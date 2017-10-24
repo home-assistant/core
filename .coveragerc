@@ -592,6 +592,7 @@ omit =
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pilight.py
     homeassistant/components/switch/pulseaudio_loopback.py
+    homeassistant/components/switch/rainbird.py
     homeassistant/components/switch/rainmachine.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
