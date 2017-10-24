@@ -105,7 +105,8 @@ class pyLoadSensor(Entity):
             return
 
         if self.api.status is None:
-            _LOGGER.debug("Update of %s requested, but no status is available", self._name)
+            _LOGGER.debug("Update of %s requested, but no status is available",
+                          self._name)
             return
 
         value = self.api.status.get(self.type)
@@ -128,7 +129,7 @@ class pyLoadAPI(object):
         self.headers = {'content-type': CONTENT_TYPE_JSON}
 
         if username is not None and password is not None:
-            self.payload = {'username':username, 'password':password}
+            self.payload = {'username': username, 'password': password}
             self.login = requests.post(api_url + 'login', data=self.payload)
         self.update()
 
@@ -141,14 +142,16 @@ class pyLoadAPI(object):
 
         try:
             response = requests.post(
-                self.api_url + 'statusServer', json=payload, cookies=self.login.cookies,
+                self.api_url + 'statusServer', json=payload,
+                cookies=self.login.cookies,
                 headers=self.headers, timeout=5)
             response.raise_for_status()
             _LOGGER.info("Response.json = %s", response.json())
             return response.json()
 
         except requests.exceptions.ConnectionError as conn_exc:
-            _LOGGER.error("Failed to update pyLoad status from %s. Error: %s", self.api_url + 'statusServer', conn_exc)
+            _LOGGER.error("Failed to update pyLoad status from %s. Error: %s",
+                          self.api_url + 'statusServer', conn_exc)
             raise
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
