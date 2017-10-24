@@ -115,7 +115,7 @@ def setup(hass, config):
                       uuid, get_model_from_uuid(uuid))
 
         discovery_info = {
-            'model_name': get_model_from_uuid(uuid),
+            'model_name': get_component_from_uuid(uuid),
             'serial': device.serialnumber,
             'mac_address': device.mac,
             'ssdp_description': url,
