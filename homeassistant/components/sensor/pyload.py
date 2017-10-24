@@ -32,7 +32,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES, default=['speed']):
-	    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -50,12 +50,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
-    url = "http{}://{}:{}/api/".format(ssl, host, port)    
+    url = "http{}://{}:{}/api/".format(ssl, host, port)
 
     try:
         pyloadapi = pyLoadAPI(
             api_url=url, username=username, password=password)
-        pyloadapi.update()		
+        pyloadapi.update()
     except (requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError) as conn_err:
         _LOGGER.error("Error setting up pyLoad API: %s", conn_err)
@@ -85,12 +85,12 @@ class pyLoadSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-		
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-		
+
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
@@ -103,11 +103,11 @@ class pyLoadSensor(Entity):
         except requests.exceptions.ConnectionError:
             # Error calling the API, already logged in api.update()
             return
-			
+
         if self.api.status is None:
             _LOGGER.debug("Update of %s requested, but no status is available", self._name)
             return
-			
+
         value = self.api.status.get(self.type)
         if value is None:
             _LOGGER.warning("Unable to locate value for %s", self.type)
@@ -118,7 +118,7 @@ class pyLoadSensor(Entity):
             self._state = round(value / 2**20, 2)
         else:
             self._state = value
-			
+
 class pyLoadAPI(object):
     """Simple wrapper for pyLoad's API."""
     def __init__(self, api_url, username=None, password=None):
