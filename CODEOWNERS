@@ -58,6 +58,7 @@ homeassistant/components/sensor/tibber.py @danielhiversen
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
+homeassistant/components/xiaomi_aqara.py @danielhiversen
 
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/rfxtrx.py @danielhiversen
