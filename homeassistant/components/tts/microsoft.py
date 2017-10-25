@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts.microsoft/
 """
 import logging
-import asyncio
+from http.client import HTTPException
 
 import voluptuous as vol
 
@@ -46,8 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+def get_engine(hass, config):
     """Set up Microsoft speech component."""
     return MicrosoftProvider(config[CONF_API_KEY], config[CONF_LANG],
                              config[CONF_GENDER], config[CONF_TYPE])
@@ -85,7 +84,7 @@ class MicrosoftProvider(Provider):
             trans = pycsspeechtts.TTSTranslator(self._apikey)
             data = trans.speak(language, self._gender, self._type,
                                self._output, message)
-        except Exception as ex:
-            _LOGGER.error("Error occurred for Microsoft TTS: "+str(ex))
+        except HTTPException as ex:
+            _LOGGER.error("Error occurred for Microsoft TTS: %s", ex)
             return(None, None)
         return ("mp3", data)
