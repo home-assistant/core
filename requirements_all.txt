@@ -576,6 +576,7 @@ pushetta==1.0.15
 pwmled==1.2.1
 
 # homeassistant.components.sensor.cpuspeed
+# homeassistant.components.system_monitoring.cpuspeed
 py-cpuinfo==3.3.0
 
 # homeassistant.components.camera.synology
