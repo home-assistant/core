@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mpd/
 """
 import logging
+import os
 from datetime import timedelta
 
 import voluptuous as vol
@@ -182,7 +183,7 @@ class MpdDevice(MediaPlayerDevice):
             if file_name is None:
                 return "None"
             else:
-                return file_name.split('/')[-1]
+                return os.path.basename(file_name)
         elif name is None:
             return title
         elif title is None:
