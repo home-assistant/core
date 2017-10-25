@@ -55,6 +55,7 @@ TEST_REQUIREMENTS = (
     'libpurecoollink',
     'libsoundtouch',
     'mficlient',
+    'numpy',
     'paho-mqtt',
     'pexpect',
     'pilight',
