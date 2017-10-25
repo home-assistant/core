@@ -613,6 +613,9 @@ pycmus==0.1.0
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.3
 
+# homeassistant.components.tts.microsoft
+pycsspeechtts==1.0.1
+
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
