@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.const import (LENGTH_KILOMETERS,
                                  CONF_MONITORED_CONDITIONS,
                                  CONF_UPDATE_INTERVAL)
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -23,13 +24,13 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['lxml==4.0.0']
+REQUIREMENTS = ['beautifulsoup4==4.6.0']
 
 SYSTADIN = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
 
-TRAFFIC_JAM_XPATH = '//*[@id="main_content"]/div[1]/div/span[3]/text()'
-MEAN_VELOCITY_XPATH = '//*[@id="main_content"]/div[2]/div/span[3]/text()'
-CONGESTION_XPATH = '//*[@id="main_content"]/div[3]/div/span[3]/text()'
+TRAFFIC_JAM_IDX = 0
+MEAN_VELOCITY_IDX = 1
+CONGESTION_IDX = 2
 
 SYSTADIN_REGEX = '(\d*\.\d+|\d+)'
 
@@ -39,11 +40,11 @@ OPTION_CONGESTION = 'congestion'
 
 SENSOR_TYPES = {
     OPTION_TRAFFIC_JAM: ['Sytadin Traffic Jam', LENGTH_KILOMETERS,
-                         TRAFFIC_JAM_XPATH],
+                         TRAFFIC_JAM_IDX],
     OPTION_MEAN_VELOCITY: ['Sytadin Mean Velocity', LENGTH_KILOMETERS+'/h',
-                           MEAN_VELOCITY_XPATH],
+                           MEAN_VELOCITY_IDX],
     OPTION_CONGESTION: ['Sytadin Congestion', '',
-                        CONGESTION_XPATH]
+                        CONGESTION_IDX]
 }
 
 TIMEOUT = 10
@@ -74,12 +75,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SytadinSensor(Entity):
     """Sytadin Sensor."""
 
-    def __init__(self, name, url, xpath, regex, unit, interval):
+    def __init__(self, name, url, idx, regex, unit, interval):
         """Initialize the sensor."""
         self._state = None
         self._name = name
         self._url = url
-        self._xpath = xpath
+        self._idx = idx
         self._regex = regex
         self._unit = unit
         self.update = Throttle(interval)(self._update)
@@ -101,10 +102,12 @@ class SytadinSensor(Entity):
 
     def _update(self):
         """Fetch new state data for the sensor."""
-        from lxml import etree
+        from bs4 import BeautifulSoup
 
         html = requests.get(self._url, timeout=TIMEOUT)
-        tree = etree.HTML(html.content)
-        extract_xpath = tree.xpath(self._xpath)
+        data = BeautifulSoup(html.text, 'html.parser')
 
-        self._state = re.search(self._regex, extract_xpath[0]).group()
+        main_content = data.find(id="main_content")
+        span = main_content.find_all("span", class_="barometre_valeur")
+
+        self._state = re.search(self._regex, span[self._idx].text).group()
