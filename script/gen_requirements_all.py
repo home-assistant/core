@@ -50,6 +50,7 @@ TEST_REQUIREMENTS = (
     'haversine',
     'hbmqtt',
     'holidays',
+    'home-assistant-frontend',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
