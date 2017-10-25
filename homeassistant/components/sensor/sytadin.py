@@ -57,12 +57,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    options = [
-        it.strip() for it in config.get(CONF_MONITORED_CONDITIONS)
-    ]
 
-    for option in options:
-        LOGGER.debug("Add new device: %s", option)
+    for option in config.get(CONF_MONITORED_CONDITIONS):
+        _LOGGER.debug("Add new device: %s", option)
 
         add_devices([
             SytadinSensor(SENSOR_TYPES.get(option)[0],
