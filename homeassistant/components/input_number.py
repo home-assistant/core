@@ -97,6 +97,7 @@ SERVICE_TO_METHOD = {
         'schema': SERVICE_DEFAULT_SCHEMA},
 }
 
+
 @bind_hass
 def set_value(hass, entity_id, value):
     """Set input_number to value."""
@@ -148,7 +149,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_handle_service(service):
-        """Handle calls to input_number services"""
+        """Handle calls to input_number services."""
         target_inputs = component.async_extract_from_service(service)
         method = SERVICE_TO_METHOD.get(service.service)
         params = service.data.copy()
