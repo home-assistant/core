@@ -524,7 +524,7 @@ pilight==0.1.1
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==2.0.2
+plexapi==3.0.3
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
