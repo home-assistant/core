@@ -98,7 +98,7 @@ asterisk_mbox==0.4.0
 # avion==0.7
 
 # homeassistant.components.axis
-axis==12
+axis==14
 
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
@@ -184,6 +184,7 @@ datapoint==0.4.3
 # homeassistant.components.device_tracker.upc_connect
 defusedxml==0.5.0
 
+# homeassistant.components.sensor.deluge
 # homeassistant.components.switch.deluge
 deluge-client==1.0.5
 
@@ -320,6 +321,9 @@ hipnotify==1.0.8
 
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
+
+# homeassistant.components.frontend
+home-assistant-frontend==20171021.2
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -524,7 +528,7 @@ pilight==0.1.1
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==2.0.2
+plexapi==3.0.3
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
@@ -803,10 +807,11 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
+# homeassistant.components.fan.xiaomi_miio
 # homeassistant.components.light.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-mirobo==0.2.0
+python-miio==0.3.0
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -1027,7 +1032,7 @@ tellduslive==0.3.4
 temperusb==1.5.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.0.17
+teslajsonpy==0.0.18
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1
