@@ -46,6 +46,9 @@ def async_trigger(hass, config, action):
     @callback
     def check_numeric_state(entity, from_s, to_s):
         """Return True if criteria are now met."""
+        if to_s is None:
+            return False
+
         variables = {
             'trigger': {
                 'platform': 'numeric_state',
