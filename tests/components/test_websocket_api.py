@@ -288,8 +288,8 @@ def test_get_config(hass, websocket_client):
 @asyncio.coroutine
 def test_get_panels(hass, websocket_client):
     """Test get_panels command."""
-    frontend.register_built_in_panel(hass, 'map', 'Map',
-                                     'mdi:account-location')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'map', 'Map', 'mdi:account-location')
 
     websocket_client.send_json({
         'id': 5,
@@ -300,7 +300,8 @@ def test_get_panels(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
-    assert msg['result'] == hass.data[frontend.DATA_PANELS]
+    assert msg['result'] == {url: panel.as_dict() for url, panel
+                             in hass.data[frontend.DATA_PANELS].items()}
 
 
 @asyncio.coroutine
