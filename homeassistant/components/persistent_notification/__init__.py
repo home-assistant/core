@@ -43,6 +43,8 @@ SCHEMA_SERVICE_DISMISS = vol.Schema({
 DEFAULT_OBJECT_ID = 'notification'
 _LOGGER = logging.getLogger(__name__)
 
+STATE = 'notifying'
+
 
 @bind_hass
 def create(hass, message, title=None, notification_id=None):
@@ -113,7 +115,9 @@ def async_setup(hass, config):
             _LOGGER.error('Error rendering message %s: %s', message, ex)
             message = message.template
 
-        hass.states.async_set(entity_id, message, attr)
+        attr[ATTR_MESSAGE] = message
+
+        hass.states.async_set(entity_id, STATE, attr)
 
     @callback
     def dismiss_service(call):

@@ -1,18 +1,19 @@
 """
 Support for Eneco Slimmer stekkers (Smart Plugs).
 
-This provides controlls for the z-wave smart plugs Toon can control.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.toon/
 """
 import logging
 
-from homeassistant.components.switch import SwitchDevice
 import homeassistant.components.toon as toon_main
+from homeassistant.components.switch import SwitchDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup discovered Smart Plugs."""
+    """Set up the discovered Toon Smart Plugs."""
     _toon_main = hass.data[toon_main.TOON_HANDLE]
     switch_items = []
     for plug in _toon_main.toon.smartplugs:
@@ -22,17 +23,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class EnecoSmartPlug(SwitchDevice):
-    """Representation of a Smart Plug."""
+    """Representation of a Toon Smart Plug."""
 
     def __init__(self, hass, plug):
         """Initialize the Smart Plug."""
         self.smartplug = plug
         self.toon_data_store = hass.data[toon_main.TOON_HANDLE]
-
-    @property
-    def should_poll(self):
-        """No polling needed with subscriptions."""
-        return True
 
     @property
     def unique_id(self):

@@ -50,10 +50,12 @@ TEST_REQUIREMENTS = (
     'haversine',
     'hbmqtt',
     'holidays',
+    'home-assistant-frontend',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
     'mficlient',
+    'numpy',
     'paho-mqtt',
     'pexpect',
     'pilight',
@@ -78,6 +80,7 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'warrant',
     'yahoo-finance',
+    'pythonwhois'
 )
 
 IGNORE_PACKAGES = (
