@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 # Monitored conditions: name, units, icon
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_BANDWIDTH_USED: ['Current Bandwidth Used', 'GB',
-                                'mdi:chart-histogram'],
+                                  'mdi:chart-histogram'],
     ATTR_PENDING_CHARGES: ['Pending Charges', 'US$',
                            'mdi:currency-usd']
 }
