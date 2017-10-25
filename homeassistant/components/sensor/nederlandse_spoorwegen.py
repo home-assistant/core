@@ -21,15 +21,12 @@ REQUIREMENTS = ['nsapi==2.7.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by NS"
-CONF_DELAY = 'delay'
 CONF_DEPARTURES = 'departures'
 CONF_FROM = 'from'
 CONF_TO = 'to'
 CONF_VIA = 'via'
 CONF_EMAIL = 'email'
 CONF_PASSWORD = 'password'
-
-DEFAULT_DELAY = 0
 
 ICON = 'mdi:train'
 
@@ -42,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_FROM): cv.string,
         vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_VIA): cv.string,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int}]
+        vol.Optional(CONF_VIA): cv.string}]
 })
 
 
@@ -57,22 +53,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(
             NSDepartureSensor(
                 nsapi, departure.get(CONF_NAME), departure.get(CONF_FROM),
-                departure.get(CONF_TO), departure.get(CONF_VIA),
-                departure.get(CONF_DELAY)))
+                departure.get(CONF_TO), departure.get(CONF_VIA)))
     add_devices(sensors)
 
 
 class NSDepartureSensor(Entity):
     """Implementation of a NS Departure Sensor."""
 
-    def __init__(self, nsapi, name, departure, heading, via, delay):
+    def __init__(self, nsapi, name, departure, heading, via):
         """Initialize the sensor."""
         self._nsapi = nsapi
         self._name = name
         self._departure = departure
         self._via = via
         self._heading = heading
-        self._delay = delay
         self._state = None
         self._trips = None
 
