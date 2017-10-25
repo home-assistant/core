@@ -4,12 +4,12 @@ Integrate with Google Domains.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/google_domains/
 """
+import asyncio
+from datetime import timedelta
+import logging
+
 import aiohttp
 import async_timeout
-import asyncio
-import logging
-from datetime import timedelta
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
