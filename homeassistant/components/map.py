@@ -28,9 +28,8 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Register the built-in map panel."""
-    register_built_in_panel(
-        hass, 'map', 'Map', 'mdi:account-location', config={
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'map', 'Map', 'mdi:account-location', config={
             CONF_TILE_PROVIDER: config[DOMAIN].get(CONF_TILE_PROVIDER)
         })
-
     return True
