@@ -543,6 +543,34 @@ input_boolean:
         description: Entity id of the input boolean to turn on
         example: 'input_boolean.notify_alerts'
 
+input_number:
+  set_value:
+    description: Set the value of an input_number entity.
+
+    fields:
+      entity_id: 
+        description: Entity id of the input_number to set the new value.
+        example: 'input_number.threshold'
+      value:
+        description: The target value the entity should be set to.
+        example: 42
+
+  increment:
+    description: Increment the value of an input_number entity by its stepping.
+
+    fields:
+      entity_id: 
+        description: Entity id of the input_number the should be incremented.
+        example: 'input_number.threshold'
+
+  decrement:
+    description: Decrement the value of an input_number entity by its stepping.
+
+    fields:
+      entity_id: 
+        description: Entity id of the input_number the should be decremented.
+        example: 'input_number.threshold'
+
 homeassistant:
   check_config:
     description: Check the Home Assistant configuration files for errors. Errors will be displayed in the Home Assistant log.
