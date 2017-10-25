@@ -61,7 +61,7 @@ def async_setup(hass, config):
     hass.helpers.event.async_track_time_interval(
         update_domain_interval, INTERVAL)
 
-    return result
+    return true
 
 
 @asyncio.coroutine
