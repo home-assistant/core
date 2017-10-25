@@ -12,7 +12,8 @@ import pytz
 import pytest
 
 import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.exceptions import (InvalidEntityFormatError,
+                                      InvalidStateError)
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
@@ -420,6 +421,10 @@ class TestState(unittest.TestCase):
         self.assertRaises(
             InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
+
+        self.assertRaises(
+            InvalidStateError, ha.State,
+            'domain.long_state', 't' * 256)
 
     def test_domain(self):
         """Test domain."""
