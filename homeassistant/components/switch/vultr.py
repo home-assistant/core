@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.vultr import (
-    CONF_SUBSCRIPTION, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH_GB,
+    CONF_SUBSCRIPTION, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH,
     ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
     ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_DISK,
     ATTR_COST_PER_MONTH, ATTR_OS, ATTR_REGION, ATTR_VCPUS, DATA_VULTR)
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vultr subscription switch."""
     vultr = hass.data.get(DATA_VULTR)
     if not vultr:
-        return False
+        return
 
     subscription = config.get(CONF_SUBSCRIPTION)
     name = config.get(CONF_NAME)
@@ -76,7 +76,7 @@ class VultrSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the Vultr subscription."""
         return {
-            ATTR_ALLOWED_BANDWIDTH_GB: self.data.get('allowed_bandwidth_gb'),
+            ATTR_ALLOWED_BANDWIDTH: self.data.get('allowed_bandwidth_gb'),
             ATTR_AUTO_BACKUPS: self.data.get('auto_backups'),
             ATTR_COST_PER_MONTH: self.data.get('cost_per_month'),
             ATTR_CREATED_AT: self.data.get('date_created'),

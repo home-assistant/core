@@ -13,7 +13,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.vultr import (
-    CONF_SUBSCRIPTION, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH_GB,
+    CONF_SUBSCRIPTION, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH,
     ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
     ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_DISK,
     ATTR_COST_PER_MONTH, ATTR_OS, ATTR_REGION, ATTR_VCPUS, DATA_VULTR)
@@ -33,7 +33,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vultr subscription (server) sensor."""
     vultr = hass.data.get(DATA_VULTR)
     if not vultr:
-        return False
+        _LOGGER.error("Failed to setup hub, aborting binary sensor")
+        return
 
     subscription = config.get(CONF_SUBSCRIPTION)
     name = config.get(CONF_NAME)
@@ -44,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(
             "Subscription %s not found. Perhaps API key issue?",
             subscription)
-        return False
+        return
 
 
 class VultrBinarySensor(BinarySensorDevice):
@@ -79,7 +80,7 @@ class VultrBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the Vultr subscription."""
         return {
-            ATTR_ALLOWED_BANDWIDTH_GB: self.data.get('allowed_bandwidth_gb'),
+            ATTR_ALLOWED_BANDWIDTH: self.data.get('allowed_bandwidth_gb'),
             ATTR_AUTO_BACKUPS: self.data.get('auto_backups'),
             ATTR_COST_PER_MONTH: self.data.get('cost_per_month'),
             ATTR_CREATED_AT: self.data.get('date_created'),

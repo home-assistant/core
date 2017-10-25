@@ -7,9 +7,11 @@ import voluptuous as vol
 from components.binary_sensor import vultr
 from components import vultr as base_vultr
 from components.vultr import (
-    ATTR_ALLOWED_BANDWIDTH_GB, ATTR_AUTO_BACKUPS, ATTR_IPV4_ADDRESS,
-    ATTR_COST_PER_MONTH, ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID, CONF_SUBS)
-from homeassistant.const import CONF_PLATFORM
+    ATTR_ALLOWED_BANDWIDTH, ATTR_AUTO_BACKUPS, ATTR_IPV4_ADDRESS,
+    ATTR_COST_PER_MONTH, ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID,
+    CONF_SUBSCRIPTION)
+from homeassistant.const import (
+    CONF_PLATFORM, CONF_NAME)
 
 from tests.components.test_vultr import VALID_CONFIG
 from tests.common import (
@@ -29,12 +31,16 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
     def setUp(self):
         """Init values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = {
-            "subs": [
-                "576965",
-                "123456"
-            ]
-        }
+        self.configs = [
+            {
+                CONF_SUBSCRIPTION: '576965',
+                CONF_NAME: "A Server"
+            },
+            {
+                CONF_SUBSCRIPTION: '123456',
+                CONF_NAME: "Failed Server"
+            }
+        ]
 
     def tearDown(self):
         """Stop our started services."""
@@ -51,11 +57,15 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
             'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_server_list.json'))
 
+        # Setup hub
         base_vultr.setup(self.hass, VALID_CONFIG)
-        vultr.setup_platform(self.hass,
-                             self.config,
-                             self.add_devices,
-                             None)
+
+        # Setup each of our test configs
+        for config in self.configs:
+            vultr.setup_platform(self.hass,
+                                 config,
+                                 self.add_devices,
+                                 None)
 
         self.assertEqual(len(self.DEVICES), 2)
 
@@ -67,7 +77,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                 self.assertEqual('on', device.state)
                 self.assertEqual('mdi:server', device.icon)
                 self.assertEqual('1000',
-                                 device_attrs[ATTR_ALLOWED_BANDWIDTH_GB])
+                                 device_attrs[ATTR_ALLOWED_BANDWIDTH])
                 self.assertEqual('yes',
                                  device_attrs[ATTR_AUTO_BACKUPS])
                 self.assertEqual('123.123.123.123',
@@ -82,7 +92,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                 self.assertEqual('off', device.state)
                 self.assertEqual('mdi:server-off', device.icon)
                 self.assertEqual('100',
-                                 device_attrs[ATTR_ALLOWED_BANDWIDTH_GB])
+                                 device_attrs[ATTR_ALLOWED_BANDWIDTH])
                 self.assertEqual('no',
                                  device_attrs[ATTR_AUTO_BACKUPS])
                 self.assertEqual('192.168.100.50',
@@ -114,7 +124,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
         base_vultr.setup(self.hass, VALID_CONFIG)
 
-        bad_conf = {}  # No subs
+        bad_conf = {}  # No subscription
 
         no_subs_setup = vultr.setup_platform(self.hass,
                                              bad_conf,
@@ -124,7 +134,8 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
         self.assertFalse(no_subs_setup)
 
         bad_conf = {
-            CONF_SUBS: ["555555"]
+            CONF_NAME: "Missing Server",
+            CONF_SUBSCRIPTION: '555555'
         }  # Sub not associated with API key (not in server_list)
 
         wrong_subs_setup = vultr.setup_platform(self.hass,

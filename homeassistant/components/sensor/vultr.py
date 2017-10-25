@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_NAME)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.vultr import (
-    CONF_SUBSCRIPTION, ATTR_CURRENT_BANDWIDTH_GB, ATTR_PENDING_CHARGES,
+    CONF_SUBSCRIPTION, ATTR_CURRENT_BANDWIDTH_USED, ATTR_PENDING_CHARGES,
     DATA_VULTR)
 
 DEFAULT_NAME = '{} {}'
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Monitored conditions: name, units, icon
 MONITORED_CONDITIONS = {
-    ATTR_CURRENT_BANDWIDTH_GB: ['Current Bandwidth Used', 'GB',
+    ATTR_CURRENT_BANDWIDTH_USED: ['Current Bandwidth Used', 'GB',
                                 'mdi:chart-histogram'],
     ATTR_PENDING_CHARGES: ['Pending Charges', 'US$',
                            'mdi:currency-usd']
@@ -50,6 +50,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
 
     for condition in monitored_conditions:
+        if condition not in MONITORED_CONDITIONS:
+            _LOGGER.error(
+                "Monitored condition %s not valid, should be: %s",
+                condition,
+                ', '.join(MONITORED_CONDITIONS))
+            continue
+
         if subscription in vultr.data:
             sensors.append(VultrSensor(vultr,
                                        subscription,

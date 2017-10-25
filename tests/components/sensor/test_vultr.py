@@ -6,9 +6,9 @@ import voluptuous as vol
 
 from components.sensor import vultr
 from components import vultr as base_vultr
-from components.vultr import CONF_SUBS
+from components.vultr import CONF_SUBSCRIPTION
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_PLATFORM)
+    CONF_MONITORED_CONDITIONS, CONF_PLATFORM, CONF_NAME)
 
 from tests.components.test_vultr import VALID_CONFIG
 from tests.common import (
@@ -29,13 +29,11 @@ class TestVultrSensorSetup(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.config = {
-            "subs": [
-                "576965",
-                "123456"
-            ],
-            "monitored_conditions": [
-                "current_bandwidth_gb",
-                "pending_charges"
+            CONF_SUBSCRIPTION: '576965',
+            CONF_NAME: 'my-amazing-server',
+            CONF_MONITORED_CONDITIONS: [
+                'current_bandwidth_gb',
+                'pending_charges'
             ]
         }
 
@@ -60,7 +58,7 @@ class TestVultrSensorSetup(unittest.TestCase):
                              self.add_devices,
                              None)
 
-        self.assertEqual(4, len(self.DEVICES))
+        self.assertEqual(2, len(self.DEVICES))
 
         for device in self.DEVICES:
             device.update()
@@ -73,14 +71,10 @@ class TestVultrSensorSetup(unittest.TestCase):
                 self.assertEqual(46.67, device.state)
                 self.assertEqual('US$', device.unit_of_measurement)
                 self.assertEqual('mdi:currency-usd', device.icon)
-            elif device.name == 'my failed server Current Bandwidth Used':
-                self.assertEqual(957.46, device.state)
-            elif device.name == 'my failed server Pending Charges':
-                self.assertEqual("not a number", device.state)
 
     def test_invalid_sensor_config(self):
         """Test config type failures."""
-        with pytest.raises(vol.Invalid):  # No subs
+        with pytest.raises(vol.Invalid):  # No subscription
             vultr.PLATFORM_SCHEMA({
                 CONF_PLATFORM: base_vultr.DOMAIN,
                 CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS
@@ -92,7 +86,7 @@ class TestVultrSensorSetup(unittest.TestCase):
         with pytest.raises(vol.Invalid):  # Bad monitored_conditions
             vultr.PLATFORM_SCHEMA({
                 CONF_PLATFORM: base_vultr.DOMAIN,
-                CONF_SUBS: ['12345', '56789'],
+                CONF_SUBSCRIPTION: '123456',
                 CONF_MONITORED_CONDITIONS: [
                     'non-existent-condition',
                 ]
@@ -124,7 +118,7 @@ class TestVultrSensorSetup(unittest.TestCase):
         self.assertEqual(0, len(self.DEVICES))
 
         bad_conf = {
-            CONF_SUBS: ['123456', '56789'],
+            CONF_SUBSCRIPTION: '123456',
             CONF_MONITORED_CONDITIONS: ['bad-condition',
                                         'non-existing-condition'],
         }  # Invalid monitored_conditions
