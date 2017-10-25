@@ -18,9 +18,9 @@ REQUIREMENTS = ['vultr==0.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AUTO_BACKUPS = 'auto_backups'
-ATTR_ALLOWED_BANDWIDTH_GB = 'allowed_bandwidth_gb'
+ATTR_ALLOWED_BANDWIDTH = 'allowed_bandwidth_gb'
 ATTR_COST_PER_MONTH = 'cost_per_month'
-ATTR_CURRENT_BANDWIDTH_GB = 'current_bandwidth_gb'
+ATTR_CURRENT_BANDWIDTH_USED = 'current_bandwidth_gb'
 ATTR_CREATED_AT = 'created_at'
 ATTR_DISK = 'disk'
 ATTR_SUBSCRIPTION_ID = 'subid'
@@ -36,8 +36,12 @@ ATTR_VCPUS = 'vcpus'
 CONF_SUBSCRIPTION = 'subscription'
 
 DATA_VULTR = 'data_vultr'
-VULTR_PLATFORMS = ['binary_sensor', 'sensor']
 DOMAIN = 'vultr'
+
+NOTIFICATION_ID = 'vultr_notification'
+NOTIFICATION_TITLE = 'Vultr Setup'
+
+VULTR_PLATFORMS = ['binary_sensor', 'sensor']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -56,12 +60,17 @@ def setup(hass, config):
 
     try:
         vultr.update()
-    except RuntimeError:
-        _LOGGER.error("No Vultr account found for the given API Key")
+    except RuntimeError as ex:
+        _LOGGER.error("Failed to make update API request because: %s",
+                      ex)
+        hass.components.persistent_notification.create(
+            'Error: {}'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
         return False
 
     hass.data[DATA_VULTR] = vultr
-
     return True
 
 
