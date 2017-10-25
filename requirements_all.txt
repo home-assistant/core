@@ -803,10 +803,11 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
+# homeassistant.components.fan.xiaomi_miio
 # homeassistant.components.light.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-mirobo==0.2.0
+python-miio==0.3.0
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
