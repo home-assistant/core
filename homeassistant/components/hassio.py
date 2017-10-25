@@ -23,7 +23,6 @@ from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.components.frontend import register_built_in_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,8 +89,8 @@ def async_setup(hass, config):
     hass.http.register_view(HassIOView(hassio))
 
     if 'frontend' in hass.config.components:
-        register_built_in_panel(hass, 'hassio', 'Hass.io',
-                                'mdi:access-point-network')
+        yield from hass.components.frontend.async_register_built_in_panel(
+            'hassio', 'Hass.io', 'mdi:access-point-network')
 
     if 'http' in config:
         yield from hassio.update_hass_api(config['http'])
