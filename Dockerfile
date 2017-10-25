@@ -32,4 +32,6 @@ RUN pip3 install --no-cache-dir -r requirements_all.txt && \
 # Copy source
 COPY . .
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=1m --retries=3 CMD curl -f http://localhost:8123 || exit 1
+
 CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
