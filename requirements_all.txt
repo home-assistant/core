@@ -98,7 +98,7 @@ asterisk_mbox==0.4.0
 # avion==0.7
 
 # homeassistant.components.axis
-axis==12
+axis==14
 
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
@@ -184,6 +184,7 @@ datapoint==0.4.3
 # homeassistant.components.device_tracker.upc_connect
 defusedxml==0.5.0
 
+# homeassistant.components.sensor.deluge
 # homeassistant.components.switch.deluge
 deluge-client==1.0.5
 
@@ -470,6 +471,7 @@ neurio==0.3.1
 # homeassistant.components.sensor.nederlandse_spoorwegen
 nsapi==2.7.4
 
+# homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
 numpy==1.13.3
 
@@ -527,7 +529,7 @@ pilight==0.1.1
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==2.0.2
+plexapi==3.0.3
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
@@ -613,6 +615,9 @@ pycmus==0.1.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.3
+
+# homeassistant.components.tts.microsoft
+pycsspeechtts==1.0.1
 
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
@@ -766,6 +771,7 @@ pysma==0.1.3
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
+# homeassistant.components.switch.snmp
 pysnmp==4.3.10
 
 # homeassistant.components.sensor.thinkingcleaner

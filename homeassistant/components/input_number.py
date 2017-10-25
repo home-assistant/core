@@ -4,11 +4,13 @@ Component to offer a way to set a numeric value from a slider or text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_number/
 """
+import os
 import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
@@ -38,6 +40,12 @@ ATTR_STEP = 'step'
 ATTR_MODE = 'mode'
 
 SERVICE_SET_VALUE = 'set_value'
+SERVICE_INCREMENT = 'increment'
+SERVICE_DECREMENT = 'decrement'
+
+SERVICE_DEFAULT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+})
 
 SERVICE_SET_VALUE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -77,12 +85,41 @@ CONFIG_SCHEMA = vol.Schema({
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
+SERVICE_TO_METHOD = {
+    SERVICE_SET_VALUE: {
+        'method': 'async_set_value',
+        'schema': SERVICE_SET_VALUE_SCHEMA},
+    SERVICE_INCREMENT: {
+        'method': 'async_increment',
+        'schema': SERVICE_DEFAULT_SCHEMA},
+    SERVICE_DECREMENT: {
+        'method': 'async_decrement',
+        'schema': SERVICE_DEFAULT_SCHEMA},
+}
+
+
 @bind_hass
 def set_value(hass, entity_id, value):
     """Set input_number to value."""
     hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
+    })
+
+
+@bind_hass
+def increment(hass, entity_id):
+    """Increment value of entity."""
+    hass.services.call(DOMAIN, SERVICE_INCREMENT, {
+        ATTR_ENTITY_ID: entity_id
+    })
+
+
+@bind_hass
+def decrement(hass, entity_id):
+    """Decrement value of entity."""
+    hass.services.call(DOMAIN, SERVICE_DECREMENT, {
+        ATTR_ENTITY_ID: entity_id
     })
 
 
@@ -111,18 +148,32 @@ def async_setup(hass, config):
         return False
 
     @asyncio.coroutine
-    def async_set_value_service(call):
-        """Handle a calls to the input slider services."""
-        target_inputs = component.async_extract_from_service(call)
+    def async_handle_service(service):
+        """Handle calls to input_number services."""
+        target_inputs = component.async_extract_from_service(service)
+        method = SERVICE_TO_METHOD.get(service.service)
+        params = service.data.copy()
+        params.pop(ATTR_ENTITY_ID, None)
 
-        tasks = [input_number.async_set_value(call.data[ATTR_VALUE])
-                 for input_number in target_inputs]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+        # call method
+        update_tasks = []
+        for target_input in target_inputs:
+            yield from getattr(target_input, method['method'])(**params)
+            if not target_input.should_poll:
+                continue
+            update_tasks.append(target_input.async_update_ha_state(True))
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
-        schema=SERVICE_SET_VALUE_SCHEMA)
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    for service, data in SERVICE_TO_METHOD.items():
+        hass.services.async_register(
+            DOMAIN, service, async_handle_service,
+            description=descriptions[DOMAIN][service], schema=data['schema'])
 
     yield from component.async_add_entities(entities)
     return True
@@ -203,4 +254,26 @@ class InputNumber(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
+        yield from self.async_update_ha_state()
+
+    @asyncio.coroutine
+    def async_increment(self):
+        """Increment value."""
+        new_value = self._current_value + self._step
+        if new_value > self._maximum:
+            _LOGGER.warning("Invalid value: %s (range %s - %s)",
+                            new_value, self._minimum, self._maximum)
+            return
+        self._current_value = new_value
+        yield from self.async_update_ha_state()
+
+    @asyncio.coroutine
+    def async_decrement(self):
+        """Decrement value."""
+        new_value = self._current_value - self._step
+        if new_value < self._minimum:
+            _LOGGER.warning("Invalid value: %s (range %s - %s)",
+                            new_value, self._minimum, self._maximum)
+            return
+        self._current_value = new_value
         yield from self.async_update_ha_state()
