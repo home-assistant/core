@@ -163,27 +163,25 @@ class SensorTemplate(Entity):
             self._state = None
             _LOGGER.error('Could not render template %s: %s', self._name, ex)
 
-        icon_picture_template = None
-        if self._icon_template is not None:
-            property_name = 'icon'
-            icon_picture_template = self._icon_template
-        elif self._entity_picture_template is not None:
-            property_name = 'entity_picture'
-            icon_picture_template = self._entity_picture_template
+        for property_name, template in (
+                ('_icon', self._icon_template),
+                ('_entity_picture', self._entity_picture_template)):
+            if template is None:
+                continue
 
-        if icon_picture_template is not None:
+            friendly_property_name = property_name[1:].replace('_', ' ')
+
             try:
-                setattr(self, '_{0}'.format(property_name),
-                        icon_picture_template.async_render())
+                setattr(self, property_name, template.async_render())
             except TemplateError as ex:
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.', property_name,
-                                    self._name)
+                                    ' the state is unknown.',
+                                    friendly_property_name, self._name)
                     return
-                setattr(self, '_{0}'.format(property_name),
-                        getattr(super(), property_name))
+
+                setattr(self, property_name, getattr(super(), property_name))
                 _LOGGER.error('Could not render %s template %s: %s',
-                              property_name, self._name, ex)
+                              friendly_property_name, self._name, ex)
