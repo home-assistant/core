@@ -326,6 +326,7 @@ omit =
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/fan/mqtt.py
+    homeassistant/components/fan/xiaomi_miio.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/ifttt.py
