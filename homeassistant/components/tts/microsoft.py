@@ -74,8 +74,7 @@ class MicrosoftProvider(Provider):
         """Return list of supported languages."""
         return SUPPORTED_LANGUAGES
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options=None):
         """Load TTS from Microsoft."""
         if language is None:
             language = self._lang
