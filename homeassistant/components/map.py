@@ -7,7 +7,6 @@ https://home-assistant.io/components/map/
 import asyncio
 import voluptuous as vol
 
-from homeassistant.components.frontend import register_built_in_panel
 import homeassistant.helpers.config_validation as cv
 
 
