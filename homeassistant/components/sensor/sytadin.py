@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ]
 
     for option in options:
-        _LOGGER.debug('add new device: ' + option)
+        LOGGER.debug("Add new device: %s", option)
 
         add_devices([
             SytadinSensor(SENSOR_TYPES.get(option)[0],
