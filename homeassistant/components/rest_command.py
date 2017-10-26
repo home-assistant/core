@@ -39,7 +39,7 @@ CONF_CONTENT_TYPE = 'content_type'
 
 COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.template,
-    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
+    vol.Optional(CONF_AUTHENTICATION, default=HTTP_DIGEST_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
         vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
@@ -74,8 +74,10 @@ def async_setup(hass, config):
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
             password = command_config.get(CONF_PASSWORD, '')
-            
-            if command_config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION:
+
+            auth_method = command_config[CONF_AUTHENTICATION]
+
+            if auth_method == HTTP_DIGEST_AUTHENTICATION:
                 auth = HTTPDigestAuth(username, password)
             else:
                 auth = aiohttp.BasicAuth(username, password=password)
@@ -101,31 +103,29 @@ def async_setup(hass, config):
 
             try:
                 # aiohttp don't support DigestAuth yet
-                if command_config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION:
+                if auth_method == HTTP_DIGEST_AUTHENTICATION:
                     def fetch():
                         """Make request"""
                         try:
                             url = template_url.async_render(variables=service.data)
-                            if command_config[CONF_METHOD] == 'get':
-                                response = requests.get(url, data=payload, timeout=10, auth=auth, headers=headers)
-                            elif command_config[CONF_METHOD] == 'post':
-                                response = requests.post(url, data=payload, timeout=10, auth=auth, headers=headers)
-                            elif command_config[CONF_METHOD] == 'delete':
-                                response = requests.delete(url, data=payload, timeout=10, auth=auth, headers=headers)
-                            elif command_config[CONF_METHOD] == 'put':
-                                response = requests.put(url, data=payload, timeout=10, auth=auth, headers=headers)
-                            elif command_config[CONF_METHOD] == 'head':
-                                response = requests.head(url, data=payload, timeout=10, auth=auth, headers=headers)
-                            elif command_config[CONF_METHOD] == 'options':
-                                response = requests.options(url, data=payload, timeout=10, auth=auth, headers=headers)
-                                
-                            return response
+
+                            if method == 'get':
+                                request = requests.get(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif method == 'post':
+                                request = requests.post(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif method == 'delete':
+                                request = requests.delete(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif method == 'put':
+                                request = requests.put(url, data=payload, timeout=10, auth=auth, headers=headers)
+
+                            return request
                         except requests.exceptions.RequestException as error:
                             _LOGGER.error("Rest command error %s.", url)
 
-                        request = yield from self.hass.async_add_job(
+                    request = yield from hass.async_add_job(
                             fetch)
-                else:    
+                    response = request.status_code
+                else:
                     with async_timeout.timeout(timeout, loop=hass.loop):
                         request = yield from getattr(websession, method)(
                             template_url.async_render(variables=service.data),
@@ -133,12 +133,13 @@ def async_setup(hass, config):
                             auth=auth,
                             headers=headers
                         )
+                    response = request.status
 
-                if request.status < 400:
+                if response < 400:
                     _LOGGER.info("Success call %s.", request.url)
                 else:
                     _LOGGER.warning(
-                        "Error %d on call %s.", request.status, request.url)
+                        "Error %d on call %s.", response, request.url)
 
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s.", request.url)
