@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_TURN_ON
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene
+    switch, light, cover, media_player, group, fan, scene, script
 )
 
 from .const import (
