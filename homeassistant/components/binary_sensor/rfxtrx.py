@@ -158,7 +158,7 @@ class RfxtrxBinarySensor(BinarySensorDevice):
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
-
+        self.hass = None
         if data_bits is not None:
             self._masked_id = rfxtrx.get_pt2262_deviceid(
                 event.device.id_string.lower(),
