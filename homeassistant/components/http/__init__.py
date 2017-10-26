@@ -336,7 +336,9 @@ class HomeAssistantWSGI(object):
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
 
-        self.app._frozen = False  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        self.app._middlewares = tuple(self.app._prepare_middleware())
+        self.app._frozen = False
 
     @asyncio.coroutine
     def stop(self):
