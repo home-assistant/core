@@ -282,8 +282,16 @@ class XiaomiButton(XiaomiBinarySensor):
     def __init__(self, device, name, data_key, hass, xiaomi_hub):
         """Initialize the XiaomiButton."""
         self._hass = hass
+        self._last_action = None
         XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub,
                                     data_key, None)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {ATTR_LAST_ACTION: self._last_action}
+        attrs.update(super().device_state_attributes)
+        return attrs
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
@@ -310,6 +318,8 @@ class XiaomiButton(XiaomiBinarySensor):
             'entity_id': self.entity_id,
             'click_type': click_type
         })
+        self._last_action = click_type
+
         if value in ['long_click_press', 'long_click_release']:
             return True
         return False
