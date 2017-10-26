@@ -164,6 +164,14 @@ class SchemaChanges(Base):   # type: ignore
     changed = Column(DateTime(timezone=True), default=datetime.utcnow)
 
 
+class PurgeRun(Base):   # type: ignore
+    """Timestamp of last scheduled purge run."""
+
+    __tablename__ = 'purge_run'
+    run_id = Column(Integer, primary_key=True)
+    last = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
 def _process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
