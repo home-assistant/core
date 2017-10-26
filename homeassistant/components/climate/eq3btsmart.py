@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, PRECISION_HALVES,
-    STATE_AUTO, STATE_ON, STATE_OFF,
+    STATE_AUTO, STATE_ON, STATE_OFF, STATE_AWAY, STATE_BOOST, STATE_MANUAL
 )
 from homeassistant.const import (
     CONF_MAC, TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE)
@@ -20,10 +20,6 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['python-eq3bt==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
-
-STATE_BOOST = 'boost'
-STATE_AWAY = 'away'
-STATE_MANUAL = 'manual'
 
 ATTR_STATE_WINDOW_OPEN = 'window_open'
 ATTR_STATE_VALVE = 'valve'

@@ -17,7 +17,8 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
     ATTR_OPERATION_MODE)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME)
+    STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_PAYLOAD_ON,
+    CONF_PAYLOAD_OFF)
 from homeassistant.components.mqtt import (CONF_QOS, CONF_RETAIN,
                                            MQTT_BASE_PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -48,9 +49,6 @@ CONF_AUX_COMMAND_TOPIC = 'aux_command_topic'
 CONF_AUX_STATE_TOPIC = 'aux_state_topic'
 
 CONF_CURRENT_TEMPERATURE_TOPIC = 'current_temperature_topic'
-
-CONF_PAYLOAD_ON = 'payload_on'
-CONF_PAYLOAD_OFF = 'payload_off'
 
 CONF_FAN_MODE_LIST = 'fan_modes'
 CONF_MODE_LIST = 'modes'

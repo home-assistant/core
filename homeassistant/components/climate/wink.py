@@ -18,14 +18,12 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     TEMP_CELSIUS, STATE_ON,
     STATE_OFF, STATE_UNKNOWN)
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
+                                          SPEED_HIGH)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['wink']
-
-SPEED_LOW = 'low'
-SPEED_MEDIUM = 'medium'
-SPEED_HIGH = 'high'
 
 HA_STATE_TO_WINK = {STATE_AUTO: 'auto',
                     STATE_ECO: 'eco',
