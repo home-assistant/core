@@ -465,7 +465,6 @@ omit =
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
     homeassistant/components/sensor/citybikes.py
-    homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cert_expiry.py
     homeassistant/components/sensor/comed_hourly_pricing.py
     homeassistant/components/sensor/cpuspeed.py
