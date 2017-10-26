@@ -578,7 +578,7 @@ class TestInfluxDB(unittest.TestCase):
         mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_component_override_measurement(self, mock_client):
-        """Test the event listener with overrided measurements."""
+        """Test the event listener with overridden measurements."""
         config = {
             'influxdb': {
                 'host': 'host',

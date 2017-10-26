@@ -15,7 +15,7 @@ DOWNLOAD_URL = ('{}/archive/'
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'requests==2.14.2',
+    'requests==2.18.4',
     'pyyaml>=3.11,<4',
     'pytz>=2017.02',
     'pip>=8.0.3',
@@ -23,9 +23,10 @@ REQUIRES = [
     'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.2.5',
-    'async_timeout==1.3.0',
+    'async_timeout==2.0.0',
     'chardet==3.0.4',
     'astral==1.4',
+    'certifi>=2017.4.17',
 ]
 
 setup(

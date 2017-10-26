@@ -47,7 +47,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
 
     @property
     def name(self):
-        """Return the the name of the node."""
+        """Return the name of the node."""
         return self._name
 
     @asyncio.coroutine

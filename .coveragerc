@@ -52,7 +52,7 @@ omit =
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
-	
+
 	homeassistant/components/doorbird.py
 	homeassistant/components/*/doorbird.py
 
@@ -149,6 +149,9 @@ omit =
     homeassistant/components/rachio.py
     homeassistant/components/*/rachio.py
 
+    homeassistant/components/raincloud.py
+    homeassistant/components/*/raincloud.py
+
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
 
@@ -161,8 +164,14 @@ omit =
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
 
+    homeassistant/components/satel_integra.py
+    homeassistant/components/*/satel_integra.py
+
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
+
+    homeassistant/components/skybell.py
+    homeassistant/components/*/skybell.py
 
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
@@ -176,7 +185,13 @@ omit =
     homeassistant/components/tesla.py
     homeassistant/components/*/tesla.py
 
+    homeassistant/components/thethingsnetwork.py
+    homeassistant/components/*/thethingsnetwork.py
+
     homeassistant/components/*/thinkingcleaner.py
+
+    homeassistant/components/toon.py
+    homeassistant/components/*/toon.py
 
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
@@ -208,7 +223,7 @@ omit =
     homeassistant/components/wemo.py
     homeassistant/components/*/wemo.py
 
-    homeassistant/components/wink.py
+    homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
     homeassistant/components/xiaomi_aqara.py
@@ -257,7 +272,10 @@ omit =
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/onvif.py
+    homeassistant/components/camera/ring.py
     homeassistant/components/camera/synology.py
+    homeassistant/components/camera/yi.py
+    homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
     homeassistant/components/climate/heatmiser.py
@@ -308,6 +326,7 @@ omit =
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/fan/mqtt.py
+    homeassistant/components/fan/xiaomi_miio.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/ifttt.py
@@ -396,6 +415,7 @@ omit =
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/ciscospark.py
     homeassistant/components/notify/clicksend.py
+    homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/discord.py
     homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
@@ -417,6 +437,7 @@ omit =
     homeassistant/components/notify/pushover.py
     homeassistant/components/notify/pushsafer.py
     homeassistant/components/notify/rest.py
+    homeassistant/components/notify/rocketchat.py
     homeassistant/components/notify/sendgrid.py
     homeassistant/components/notify/simplepush.py
     homeassistant/components/notify/slack.py
@@ -452,6 +473,7 @@ omit =
     homeassistant/components/sensor/cups.py
     homeassistant/components/sensor/currencylayer.py
     homeassistant/components/sensor/darksky.py
+    homeassistant/components/sensor/deluge.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/dnsip.py
@@ -486,6 +508,7 @@ omit =
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
+    homeassistant/components/sensor/irish_rail_transport.py
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
@@ -519,6 +542,7 @@ omit =
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
+    homeassistant/components/sensor/serial.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/shodan.py
     homeassistant/components/sensor/skybeacon.py
@@ -535,16 +559,20 @@ omit =
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
+    homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/travisci.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
+    homeassistant/components/sensor/whois.py
     homeassistant/components/sensor/worldtidesinfo.py
+    homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
@@ -554,6 +582,7 @@ omit =
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/broadlink.py
+    homeassistant/components/switch/deluge.py
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
@@ -566,17 +595,21 @@ omit =
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pilight.py
     homeassistant/components/switch/pulseaudio_loopback.py
+    homeassistant/components/switch/rainbird.py
     homeassistant/components/switch/rainmachine.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
+    homeassistant/components/switch/snmp.py
     homeassistant/components/switch/tplink.py
+    homeassistant/components/switch/telnet.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
+    homeassistant/components/switch/xiaomi_miio.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
+    homeassistant/components/tts/microsoft.py
     homeassistant/components/tts/picotts.py
-    homeassistant/components/upnp.py
     homeassistant/components/vacuum/roomba.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py

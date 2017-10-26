@@ -130,7 +130,7 @@ class InsteonLocalSwitchDevice(SwitchDevice):
 
     @property
     def name(self):
-        """Return the the name of the node."""
+        """Return the name of the node."""
         return self.node.deviceName
 
     @property

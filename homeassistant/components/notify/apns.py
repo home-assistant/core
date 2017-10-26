@@ -111,7 +111,7 @@ class ApnsDevice(object):
         return self.device_disabled
 
     def disable(self):
-        """Disable the device from recieving notifications."""
+        """Disable the device from receiving notifications."""
         self.device_disabled = True
 
     def __eq__(self, other):

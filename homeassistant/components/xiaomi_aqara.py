@@ -6,10 +6,9 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_MAC)
+                                 CONF_MAC, CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
-                '0.3.2.zip#PyXiaomiGateway==0.3.2']
+REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
@@ -25,20 +24,37 @@ def _validate_conf(config):
     """Validate a list of devices definitions."""
     res_config = []
     for gw_conf in config:
+        for _conf in gw_conf.keys():
+            if _conf not in [CONF_MAC, CONF_HOST, CONF_PORT, 'key']:
+                raise vol.Invalid('{} is not a valid config parameter'.
+                                  format(_conf))
+
         res_gw_conf = {'sid': gw_conf.get(CONF_MAC)}
         if res_gw_conf['sid'] is not None:
             res_gw_conf['sid'] = res_gw_conf['sid'].replace(":", "").lower()
             if len(res_gw_conf['sid']) != 12:
                 raise vol.Invalid('Invalid mac address', gw_conf.get(CONF_MAC))
         key = gw_conf.get('key')
+
         if key is None:
             _LOGGER.warning(
                 'Gateway Key is not provided.'
                 ' Controlling gateway device will not be possible.')
         elif len(key) != 16:
-            raise vol.Invalid('Invalid key %s.'
-                              ' Key must be 16 characters', key)
+            raise vol.Invalid('Invalid key {}.'
+                              ' Key must be 16 characters'.format(key))
         res_gw_conf['key'] = key
+
+        host = gw_conf.get(CONF_HOST)
+        if host is not None:
+            res_gw_conf[CONF_HOST] = host
+            res_gw_conf['port'] = gw_conf.get(CONF_PORT, 9898)
+
+            _LOGGER.warning(
+                'Static address (%s:%s) of the gateway provided. '
+                'Discovery of this host will be skipped.',
+                res_gw_conf[CONF_HOST], res_gw_conf[CONF_PORT])
+
         res_config.append(res_gw_conf)
     return res_config
 
@@ -89,7 +105,7 @@ def setup(hass, config):
         _LOGGER.error("No gateway discovered")
         return False
     hass.data[PY_XIAOMI_GATEWAY].listen()
-    _LOGGER.debug("Listening for broadcast")
+    _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
     for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)

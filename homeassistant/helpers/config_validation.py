@@ -1,5 +1,6 @@
 """Helpers for config validation using voluptuous."""
-from datetime import timedelta, datetime as datetime_sys
+from datetime import (timedelta, datetime as datetime_sys,
+                      time as time_sys, date as date_sys)
 import os
 import re
 from urllib.parse import urlparse
@@ -57,6 +58,21 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
+def has_at_least_one_key_value(*items: list) -> Callable:
+    """Validate that at least one (key, value) pair exists."""
+    def validate(obj: Dict) -> Dict:
+        """Test (key,value) exist in dict."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        for item in obj.items():
+            if item in items:
+                return obj
+        raise vol.Invalid('must contain one of {}.'.format(str(items)))
+
+    return validate
+
+
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
     if isinstance(value, str):
@@ -89,6 +105,19 @@ def isfile(value: Any) -> str:
     if not os.access(file_in, os.R_OK):
         raise vol.Invalid('file not readable')
     return file_in
+
+
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing dir."""
+    if value is None:
+        raise vol.Invalid('not a directory')
+    dir_in = os.path.expanduser(str(value))
+
+    if not os.path.isdir(dir_in):
+        raise vol.Invalid('not a directory')
+    if not os.access(dir_in, os.R_OK):
+        raise vol.Invalid('directory not readable')
+    return dir_in
 
 
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
@@ -142,6 +171,38 @@ time_period_dict = vol.All(
     has_at_least_one_key('days', 'hours', 'minutes',
                          'seconds', 'milliseconds'),
     lambda value: timedelta(**value))
+
+
+def time(value) -> time_sys:
+    """Validate and transform a time."""
+    if isinstance(value, time_sys):
+        return value
+
+    try:
+        time_val = dt_util.parse_time(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if time_val is None:
+        raise vol.Invalid('Invalid time specified: {}'.format(value))
+
+    return time_val
+
+
+def date(value) -> date_sys:
+    """Validate and transform a date."""
+    if isinstance(value, date_sys):
+        return value
+
+    try:
+        date_val = dt_util.parse_date(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if date_val is None:
+        raise vol.Invalid("Could not parse date")
+
+    return date_val
 
 
 def time_period_str(value: str) -> timedelta:
@@ -295,16 +356,6 @@ def template_complex(value):
         return value
 
     return template(value)
-
-
-def time(value):
-    """Validate time."""
-    time_val = dt_util.parse_time(value)
-
-    if time_val is None:
-        raise vol.Invalid('Invalid time specified: {}'.format(value))
-
-    return time_val
 
 
 def datetime(value):

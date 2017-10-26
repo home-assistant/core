@@ -406,16 +406,9 @@ def async_setup(hass, config):
         update_tasks = []
         for player in target_players:
             yield from getattr(player, method['method'])(**params)
-
-        for player in target_players:
             if not player.should_poll:
                 continue
-
-            update_coro = player.async_update_ha_state(True)
-            if hasattr(player, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(player.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
@@ -637,11 +630,11 @@ class MediaPlayerDevice(Entity):
         return self.hass.async_add_job(self.set_volume_level, volume)
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         raise NotImplementedError()
 
     def async_media_play(self):
-        """Send play commmand.
+        """Send play command.
 
         This method must be run in the event loop and returns a coroutine.
         """

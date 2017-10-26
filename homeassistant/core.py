@@ -30,9 +30,9 @@ from homeassistant.const import (
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED, __version__)
-from homeassistant.loader import Components
+from homeassistant import loader
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
+    HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
@@ -63,6 +63,11 @@ def split_entity_id(entity_id: str) -> List[str]:
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format."""
     return ENTITY_ID_PATTERN.match(entity_id) is not None
+
+
+def valid_state(state: str) -> bool:
+    """Test if an state is valid."""
+    return len(state) < 256
 
 
 def callback(func: Callable[..., None]) -> Callable[..., None]:
@@ -129,7 +134,8 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
-        self.components = Components(self)
+        self.components = loader.Components(self)
+        self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
         self.data = {}
         self.state = CoreState.not_running
@@ -218,7 +224,7 @@ class HomeAssistant(object):
         else:
             task = self.loop.run_in_executor(None, target, *args)
 
-        # If a task is sheduled
+        # If a task is scheduled
         if self._track_task and task is not None:
             self._pending_tasks.append(task)
 
@@ -519,13 +525,20 @@ class State(object):
     def __init__(self, entity_id, state, attributes=None, last_changed=None,
                  last_updated=None):
         """Initialize a new state."""
+        state = str(state)
+
         if not valid_entity_id(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
                 "Format should be <domain>.<object_id>").format(entity_id))
 
+        if not valid_state(state):
+            raise InvalidStateError((
+                "Invalid state encountered for entity id: {}. "
+                "State max length is 255 characters.").format(entity_id))
+
         self.entity_id = entity_id.lower()
-        self.state = str(state)
+        self.state = state
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
@@ -914,7 +927,7 @@ class ServiceRegistry(object):
         Waits a maximum of SERVICE_CALL_LIMIT.
 
         If blocking = True, will return boolean if service executed
-        succesfully within SERVICE_CALL_LIMIT.
+        successfully within SERVICE_CALL_LIMIT.
 
         This method will fire an event to call the service.
         This event will be picked up by this ServiceRegistry and any
@@ -937,7 +950,7 @@ class ServiceRegistry(object):
         Waits a maximum of SERVICE_CALL_LIMIT.
 
         If blocking = True, will return boolean if service executed
-        succesfully within SERVICE_CALL_LIMIT.
+        successfully within SERVICE_CALL_LIMIT.
 
         This method will fire an event to call the service.
         This event will be picked up by this ServiceRegistry and any

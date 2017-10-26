@@ -13,17 +13,20 @@ import voluptuous as vol
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_to_rgb)
+    color_temperature_to_rgb,
+    color_RGB_to_xy,
+    color_xy_brightness_to_RGB)
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
-    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+    ATTR_FLASH, ATTR_XY_COLOR, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
+    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_XY_COLOR,
+    SUPPORT_TRANSITION,
     SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_EFFECT,
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.3.2']
+REQUIREMENTS = ['yeelight==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,8 +54,13 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_RGB_COLOR |
+                        SUPPORT_XY_COLOR |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
+
+YEELIGHT_MIN_KELVIN = YEELIGHT_MAX_KELVIN = 2700
+YEELIGHT_RGB_MIN_KELVIN = 1700
+YEELIGHT_RGB_MAX_KELVIN = 6500
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -150,6 +158,7 @@ class YeelightLight(Light):
         self._color_temp = None
         self._is_on = None
         self._rgb = None
+        self._xy = None
 
     @property
     def available(self) -> bool:
@@ -191,6 +200,20 @@ class YeelightLight(Light):
         """Return the brightness of this light between 1..255."""
         return self._brightness
 
+    @property
+    def min_mireds(self):
+        """Return minimum supported color temperature."""
+        if self.supported_features & SUPPORT_COLOR_TEMP:
+            return kelvin_to_mired(YEELIGHT_RGB_MAX_KELVIN)
+        return kelvin_to_mired(YEELIGHT_MAX_KELVIN)
+
+    @property
+    def max_mireds(self):
+        """Return maximum supported color temperature."""
+        if self.supported_features & SUPPORT_COLOR_TEMP:
+            return kelvin_to_mired(YEELIGHT_RGB_MIN_KELVIN)
+        return kelvin_to_mired(YEELIGHT_MIN_KELVIN)
+
     def _get_rgb_from_properties(self):
         rgb = self._properties.get('rgb', None)
         color_mode = self._properties.get('color_mode', None)
@@ -217,6 +240,11 @@ class YeelightLight(Light):
     def rgb_color(self) -> tuple:
         """Return the color property."""
         return self._rgb
+
+    @property
+    def xy_color(self) -> tuple:
+        """Return the XY color value."""
+        return self._xy
 
     @property
     def _properties(self) -> dict:
@@ -265,6 +293,12 @@ class YeelightLight(Light):
                 self._color_temp = kelvin_to_mired(int(temp_in_k))
 
             self._rgb = self._get_rgb_from_properties()
+
+            if self._rgb:
+                xyb = color_RGB_to_xy(*self._rgb)
+                self._xy = (xyb[0], xyb[1])
+            else:
+                self._xy = None
 
             self._available = True
         except yeelight.BulbException as ex:
@@ -392,6 +426,7 @@ class YeelightLight(Light):
         rgb = kwargs.get(ATTR_RGB_COLOR)
         flash = kwargs.get(ATTR_FLASH)
         effect = kwargs.get(ATTR_EFFECT)
+        xy_color = kwargs.get(ATTR_XY_COLOR)
 
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
@@ -409,6 +444,9 @@ class YeelightLight(Light):
             except yeelight.BulbException as ex:
                 _LOGGER.error("Unable to turn on music mode,"
                               "consider disabling it: %s", ex)
+        if xy_color and brightness:
+            rgb = color_xy_brightness_to_RGB(xy_color[0], xy_color[1],
+                                             brightness)
 
         try:
             # values checked for none in methods
@@ -434,7 +472,10 @@ class YeelightLight(Light):
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
         import yeelight
+        duration = int(self.config[CONF_TRANSITION])  # in ms
+        if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
+            duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
         try:
-            self._bulb.turn_off()
+            self._bulb.turn_off(duration=duration)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb off: %s", ex)

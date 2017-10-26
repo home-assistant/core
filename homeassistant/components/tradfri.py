@@ -16,7 +16,11 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['pytradfri==2.2']
+REQUIREMENTS = ['pytradfri==3.0.2',
+                'DTLSSocket==0.1.3',
+                'https://github.com/chrysn/aiocoap/archive/'
+                '3286f48f0b949901c8b5c04c0719dc54ab63d431.zip'
+                '#aiocoap==0.3']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
@@ -111,16 +115,21 @@ def async_setup(hass, config):
 def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import Gateway, RequestError
-    from pytradfri.api.libcoap_api import api_factory
+    try:
+        from pytradfri.api.aiocoap_api import api_factory
+    except ImportError:
+        _LOGGER.exception("Looks like something isn't installed!")
+        return False
 
     try:
-        api = api_factory(host, key)
+        api = yield from api_factory(host, key, loop=hass.loop)
     except RequestError:
+        _LOGGER.exception("Tradfri setup failed.")
         return False
 
     gateway = Gateway()
-    # pylint: disable=no-member
-    gateway_id = api(gateway.get_gateway_info()).id
+    gateway_info_result = yield from api(gateway.get_gateway_info())
+    gateway_id = gateway_info_result.id
     hass.data.setdefault(KEY_API, {})
     hass.data.setdefault(KEY_GATEWAY, {})
     gateways = hass.data[KEY_GATEWAY]
@@ -137,6 +146,8 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     gateways[gateway_id] = gateway
     hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {'gateway': gateway_id}, hass_config))
+    hass.async_add_job(discovery.async_load_platform(
+        hass, 'sensor', DOMAIN, {'gateway': gateway_id}, hass_config))
     return True
 
 

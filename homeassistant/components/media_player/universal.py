@@ -422,12 +422,12 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """
         return self._async_call_service(SERVICE_TURN_OFF, allow_override=True)
 
-    def async_mute_volume(self, is_volume_muted):
+    def async_mute_volume(self, mute):
         """Mute the volume.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        data = {ATTR_MEDIA_VOLUME_MUTED: is_volume_muted}
+        data = {ATTR_MEDIA_VOLUME_MUTED: mute}
         return self._async_call_service(
             SERVICE_VOLUME_MUTE, data, allow_override=True)
 
@@ -441,7 +441,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             SERVICE_VOLUME_SET, data, allow_override=True)
 
     def async_media_play(self):
-        """Send play commmand.
+        """Send play command.
 
         This method must be run in the event loop and returns a coroutine.
         """

@@ -18,7 +18,7 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
                                  STATE_PLAYING, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.4.0']
+REQUIREMENTS = ['rxv==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -214,7 +214,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._volume = (self._receiver.volume / 100) + 1
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         self._call_playback_function(self._receiver.play, "play")
 
     def media_pause(self):

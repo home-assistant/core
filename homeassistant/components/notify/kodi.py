@@ -53,7 +53,7 @@ def async_get_service(hass, config, discovery_info=None):
     if host.startswith('http://') or host.startswith('https://'):
         host = host.lstrip('http://').lstrip('https://')
         _LOGGER.warning(
-            "Kodi host name should no longer conatin http:// See updated "
+            "Kodi host name should no longer contain http:// See updated "
             "definitions here: "
             "https://home-assistant.io/components/media_player.kodi/")
 

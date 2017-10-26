@@ -122,7 +122,7 @@ def setup(hass, config):
                     _LOGGER.info("Downloading of %s done", url)
 
             except requests.exceptions.ConnectionError:
-                _LOGGER.exception("ConnectionError occured for %s", url)
+                _LOGGER.exception("ConnectionError occurred for %s", url)
 
                 # Remove file if we started downloading but failed
                 if final_path and os.path.isfile(final_path):

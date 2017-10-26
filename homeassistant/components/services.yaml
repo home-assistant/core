@@ -1,3 +1,5 @@
+
+
 foursquare:
   checkin:
     description: Check a user into a Foursquare venue
@@ -39,91 +41,6 @@ foursquare:
         description: Vertical accuracy of the user's location, in meters.
         example: 1
 
-group:
-  reload:
-    description: "Reload group configuration."
-
-  set_visibility:
-    description: Hide or show a group
-
-    fields:
-      entity_id:
-        description: Name(s) of entities to set value
-        example: 'group.travel'
-
-      visible:
-        description: True if group should be shown or False if it should be hidden.
-        example: True
-
-  set:
-    description: Create/Update a user group
-
-    fields:
-      object_id:
-        description: Group id and part of entity id
-        example: 'test_group'
-
-      name:
-        description: Name of group
-        example: 'My test group'
-
-      view:
-        description: Boolean for if the group is a view
-        example: True
-
-      icon:
-        description: Name of icon for the group
-        example: 'mdi:camera'
-
-      control:
-        description: Value for control the group control
-        example: 'hidden'
-
-      visible:
-        description: If the group is visible on UI
-        example: True
-
-      entities:
-        description: List of all members in the group. Not compatible with 'delta'
-        example: domain.entity_id1, domain.entity_id2
-
-      add_entities:
-        description: List of members they will change on group listening.
-        example: domain.entity_id1, domain.entity_id2
-
-  remove:
-    description: Remove a user group
-
-    fields:
-      object_id:
-        description: Group id and part of entity id
-        example: 'test_group'
-
-persistent_notification:
-  create:
-    description: Show a notification in the frontend
-
-    fields:
-      message:
-        description: Message body of the notification. [Templates accepted]
-        example: Please check your configuration.yaml.
-
-      title:
-        description: Optional title for your notification. [Optional, Templates accepted]
-        example: Test notification
-
-      notification_id:
-        description: Target ID of the notification, will replace a notification with the same Id. [Optional]
-        example: 1234
-        
-  dismiss:
-    description: Remove a notification from the frontend
-
-    fields:
-      notification_id:
-        description: Target ID of the notification, which should be removed. [Required]
-        example: 1234
-
 homematic:
   virtualkey:
     description: Press a virtual key from CCU/Homegear or simulate keypress
@@ -162,7 +79,7 @@ homematic:
         example: 1
 
   set_dev_value:
-    description: Set a device property on RPC XML inteface.
+    description: Set a device property on RPC XML interface.
 
     fields:
       address:
@@ -333,7 +250,7 @@ hdmi_cec:
     description: Select HDMI device.
     fields:
       device:
-        description: Addres of device to select. Can be entity_id, physical address or alias from confuguration.
+        description: Address of device to select. Can be entity_id, physical address or alias from confuguration.
         example: '"switch.hdmi_1" or "1.1.0.0" or "01:10"'
 
   power_on:
@@ -347,21 +264,21 @@ ffmpeg:
     description: Send a start command to a ffmpeg based sensor.
     fields:
       entity_id:
-        description: Name(s) of entites that will start. Platform dependent.
+        description: Name(s) of entities that will start. Platform dependent.
         example: 'binary_sensor.ffmpeg_noise'
 
   stop:
     description: Send a stop command to a ffmpeg based sensor.
     fields:
       entity_id:
-        description: Name(s) of entites that will stop. Platform dependent.
+        description: Name(s) of entities that will stop. Platform dependent.
         example: 'binary_sensor.ffmpeg_noise'
 
   restart:
     description: Send a restart command to a ffmpeg based sensor.
     fields:
       entity_id:
-        description: Name(s) of entites that will restart. Platform dependent.
+        description: Name(s) of entities that will restart. Platform dependent.
         example: 'binary_sensor.ffmpeg_noise'
 
 logger:
@@ -571,3 +488,113 @@ counter:
       entity_id:
         description: Entity id of the counter to reset.
         example: 'counter.count0'
+
+abode:
+  change_setting:
+    description: Change an Abode system setting.
+
+    fields:
+      setting:
+        description: Setting to change.
+        example: 'beeper_mute'
+
+      value:
+        description: Value of the setting.
+        example: '1'
+
+  capture_image:
+    description: Request a new image capture from a camera device.
+
+    fields:
+      entity_id:
+        description: Entity id of the camera to request an image.
+        example: 'camera.downstairs_motion_camera'
+
+  trigger_quick_action:
+    description: Trigger an Abode quick action.
+
+    fields:
+      entity_id:
+        description: Entity id of the quick action to trigger.
+        example: 'binary_sensor.home_quick_action'
+
+input_boolean:
+  toggle:
+    description: Toggles an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to toggle
+        example: 'input_boolean.notify_alerts'
+
+  turn_off:
+    description: Turns OFF an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to turn off
+        example: 'input_boolean.notify_alerts'
+
+  turn_on:
+    description: Turns ON an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to turn on
+        example: 'input_boolean.notify_alerts'
+
+input_number:
+  set_value:
+    description: Set the value of an input_number entity.
+
+    fields:
+      entity_id: 
+        description: Entity id of the input_number to set the new value.
+        example: 'input_number.threshold'
+      value:
+        description: The target value the entity should be set to.
+        example: 42
+
+  increment:
+    description: Increment the value of an input_number entity by its stepping.
+
+    fields:
+      entity_id: 
+        description: Entity id of the input_number the should be incremented.
+        example: 'input_number.threshold'
+
+  decrement:
+    description: Decrement the value of an input_number entity by its stepping.
+
+    fields:
+      entity_id: 
+        description: Entity id of the input_number the should be decremented.
+        example: 'input_number.threshold'
+
+homeassistant:
+  check_config:
+    description: Check the Home Assistant configuration files for errors. Errors will be displayed in the Home Assistant log.
+  reload_core_config:
+    description: Reload the core configuration.
+  restart:
+    description: Restart the Home Assistant service. It is normal to get a "Failed to call service homeassistant/restart" message.
+  stop:
+    description: Stop the Home Assistant service. It is normal to get a "Failed to call service homeassistant/stop" message.
+  toggle:
+    description: Generic service to toggle devices on/off under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
+    fields:
+      entity_id:
+        description: The entity_id of the device to toggle on/off
+        example: light.living_room
+  turn_on:
+    description: Generic service to turn devices on under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
+    fields:
+      entity_id:
+        description: The entity_id of the device to turn on
+        example: light.living_room
+  turn_off:
+    description: Generic service to turn devices off under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
+    fields:
+      entity_id:
+        description: The entity_id of the device to turn off
+        example: light.living_room

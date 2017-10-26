@@ -3,7 +3,6 @@
 import logging
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components import sun
 import homeassistant.core as ha
@@ -32,10 +31,8 @@ class TestComponentLogbook(unittest.TestCase):
         init_recorder_component(self.hass)  # Force an in memory DB
         mock_http_component(self.hass)
         self.hass.config.components |= set(['frontend', 'recorder', 'api'])
-        with patch('homeassistant.components.logbook.'
-                   'register_built_in_panel'):
-            assert setup_component(self.hass, logbook.DOMAIN,
-                                   self.EMPTY_CONFIG)
+        assert setup_component(self.hass, logbook.DOMAIN,
+                               self.EMPTY_CONFIG)
         self.hass.start()
 
     def tearDown(self):
@@ -415,7 +412,7 @@ class TestComponentLogbook(unittest.TestCase):
     def test_home_assistant_start_stop_grouped(self):
         """Test if HA start and stop events are grouped.
 
-        Events that are occuring in the same minute.
+        Events that are occurring in the same minute.
         """
         entries = list(logbook.humanify((
             ha.Event(EVENT_HOMEASSISTANT_STOP),

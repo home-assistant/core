@@ -21,7 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mirobo==0.2.0']
+REQUIREMENTS = ['python-miio==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +48,12 @@ FAN_SPEEDS = {
 
 ATTR_CLEANING_TIME = 'cleaning_time'
 ATTR_DO_NOT_DISTURB = 'do_not_disturb'
+ATTR_MAIN_BRUSH_LEFT = 'main_brush_left'
+ATTR_SIDE_BRUSH_LEFT = 'side_brush_left'
+ATTR_FILTER_LEFT = 'filter_left'
+ATTR_CLEANING_COUNT = 'cleaning_count'
+ATTR_CLEANED_TOTAL_AREA = 'total_cleaned_area'
+ATTR_CLEANING_TOTAL_TIME = 'total_cleaning_time'
 ATTR_ERROR = 'error'
 ATTR_RC_DURATION = 'duration'
 ATTR_RC_ROTATION = 'rotation'
@@ -147,6 +153,9 @@ class MiroboVacuum(VacuumDevice):
         self._is_on = False
         self._available = False
 
+        self.consumable_state = None
+        self.clean_history = None
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -194,8 +203,24 @@ class MiroboVacuum(VacuumDevice):
                     STATE_ON if self.vacuum_state.dnd else STATE_OFF,
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
-                ATTR_CLEANING_TIME: str(self.vacuum_state.clean_time),
-                ATTR_CLEANED_AREA: round(self.vacuum_state.clean_area, 2)})
+                ATTR_CLEANING_TIME: int(
+                    self.vacuum_state.clean_time.total_seconds()
+                    / 60),
+                ATTR_CLEANED_AREA: int(self.vacuum_state.clean_area),
+                ATTR_CLEANING_COUNT: int(self.clean_history.count),
+                ATTR_CLEANED_TOTAL_AREA: int(self.clean_history.total_area),
+                ATTR_CLEANING_TOTAL_TIME: int(
+                    self.clean_history.total_duration.total_seconds()
+                    / 60),
+                ATTR_MAIN_BRUSH_LEFT: int(
+                    self.consumable_state.main_brush_left.total_seconds()
+                    / 3600),
+                ATTR_SIDE_BRUSH_LEFT: int(
+                    self.consumable_state.side_brush_left.total_seconds()
+                    / 3600),
+                ATTR_FILTER_LEFT: int(
+                    self.consumable_state.filter_left.total_seconds()
+                    / 3600)})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
 
@@ -338,19 +363,17 @@ class MiroboVacuum(VacuumDevice):
             self._vacuum.manual_control_once,
             velocity=velocity, rotation=rotation, duration=duration)
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Fetch state from the device."""
         from mirobo import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._vacuum.status)
-            _LOGGER.debug("Got new state from the vacuum: %s", state.data)
+            state = self._vacuum.status()
             self.vacuum_state = state
+            self.consumable_state = self._vacuum.consumable_status()
+            self.clean_history = self._vacuum.clean_history()
             self._is_on = state.is_on
             self._available = True
         except OSError as exc:
             _LOGGER.error("Got OSError while fetching the state: %s", exc)
-            # self._available = False
         except DeviceException as exc:
             _LOGGER.warning("Got exception while fetching the state: %s", exc)
-            # self._available = False
