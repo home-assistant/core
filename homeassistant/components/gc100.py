@@ -24,7 +24,6 @@ DATA_GC100 = 'gc100'
 # pylint: disable=import-self
 def setup(hass, base_config):
     """Set up the gc100 component."""
-    sys.path.append('/home/homeassistant/.homeassistant/custom_components')
     import gc100
 
     config = base_config[DOMAIN]
