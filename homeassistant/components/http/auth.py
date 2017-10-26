@@ -15,6 +15,7 @@ DATA_API_PASSWORD = 'api_password'
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @middleware
 @asyncio.coroutine
 def auth_middleware(request, handler):
@@ -24,7 +25,7 @@ def auth_middleware(request, handler):
         request[KEY_AUTHENTICATED] = True
         return handler(request)
 
-    # Check authentication        
+    # Check authentication    
     authenticated = False
 
     if (HTTP_HEADER_HA_AUTH in request.headers and
