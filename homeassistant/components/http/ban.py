@@ -42,7 +42,7 @@ def ban_middleware(request, handler):
 
     if KEY_BANNED_IPS not in request.app:
         hass = request.app['hass']
-        app[KEY_BANNED_IPS] = yield from hass.async_add_job(
+        request.app[KEY_BANNED_IPS] = yield from hass.async_add_job(
             load_ip_bans_config, hass.config.path(IP_BANS_FILE))
 
     # Verify if IP is not banned
