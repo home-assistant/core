@@ -346,7 +346,7 @@ class HomeAssistantWSGI(object):
             yield from self.server.wait_closed()
         yield from self.app.shutdown()
         if self._handler:
-            yield from self._handler.shutdown(60.0)
+            yield from self._handler.shutdown(10)
         yield from self.app.cleanup()
 
 
