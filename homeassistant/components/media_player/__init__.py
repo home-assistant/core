@@ -965,7 +965,7 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=500)
 
-        headers = { hdrs.CACHE_CONTROL: 'max-age=3600' }
+        headers = {hdrs.CACHE_CONTROL: 'max-age=3600'}
         return web.Response(
             body=data,
             content_type=content_type,
