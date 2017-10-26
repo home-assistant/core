@@ -761,4 +761,4 @@ class WUndergroundData(object):
                 self.data = result
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
-            self.data = None
+            pass
