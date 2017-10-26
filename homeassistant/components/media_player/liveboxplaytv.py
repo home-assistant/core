@@ -99,9 +99,10 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                     # Media progress info
                     self._media_duration = \
                         pyteleloisirs.get_program_duration(program)
-                    self._media_remaining_time = \
-                        pyteleloisirs.get_remaining_time(program)
-                    self._media_last_updated = dt_util.utcnow()
+                    rtime = pyteleloisirs.get_remaining_time(program)
+                    if rtime != self._media_remaining_time:
+                        self._media_remaining_time = rtime
+                        self._media_last_updated = dt_util.utcnow()
                 # Set media image to current program if a thumbnail is
                 # available. Otherwise we'll use the channel's image.
                 img_size = 800
