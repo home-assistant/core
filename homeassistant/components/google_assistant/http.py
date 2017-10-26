@@ -26,7 +26,9 @@ from .const import (
     DEFAULT_EXPOSED_DOMAINS,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
-    ATTR_GOOGLE_ASSISTANT)
+    ATTR_GOOGLE_ASSISTANT,
+    CONF_AGENT_USER_ID
+    )
 from .smart_home import entity_to_device, query_device, determine_service
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +50,7 @@ class GoogleAssistantView(HomeAssistantView):
                                          DEFAULT_EXPOSE_BY_DEFAULT)
         self.exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS,
                                        DEFAULT_EXPOSED_DOMAINS)
+        self.agent_user_id = cfg.get(CONF_AGENT_USER_ID)
 
     def is_entity_exposed(self, entity) -> bool:
         """Determine if an entity should be exposed to Google Assistant."""
@@ -85,7 +88,7 @@ class GoogleAssistantView(HomeAssistantView):
             devices.append(device)
 
         return self.json(
-            make_actions_response(request_id, {'devices': devices}))
+            make_actions_response(request_id, {'agentUserId': self.agent_user_id, 'devices': devices}))
 
     @asyncio.coroutine
     def handle_query(self,

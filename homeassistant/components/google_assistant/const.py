@@ -12,6 +12,8 @@ CONF_PROJECT_ID = 'project_id'
 CONF_ACCESS_TOKEN = 'access_token'
 CONF_CLIENT_ID = 'client_id'
 CONF_ALIASES = 'aliases'
+CONF_AGENT_USER_ID = 'agent_user_id'
+CONF_HOMEGRAPH_API_KEY = 'homegraph_api_key'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -35,3 +37,6 @@ PREFIX_TYPES = 'action.devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'
 TYPE_SWITCH = PREFIX_TYPES + 'SWITCH'
 TYPE_SCENE = PREFIX_TYPES + 'SCENE'
+
+SERVICE_REQUEST_SYNC = 'request_sync'
+REQUEST_SYNC_BASE_URL = 'https://homegraph.googleapis.com/v1/devices:requestSync?key=';
