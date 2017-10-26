@@ -22,7 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['liveboxplaytv==2.0.2']
+REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._current_program = None
         self._media_duration = None
         self._media_remaining_time = None
-        self._media_ = None
         self._media_image_url = None
         self._media_last_updated = None
 
