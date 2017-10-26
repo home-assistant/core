@@ -26,7 +26,9 @@ SERVICE_ADD_DEVICE = 'add_device'
 SERVICE_REMOVE_DEVICE = 'remove_device'
 
 XIAOMI_AQARA_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_GW_MAC): vol.All(cv.string, vol.Length(min=12, max=17))
+    vol.Required(ATTR_GW_MAC): vol.All(cv.string,
+                                       vol.Any(vol.Length(min=12, max=12),
+                                               vol.Length(min=17, max=17)))
 })
 
 SERVICE_SCHEMA_PLAY_RINGTONE = XIAOMI_AQARA_SERVICE_SCHEMA.extend({
