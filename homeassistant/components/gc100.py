@@ -6,7 +6,6 @@ https://home-assistant.io/components/gc100/
 """
 
 import logging
-import sys
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
