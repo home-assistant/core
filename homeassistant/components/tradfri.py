@@ -17,8 +17,9 @@ from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
 REQUIREMENTS = ['pytradfri==3.0.2',
-                'Cython==0.27.2',
-                'DTLSSocket==0.1.3',
+                'https://github.com/flowolf/tinydtls-cython/raw/'
+                '432c4b014936cbce655a0c0f271d16bc74602c47/DTLSSocket.tar.gz'
+                '#DTLSSocket==0.1.3',
                 'https://github.com/chrysn/aiocoap/archive/'
                 '3286f48f0b949901c8b5c04c0719dc54ab63d431.zip'
                 '#aiocoap==0.3']
