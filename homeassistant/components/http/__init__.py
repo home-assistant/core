@@ -358,19 +358,21 @@ class HomeAssistantView(object):
     requires_auth = True  # Views inheriting from this class can override this
 
     # pylint: disable=no-self-use
-    def json(self, result, status_code=200):
+    def json(self, result, status_code=200, headers=None):
         """Return a JSON response."""
         msg = json.dumps(
             result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
         return web.Response(
-            body=msg, content_type=CONTENT_TYPE_JSON, status=status_code)
+            body=msg, content_type=CONTENT_TYPE_JSON, status=status_code,
+            headers=headers)
 
-    def json_message(self, message, status_code=200, message_code=None):
+    def json_message(self, message, status_code=200, message_code=None,
+                     headers=None):
         """Return a JSON message response."""
         data = {'message': message}
         if message_code is not None:
             data['code'] = message_code
-        return self.json(data, status_code)
+        return self.json(data, status_code, headers=headers)
 
     @asyncio.coroutine
     # pylint: disable=no-self-use

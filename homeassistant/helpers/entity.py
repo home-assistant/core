@@ -71,8 +71,11 @@ class Entity(object):
     # If we reported if this entity was slow
     _slow_reported = False
 
-    # protect for multiple updates
-    _update_warn = None
+    # Protect for multiple updates
+    _update_staged = False
+
+    # Process updates pararell
+    parallel_updates = None
 
     @property
     def should_poll(self) -> bool:
@@ -197,28 +200,11 @@ class Entity(object):
 
         # update entity data
         if force_refresh:
-            if self._update_warn:
-                # Update is already in progress.
-                return
-
-            self._update_warn = self.hass.loop.call_later(
-                SLOW_UPDATE_WARNING, _LOGGER.warning,
-                "Update of %s is taking over %s seconds", self.entity_id,
-                SLOW_UPDATE_WARNING
-            )
-
             try:
-                if hasattr(self, 'async_update'):
-                    # pylint: disable=no-member
-                    yield from self.async_update()
-                else:
-                    yield from self.hass.async_add_job(self.update)
+                yield from self.async_device_update()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
-            finally:
-                self._update_warn.cancel()
-                self._update_warn = None
 
         start = timer()
 
@@ -294,6 +280,39 @@ class Entity(object):
     def async_schedule_update_ha_state(self, force_refresh=False):
         """Schedule a update ha state change task."""
         self.hass.async_add_job(self.async_update_ha_state(force_refresh))
+
+    def async_device_update(self, warning=True):
+        """Process 'update' or 'async_update' from entity.
+
+        This method is a coroutine.
+        """
+        if self._update_staged:
+            return
+        self._update_staged = True
+
+        # Process update sequential
+        if self.parallel_updates:
+            yield from self.parallel_updates.acquire()
+
+        if warning:
+            update_warn = self.hass.loop.call_later(
+                SLOW_UPDATE_WARNING, _LOGGER.warning,
+                "Update of %s is taking over %s seconds", self.entity_id,
+                SLOW_UPDATE_WARNING
+            )
+
+        try:
+            if hasattr(self, 'async_update'):
+                # pylint: disable=no-member
+                yield from self.async_update()
+            else:
+                yield from self.hass.async_add_job(self.update)
+        finally:
+            self._update_staged = False
+            if warning:
+                update_warn.cancel()
+            if self.parallel_updates:
+                self.parallel_updates.release()
 
     def remove(self) -> None:
         """Remove entity from HASS."""

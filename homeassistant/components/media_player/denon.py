@@ -225,7 +225,7 @@ class DenonDevice(MediaPlayerDevice):
         self.telnet_command('MU' + ('ON' if mute else 'OFF'))
 
     def media_play(self):
-        """Play media media player."""
+        """Play media player."""
         self.telnet_command('NS9A')
 
     def media_pause(self):

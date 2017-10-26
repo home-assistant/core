@@ -17,7 +17,6 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
-from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_HIDDEN
 from homeassistant.components.recorder.util import session_scope, execute
@@ -41,6 +40,7 @@ def last_recorder_run(hass):
 
     with session_scope(hass=hass) as session:
         res = (session.query(RecorderRuns)
+               .filter(RecorderRuns.end.isnot(None))
                .order_by(RecorderRuns.end.desc()).first())
         if res is None:
             return None
@@ -230,8 +230,8 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
     return states[0] if states else None
 
 
-# pylint: disable=unused-argument
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the history hooks."""
     filters = Filters()
     exclude = config[DOMAIN].get(CONF_EXCLUDE)
@@ -244,7 +244,8 @@ def setup(hass, config):
         filters.included_domains = include[CONF_DOMAINS]
 
     hass.http.register_view(HistoryPeriodView(filters))
-    register_built_in_panel(hass, 'history', 'history', 'mdi:poll-box')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'history', 'history', 'mdi:poll-box')
 
     return True
 
@@ -283,9 +284,10 @@ class HistoryPeriodView(HomeAssistantView):
 
         end_time = request.query.get('end_time')
         if end_time:
-            end_time = dt_util.as_utc(
-                dt_util.parse_datetime(end_time))
-            if end_time is None:
+            end_time = dt_util.parse_datetime(end_time)
+            if end_time:
+                end_time = dt_util.as_utc(end_time)
+            else:
                 return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day

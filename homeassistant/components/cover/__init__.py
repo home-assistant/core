@@ -169,21 +169,12 @@ def async_setup(hass, config):
         params.pop(ATTR_ENTITY_ID, None)
 
         # call method
+        update_tasks = []
         for cover in covers:
             yield from getattr(cover, method['method'])(**params)
-
-        update_tasks = []
-
-        for cover in covers:
             if not cover.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                cover.async_update_ha_state(True))
-            if hasattr(cover, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(cover.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

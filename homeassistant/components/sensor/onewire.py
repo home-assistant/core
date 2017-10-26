@@ -61,8 +61,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                    '[.-]*')):
                 sensor_id = os.path.split(device_folder)[1]
                 device_file = os.path.join(device_folder, 'w1_slave')
-                devs.append(OneWire(device_names.get(sensor_id, sensor_id),
-                                    device_file, 'temperature'))
+                devs.append(OneWireDirect(device_names.get(sensor_id,
+                                                           sensor_id),
+                                          device_file, 'temperature'))
     else:
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
             family_file = open(family_file_path, "r")
@@ -73,8 +74,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         os.path.split(family_file_path)[0])[1]
                     device_file = os.path.join(
                         os.path.split(family_file_path)[0], sensor_value)
-                    devs.append(OneWire(device_names.get(sensor_id, sensor_id),
-                                        device_file, sensor_key))
+                    devs.append(OneWireOWFS(device_names.get(sensor_id,
+                                                             sensor_id),
+                                            device_file, sensor_key))
 
     if devs == []:
         _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
@@ -97,9 +99,8 @@ class OneWire(Entity):
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""
-        ds_device_file = open(self._device_file, 'r')
-        lines = ds_device_file.readlines()
-        ds_device_file.close()
+        with open(self._device_file, 'r') as ds_device_file:
+            lines = ds_device_file.readlines()
         return lines
 
     @property
@@ -117,30 +118,37 @@ class OneWire(Entity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
+
+class OneWireDirect(OneWire):
+    """Implementation of an One wire Sensor directly connected to RPI GPIO."""
+
     def update(self):
         """Get the latest data from the device."""
         value = None
-        if self._device_file.startswith(DEFAULT_MOUNT_DIR):
+        lines = self._read_value_raw()
+        while lines[0].strip()[-3:] != 'YES':
+            time.sleep(0.2)
             lines = self._read_value_raw()
-            while lines[0].strip()[-3:] != 'YES':
-                time.sleep(0.2)
-                lines = self._read_value_raw()
-            equals_pos = lines[1].find('t=')
-            if equals_pos != -1:
-                value_string = lines[1][equals_pos+2:]
-                value = round(float(value_string) / 1000.0, 1)
-        else:
-            try:
-                ds_device_file = open(self._device_file, 'r')
-                value_read = ds_device_file.readlines()
-                ds_device_file.close()
-                if len(value_read) == 1:
-                    value = round(float(value_read[0]), 1)
-            except ValueError:
-                _LOGGER.warning("Invalid value read from %s",
-                                self._device_file)
-            except FileNotFoundError:
-                _LOGGER.warning(
-                    "Cannot read from sensor: %s", self._device_file)
+        equals_pos = lines[1].find('t=')
+        if equals_pos != -1:
+            value_string = lines[1][equals_pos + 2:]
+            value = round(float(value_string) / 1000.0, 1)
+        self._state = value
+
+
+class OneWireOWFS(OneWire):
+    """Implementation of an One wire Sensor through owfs."""
+
+    def update(self):
+        """Get the latest data from the device."""
+        value = None
+        try:
+            value_read = self._read_value_raw()
+            if len(value_read) == 1:
+                value = round(float(value_read[0]), 1)
+        except ValueError:
+            _LOGGER.warning("Invalid value read from %s", self._device_file)
+        except FileNotFoundError:
+            _LOGGER.warning("Cannot read from sensor: %s", self._device_file)
 
         self._state = value

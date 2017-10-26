@@ -12,6 +12,7 @@ ATTR_OPEN_SINCE = 'Open since'
 
 MOTION = 'motion'
 NO_MOTION = 'no_motion'
+ATTR_LAST_ACTION = 'last_action'
 ATTR_NO_MOTION_SINCE = 'No motion since'
 
 DENSITY = 'density'
@@ -24,13 +25,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['binary_sensor']:
             model = device['model']
-            if model == 'motion':
+            if model in ['motion', 'sensor_motion.aq2']:
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
-            elif model == 'sensor_motion.aq2':
-                devices.append(XiaomiMotionSensor(device, hass, gateway))
-            elif model == 'magnet':
-                devices.append(XiaomiDoorSensor(device, gateway))
-            elif model == 'sensor_magnet.aq2':
+            elif model in ['magnet', 'sensor_magnet.aq2']:
                 devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_wleak.aq1':
                 devices.append(XiaomiWaterLeakSensor(device, gateway))
@@ -38,10 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiSmokeSensor(device, gateway))
             elif model == 'natgas':
                 devices.append(XiaomiNatgasSensor(device, gateway))
-            elif model == 'switch':
-                devices.append(XiaomiButton(device, 'Switch', 'status',
-                                            hass, gateway))
-            elif model == 'sensor_switch.aq2':
+            elif model in ['switch', 'sensor_switch.aq2', 'sensor_switch.aq3']:
                 devices.append(XiaomiButton(device, 'Switch', 'status',
                                             hass, gateway))
             elif model == '86sw1':
@@ -327,9 +321,17 @@ class XiaomiCube(XiaomiBinarySensor):
     def __init__(self, device, hass, xiaomi_hub):
         """Initialize the Xiaomi Cube."""
         self._hass = hass
+        self._last_action = None
         self._state = False
         XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub,
                                     None, None)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {ATTR_LAST_ACTION: self._last_action}
+        attrs.update(super().device_state_attributes)
+        return attrs
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
@@ -338,6 +340,7 @@ class XiaomiCube(XiaomiBinarySensor):
                 'entity_id': self.entity_id,
                 'action_type': data['status']
             })
+            self._last_action = data['status']
 
         if 'rotate' in data:
             self._hass.bus.fire('cube_action', {
@@ -345,4 +348,6 @@ class XiaomiCube(XiaomiBinarySensor):
                 'action_type': 'rotate',
                 'action_value': float(data['rotate'].replace(",", "."))
             })
-        return False
+            self._last_action = 'rotate'
+
+        return True
