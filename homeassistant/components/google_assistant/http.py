@@ -88,7 +88,9 @@ class GoogleAssistantView(HomeAssistantView):
             devices.append(device)
 
         return self.json(
-            make_actions_response(request_id, {'agentUserId': self.agent_user_id, 'devices': devices}))
+            make_actions_response(request_id, 
+            		{'agentUserId': self.agent_user_id, 
+            		'devices': devices}))
 
     @asyncio.coroutine
     def handle_query(self,

@@ -21,7 +21,9 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     DOMAIN, CONF_PROJECT_ID, CONF_CLIENT_ID, CONF_ACCESS_TOKEN,
-    CONF_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS, CONF_AGENT_USER_ID, CONF_HOMEGRAPH_API_KEY, SERVICE_REQUEST_SYNC, REQUEST_SYNC_URL
+    CONF_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS, 
+    CONF_AGENT_USER_ID, CONF_HOMEGRAPH_API_KEY, 
+    SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL
 )
 from .auth import GoogleAssistantAuthView
 from .http import GoogleAssistantView
@@ -62,16 +64,18 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         #Code to execute request sync goes here
         websession = async_get_clientsession(hass) 
         try:
-            agent_user_id = config.get(CONF_AGENT_USER_ID);
-	    with async_timeout.timeout(5, loop=hass.loop):
-	       req = yield from session.post(REQUEST_SYNC_URL+CONF_HOMEGRAPH_API_KEY, json={'agent_user_id': agent_user_id})
-	       _LOGGER.info("Submitted request_sync request to Google")
-	    except (asyncio.TimeoutError, aiohttp.ClientError):
-	        _LOGGER.error("Could not contact Google for request_sync")
+            agent_user_id = config.get(CONF_AGENT_USER_ID)
+            with async_timeout.timeout(5, loop=hass.loop):
+                req = yield from session.post(
+                                  REQUEST_SYNC_BASE_URL+CONF_HOMEGRAPH_API_KEY, 
+                                  json={'agent_user_id': agent_user_id})
+                _LOGGER.info("Submitted request_sync request to Google")
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+                _LOGGER.error("Could not contact Google for request_sync")
         return None
     
     hass.services.async_register(
- 	    DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler,
-	    descriptions.get(SERVICE_REQUEST_SYNC))
+               DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler,
+               descriptions.get(SERVICE_REQUEST_SYNC))
 
     return True
