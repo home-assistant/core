@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 MAPPING_COMPONENT = {
     group.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     scene.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
-	script.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
+    script.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     switch.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     fan.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     light.DOMAIN: [
