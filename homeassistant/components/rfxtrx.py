@@ -245,16 +245,13 @@ def get_pt2262_cmd(device_id, data_bits):
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
-        try:
-            if (device.is_lighting4 and
-                    device.masked_id == get_pt2262_deviceid(device_id,
-                                                            device.data_bits)):
-                _LOGGER.info("rfxtrx: found matching device %s for %s",
-                             device_id,
-                             device.masked_id)
-                return device
-        except AttributeError:
-            continue
+        if (hasattr(device, 'is_lighting4') and
+                device.masked_id == get_pt2262_deviceid(device_id,
+                                                        device.data_bits)):
+            _LOGGER.info("rfxtrx: found matching device %s for %s",
+                         device_id,
+                         device.masked_id)
+            return device
     return None
 
 
@@ -262,28 +259,25 @@ def get_pt2262_device(device_id):
 def find_possible_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
-        try:
-            if device.is_lighting4 and len(dev_id) == len(device_id):
-                size = None
-                for i in range(0, len(dev_id)):
-                    if dev_id[i] != device_id[i]:
-                        break
-                    size = i
+        if hasattr(device, 'is_lighting4') and len(dev_id) == len(device_id):
+            size = None
+            for i in range(0, len(dev_id)):
+                if dev_id[i] != device_id[i]:
+                    break
+                size = i
 
-                if size is not None:
-                    size = len(dev_id) - size - 1
-                    _LOGGER.info("rfxtrx: found possible device %s for %s "
-                                 "with the following configuration:\n"
-                                 "data_bits=%d\n"
-                                 "command_on=0x%s\n"
-                                 "command_off=0x%s\n",
-                                 device_id,
-                                 dev_id,
-                                 size * 4,
-                                 dev_id[-size:], device_id[-size:])
-                    return device
-        except AttributeError:
-            continue
+            if size is not None:
+                size = len(dev_id) - size - 1
+                _LOGGER.info("rfxtrx: found possible device %s for %s "
+                             "with the following configuration:\n"
+                             "data_bits=%d\n"
+                             "command_on=0x%s\n"
+                             "command_off=0x%s\n",
+                             device_id,
+                             dev_id,
+                             size * 4,
+                             dev_id[-size:], device_id[-size:])
+                return device
 
     return None
 
