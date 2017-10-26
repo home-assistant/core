@@ -21,9 +21,8 @@ ATTR_ORDERS = 'orders'
 ATTR_DUMP_MENU = 'dump_menu'
 ATTR_ORDER_ENTITY = 'order_entity_id'
 
-DEFAULT_NAME = 'World'
-
-REQUIREMENTS = ['pizzapi', 'jsonpickle']
+COMMIT = 'ae140bd640d64ce5fdb638d5b11cfc8dae6c6587'
+REQUIREMENTS = ['https://github.com/wardcraigj/pizzapi/archive/%s.zip#pizzapi==0.0.2' % COMMIT, 'jsonpickle']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -41,15 +40,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
+    dominos = Dominos(hass, config)
 
-
-    # if config[DOMAIN].get(ATTR_DUMP_MENU):
-    #     hass.states.set('dominos.closest_menu', jsonpickle.encode(store.get_menu()))
+    if config[DOMAIN].get(ATTR_DUMP_MENU):
+        hass.states.set('dominos.closest_menu', jsonpickle.encode(dominos.store.get_menu()))
 
     for order in config[DOMAIN].get(ATTR_ORDERS):
         # _LOGGER.INFO('Creating Order')
         hass.states.set('dominos.' + order['name'].replace(" ", "_"), json.dumps(order['codes']))
-    hass.services.register(DOMAIN, 'order', Dominos(hass, config)._handle_order)
+    hass.services.register(DOMAIN, 'order', dominos.handle_order)
 
 
     # Return boolean to indicate that initialization was successfully.
@@ -65,7 +64,7 @@ class Dominos():
         self.store = self.address.closest_store()
         self.country = config[DOMAIN].get(ATTR_COUNTRY) 
 
-    def _handle_order(self, call=None):
+    def handle_order(self, call=None):
         """Handle ordering pizza."""
 
         order_key = call.data.get(ATTR_ORDER_ENTITY)
