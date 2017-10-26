@@ -4,17 +4,16 @@ Support for SNMP enabled switch.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.snmp/
 """
-
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT,
-                                 CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysnmp==4.3.10']
+REQUIREMENTS = ['pysnmp==4.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ CONF_BASEOID = 'baseoid'
 CONF_COMMUNITY = 'community'
 CONF_VERSION = 'version'
 
-DEFAULT_NAME = 'SNMPSwitch'
+DEFAULT_NAME = 'SNMP Switch'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = '161'
 DEFAULT_COMMUNITY = 'private'
@@ -40,11 +39,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
-        vol.In(SNMP_VERSIONS),
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
 })
 
 
@@ -59,9 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
 
-    add_devices([SnmpSwitch(name, host, port, community,
-                            baseoid, version, payload_on,
-                            payload_off)], True)
+    add_devices(
+        [SnmpSwitch(name, host, port, community, baseoid, version, payload_on,
+                    payload_off)], True)
 
 
 class SnmpSwitch(SwitchDevice):
