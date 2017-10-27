@@ -4,7 +4,6 @@ Support for binary sensor using GC100.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.gc100/
 """
-import logging
 
 import voluptuous as vol
 
@@ -24,7 +23,7 @@ _SENSORS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORTS): vol.All(cv.ensure_list,[_SENSORS_SCHEMA])
+    vol.Required(CONF_PORTS): vol.All(cv.ensure_list, [_SENSORS_SCHEMA])
 })
 
 

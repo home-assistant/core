@@ -29,6 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+
 # pylint: disable=no-member
 # pylint: disable=import-self
 def setup(hass, base_config):
