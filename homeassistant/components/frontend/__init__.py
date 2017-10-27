@@ -264,13 +264,10 @@ def add_manifest_json_key(key, val):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the serving of the frontend."""
-    import hass_frontend
-
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
 
-    frontend_path = hass_frontend.where()
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None
 
@@ -282,12 +279,14 @@ def async_setup(hass, config):
         sw_path = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
     else:
+        import hass_frontend
+        frontend_path = hass_frontend.where()
         sw_path = os.path.join(frontend_path, "service_worker.js")
         static_path = frontend_path
 
     hass.http.register_static_path("/service_worker.js", sw_path, False)
     hass.http.register_static_path("/robots.txt",
-                                   os.path.join(frontend_path, "robots.txt"))
+                                   os.path.join(static_path, "robots.txt"))
     hass.http.register_static_path("/static", static_path)
 
     local = hass.config.path('www')
@@ -409,8 +408,6 @@ class IndexView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, extra=None):
         """Serve the index view."""
-        import hass_frontend
-
         hass = request.app['hass']
 
         if self.use_repo:
@@ -418,13 +415,18 @@ class IndexView(HomeAssistantView):
             compatibility_url = \
                 '/home-assistant-polymer/build/compatibility.js'
             ui_url = '/home-assistant-polymer/src/home-assistant.html'
+            icons_fp = ''
+            icons_url = '/static/mdi.html'
         else:
+            import hass_frontend
             core_url = '/static/core-{}.js'.format(
                 hass_frontend.FINGERPRINTS['core.js'])
             compatibility_url = '/static/compatibility-{}.js'.format(
                 hass_frontend.FINGERPRINTS['compatibility.js'])
             ui_url = '/static/frontend-{}.html'.format(
                 hass_frontend.FINGERPRINTS['frontend.html'])
+            icons_fp = '-{}'.format(hass_frontend.FINGERPRINTS['mdi.html'])
+            icons_url = '/static/mdi{}.html'.format(icons_fp)
 
         if request.path == '/':
             panel = 'states'
@@ -441,8 +443,6 @@ class IndexView(HomeAssistantView):
             # do not try to auto connect on load
             no_auth = 'false'
 
-        icons_fp = hass_frontend.FINGERPRINTS['mdi.html']
-        icons_url = '/static/mdi-{}.html'.format(icons_fp)
         template = yield from hass.async_add_job(
             self.templates.get_template, 'index.html')
 
