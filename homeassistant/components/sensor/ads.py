@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Set up an ADS sensor device. """
+    """Set up an ADS sensor device."""
     ads_hub = hass.data.get(ads.DATA_ADS)
     if not ads_hub:
         return False
@@ -60,6 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AdsSensor(Entity):
+    """Representation of an ADS sensor entity."""
 
     def __init__(self, ads_hub, adsvar, adstype, devname, unit_of_measurement,
                  use_notify, poll_interval, factor):
@@ -91,8 +92,8 @@ class AdsSensor(Entity):
         return self._unit_of_measurement
 
     def callback(self, name, value):
-        _LOGGER.debug('Variable "{0}" changed its value to "{1}"'
-                      .format(name, value))
+        """Handle device notifications."""
+        _LOGGER.debug('Variable %s changed its value to %d', name, value)
 
         # if factor is set use it otherwise not
         if self.factor is None:
@@ -106,6 +107,7 @@ class AdsSensor(Entity):
             pass
 
     def poll(self, now):
+        """Poll value from ADS device."""
         try:
             val = self._ads_hub.read_by_name(
                 self.adsvar, self._ads_hub.ADS_TYPEMAP[self.adstype]
@@ -116,10 +118,11 @@ class AdsSensor(Entity):
             else:
                 self._value = val / self.factor
 
-            _LOGGER.debug('Polled value for bool variable {0}: {1}'
-                          .format(self.adsvar, self._value))
-        except self._ads_hub.ADSError as e:
-            _LOGGER.error(e)
+            _LOGGER.debug('Polled value for variable %s: %d',
+                          self.adsvar, self._value)
+
+        except self._ads_hub.ADSError as err:
+            _LOGGER.error(err)
 
         try:
             self.schedule_update_ha_state()

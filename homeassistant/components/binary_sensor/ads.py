@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AdsBinarySensor(BinarySensorDevice):
-    """ Representation of ADS binary sensors. """
+    """Representation of ADS binary sensors."""
 
     def __init__(self, ads_hub, name, adsvar, device_class, use_notify,
                  poll_interval):
@@ -74,22 +74,23 @@ class AdsBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """ Return the default name of the binary sensor. """
+        """Return the default name of the binary sensor."""
         return self._name
 
     @property
     def device_class(self):
-        """ Return the device class. """
+        """Return the device class."""
         return self._device_class
 
     @property
     def is_on(self):
-        """ Return if the binary sensor is on. """
+        """Return if the binary sensor is on."""
         return self._state
 
     def callback(self, name, value):
-        _LOGGER.debug('Variable "{0}" changed its value to "{1}"'
-                      .format(name, value))
+        """Handle device notifications."""
+        _LOGGER.debug('Variable %s changed its value to %d',
+                      name, value)
         self._state = value
         try:
             self.schedule_update_ha_state()
@@ -97,14 +98,15 @@ class AdsBinarySensor(BinarySensorDevice):
             pass
 
     def poll(self, now):
+        """Handle polling."""
         try:
             self._state = self._ads_hub.read_by_name(
                 self.adsvar, self._ads_hub.PLCTYPE_BOOL
             )
-            _LOGGER.debug('Polled value for bool variable {0}: {1}'
-                          .format(self.adsvar, self._state))
-        except self._ads_hub.ADSError as e:
-            _LOGGER.error(e)
+            _LOGGER.debug('Polled value for bool variable %s: %d',
+                          self.adsvar, self._state)
+        except self._ads_hub.ADSError as err:
+            _LOGGER.error(err)
 
         try:
             self.schedule_update_ha_state()

@@ -50,9 +50,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
+    """Set up the ADS component."""
     import pyads
-    """ Set up the ADS component. """
-    _LOGGER.info('created ADS client')
     conf = config[DOMAIN]
 
     # get ads connection parameters from config
@@ -65,13 +64,28 @@ def setup(hass, config):
     # create a new ads connection
     client = pyads.Connection(net_id, port, ip_address)
 
+    # add some constants to AdsHub
+    AdsHub.ADS_TYPEMAP = {
+        ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
+        ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
+        ADSTYPE_INT: pyads.PLCTYPE_INT,
+        ADSTYPE_UINT: pyads.PLCTYPE_UINT,
+    }
+
+    AdsHub.PLCTYPE_BOOL = pyads.PLCTYPE_BOOL
+    AdsHub.PLCTYPE_BYTE = pyads.PLCTYPE_BYTE
+    AdsHub.PLCTYPE_INT = pyads.PLCTYPE_INT
+    AdsHub.PLCTYPE_UINT = pyads.PLCTYPE_UINT
+    AdsHub.ADSError = pyads.ADSError
+
     # connect to ads client and try to connect
     try:
         ads = AdsHub(client, poll_interval=poll_interval,
                      use_notify=use_notify)
-    except pyads.pyads.ADSError as e:
-        _LOGGER.error('Could not connect to ADS host (netid={}, port={})'
-                      .format(net_id, port))
+    except pyads.pyads.ADSError:
+        _LOGGER.error(
+            'Could not connect to ADS host (netid=%s, port=%s)', net_id, port
+        )
         return False
 
     # add ads hub to hass data collection, listen to shutdown
@@ -79,7 +93,7 @@ def setup(hass, config):
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
 
     def handle_write_data_by_name(call):
-        """ Write a value to the connected ADS device. """
+        """Write a value to the connected ADS device."""
         adsvar = call.data.get('adsvar')
         adstype = call.data.get('adstype')
         value = call.data.get('value')
@@ -88,8 +102,8 @@ def setup(hass, config):
 
         try:
             ads.write_by_name(adsvar, value, ads.ADS_TYPEMAP[adstype])
-        except pyads.ADSError as e:
-            _LOGGER.error(e)
+        except pyads.ADSError as err:
+            _LOGGER.error(err)
 
     hass.services.register(DOMAIN, 'write_data_by_name',
                            handle_write_data_by_name)
@@ -104,24 +118,9 @@ NotificationItem = namedtuple(
 
 
 class AdsHub:
-    """ Representation of a PyADS connection. """
+    """Representation of a PyADS connection."""
 
     def __init__(self, ads_client, poll_interval, use_notify):
-        from pyads import PLCTYPE_BOOL, PLCTYPE_BYTE, PLCTYPE_INT, \
-            PLCTYPE_UINT, ADSError
-
-        self.ADS_TYPEMAP = {
-            ADSTYPE_BOOL: PLCTYPE_BOOL,
-            ADSTYPE_BYTE: PLCTYPE_BYTE,
-            ADSTYPE_INT: PLCTYPE_INT,
-            ADSTYPE_UINT: PLCTYPE_UINT,
-        }
-
-        self.PLCTYPE_BOOL = PLCTYPE_BOOL
-        self.PLCTYPE_BYTE = PLCTYPE_BYTE
-        self.PLCTYPE_INT = PLCTYPE_INT
-        self.PLCTYPE_UINT = PLCTYPE_UINT
-        self.ADSError = ADSError
         self.poll_interval = poll_interval
         self.use_notify = use_notify
 
@@ -134,32 +133,36 @@ class AdsHub:
         self._lock = threading.Lock()
 
     def shutdown(self, *args, **kwargs):
+        """Shutdown ADS connection."""
         _LOGGER.debug('Shutting down ADS')
-        for key, notification_item in self._notification_items.items():
+        for _, notification_item in self._notification_items.items():
             self._client.del_device_notification(
                 notification_item.hnotify,
                 notification_item.huser
             )
-            _LOGGER.debug('Deleting device notification {0}, {1}'
-                          .format(notification_item.hnotify,
-                                  notification_item.huser))
+            _LOGGER.debug(
+                'Deleting device notification %d, %d',
+                notification_item.hnotify, notification_item.huser
+            )
         self._client.close()
 
     def register_device(self, device):
-        """ Register a new device. """
+        """Register a new device."""
         self._devices.append(device)
 
     def write_by_name(self, name, value, plc_datatype):
+        """Write a value to the device."""
         with self._lock:
             return self._client.write_by_name(name, value, plc_datatype)
 
     def read_by_name(self, name, plc_datatype):
+        """Read a value from the device."""
         with self._lock:
             return self._client.read_by_name(name, plc_datatype)
 
     def add_device_notification(self, name, plc_datatype, callback):
+        """Add a notification to the ADS devices."""
         from pyads import NotificationAttrib
-        """ Add a notification to the ADS devices. """
         attr = NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with self._lock:
@@ -168,26 +171,27 @@ class AdsHub:
             )
             hnotify = int(hnotify)
 
-        _LOGGER.debug('Added Device Notification {0} for variable {1}'
-                      .format(hnotify, name))
+        _LOGGER.debug(
+            'Added Device Notification %d for variable %s', hnotify, name
+        )
 
         self._notification_items[hnotify] = NotificationItem(
             hnotify, huser, name, plc_datatype, callback
         )
 
     def _device_notification_callback(self, addr, notification, huser):
+        """Callback for device notifications."""
         from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_BYTE, PLCTYPE_UINT
         contents = notification.contents
 
         hnotify = int(contents.hNotification)
-        _LOGGER.debug('Received Notification {0}'.format(hnotify))
+        _LOGGER.debug('Received Notification %d', hnotify)
         data = contents.data
 
         try:
             notification_item = self._notification_items[hnotify]
         except KeyError:
-            _LOGGER.debug('Unknown Device Notification handle: {0}'
-                          .format(hnotify))
+            _LOGGER.debug('Unknown Device Notification handle: %d', hnotify)
             return
 
         # parse data to desired datatype

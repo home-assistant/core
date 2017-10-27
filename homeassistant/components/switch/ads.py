@@ -23,6 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up switch platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
     if not ads_hub:
         return False
@@ -61,10 +62,12 @@ class AdsSwitch(ToggleEntity):
         self._on_state = False
 
     def value_changed(self, val):
+        """Handle changed state change."""
         self._on_state = val
         self.schedule_update_ha_state()
 
     def update(self):
+        """Update state of entity."""
         self._on_state = self._ads_hub.read_by_name(
             self.ads_var, self._ads_hub.PLCTYPE_BOOL
         )

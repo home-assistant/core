@@ -25,6 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the light platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
     if not ads_hub:
         return False
@@ -38,6 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AdsLight(Light):
+    """Representation of ADS light."""
 
     def __init__(self, ads_hub, varname_enable, varname_brightness, devname):
         self._ads_hub = ads_hub
@@ -75,7 +77,7 @@ class AdsLight(Light):
         return SUPPORT_ADS
 
     def turn_on(self, **kwargs):
-        """ Turn the light on or set a specific dimmer value. """
+        """Turn the light on or set a specific dimmer value."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
             self._brightness = brightness
@@ -92,7 +94,7 @@ class AdsLight(Light):
         self._on_state = True
 
     def turn_off(self, **kwargs):
-        """ Turn the light off. """
+        """Turn the light off."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
             self._brightness = brightness
@@ -105,11 +107,13 @@ class AdsLight(Light):
         self._on_state = False
 
     def value_changed(self, val):
+        """Handle value change."""
         self._brightness = math.floor(val / 100.0 * 256.0)
         self._on_state = bool(val != 0)
         self.schedule_update_ha_state()
 
     def update(self):
+        """Update state of entity."""
         self._on_state = self._ads_hub.read_by_name(self.varname_enable,
                                                     self._ads_hub.PLCTYPE_BOOL)
         if self.varname_brightness is not None:
