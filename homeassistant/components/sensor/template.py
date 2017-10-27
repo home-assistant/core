@@ -169,11 +169,10 @@ class SensorTemplate(Entity):
             if template is None:
                 continue
 
-            friendly_property_name = property_name[1:].replace('_', ' ')
-
             try:
                 setattr(self, property_name, template.async_render())
             except TemplateError as ex:
+                friendly_property_name = property_name[1:].replace('_', ' ')
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
