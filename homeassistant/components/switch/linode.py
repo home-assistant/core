@@ -29,9 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Linode Node switch."""
     linode = hass.data.get(DATA_LINODE)
-    if not linode:
-        return False
-
     nodes = config.get(CONF_NODES)
 
     dev = []
@@ -39,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         node_id = linode.get_node_id(node)
         if node_id is None:
             _LOGGER.error("Node %s is not available", node)
-            return False
+            return
         dev.append(LinodeSwitch(linode, node_id))
 
     add_devices(dev, True)
@@ -60,32 +57,18 @@ class LinodeSwitch(SwitchDevice):
         """Return the name of the switch."""
         if self.data is not None:
             return self.data.label
-        else:
-            return None
 
     @property
     def is_on(self):
         """Return true if switch is on."""
         if self.data is not None:
             return self.data.status == 'running'
-        else:
-            return False
+        return False
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the Linode Node."""
-        if self.data is None:
-            return {
-                ATTR_CREATED: None,
-                ATTR_NODE_ID: None,
-                ATTR_NODE_NAME: None,
-                ATTR_IPV4_ADDRESS: None,
-                ATTR_IPV6_ADDRESS: None,
-                ATTR_MEMORY: None,
-                ATTR_REGION: None,
-                ATTR_VCPUS: None,
-            }
-        else:
+        if self.data:
             return {
                 ATTR_CREATED: self.data.created,
                 ATTR_NODE_ID: self.data.id,
@@ -96,6 +79,7 @@ class LinodeSwitch(SwitchDevice):
                 ATTR_REGION: self.data.region.country,
                 ATTR_VCPUS: self.data.specs.vcpus,
             }
+        return {}
 
     def turn_on(self, **kwargs):
         """Boot-up the Node."""
@@ -110,7 +94,6 @@ class LinodeSwitch(SwitchDevice):
     def update(self):
         """Get the latest data from the device and update the data."""
         self._linode.update()
-
         if self._linode.data is not None:
             for node in self._linode.data:
                 if node.id == self._node_id:
