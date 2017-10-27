@@ -59,7 +59,6 @@ class TestRFXTRX(unittest.TestCase):
                 'dummy': True,
                 'debug': True}}))
 
-
     def test_valid_config3(self):
         """Test configuration."""
         self.assertTrue(setup_component(self.hass, 'rfxtrx', {
