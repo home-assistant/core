@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['pytradfri==3.0',
+REQUIREMENTS = ['pytradfri==3.0.2',
                 'DTLSSocket==0.1.3',
                 'https://github.com/chrysn/aiocoap/archive/'
                 '3286f48f0b949901c8b5c04c0719dc54ab63d431.zip'
