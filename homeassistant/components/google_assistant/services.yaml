@@ -1,0 +1,2 @@
+request_sync:
+  description: "Request a sync of devices"

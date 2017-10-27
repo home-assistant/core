@@ -22,6 +22,8 @@ from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
     CONF_ACCESS_TOKEN,
+    CONF_API_KEY,
+    CONF_AGENT_USER_ID,
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     CONF_EXPOSE_BY_DEFAULT,
@@ -48,6 +50,8 @@ class GoogleAssistantView(HomeAssistantView):
                                          DEFAULT_EXPOSE_BY_DEFAULT)
         self.exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS,
                                        DEFAULT_EXPOSED_DOMAINS)
+        self.api_key = cfg.get(CONF_API_KEY)
+        self.agent_user_id = cfg.get(CONF_AGENT_USER_ID)
 
     def is_entity_exposed(self, entity) -> bool:
         """Determine if an entity should be exposed to Google Assistant."""
@@ -84,8 +88,12 @@ class GoogleAssistantView(HomeAssistantView):
 
             devices.append(device)
 
+        request_data = {'devices': devices}
+        if self.agent_user_id is not None:
+            request_data["agent_user_id"] = self.agent_user_id
+
         return self.json(
-            make_actions_response(request_id, {'devices': devices}))
+            make_actions_response(request_id, request_data))
 
     @asyncio.coroutine
     def handle_query(self,
