@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyRFXtrx==0.20.1']
+REQUIREMENTS = ['pyRFXtrx==0.21.1']
 
 DOMAIN = 'rfxtrx'
 
@@ -36,6 +36,7 @@ ATTR_DATA_TYPE = 'data_type'
 ATTR_DATA_BITS = 'data_bits'
 ATTR_DUMMY = 'dummy'
 ATTR_OFF_DELAY = 'off_delay'
+ATTR_RECV_MODES = 'recv_modes'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
 EVENT_BUTTON_PRESSED = 'button_pressed'
@@ -58,7 +59,6 @@ RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = 'rfxobject'
-
 
 def _valid_device(value, device_type):
     """Validate a dictionary of devices definitions."""
@@ -144,6 +144,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(ATTR_DEVICE): cv.string,
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
+        vol.Optional(ATTR_RECV_MODES, default=None):
+            vol.All(vol.All(cv.ensure_list, [cv.string]), vol.Length(min=1))
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -152,7 +154,7 @@ def setup(hass, config):
     """Set up the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
-        """Handle revieved messgaes from RFXtrx gateway."""
+        """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return
@@ -173,13 +175,18 @@ def setup(hass, config):
     device = config[DOMAIN][ATTR_DEVICE]
     debug = config[DOMAIN][ATTR_DEBUG]
     dummy_connection = config[DOMAIN][ATTR_DUMMY]
+    recv_modes = config[DOMAIN][ATTR_RECV_MODES]
+
+    if recv_modes is not None:
+        _LOGGER.info("Receiving modes to be enabled: %s", recv_modes)
 
     if dummy_connection:
         hass.data[RFXOBJECT] =\
             rfxtrxmod.Connect(device, None, debug=debug,
                               transport_protocol=rfxtrxmod.DummyTransport2)
     else:
-        hass.data[RFXOBJECT] = rfxtrxmod.Connect(device, None, debug=debug)
+        hass.data[RFXOBJECT] = rfxtrxmod.Connect(device, None, debug=debug,
+                                                 modes=recv_modes)
 
     def _start_rfxtrx(event):
         hass.data[RFXOBJECT].event_callback = handle_receive
@@ -268,7 +275,7 @@ def find_possible_pt2262_device(device_id):
 
             if size is not None:
                 size = len(dev_id) - size - 1
-                _LOGGER.info("rfxtrx: found possible device %s for %s "
+                _LOGGER.info("found possible device %s for %s "
                              "with the following configuration:\n"
                              "data_bits=%d\n"
                              "command_on=0x%s\n"
