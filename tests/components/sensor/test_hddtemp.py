@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 
-from tests.common import (get_test_home_assistant, load_fixture)
+from tests.common import get_test_home_assistant
 
 VALID_CONFIG_MINIMAL = {
     'sensor': {
@@ -49,7 +49,11 @@ class TelnetMock():
         self.host = host
         self.port = port
         self.timeout = timeout
-        self.sample_data = bytes(load_fixture('hddtemp.txt'), 'ascii')
+        self.sample_data = bytes('|/dev/sda1|WDC WD30EZRX-12DC0B0|29|C|' +
+                                 '|/dev/sdb1|WDC WD15EADS-11P7B2|32|C|' +
+                                 '|/dev/sdc1|WDC WD20EARX-22MMMB0|29|C|' +
+                                 '|/dev/sdd1|WDC WD15EARS-00Z5B1|29|C|',
+                                 'ascii')
 
     def read_all(self):
         """Return sample values."""
