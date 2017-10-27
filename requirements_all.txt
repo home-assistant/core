@@ -19,7 +19,7 @@ certifi>=2017.4.17
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.tradfri
-# DTLSSocket==0.1.3
+# DTLSSocket==0.1.4
 
 # homeassistant.components.doorbird
 DoorBirdPy==0.0.4
