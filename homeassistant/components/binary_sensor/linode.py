@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         node_id = linode.get_node_id(node)
         if node_id is None:
             _LOGGER.error("Node %s is not available", node)
-            return False
+            return
         dev.append(LinodeBinarySensor(linode, node_id))
 
     add_devices(dev, True)
@@ -61,8 +61,6 @@ class LinodeBinarySensor(BinarySensorDevice):
         """Return the name of the sensor."""
         if self.data is not None:
             return self.data.label
-        else:
-            return None
 
     @property
     def is_on(self):
@@ -80,18 +78,7 @@ class LinodeBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the Linode Node."""
-        if self.data is None:
-            return {
-                ATTR_CREATED: None,
-                ATTR_NODE_ID: None,
-                ATTR_NODE_NAME: None,
-                ATTR_IPV4_ADDRESS: None,
-                ATTR_IPV6_ADDRESS: None,
-                ATTR_MEMORY: None,
-                ATTR_REGION: None,
-                ATTR_VCPUS: None,
-            }
-        else:
+        if self.data:
             return {
                 ATTR_CREATED: self.data.created,
                 ATTR_NODE_ID: self.data.id,
@@ -102,11 +89,12 @@ class LinodeBinarySensor(BinarySensorDevice):
                 ATTR_REGION: self.data.region.country,
                 ATTR_VCPUS: self.data.specs.vcpus,
             }
+        else:
+            return {}
 
     def update(self):
         """Update state of sensor."""
         self._linode.update()
-
         if self._linode.data is not None:
             for node in self._linode.data:
                 if node.id == self._node_id:
