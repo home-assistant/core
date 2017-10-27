@@ -9,10 +9,12 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
+import requests
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import (CONF_EMAIL, CONF_NAME,
+                                 CONF_PASSWORD, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -21,25 +23,29 @@ REQUIREMENTS = ['nsapi==2.7.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by NS"
-CONF_DEPARTURES = 'departures'
+CONF_ROUTES = 'routes'
 CONF_FROM = 'from'
 CONF_TO = 'to'
 CONF_VIA = 'via'
-CONF_EMAIL = 'email'
-CONF_PASSWORD = 'password'
 
 ICON = 'mdi:train'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
+ROUTE_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_FROM): cv.string,
+    vol.Required(CONF_TO): cv.string,
+    vol.Optional(CONF_VIA): cv.string})
+
+ROUTES_SCHEMA = vol.All(
+    cv.ensure_list,
+    [ROUTE_SCHEMA])
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_DEPARTURES): [{
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_VIA): cv.string}]
+    vol.Optional(CONF_ROUTES): ROUTES_SCHEMA,
 })
 
 
@@ -48,13 +54,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import ns_api
     nsapi = ns_api.NSAPI(
         config.get(CONF_EMAIL), config.get(CONF_PASSWORD))
+    try:
+        stations = nsapi.get_stations()
+    except (requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError) as error:
+        _LOGGER.error("Couldn't fetch stations, API password correct?: %s",
+                      error)
+        return
+
     sensors = []
-    for departure in config.get(CONF_DEPARTURES):
+    for departure in config.get(CONF_ROUTES):
+        if(not valid_stations(stations, [departure.get(CONF_FROM),
+                                         departure.get(CONF_VIA),
+                                         departure.get(CONF_TO)])):
+            continue
         sensors.append(
             NSDepartureSensor(
                 nsapi, departure.get(CONF_NAME), departure.get(CONF_FROM),
                 departure.get(CONF_TO), departure.get(CONF_VIA)))
-    add_devices(sensors)
+    if len(sensors):
+        add_devices(sensors, True)
+
+
+def valid_stations(stations, given_stations):
+    """Verify the existance of the given station codes."""
+    for station in given_stations:
+        if station is None:
+            continue
+        if not any(s.code == station.upper() for s in stations):
+            _LOGGER.warning("Station '%s' is not a valid station.", station)
+            return False
+    return True
 
 
 class NSDepartureSensor(Entity):
@@ -132,5 +162,6 @@ class NSDepartureSensor(Entity):
             if self._trips:
                 actual_time = self._trips[0].departure_time_actual
                 self._state = actual_time.strftime('%H:%M')
-        except self._nsapi.Error:
-            _LOGGER.warning("Couldn't fetch trip info")
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as error:
+            _LOGGER.error("Couldn't fetch trip info: %s", error)
