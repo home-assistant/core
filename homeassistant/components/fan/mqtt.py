@@ -186,7 +186,7 @@ class MqttFan(FanEntity):
             yield from mqtt.async_subscribe(
                 self.hass, self._topic[CONF_SPEED_STATE_TOPIC], speed_received,
                 self._qos)
-        self._speed = SPEED_OFF
+            self._speed = SPEED_OFF
 
         @callback
         def oscillation_received(topic, payload, qos):
@@ -202,7 +202,7 @@ class MqttFan(FanEntity):
             yield from mqtt.async_subscribe(
                 self.hass, self._topic[CONF_OSCILLATION_STATE_TOPIC],
                 oscillation_received, self._qos)
-        self._oscillation = False
+            self._oscillation = False
 
     @property
     def should_poll(self):
