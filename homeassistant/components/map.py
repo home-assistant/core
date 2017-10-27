@@ -13,5 +13,5 @@ DOMAIN = 'map'
 def async_setup(hass, config):
     """Register the built-in map panel."""
     yield from hass.components.frontend.async_register_built_in_panel(
-        'map', 'Map', 'mdi:account-location')
+        'map', 'map', 'mdi:account-location')
     return True
