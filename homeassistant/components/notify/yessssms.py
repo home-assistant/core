@@ -41,4 +41,4 @@ class YesssSMSNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a SMS message via Yesss.at's website."""
-        resp = self.yesss.send(self._recipient, message)
+        self.yesss.send(self._recipient, message)
