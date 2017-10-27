@@ -522,6 +522,7 @@ omit =
     homeassistant/components/sensor/mopar.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/mvglive.py
+    homeassistant/components/sensor/nederlandse_spoorwegen.py
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nut.py

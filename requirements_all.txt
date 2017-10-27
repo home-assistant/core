@@ -471,6 +471,9 @@ netdisco==1.2.2
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
 
+# homeassistant.components.sensor.nederlandse_spoorwegen
+nsapi==2.7.4
+
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
 numpy==1.13.3
