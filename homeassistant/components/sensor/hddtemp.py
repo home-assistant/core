@@ -47,11 +47,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     disks = config.get(CONF_DISKS)
 
-    try:
-        hddtemp = HddTempData(host, port)
-        hddtemp.update()
-    except RuntimeError:
-        _LOGGER.error("Unable to fetch the data from %s:%s", host, port)
+    hddtemp = HddTempData(host, port)
+    hddtemp.update()
+
+    if hddtemp.data is None:
+        _LOGGER.error("Error connecting ...")
         return False
 
     if not disks:

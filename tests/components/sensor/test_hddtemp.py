@@ -75,9 +75,9 @@ class TelnetMock():
         """Return sample values."""
         if self.host == 'alice.local':
             raise ConnectionRefusedError
-            return None
         else:
             return self.sample_data
+        return None
 
 
 class TestHDDTempSensor(unittest.TestCase):
@@ -90,20 +90,19 @@ class TestHDDTempSensor(unittest.TestCase):
         self.reference = {'/dev/sda1': {'device': '/dev/sda1',
                                         'temperature': '29',
                                         'unit_of_measurement': '°C',
-                                        'model': 'WDC WD30EZRX-12DC0B0',},
+                                        'model': 'WDC WD30EZRX-12DC0B0', },
                           '/dev/sdb1': {'device': '/dev/sdb1',
                                         'temperature': '32',
                                         'unit_of_measurement': '°C',
-                                        'model': 'WDC WD15EADS-11P7B2',},
+                                        'model': 'WDC WD15EADS-11P7B2', },
                           '/dev/sdc1': {'device': '/dev/sdc1',
                                         'temperature': '29',
                                         'unit_of_measurement': '°C',
-                                        'model': 'WDC WD20EARX-22MMMB0',},
+                                        'model': 'WDC WD20EARX-22MMMB0', },
                           '/dev/sdd1': {'device': '/dev/sdd1',
                                         'temperature': '32',
                                         'unit_of_measurement': '°C',
-                                        'model': 'WDC WD15EARS-00Z5B1',},
-                          }
+                                        'model': 'WDC WD15EARS-00Z5B1', }, }
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -175,13 +174,16 @@ class TestHDDTempSensor(unittest.TestCase):
                        'sensor.hd_temperature_devsdb1',
                        'sensor.hd_temperature_devsdc1']:
 
-            state = self.hass.states.get('sensor.hd_temperature_devsda1')
+            state = self.hass.states.get(sensor)
 
             reference = self.reference[state.attributes.get('device')]
 
-            self.assertEqual(state.state, reference['temperature'])
-            self.assertEqual(state.attributes.get('device'), reference['device'])
-            self.assertEqual(state.attributes.get('model'), reference['model'])
+            self.assertEqual(state.state,
+                             reference['temperature'])
+            self.assertEqual(state.attributes.get('device'),
+                             reference['device'])
+            self.assertEqual(state.attributes.get('model'),
+                             reference['model'])
             self.assertEqual(state.attributes.get('unit_of_measurement'),
                              reference['unit_of_measurement'])
             self.assertEqual(state.attributes.get('friendly_name'),
@@ -191,6 +193,4 @@ class TestHDDTempSensor(unittest.TestCase):
     def test_hddtemp_host_unreachable(self):
         """Test hddtemp if host unreachable."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_HOST)
-
         self.assertEqual(len(self.hass.states.all()), 0)
-        self.assertRaises(ConnectionRefusedError)
