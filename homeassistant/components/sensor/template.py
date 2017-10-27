@@ -181,6 +181,9 @@ class SensorTemplate(Entity):
                                     friendly_property_name, self._name)
                     return
 
-                setattr(self, property_name, getattr(super(), property_name))
-                _LOGGER.error('Could not render %s template %s: %s',
-                              friendly_property_name, self._name, ex)
+                try:
+                    setattr(self, property_name,
+                            getattr(super(), property_name))
+                except AttributeError:
+                    _LOGGER.error('Could not render %s template %s: %s',
+                                  friendly_property_name, self._name, ex)
