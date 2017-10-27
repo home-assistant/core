@@ -859,7 +859,7 @@ python-vlc==1.1.2
 python-wink==1.7.0
 
 # homeassistant.components.sensor.swiss_public_transport
-python_opendata_transport==0.0.2
+python_opendata_transport==0.0.3
 
 # homeassistant.components.zwave
 python_openzwave==0.4.0.35
