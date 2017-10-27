@@ -20,7 +20,7 @@ from homeassistant.const import STATE_HOME
 from homeassistant.core import callback
 from homeassistant.util import slugify, decorator
 
-REQUIREMENTS = ['libnacl==1.6.0']
+REQUIREMENTS = ['libnacl==1.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
