@@ -1,7 +1,5 @@
-"""
-Support for ADS switch platform.
+"""Support for ADS switch platform."""
 
-"""
 import logging
 
 import voluptuous as vol
@@ -35,9 +33,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AdsSwitch(ToggleEntity):
-    """ Representation of an Ads switch device. """
+    """Representation of an Ads switch device."""
 
     def __init__(self, ads_hub, dev_name, ads_var):
+        """Initialize the AdsSwitch entity."""
         self._ads_hub = ads_hub
         self._on_state = False
         self.dev_name = dev_name
@@ -45,24 +44,28 @@ class AdsSwitch(ToggleEntity):
 
     @property
     def is_on(self):
+        """Return if the switch is turned on."""
         return self._on_state
 
     @property
     def name(self):
+        """Return the name of the entity."""
         return self.dev_name
 
     def turn_on(self, **kwargs):
+        """Turn the switch on."""
         self._ads_hub.write_by_name(self.ads_var, True,
                                     self._ads_hub.PLCTYPE_BOOL)
         self._on_state = True
 
     def turn_off(self, **kwargs):
+        """Turn the switch off."""
         self._ads_hub.write_by_name(self.ads_var, False,
                                     self._ads_hub.PLCTYPE_BOOL)
         self._on_state = False
 
     def value_changed(self, val):
-        """Handle changed state change."""
+        """Handle changed state."""
         self._on_state = val
         self.schedule_update_ha_state()
 

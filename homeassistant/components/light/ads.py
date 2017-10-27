@@ -1,6 +1,5 @@
-"""
-Support for ADS light sources.
-"""
+"""Support for ADS light sources."""
+
 import logging
 import math
 
@@ -42,6 +41,7 @@ class AdsLight(Light):
     """Representation of ADS light."""
 
     def __init__(self, ads_hub, varname_enable, varname_brightness, devname):
+        """Initialize AdsLight entity."""
         self._ads_hub = ads_hub
         self._on_state = False
         self._brightness = 50
@@ -52,7 +52,7 @@ class AdsLight(Light):
 
     @property
     def name(self):
-        """ Return the name of the device if any. """
+        """Return the name of the device if any."""
         return self._devname
 
     @property
@@ -68,7 +68,7 @@ class AdsLight(Light):
 
     @property
     def is_on(self):
-        """ If light is on. """
+        """If light is on."""
         return self._on_state
 
     @property

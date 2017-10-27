@@ -121,6 +121,7 @@ class AdsHub:
     """Representation of a PyADS connection."""
 
     def __init__(self, ads_client, poll_interval, use_notify):
+        """Initialize the ADS Hub."""
         self.poll_interval = poll_interval
         self.use_notify = use_notify
 
@@ -180,7 +181,7 @@ class AdsHub:
         )
 
     def _device_notification_callback(self, addr, notification, huser):
-        """Callback for device notifications."""
+        """Handle device notifications."""
         from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_BYTE, PLCTYPE_UINT
         contents = notification.contents
 

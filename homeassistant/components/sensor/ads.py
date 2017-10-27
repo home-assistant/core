@@ -1,7 +1,5 @@
-"""
-Support for ADS sensors.__init__.py
+"""Support for ADS sensors."""
 
-"""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -64,6 +62,7 @@ class AdsSensor(Entity):
 
     def __init__(self, ads_hub, adsvar, adstype, devname, unit_of_measurement,
                  use_notify, poll_interval, factor):
+        """Initialize AdsSensor entity."""
         self._ads_hub = ads_hub
         self._name = devname
         self._value = 0
@@ -80,15 +79,17 @@ class AdsSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the entity."""
         return self._name
 
     @property
     def state(self):
-        """ Return the state of the device. """
+        """Return the state of the device."""
         return self._value
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement."""
         return self._unit_of_measurement
 
     def callback(self, name, value):

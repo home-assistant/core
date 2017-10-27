@@ -1,7 +1,5 @@
-"""
-Support for ADS binary sensors.
+"""Support for ADS binary sensors."""
 
-"""
 import logging
 from datetime import timedelta
 
@@ -32,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Set up the Binary Sensor platform for ADS. """
+    """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
     if not ads_hub:
         return False
@@ -60,6 +58,7 @@ class AdsBinarySensor(BinarySensorDevice):
 
     def __init__(self, ads_hub, name, adsvar, device_class, use_notify,
                  poll_interval):
+        """Initialize AdsBinarySensor entity."""
         self._name = name
         self._state = False
         self._device_class = device_class or 'moving'
