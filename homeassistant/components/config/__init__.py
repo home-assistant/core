@@ -21,7 +21,7 @@ ON_DEMAND = ('zwave')
 def async_setup(hass, config):
     """Set up the config component."""
     yield from hass.components.frontend.async_register_built_in_panel(
-        'config', 'Configuration', 'mdi:settings')
+        'config', 'config', 'mdi:settings')
 
     @asyncio.coroutine
     def setup_panel(panel_name):
