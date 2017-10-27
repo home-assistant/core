@@ -30,9 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Linode droplet sensor."""
     linode = hass.data.get(DATA_LINODE)
-    if not linode:
-        return False
-
     nodes = config.get(CONF_NODES)
 
     dev = []
@@ -88,8 +85,7 @@ class LinodeBinarySensor(BinarySensorDevice):
                 ATTR_REGION: self.data.region.country,
                 ATTR_VCPUS: self.data.specs.vcpus,
             }
-        else:
-            return {}
+        return {}
 
     def update(self):
         """Update state of sensor."""
