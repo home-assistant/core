@@ -37,7 +37,7 @@ NO_IP_ERRORS = {
     '911': "A fatal error on NO-IP's side such as a database outage",
 }
 
-UPDATE_URL = 'https://dynupdate.no-ip.com/nic/update'
+UPDATE_URL = 'https://dynupdate.noip.com/nic/update'
 USER_AGENT = "{} {}".format(SERVER_SOFTWARE, PROJECT_EMAIL)
 
 CONFIG_SCHEMA = vol.Schema({
