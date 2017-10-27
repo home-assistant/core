@@ -7,17 +7,27 @@ https://home-assistant.io/components/gc100/
 
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-gc100==1.0.1a']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_PORT = 4998
 DOMAIN = 'gc100'
 
 DATA_GC100 = 'gc100'
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 # pylint: disable=no-member
 # pylint: disable=import-self

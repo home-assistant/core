@@ -14,10 +14,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_PORTS = 'ports'
-
 
 DEPENDENCIES = ['gc100']
 
@@ -26,7 +23,7 @@ _SWITCH_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORTS): _SWITCH_SCHEMA
+    vol.Required(CONF_PORTS): vol.All(cv.ensure_list,[_SWITCH_SCHEMA])
 })
 
 
@@ -34,10 +31,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the GC100 devices."""
     switches = []
-    ports = config.get('ports')
-    for port_addr, port_name in ports.items():
-        switches.append(GC100Switch(
-            port_name, port_addr, hass.data[DATA_GC100]))
+    ports = config.get(CONF_PORTS)
+    for port in ports:
+        for port_addr, port_name in port.items():
+            switches.append(GC100Switch(
+                port_name, port_addr, hass.data[DATA_GC100]))
     add_devices(switches, True)
 
 
@@ -45,7 +43,7 @@ class GC100Switch(ToggleEntity):
     """Represent a switch / relay from GC100."""
 
     def __init__(self, name, port_addr, gc100):
-        """Initialize the GC100 binary sensor."""
+        """Initialize the GC100 switch."""
         # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._port_addr = port_addr

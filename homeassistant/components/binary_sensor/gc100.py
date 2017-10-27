@@ -14,8 +14,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_PORTS = 'ports'
 
 
@@ -26,7 +24,7 @@ _SENSORS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORTS): _SENSORS_SCHEMA
+    vol.Required(CONF_PORTS): vol.All(cv.ensure_list,[_SENSORS_SCHEMA])
 })
 
 
@@ -34,10 +32,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the GC100 devices."""
     binary_sensors = []
-    ports = config.get('ports')
-    for port_addr, port_name in ports.items():
-        binary_sensors.append(GC100BinarySensor(
-            port_name, port_addr, hass.data[DATA_GC100]))
+    ports = config.get(CONF_PORTS)
+    for port in ports:
+        for port_addr, port_name in port.items():
+            binary_sensors.append(GC100BinarySensor(
+                port_name, port_addr, hass.data[DATA_GC100]))
     add_devices(binary_sensors, True)
 
 
@@ -55,11 +54,6 @@ class GC100BinarySensor(BinarySensorDevice):
 
         # subscribe to be notified about state changes (PUSH)
         self._gc100.subscribe(self._port_addr, self.set_state)
-
-    @property
-    def should_poll(self):
-        """Should poll."""
-        return True
 
     @property
     def name(self):
