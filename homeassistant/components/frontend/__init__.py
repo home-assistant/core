@@ -18,7 +18,7 @@ from homeassistant.components.http.auth import is_trusted_ip
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
-REQUIREMENTS = ['home-assistant-frontend==20171021.2']
+REQUIREMENTS = ['home-assistant-frontend==20171027.1']
 
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
