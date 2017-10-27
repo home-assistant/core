@@ -23,7 +23,16 @@ VALID_CONFIG_ONE_DISK = {
     'sensor': {
         'platform': 'hddtemp',
         'disks': [
-            '/dev/sdb1',
+            '/dev/sdd1',
+        ],
+    }
+}
+
+VALID_CONFIG_WRONG_DISK = {
+    'sensor': {
+        'platform': 'hddtemp',
+        'disks': [
+            '/dev/sdx1',
         ],
     }
 }
@@ -40,6 +49,13 @@ VALID_CONFIG_MULTIPLE_DISKS = {
     }
 }
 
+VALID_CONFIG_HOST = {
+    'sensor': {
+        'platform': 'hddtemp',
+        'host': 'alice.local',
+    }
+}
+
 
 class TelnetMock():
     """Mock class for the telnetlib.Telnet object."""
@@ -52,12 +68,16 @@ class TelnetMock():
         self.sample_data = bytes('|/dev/sda1|WDC WD30EZRX-12DC0B0|29|C|' +
                                  '|/dev/sdb1|WDC WD15EADS-11P7B2|32|C|' +
                                  '|/dev/sdc1|WDC WD20EARX-22MMMB0|29|C|' +
-                                 '|/dev/sdd1|WDC WD15EARS-00Z5B1|29|C|',
+                                 '|/dev/sdd1|WDC WD15EARS-00Z5B1|89|F|',
                                  'ascii')
 
     def read_all(self):
         """Return sample values."""
-        return self.sample_data
+        if self.host == 'alice.local':
+            raise ConnectionRefusedError
+            return None
+        else:
+            return self.sample_data
 
 
 class TestHDDTempSensor(unittest.TestCase):
@@ -67,6 +87,23 @@ class TestHDDTempSensor(unittest.TestCase):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG_ONE_DISK
+        self.reference = {'/dev/sda1': {'device': '/dev/sda1',
+                                        'temperature': '29',
+                                        'unit_of_measurement': '°C',
+                                        'model': 'WDC WD30EZRX-12DC0B0',},
+                          '/dev/sdb1': {'device': '/dev/sdb1',
+                                        'temperature': '32',
+                                        'unit_of_measurement': '°C',
+                                        'model': 'WDC WD15EADS-11P7B2',},
+                          '/dev/sdc1': {'device': '/dev/sdc1',
+                                        'temperature': '29',
+                                        'unit_of_measurement': '°C',
+                                        'model': 'WDC WD20EARX-22MMMB0',},
+                          '/dev/sdd1': {'device': '/dev/sdd1',
+                                        'temperature': '32',
+                                        'unit_of_measurement': '°C',
+                                        'model': 'WDC WD15EARS-00Z5B1',},
+                          }
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -77,14 +114,18 @@ class TestHDDTempSensor(unittest.TestCase):
         """Test minimal hddtemp configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
 
-        state = self.hass.states.get('sensor.hd_temperature_devsda1')
+        entity = self.hass.states.all()[0].entity_id
+        state = self.hass.states.get(entity)
 
-        self.assertEqual(state.state, '29')
-        self.assertEqual(state.attributes.get('device'), '/dev/sda1')
-        self.assertEqual(state.attributes.get('model'), 'WDC WD30EZRX-12DC0B0')
-        self.assertEqual(state.attributes.get('unit_of_measurement'), '°C')
+        reference = self.reference[state.attributes.get('device')]
+
+        self.assertEqual(state.state, reference['temperature'])
+        self.assertEqual(state.attributes.get('device'), reference['device'])
+        self.assertEqual(state.attributes.get('model'), reference['model'])
+        self.assertEqual(state.attributes.get('unit_of_measurement'),
+                         reference['unit_of_measurement'])
         self.assertEqual(state.attributes.get('friendly_name'),
-                         'HD Temperature /dev/sda1')
+                         'HD Temperature ' + reference['device'])
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_rename_config(self):
@@ -92,22 +133,37 @@ class TestHDDTempSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_NAME)
         assert self.hass.states.get('sensor.foobar_devsda1')
 
-        state = self.hass.states.get('sensor.foobar_devsda1')
+        entity = self.hass.states.all()[0].entity_id
+        state = self.hass.states.get(entity)
+
+        reference = self.reference[state.attributes.get('device')]
 
         self.assertEqual(state.attributes.get('friendly_name'),
-                         'FooBar /dev/sda1')
+                         'FooBar ' + reference['device'])
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_one_disk(self):
         """Test hddtemp one disk configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_ONE_DISK)
 
-        state = self.hass.states.get('sensor.hd_temperature_devsdb1')
+        state = self.hass.states.get('sensor.hd_temperature_devsdd1')
 
-        self.assertEqual(state.state, '32')
-        self.assertEqual(state.attributes.get('device'), '/dev/sdb1')
-        self.assertEqual(state.attributes.get('model'), 'WDC WD15EADS-11P7B2')
-        self.assertEqual(state.attributes.get('unit_of_measurement'), '°C')
+        reference = self.reference[state.attributes.get('device')]
+
+        self.assertEqual(state.state, reference['temperature'])
+        self.assertEqual(state.attributes.get('device'), reference['device'])
+        self.assertEqual(state.attributes.get('model'), reference['model'])
+        self.assertEqual(state.attributes.get('unit_of_measurement'),
+                         reference['unit_of_measurement'])
+        self.assertEqual(state.attributes.get('friendly_name'),
+                         'HD Temperature ' + reference['device'])
+
+    @patch('telnetlib.Telnet', new=TelnetMock)
+    def test_hddtemp_wrong_disk(self):
+        """Test hddtemp wrong disk configuration."""
+        assert setup_component(self.hass, 'sensor', VALID_CONFIG_WRONG_DISK)
+
+        self.assertEqual(len(self.hass.states.all()), 0)
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_multiple_disks(self):
@@ -115,23 +171,26 @@ class TestHDDTempSensor(unittest.TestCase):
         assert setup_component(self.hass,
                                'sensor', VALID_CONFIG_MULTIPLE_DISKS)
 
-        state = self.hass.states.get('sensor.hd_temperature_devsda1')
+        for sensor in ['sensor.hd_temperature_devsda1',
+                       'sensor.hd_temperature_devsdb1',
+                       'sensor.hd_temperature_devsdc1']:
 
-        self.assertEqual(state.state, '29')
-        self.assertEqual(state.attributes.get('device'), '/dev/sda1')
-        self.assertEqual(state.attributes.get('model'), 'WDC WD30EZRX-12DC0B0')
-        self.assertEqual(state.attributes.get('unit_of_measurement'), '°C')
+            state = self.hass.states.get('sensor.hd_temperature_devsda1')
 
-        state = self.hass.states.get('sensor.hd_temperature_devsdb1')
+            reference = self.reference[state.attributes.get('device')]
 
-        self.assertEqual(state.state, '32')
-        self.assertEqual(state.attributes.get('device'), '/dev/sdb1')
-        self.assertEqual(state.attributes.get('model'), 'WDC WD15EADS-11P7B2')
-        self.assertEqual(state.attributes.get('unit_of_measurement'), '°C')
+            self.assertEqual(state.state, reference['temperature'])
+            self.assertEqual(state.attributes.get('device'), reference['device'])
+            self.assertEqual(state.attributes.get('model'), reference['model'])
+            self.assertEqual(state.attributes.get('unit_of_measurement'),
+                             reference['unit_of_measurement'])
+            self.assertEqual(state.attributes.get('friendly_name'),
+                             'HD Temperature ' + reference['device'])
 
-        state = self.hass.states.get('sensor.hd_temperature_devsdc1')
+    @patch('telnetlib.Telnet', new=TelnetMock)
+    def test_hddtemp_host_unreachable(self):
+        """Test hddtemp if host unreachable."""
+        assert setup_component(self.hass, 'sensor', VALID_CONFIG_HOST)
 
-        self.assertEqual(state.state, '29')
-        self.assertEqual(state.attributes.get('device'), '/dev/sdc1')
-        self.assertEqual(state.attributes.get('model'), 'WDC WD20EARX-22MMMB0')
-        self.assertEqual(state.attributes.get('unit_of_measurement'), '°C')
+        self.assertEqual(len(self.hass.states.all()), 0)
+        self.assertRaises(ConnectionRefusedError)
