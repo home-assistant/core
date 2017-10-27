@@ -1,9 +1,4 @@
-"""
-Component to allow running Python scripts.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/python_script/
-"""
+"""Component to allow running Python scripts."""
 import datetime
 import glob
 import logging
@@ -12,19 +7,16 @@ import time
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
-
-REQUIREMENTS = ['restrictedpython==4.0b2']
-
-_LOGGER = logging.getLogger(__name__)
+import homeassistant.util.dt as dt_util
 
 DOMAIN = 'python_script'
-
+REQUIREMENTS = ['restrictedpython==4.0a3']
 FOLDER = 'python_scripts'
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(dict)
@@ -55,7 +47,7 @@ def setup(hass, config):
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
-        _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
+        _LOGGER.warning('Folder %s not found in config folder', FOLDER)
         return False
 
     discover_scripts(hass)
@@ -73,7 +65,7 @@ def discover_scripts(hass):
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
-        _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
+        _LOGGER.warning('Folder %s not found in config folder', FOLDER)
         return False
 
     def python_script_service_handler(call):
@@ -112,19 +104,19 @@ def execute(hass, filename, source, data=None):
     compiled = compile_restricted_exec(source, filename=filename)
 
     if compiled.errors:
-        _LOGGER.error("Error loading script %s: %s", filename,
-                      ", ".join(compiled.errors))
+        _LOGGER.error('Error loading script %s: %s', filename,
+                      ', '.join(compiled.errors))
         return
 
     if compiled.warnings:
-        _LOGGER.warning("Warning loading script %s: %s", filename,
-                        ", ".join(compiled.warnings))
+        _LOGGER.warning('Warning loading script %s: %s', filename,
+                        ', '.join(compiled.warnings))
 
     def protected_getattr(obj, name, default=None):
         """Restricted method to get attributes."""
         # pylint: disable=too-many-boolean-expressions
         if name.startswith('async_'):
-            raise ScriptError("Not allowed to access async methods")
+            raise ScriptError('Not allowed to access async methods')
         elif (obj is hass and name not in ALLOWED_HASS or
               obj is hass.bus and name not in ALLOWED_EVENTBUS or
               obj is hass.states and name not in ALLOWED_STATEMACHINE or
@@ -132,7 +124,7 @@ def execute(hass, filename, source, data=None):
               obj is dt_util and name not in ALLOWED_DT_UTIL or
               obj is datetime and name not in ALLOWED_DATETIME or
               isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
-            raise ScriptError("Not allowed to access {}.{}".format(
+            raise ScriptError('Not allowed to access {}.{}'.format(
                 obj.__class__.__name__, name))
 
         return getattr(obj, name, default)
@@ -160,13 +152,13 @@ def execute(hass, filename, source, data=None):
     }
 
     try:
-        _LOGGER.info("Executing %s: %s", filename, data)
+        _LOGGER.info('Executing %s: %s', filename, data)
         # pylint: disable=exec-used
         exec(compiled.code, restricted_globals, local)
     except ScriptError as err:
-        logger.error("Error executing script: %s", err)
+        logger.error('Error executing script: %s', err)
     except Exception as err:  # pylint: disable=broad-except
-        logger.exception("Error executing script: %s", err)
+        logger.exception('Error executing script: %s', err)
 
 
 class StubPrinter:
@@ -180,7 +172,7 @@ class StubPrinter:
         """Print text."""
         # pylint: disable=no-self-use
         _LOGGER.warning(
-            "Don't use print() inside scripts. Use logger.info() instead")
+            "Don't use print() inside scripts. Use logger.info() instead.")
 
 
 class TimeWrapper:
@@ -194,8 +186,8 @@ class TimeWrapper:
         """Sleep method that warns once."""
         if not TimeWrapper.warned:
             TimeWrapper.warned = True
-            _LOGGER.warning("Using time.sleep can reduce the performance of "
-                            "Home Assistant")
+            _LOGGER.warning('Using time.sleep can reduce the performance of '
+                            'Home Assistant')
 
         time.sleep(*args, **kwargs)
 
