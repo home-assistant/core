@@ -8,9 +8,10 @@ from datetime import timedelta
 from homeassistant.core import CoreState
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.timer import (
-    DOMAIN, CONF_DURATION, CONF_NAME, STATUS_ACTIVE, STATUS_IDLE, STATUS_PAUSED,
-    CONF_ICON, ATTR_DURATION, EVENT_TIMER_FINISHED, EVENT_TIMER_CANCELLED,
-    SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL, SERVICE_FINISH)
+    DOMAIN, CONF_DURATION, CONF_NAME, STATUS_ACTIVE, STATUS_IDLE,
+    STATUS_PAUSED, CONF_ICON, ATTR_DURATION, EVENT_TIMER_FINISHED,
+    EVENT_TIMER_CANCELLED, SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL,
+    SERVICE_FINISH)
 from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID)
 from homeassistant.util.dt import utcnow
 
