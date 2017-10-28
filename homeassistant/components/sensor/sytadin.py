@@ -1,94 +1,85 @@
 """
 Support for Sytadin Traffic, French Traffic Supervision.
 
-Systadin website : http://www.sytadin.fr
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sytadin/
 """
 import logging
-import requests
 import re
-
 from datetime import timedelta
+
+import requests
 import voluptuous as vol
 
-from homeassistant.const import (LENGTH_KILOMETERS,
-                                 CONF_MONITORED_CONDITIONS,
-                                 CONF_UPDATE_INTERVAL)
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    LENGTH_KILOMETERS, CONF_MONITORED_CONDITIONS, CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['beautifulsoup4==4.6.0']
 
-SYSTADIN = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
+_LOGGER = logging.getLogger(__name__)
 
-TRAFFIC_JAM_IDX = 0
-MEAN_VELOCITY_IDX = 1
-CONGESTION_IDX = 2
+URL = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
 
-SYSTADIN_REGEX = '(\d*\.\d+|\d+)'
+CONF_ATTRIBUTION = "Data provided by Direction des routes Île-de-France" \
+                   "(DiRIF)"
+
+DEFAULT_NAME = 'Sytadin'
+REGEX = r'(\d*\.\d+|\d+)'
 
 OPTION_TRAFFIC_JAM = 'traffic_jam'
 OPTION_MEAN_VELOCITY = 'mean_velocity'
 OPTION_CONGESTION = 'congestion'
 
 SENSOR_TYPES = {
-    OPTION_TRAFFIC_JAM: ['Sytadin Traffic Jam', LENGTH_KILOMETERS,
-                         TRAFFIC_JAM_IDX],
-    OPTION_MEAN_VELOCITY: ['Sytadin Mean Velocity', LENGTH_KILOMETERS+'/h',
-                           MEAN_VELOCITY_IDX],
-    OPTION_CONGESTION: ['Sytadin Congestion', '',
-                        CONGESTION_IDX]
+    OPTION_TRAFFIC_JAM: ['Traffic Jam', LENGTH_KILOMETERS],
+    OPTION_MEAN_VELOCITY: ['Mean Velocity', LENGTH_KILOMETERS+'/h'],
+    OPTION_CONGESTION: ['Congestion', ''],
 }
 
-TIMEOUT = 10
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list,
-                                                [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=OPTION_TRAFFIC_JAM):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up of the Sytadin Traffic sensor platform."""
+    name = config.get(CONF_NAME)
 
+    sytadin = SytadinData(URL)
+
+    dev = []
     for option in config.get(CONF_MONITORED_CONDITIONS):
-        _LOGGER.debug("Add new device: %s", option)
-
-        add_devices([
-            SytadinSensor(SENSOR_TYPES.get(option)[0],
-                          SYSTADIN,
-                          SENSOR_TYPES.get(option)[2],
-                          SYSTADIN_REGEX,
-                          SENSOR_TYPES.get(option)[1],
-                          config.get(CONF_UPDATE_INTERVAL))
-            ])
+        print(option)
+        dev.append(SytadinSensor(
+            sytadin, name, option, SENSOR_TYPES[option][0],
+            SENSOR_TYPES[option][1]))
+    add_devices(dev, True)
 
 
 class SytadinSensor(Entity):
-    """Sytadin Sensor."""
+    """Representation of a Sytadin Sensor."""
 
-    def __init__(self, name, url, idx, regex, unit, interval):
+    def __init__(self, data, name, sensor_type, option, unit):
         """Initialize the sensor."""
+        self.data = data
         self._state = None
         self._name = name
-        self._url = url
-        self._idx = idx
-        self._regex = regex
+        self._option = option
+        self._type = sensor_type
         self._unit = unit
-        self.update = Throttle(interval)(self._update)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return '{} {}'.format(self._name, self._option)
 
     @property
     def state(self):
@@ -100,14 +91,50 @@ class SytadinSensor(Entity):
         """Return the unit of measurement."""
         return self._unit
 
-    def _update(self):
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
+
+    def update(self):
         """Fetch new state data for the sensor."""
+        self.data.update()
+
+        if self.data is None:
+            return
+
+        if self._type == OPTION_TRAFFIC_JAM:
+            self._state = self.data.traffic_jam
+        elif self._type == OPTION_MEAN_VELOCITY:
+            self._state = self.data.mean_velocity
+        elif self._type == OPTION_CONGESTION:
+            self._state = self.data.congestion
+
+
+class SytadinData(object):
+    """The class for handling the data retrieval."""
+
+    def __init__(self, resource):
+        """Initialize the data object."""
+        self._resource = resource
+        self.data = None
+        self.traffic_jam = self.mean_velocity = self.congestion = None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data from the Sytadin."""
         from bs4 import BeautifulSoup
 
-        html = requests.get(self._url, timeout=TIMEOUT)
-        data = BeautifulSoup(html.text, 'html.parser')
+        try:
+            raw_html = requests.get(self._resource, timeout=10).text
+            data = BeautifulSoup(raw_html, 'html.parser')
 
-        main_content = data.find(id="main_content")
-        span = main_content.find_all("span", class_="barometre_valeur")
-
-        self._state = re.search(self._regex, span[self._idx].text).group()
+            values = data.select('.barometre_valeur')
+            self.traffic_jam = re.search(REGEX, values[0].text).group()
+            self.mean_velocity = re.search(REGEX, values[1].text).group()
+            self.congestion = re.search(REGEX, values[2].text).group()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Connection error")
+            self.data = None
