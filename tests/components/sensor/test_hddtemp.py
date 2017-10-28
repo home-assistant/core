@@ -130,7 +130,6 @@ class TestHDDTempSensor(unittest.TestCase):
     def test_hddtemp_rename_config(self):
         """Test hddtemp configuration with different name."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_NAME)
-        assert self.hass.states.get('sensor.foobar_devsda1')
 
         entity = self.hass.states.all()[0].entity_id
         state = self.hass.states.get(entity)
