@@ -190,10 +190,7 @@ class HarmonyRemote(remote.RemoteDevice):
     def turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
         import pyharmony
-        if kwargs[ATTR_ACTIVITY]:
-            activity = kwargs[ATTR_ACTIVITY]
-        else:
-            activity = self._default_activity
+        activity = kwargs.get(ATTR_ACTIVITY, self._default_activity)
 
         if activity:
             pyharmony.ha_start_activity(
@@ -210,7 +207,7 @@ class HarmonyRemote(remote.RemoteDevice):
     def send_command(self, command, **kwargs):
         """Send a set of commands to one device."""
         import pyharmony
-        device = kwargs.pop(ATTR_DEVICE, None)
+        device = kwargs.get(ATTR_DEVICE)
         if device is None:
             _LOGGER.error("Missing required argument: device")
             return
