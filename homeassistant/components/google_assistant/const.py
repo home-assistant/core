@@ -40,4 +40,4 @@ TYPE_SCENE = PREFIX_TYPES + 'SCENE'
 
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
-REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + 'v1/devices:requestSync?key='
+REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + 'v1/devices:requestSync'
