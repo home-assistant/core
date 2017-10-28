@@ -5,17 +5,16 @@ import unittest
 import logging
 from datetime import timedelta
 
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.timer import (
-    DOMAIN, sync_start, pause, cancel, finish, CONF_DURATION, CONF_NAME,
+    DOMAIN, CONF_DURATION, CONF_NAME,
     CONF_ICON, ATTR_DURATION, EVENT_TIMER_FINISHED, EVENT_TIMER_CANCELLED,
-     SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL, SERVICE_FINISH)
+    SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL, SERVICE_FINISH)
 from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID)
 from homeassistant.util.dt import utcnow
 
-from tests.common import (get_test_home_assistant, mock_restore_cache,
-    async_fire_time_changed)
+from tests.common import (get_test_home_assistant, async_fire_time_changed)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,6 +159,27 @@ def test_methods_and_events(hass):
     assert int(state.state) == 0
 
     assert len(results) == 2
+    assert results[-1].event_type == EVENT_TIMER_FINISHED
+
+    yield from hass.services.async_call(DOMAIN,
+                                        SERVICE_START,
+                                        {CONF_ENTITY_ID: 'timer.test1'})
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 1
+
+    yield from hass.services.async_call(DOMAIN,
+                                        SERVICE_FINISH,
+                                        {CONF_ENTITY_ID: 'timer.test1'})
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 0
+
+    assert len(results) == 3
     assert results[-1].event_type == EVENT_TIMER_FINISHED
 
 
