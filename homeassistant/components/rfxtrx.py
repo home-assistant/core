@@ -60,6 +60,7 @@ RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = 'rfxobject'
 
+
 def _valid_device(value, device_type):
     """Validate a dictionary of devices definitions."""
     config = OrderedDict()
