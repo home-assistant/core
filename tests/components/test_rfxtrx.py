@@ -107,8 +107,8 @@ class TestRFXTRX(unittest.TestCase):
                        'devices':
                            {'0b1100cd0213c7f210010f51': {
                                'name': 'Test',
-                               rfxtrx.ATTR_FIREEVENT: True}
-        }}}))
+                               rfxtrx.ATTR_FIREEVENT: True}}}
+        }))
 
         calls = []
 
@@ -152,8 +152,8 @@ class TestRFXTRX(unittest.TestCase):
                        'devices':
                            {'0a520802060100ff0e0269': {
                                'name': 'Test',
-                               rfxtrx.ATTR_FIREEVENT: True}
-        }}}))
+                               rfxtrx.ATTR_FIREEVENT: True}}}
+        }))
 
         calls = []
 
