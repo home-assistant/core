@@ -22,13 +22,13 @@ DOMAIN = 'calendar'
 SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
     calendars = []
 
-    component = EntityComponent(
-            _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.components.frontend.register_built_in_panel(
         'calendar', 'Calendar', 'mdi:calendar')
@@ -36,7 +36,7 @@ def async_setup(hass, config):
     hass.http.register_view(CalendarEventView(calendars))
 
     @asyncio.coroutine
-    def async_setup_platform(p_type, p_config={}, discovery_info={}):
+    def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a calendar platform."""
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
@@ -49,7 +49,8 @@ def async_setup(hass, config):
         calendar = None
         try:
             if hasattr(platform, 'async_get_handler'):
-                calendar = yield from platform.async_get_handler(hass, p_config, discovery_info)
+                calendar = yield from platform.async_get_handler(
+                    hass, p_config, discovery_info)
             elif hasattr(platform, 'get_handler'):
                 calendar = yield from hass.async_add_job(
                     platform.get_handler, hass, p_config, discovery_info)
@@ -76,14 +77,17 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_platform_discovered(platform, info):
+        """Setup discovered platform."""
         yield from async_setup_platform(platform, discovery_info=info)
 
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-    
+
     return True
+
 
 class Calendar(Entity):
     """Entity for each calendar platform."""
+
     def __init__(self, hass, name):
         """Initialze calendar entity."""
         self.hass = hass
@@ -92,7 +96,7 @@ class Calendar(Entity):
     @property
     def state(self):
         """Return the status of the calendar."""
-        return 'state' # TODO
+        return 'state'  # TODO
 
     @property
     def name(self):
@@ -101,38 +105,49 @@ class Calendar(Entity):
 
     @asyncio.coroutine
     def async_get_events(self):
-        """Returns a list of events."""
+        """Return a list of events."""
         raise NotImplementedError()
+
 
 class CalendarView(HomeAssistantView):
     """Base Calendar view."""
+
     def __init__(self, calendars):
+        """Initialize base calendar view."""
         self.calendars = calendars
 
     def get_calendar(self, platform):
+        """Get calendar by name."""
         for calendar in self.calendars:
             if calendar.name == platform:
                 return calendar
         return HTTPNotFound
 
+
 class CalendarPlatformsView(CalendarView):
+    """All platforms view."""
 
     url = "/api/calendar/platforms"
     name = "api:calendar:platforms"
 
     @asyncio.coroutine
     def get(self, request):
+        """Get all calendars."""
         platforms = []
         for calendar in self.calendars:
             platforms.append(calendar.name)
         return self.json(platforms)
 
+
 class CalendarEventView(CalendarView):
+    """Events per platform view."""
+
     url = "/api/calendar/events/{platform}"
     name = "api:calendar:events"
 
     @asyncio.coroutine
     def get(self, request, platform):
+        """Get all events for platform."""
         calendar = self.get_calendar(platform)
         events = yield from calendar.async_get_events()
         return self.json(events)

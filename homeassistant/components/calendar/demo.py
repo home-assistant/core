@@ -14,8 +14,6 @@ from random import randint, randrange, choice
 from homeassistant.util import Throttle
 
 
-from homeassistant.const import CONF_NAME
-
 import homeassistant.util.dt as dt
 from homeassistant.components.calendar import Calendar
 
@@ -24,8 +22,10 @@ DOMAIN = "DemoCalendar"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
+
 @asyncio.coroutine
 def async_get_handler(hass, config, discovery_info=None):
+    """Setup demo calendar platform."""
     calendars = []
 
     calendars.append(DemoCalendar(hass, 'DemoCalendar1'))
@@ -33,8 +33,12 @@ def async_get_handler(hass, config, discovery_info=None):
 
     return calendars
 
+
 class DemoCalendar(Calendar):
+    """Demo Calendar entity."""
+
     def __init__(self, hass, name):
+        """Initialize Demo Calender entity."""
         self._events = []
 
         events = [
@@ -49,8 +53,12 @@ class DemoCalendar(Calendar):
         today = dt.now()
 
         for eni in range(0, 10):
-            start = today.replace(day=randint(1, 30), hour=randint(6, 19), minute=randrange(0, 60, 15))
-            end = start + dt.dt.timedelta(days=randint(0, 3), hours=randint(1, 6), minutes=randrange(0, 60, 15))
+            start = today.replace(day=randint(1, 30),
+                                  hour=randint(6, 19),
+                                  minute=randrange(0, 60, 15))
+            end = start + dt.dt.timedelta(days=randint(0, 3),
+                                          hours=randint(1, 6),
+                                          minutes=randrange(0, 60, 15))
 
             event = {
                 'start': start,
@@ -63,9 +71,11 @@ class DemoCalendar(Calendar):
 
     @asyncio.coroutine
     def async_get_events(self):
+        """Calendar events."""
         return self._events
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def async_update(self):
+        """Update calendar events."""
         _LOGGER.info('Updating demo calendar')

@@ -30,6 +30,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=2)
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @asyncio.coroutine
 def async_get_handler(hass, config, discovery_info=None):
     """Set up the calendar platform for event devices."""
@@ -41,13 +42,16 @@ def async_get_handler(hass, config, discovery_info=None):
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
 
-    return [GoogleCalendar(hass, calendar_service, data, discovery_info[CONF_CAL_ID])
-        for data in discovery_info[CONF_ENTITIES] if data[CONF_TRACK]]
+    return [GoogleCalendar(hass, calendar_service, data,
+                           discovery_info[CONF_CAL_ID])
+            for data in discovery_info[CONF_ENTITIES] if data[CONF_TRACK]]
 
 
 class GoogleCalendar(Calendar):
+    """Entity for Google Calendar events."""
 
     def __init__(self, hass, calendar_service, data, calendar_id):
+        """Initialze Google Calendar entity."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = data.get('search', None)
@@ -57,14 +61,18 @@ class GoogleCalendar(Calendar):
 
     @asyncio.coroutine
     def async_get_events(self):
+        """Return a list of events."""
         return self.events
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def async_update(self):
+        """Update list of event."""
         service = self.calendar_service.get()
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-        params['timeMin'] = dt.now().replace(day=1, minute=0, hour=0).isoformat('T')
+        params['timeMin'] = dt.now().replace(day=1,
+                                             minute=0,
+                                             hour=0).isoformat('T')
 
         end = dt.now() + dt.dt.timedelta(weeks=8)
 
