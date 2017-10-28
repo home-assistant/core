@@ -3,15 +3,19 @@
 import asyncio
 import unittest
 import logging
+from datetime import timedelta
 
 from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.timer import (
-    DOMAIN, sync_start, pause, cancel, finish, CONF_SECONDS, CONF_NAME,
-    CONF_ICON)
-from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME)
+    DOMAIN, sync_start, pause, cancel, finish, CONF_DURATION, CONF_NAME,
+    CONF_ICON, ATTR_DURATION, EVENT_TIMER_FINISHED, EVENT_TIMER_CANCELLED,
+     SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL, SERVICE_FINISH)
+from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID)
+from homeassistant.util.dt import utcnow
 
-from tests.common import (get_test_home_assistant, mock_restore_cache)
+from tests.common import (get_test_home_assistant, mock_restore_cache,
+    async_fire_time_changed)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,41 +46,6 @@ class TestTimer(unittest.TestCase):
             self.assertFalse(
                 setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
-    def test_methods(self):
-        """Test start, pause, cancel and finish methods."""
-        config = {
-            DOMAIN: {
-                'test_1': {
-                    CONF_SECONDS: 10
-                },
-            }
-        }
-
-        assert setup_component(self.hass, 'timer', config)
-
-        entity_id = 'timer.test_1'
-
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(0, int(state.state))
-
-    def test_methods_with_config(self):
-        """Test increment, decrement, and reset methods with configuration."""
-        config = {
-            DOMAIN: {
-                'test_2': {
-                    CONF_NAME: 'MyTimer',
-                    CONF_SECONDS: 10,
-                }
-            }
-        }
-
-        assert setup_component(self.hass, 'timer', config)
-
-        entity_id = 'timer.test_2'
-
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(0, int(state.state))
-
     def test_config_options(self):
         """Test configuration options."""
         count_start = len(self.hass.states.entity_ids())
@@ -89,7 +58,7 @@ class TestTimer(unittest.TestCase):
                 'test_2': {
                     CONF_NAME: 'Hello World',
                     CONF_ICON: 'mdi:work',
-                    CONF_SECONDS: 10,
+                    CONF_DURATION: 10,
                 }
             }
         }
@@ -108,14 +77,90 @@ class TestTimer(unittest.TestCase):
         self.assertIsNotNone(state_1)
         self.assertIsNotNone(state_2)
 
-        #self.assertEqual(0, int(state_1.state))
+        self.assertEqual(0, int(state_1.state))
         self.assertNotIn(ATTR_ICON, state_1.attributes)
         self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
 
-        #self.assertEqual(10, int(state_2.state))
+        self.assertEqual(0, int(state_2.state))
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
         self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+        self.assertEqual('0:00:10', state_2.attributes.get(ATTR_DURATION))
+
+
+@asyncio.coroutine
+def test_methods_and_events(hass):
+    """Test methods and events."""
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'test1': {
+                CONF_DURATION: 10,
+            }
+        }})
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 0
+
+    results = []
+
+    def fake_event_listener(event):
+        """Fake event listener for trigger."""
+        results.append(event)
+
+    hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
+
+    yield from hass.services.async_call(DOMAIN,
+                                        SERVICE_START,
+                                        {CONF_ENTITY_ID: 'timer.test1'})
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 1
+
+    yield from hass.services.async_call(DOMAIN,
+                                        SERVICE_PAUSE,
+                                        {CONF_ENTITY_ID: 'timer.test1'})
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 2
+
+    yield from hass.services.async_call(DOMAIN,
+                                        SERVICE_CANCEL,
+                                        {CONF_ENTITY_ID: 'timer.test1'})
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 0
+
+    assert len(results) == 1
+    assert results[-1].event_type == EVENT_TIMER_CANCELLED
+
+    yield from hass.services.async_call(DOMAIN,
+                                        SERVICE_START,
+                                        {CONF_ENTITY_ID: 'timer.test1'})
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 1
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert int(state.state) == 0
+
+    assert len(results) == 2
+    assert results[-1].event_type == EVENT_TIMER_FINISHED
 
 
 @asyncio.coroutine
@@ -126,7 +171,7 @@ def test_no_initial_state_and_no_restore_state(hass):
     yield from async_setup_component(hass, DOMAIN, {
         DOMAIN: {
             'test1': {
-                CONF_SECONDS: 5,
+                CONF_DURATION: 10,
             }
         }})
 
