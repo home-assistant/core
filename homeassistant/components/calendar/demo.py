@@ -4,79 +4,68 @@ Demo platform that has two fake binary sensors.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-import homeassistant.util.dt as dt_util
-from homeassistant.components.calendar import CalendarEventDevice
-from homeassistant.components.google import CONF_DEVICE_ID, CONF_NAME
+import asyncio
+import logging
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Demo Calendar platform."""
-    calendar_data_future = DemoGoogleCalendarDataFuture()
-    calendar_data_current = DemoGoogleCalendarDataCurrent()
-    add_devices([
-        DemoGoogleCalendar(hass, calendar_data_future, {
-            CONF_NAME: 'Future Event',
-            CONF_DEVICE_ID: 'future_event',
-        }),
+from datetime import timedelta
+from random import randint, randrange, choice
 
-        DemoGoogleCalendar(hass, calendar_data_current, {
-            CONF_NAME: 'Current Event',
-            CONF_DEVICE_ID: 'current_event',
-        }),
-    ])
+from homeassistant.util import Throttle
 
 
-class DemoGoogleCalendarData(object):
-    """Representation of a Demo Calendar element."""
+from homeassistant.const import CONF_NAME
 
-    # pylint: disable=no-self-use
-    def update(self):
-        """Return true so entity knows we have new data."""
-        return True
+import homeassistant.util.dt as dt
+from homeassistant.components.calendar import Calendar
 
+_LOGGER = logging.getLogger(__name__)
+DOMAIN = "DemoCalendar"
 
-class DemoGoogleCalendarDataFuture(DemoGoogleCalendarData):
-    """Representation of a Demo Calendar for a future event."""
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-    def __init__(self):
-        """Set the event to a future event."""
-        one_hour_from_now = dt_util.now() \
-            + dt_util.dt.timedelta(minutes=30)
-        self.event = {
-            'start': {
-                'dateTime': one_hour_from_now.isoformat()
-            },
-            'end': {
-                'dateTime': (one_hour_from_now + dt_util.dt.
-                             timedelta(minutes=60)).isoformat()
-            },
-            'summary': 'Future Event',
-        }
+@asyncio.coroutine
+def async_get_handler(hass, config, discovery_info=None):
+    calendars = []
 
+    calendars.append(DemoCalendar(hass, 'DemoCalendar1'))
+    calendars.append(DemoCalendar(hass, 'DemoCalendar2'))
 
-class DemoGoogleCalendarDataCurrent(DemoGoogleCalendarData):
-    """Representation of a Demo Calendar for a current event."""
+    return calendars
 
-    def __init__(self):
-        """Set the event data."""
-        middle_of_event = dt_util.now() \
-            - dt_util.dt.timedelta(minutes=30)
-        self.event = {
-            'start': {
-                'dateTime': middle_of_event.isoformat()
-            },
-            'end': {
-                'dateTime': (middle_of_event + dt_util.dt.
-                             timedelta(minutes=60)).isoformat()
-            },
-            'summary': 'Current Event',
-        }
+class DemoCalendar(Calendar):
+    def __init__(self, hass, name):
+        self._events = []
 
+        events = [
+            'Football',
+            'Doctor',
+            'Meeting with Jim',
+            'Open house',
+            'Shopping',
+            'Cleaning lady'
+        ]
 
-class DemoGoogleCalendar(CalendarEventDevice):
-    """Representation of a Demo Calendar element."""
+        today = dt.now()
 
-    def __init__(self, hass, calendar_data, data):
-        """Initialize Google Calendar but without the API calls."""
-        self.data = calendar_data
-        super().__init__(hass, data)
+        for eni in range(0, 10):
+            start = today.replace(day=randint(1, 30), hour=randint(6, 19), minute=randrange(0, 60, 15))
+            end = start + dt.dt.timedelta(days=randint(0, 3), hours=randint(1, 6), minutes=randrange(0, 60, 15))
+
+            event = {
+                'start': start,
+                'end': end,
+                'text': choice(events)
+            }
+            self._events.append(event)
+
+        super().__init__(hass, name)
+
+    @asyncio.coroutine
+    def async_get_events(self):
+        return self._events
+
+    @asyncio.coroutine
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def async_update(self):
+        _LOGGER.info('Updating demo calendar')
