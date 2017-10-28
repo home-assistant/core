@@ -24,27 +24,19 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_TIMER_FINISHED = 'timer.finished'
-EVENT_TIMER_CANCELLED = 'timer.cancelled'
-
-ATTR_DURATION = 'duration'
-
-STATUS_IDLE = 0
-STATUS_ACTIVE = 1
-STATUS_PAUSED = 2
-
-STATUS_MAPPING = {
-    STATUS_IDLE: 'idle',
-    STATUS_ACTIVE: 'active',
-    STATUS_PAUSED: 'paused'
-}
-
-CONF_DURATION = 'duration'
+DOMAIN = 'timer'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DEFAULT_DURATION = 0
-DOMAIN = 'timer'
+ATTR_DURATION = 'duration'
+CONF_DURATION = 'duration'
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+STATUS_IDLE = 'idle'
+STATUS_ACTIVE = 'active'
+STATUS_PAUSED = 'paused'
+
+EVENT_TIMER_FINISHED = 'timer.finished'
+EVENT_TIMER_CANCELLED = 'timer.cancelled'
 
 SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'

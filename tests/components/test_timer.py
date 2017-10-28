@@ -8,7 +8,7 @@ from datetime import timedelta
 from homeassistant.core import CoreState
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.timer import (
-    DOMAIN, CONF_DURATION, CONF_NAME,
+    DOMAIN, CONF_DURATION, CONF_NAME, STATUS_ACTIVE, STATUS_IDLE, STATUS_PAUSED,
     CONF_ICON, ATTR_DURATION, EVENT_TIMER_FINISHED, EVENT_TIMER_CANCELLED,
     SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL, SERVICE_FINISH)
 from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID)
@@ -65,8 +65,6 @@ class TestTimer(unittest.TestCase):
         assert setup_component(self.hass, 'timer', config)
         self.hass.block_till_done()
 
-        _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
-
         self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
         self.hass.block_till_done()
 
@@ -76,11 +74,11 @@ class TestTimer(unittest.TestCase):
         self.assertIsNotNone(state_1)
         self.assertIsNotNone(state_2)
 
-        self.assertEqual(0, int(state_1.state))
+        self.assertEqual(STATUS_IDLE, state_1.state)
         self.assertNotIn(ATTR_ICON, state_1.attributes)
         self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
 
-        self.assertEqual(0, int(state_2.state))
+        self.assertEqual(STATUS_IDLE, state_2.state)
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
         self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
@@ -101,7 +99,7 @@ def test_methods_and_events(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 0
+    assert state.state == STATUS_IDLE
 
     results = []
 
@@ -119,7 +117,7 @@ def test_methods_and_events(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 1
+    assert state.state == STATUS_ACTIVE
 
     yield from hass.services.async_call(DOMAIN,
                                         SERVICE_PAUSE,
@@ -128,7 +126,7 @@ def test_methods_and_events(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 2
+    assert state.state == STATUS_PAUSED
 
     yield from hass.services.async_call(DOMAIN,
                                         SERVICE_CANCEL,
@@ -137,7 +135,7 @@ def test_methods_and_events(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 0
+    assert state.state == STATUS_IDLE
 
     assert len(results) == 1
     assert results[-1].event_type == EVENT_TIMER_CANCELLED
@@ -149,14 +147,14 @@ def test_methods_and_events(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 1
+    assert state.state == STATUS_ACTIVE
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
     yield from hass.async_block_till_done()
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 0
+    assert state.state == STATUS_IDLE
 
     assert len(results) == 2
     assert results[-1].event_type == EVENT_TIMER_FINISHED
@@ -168,7 +166,7 @@ def test_methods_and_events(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 1
+    assert state.state == STATUS_ACTIVE
 
     yield from hass.services.async_call(DOMAIN,
                                         SERVICE_FINISH,
@@ -177,7 +175,7 @@ def test_methods_and_events(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 0
+    assert state.state == STATUS_IDLE
 
     assert len(results) == 3
     assert results[-1].event_type == EVENT_TIMER_FINISHED
@@ -197,4 +195,4 @@ def test_no_initial_state_and_no_restore_state(hass):
 
     state = hass.states.get('timer.test1')
     assert state
-    assert int(state.state) == 0
+    assert state.state == STATUS_IDLE
