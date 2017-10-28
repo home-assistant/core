@@ -450,6 +450,7 @@ omit =
     homeassistant/components/notify/telstra.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
+    homeassistant/components/notify/yessssms.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/prometheus.py
     homeassistant/components/remote/harmony.py
