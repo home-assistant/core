@@ -52,7 +52,7 @@ TravisPy==0.3.5
 TwitterAPI==2.4.6
 
 # homeassistant.components.notify.yessssms
-YesssSMS==0.1.1b
+YesssSMS==0.1.1b2
 
 # homeassistant.components.abode
 abodepy==0.12.1
