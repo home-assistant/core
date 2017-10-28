@@ -40,7 +40,7 @@ xiaomi_miio_set_favorite_level:
       example: 'fan.xiaomi_air_purifier'
 
     level:
-      description: Level, between 0 and 17.
+      description: Level, between 0 and 16.
       example: '1'
 
 xiaomi_miio_set_led_brightness:
