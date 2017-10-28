@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_RECIPIENT
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['YesssSMS==0.1.1b']
+REQUIREMENTS = ['YesssSMS==0.1.1b2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,4 +41,11 @@ class YesssSMSNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a SMS message via Yesss.at's website."""
-        self.yesss.send(self._recipient, message)
+        try:
+            self.yesss.send(self._recipient, message)
+        except ValueError as e:
+            if str(e).startswith("YesssSMS:"):
+                _LOGGER.error(str(e))
+        except RuntimeError as e:
+            if str(e).startswith("YesssSMS:"):
+                _LOGGER.error(str(e))
