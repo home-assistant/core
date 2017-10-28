@@ -488,54 +488,6 @@ counter:
         description: Entity id of the counter to reset.
         example: 'counter.count0'
 
-timer:
-  start:
-    description: Start a timer.
-
-    fields:
-      entity_id:
-        description: Entity id of the timer to start. [optional]
-        example: 'timer.timer0'
-      weeks:
-        description: Duration in weeks the timer should be running. [optional]
-        example: 1
-      days:
-        description: Duration in days the timer should be running. [optional]
-        example: 7
-      hours:
-        description: Duration in hours the timer should be running. [optional]
-        example: 24
-      minutes:
-        description: Duration in minutes the timer should be running. [optional]
-        example: 60
-      seconds:
-        description: Duration in seconds the timer should be running. [optional]
-        example: 60
-
-  pause:
-    description: Pause a timer.
-
-    fields:
-      entity_id:
-        description: Entity id of the timer to pause. [optional]
-        example: 'timer.timer0'
-
-  cancel:
-    description: Cancel a timer.
-
-    fields:
-      entity_id:
-        description: Entity id of the timer to cancel. [optional]
-        example: 'timer.timer0'
-
-  finish:
-    description: Finish a timer.
-
-    fields:
-      entity_id:
-        description: Entity id of the timer to finish. [optional]
-        example: 'timer.timer0'
-
 abode:
   change_setting:
     description: Change an Abode system setting.
