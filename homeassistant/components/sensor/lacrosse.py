@@ -110,10 +110,10 @@ class LaCrosseSensor(Entity):
     _low_battery = None
     _new_battery = None
 
-    def __init__(self, hass, lacrosse, device_id, friendly_name, \
-            expire_after, config):
+    def __init__(self, hass, lacrosse, device_id, friendly_name,
+                 expire_after, config):
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, \
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT,
                                                   device_id, hass=hass)
         self._config = config
         self._name = friendly_name
@@ -121,8 +121,8 @@ class LaCrosseSensor(Entity):
         self._expire_after = expire_after
         self._expiration_trigger = None
 
-        lacrosse.register_callback(int(self._config["id"]), \
-            self._callback_lacrosse, None)
+        lacrosse.register_callback(int(self._config["id"]),
+                                   self._callback_lacrosse, None)
 
     @property
     def name(self):
