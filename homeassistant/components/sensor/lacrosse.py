@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_FRIENDLY_NAME, CONF_ID,
-    CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_TYPE, STATE_UNKNOWN, TEMP_CELSIUS)
+    CONF_SENSORS, CONF_TYPE, STATE_UNKNOWN, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -45,6 +45,7 @@ SENSOR_SCHEMA = vol.Schema({
 })
 
 lacrosse = None
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LaCrosse component."""
@@ -89,12 +90,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
 
     add_devices(sensors)
+
 
 def close_serial_port(*args):
     """Close the serial port uesed for the lacrosse."""
@@ -109,25 +110,24 @@ class LaCrosseSensor(Entity):
     _low_battery = None
     _new_battery = None
 
-    def __init__(self, hass, lacrosse, device_id, friendly_name,
+    def __init__(self, hass, lacrosse, device_id, friendly_name, \
             expire_after, config):
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id,
-                                                      hass=hass)
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, \
+                                                  device_id, hass=hass)
         self._config = config
         self._name = friendly_name
         self._value = STATE_UNKNOWN
         self._expire_after = expire_after
         self._expiration_trigger = None
 
-        lacrosse.register_callback(int(self._config["id"]),
+        lacrosse.register_callback(int(self._config["id"]), \
             self._callback_lacrosse, None)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
 
     def update(self, *args):
         """Get the latest data."""
@@ -158,7 +158,7 @@ class LaCrosseSensor(Entity):
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self.value_is_expired, expiration_at)
 
-        self._temperature = round(lacrosse_sensor.temperature * 2) /2
+        self._temperature = round(lacrosse_sensor.temperature * 2) / 2
         self._humidity = lacrosse_sensor.humidity
         self._low_battery = lacrosse_sensor.low_battery
         self._new_battery = lacrosse_sensor.new_battery
