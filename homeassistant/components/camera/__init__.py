@@ -139,7 +139,7 @@ def async_setup(hass, config):
             hass.async_add_job(entity.async_update_ha_state())
 
     hass.helpers.event.async_track_time_interval(
-        hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+        update_tokens, TOKEN_CHANGE_INTERVAL)
 
     @asyncio.coroutine
     def async_handle_camera_service(service):
