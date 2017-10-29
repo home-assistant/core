@@ -334,6 +334,8 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
+https://github.com/wardcraigj/PythonPusherClient/archive/773e8223ccdceb535cd6f47ceb8b5e951a13beb3.zip#PythonPusherClient==0.3.0
+
 # homeassistant.components.tradfri
 # https://github.com/chrysn/aiocoap/archive/3286f48f0b949901c8b5c04c0719dc54ab63d431.zip#aiocoap==0.3
 
