@@ -101,7 +101,7 @@ def hass_fixture(loop, hass):
 
     # By setting the google_assistant_type = 'light'
     # we can override how a device is reported to GA
-    switch_light = hass.states.get('switch.ac')
+    switch_light = hass.states.get('switch.decorative_lights')
     attrs = dict(switch_light.attributes)
     attrs[ga.const.ATTR_GOOGLE_ASSISTANT_TYPE] = "light"
     hass.states.async_set(
@@ -205,6 +205,8 @@ def test_execute_request(hass_fixture, assistant_client):
                     "devices": [{
                         "id": "light.ceiling_lights",
                     }, {
+                        "id": "switch.decorative_lights",
+                    }, {
                         "id": "light.bed_light",
                     }],
                     "execution": [{
@@ -225,6 +227,7 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 2
+    assert len(commands) == 3
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
+    assert hass_fixture.states.get('switch.decorative_lights').state == 'off'

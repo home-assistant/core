@@ -16,14 +16,14 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         {'entity_id': 'light.test', 'brightness': 242}
     )
 }, {  # Test switch to light custom type
-    'entity_id': 'switch.ac',
+    'entity_id': 'switch.decorative_lights',
     'command': ga.const.COMMAND_ONOFF,
     'params': {
         'on': True
     },
     'expected': (
         const.SERVICE_TURN_ON,
-        {'entity_id': 'switch.ac'}
+        {'entity_id': 'switch.decorative_lights'}
     )
 }, {  # Test light on / off
     'entity_id': 'light.test',
