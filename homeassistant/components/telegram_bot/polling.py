@@ -108,15 +108,15 @@ class TelegramPoll(BaseTelegramBotEntity):
         """Receiving and processing incoming messages."""
         try:
             _updates = yield from self.get_updates(self.update_id)
-        except WrongHttpStatus as _e:
+        except WrongHttpStatus as e:
             # WrongHttpStatus: Non-200 status code.
             # Occurs at times (mainly 502) and recovers
             # automatically. Pause for a while before retrying.
-            _LOGGER.error(_e)
+            _LOGGER.error(e)
             yield from asyncio.sleep(RETRY_SLEEP)
-        except ClientError as _e:
+        except ClientError as e:
             # ClientError: A client error has occurred. Pausing is advised.
-            _LOGGER.error(_e)
+            _LOGGER.error(e)
             yield from asyncio.sleep(RETRY_SLEEP)
         except asyncio.TimeoutError:
             # Long polling timeout. Nothing serious.
