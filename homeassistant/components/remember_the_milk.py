@@ -230,12 +230,12 @@ class RememberTheMilk(Entity):
             timeline = result.timeline.value
             self._rtm_api.rtm.tasks.add(
                 timeline=timeline, name=task_name, parse='1')
-            _LOGGER.info('created new task "%s" in account %s', task_name,
+            _LOGGER.debug('created new task "%s" in account %s', task_name,
                          self.name)
         except rtmapi.RtmRequestFailedException as rtm_exception:
-            _LOGGER.error(str(rtm_exception))
+            _LOGGER.error('Error creating new Remember The Milk task for account %s: %s', self._name,
+                          str(rtm_exception))
             return False
-        _LOGGER.debug('added task %s', task_name)
         return True
 
     @property
