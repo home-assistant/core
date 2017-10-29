@@ -98,8 +98,7 @@ class MikrotikScanner(DeviceScanner):
                 except (librouteros.exceptions.TrapError,
                         librouteros.exceptions.MultiTrapError,
                         librouteros.exceptions.ConnectionError):
-                    self.capsman_exist = None
-                    raise
+                    self.capsman_exist = False
 
                 if not self.capsman_exist:
                     _LOGGER.info(
@@ -115,8 +114,7 @@ class MikrotikScanner(DeviceScanner):
                 except (librouteros.exceptions.TrapError,
                         librouteros.exceptions.MultiTrapError,
                         librouteros.exceptions.ConnectionError):
-                    self.wireless_exist = None
-                    raise
+                    self.wireless_exist = False
 
                 if not self.wireless_exist:
                     _LOGGER.info(
