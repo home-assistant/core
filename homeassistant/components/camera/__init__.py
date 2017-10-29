@@ -162,7 +162,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_handle_snapshot_service(service):
-        """Handle snapshot servcie calls."""
+        """Handle snapshot services calls."""
         target_cameras = component.async_extract_from_service(service)
         filename = service.data[ATTR_FILENAME]
         filename.hass = hass
