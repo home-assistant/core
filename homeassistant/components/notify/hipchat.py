@@ -11,14 +11,13 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_TOKEN, CONF_HOST
+from homeassistant.const import CONF_TOKEN, CONF_HOST, CONF_ROOM
 
 REQUIREMENTS = ['hipnotify==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_COLOR = 'color'
-CONF_ROOM = 'room'
 CONF_NOTIFY = 'notify'
 CONF_FORMAT = 'format'
 

@@ -140,11 +140,13 @@ CONF_PROFILE_NAME = 'profile_name'
 CONF_PROTOCOL = 'protocol'
 CONF_PROXY_SSL = 'proxy_ssl'
 CONF_QUOTE = 'quote'
+CONF_RADIUS = 'radius'
 CONF_RECIPIENT = 'recipient'
 CONF_REGION = 'region'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
+CONF_ROOM = 'room'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_TYPE = 'sensor_type'
@@ -234,6 +236,9 @@ ATTR_DOMAIN = 'domain'
 ATTR_SERVICE = 'service'
 ATTR_SERVICE_DATA = 'service_data'
 
+# IDs
+ATTR_ID = 'id'
+
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = 'service_call_id'
 
@@ -257,38 +262,6 @@ CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
 
 # Electrical attributes
 ATTR_VOLTAGE = 'voltage'
-
-# Temperature attribute
-ATTR_TEMPERATURE = 'temperature'
-TEMP_CELSIUS = '°C'
-TEMP_FAHRENHEIT = '°F'
-
-# Length units
-LENGTH_CENTIMETERS = 'cm'  # type: str
-LENGTH_METERS = 'm'  # type: str
-LENGTH_KILOMETERS = 'km'  # type: str
-
-LENGTH_INCHES = 'in'  # type: str
-LENGTH_FEET = 'ft'  # type: str
-LENGTH_YARD = 'yd'  # type: str
-LENGTH_MILES = 'mi'  # type: str
-
-# Volume units
-VOLUME_LITERS = 'L'  # type: str
-VOLUME_MILLILITERS = 'mL'  # type: str
-
-VOLUME_GALLONS = 'gal'  # type: str
-VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
-
-# Mass units
-MASS_GRAMS = 'g'  # type: str
-MASS_KILOGRAMS = 'kg'  # type: str
-
-MASS_OUNCES = 'oz'  # type: str
-MASS_POUNDS = 'lb'  # type: str
-
-# UV Index units
-UNIT_UV_INDEX = 'UV index'  # type: str
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = 'discovered'
@@ -340,6 +313,41 @@ ATTR_SUPPORTED_FEATURES = 'supported_features'
 
 # Class of device within its domain
 ATTR_DEVICE_CLASS = 'device_class'
+
+# Temperature attribute
+ATTR_TEMPERATURE = 'temperature'
+
+# #### UNITS OF MEASUREMENT ####
+# Temperature units
+TEMP_CELSIUS = '°C'
+TEMP_FAHRENHEIT = '°F'
+
+# Length units
+LENGTH_CENTIMETERS = 'cm'  # type: str
+LENGTH_METERS = 'm'  # type: str
+LENGTH_KILOMETERS = 'km'  # type: str
+
+LENGTH_INCHES = 'in'  # type: str
+LENGTH_FEET = 'ft'  # type: str
+LENGTH_YARD = 'yd'  # type: str
+LENGTH_MILES = 'mi'  # type: str
+
+# Volume units
+VOLUME_LITERS = 'L'  # type: str
+VOLUME_MILLILITERS = 'mL'  # type: str
+
+VOLUME_GALLONS = 'gal'  # type: str
+VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
+
+# Mass units
+MASS_GRAMS = 'g'  # type: str
+MASS_KILOGRAMS = 'kg'  # type: str
+
+MASS_OUNCES = 'oz'  # type: str
+MASS_POUNDS = 'lb'  # type: str
+
+# UV Index units
+UNIT_UV_INDEX = 'UV index'  # type: str
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
