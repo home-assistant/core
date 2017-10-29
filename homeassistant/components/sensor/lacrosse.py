@@ -46,8 +46,6 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
 })
 
-lacrosse = None
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LaCrosse component."""
@@ -58,20 +56,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     baud = int(config.get(CONF_BAUD, DEFAULT_BAUD))
     expire_after = config.get(CONF_EXPIRE_AFTER, DEFAULT_EXPIRE_AFTER)
 
-    _LOGGER.debug("%s %s" % (usb_device, baud))
+    _LOGGER.debug("%s %s", usb_device, baud)
 
     try:
         lacrosse = pylacrosse.LaCrosse(usb_device, baud)
         lacrosse.open()
-    except SerialException as e:
-        _LOGGER.exception("Unable to open serial port for LaCrosse: %s", e)
+    except SerialException as exc:
+        _LOGGER.exception("Unable to open serial port for LaCrosse: %s", exc)
         return False
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_port)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lacrosse.close)
 
     sensors = []
     for device, device_config in config[CONF_SENSORS].items():
-        _LOGGER.debug("%s %s" % (device, device_config))
+        _LOGGER.debug("%s %s", device, device_config)
 
         typ = device_config.get(CONF_TYPE)
         try:
@@ -99,9 +97,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-def close_serial_port(*args):
-    """Close the serial port uesed for the lacrosse."""
-    lacrosse.close()
 
 
 class LaCrosseSensor(Entity):
