@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 # httplib2 is a transitive dependency from RtmAPI. If this dependency is not
 # set explicitly, the library does not work.
-REQUIREMENTS = ['RtmAPI==0.7.0' 'httplib2==0.10.3']
+REQUIREMENTS = ['RtmAPI==0.7.0', 'httplib2==0.10.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [RTM_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
 
-CONFIG_FILE_NAME = 'remember_the_milk.conf'
+CONFIG_FILE_NAME = '.remember_the_milk.conf'
 SERVICE_CREATE_TASK = 'create_task'
 
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
@@ -58,7 +58,7 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
 
-    stored_rtm_config = RememberTheMilkConfiguration()
+    stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
         account_name = rtm_config[CONF_NAME]
         _LOGGER.info("Adding Remember the milk account %s", account_name)
@@ -139,19 +139,20 @@ class RememberTheMilkConfiguration(object):
     This class stores the authentication token it get from the backend.
     """
 
-    def __init__(self):
+    def __init__(self, hass):
         """Create new instance of configuration."""
-        if os.path.isfile(CONFIG_FILE_NAME):
-            try:
-                _LOGGER.debug('loading configuration from file: %s',
-                              os.path.abspath(CONFIG_FILE_NAME))
-                with open(CONFIG_FILE_NAME, 'r') as config_file:
-                    self._config = json.load(config_file)
-            except ValueError:
-                _LOGGER.error('failed to load configuration file, creating a '
-                              'new one: %s', os.path.abspath(CONFIG_FILE_NAME))
-                self._config = dict()
-        else:
+        config_file_path = hass.config.path(CONFIG_FILE_NAME)
+        if not os.path.isfile(config_file_path):
+            self._config = dict()
+            return
+        try:
+            _LOGGER.debug('loading configuration from file: %s',
+                          config_file_path)
+            with open(config_file_path, 'r') as config_file:
+                self._config = json.load(config_file)
+        except ValueError:
+            _LOGGER.error('failed to load configuration file, creating a '
+                          'new one: %s', config_file_path)
             self._config = dict()
 
     def save_config(self):
