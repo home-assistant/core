@@ -117,8 +117,9 @@ CONF_LONGITUDE = 'longitude'
 CONF_LIGHTS = 'lights'
 CONF_MAC = 'mac'
 CONF_METHOD = 'method'
-CONF_MINIMUM = 'minimum'
 CONF_MAXIMUM = 'maximum'
+CONF_MINIMUM = 'minimum'
+CONF_MODE = 'mode'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
@@ -135,10 +136,12 @@ CONF_PIN = 'pin'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
+CONF_PROFILE_NAME = 'profile_name'
 CONF_PROTOCOL = 'protocol'
 CONF_PROXY_SSL = 'proxy_ssl'
 CONF_QUOTE = 'quote'
 CONF_RECIPIENT = 'recipient'
+CONF_REGION = 'region'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
@@ -217,6 +220,9 @@ STATE_PROBLEM = 'problem'
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
 ATTR_ATTRIBUTION = 'attribution'
+
+# Credentials
+ATTR_CREDENTIALS = 'credentials'
 
 # Contains time-related attributes
 ATTR_NOW = 'now'

@@ -11,10 +11,12 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     is_on, turn_on, VALID_TRANSITION, ATTR_TRANSITION)
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_LIGHTS
+from homeassistant.const import (
+    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -22,9 +24,6 @@ from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
-import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = ['light']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +34,14 @@ CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_STOP_CT = 'stop_colortemp'
 CONF_BRIGHTNESS = 'brightness'
 CONF_DISABLE_BRIGTNESS_ADJUST = 'disable_brightness_adjust'
-CONF_MODE = 'mode'
 CONF_INTERVAL = 'interval'
 
 MODE_XY = 'xy'
 MODE_MIRED = 'mired'
 MODE_RGB = 'rgb'
 DEFAULT_MODE = MODE_XY
+DEPENDENCIES = ['light']
+
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'flux',
