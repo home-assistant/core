@@ -140,10 +140,10 @@ blockchain==1.4.0
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
 # homeassistant.components.tts.amazon_polly
-boto3==1.4.3
+boto3==1.4.7
 
 # homeassistant.scripts.credstash
-botocore==1.4.93
+botocore==1.7.34
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
