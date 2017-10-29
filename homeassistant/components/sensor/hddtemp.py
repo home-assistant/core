@@ -47,11 +47,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     disks = config.get(CONF_DISKS)
 
-    try:
-        hddtemp = HddTempData(host, port)
-        hddtemp.update()
-    except RuntimeError:
-        _LOGGER.error("Unable to fetch the data from %s:%s", host, port)
+    hddtemp = HddTempData(host, port)
+    hddtemp.update()
+
+    if hddtemp.data is None:
         return False
 
     if not disks:
@@ -61,8 +60,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for disk in disks:
         if disk in hddtemp.data:
             dev.append(HddTempSensor(name, disk, hddtemp))
-        else:
-            continue
 
     add_devices(dev, True)
 
@@ -107,7 +104,7 @@ class HddTempSensor(Entity):
         """Get the latest data from HDDTemp daemon and updates the state."""
         self.hddtemp.update()
 
-        if self.disk in self.hddtemp.data:
+        if self.hddtemp.data and self.disk in self.hddtemp.data:
             self._details = self.hddtemp.data[self.disk].split('|')
             self._state = self._details[2]
         else:
