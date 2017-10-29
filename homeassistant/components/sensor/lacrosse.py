@@ -2,7 +2,6 @@
 Support for LaCrosse sensor components.
 """
 import logging
-import pylacrosse
 from datetime import timedelta
 
 import voluptuous as vol
@@ -50,6 +49,7 @@ lacrosse = None
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LaCrosse component."""
 
+    import pylacrosse
     from serial import SerialException
 
     usb_device = config.get(CONF_DEVICE, DEFAULT_DEVICE)
