@@ -608,13 +608,3 @@ homeassistant:
       entity_id:
         description: The entity_id of the device to turn off
         example: light.living_room
-
-
-remember_the_milk:
-  create_task:
-    description: Create a new task in your Remember The Milk account
-
-    fields:
-      name:
-        description: name of the new task, you can use the smart syntax here
-        example: 'do this ^today #from_hass'

@@ -55,8 +55,7 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_RTM)
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
+    descriptions = load_yaml_config_file(os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
