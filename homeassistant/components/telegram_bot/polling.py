@@ -22,6 +22,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
+RETRY_SLEEP = 10
+
+
+class WrongHttpStatus(Exception):
+    """Thrown when a wrong http status is received."""
+
+    pass
 
 
 @asyncio.coroutine
@@ -79,8 +86,6 @@ class TelegramPoll(BaseTelegramBotEntity):
     def get_updates(self, offset):
         """Bypass the default long polling method to enable asyncio."""
         resp = None
-        _json = {'result': [], 'ok': True}  # Empty result.
-
         if offset:
             self.post_data['offset'] = offset
         try:
@@ -91,30 +96,43 @@ class TelegramPoll(BaseTelegramBotEntity):
                 )
             if resp.status == 200:
                 _json = yield from resp.json()
+                return _json
             else:
-                _LOGGER.error("Error %s on %s", resp.status, self.update_url)
-
-        except ValueError:
-            _LOGGER.error("Error parsing Json message")
-        except (asyncio.TimeoutError, ClientError):
-            _LOGGER.error("Client connection error")
+                raise WrongHttpStatus('wrong status %s', resp.status)
         finally:
             if resp is not None:
                 yield from resp.release()
 
-        return _json
-
     @asyncio.coroutine
     def handle(self):
         """Receiving and processing incoming messages."""
-        _updates = yield from self.get_updates(self.update_id)
-        _updates = _updates.get('result')
-        if _updates is None:
-            _LOGGER.error("Incorrect result received.")
+        try:
+            _updates = yield from self.get_updates(self.update_id)
+        except WrongHttpStatus as _e:
+            # WrongHttpStatus: Non-200 status code.
+            # Occurs at times (mainly 502) and recovers
+            # automatically. Pause for a while before retrying.
+            _LOGGER.error(_e)
+            yield from asyncio.sleep(RETRY_SLEEP)
+        except ClientError as _e:
+            # ClientError: A client error has occurred. Pausing is advised.
+            _LOGGER.error(_e)
+            yield from asyncio.sleep(RETRY_SLEEP)
+        except asyncio.TimeoutError:
+            # Long polling timeout. Nothing serious.
+            _LOGGER.debug("Long polling timed out.")
+        except ValueError:
+            # Json error. Just retry for the next message.
+            _LOGGER.debug("Json decode error. Continuing without pause.")
         else:
-            for update in _updates:
-                self.update_id = update['update_id'] + 1
-                self.process_message(update)
+            # no exception raised. update received data.
+            _updates = _updates.get('result')
+            if _updates is None:
+                _LOGGER.error("Incorrect result received.")
+            else:
+                for update in _updates:
+                    self.update_id = update['update_id'] + 1
+                    self.process_message(update)
 
     @asyncio.coroutine
     def check_incoming(self):
