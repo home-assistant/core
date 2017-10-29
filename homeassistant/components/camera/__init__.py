@@ -138,7 +138,7 @@ def async_setup(hass, config):
             entity.async_update_token()
             hass.async_add_job(entity.async_update_ha_state())
 
-    hass.helpers.events.async_track_time_interval(
+    hass.helpers.event.async_track_time_interval(
         hass, update_tokens, TOKEN_CHANGE_INTERVAL)
 
     @asyncio.coroutine
