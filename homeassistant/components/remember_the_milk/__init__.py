@@ -141,23 +141,23 @@ class RememberTheMilkConfiguration(object):
 
     def __init__(self, hass):
         """Create new instance of configuration."""
-        config_file_path = hass.config.path(CONFIG_FILE_NAME)
-        if not os.path.isfile(config_file_path):
+        self._config_file_path = hass.config.path(CONFIG_FILE_NAME)
+        if not os.path.isfile(self._config_file_path):
             self._config = dict()
             return
         try:
             _LOGGER.debug('loading configuration from file: %s',
-                          config_file_path)
-            with open(config_file_path, 'r') as config_file:
+                          self._config_file_path)
+            with open(self._config_file_path, 'r') as config_file:
                 self._config = json.load(config_file)
         except ValueError:
             _LOGGER.error('failed to load configuration file, creating a '
-                          'new one: %s', config_file_path)
+                          'new one: %s', self._config_file_path)
             self._config = dict()
 
     def save_config(self):
         """Write the configuration to a file."""
-        with open(CONFIG_FILE_NAME, 'w') as config_file:
+        with open(self._config_file_path, 'w') as config_file:
             json.dump(self._config, config_file)
 
     def get_token(self, profile_name):
