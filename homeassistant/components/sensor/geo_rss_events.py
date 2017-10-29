@@ -12,6 +12,7 @@ import logging
 from collections import namedtuple
 from datetime import timedelta
 from functools import total_ordering
+import re
 
 import voluptuous as vol
 
@@ -35,6 +36,13 @@ VALID_SORT_BY = [ATTR_DATE_PUBLISHED, ATTR_DATE_UPDATED, ATTR_DISTANCE,
                  ATTR_TITLE]
 
 CONF_CATEGORIES = 'categories'
+CONF_CUSTOM_ATTRIBUTES = 'custom_attributes'
+CONF_CUSTOM_ATTRIBUTES_NAME = 'name'
+CONF_CUSTOM_ATTRIBUTES_REGEXP = 'regexp'
+CONF_CUSTOM_ATTRIBUTES_SOURCE = 'source'
+CONF_CUSTOM_FILTERS = 'custom_filters'
+CONF_CUSTOM_FILTERS_ATTRIBUTE = 'attribute'
+CONF_CUSTOM_FILTERS_REGEXP = 'regexp'
 CONF_SORT_BY = 'sort_by'
 CONF_SORT_REVERSE = 'sort_reverse'
 
@@ -50,16 +58,33 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
+CUSTOM_ATTRIBUTES_SCHEMA = vol.Schema({
+    vol.Required(CONF_CUSTOM_ATTRIBUTES_NAME): cv.string,
+    vol.Required(CONF_CUSTOM_ATTRIBUTES_SOURCE): cv.string,
+    vol.Required(CONF_CUSTOM_ATTRIBUTES_REGEXP): cv.string,
+})
+
+CUSTOM_FILTERS_SCHEMA = vol.Schema({
+    vol.Required(CONF_CUSTOM_FILTERS_ATTRIBUTE): cv.string,
+    vol.Required(CONF_CUSTOM_FILTERS_REGEXP): cv.string,
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_CATEGORIES, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_CUSTOM_ATTRIBUTES,
+                 default=[]): vol.All(cv.ensure_list,
+                                      [CUSTOM_ATTRIBUTES_SCHEMA]),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                  default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_SORT_BY, default=None): vol.In(VALID_SORT_BY),
-    vol.Optional(CONF_SORT_REVERSE, default=False): cv.boolean
+    vol.Optional(CONF_SORT_BY, default=None): cv.string,
+    vol.Optional(CONF_SORT_REVERSE, default=False): cv.boolean,
+    vol.Optional(CONF_CUSTOM_FILTERS,
+                 default=[]): vol.All(cv.ensure_list,
+                                      [CUSTOM_FILTERS_SCHEMA]),
 })
 
 
@@ -74,12 +99,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     sort_by = config.get(CONF_SORT_BY)
     sort_reverse = config.get(CONF_SORT_REVERSE)
+    custom_attributes_definition = config.get(CONF_CUSTOM_ATTRIBUTES)
+    custom_filters_definition = config.get(CONF_CUSTOM_FILTERS)
 
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
                   home_latitude, home_longitude, url, radius_in_km)
 
     # Initialise update service.
-    data = GeoRssServiceData(home_latitude, home_longitude, url, radius_in_km)
+    data = GeoRssServiceData(home_latitude, home_longitude, url, radius_in_km,
+                             custom_attributes_definition,
+                             custom_filters_definition)
     data.update()
 
     # Create all sensors based on categories.
@@ -158,6 +187,7 @@ class GeoRssServiceSensor(Entity):
         if self._data.events is None:
             self._state = 0
         else:
+            # Split up events by category (if defined).
             if self._category is None:
                 # Add all events regardless of category.
                 my_events = self._data.events
@@ -170,10 +200,11 @@ class GeoRssServiceSensor(Entity):
             self._state = len(my_events)
             # Sort events if configured to do so.
             if self._sort_by is not None:
-                min = MinType()
+                min_object = MinType()
                 my_events = sorted(my_events,
                                    key=lambda event:
-                                   min if event[self._sort_by] is None
+                                   min_object if self._sort_by not in event or
+                                                 event[self._sort_by] is None
                                    else event[self._sort_by],
                                    reverse=self._sort_reverse)
             # And now compute the attributes from the filtered events.
@@ -187,11 +218,14 @@ class GeoRssServiceSensor(Entity):
 class GeoRssServiceData(object):
     """Provide access to GeoRSS feed and stores the latest data."""
 
-    def __init__(self, home_latitude, home_longitude, url, radius_in_km):
+    def __init__(self, home_latitude, home_longitude, url, radius_in_km,
+                 custom_attributes_definition, custom_filters_definition):
         """Initialize the update service."""
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
+        self._custom_attributes_definition = custom_attributes_definition
+        self._custom_filters_definition = custom_filters_definition
         self.events = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -221,22 +255,56 @@ class GeoRssServiceData(object):
             if geometry:
                 distance = self.calculate_distance_to_geometry(geometry)
                 if distance <= self._radius_in_km:
-                    # Now create the event with attributes.
-                    event = {
-                        ATTR_CATEGORY: None if not hasattr(
-                            entry, 'category') else entry.category,
-                        ATTR_TITLE: None if not hasattr(
-                            entry, 'title') else entry.title,
-                        ATTR_DATE_PUBLISHED: None if not hasattr(
-                            entry,
-                            'published_parsed') else entry.published_parsed,
-                        ATTR_DATE_UPDATED: None if not hasattr(
-                            entry, 'updated_parsed') else entry.updated_parsed,
-                        ATTR_DISTANCE: distance
-                    }
-                    events.append(event)
+                    event = self.create_event(entry, distance)
+                    if event:
+                        events.append(event)
         _LOGGER.debug("%s events found nearby", len(events))
         return events
+
+    def create_event(self, entry, distance):
+        # Create the event with attributes.
+        event = {
+            ATTR_CATEGORY: None if not hasattr(
+                entry, 'category') else entry.category,
+            ATTR_TITLE: None if not hasattr(
+                entry, 'title') else entry.title,
+            ATTR_DATE_PUBLISHED: None if not hasattr(
+                entry,
+                'published_parsed') else entry.published_parsed,
+            ATTR_DATE_UPDATED: None if not hasattr(
+                entry, 'updated_parsed') else entry.updated_parsed,
+            ATTR_DISTANCE: distance
+        }
+        # Compute custom attributes.
+        for definition in self._custom_attributes_definition:
+            if hasattr(entry,
+                       definition[CONF_CUSTOM_ATTRIBUTES_SOURCE]):
+                match = re.match(definition[CONF_CUSTOM_ATTRIBUTES_REGEXP],
+                                 entry[definition[
+                                     CONF_CUSTOM_ATTRIBUTES_SOURCE]])
+                event[definition[
+                    CONF_CUSTOM_ATTRIBUTES_NAME]] = None if not match \
+                    else match.group('custom_attribute')
+            else:
+                _LOGGER.warning("No attribute '%s' found",
+                                definition[CONF_CUSTOM_ATTRIBUTES_SOURCE])
+                event[definition['name']] = None
+        # Run custom filters if defined.
+        if self._custom_filters_definition:
+            for definition in self._custom_filters_definition:
+                if definition[CONF_CUSTOM_FILTERS_ATTRIBUTE] in event:
+                    match = re.match(definition[CONF_CUSTOM_FILTERS_REGEXP],
+                                     event[definition[
+                                         CONF_CUSTOM_FILTERS_ATTRIBUTE]])
+                    # If the attribute does not match, immediately return
+                    # None value to eliminate entry, otherwise continue with
+                    # the filter loop.
+                    if not match:
+                        _LOGGER.debug("Event %s does not match filter %s",
+                                      event, definition)
+                        return None
+        _LOGGER.debug("Keeping event %s", event)
+        return event
 
     def calculate_distance_to_geometry(self, geometry):
         """Calculate the distance between HA and provided geometry."""
