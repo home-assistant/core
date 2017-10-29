@@ -1,13 +1,11 @@
 """
 Clickatell platform for notify component.
 
-This platform is to enable the sending of SMS notfiy messages with Clickatell
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.clickatell/
 """
-
 import logging
+
 import requests
 import voluptuous as vol
 
@@ -43,9 +41,11 @@ class ClickatellNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = {'apiKey': self.api_key,
-                'to': self.recipient,
-                'content': message}
+        data = {
+            'apiKey': self.api_key,
+            'to': self.recipient,
+            'content': message,
+        }
 
         resp = requests.get(BASE_API_URL, params=data, timeout=5)
         if (resp.status_code != 200) or (resp.status_code != 201):
