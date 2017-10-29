@@ -55,7 +55,8 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_RTM)
 
-    descriptions = load_yaml_config_file(os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
@@ -229,10 +230,10 @@ class RememberTheMilk(Entity):
             timeline = result.timeline.value
             self._rtm_api.rtm.tasks.add(
                 timeline=timeline, name=task_name, parse='1')
-            _LOGGER.debug('created new task "%s" in account %s', task_name,
-                         self.name)
+            _LOGGER.debug('created new task "%s" in account %s', task_name, self.name)
         except rtmapi.RtmRequestFailedException as rtm_exception:
-            _LOGGER.error('Error creating new Remember The Milk task for account %s: %s', self._name,
+            _LOGGER.error('Error creating new Remember The Milk task for '
+                          'account %s: %s', self._name,
                           str(rtm_exception))
             return False
         return True
