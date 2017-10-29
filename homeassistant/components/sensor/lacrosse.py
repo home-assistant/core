@@ -97,8 +97,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-
-
 class LaCrosseSensor(Entity):
     """Implementation of a Lacrosse sensor."""
 
