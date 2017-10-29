@@ -4,7 +4,6 @@ Support for controlling Global Cache gc100.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/gc100/
 """
-
 import logging
 
 import voluptuous as vol
@@ -16,6 +15,8 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['python-gc100==1.0.1a']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_PORTS = 'ports'
 
 DEFAULT_PORT = 4998
 DOMAIN = 'gc100'
@@ -30,8 +31,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=no-member
-# pylint: disable=import-self
+# pylint: disable=no-member, disable=import-self
 def setup(hass, base_config):
     """Set up the gc100 component."""
     import gc100
@@ -57,7 +57,7 @@ class GC100Device(object):
     """The GC100 component."""
 
     def __init__(self, hass, gc_device):
-        """Init gc100 device."""
+        """Init a gc100 device."""
         self.hass = hass
         self.gc_device = gc_device
 
