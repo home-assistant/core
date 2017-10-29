@@ -147,11 +147,34 @@ def query_device(entity: Entity) -> dict:
 
     final_brightness = 100 * (final_brightness / 255)
 
-    return {
+    query_response = {
         "on": final_state,
         "online": True,
         "brightness": int(final_brightness)
     }
+
+    supported_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    if supported_features & \
+       (light.SUPPORT_COLOR_TEMP | light.SUPPORT_RGB_COLOR):
+        query_response["color"] = {}
+
+        if entity.attributes.get(light.ATTR_COLOR_TEMP) is not None:
+            query_response["color"]["temperature"] = \
+                int(round(color.color_temperature_mired_to_kelvin(
+                    entity.attributes.get(light.ATTR_COLOR_TEMP))))
+
+        if entity.attributes.get(light.ATTR_COLOR_NAME) is not None:
+            query_response["color"]["name"] = \
+                entity.attributes.get(light.ATTR_COLOR_NAME)
+
+        if entity.attributes.get(light.ATTR_RGB_COLOR) is not None:
+            color_rgb = entity.attributes.get(light.ATTR_RGB_COLOR)
+            if color_rgb is not None:
+                query_response["color"]["spectrumRGB"] = \
+                    int(color.color_rgb_to_hex(
+                        color_rgb[0], color_rgb[1], color_rgb[2]), 16)
+
+    return query_response
 
 
 # erroneous bug on old pythons and pylint
@@ -187,6 +210,7 @@ def determine_service(entity_id: str, command: str,
         service_data['brightness'] = int(brightness / 100 * 255)
         return (SERVICE_TURN_ON, service_data)
 
+    _LOGGER.debug("Handling command %s with data %s", command, params)
     if command == COMMAND_COLOR:
         color_data = params.get('color')
         if color_data is not None:
@@ -208,4 +232,5 @@ def determine_service(entity_id: str, command: str,
         if params.get('on') is True:
             return (SERVICE_TURN_ON, service_data)
         return (SERVICE_TURN_OFF, service_data)
+
     return (None, service_data)
