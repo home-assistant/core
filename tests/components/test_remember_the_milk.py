@@ -27,15 +27,20 @@ class TestConfiguration(unittest.TestCase):
         """Test creating a new config file and reading data back."""
         profile = "myprofile"
         token = "mytoken"
+        json_string = '{"myprofile": {"token": "mytoken"}}'
 
-        config = rtm.RememberTheMilkConfiguration(self.hass)
-        config.set_token(profile, token)
+        with patch("builtins.open", mock_open()), \
+                patch("os.path.isfile", Mock(return_value=False)):
+            config = rtm.RememberTheMilkConfiguration(self.hass)
+            config.set_token(profile, token)
         self.assertEqual(config.get_token(profile), token)
         self.assertTrue(os.path.exists(rtm.CONFIG_FILE_NAME))
 
         del config
 
-        config = rtm.RememberTheMilkConfiguration(self.hass)
+        with patch("builtins.open", mock_open(read_data=json_string)), \
+                patch("os.path.isfile", Mock(return_value=True)):
+            config = rtm.RememberTheMilkConfiguration(self.hass)
         self.assertEqual(config.get_token(profile), token)
 
     def test_invalid_data(self):
