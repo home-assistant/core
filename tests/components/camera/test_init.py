@@ -17,6 +17,7 @@ from tests.common import (
 
 @pytest.fixture
 def mock_camera(hass):
+    """Initialize a demo camera platform."""
     assert hass.loop.run_until_complete(async_setup_component(hass, 'camera', {
         camera.DOMAIN: {
             'platform': 'demo'
