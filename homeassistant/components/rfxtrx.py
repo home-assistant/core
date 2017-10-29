@@ -277,6 +277,8 @@ def find_possible_pt2262_device(device_id):
 
             if size is not None:
                 size = len(dev_id) - size - 1
+
+                # 6 tri-state bits = 729 values => 10 bits max.
                 if size <= 3:
                     _LOGGER.info("found possible device %s for %s "
                                  "with the following configuration:\n"
