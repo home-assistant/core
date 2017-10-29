@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_STATE,
-    CONF_SHOW_ON_MAP)
+    CONF_SHOW_ON_MAP, CONF_RADIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -31,7 +31,6 @@ ATTR_TIMESTAMP = 'timestamp'
 
 CONF_CITY = 'city'
 CONF_COUNTRY = 'country'
-CONF_RADIUS = 'radius'
 CONF_ATTRIBUTION = "Data provided by AirVisual"
 
 MASS_PARTS_PER_MILLION = 'ppm'
