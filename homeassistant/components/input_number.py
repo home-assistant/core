@@ -10,14 +10,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
-from homeassistant.loader import bind_hass
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,6 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
-CONF_MODE = 'mode'
 CONF_STEP = 'step'
 
 MODE_SLIDER = 'slider'
@@ -180,7 +179,7 @@ def async_setup(hass, config):
 
 
 class InputNumber(Entity):
-    """Represent an slider."""
+    """Representation of a slider."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
                  unit, mode):
