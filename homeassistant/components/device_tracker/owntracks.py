@@ -20,7 +20,7 @@ from homeassistant.const import STATE_HOME
 from homeassistant.core import callback
 from homeassistant.util import slugify, decorator
 
-REQUIREMENTS = ['libnacl==1.6.0']
+REQUIREMENTS = ['libnacl==1.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +75,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         except ValueError:
             # If invalid JSON
             _LOGGER.error("Unable to parse payload as JSON: %s", payload)
+            return
 
         message['topic'] = topic
 
@@ -91,7 +92,11 @@ def _parse_topic(topic):
 
     Async friendly.
     """
-    _, user, device, *_ = topic.split('/', 3)
+    try:
+        _, user, device, *_ = topic.split('/', 3)
+    except ValueError:
+        _LOGGER.error("Can't parse topic: '%s'", topic)
+        raise
 
     return user, device
 

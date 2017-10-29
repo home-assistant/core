@@ -12,7 +12,7 @@ from tests.common import async_fire_time_changed
 
 HOST = 'test'
 DOMAIN = 'bla'
-TOKEN = 'abcdefgh'
+PASSWORD = 'abcdefgh'
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def setup_namecheapdns(hass, aioclient_mock):
     aioclient_mock.get(namecheapdns.UPDATE_URL, params={
         'host': HOST,
         'domain': DOMAIN,
-        'password': TOKEN
+        'password': PASSWORD,
     }, text='<interface-response><ErrCount>0</ErrCount></interface-response>')
 
     hass.loop.run_until_complete(async_setup_component(
@@ -29,7 +29,7 @@ def setup_namecheapdns(hass, aioclient_mock):
             'namecheapdns': {
                 'host': HOST,
                 'domain': DOMAIN,
-                'access_token': TOKEN
+                'password': PASSWORD,
             }
         }))
 
@@ -40,14 +40,14 @@ def test_setup(hass, aioclient_mock):
     aioclient_mock.get(namecheapdns.UPDATE_URL, params={
         'host': HOST,
         'domain': DOMAIN,
-        'password': TOKEN
+        'password': PASSWORD
     }, text='<interface-response><ErrCount>0</ErrCount></interface-response>')
 
     result = yield from async_setup_component(hass, namecheapdns.DOMAIN, {
         'namecheapdns': {
             'host': HOST,
             'domain': DOMAIN,
-            'access_token': TOKEN
+            'password': PASSWORD,
         }
     })
     assert result
@@ -64,14 +64,14 @@ def test_setup_fails_if_update_fails(hass, aioclient_mock):
     aioclient_mock.get(namecheapdns.UPDATE_URL, params={
         'host': HOST,
         'domain': DOMAIN,
-        'password': TOKEN
+        'password': PASSWORD,
     }, text='<interface-response><ErrCount>1</ErrCount></interface-response>')
 
     result = yield from async_setup_component(hass, namecheapdns.DOMAIN, {
         'namecheapdns': {
             'host': HOST,
             'domain': DOMAIN,
-            'access_token': TOKEN
+            'password': PASSWORD,
         }
     })
     assert not result

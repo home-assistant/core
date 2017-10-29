@@ -321,7 +321,6 @@ class SonosDevice(MediaPlayerDevice):
         self._media_album_name = None
         self._media_title = None
         self._media_radio_show = None
-        self._media_next_title = None
         self._available = True
         self._support_previous_track = False
         self._support_next_track = False
@@ -440,7 +439,6 @@ class SonosDevice(MediaPlayerDevice):
             self._media_album_name = None
             self._media_title = None
             self._media_radio_show = None
-            self._media_next_title = None
             self._current_track_uri = None
             self._current_track_is_radio_stream = False
             self._support_previous_track = False
@@ -732,17 +730,6 @@ class SonosDevice(MediaPlayerDevice):
                     None,
                     next_track_uri
                 )
-
-            next_track_metadata = event.variables.get('next_track_meta_data')
-            if next_track_metadata:
-                next_track = '{title} - {creator}'.format(
-                    title=next_track_metadata.title,
-                    creator=next_track_metadata.creator
-                )
-                if next_track != self._media_next_title:
-                    self._media_next_title = next_track
-            else:
-                self._media_next_title = None
 
         elif event.service == self._player.renderingControl:
             if 'volume' in event.variables:

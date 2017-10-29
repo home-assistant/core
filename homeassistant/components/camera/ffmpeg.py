@@ -55,9 +55,9 @@ class FFmpegCamera(Camera):
         from haffmpeg import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
 
-        image = yield from ffmpeg.get_image(
+        image = yield from asyncio.shield(ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
-            extra_cmd=self._extra_arguments)
+            extra_cmd=self._extra_arguments), loop=self.hass.loop)
         return image
 
     @asyncio.coroutine

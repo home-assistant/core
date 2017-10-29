@@ -48,7 +48,7 @@ def async_setup(hass, config):
         'What is on my shopping list'
     ])
 
-    hass.components.frontend.register_built_in_panel(
+    yield from hass.components.frontend.async_register_built_in_panel(
         'shopping-list', 'Shopping List', 'mdi:cart')
 
     return True
