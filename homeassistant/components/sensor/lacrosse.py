@@ -51,7 +51,6 @@ lacrosse = None
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LaCrosse component."""
-
     import pylacrosse
     from serial import SerialException
 
