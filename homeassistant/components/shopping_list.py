@@ -49,7 +49,7 @@ def async_setup(hass, config):
     ])
 
     yield from hass.components.frontend.async_register_built_in_panel(
-        'shopping-list', 'Shopping List', 'mdi:cart')
+        'shopping-list', 'shopping_list', 'mdi:cart')
 
     return True
 
