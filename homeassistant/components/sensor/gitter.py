@@ -10,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_API_KEY
+from homeassistant.const import CONF_NAME, CONF_API_KEY, CONF_ROOM
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['gitterpy==0.1.6']
@@ -20,8 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_MENTION = 'mention'
 ATTR_ROOM = 'room'
 ATTR_USERNAME = 'username'
-
-CONF_ROOM = 'room'
 
 DEFAULT_NAME = 'Gitter messages'
 DEFAULT_ROOM = 'home-assistant/home-assistant'
