@@ -81,7 +81,7 @@ def disable_motion_detection(hass, entity_id=None):
 
 
 @bind_hass
-def snapshot(hass, filename, entity_id=None):
+def async_snapshot(hass, filename, entity_id=None):
     """Make a snapshot from a camera."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     data[ATTR_FILENAME] = filename
@@ -177,7 +177,7 @@ def async_setup(hass, config):
                     "Can't write %s, no access to path!", snapshot_file)
                 continue
 
-            image = yield from camera.async_get_image()
+            image = yield from camera.async_camera_image()
 
             def _write_image(to_file, image_data):
                 """Executor helper to write image."""
@@ -185,7 +185,7 @@ def async_setup(hass, config):
                     img_file.write(image_data)
 
             try:
-                yield from hass.async_run_job(
+                yield from hass.async_add_job(
                     _write_image, snapshot_file, image)
             except OSError as err:
                 _LOGGER.error("Can't write image to file: %s", err)
