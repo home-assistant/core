@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     baud = int(config.get(CONF_BAUD, DEFAULT_BAUD))
     expire_after = config.get(CONF_EXPIRE_AFTER, DEFAULT_EXPIRE_AFTER)
 
-    _LOGGER.debug("%s %s", usb_device, baud)
+    _LOGGER.info("%s %s", usb_device, baud)
 
     try:
         lacrosse = pylacrosse.LaCrosse(usb_device, baud)
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for device, device_config in config[CONF_SENSORS].items():
-        _LOGGER.debug("%s %s", device, device_config)
+        _LOGGER.info("%s %s", device, device_config)
 
         typ = device_config.get(CONF_TYPE)
         try:
@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
 
     if not sensors:
-        _LOGGER.error("No sensors added")
+        _LOGGER.warning("No sensors added")
         return False
 
     add_devices(sensors)
@@ -139,8 +139,6 @@ class LaCrosseSensor(Entity):
 
     def _callback_lacrosse(self, lacrosse_sensor, user_data):
         """Callback function that is called from pylacrosse with new values."""
-        # auto-expire enabled?
-
         if self._expire_after is not None and self._expire_after > 0:
             # Reset old trigger
             if self._expiration_trigger:
