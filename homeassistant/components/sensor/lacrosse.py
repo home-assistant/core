@@ -112,6 +112,7 @@ class LaCrosseSensor(Entity):
 
     def __init__(self, hass, lacrosse, device_id, friendly_name,
                  expire_after, config):
+        """Initialize the sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT,
                                                   device_id, hass=hass)
