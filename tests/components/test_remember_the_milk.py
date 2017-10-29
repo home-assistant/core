@@ -4,6 +4,8 @@ import unittest
 import logging
 import os
 import homeassistant.components.remember_the_milk as rtm
+from unittest.mock import patch, mock_open, Mock
+from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,23 +22,23 @@ class TestConfiguration(unittest.TestCase):
         """Test creating a new config file and reading data back."""
         profile = "myprofile"
         token = "mytoken"
-
+        hass = get_test_home_assistant()
         self._delete_config_file()
 
-        config = rtm.RememberTheMilkConfiguration()
+        config = rtm.RememberTheMilkConfiguration(hass)
         config.set_token(profile, token)
         self.assertEqual(config.get_token(profile), token)
         self.assertTrue(os.path.exists(rtm.CONFIG_FILE_NAME))
 
         del config
 
-        config = rtm.RememberTheMilkConfiguration()
+        config = rtm.RememberTheMilkConfiguration(hass)
         self.assertEqual(config.get_token(profile), token)
 
     def test_invalid_data(self):
         """Test starts with invalid data and should not raise an exception."""
-        with open(rtm.CONFIG_FILE_NAME, "w") as config_file:
-            config_file.write('random charachters')
 
-        config = rtm.RememberTheMilkConfiguration()
+        with patch("builtins.open", mock_open(read_data='random charachters')), \
+                patch("os.path.isfile", Mock(return_value=True)):
+            config = rtm.RememberTheMilkConfiguration(get_test_home_assistant())
         self.assertIsNotNone(config)
