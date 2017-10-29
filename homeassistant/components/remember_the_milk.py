@@ -31,14 +31,13 @@ GROUP_NAME_RTM = 'remember the milk accounts'
 CONF_SHARED_SECRET = 'shared_secret'
 
 RTM_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_SHARED_SECRET): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        cv.string: RTM_SCHEMA
-    }
+    DOMAIN: vol.All(cv.ensure_list, [RTM_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIG_FILE_NAME = 'remember_the_milk.conf'
@@ -58,7 +57,8 @@ def setup(hass, config):
         os.path.join(os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
 
     stored_rtm_config = RememberTheMilkConfiguration()
-    for account_name, rtm_config in config[DOMAIN].items():
+    for rtm_config in config[DOMAIN]:
+        account_name = rtm_config[CONF_NAME]
         _LOGGER.info("Adding Remember the milk account %s", account_name)
         api_key = rtm_config[CONF_API_KEY]
         shared_secret = rtm_config[CONF_SHARED_SECRET]
