@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.remote import (
     PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_ACTIVITY, ATTR_NUM_REPEATS,
-    ATTR_DELAY_SECS)
+    ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
@@ -37,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
+    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
 })
 
 HARMONY_SYNC_SCHEMA = vol.Schema({
@@ -83,6 +84,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[CONF_DEVICE_CACHE].append(config)
         return
 
+    delay_secs = config.get(ATTR_DELAY_SECS)
+
     name, address, port = host
     _LOGGER.info("Loading Harmony Platform: %s at %s:%s, startup activity: %s",
                  name, address, port, activity)
@@ -91,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         '{}{}{}'.format('harmony_', slugify(name), '.conf'))
     try:
         device = HarmonyRemote(
-            name, address, port, activity, harmony_conf_file)
+            name, address, port, activity, harmony_conf_file, delay_secs)
         DEVICES.append(device)
         add_devices([device])
         register_services(hass)
@@ -131,7 +134,7 @@ def _sync_service(service):
 class HarmonyRemote(remote.RemoteDevice):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, name, host, port, activity, out_path):
+    def __init__(self, name, host, port, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
         import pyharmony
         from pathlib import Path
@@ -150,6 +153,7 @@ class HarmonyRemote(remote.RemoteDevice):
             _LOGGER.debug("Writing harmony configuration to file: %s",
                           out_path)
             pyharmony.ha_write_config_file(self._config, self._config_path)
+        self._delay_secs = delay_secs
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -211,7 +215,7 @@ class HarmonyRemote(remote.RemoteDevice):
             return
 
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
-        delay_secs = kwargs.get(ATTR_DELAY_SECS)
+        delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
 
         for i in range(num_repeats):
             for command in commands:
