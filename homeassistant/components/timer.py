@@ -236,9 +236,8 @@ class Timer(Entity):
         if self._state is not None:
             return
 
-        # pylint: disable=undefined-variable
-        state = yield from hass.helpers.restore_state.async_get_last_state(
-            self.entity_id)
+        restore_state = self._hass.helpers.restore_state
+        state = yield from restore_state.async_get_last_state(self.entity_id)
         self._state = state and state.state == state
 
     @asyncio.coroutine
