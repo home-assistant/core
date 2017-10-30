@@ -9,7 +9,6 @@ set_aux_heat:
     aux_heat:
       description: New value of axillary heater.
       example: true
-
 set_away_mode:
   description: Turn away mode on/off for climate device.
   fields:
@@ -19,7 +18,6 @@ set_away_mode:
     away_mode:
       description: New value of away mode.
       example: true
-
 set_hold_mode:
   description: Turn hold mode for climate device.
   fields:
@@ -29,7 +27,6 @@ set_hold_mode:
     hold_mode:
       description: New value of hold mode
       example: 'away'
-
 set_temperature:
   description: Set target temperature of climate device.
   fields:
@@ -37,18 +34,17 @@ set_temperature:
       description: Name(s) of entities to change.
       example: 'climate.kitchen'
     temperature:
-      description: New target temperature for hvac.
+      description: New target temperature for HVAC.
       example: 25
     target_temp_high:
-      description: New target high tempereature for hvac.
+      description: New target high tempereature for HVAC.
       example: 26
-     target_temp_low:
-      description: New target low temperature for hvac.
+    target_temp_low:
+      description: New target low temperature for HVAC.
       example: 20
     operation_mode:
       description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
       example: 'Heat'
-
 set_humidity:
   description: Set target humidity of climate device.
   fields:
@@ -58,7 +54,6 @@ set_humidity:
     humidity:
       description: New target humidity for climate device.
       example: 60
-
 set_fan_mode:
   description: Set fan operation for climate device.
   fields:
@@ -68,7 +63,6 @@ set_fan_mode:
     fan_mode:
       description: New value of fan mode.
       example: On Low
-
 set_operation_mode:
   description: Set operation mode for climate device.
   fields:
@@ -78,7 +72,6 @@ set_operation_mode:
     operation_mode:
       description: New value of operation mode.
       example: Heat
-
 set_swing_mode:
   description: Set swing operation for climate device.
   fields:
@@ -88,7 +81,6 @@ set_swing_mode:
     swing_mode:
       description: New value of swing mode.
       example: 1
-
 ecobee_set_fan_min_on_time:
   description: Set the minimum fan on time.
   fields:
