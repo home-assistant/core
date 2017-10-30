@@ -10,10 +10,11 @@ media_player:
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 from homeassistant.const import (
     CONF_HOST, CONF_PORT,
-    STATE_UNKNOWN, STATE_ON
+    STATE_UNKNOWN, STATE_ON, STATE_PLAYING, STATE_PAUSED, STATE_IDLE
 )
 from homeassistant.components.media_player import (
     MediaPlayerDevice, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
@@ -111,6 +112,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._zone = zone
         self.mute = False
         self.media_status = None
+        self.media_status_received = None
         self.power = STATE_UNKNOWN
         self.status = STATE_UNKNOWN
         self.volume = 0
@@ -202,6 +204,23 @@ class YamahaDevice(MediaPlayerDevice):
         """Title of current playing media."""
         return self.media_status.media_title if self.media_status else None
 
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self.media_status and self.state in \
+                [STATE_PLAYING, STATE_PAUSED, STATE_IDLE]:
+            return self.media_status.media_position
+        else:
+            return None
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self.media_status_received if self.media_status else None
+
     def update(self):
         """Get the latest details from the device."""
         _LOGGER.debug("update: %s", self.entity_id)
@@ -269,3 +288,9 @@ class YamahaDevice(MediaPlayerDevice):
         _LOGGER.debug("select_source: %s", source)
         self.status = STATE_UNKNOWN
         self._zone.set_input(source)
+
+    def new_media_status(self, status):
+        """Handle updates of the media status."""
+        _LOGGER.debug("new media_status arrived")
+        self.media_status = status
+        self.media_status_received = dt_util.utcnow()
