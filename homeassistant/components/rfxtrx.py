@@ -110,7 +110,7 @@ def _valid_light_switch(value):
 
 
 def valid_recvmode(value):
-    """Test if a recv_mode value is known by pyRFXTRX"""
+    """Test if a recv_mode value is known by pyRFXTRX."""
     import RFXtrx
     if RFXtrx.lowlevel.get_recmode_tuple(value) != (None, None):
         return value
