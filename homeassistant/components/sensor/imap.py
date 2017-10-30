@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['aioimaplib==0.7.13']
 
 CONF_SERVER = 'server'
+CONF_FOLDER = 'folder'
 
 DEFAULT_PORT = 993
 
@@ -34,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SERVER): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_FOLDER, default='INBOX'): cv.string,
 })
 
 
@@ -44,7 +46,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                         config.get(CONF_USERNAME),
                         config.get(CONF_PASSWORD),
                         config.get(CONF_SERVER),
-                        config.get(CONF_PORT))
+                        config.get(CONF_PORT),
+                        config.get(CONF_FOLDER))
 
     if not (yield from sensor.connection()):
         raise PlatformNotReady
@@ -56,13 +59,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class ImapSensor(Entity):
     """Representation of an IMAP sensor."""
 
-    def __init__(self, name, user, password, server, port):
+    def __init__(self, name, user, password, server, port, folder):
         """Initialize the sensor."""
         self._name = name or user
         self._user = user
         self._password = password
         self._server = server
         self._port = port
+        self._folder = folder
         self._unread_count = 0
         self._connection = None
         self._does_push = None
@@ -110,7 +114,7 @@ class ImapSensor(Entity):
                     self._server, self._port)
                 yield from self._connection.wait_hello_from_server()
                 yield from self._connection.login(self._user, self._password)
-                yield from self._connection.select()
+                yield from self._connection.select(self._folder)
                 self._does_push = self._connection.has_capability('IDLE')
             except (aioimaplib.AioImapException, asyncio.TimeoutError):
                 self._connection = None

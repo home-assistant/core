@@ -219,6 +219,12 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.media_player.update()
         self.assertEqual('one', self.media_player.source)
 
+    def test_media_title(self):
+        """Test media title property."""
+        self.assertIsNone(self.media_player.media_title)
+        self.media_player.update()
+        self.assertEqual('one', self.media_player.media_title)
+
     def test_source_list(self):
         """Test source list property."""
         # Note, the list is sorted!
