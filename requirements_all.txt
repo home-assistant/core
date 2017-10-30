@@ -920,7 +920,7 @@ rachiopy==0.1.2
 radiotherm==1.3
 
 # homeassistant.components.raincloud
-raincloudy==0.0.3
+raincloudy==0.0.4
 
 # homeassistant.components.raspihats
 # raspihats==2.2.3
