@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ICON
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.lametric import DOMAIN
+from homeassistant.components.lametric import DOMAIN, HassLaMetricManager
 
 REQUIREMENTS = ['lmnotify==0.0.4']
 
