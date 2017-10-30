@@ -24,7 +24,7 @@ from homeassistant.util.color import (
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = 'device_sun_light_trigger'
+DOMAIN = 'flux'
 DEPENDENCIES = ['light']
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,9 +45,8 @@ MODE_MIRED = 'mired'
 MODE_RGB = 'rgb'
 DEFAULT_MODE = MODE_XY
 
-PLATFORM_SCHEMA = vol.Schema({
+CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_PLATFORM): 'flux',
         vol.Required(CONF_LIGHTS): cv.entity_ids,
         vol.Optional(CONF_NAME, default="Flux"): cv.string,
         vol.Optional(CONF_START_TIME): cv.time,
@@ -101,19 +100,20 @@ def set_lights_rgb(hass, lights, rgb, transition):
 
 def setup(hass, config):
     """Set up the Flux switches."""
-    name = config.get(CONF_NAME)
-    lights = config.get(CONF_LIGHTS)
-    start_time = config.get(CONF_START_TIME)
-    stop_time = config.get(CONF_STOP_TIME)
-    start_colortemp = config.get(CONF_START_CT)
-    sunset_colortemp = config.get(CONF_SUNSET_CT)
-    stop_colortemp = config.get(CONF_STOP_CT)
-    brightness = config.get(CONF_BRIGHTNESS)
-    disable_brightness_adjust = config.get(CONF_DISABLE_BRIGTNESS_ADJUST)
-    mode = config.get(CONF_MODE)
-    interval = config.get(CONF_INTERVAL)
-    transition = config.get(ATTR_TRANSITION)
-    active = config.get(CONF_ACTIVE_BY_DEFAULT)
+    domain_cfg = config[DOMAIN]
+    name = domain_cfg.get(CONF_NAME)
+    lights = domain_cfg.get(CONF_LIGHTS)
+    start_time = domain_cfg.get(CONF_START_TIME)
+    stop_time = domain_cfg.get(CONF_STOP_TIME)
+    start_colortemp = domain_cfg.get(CONF_START_CT)
+    sunset_colortemp = domain_cfg.get(CONF_SUNSET_CT)
+    stop_colortemp = domain_cfg.get(CONF_STOP_CT)
+    brightness = domain_cfg.get(CONF_BRIGHTNESS)
+    disable_brightness_adjust = domain_cfg.get(CONF_DISABLE_BRIGTNESS_ADJUST)
+    mode = domain_cfg.get(CONF_MODE)
+    interval = domain_cfg.get(CONF_INTERVAL)
+    transition = domain_cfg.get(ATTR_TRANSITION)
+    active = domain_cfg.get(CONF_ACTIVE_BY_DEFAULT)
     flux = FluxSwitch(name, hass, lights, start_time, stop_time,
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness, disable_brightness_adjust, mode, interval,
