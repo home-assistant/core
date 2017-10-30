@@ -22,7 +22,8 @@ from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['https://github.com/amelchio/pyharmony/archive/'
-                '4bf627ef462c8e9a5d50b65e7523b54ed76e2b2a.zip#pyharmony==1.0.17alpha1']
+                '4bf627ef462c8e9a5d50b65e7523b54ed76e2b2a.zip'
+                '#pyharmony==1.0.17alpha1']
 
 _LOGGER = logging.getLogger(__name__)
 
