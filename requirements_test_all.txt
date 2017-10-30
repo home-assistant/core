@@ -137,7 +137,7 @@ pyunifi==2.13
 pywebpush==1.1.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0a3
+restrictedpython==4.0b2
 
 # homeassistant.components.rflink
 rflink==0.0.34
