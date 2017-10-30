@@ -148,6 +148,7 @@ def setup(hass, config):
         hass.data[PY_XIAOMI_GATEWAY].stop_listen()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
+    # pylint: disable=unused-variable
     def play_ringtone_service(call):
         """Service to play ringtone through Gateway."""
         ring_id = int(call.data.get(ATTR_RINGTONE_ID))
@@ -171,6 +172,7 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
+    # pylint: disable=unused-variable
     def stop_ringtone_service(call):
         """Service to stop playing ringtone on Gateway."""
         gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
@@ -182,6 +184,7 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
+    # pylint: disable=unused-variable
     def add_device_service(call):
         """Service to add a new sub-device within the next 30 seconds."""
         gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
@@ -197,6 +200,7 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
+    # pylint: disable=unused-variable
     def remove_device_service(call):
         """Service to remove a sub-device from the gateway."""
         device_id = call.data.get(ATTR_DEVICE_ID)
