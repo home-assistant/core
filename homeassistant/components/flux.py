@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     is_on, turn_on, VALID_TRANSITION, ATTR_TRANSITION)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_LIGHTS
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
@@ -62,7 +62,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
         vol.Optional(CONF_MODE, default=DEFAULT_MODE):
             vol.Any(MODE_XY, MODE_MIRED, MODE_RGB),
-        vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
+        vol.Optional(CONF_INTERVAL, default=datetime.timedelta(seconds=30)):
+            cv.time_period,
         vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
         vol.Optional(CONF_ACTIVE_BY_DEFAULT, default=True): cv.boolean
     }),
@@ -173,8 +174,8 @@ class FluxSwitch:
         # Make initial update
         self.flux_update()
 
-        self.unsub_tracker = track_time_change(
-            self.hass, self.flux_update, second=[0, self._interval])
+        self.unsub_tracker = track_time_interval(
+            self.hass, self.flux_update, self._interval)
 
     def turn_off(self):
         """Turn off flux."""
