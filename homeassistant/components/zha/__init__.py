@@ -234,7 +234,8 @@ class Entity(entity.Entity):
         ieeetail = ''.join([
             '%02x' % (o, ) for o in endpoint.device.ieee[-4:]
         ])
-        if manufacturer and model is not None:
+        # when using Ecosmart dimmable light bulbs, the value of model is not string type, it is a long byte array which throws an exception when calling slugify(model)
+        if manufacturer and model is not None and isinstance(manufacturer, str) and isinstance(model, str):
             self.entity_id = '%s.%s_%s_%s_%s' % (
                 self._domain,
                 slugify(manufacturer),
