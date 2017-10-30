@@ -7,7 +7,6 @@ https://home-assistant.io/components/remote.harmony/
 import logging
 import asyncio
 from os import path
-import urllib.parse
 import time
 
 import voluptuous as vol
@@ -37,7 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
-    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
+    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
+        vol.Coerce(float),
 })
 
 HARMONY_SYNC_SCHEMA = vol.Schema({
@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DEVICES.append(device)
         add_devices([device])
         register_services(hass)
-    except:
+    except ValueError as err:
         _LOGGER.warning("Failed to initialize remote: %s", name)
 
 
@@ -158,8 +158,11 @@ class HarmonyRemote(remote.RemoteDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Complete the initialization."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
             lambda event: self._client.disconnect(wait=True))
+
+        # Poll for initial state
         self.new_activity(self._client.get_current_activity())
 
     @property
@@ -217,7 +220,7 @@ class HarmonyRemote(remote.RemoteDevice):
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
         delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
 
-        for i in range(num_repeats):
+        for _ in range(num_repeats):
             for command in commands:
                 self._client.send_command(device, command)
                 time.sleep(delay_secs)
