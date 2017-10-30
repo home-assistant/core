@@ -62,6 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         port = DEFAULT_PORT
         if override:
             activity = override.get(ATTR_ACTIVITY)
+            delay_secs = override.get(ATTR_DELAY_SECS)
             port = override.get(CONF_PORT, DEFAULT_PORT)
 
         host = (
@@ -80,11 +81,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             config.get(CONF_PORT),
         )
         activity = config.get(ATTR_ACTIVITY)
+        delay_secs = config.get(ATTR_DELAY_SECS)
     else:
         hass.data[CONF_DEVICE_CACHE].append(config)
         return
-
-    delay_secs = config.get(ATTR_DELAY_SECS)
 
     name, address, port = host
     _LOGGER.info("Loading Harmony Platform: %s at %s:%s, startup activity: %s",
