@@ -71,6 +71,9 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/gc100.py
+    homeassistant/components/*/gc100.py
+
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
