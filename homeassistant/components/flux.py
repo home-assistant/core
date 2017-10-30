@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     is_on, turn_on, VALID_TRANSITION, ATTR_TRANSITION)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_LIGHTS
+from homeassistant.const import CONF_NAME, CONF_MODE, CONF_LIGHTS
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -36,7 +36,6 @@ CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_STOP_CT = 'stop_colortemp'
 CONF_BRIGHTNESS = 'brightness'
 CONF_DISABLE_BRIGTNESS_ADJUST = 'disable_brightness_adjust'
-CONF_MODE = 'mode'
 CONF_INTERVAL = 'interval'
 CONF_ACTIVE_BY_DEFAULT = 'active_by_default'
 
