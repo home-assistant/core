@@ -243,27 +243,18 @@ class OwnTracksContext:
         # changes to kwargs.
         device_tracker_state = hass.states.get(
             "device_tracker.{}".format(dev_id))
-        _LOGGER.info("device tracker state: %s", device_tracker_state)
 
         if device_tracker_state is not None:
-            try:
-                acc = device_tracker_state.attributes.get("gps_accuracy")
-                lat = device_tracker_state.attributes.get("latitude")
-                lon = device_tracker_state.attributes.get("longitude")
-                kwargs['gps_accuracy'] = acc
-                kwargs['gps'] = (lat, lon)
-            except AttributeError:
-                _LOGGER.warning('could not get device_tracker state '
-                                'attribute for setting beacon location.')
-
-        # import pdb; pdb.set_trace()
+            acc = device_tracker_state.attributes.get("gps_accuracy")
+            lat = device_tracker_state.attributes.get("latitude")
+            lon = device_tracker_state.attributes.get("longitude")
+            kwargs['gps_accuracy'] = acc
+            kwargs['gps'] = (lat, lon)
 
         # the battery state applies to the tracking device, not the beacon
         # kwargs location is the beacon's configured lat/lon
         kwargs.pop('battery', None)
         for beacon in self.mobile_beacons_active[dev_id]:
-            _LOGGER.info("async_see_beacons beacon: %s kwargs %s",
-                         beacon, kwargs)
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
             yield from self.async_see(**kwargs)
@@ -339,13 +330,14 @@ def _async_transition_message_leave(hass, context, message, location):
             _LOGGER.info("Exit to %s", new_region)
             yield from context.async_see(**kwargs)
             yield from context.async_see_beacons(hass, dev_id, kwargs)
-        else:
-            _LOGGER.info("Exit to GPS")
+            return
 
-            # Check for GPS accuracy
-            if context.async_valid_accuracy(message):
-                yield from context.async_see(**kwargs)
-                yield from context.async_see_beacons(hass, dev_id, kwargs)
+        _LOGGER.info("Exit to GPS")
+
+        # Check for GPS accuracy
+        if context.async_valid_accuracy(message):
+            yield from context.async_see(**kwargs)
+            yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @HANDLERS.register('transition')
