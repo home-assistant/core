@@ -155,7 +155,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
         vol.Optional(ATTR_RECV_MODES, default=None):
-            vol.All(vol.All(cv.ensure_list, [valid_recvmode]), vol.Length(min=1))
+            vol.All(vol.All(cv.ensure_list, [valid_recvmode]),
+                    vol.Length(min=1))
     }),
 }, extra=vol.ALLOW_EXTRA)
 
