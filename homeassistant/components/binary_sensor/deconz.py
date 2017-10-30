@@ -1,8 +1,7 @@
 import asyncio
 import logging
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.components.deconz import DATA_DECONZ
 
@@ -20,14 +19,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for sensor_id, sensor in sensors.items():
         if sensor.type == 'ZHAPresence':
-            async_add_devices([DeconzBinarySensor(hass, sensor_id, sensor)])
+            async_add_devices([DeconzBinarySensor(sensor_id, sensor)])
 
 
 class DeconzBinarySensor(BinarySensorDevice):
     """Representation of an device."""
 
-    def __init__(self, hass, sensor_id, sensor):
-        self._state = STATE_UNKNOWN
+    def __init__(self, sensor_id, sensor):
+        self._state = None
         self.sensor_id = sensor_id
         self.sensor = sensor
         self.sensor.callback = self._update_callback
