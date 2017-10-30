@@ -13,8 +13,10 @@ from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
 from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON,
-    STATE_OFF, EVENT_HOMEASSISTANT_START, MATCH_ALL, CONF_LIGHTS)
+    CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON, STATE_OFF,
+    EVENT_HOMEASSISTANT_START, MATCH_ALL, CONF_LIGHTS
+)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -34,6 +36,8 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
@@ -53,6 +57,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for device, device_config in config[CONF_LIGHTS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        entity_picture_template = device_config.get(
+            CONF_ENTITY_PICTURE_TEMPLATE)
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
@@ -70,6 +77,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
+        if icon_template is not None:
+            temp_ids = icon_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
+        if entity_picture_template is not None:
+            temp_ids = entity_picture_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
         if not template_entity_ids:
             template_entity_ids = MATCH_ALL
 
@@ -78,8 +95,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         lights.append(
             LightTemplate(
                 hass, device, friendly_name, state_template,
-                on_action, off_action, level_action, level_template,
-                entity_ids)
+                icon_template, entity_picture_template, on_action,
+                off_action, level_action, level_template, entity_ids)
         )
 
     if not lights:
@@ -94,14 +111,16 @@ class LightTemplate(Light):
     """Representation of a templated Light, including dimmable."""
 
     def __init__(self, hass, device_id, friendly_name, state_template,
-                 on_action, off_action, level_action, level_template,
-                 entity_ids):
+                 icon_template, entity_picture_template, on_action,
+                 off_action, level_action, level_template, entity_ids):
         """Initialize the light."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass)
         self._name = friendly_name
         self._template = state_template
+        self._icon_template = icon_template
+        self._entity_picture_template = entity_picture_template
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._level_script = None
@@ -110,6 +129,8 @@ class LightTemplate(Light):
         self._level_template = level_template
 
         self._state = False
+        self._icon = None
+        self._entity_picture = None
         self._brightness = None
         self._entities = entity_ids
 
@@ -117,6 +138,10 @@ class LightTemplate(Light):
             self._template.hass = self.hass
         if self._level_template is not None:
             self._level_template.hass = self.hass
+        if self._icon_template is not None:
+            self._icon_template.hass = self.hass
+        if self._entity_picture_template is not None:
+            self._entity_picture_template.hass = self.hass
 
     @property
     def brightness(self):
@@ -145,6 +170,16 @@ class LightTemplate(Light):
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        return self._entity_picture
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -234,3 +269,28 @@ class LightTemplate(Light):
                     'Expected: 0-255',
                     brightness)
                 self._brightness = None
+
+        for property_name, template in (
+                ('_icon', self._icon_template),
+                ('_entity_picture', self._entity_picture_template)):
+            if template is None:
+                continue
+
+            try:
+                setattr(self, property_name, template.async_render())
+            except TemplateError as ex:
+                friendly_property_name = property_name[1:].replace('_', ' ')
+                if ex.args and ex.args[0].startswith(
+                        "UndefinedError: 'None' has no attribute"):
+                    # Common during HA startup - so just a warning
+                    _LOGGER.warning('Could not render %s template %s,'
+                                    ' the state is unknown.',
+                                    friendly_property_name, self._name)
+                    return
+
+                try:
+                    setattr(self, property_name,
+                            getattr(super(), property_name))
+                except AttributeError:
+                    _LOGGER.error('Could not render %s template %s: %s',
+                                  friendly_property_name, self._name, ex)
