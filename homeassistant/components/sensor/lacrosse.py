@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.components.sensor import (ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_FRIENDLY_NAME, CONF_ID,
+    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_ID,
     CONF_SENSORS, CONF_TYPE, STATE_UNKNOWN, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -22,8 +22,6 @@ from homeassistant.util import dt as dt_util
 REQUIREMENTS = ['pylacrosse==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'lacrosse'
 
 CONF_BAUD = 'baud'
 CONF_EXPIRE_AFTER = 'expire_after'
@@ -34,27 +32,28 @@ DEFAULT_EXPIRE_AFTER = 300
 
 TYPES = ['battery', 'humidity', 'temperature']
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
-})
-
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_TYPE): vol.In(TYPES),
     vol.Required(CONF_ID): cv.positive_int,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
+    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LaCrosse component."""
+    """Set up the LaCrosse sensors."""
     import pylacrosse
     from serial import SerialException
 
-    usb_device = config.get(CONF_DEVICE, DEFAULT_DEVICE)
-    baud = int(config.get(CONF_BAUD, DEFAULT_BAUD))
-    expire_after = config.get(CONF_EXPIRE_AFTER, DEFAULT_EXPIRE_AFTER)
+    usb_device = config.get(CONF_DEVICE)
+    baud = int(config.get(CONF_BAUD))
+    expire_after = config.get(CONF_EXPIRE_AFTER)
 
     _LOGGER.info("%s %s", usb_device, baud)
 
@@ -77,14 +76,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         except KeyError:
             _LOGGER.exception("Unknown LaCrosse sensor type: %s", typ)
 
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
+        name = device_config.get(CONF_NAME, device)
 
         sensors.append(
             sensor_class(
                 hass,
                 lacrosse,
                 device,
-                friendly_name,
+                name,
                 expire_after,
                 device_config
             )
@@ -105,15 +104,15 @@ class LaCrosseSensor(Entity):
     _low_battery = None
     _new_battery = None
 
-    def __init__(self, hass, lacrosse, device_id, friendly_name,
+    def __init__(self, hass, lacrosse, device_id, name,
                  expire_after, config):
         """Initialize the sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT,
                                                   device_id, hass=hass)
         self._config = config
-        self._name = friendly_name
-        self._value = STATE_UNKNOWN
+        self._name = name
+        self._value = None
         self._expire_after = expire_after
         self._expiration_trigger = None
 
@@ -205,7 +204,7 @@ class LaCrosseBattery(LaCrosseSensor):
     def state(self):
         """Return the state of the sensor."""
         if self._low_battery is None:
-            state = 'na/a'
+            state = None
         elif self._low_battery is True:
             state = 'low'
         else:
