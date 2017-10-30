@@ -13,11 +13,43 @@ REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_RINGTONE_VOL = 'ringtone_vol'
+ATTR_DEVICE_ID = 'device_id'
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 DOMAIN = 'xiaomi_aqara'
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
+
+SERVICE_PLAY_RINGTONE = 'play_ringtone'
+SERVICE_STOP_RINGTONE = 'stop_ringtone'
+SERVICE_ADD_DEVICE = 'add_device'
+SERVICE_REMOVE_DEVICE = 'remove_device'
+
+XIAOMI_AQARA_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_GW_MAC): vol.All(cv.string,
+                                       vol.Any(vol.Length(min=12, max=12),
+                                               vol.Length(min=17, max=17)))
+})
+
+SERVICE_SCHEMA_PLAY_RINGTONE = XIAOMI_AQARA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_RINGTONE_ID): vol.Coerce(int),
+    vol.Optional(ATTR_RINGTONE_VOL): vol.All(vol.Coerce(int),
+                                             vol.Clamp(min=0, max=100))
+})
+
+SERVICE_SCHEMA_REMOVE_DEVICE = XIAOMI_AQARA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_DEVICE_ID): vol.All(cv.string,
+                                          vol.Length(min=14, max=14))
+})
+
+SERVICE_TO_METHOD = {
+    SERVICE_PLAY_RINGTONE: {'method': 'play_ringtone_service',
+                            'schema': SERVICE_SCHEMA_PLAY_RINGTONE},
+    SERVICE_STOP_RINGTONE: {'method': 'stop_ringtone_service'},
+    SERVICE_ADD_DEVICE: {'method': 'add_device_service'},
+    SERVICE_REMOVE_DEVICE: {'method': 'remove_device_service',
+                            'schema': SERVICE_SCHEMA_REMOVE_DEVICE},
+}
 
 
 def _validate_conf(config):
@@ -116,15 +148,12 @@ def setup(hass, config):
         hass.data[PY_XIAOMI_GATEWAY].stop_listen()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
+    # pylint: disable=unused-variable
     def play_ringtone_service(call):
         """Service to play ringtone through Gateway."""
-        ring_id = call.data.get(ATTR_RINGTONE_ID)
-        gw_sid = call.data.get(ATTR_GW_MAC)
-        if ring_id is None or gw_sid is None:
-            _LOGGER.error("Mandatory parameters is not specified.")
-            return
+        ring_id = int(call.data.get(ATTR_RINGTONE_ID))
+        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
 
-        ring_id = int(ring_id)
         if ring_id in [9, 14-19]:
             _LOGGER.error('Specified mid: %s is not defined in gateway.',
                           ring_id)
@@ -136,8 +165,6 @@ def setup(hass, config):
         else:
             ringtone = {'mid': ring_id, 'vol': int(ring_vol)}
 
-        gw_sid = gw_sid.replace(":", "").lower()
-
         for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 gateway.write_to_hub(gateway.sid, **ringtone)
@@ -145,15 +172,10 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
+    # pylint: disable=unused-variable
     def stop_ringtone_service(call):
         """Service to stop playing ringtone on Gateway."""
-        gw_sid = call.data.get(ATTR_GW_MAC)
-        if gw_sid is None:
-            _LOGGER.error("Mandatory parameter (%s) is not specified.",
-                          ATTR_GW_MAC)
-            return
-
-        gw_sid = gw_sid.replace(":", "").lower()
+        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
         for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 ringtone = {'mid': 10000}
@@ -162,12 +184,43 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
-    hass.services.async_register(DOMAIN, 'play_ringtone',
-                                 play_ringtone_service,
-                                 description=None, schema=None)
-    hass.services.async_register(DOMAIN, 'stop_ringtone',
-                                 stop_ringtone_service,
-                                 description=None, schema=None)
+    # pylint: disable=unused-variable
+    def add_device_service(call):
+        """Service to add a new sub-device within the next 30 seconds."""
+        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
+        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+            if gateway.sid == gw_sid:
+                join_permission = {'join_permission': 'yes'}
+                gateway.write_to_hub(gateway.sid, **join_permission)
+                hass.components.persistent_notification.async_create(
+                    'Join permission enabled for 30 seconds! '
+                    'Please press the pairing button of the new device once.',
+                    title='Xiaomi Aqara Gateway')
+                break
+        else:
+            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+
+    # pylint: disable=unused-variable
+    def remove_device_service(call):
+        """Service to remove a sub-device from the gateway."""
+        device_id = call.data.get(ATTR_DEVICE_ID)
+        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
+        remove_device = {'remove_device': device_id}
+        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+            if gateway.sid == gw_sid:
+                gateway.write_to_hub(gateway.sid, **remove_device)
+                break
+        else:
+            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+
+    for xiaomi_aqara_service in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[xiaomi_aqara_service].get(
+            'schema', XIAOMI_AQARA_SERVICE_SCHEMA)
+        service_handler = SERVICE_TO_METHOD[xiaomi_aqara_service].get('method')
+        hass.services.async_register(
+            DOMAIN, xiaomi_aqara_service, service_handler,
+            description=None, schema=schema)
+
     return True
 
 
