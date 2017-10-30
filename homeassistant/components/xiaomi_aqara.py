@@ -51,6 +51,7 @@ SERVICE_TO_METHOD = {
                             'schema': SERVICE_SCHEMA_REMOVE_DEVICE},
 }
 
+
 def _validate_conf(config):
     """Validate a list of devices definitions."""
     res_config = []
@@ -188,6 +189,10 @@ def setup(hass, config):
             if gateway.sid == gw_sid:
                 join_permission = {'join_permission': 'yes'}
                 gateway.write_to_hub(gateway.sid, **join_permission)
+                hass.components.persistent_notification.async_create(
+                    'Join permission enabled for 30 seconds! '
+                    'Please press the pairing button of the new device once.',
+                    title='Xiaomi Aqara Gateway')
                 break
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
