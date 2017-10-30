@@ -117,7 +117,7 @@ class LaCrosseSensor(Entity):
         self._expire_after = expire_after
         self._expiration_trigger = None
 
-        lacrosse.register_callback(int(self._config["id"]),
+        lacrosse.register_callback(int(self._config['id']),
                                    self._callback_lacrosse, None)
 
     @property
@@ -225,7 +225,7 @@ class LaCrosseBattery(LaCrosseSensor):
 
 
 TYPE_CLASSES = {
-    "temperature": LaCrosseTemperature,
-    "humidity": LaCrosseHumidity,
-    "battery": LaCrosseBattery
+    'temperature': LaCrosseTemperature,
+    'humidity': LaCrosseHumidity,
+    'battery': LaCrosseBattery
 }
