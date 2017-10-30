@@ -46,25 +46,27 @@ DEFAULT_MODE = MODE_XY
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_LIGHTS): cv.entity_ids,
-        vol.Optional(CONF_NAME, default="Flux"): cv.string,
-        vol.Optional(CONF_START_TIME): cv.time,
-        vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
-        vol.Optional(CONF_START_CT, default=4000):
-            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-        vol.Optional(CONF_SUNSET_CT, default=3000):
-            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-        vol.Optional(CONF_STOP_CT, default=1900):
-            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-        vol.Optional(CONF_BRIGHTNESS):
-            vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-        vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-            vol.Any(MODE_XY, MODE_MIRED, MODE_RGB),
-        vol.Optional(CONF_INTERVAL, default=datetime.timedelta(seconds=30)):
-            cv.time_period,
-        vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
-        vol.Optional(CONF_ACTIVE_BY_DEFAULT, default=True): cv.boolean
+        cv.slug: vol.All({
+            vol.Optional(CONF_NAME, default="Flux"): cv.string,
+            vol.Required(CONF_LIGHTS): cv.entity_ids,
+            vol.Optional(CONF_START_TIME): cv.time,
+            vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
+            vol.Optional(CONF_START_CT, default=4000):
+                vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+            vol.Optional(CONF_SUNSET_CT, default=3000):
+                vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+            vol.Optional(CONF_STOP_CT, default=1900):
+                vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+            vol.Optional(CONF_BRIGHTNESS):
+                vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+            vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
+            vol.Optional(CONF_MODE, default=DEFAULT_MODE):
+                vol.Any(MODE_XY, MODE_MIRED, MODE_RGB),
+            vol.Optional(CONF_INTERVAL, default=datetime.timedelta(seconds=30)):
+                cv.time_period,
+            vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+            vol.Optional(CONF_ACTIVE_BY_DEFAULT, default=True): cv.boolean
+        })
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -100,28 +102,32 @@ def set_lights_rgb(hass, lights, rgb, transition):
 
 def setup(hass, config):
     """Set up the Flux switches."""
-    domain_cfg = config[DOMAIN]
-    name = domain_cfg.get(CONF_NAME)
-    lights = domain_cfg.get(CONF_LIGHTS)
-    start_time = domain_cfg.get(CONF_START_TIME)
-    stop_time = domain_cfg.get(CONF_STOP_TIME)
-    start_colortemp = domain_cfg.get(CONF_START_CT)
-    sunset_colortemp = domain_cfg.get(CONF_SUNSET_CT)
-    stop_colortemp = domain_cfg.get(CONF_STOP_CT)
-    brightness = domain_cfg.get(CONF_BRIGHTNESS)
-    disable_brightness_adjust = domain_cfg.get(CONF_DISABLE_BRIGTNESS_ADJUST)
-    mode = domain_cfg.get(CONF_MODE)
-    interval = domain_cfg.get(CONF_INTERVAL)
-    transition = domain_cfg.get(ATTR_TRANSITION)
-    active = domain_cfg.get(CONF_ACTIVE_BY_DEFAULT)
-    flux = FluxSwitch(name, hass, lights, start_time, stop_time,
-                      start_colortemp, sunset_colortemp, stop_colortemp,
-                      brightness, disable_brightness_adjust, mode, interval,
-                      transition, active)
+    fluxes = []
+
+    for object_id, cfg in config[DOMAIN].items():
+        name = cfg.get(CONF_NAME)
+        lights = cfg.get(CONF_LIGHTS)
+        start_time = cfg.get(CONF_START_TIME)
+        stop_time = cfg.get(CONF_STOP_TIME)
+        start_colortemp = cfg.get(CONF_START_CT)
+        sunset_colortemp = cfg.get(CONF_SUNSET_CT)
+        stop_colortemp = cfg.get(CONF_STOP_CT)
+        brightness = cfg.get(CONF_BRIGHTNESS)
+        disable_brightness_adjust = cfg.get(CONF_DISABLE_BRIGTNESS_ADJUST)
+        mode = cfg.get(CONF_MODE)
+        interval = cfg.get(CONF_INTERVAL)
+        transition = cfg.get(ATTR_TRANSITION)
+        active = cfg.get(CONF_ACTIVE_BY_DEFAULT)
+
+        fluxes[object_id] = Flux(
+            name, hass, lights, start_time, stop_time, start_colortemp,
+            sunset_colortemp, stop_colortemp, brightness,
+            disable_brightness_adjust, mode, interval, transition, active)
 
     def update_service(call=None):
         """Update lights."""
-        flux.flux_update()
+        for flux in fluxes.items():
+            flux.flux_update()
 
     service_name = slugify("{} {}".format(name, 'update'))
     hass.services.register(DOMAIN, service_name, update_service)
@@ -129,7 +135,7 @@ def setup(hass, config):
     return True
 
 
-class FluxSwitch:
+class Flux:
     """Representation of a Flux switch."""
 
     def __init__(self, name, hass, lights, start_time, stop_time,
