@@ -2,10 +2,8 @@ import asyncio
 import logging
 
 from homeassistant.components.deconz import DATA_DECONZ
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-
 
 DEPENDENCIES = ['deconz']
 
@@ -21,14 +19,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for sensor_id, sensor in sensors.items():
         if sensor.type == 'ZHASwitch':
-            async_add_devices([DeconzSensor(hass, sensor_id, sensor)])
+            async_add_devices([DeconzSensor(sensor_id, sensor)])
 
 
 class DeconzSensor(Entity):
     """Representation of an device."""
 
-    def __init__(self, hass, sensor_id, sensor):
-        self._state = False
+    def __init__(self, sensor_id, sensor):
+        self._state = None
         self.sensor_id = sensor_id
         self.sensor = sensor
         self.sensor.callback = self._update_callback
