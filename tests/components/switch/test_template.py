@@ -166,6 +166,45 @@ class TestTemplateSwitch:
         state = self.hass.states.get('switch.test_template_switch')
         assert state.attributes['icon'] == 'mdi:check'
 
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'template',
+                    'switches': {
+                        'test_template_switch': {
+                            'value_template':
+                                "{{ states.switch.test_state.state }}",
+                            'turn_on': {
+                                'service': 'switch.turn_on',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'switch.turn_off',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'entity_picture_template':
+                                "{% if states.switch.test_state.state %}"
+                                "/local/switch.png"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes.get('entity_picture') == ''
+
+        state = self.hass.states.set('switch.test_state', STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes['entity_picture'] == '/local/switch.png'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0, 'switch'):
