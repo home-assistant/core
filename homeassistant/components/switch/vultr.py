@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vultr subscription switch."""
     vultr = hass.data.get(DATA_VULTR)
     if not vultr:
-        return
+        return False
 
     subscription = config.get(CONF_SUBSCRIPTION)
     name = config.get(CONF_NAME)

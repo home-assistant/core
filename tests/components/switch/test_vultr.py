@@ -1,208 +1,182 @@
-"""The tests for the REST switch platform."""
-import asyncio
+"""Test the Vultr switch platform."""
+import unittest
+import requests_mock
+import pytest
+import voluptuous as vol
 
-import aiohttp
+from components.switch import vultr
+from components import vultr as base_vultr
+from components.vultr import (
+    ATTR_ALLOWED_BANDWIDTH, ATTR_AUTO_BACKUPS, ATTR_IPV4_ADDRESS,
+    ATTR_COST_PER_MONTH, ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID,
+    CONF_SUBSCRIPTION)
+from homeassistant.const import (
+    CONF_PLATFORM, CONF_NAME)
 
-import homeassistant.components.switch.rest as rest
-from homeassistant.setup import setup_component
-from homeassistant.util.async import run_coroutine_threadsafe
-from homeassistant.helpers.template import Template
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.components.test_vultr import VALID_CONFIG
+from tests.common import (
+    get_test_home_assistant, load_fixture)
 
 
-class TestRestSwitchSetup:
-    """Tests for setting up the REST switch platform."""
+class TestVultrSwitchSetup(unittest.TestCase):
+    """Test the Vultr switch platform."""
 
-    def setup_method(self):
-        """Setup things to be run when tests are started."""
+    DEVICES = []
+
+    def add_devices(self, devices, action):
+        """Mock add devices."""
+        for device in devices:
+            self.DEVICES.append(device)
+
+    def setUp(self):
+        """Init values for this testcase class."""
         self.hass = get_test_home_assistant()
-
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup_missing_config(self):
-        """Test setup with configuration missing required entries."""
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
-                'platform': 'rest'
-            }, None),
-            self.hass.loop
-        ).result()
-
-    def test_setup_missing_schema(self):
-        """Test setup with resource missing schema."""
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'localhost'
-            }, None),
-            self.hass.loop
-        ).result()
-
-    def test_setup_failed_connect(self, aioclient_mock):
-        """Test setup when connection error occurs."""
-        aioclient_mock.get('http://localhost', exc=aiohttp.ClientError)
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-            }, None),
-            self.hass.loop
-        ).result()
-
-    def test_setup_timeout(self, aioclient_mock):
-        """Test setup when connection timeout occurs."""
-        aioclient_mock.get('http://localhost', exc=asyncio.TimeoutError())
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-            }, None),
-            self.hass.loop
-        ).result()
-
-    def test_setup_minimum(self, aioclient_mock):
-        """Test setup with minimum configuration."""
-        aioclient_mock.get('http://localhost', status=200)
-        with assert_setup_component(1, 'switch'):
-            assert setup_component(self.hass, 'switch', {
-                'switch': {
-                    'platform': 'rest',
-                    'resource': 'http://localhost'
-                }
-            })
-        assert aioclient_mock.call_count == 1
-
-    def test_setup(self, aioclient_mock):
-        """Test setup with valid configuration."""
-        aioclient_mock.get('http://localhost', status=200)
-        assert setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'rest',
-                'name': 'foo',
-                'resource': 'http://localhost',
-                'body_on': 'custom on text',
-                'body_off': 'custom off text',
+        self.configs = [
+            {
+                CONF_SUBSCRIPTION: '576965',
+                CONF_NAME: "A Server"
+            },
+            {
+                CONF_SUBSCRIPTION: '123456',
+                CONF_NAME: "Failed Server"
             }
-        })
-        assert aioclient_mock.call_count == 1
-        assert_setup_component(1, 'switch')
+        ]
 
-
-class TestRestSwitch:
-    """Tests for REST switch platform."""
-
-    def setup_method(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.name = 'foo'
-        self.method = 'post'
-        self.resource = 'http://localhost/'
-        self.auth = None
-        self.body_on = Template('on', self.hass)
-        self.body_off = Template('off', self.hass)
-        self.switch = rest.RestSwitch(
-            self.name, self.resource, self.method, self.auth, self.body_on,
-            self.body_off, None, 10)
-        self.switch.hass = self.hass
-
-    def teardown_method(self):
-        """Stop everything that was started."""
+    def tearDown(self):
+        """Stop our started services."""
         self.hass.stop()
 
-    def test_name(self):
-        """Test the name."""
-        assert self.name == self.switch.name
+    @requests_mock.Mocker()
+    def test_switch(self, mock):
+        """Test successful instance."""
+        mock.get(
+            'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_account_info.json'))
 
-    def test_is_on_before_update(self):
-        """Test is_on in initial state."""
-        assert self.switch.is_on is None
+        mock.get(
+            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_server_list.json'))
 
-    def test_turn_on_success(self, aioclient_mock):
-        """Test turn_on."""
-        aioclient_mock.post(self.resource, status=200)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+        # Setup hub
+        base_vultr.setup(self.hass, VALID_CONFIG)
 
-        assert self.body_on.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on
+        # Setup each of our test configs
+        for config in self.configs:
+            vultr.setup_platform(self.hass,
+                                 config,
+                                 self.add_devices,
+                                 None)
 
-    def test_turn_on_status_not_ok(self, aioclient_mock):
-        """Test turn_on when error status returned."""
-        aioclient_mock.post(self.resource, status=500)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+        self.assertEqual(len(self.DEVICES), 2)
 
-        assert self.body_on.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on is None
+        for device in self.DEVICES:
+            device.update()
+            device_attrs = device.device_state_attributes
 
-    def test_turn_on_timeout(self, aioclient_mock):
-        """Test turn_on when timeout occurs."""
-        aioclient_mock.post(self.resource, status=500)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+            if device.name == 'my new server':
+                self.assertEqual('on', device.state)
+                self.assertEqual('mdi:server', device.icon)
+                self.assertEqual('1000',
+                                 device_attrs[ATTR_ALLOWED_BANDWIDTH])
+                self.assertEqual('yes',
+                                 device_attrs[ATTR_AUTO_BACKUPS])
+                self.assertEqual('123.123.123.123',
+                                 device_attrs[ATTR_IPV4_ADDRESS])
+                self.assertEqual('10.05',
+                                 device_attrs[ATTR_COST_PER_MONTH])
+                self.assertEqual('2013-12-19 14:45:41',
+                                 device_attrs[ATTR_CREATED_AT])
+                self.assertEqual('576965',
+                                 device_attrs[ATTR_SUBSCRIPTION_ID])
+            elif device.name == 'my failed server':
+                self.assertEqual('off', device.state)
+                self.assertEqual('mdi:server-off', device.icon)
+                self.assertEqual('100',
+                                 device_attrs[ATTR_ALLOWED_BANDWIDTH])
+                self.assertEqual('no',
+                                 device_attrs[ATTR_AUTO_BACKUPS])
+                self.assertEqual('192.168.100.50',
+                                 device_attrs[ATTR_IPV4_ADDRESS])
+                self.assertEqual('73.25',
+                                 device_attrs[ATTR_COST_PER_MONTH])
+                self.assertEqual('2014-10-13 14:45:41',
+                                 device_attrs[ATTR_CREATED_AT])
+                self.assertEqual('123456',
+                                 device_attrs[ATTR_SUBSCRIPTION_ID])
 
-        assert self.switch.is_on is None
+    @requests_mock.Mocker()
+    def test_turn_on(self, mock):
+        """Test turning a subscription on."""
+        self.assertEqual(len(self.DEVICES), 2)
 
-    def test_turn_off_success(self, aioclient_mock):
-        """Test turn_off."""
-        aioclient_mock.post(self.resource, status=200)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_off(), self.hass.loop).result()
+        mock.get(
+            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_server_list.json'))
 
-        assert self.body_off.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert not self.switch.is_on
+        mock.post(
+            'https://api.vultr.com/v1/server/start?api_key=ABCDEFG1234567')
 
-    def test_turn_off_status_not_ok(self, aioclient_mock):
-        """Test turn_off when error status returned."""
-        aioclient_mock.post(self.resource, status=500)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_off(), self.hass.loop).result()
+        for device in self.DEVICES:
+            if device.name == 'Failed Server':
+                device.turn_on()
 
-        assert self.body_off.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on is None
+        self.assertEqual(2, mock.call_count)
 
-    def test_turn_off_timeout(self, aioclient_mock):
-        """Test turn_off when timeout occurs."""
-        aioclient_mock.post(self.resource, exc=asyncio.TimeoutError())
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+    @requests_mock.Mocker()
+    def test_turn_off(self, mock):
+        """Test turning a subscription off."""
+        self.assertEqual(len(self.DEVICES), 2)
 
-        assert self.switch.is_on is None
+        mock.get(
+            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_server_list.json'))
 
-    def test_update_when_on(self, aioclient_mock):
-        """Test update when switch is on."""
-        aioclient_mock.get(self.resource, text=self.body_on.template)
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
+        mock.post(
+            'https://api.vultr.com/v1/server/halt?api_key=ABCDEFG1234567')
 
-        assert self.switch.is_on
+        for device in self.DEVICES:
+            if device.name == 'A Server':
+                device.turn_off()
 
-    def test_update_when_off(self, aioclient_mock):
-        """Test update when switch is off."""
-        aioclient_mock.get(self.resource, text=self.body_off.template)
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
+        self.assertEqual(2, mock.call_count)
 
-        assert not self.switch.is_on
+    def test_invalid_sensor_config(self):
+        """Test config type failures."""
+        with pytest.raises(vol.Invalid):  # No subs
+            vultr.PLATFORM_SCHEMA({
+                CONF_PLATFORM: base_vultr.DOMAIN,
+            })
 
-    def test_update_when_unknown(self, aioclient_mock):
-        """Test update when unknown status returned."""
-        aioclient_mock.get(self.resource, text='unknown status')
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
+    @requests_mock.Mocker()
+    def test_invalid_sensors(self, mock):
+        """Test the VultrBinarySensor fails."""
+        mock.get(
+            'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_account_info.json'))
 
-        assert self.switch.is_on is None
+        mock.get(
+            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_server_list.json'))
 
-    def test_update_timeout(self, aioclient_mock):
-        """Test update when timeout occurs."""
-        aioclient_mock.get(self.resource, exc=asyncio.TimeoutError())
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
+        base_vultr.setup(self.hass, VALID_CONFIG)
 
-        assert self.switch.is_on is None
+        bad_conf = {}  # No subscription
+
+        no_subs_setup = vultr.setup_platform(self.hass,
+                                             bad_conf,
+                                             self.add_devices,
+                                             None)
+
+        self.assertFalse(no_subs_setup)
+
+        bad_conf = {
+            CONF_NAME: "Missing Server",
+            CONF_SUBSCRIPTION: '555555'
+        }  # Sub not associated with API key (not in server_list)
+
+        wrong_subs_setup = vultr.setup_platform(self.hass,
+                                                bad_conf,
+                                                self.add_devices,
+                                                None)
+
+        self.assertFalse(wrong_subs_setup)
