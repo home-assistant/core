@@ -208,6 +208,16 @@ class YamahaDevice(MediaPlayerDevice):
         self._recv.update_status()
         self._zone.update_status()
 
+    def update_hass(self):
+        """Push updates to HASS"""
+        if not self.entity_id:
+            _LOGGER.debug("update_hass: not pushing yet")
+            return False
+        else:
+            _LOGGER.debug("update_hass: pushing updates")
+            self.schedule_update_ha_state()
+            return True
+
     def turn_on(self):
         """Turn on specified media player or all."""
         _LOGGER.debug("Turn device: on")
