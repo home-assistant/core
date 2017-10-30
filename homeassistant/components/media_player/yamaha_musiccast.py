@@ -210,8 +210,6 @@ class YamahaDevice(MediaPlayerDevice):
         if self.media_status and self.state in \
                 [STATE_PLAYING, STATE_PAUSED, STATE_IDLE]:
             return self.media_status.media_position
-        else:
-            return None
 
     @property
     def media_position_updated_at(self):
@@ -229,10 +227,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     def update_hass(self):
         """Push updates to HASS"""
-        if not self.entity_id:
-            _LOGGER.debug("update_hass: not pushing yet")
-            return False
-        else:
+        if self.entity_id:
             _LOGGER.debug("update_hass: pushing updates")
             self.schedule_update_ha_state()
             return True
