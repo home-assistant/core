@@ -61,6 +61,7 @@ def _setup_deconz(hass, config, deconz_config):
     DECONZ = DeconzSession(hass.loop, **deconz_config)
     hass.data[DATA_DECONZ] = DECONZ
     result = yield from DECONZ.populate_config()
+    result = yield from DECONZ.populate_lights()
     result = yield from DECONZ.populate_sensors()
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'binary_sensor',
@@ -69,6 +70,11 @@ def _setup_deconz(hass, config, deconz_config):
                                                      config))
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'sensor',
+                                                     DOMAIN,
+                                                     {},
+                                                     config))
+    hass.async_add_job(discovery.async_load_platform(hass,
+                                                     'light',
                                                      DOMAIN,
                                                      {},
                                                      config))
