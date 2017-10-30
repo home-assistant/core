@@ -109,6 +109,15 @@ def _valid_light_switch(value):
     return _valid_device(value, "light_switch")
 
 
+def valid_recvmode(value):
+    """Test if a recv_mode value is known by pyRFXTRX"""
+    import RFXtrx
+    if RFXtrx.lowlevel.get_recmode_tuple(value) != (None, None):
+        return value
+
+    raise vol.Invalid('Recv_mode "{}" is unknown to RFXTRX.'.format(value))
+
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
@@ -146,7 +155,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
         vol.Optional(ATTR_RECV_MODES, default=None):
-            vol.All(vol.All(cv.ensure_list, [cv.string]), vol.Length(min=1))
+            vol.All(vol.All(cv.ensure_list, [valid_recvmode]), vol.Length(min=1))
     }),
 }, extra=vol.ALLOW_EXTRA)
 
