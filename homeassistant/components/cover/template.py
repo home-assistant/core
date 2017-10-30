@@ -19,7 +19,8 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_ENTITY_ID,
     EVENT_HOMEASSISTANT_START, MATCH_ALL,
     CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
-    CONF_OPTIMISTIC, STATE_OPEN, STATE_CLOSED)
+    CONF_ENTITY_PICTURE_TEMPLATE, CONF_OPTIMISTIC,
+    STATE_OPEN, STATE_CLOSED)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -57,6 +58,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_TILT_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
@@ -81,6 +83,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         position_template = device_config.get(CONF_POSITION_TEMPLATE)
         tilt_template = device_config.get(CONF_TILT_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        entity_picture_template = device_config.get(
+            CONF_ENTITY_PICTURE_TEMPLATE)
         open_action = device_config.get(OPEN_ACTION)
         close_action = device_config.get(CLOSE_ACTION)
         stop_action = device_config.get(STOP_ACTION)
@@ -114,6 +118,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
+        if entity_picture_template is not None:
+            temp_ids = entity_picture_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
         if not template_entity_ids:
             template_entity_ids = MATCH_ALL
 
@@ -124,8 +133,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 hass,
                 device, friendly_name, state_template,
                 position_template, tilt_template, icon_template,
-                open_action, close_action, stop_action,
-                position_action, tilt_action,
+                entity_picture_template, open_action, close_action,
+                stop_action, position_action, tilt_action,
                 optimistic, tilt_optimistic, entity_ids
             )
         )
@@ -142,8 +151,8 @@ class CoverTemplate(CoverDevice):
 
     def __init__(self, hass, device_id, friendly_name, state_template,
                  position_template, tilt_template, icon_template,
-                 open_action, close_action, stop_action,
-                 position_action, tilt_action,
+                 entity_picture_template, open_action, close_action,
+                 stop_action, position_action, tilt_action,
                  optimistic, tilt_optimistic, entity_ids):
         """Initialize the Template cover."""
         self.hass = hass
@@ -154,6 +163,7 @@ class CoverTemplate(CoverDevice):
         self._position_template = position_template
         self._tilt_template = tilt_template
         self._icon_template = icon_template
+        self._entity_picture_template = entity_picture_template
         self._open_script = None
         if open_action is not None:
             self._open_script = Script(hass, open_action)
@@ -173,6 +183,7 @@ class CoverTemplate(CoverDevice):
                             (not state_template and not position_template))
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None
+        self._entity_picture = None
         self._position = None
         self._tilt_value = None
         self._entities = entity_ids
@@ -185,6 +196,8 @@ class CoverTemplate(CoverDevice):
             self._tilt_template.hass = self.hass
         if self._icon_template is not None:
             self._icon_template.hass = self.hass
+        if self._entity_picture_template is not None:
+            self._entity_picture_template.hass = self.hass
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -235,6 +248,11 @@ class CoverTemplate(CoverDevice):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        return self._entity_picture
 
     @property
     def supported_features(self):
@@ -369,16 +387,28 @@ class CoverTemplate(CoverDevice):
             except ValueError as ex:
                 _LOGGER.error(ex)
                 self._tilt_value = None
-        if self._icon_template is not None:
+
+        for property_name, template in (
+                ('_icon', self._icon_template),
+                ('_entity_picture', self._entity_picture_template)):
+            if template is None:
+                continue
+
             try:
-                self._icon = self._icon_template.async_render()
+                setattr(self, property_name, template.async_render())
             except TemplateError as ex:
+                friendly_property_name = property_name[1:].replace('_', ' ')
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render icon template %s,'
-                                    ' the state is unknown.', self._name)
+                    _LOGGER.warning('Could not render %s template %s,'
+                                    ' the state is unknown.',
+                                    friendly_property_name, self._name)
                     return
-                self._icon = super().icon
-                _LOGGER.error('Could not render icon template %s: %s',
-                              self._name, ex)
+
+                try:
+                    setattr(self, property_name,
+                            getattr(super(), property_name))
+                except AttributeError:
+                    _LOGGER.error('Could not render %s template %s: %s',
+                                  friendly_property_name, self._name, ex)
