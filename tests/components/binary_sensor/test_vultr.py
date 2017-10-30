@@ -46,6 +46,10 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
         """Stop our started services."""
         self.hass.stop()
 
+    def test_failed_hub(self):
+        """Test a hub setup failure."""
+        base_vultr.setup(self.hass, VALID_CONFIG)
+
     @requests_mock.Mocker()
     def test_binary_sensor(self, mock):
         """Test successful instance."""
@@ -73,7 +77,8 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
             device.update()
             device_attrs = device.device_state_attributes
 
-            if device.name == 'my new server':
+            if device.name == 'A Server':
+                self.assertEqual(True, device.is_on)
                 self.assertEqual('on', device.state)
                 self.assertEqual('mdi:server', device.icon)
                 self.assertEqual('1000',
@@ -88,7 +93,8 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                                  device_attrs[ATTR_CREATED_AT])
                 self.assertEqual('576965',
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
-            elif device.name == 'my failed server':
+            elif device.name == 'Failed Server':
+                self.assertEqual(False, device.is_on)
                 self.assertEqual('off', device.state)
                 self.assertEqual('mdi:server-off', device.icon)
                 self.assertEqual('100',

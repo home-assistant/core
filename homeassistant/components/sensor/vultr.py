@@ -44,8 +44,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     subscription = config.get(CONF_SUBSCRIPTION)
-    name = config.get(CONF_NAME)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    name = config.get(CONF_NAME, DEFAULT_NAME)
+    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS,
+                                      MONITORED_CONDITIONS)
 
     sensors = []
 

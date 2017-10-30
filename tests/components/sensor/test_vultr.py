@@ -8,7 +8,7 @@ from components.sensor import vultr
 from components import vultr as base_vultr
 from components.vultr import CONF_SUBSCRIPTION
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_PLATFORM, CONF_NAME)
+    CONF_MONITORED_CONDITIONS, CONF_PLATFORM)
 
 from tests.components.test_vultr import VALID_CONFIG
 from tests.common import (
@@ -30,7 +30,6 @@ class TestVultrSensorSetup(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.config = {
             CONF_SUBSCRIPTION: '576965',
-            CONF_NAME: 'my-amazing-server',
             CONF_MONITORED_CONDITIONS: [
                 'current_bandwidth_gb',
                 'pending_charges'
@@ -64,10 +63,12 @@ class TestVultrSensorSetup(unittest.TestCase):
             device.update()
 
             if device.name == 'my new server Current Bandwidth Used':
+                self.assertEqual('mdi:chart-histogram', device.icon)
                 self.assertEqual(131.51, device.state)
                 self.assertEqual('GB', device.unit_of_measurement)
                 self.assertEqual('mdi:chart-histogram', device.icon)
             elif device.name == 'my new server Pending Charges':
+                self.assertEqual('mdi:currency-usd', device.icon)
                 self.assertEqual(46.67, device.state)
                 self.assertEqual('US$', device.unit_of_measurement)
                 self.assertEqual('mdi:currency-usd', device.icon)
