@@ -77,7 +77,8 @@ class MikrotikScanner(DeviceScanner):
             )
 
             try:
-                routerboard_info = self.client(cmd='/system/routerboard/getall')
+                routerboard_info = self.client(
+                    cmd='/system/routerboard/getall')
             except (librouteros.exceptions.TrapError,
                     librouteros.exceptions.MultiTrapError,
                     librouteros.exceptions.ConnectionError):
