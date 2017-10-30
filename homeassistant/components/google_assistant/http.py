@@ -122,11 +122,10 @@ class GoogleAssistantView(HomeAssistantView):
             ent_ids = [ent.get('id') for ent in command.get('devices', [])]
             execution = command.get('execution')[0]
             for eid in ent_ids:
-                domain = eid.split('.')[0]
-                (service, service_data) = determine_service(
+                (service_domain, service, service_data) = determine_service(
                     eid, execution.get('command'), execution.get('params'))
                 success = yield from hass.services.async_call(
-                    domain, service, service_data, blocking=True)
+                    service_domain, service, service_data, blocking=True)
                 result = {"ids": [eid], "states": {}}
                 if success:
                     result['status'] = 'SUCCESS'

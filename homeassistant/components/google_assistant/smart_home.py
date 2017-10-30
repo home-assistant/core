@@ -1,5 +1,6 @@
 """Support for Google Assistant Smart Home API."""
 import logging
+import homeassistant.core as ha
 
 # Typing imports
 # pylint: disable=using-constant-test,unused-import,ungrouped-imports
@@ -126,7 +127,7 @@ def query_device(entity: Entity) -> dict:
 # https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
 def determine_service(entity_id: str, command: str,
-                      params: dict) -> Tuple[str, dict]:
+                      params: dict) -> Tuple[str, str, dict]:
     """
     Determine service and service_data.
 
@@ -134,28 +135,35 @@ def determine_service(entity_id: str, command: str,
     and action requested.
     """
     domain = entity_id.split('.')[0]
+    service_domain = domain
+
+    # special cover handling
+    if domain == group.DOMAIN:
+        service_domain = ha.DOMAIN
+
     service_data = {ATTR_ENTITY_ID: entity_id}  # type: Dict[str, Any]
     # special media_player handling
     if domain == media_player.DOMAIN and command == COMMAND_BRIGHTNESS:
         brightness = params.get('brightness', 0)
         service_data[media_player.ATTR_MEDIA_VOLUME_LEVEL] = brightness / 100
-        return (media_player.SERVICE_VOLUME_SET, service_data)
+        return (service_domain, media_player.SERVICE_VOLUME_SET, service_data)
 
     # special cover handling
     if domain == cover.DOMAIN:
         if command == COMMAND_BRIGHTNESS:
             service_data['position'] = params.get('brightness', 0)
-            return (cover.SERVICE_SET_COVER_POSITION, service_data)
+            return (service_domain, cover.SERVICE_SET_COVER_POSITION,
+                    service_data)
         if command == COMMAND_ONOFF and params.get('on') is True:
-            return (cover.SERVICE_OPEN_COVER, service_data)
-        return (cover.SERVICE_CLOSE_COVER, service_data)
+            return (service_domain, cover.SERVICE_OPEN_COVER, service_data)
+        return (service_domain, cover.SERVICE_CLOSE_COVER, service_data)
 
     if command == COMMAND_BRIGHTNESS:
         brightness = params.get('brightness')
         service_data['brightness'] = int(brightness / 100 * 255)
-        return (SERVICE_TURN_ON, service_data)
+        return (service_domain, SERVICE_TURN_ON, service_data)
 
     if command == COMMAND_ACTIVATESCENE or (COMMAND_ONOFF == command and
                                             params.get('on') is True):
-        return (SERVICE_TURN_ON, service_data)
-    return (SERVICE_TURN_OFF, service_data)
+        return (service_domain, SERVICE_TURN_ON, service_data)
+    return (service_domain, SERVICE_TURN_OFF, service_data)
