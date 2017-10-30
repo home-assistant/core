@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_TURN_ON
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene
+    switch, light, cover, media_player, group, fan, scene, script
 )
 
 from .const import (
@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 MAPPING_COMPONENT = {
     group.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     scene.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
+    script.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     switch.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     fan.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     light.DOMAIN: [
