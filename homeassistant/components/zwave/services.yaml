@@ -1,3 +1,5 @@
+# Describes the format for available Z-Wave services
+
 change_association:
   description: Change an association in the Z-Wave network.
   fields:
