@@ -43,8 +43,7 @@ SENSOR_TYPES = {
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    # vol.Optional(CONF_MONITORED_CONDITIONS, default=[OPTION_TRAFFIC_JAM]):
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=OPTION_TRAFFIC_JAM):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[OPTION_TRAFFIC_JAM]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
