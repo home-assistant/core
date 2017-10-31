@@ -59,9 +59,9 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_WHITE_VALUE_SCALE = 255
-DEFAULT_ON_COMMAND_TYPE = "LAST"
+DEFAULT_ON_COMMAND_TYPE = "last"
 
-VALUES_ON_COMMAND_TYPE = ["FIRST", "LAST", "BRIGHTNESS"]
+VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -405,7 +405,7 @@ class MqttLight(Light):
         """
         should_update = False
 
-        if self._on_command_type == 'FIRST':
+        if self._on_command_type == 'first':
             mqtt.async_publish(
                 self.hass, self._topic[CONF_COMMAND_TOPIC],
                 self._payload['on'], self._qos, self._retain)
@@ -414,7 +414,7 @@ class MqttLight(Light):
         # If brightness is being used instead of an on command, make sure
         # there is a brightness input.  Either set the brightness to our
         # saved value or the maximum value if this is the first call
-        elif self._on_command_type == 'BRIGHTNESS':
+        elif self._on_command_type == 'brightness':
             if ATTR_BRIGHTNESS not in kwargs:
                 kwargs[ATTR_BRIGHTNESS] = self._brightness if \
                                           self._brightness else 255
@@ -498,7 +498,7 @@ class MqttLight(Light):
                 self._xy = kwargs[ATTR_XY_COLOR]
                 should_update = True
 
-        if self._on_command_type == 'LAST':
+        if self._on_command_type == 'last':
             mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
                                self._payload['on'], self._qos, self._retain)
             should_update = True

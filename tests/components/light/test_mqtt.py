@@ -685,7 +685,7 @@ class TestLightMQTT(unittest.TestCase):
             'name': 'test',
             'command_topic': 'test_light/set',
             'brightness_command_topic': 'test_light/bright',
-            'on_command_type': 'FIRST',
+            'on_command_type': 'first',
         }}
 
         with assert_setup_component(1, light.DOMAIN):
@@ -751,7 +751,7 @@ class TestLightMQTT(unittest.TestCase):
             'command_topic': 'test_light/set',
             'brightness_command_topic': 'test_light/bright',
             'rgb_command_topic': "test_light/rgb",
-            'on_command_type': 'BRIGHTNESS',
+            'on_command_type': 'brightness',
         }}
 
         with assert_setup_component(1, light.DOMAIN):
