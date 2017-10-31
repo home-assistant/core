@@ -346,7 +346,6 @@ class RetryOnError(object):
         @wraps(method)
         def wrapper(*args, **kwargs):
             """Wrapped method."""
-
             if not hasattr(wrapper, "_retry_queue"):
                 wrapper._retry_queue = []
 
