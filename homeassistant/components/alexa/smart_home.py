@@ -270,13 +270,13 @@ def async_api_set_color_temperature(hass, request, entity):
 @asyncio.coroutine
 def async_api_decrease_color_temp(hass, request, entity):
     """Process a decrease color temperature request."""
-    current = color_util.color_temperature_mired_to_kelvin(
-        int(entity.attributes.get(light.ATTR_COLOR_TEMP)))
+    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
+    max_mireds = int(entity.attributes.get(light.ATTR_MAX_MIREDS))
 
-    value = max(2000, current - 500)
+    value = min(max_mireds, current + 50)
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
-        light.ATTR_KELVIN: value,
+        light.ATTR_COLOR_TEMP: value,
     }, blocking=True)
 
     return api_message(request)
@@ -288,13 +288,13 @@ def async_api_decrease_color_temp(hass, request, entity):
 @asyncio.coroutine
 def async_api_increase_color_temp(hass, request, entity):
     """Process a increase color temperature request."""
-    current = color_util.color_temperature_mired_to_kelvin(
-        int(entity.attributes.get(light.ATTR_COLOR_TEMP)))
+    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
+    min_mireds = int(entity.attributes.get(light.ATTR_MIN_MIREDS))
 
-    value = min(7000, current + 500)
+    value = max(min_mireds, current - 50)
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
-        light.ATTR_KELVIN: value,
+        light.ATTR_COLOR_TEMP: value,
     }, blocking=True)
 
     return api_message(request)

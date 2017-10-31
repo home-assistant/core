@@ -368,7 +368,7 @@ def test_api_set_color_temperature(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("result,initial", [(2503, '333'), (2000, '500')])
+@pytest.mark.parametrize("result,initial", [(383, '333'), (500, '500')])
 def test_api_decrease_color_temp(hass, result, initial):
     """Test api decrease color temp process."""
     request = get_new_request(
@@ -378,7 +378,8 @@ def test_api_decrease_color_temp(hass, result, initial):
     # settup test devices
     hass.states.async_set(
         'light.test', 'off', {
-            'friendly_name': "Test light", 'color_temp': initial
+            'friendly_name': "Test light", 'color_temp': initial,
+            'max_mireds': 500,
         })
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
@@ -390,12 +391,12 @@ def test_api_decrease_color_temp(hass, result, initial):
 
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
-    assert call_light[0].data['kelvin'] == result
+    assert call_light[0].data['color_temp'] == result
     assert msg['header']['name'] == 'Response'
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("result,initial", [(3503, '333'), (7000, '142')])
+@pytest.mark.parametrize("result,initial", [(283, '333'), (142, '142')])
 def test_api_increase_color_temp(hass, result, initial):
     """Test api increase color temp process."""
     request = get_new_request(
@@ -405,7 +406,8 @@ def test_api_increase_color_temp(hass, result, initial):
     # settup test devices
     hass.states.async_set(
         'light.test', 'off', {
-            'friendly_name': "Test light", 'color_temp': initial
+            'friendly_name': "Test light", 'color_temp': initial,
+            'min_mireds': 142,
         })
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
@@ -417,5 +419,5 @@ def test_api_increase_color_temp(hass, result, initial):
 
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
-    assert call_light[0].data['kelvin'] == result
+    assert call_light[0].data['color_temp'] == result
     assert msg['header']['name'] == 'Response'
