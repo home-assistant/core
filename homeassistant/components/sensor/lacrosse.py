@@ -71,11 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("%s %s", device, device_config)
 
         typ = device_config.get(CONF_TYPE)
-        try:
-            sensor_class = TYPE_CLASSES[typ]
-        except KeyError:
-            _LOGGER.exception("Unknown LaCrosse sensor type: %s", typ)
-
+        sensor_class = TYPE_CLASSES[typ]
         name = device_config.get(CONF_NAME, device)
 
         sensors.append(
