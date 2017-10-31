@@ -32,6 +32,7 @@ CONF_COMPONENT_CONFIG = 'component_config'
 CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
 CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
 CONF_RETRY_COUNT = 'max_retries'
+CONF_RETRY_QUEUE = 'retry_queue_limit'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -60,7 +61,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
-        vol.Optional(CONF_RETRY_COUNT): cv.positive_int,
+        vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
+        vol.Optional(CONF_RETRY_QUEUE, default=20): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
@@ -123,6 +125,7 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
         conf[CONF_COMPONENT_CONFIG_GLOB])
     max_tries = conf.get(CONF_RETRY_COUNT)
+    queue_limit = conf.get(CONF_RETRY_QUEUE)
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -219,7 +222,8 @@ def setup(hass, config):
 
         _write_data(json_body)
 
-    @RetryOnError(hass, retry_limit=max_tries, retry_delay=20)
+    @RetryOnError(hass, retry_limit=max_tries, retry_delay=20,
+                  queue_limit=queue_limit)
     def _write_data(json_body):
         try:
             influx.write_points(json_body)
