@@ -193,11 +193,34 @@ def async_api_turn_off(hass, request, entity):
 @asyncio.coroutine
 def async_api_set_brightness(hass, request, entity):
     """Process a set brightness request."""
-    brightness = request[API_PAYLOAD]['brightness']
+    brightness = int(request[API_PAYLOAD]['brightness'])
 
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
-        light.ATTR_BRIGHTNESS: brightness,
+        light.ATTR_BRIGHTNESS_PCT: brightness,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.BrightnessController', 'AdjustBrightness'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_brightness(hass, request, entity):
+    """Process a adjust brightness request."""
+    brightness_delta = int(request[API_PAYLOAD]['brightnessDelta'])
+
+    # read current state
+    try:
+        current = int(entity.attributes.get(light.ATTR_BRIGHTNESS) * 255/100)
+    except ZeroDivisionError:
+        return api_message(request, error_type='INVALID_VALUE')
+
+    # set brightness
+    brightness = brightness_delta + current
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_BRIGHTNESS_PCT: brightness,
     }, blocking=True)
 
     return api_message(request)

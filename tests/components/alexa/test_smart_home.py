@@ -257,5 +257,34 @@ def test_api_set_brightness(hass):
 
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
-    assert call_light[0].data['brightness'] == '50'
+    assert call_light[0].data['brightness_pct'] == 50
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("result,adjust", [(25, '-5'), (35, '5')])
+def test_api_adjust_brightness(hass, result, adjust):
+    """Test api adjust brightness process."""
+    request = get_new_request(
+        'Alexa.BrightnessController', 'AdjustBrightness', 'light#test')
+
+    # add payload
+    request['directive']['payload']['brightness'] = adjust
+
+    # settup test devices
+    hass.states.async_set(
+        'light.test', 'off', {
+            'friendly_name': "Test light", 'brightness': '30'
+        })
+
+    call_light = async_mock_service(hass, 'light', 'turn_on')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_light) == 1
+    assert call_light[0].data['entity_id'] == 'light.test'
+    assert call_light[0].data['brightness_pct'] == result
     assert msg['header']['name'] == 'Response'
