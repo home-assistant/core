@@ -434,3 +434,38 @@ class TestAutomationTemplate(unittest.TestCase):
         self.assertEqual(
             'template - test.entity - hello - world',
             self.calls[0].data['some'])
+
+    def test_wait_template_with_trigger_states(self):
+        """Test using wait template with 'states.trigger.entity_id'."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'template',
+                    'value_template':
+                        "{{ states.test.entity.state == 'world' }}",
+                },
+                'action': [
+                    {'wait_template':
+                        "{{ states.trigger.entity_id.state == 'hello' }}"},
+                    {'service': 'test.automation',
+                     'data_template': {
+                        'some':
+                        '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id', 'from_state.state',
+                            'to_state.state'))
+                     }}
+                ],
+            }
+        })
+
+        self.hass.block_till_done()
+        self.calls = []
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity', 'hello')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'template - test.entity - hello - world',
+            self.calls[0].data['some'])
