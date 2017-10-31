@@ -1,13 +1,10 @@
 """The tests for the wake on lan switch platform."""
-import json
-import os
 import unittest
 from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
-#import homeassistant.components.switch.wake_on_lan as wake_on_lan
 
 from tests.common import get_test_home_assistant
 
@@ -17,17 +14,13 @@ TEST_STATE = None
 
 def send_magic_packet(*macs, **kwargs):
     """Fake call for sending magic packets."""
-    print("send_magic_packet", macs)
     return
 
 
 def call(cmd, stdout, stderr):
     """Return fake subprocess return codes."""
-    print("call(", cmd[5], ")")
     if cmd[5] == 'validhostname' and TEST_STATE:
-        print("call_ok", TEST_STATE)
         return 0
-    print("call_nook", TEST_STATE)
     return 2
 
 
