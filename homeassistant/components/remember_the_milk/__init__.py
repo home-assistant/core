@@ -110,15 +110,15 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
                 request_id,
                 'Failed to register, please try again.')
             return
-        else:
-            stored_rtm_config.set_token(account_name, token)
-            _LOGGER.debug('retrieved new token from server')
 
-            _create_instance(
-                hass, account_name, api_key, shared_secret, token,
-                stored_rtm_config, component, descriptions)
+        stored_rtm_config.set_token(account_name, token)
+        _LOGGER.debug('retrieved new token from server')
 
-            configurator.request_done(request_id)
+        _create_instance(
+            hass, account_name, api_key, shared_secret, token,
+            stored_rtm_config, component, descriptions)
+
+        configurator.request_done(request_id)
 
     request_id = configurator.async_request_config(
         '{} - {}'.format(DOMAIN, account_name),
@@ -234,8 +234,7 @@ class RememberTheMilk(Entity):
                           task_name, self.name)
         except rtmapi.RtmRequestFailedException as rtm_exception:
             _LOGGER.error('Error creating new Remember The Milk task for '
-                          'account %s: %s', self._name,
-                          str(rtm_exception))
+                          'account %s: %s', self._name, rtm_exception)
             return False
         return True
 
@@ -249,5 +248,4 @@ class RememberTheMilk(Entity):
         """Return the state of the device."""
         if not self._token_valid:
             return 'API token invalid'
-        else:
-            return STATE_OK
+        return STATE_OK
