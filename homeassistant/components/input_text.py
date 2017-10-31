@@ -116,8 +116,6 @@ def async_setup(hass, config):
         load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
-    print(descriptions[DOMAIN])
-
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
         description=descriptions[DOMAIN][SERVICE_SET_VALUE],
