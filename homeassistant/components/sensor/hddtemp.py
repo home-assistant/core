@@ -11,18 +11,15 @@ from telnetlib import Telnet
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    STATE_UNKNOWN)
+    CONF_NAME, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_DISKS)
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = 'device'
 ATTR_MODEL = 'model'
-
-CONF_DISKS = 'disks'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 7634
@@ -32,8 +29,7 @@ DEFAULT_TIMEOUT = 5
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DISKS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DISKS, default=[]): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -108,7 +104,7 @@ class HddTempSensor(Entity):
             self._details = self.hddtemp.data[self.disk].split('|')
             self._state = self._details[2]
         else:
-            self._state = STATE_UNKNOWN
+            self._state = None
 
 
 class HddTempData(object):
