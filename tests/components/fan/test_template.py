@@ -30,7 +30,7 @@ class TestTemplateFan:
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Setup."""
         self.hass = get_test_home_assistant()
 
         self.calls = []
@@ -48,7 +48,7 @@ class TestTemplateFan:
 
     # Configuration tests #
     def test_missing_optional_config(self):
-        """"Test: missing optional template is ok"""
+        """Test: missing optional template is ok."""
         with assert_setup_component(1, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
@@ -74,8 +74,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, None)
 
     def test_missing_value_template_config(self):
-        """"Test: missing 'value_template' will fail"""
-
+        """Test: missing 'value_template' will fail."""
         with assert_setup_component(0, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
@@ -99,8 +98,7 @@ class TestTemplateFan:
         assert self.hass.states.all() == []
 
     def test_missing_turn_on_config(self):
-        """"Test: missing 'turn_on' will fail"""
-
+        """Test: missing 'turn_on' will fail."""
         with assert_setup_component(0, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
@@ -122,8 +120,7 @@ class TestTemplateFan:
         assert self.hass.states.all() == []
 
     def test_missing_turn_off_config(self):
-        """"Test: missing 'turn_off' will fail"""
-
+        """Test: missing 'turn_off' will fail."""
         with assert_setup_component(0, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
@@ -145,8 +142,7 @@ class TestTemplateFan:
         assert self.hass.states.all() == []
 
     def test_invalid_config(self):
-        """"Test: missing 'turn_off' will fail"""
-
+        """Test: missing 'turn_off' will fail."""
         with assert_setup_component(0, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'platform': 'template',
@@ -169,7 +165,7 @@ class TestTemplateFan:
 
     # Template tests #
     def test_templates_with_entities(self):
-        """"Test tempalates with values from other entities"""
+        """Test tempalates with values from other entities."""
         with assert_setup_component(1, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
@@ -207,7 +203,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, SPEED_MEDIUM, True)
 
     def test_templates_with_valid_values(self):
-        """"Test templates with valid values"""
+        """Test templates with valid values."""
         with assert_setup_component(1, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
@@ -238,7 +234,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, SPEED_MEDIUM, True)
 
     def test_templates_invalid_values(self):
-        """"Test templates with invalid values"""
+        """Test templates with invalid values."""
         with assert_setup_component(1, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
@@ -272,7 +268,7 @@ class TestTemplateFan:
 
     # Function tests #
     def test_on_off(self):
-        """Test turn on and turn off"""
+        """Test turn on and turn off."""
         self._register_components()
 
         # Turn on fan
@@ -292,7 +288,7 @@ class TestTemplateFan:
         self._verify(STATE_OFF, None, None)
 
     def test_on_with_speed(self):
-        """Test turn on with speed"""
+        """Test turn on with speed."""
         self._register_components()
 
         # Turn on fan with high speed
@@ -305,7 +301,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, SPEED_HIGH, None)
 
     def test_set_speed(self):
-        """Test set valid speed"""
+        """Test set valid speed."""
         self._register_components()
 
         # Turn on fan
@@ -329,7 +325,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, SPEED_MEDIUM, None)
 
     def test_set_invalid_speed_from_initial_stage(self):
-        """Test set invalid speed when fan is in initial state"""
+        """Test set invalid speed when fan is in initial state."""
         self._register_components()
 
         # Turn on fan
@@ -345,7 +341,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, None)
 
     def test_set_invalid_speed(self):
-        """Test set invalid speed when fan has valid speed"""
+        """Test set invalid speed when fan has valid speed."""
         self._register_components()
 
         # Turn on fan
@@ -369,7 +365,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, SPEED_HIGH, None)
 
     def test_custom_speed_list(self):
-        """Test set custom speed list"""
+        """Test set custom speed list."""
         self._register_components(['1', '2', '3'])
 
         # Turn on fan
@@ -393,7 +389,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, '1', None)
 
     def test_set_osc(self):
-        """Test set oscillating"""
+        """Test set oscillating."""
         self._register_components()
 
         # Turn on fan
@@ -417,7 +413,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, False)
 
     def test_set_invalid_osc_from_initial_state(self):
-        """Test set invalid oscillating when fan is in initial state"""
+        """Test set invalid oscillating when fan is in initial state."""
         self._register_components()
 
         # Turn on fan
@@ -433,7 +429,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, None)
 
     def test_set_invalid_osc(self):
-        """Test set invalid oscillating when fan has valid osc"""
+        """Test set invalid oscillating when fan has valid osc."""
         self._register_components()
 
         # Turn on fan
@@ -457,7 +453,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, True)
 
     def _verify(self, expected_state, expected_speed, expected_oscillating):
-        """"Verify fan's state, speed and osc"""
+        """Verify fan's state, speed and osc."""
         state = self.hass.states.get(_TEST_FAN)
         attributes = state.attributes
         assert state.state == expected_state
@@ -465,7 +461,7 @@ class TestTemplateFan:
         assert attributes.get(ATTR_OSCILLATING, None) == expected_oscillating
 
     def _register_components(self, speed_list=None):
-        """"Register basic components for testing"""
+        """Register basic components for testing."""
         with assert_setup_component(1, 'input_boolean'):
             assert setup.setup_component(
                 self.hass,
