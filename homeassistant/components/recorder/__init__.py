@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -178,10 +179,10 @@ class Recorder(threading.Thread):
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 
-        self.include_e = include.get(CONF_ENTITIES, [])
-        self.include_d = include.get(CONF_DOMAINS, [])
-        self.exclude = exclude.get(CONF_ENTITIES, []) + \
-            exclude.get(CONF_DOMAINS, [])
+        self.entity_filter = EntityFilter(include.get(CONF_DOMAINS, []),
+                                          include.get(CONF_ENTITIES, []),
+                                          exclude.get(CONF_DOMAINS, []),
+                                          exclude.get(CONF_ENTITIES, []))
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
@@ -289,22 +290,8 @@ class Recorder(threading.Thread):
                 continue
 
             entity_id = event.data.get(ATTR_ENTITY_ID)
-            if entity_id is not None:
-                domain = split_entity_id(entity_id)[0]
-
-                # Exclude entities OR
-                # Exclude domains, but include specific entities
-                if (entity_id in self.exclude) or \
-                        (domain in self.exclude and
-                         entity_id not in self.include_e):
-                    self.queue.task_done()
-                    continue
-
-                # Included domains only (excluded entities above) OR
-                # Include entities only, but only if no excludes
-                if (self.include_d and domain not in self.include_d) or \
-                        (self.include_e and entity_id not in self.include_e
-                         and not self.exclude):
+            if entity_id is not None and \
+                not(self.entity_filter.check_entity(entity_id)):
                     self.queue.task_done()
                     continue
 
