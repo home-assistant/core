@@ -45,7 +45,7 @@ class TestTemplateFan:
         """Stop everything that was started."""
         self.hass.stop()
 
-    ##### Configuration tests #####
+    ### Configuration tests ###
     def test_missing_optional_config(self):
         """"Test: missing optional template is ok"""
         with assert_setup_component(1, 'fan'):
@@ -55,7 +55,7 @@ class TestTemplateFan:
                     'fans': {
                         'test_fan': {
                             'value_template': "{{ 'on' }}",
-                            
+
                             'turn_on': {
                                 'service': 'script.fan_on'
                             },
@@ -164,9 +164,9 @@ class TestTemplateFan:
 
         assert self.hass.states.all() == []
 
-    ##### End of configuration tests #####
-    
-    ##### Template tests #####
+    ### End of configuration tests ###
+
+    ### Template tests ###
     def test_templates_with_entities(self):
         """"Test tempalates with values from other entities"""
         with assert_setup_component(1, 'fan'):
@@ -177,11 +177,11 @@ class TestTemplateFan:
                         'test_fan': {
                             'value_template':
                                 "{{ states('input_boolean.state') }}",
-                            'speed_template' : 
+                            'speed_template' :
                                 "{{ states('input_select.speed') }}",
-                            'oscillating_template' : 
+                            'oscillating_template' :
                                 "{{ states('input_select.osc') }}",
-                            
+
                             'turn_on': {
                                 'service': 'script.fan_on'
                             },
@@ -215,11 +215,11 @@ class TestTemplateFan:
                         'test_fan': {
                             'value_template':
                                 "{{ 'on' }}",
-                            'speed_template' : 
+                            'speed_template' :
                                 "{{ 'medium' }}",
-                            'oscillating_template' : 
+                            'oscillating_template' :
                                 "{{ 1 == 1 }}",
-                            
+
                             'turn_on': {
                                 'service': 'script.fan_on'
                             },
@@ -246,11 +246,11 @@ class TestTemplateFan:
                         'test_fan': {
                             'value_template':
                                 "{{ 'abc' }}",
-                            'speed_template' : 
+                            'speed_template' :
                                 "{{ '0' }}",
-                            'oscillating_template' : 
+                            'oscillating_template' :
                                 "{{ 'xyz' }}",
-                            
+
                             'turn_on': {
                                 'service': 'script.fan_on'
                             },
@@ -267,9 +267,9 @@ class TestTemplateFan:
 
         self._verify_fan(STATE_OFF, None, None)
 
-    ##### End of template tests #####
-    
-    ##### Function tests ######
+    ### End of template tests ###
+
+    ### Function tests ###
     def test_on_off(self):
         """Test turn on and turn off"""
         self._register_components()
@@ -277,7 +277,7 @@ class TestTemplateFan:
         # Turn on fan
         core.fan.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
-        
+
         # verify
         assert self.hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
         self._verify_fan(STATE_ON, None, None)
@@ -285,7 +285,7 @@ class TestTemplateFan:
         # Turn off fan
         core.fan.turn_off(self.hass, _TEST_FAN)
         self.hass.block_till_done()
-        
+
         # verify
         assert self.hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_OFF
         self._verify_fan(STATE_OFF, None, None)
@@ -455,7 +455,6 @@ class TestTemplateFan:
         assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'True'
         self._verify_fan(STATE_ON, None, True)
 
-
     def _verify_fan(self, expected_state, expected_speed, expected_oscillating):
         """"Verify fan's state, speed and osc"""
         state = self.hass.states.get(_TEST_FAN)
@@ -467,15 +466,16 @@ class TestTemplateFan:
     def _register_components(self, speed_list=None):
         """"Register basic components for testing"""
         with assert_setup_component(1, 'input_boolean'):
-            assert setup.setup_component(self.hass, 'input_boolean', {'input_boolean': {'state': None}})
-            
+            assert setup.setup_component(self.hass, 'input_boolean',
+                {'input_boolean': {'state': None}})
 
         with assert_setup_component(2, 'input_select'):
             assert setup.setup_component(self.hass, 'input_select', {
                 'input_select': {
                     'speed': {
                         'name': 'Speed',
-                        'options': ['', SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, '1', '2', '3']
+                        'options': ['', SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
+                            '1', '2', '3']
                     },
 
                     'osc': {
@@ -485,14 +485,13 @@ class TestTemplateFan:
                 }
             })
 
-
         with assert_setup_component(1, 'fan'):
             test_fan_config = {
-                'value_template': 
+                'value_template':
                     "{{ states('input_boolean.state') }}",
-                'speed_template': 
+                'speed_template':
                     "{{ states('input_select.speed') }}",
-                'oscillating_template': 
+                'oscillating_template':
                     "{{ states('input_select.osc') }}",
 
                 'turn_on': {
@@ -505,7 +504,7 @@ class TestTemplateFan:
                 },
                 'set_speed': {
                     'service': 'input_select.select_option',
-                    
+
                     'data_template': {
                         'entity_id': _SPEED_INPUT_SELECT,
                         'option': '{{ speed }}'
@@ -513,7 +512,7 @@ class TestTemplateFan:
                 },
                 'set_oscillating': {
                     'service': 'input_select.select_option',
-                    
+
                     'data_template': {
                         'entity_id': _OSC_INPUT_SELECT,
                         'option': '{{ oscillating }}'
