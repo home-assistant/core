@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
-    CONF_SSL, HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
+    CONF_SSL, HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON,
+    CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -77,7 +78,7 @@ class PyLoadSensor(Entity):
     def __init__(self, api, sensor_type, client_name):
         """Initialize a new pyLoad sensor."""
         self._name = '{} {}'.format(client_name, sensor_type[1])
-        self.type = sensor_type[0]        
+        self.type = sensor_type[0]
         self.api = api
         self._state = None
         self._unit_of_measurement = sensor_type[2]
@@ -134,7 +135,7 @@ class PyLoadAPI(object):
 
         if username is not None and password is not None:
             self.payload = {'username': username, 'password': password}
-            self.login = requests.post(api_url + 'login', data=self.payload, 
+            self.login = requests.post(api_url + 'login', data=self.payload,
                                        timeout=5)
         self.update()
 
@@ -155,7 +156,8 @@ class PyLoadAPI(object):
             return response.json()
 
         except requests.exceptions.ConnectionError as conn_exc:
-            _LOGGER.error("Failed to update pyLoad status. Error: %s", conn_exc)
+            _LOGGER.error("Failed to update pyLoad status. Error: %s",
+                          conn_exc)
             raise
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
