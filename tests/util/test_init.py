@@ -285,7 +285,7 @@ class TestUtil(unittest.TestCase):
         assert util.get_random_string(length=3) == 'ABC'
 
 
-class TestRetryOnErrorDecoratoru(unittest.TestCase):
+class TestRetryOnErrorDecorator(unittest.TestCase):
     """Test the RetryOnError decorator."""
 
     def setUp(self):
@@ -358,3 +358,58 @@ class TestRetryOnErrorDecoratoru(unittest.TestCase):
             self.hass.block_till_done()
             self.assertEqual(mock_method.call_count, cnt + 2)
             mock_method.assert_called_with(1, 2, test=3)
+
+    def test_max_queue(self):
+        """Test the maximum queue length."""
+        # make a wrapped method
+        mock_method = MagicMock()
+        retryer = util.RetryOnError(self.hass, retry_limit=4, queue_limit=3)
+        wrapped = retryer(mock_method)
+        mock_method.side_effect = Exception()
+
+        # call it once, call fails, queue fills to 1
+        wrapped(1, 2, test=3)
+        self.assertEqual(mock_method.call_count, 1)
+        mock_method.assert_called_with(1, 2, test=3)
+        self.assertEqual(len(wrapped._retry_queue), 1)
+
+        # two more calls that failed. queue is 3
+        wrapped(1, 2, test=3)
+        wrapped(1, 2, test=3)
+        self.assertEqual(mock_method.call_count, 3)
+        self.assertEqual(len(wrapped._retry_queue), 3)
+
+        # another call, queue gets limited to 3
+        wrapped(1, 2, test=3)
+        self.assertEqual(mock_method.call_count, 4)
+        self.assertEqual(len(wrapped._retry_queue), 3)
+
+        # time passes
+        start = dt_util.utcnow()
+        shifted_time = start + (timedelta(seconds=20 + 1))
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                           {ha.ATTR_NOW: shifted_time})
+        self.hass.block_till_done()
+
+        # only the three queued calls where repeated
+        self.assertEqual(mock_method.call_count, 7)
+        self.assertEqual(len(wrapped._retry_queue), 3)
+
+        # another call, queue stays limited
+        wrapped(1, 2, test=3)
+        self.assertEqual(mock_method.call_count, 8)
+        self.assertEqual(len(wrapped._retry_queue), 3)
+
+        # disable the side effect
+        mock_method.side_effect = None
+
+        # time passes, all calls should succeed
+        start = dt_util.utcnow()
+        shifted_time = start + (timedelta(seconds=20 + 1))
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                           {ha.ATTR_NOW: shifted_time})
+        self.hass.block_till_done()
+
+        # three queued calls succeeded, queue empty.
+        self.assertEqual(mock_method.call_count, 11)
+        self.assertEqual(len(wrapped._retry_queue), 0)
