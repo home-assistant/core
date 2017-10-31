@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 from typing import Optional, List
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
+    ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON, ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
@@ -393,16 +393,27 @@ class ToggleEntity(Entity):
 
     def toggle(self, **kwargs) -> None:
         """Toggle the entity."""
-        if self.is_on:
-            self.turn_off(**kwargs)
+        if ATTR_STATE in kwargs:
+            if kwargs[ATTR_STATE] == STATE_ON:
+                self.turn_on(**kwargs)
+            else:
+                self.turn_off(**kwargs)
         else:
-            self.turn_on(**kwargs)
+            if self.is_on:
+                self.turn_off(**kwargs)
+            else:
+                self.turn_on(**kwargs)
 
     def async_toggle(self, **kwargs):
         """Toggle the entity.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self.is_on:
+        if ATTR_STATE in kwargs:
+            if kwargs[ATTR_STATE] == STATE_ON:
+                return self.async_turn_on(**kwargs)
             return self.async_turn_off(**kwargs)
-        return self.async_turn_on(**kwargs)
+        else:
+            if self.is_on:
+                return self.async_turn_off(**kwargs)
+            return self.async_turn_on(**kwargs)

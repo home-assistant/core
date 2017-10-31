@@ -19,8 +19,8 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
+    ATTR_ENTITY_ID, ATTR_STATE)
 from homeassistant.components import group
 
 DOMAIN = 'switch'
@@ -44,6 +44,11 @@ PROP_TO_ATTR = {
 
 SWITCH_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+SWITCH_TOGGLE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    ATTR_STATE: vol.In([STATE_ON, STATE_OFF]),
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,9 +94,14 @@ def async_turn_off(hass, entity_id=None):
 
 
 @bind_hass
-def toggle(hass, entity_id=None):
+def toggle(hass, entity_id=None, state=None):
     """Toggle all or specified switch."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_STATE, state),
+        ] if value is not None
+    }
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
@@ -105,16 +115,20 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_handle_switch_service(service):
         """Handle calls to the switch services."""
+        # Get the validated data
+        params = service.data.copy()
+
         target_switches = component.async_extract_from_service(service)
+        params.pop(ATTR_ENTITY_ID, None)
 
         update_tasks = []
         for switch in target_switches:
             if service.service == SERVICE_TURN_ON:
-                yield from switch.async_turn_on()
+                yield from switch.async_turn_on(**params)
             elif service.service == SERVICE_TOGGLE:
-                yield from switch.async_toggle()
+                yield from switch.async_toggle(**params)
             else:
-                yield from switch.async_turn_off()
+                yield from switch.async_turn_off(**params)
 
             if not switch.should_poll:
                 continue
@@ -135,7 +149,7 @@ def async_setup(hass, config):
         descriptions.get(SERVICE_TURN_ON), schema=SWITCH_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_switch_service,
-        descriptions.get(SERVICE_TOGGLE), schema=SWITCH_SERVICE_SCHEMA)
+        descriptions.get(SERVICE_TOGGLE), schema=SWITCH_TOGGLE_SCHEMA)
 
     return True
 

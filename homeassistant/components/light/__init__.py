@@ -17,8 +17,8 @@ from homeassistant.loader import bind_hass
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
+    ATTR_ENTITY_ID, ATTR_STATE)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -130,6 +130,7 @@ LIGHT_TURN_OFF_SCHEMA = vol.Schema({
 
 LIGHT_TOGGLE_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_STATE: vol.In([STATE_ON, STATE_OFF]),
     ATTR_TRANSITION: VALID_TRANSITION,
 })
 
@@ -217,11 +218,12 @@ def async_turn_off(hass, entity_id=None, transition=None):
 
 
 @bind_hass
-def toggle(hass, entity_id=None, transition=None):
+def toggle(hass, entity_id=None, state=None, transition=None):
     """Toggle all or specified light."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
+            (ATTR_STATE, state),
             (ATTR_TRANSITION, transition),
         ] if value is not None
     }
