@@ -5,8 +5,8 @@ from homeassistant.core import callback
 from homeassistant import setup
 import homeassistant.components as core
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.fan import (ATTR_SPEED, ATTR_OSCILLATING,
-    SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
+from homeassistant.components.fan import (
+    ATTR_SPEED, ATTR_OSCILLATING, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
@@ -20,6 +20,7 @@ _STATE_INPUT_BOOLEAN = 'input_boolean.state'
 _SPEED_INPUT_SELECT = 'input_select.speed'
 # Represent for fan's oscillating
 _OSC_INPUT_SELECT = 'input_select.osc'
+
 
 class TestTemplateFan:
     """Test the Template light."""
