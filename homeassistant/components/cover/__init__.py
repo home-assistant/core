@@ -59,6 +59,10 @@ ATTR_TILT_POSITION = 'tilt_position'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_POSITION):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+    vol.Optional(ATTR_TILT_POSITION):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
 COVER_SET_COVER_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
