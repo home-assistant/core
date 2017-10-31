@@ -365,3 +365,57 @@ def test_api_set_color_temperature(hass):
     assert call_light[0].data['entity_id'] == 'light.test'
     assert call_light[0].data['kelvin'] == 7500
     assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("result,initial", [(2500, '3000'), (2000, '2000')])
+def test_api_decrease_color_temp(hass, result, initial):
+    """Test api decrease color temp process."""
+    request = get_new_request(
+        'Alexa.ColorTemperatureController', 'DecreaseColorTemperature',
+        'light#test')
+
+    # settup test devices
+    hass.states.async_set(
+        'light.test', 'off', {
+            'friendly_name': "Test light", 'color_temp': initial
+        })
+
+    call_light = async_mock_service(hass, 'light', 'turn_on')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_light) == 1
+    assert call_light[0].data['entity_id'] == 'light.test'
+    assert call_light[0].data['color_temp'] == result
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("result,initial", [(3500, '3000'), (7000, '7000')])
+def test_api_increase_color_temp(hass, result, initial):
+    """Test api increase color temp process."""
+    request = get_new_request(
+        'Alexa.ColorTemperatureController', 'IncreaseColorTemperature',
+        'light#test')
+
+    # settup test devices
+    hass.states.async_set(
+        'light.test', 'off', {
+            'friendly_name': "Test light", 'color_temp': initial
+        })
+
+    call_light = async_mock_service(hass, 'light', 'turn_on')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_light) == 1
+    assert call_light[0].data['entity_id'] == 'light.test'
+    assert call_light[0].data['color_temp'] == result
+    assert msg['header']['name'] == 'Response'

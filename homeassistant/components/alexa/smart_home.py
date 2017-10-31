@@ -262,3 +262,37 @@ def async_api_set_color_temperature(hass, request, entity):
     }, blocking=True)
 
     return api_message(request)
+
+
+@HANDLERS.register(
+    ('Alexa.ColorTemperatureController', 'DecreaseColorTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_decrease_color_temp(hass, request, entity):
+    """Process a decrease color temperature request."""
+    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
+
+    value = max(2000, current - 500)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_COLOR_TEMP: value,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(
+    ('Alexa.ColorTemperatureController', 'IncreaseColorTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_increase_color_temp(hass, request, entity):
+    """Process a increase color temperature request."""
+    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
+
+    value = min(7000, current + 500)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_COLOR_TEMP: value,
+    }, blocking=True)
+
+    return api_message(request)
