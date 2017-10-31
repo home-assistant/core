@@ -23,8 +23,9 @@ toggle:
     state:
       description: Desired state
       values:
-        - on
-        - off
+        - 'on'
+        - 'off'
+      example: 'on'
 
 mysensors_send_ir_code:
   description: Set an IR code as a state attribute for a MySensors IR device switch and turn the switch on.

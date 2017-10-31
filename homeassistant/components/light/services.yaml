@@ -71,8 +71,9 @@ toggle:
     state:
       description: Desired state
       values:
-        - on
-        - off
+        - 'on'
+        - 'off'
+      example: 'on'
     transition:
       description: Duration in seconds it takes to get to next state.
       example: 60
