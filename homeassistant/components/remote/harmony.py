@@ -21,9 +21,7 @@ from homeassistant.components.remote import (
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['https://github.com/amelchio/pyharmony/archive/'
-                '4bf627ef462c8e9a5d50b65e7523b54ed76e2b2a.zip'
-                '#pyharmony==1.0.17alpha1']
+REQUIREMENTS = ['pyharmony==1.0.17']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +146,8 @@ class HarmonyRemote(remote.RemoteDevice):
         self._state = None
         self._current_activity = None
         self._default_activity = activity
-        self._client = pyharmony.get_client(host, port, self.new_activity)
+        self._client = pyharmony.get_client(host, port)
+        self._client.register_activity_callback(self.new_activity)
         self._config_path = out_path
         self._config = self._client.get_config()
         if not Path(self._config_path).is_file():
