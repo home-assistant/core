@@ -66,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @bind_hass
-def sync_start(hass, entity_id, duration):
+def start(hass, entity_id, duration):
     """Start a timer."""
     hass.add_job(async_start, hass, entity_id, {ATTR_ENTITY_ID: entity_id,
                                                 ATTR_DURATION: duration})
@@ -205,7 +205,7 @@ class Timer(Entity):
     @property
     def should_poll(self):
         """If entity should be polled."""
-        return True
+        return False
 
     @property
     def name(self):
@@ -226,7 +226,7 @@ class Timer(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_DURATION: self._duration.__str__(),
+            ATTR_DURATION: str(self._duration),
         }
 
     @asyncio.coroutine
@@ -251,6 +251,7 @@ class Timer(Entity):
             newduration = duration
 
         self._state = STATUS_ACTIVE
+        # pylint: disable=redefined-outer-name
         start = dt_util.utcnow()
         if self._remaining and newduration is None:
             self._end = start + self._remaining
@@ -269,13 +270,15 @@ class Timer(Entity):
     @asyncio.coroutine
     def async_pause(self):
         """Pause a timer."""
-        if self._listener:
-            self._listener()
-            self._listener = None
-            self._remaining = self._end - dt_util.utcnow()
-            self._state = STATUS_PAUSED
-            self._end = None
-            yield from self.async_update_ha_state()
+        if self._listener is None:
+            return
+
+        self._listener()
+        self._listener = None
+        self._remaining = self._end - dt_util.utcnow()
+        self._state = STATUS_PAUSED
+        self._end = None
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_cancel(self):
@@ -293,23 +296,25 @@ class Timer(Entity):
     @asyncio.coroutine
     def async_finish(self):
         """Reset and updates the states, fire finished event."""
-        if self._state == STATUS_ACTIVE:
-            self._listener = None
-            self._state = STATUS_IDLE
-            self._remaining = timedelta()
-            self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
-                                      {"entity_id": self.entity_id})
-            yield from self.async_update_ha_state()
-        return
+        if self._state != STATUS_ACTIVE:
+            return
+
+        self._listener = None
+        self._state = STATUS_IDLE
+        self._remaining = timedelta()
+        self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
+                                  {"entity_id": self.entity_id})
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_finished(self, time):
         """Reset and updates the states, fire finished event."""
-        if self._state == STATUS_ACTIVE:
-            self._listener = None
-            self._state = STATUS_IDLE
-            self._remaining = timedelta()
-            self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
-                                      {"entity_id": self.entity_id})
-            yield from self.async_update_ha_state()
-        return
+        if self._state != STATUS_ACTIVE:
+            return
+
+        self._listener = None
+        self._state = STATUS_IDLE
+        self._remaining = timedelta()
+        self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
+                                  {"entity_id": self.entity_id})
+        yield from self.async_update_ha_state()
