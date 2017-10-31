@@ -46,7 +46,7 @@ class TestTemplateFan:
         """Stop everything that was started."""
         self.hass.stop()
 
-    ### Configuration tests ###
+    # Configuration tests #
     def test_missing_optional_config(self):
         """"Test: missing optional template is ok"""
         with assert_setup_component(1, 'fan'):
@@ -71,7 +71,7 @@ class TestTemplateFan:
         self.hass.start()
         self.hass.block_till_done()
 
-        self._verify_fan(STATE_ON, None, None)
+        self._verify(STATE_ON, None, None)
 
     def test_missing_value_template_config(self):
         """"Test: missing 'value_template' will fail"""
@@ -165,9 +165,9 @@ class TestTemplateFan:
 
         assert self.hass.states.all() == []
 
-    ### End of configuration tests ###
+    # End of configuration tests #
 
-    ### Template tests ###
+    # Template tests #
     def test_templates_with_entities(self):
         """"Test tempalates with values from other entities"""
         with assert_setup_component(1, 'fan'):
@@ -178,9 +178,9 @@ class TestTemplateFan:
                         'test_fan': {
                             'value_template':
                                 "{{ states('input_boolean.state') }}",
-                            'speed_template' :
+                            'speed_template':
                                 "{{ states('input_select.speed') }}",
-                            'oscillating_template' :
+                            'oscillating_template':
                                 "{{ states('input_select.osc') }}",
 
                             'turn_on': {
@@ -197,14 +197,14 @@ class TestTemplateFan:
         self.hass.start()
         self.hass.block_till_done()
 
-        self._verify_fan(STATE_OFF, None, None)
+        self._verify(STATE_OFF, None, None)
 
         self.hass.states.set(_STATE_INPUT_BOOLEAN, True)
         self.hass.states.set(_SPEED_INPUT_SELECT, SPEED_MEDIUM)
         self.hass.states.set(_OSC_INPUT_SELECT, 'True')
         self.hass.block_till_done()
 
-        self._verify_fan(STATE_ON, SPEED_MEDIUM, True)
+        self._verify(STATE_ON, SPEED_MEDIUM, True)
 
     def test_templates_with_valid_values(self):
         """"Test templates with valid values"""
@@ -216,9 +216,9 @@ class TestTemplateFan:
                         'test_fan': {
                             'value_template':
                                 "{{ 'on' }}",
-                            'speed_template' :
+                            'speed_template':
                                 "{{ 'medium' }}",
-                            'oscillating_template' :
+                            'oscillating_template':
                                 "{{ 1 == 1 }}",
 
                             'turn_on': {
@@ -235,7 +235,7 @@ class TestTemplateFan:
         self.hass.start()
         self.hass.block_till_done()
 
-        self._verify_fan(STATE_ON, SPEED_MEDIUM, True)
+        self._verify(STATE_ON, SPEED_MEDIUM, True)
 
     def test_templates_invalid_values(self):
         """"Test templates with invalid values"""
@@ -247,9 +247,9 @@ class TestTemplateFan:
                         'test_fan': {
                             'value_template':
                                 "{{ 'abc' }}",
-                            'speed_template' :
+                            'speed_template':
                                 "{{ '0' }}",
-                            'oscillating_template' :
+                            'oscillating_template':
                                 "{{ 'xyz' }}",
 
                             'turn_on': {
@@ -266,11 +266,11 @@ class TestTemplateFan:
         self.hass.start()
         self.hass.block_till_done()
 
-        self._verify_fan(STATE_OFF, None, None)
+        self._verify(STATE_OFF, None, None)
 
-    ### End of template tests ###
+    # End of template tests #
 
-    ### Function tests ###
+    # Function tests #
     def test_on_off(self):
         """Test turn on and turn off"""
         self._register_components()
@@ -281,7 +281,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
-        self._verify_fan(STATE_ON, None, None)
+        self._verify(STATE_ON, None, None)
 
         # Turn off fan
         core.fan.turn_off(self.hass, _TEST_FAN)
@@ -289,7 +289,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_OFF
-        self._verify_fan(STATE_OFF, None, None)
+        self._verify(STATE_OFF, None, None)
 
     def test_on_with_speed(self):
         """Test turn on with speed"""
@@ -302,7 +302,7 @@ class TestTemplateFan:
         # verify
         assert self.hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-        self._verify_fan(STATE_ON, SPEED_HIGH, None)
+        self._verify(STATE_ON, SPEED_HIGH, None)
 
     def test_set_speed(self):
         """Test set valid speed"""
@@ -318,7 +318,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-        self._verify_fan(STATE_ON, SPEED_HIGH, None)
+        self._verify(STATE_ON, SPEED_HIGH, None)
 
         # Set fan's speed to medium
         core.fan.set_speed(self.hass, _TEST_FAN, SPEED_MEDIUM)
@@ -326,7 +326,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_MEDIUM
-        self._verify_fan(STATE_ON, SPEED_MEDIUM, None)
+        self._verify(STATE_ON, SPEED_MEDIUM, None)
 
     def test_set_invalid_speed_from_initial_stage(self):
         """Test set invalid speed when fan is in initial state"""
@@ -342,7 +342,7 @@ class TestTemplateFan:
 
         # verify speed is unchanged
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == ''
-        self._verify_fan(STATE_ON, None, None)
+        self._verify(STATE_ON, None, None)
 
     def test_set_invalid_speed(self):
         """Test set invalid speed when fan has valid speed"""
@@ -358,7 +358,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-        self._verify_fan(STATE_ON, SPEED_HIGH, None)
+        self._verify(STATE_ON, SPEED_HIGH, None)
 
         # Set fan's speed to 'invalid'
         core.fan.set_speed(self.hass, _TEST_FAN, 'invalid')
@@ -366,7 +366,7 @@ class TestTemplateFan:
 
         # verify speed is unchanged
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-        self._verify_fan(STATE_ON, SPEED_HIGH, None)
+        self._verify(STATE_ON, SPEED_HIGH, None)
 
     def test_custom_speed_list(self):
         """Test set custom speed list"""
@@ -382,7 +382,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == '1'
-        self._verify_fan(STATE_ON, '1', None)
+        self._verify(STATE_ON, '1', None)
 
         # Set fan's speed to 'medium' which is invalid
         core.fan.set_speed(self.hass, _TEST_FAN, SPEED_MEDIUM)
@@ -390,7 +390,7 @@ class TestTemplateFan:
 
         # verify that speed is unchanged
         assert self.hass.states.get(_SPEED_INPUT_SELECT).state == '1'
-        self._verify_fan(STATE_ON, '1', None)
+        self._verify(STATE_ON, '1', None)
 
     def test_set_osc(self):
         """Test set oscillating"""
@@ -406,7 +406,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'True'
-        self._verify_fan(STATE_ON, None, True)
+        self._verify(STATE_ON, None, True)
 
         # Set fan's osc to False
         core.fan.oscillate(self.hass, _TEST_FAN, False)
@@ -414,7 +414,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'False'
-        self._verify_fan(STATE_ON, None, False)
+        self._verify(STATE_ON, None, False)
 
     def test_set_invalid_osc_from_initial_state(self):
         """Test set invalid oscillating when fan is in initial state"""
@@ -430,7 +430,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_OSC_INPUT_SELECT).state == ''
-        self._verify_fan(STATE_ON, None, None)
+        self._verify(STATE_ON, None, None)
 
     def test_set_invalid_osc(self):
         """Test set invalid oscillating when fan has valid osc"""
@@ -446,7 +446,7 @@ class TestTemplateFan:
 
         # verify
         assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'True'
-        self._verify_fan(STATE_ON, None, True)
+        self._verify(STATE_ON, None, True)
 
         # Set fan's osc to False
         core.fan.oscillate(self.hass, _TEST_FAN, None)
@@ -454,9 +454,9 @@ class TestTemplateFan:
 
         # verify osc is unchanged
         assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'True'
-        self._verify_fan(STATE_ON, None, True)
+        self._verify(STATE_ON, None, True)
 
-    def _verify_fan(self, expected_state, expected_speed, expected_oscillating):
+    def _verify(self, expected_state, expected_speed, expected_oscillating):
         """"Verify fan's state, speed and osc"""
         state = self.hass.states.get(_TEST_FAN)
         attributes = state.attributes
@@ -467,8 +467,11 @@ class TestTemplateFan:
     def _register_components(self, speed_list=None):
         """"Register basic components for testing"""
         with assert_setup_component(1, 'input_boolean'):
-            assert setup.setup_component(self.hass, 'input_boolean',
-                {'input_boolean': {'state': None}})
+            assert setup.setup_component(
+                self.hass,
+                'input_boolean',
+                {'input_boolean': {'state': None}}
+            )
 
         with assert_setup_component(2, 'input_select'):
             assert setup.setup_component(self.hass, 'input_select', {
@@ -476,7 +479,7 @@ class TestTemplateFan:
                     'speed': {
                         'name': 'Speed',
                         'options': ['', SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-                            '1', '2', '3']
+                                    '1', '2', '3']
                     },
 
                     'osc': {

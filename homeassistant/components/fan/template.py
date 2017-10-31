@@ -54,9 +54,10 @@ FAN_SCHEMA = vol.Schema({
     vol.Optional(CONF_SET_SPEED_ACTION, default=None): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_SET_OSCILLATING_ACTION, default=None): cv.SCRIPT_SCHEMA,
 
-    vol.Optional(CONF_SPEED_LIST,
-                 default=[SPEED_LOW, SPEED_MEDIUM,
-                            SPEED_HIGH]): cv.ensure_list,
+    vol.Optional(
+        CONF_SPEED_LIST,
+        default=[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    ): cv.ensure_list,
 
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
@@ -76,7 +77,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         state_template = device_config[CONF_VALUE_TEMPLATE]
         speed_template = device_config[CONF_SPEED_TEMPLATE]
-        oscillating_template = device_config[CONF_OSCILLATING_TEMPLATE]
+        oscillating_template = device_config[
+            CONF_OSCILLATING_TEMPLATE
+        ]
 
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
@@ -110,8 +113,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             TemplateFan(
                 hass, device, friendly_name,
                 state_template, speed_template, oscillating_template,
-                on_action, off_action, set_speed_action, set_oscillating_action,
-                speed_list, entity_ids)
+                on_action, off_action, set_speed_action,
+                set_oscillating_action, speed_list, entity_ids
+            )
         )
 
     if not fans:
@@ -121,12 +125,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(fans)
     return True
 
+
 class TemplateFan(FanEntity):
     """A template fan component."""
     def __init__(self, hass, device_id, friendly_name,
                  state_template, speed_template, oscillating_template,
-                 on_action, off_action, set_speed_action, set_oscillating_action,
-                 speed_list, entity_ids):
+                 on_action, off_action, set_speed_action,
+                 set_oscillating_action, speed_list, entity_ids):
         """Initialize the fan."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -136,7 +141,7 @@ class TemplateFan(FanEntity):
         self._template = state_template
         self._speed_template = speed_template
         self._oscillating_template = oscillating_template
-        self._supported_features = 0;
+        self._supported_features = 0
 
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
@@ -156,10 +161,10 @@ class TemplateFan(FanEntity):
         self._template.hass = self.hass
         if self._speed_template is not None:
             self._speed_template.hass = self.hass
-            self._supported_features |= SUPPORT_SET_SPEED;
+            self._supported_features |= SUPPORT_SET_SPEED
         if self._oscillating_template is not None:
             self._oscillating_template.hass = self.hass
-            self._supported_features |= SUPPORT_OSCILLATE;
+            self._supported_features |= SUPPORT_OSCILLATE
 
         self._entities = entity_ids
         # List of valid speeds
@@ -179,6 +184,7 @@ class TemplateFan(FanEntity):
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
         return self._speed_list
+
     @property
     def is_on(self):
         """Return true if device is on."""
@@ -231,10 +237,11 @@ class TemplateFan(FanEntity):
 
         if speed in self._speed_list:
             self._speed = speed
-            self.hass.async_add_job(self._set_speed_script.async_run({ATTR_SPEED: speed}))
+            self.hass.async_add_job(
+                self._set_speed_script.async_run({ATTR_SPEED: speed}))
         else:
             _LOGGER.error(
-                'Received invalid speed : %s. ' +
+                'Received invalid speed: %s. ' +
                 'Expected: %s.',
                 speed, self._speed_list)
 
@@ -247,12 +254,13 @@ class TemplateFan(FanEntity):
         if self._set_oscillating_script is None:
             return
 
-        if oscillating == True or oscillating == False:
+        if oscillating is True or oscillating is False:
             self._oscillating = oscillating
-            self.hass.async_add_job(self._set_oscillating_script.async_run({ATTR_OSCILLATING: oscillating}))
+            self.hass.async_add_job(self._set_oscillating_script.async_run(
+                {ATTR_OSCILLATING: oscillating}))
         else:
             _LOGGER.error(
-                'Received invalid oscillating : %s. ' +
+                'Received invalid oscillating: %s. ' +
                 'Expected True/False.', oscillating)
 
     @asyncio.coroutine
@@ -266,7 +274,8 @@ class TemplateFan(FanEntity):
         @callback
         def template_fan_startup(event):
             """Update template on startup."""
-            async_track_state_change(self.hass, self._entities, template_fan_state_listener)
+            async_track_state_change(
+                self.hass, self._entities, template_fan_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
@@ -312,7 +321,7 @@ class TemplateFan(FanEntity):
                 self._speed = None
             else:
                 _LOGGER.error(
-                    'Received invalid speed : %s. ' +
+                    'Received invalid speed: %s. ' +
                     'Expected: %s.',
                     speed, self._speed_list)
                 self._speed = None
@@ -334,6 +343,6 @@ class TemplateFan(FanEntity):
                 self._oscillating = None
             else:
                 _LOGGER.error(
-                    'Received invalid oscillating : %s. ' +
+                    'Received invalid oscillating: %s. ' +
                     'Expected True/False.', oscillating)
                 self._oscillating = None
