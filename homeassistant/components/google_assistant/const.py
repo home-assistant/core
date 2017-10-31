@@ -13,7 +13,7 @@ CONF_ACCESS_TOKEN = 'access_token'
 CONF_CLIENT_ID = 'client_id'
 CONF_ALIASES = 'aliases'
 CONF_AGENT_USER_ID = 'agent_user_id'
-CONF_HOMEGRAPH_API_KEY = 'homegraph_api_key'
+CONF_API_KEY = 'api_key'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [

@@ -27,7 +27,7 @@ from homeassistant.loader import bind_hass
 from .const import (
     DOMAIN, CONF_PROJECT_ID, CONF_CLIENT_ID, CONF_ACCESS_TOKEN,
     CONF_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS,
-    CONF_AGENT_USER_ID, CONF_HOMEGRAPH_API_KEY,
+    CONF_AGENT_USER_ID, CONF_API_KEY,
     SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL
 )
 from .auth import GoogleAssistantAuthView
@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
             vol.Optional(CONF_AGENT_USER_ID,
                          default=DEFAULT_AGENT_USER_ID): cv.string,
-            vol.Optional(CONF_HOMEGRAPH_API_KEY): cv.string
+            vol.Optional(CONF_API_KEY): cv.string
         }
     },
     extra=vol.ALLOW_EXTRA)
@@ -66,11 +66,12 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Actions component."""
     config = yaml_config.get(DOMAIN, {})
     agent_user_id = config.get(CONF_AGENT_USER_ID)
-    api_key = config.get(CONF_HOMEGRAPH_API_KEY)
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
+    api_key = config.get(CONF_API_KEY)
+    if api_key is not None:
+        descriptions = yield from hass.async_add_job(
+            conf_util.load_yaml_config_file, os.path.join(
+                os.path.dirname(__file__), 'services.yaml')
+        )
     hass.http.register_view(GoogleAssistantAuthView(hass, config))
     hass.http.register_view(GoogleAssistantView(hass, config))
 
@@ -90,10 +91,8 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
             body = yield from res.read()
             _LOGGER.error(
                 'request_sync request failed: %d %s', res.status, body)
-            return
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Could not contact Google for request_sync")
-        return None
 
 # Register service only if api key is provided
     if api_key is not None:
