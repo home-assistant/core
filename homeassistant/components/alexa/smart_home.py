@@ -210,7 +210,7 @@ def async_api_set_brightness(hass, request, entity):
 @HANDLERS.register(('Alexa.BrightnessController', 'AdjustBrightness'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_brightness(hass, request, entity):
+def async_api_adjust_brightness(hass, request, entity):
     """Process a adjust brightness request."""
     brightness_delta = int(request[API_PAYLOAD]['brightnessDelta'])
 
@@ -243,7 +243,7 @@ def async_api_set_color(hass, request, entity):
     brightness = float(request[API_PAYLOAD]['color']['brightness'])
     rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness),
 
-    if supported & ligth.SUPPORT_RGB_COLOR:
+    if supported & light.SUPPORT_RGB_COLOR:
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
             light.ATTR_RGB_COLOR: rgb,
