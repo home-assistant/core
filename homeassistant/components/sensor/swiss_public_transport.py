@@ -17,7 +17,7 @@ from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['python_opendata_transport==0.0.2']
+REQUIREMENTS = ['python_opendata_transport==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
