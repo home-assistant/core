@@ -59,9 +59,9 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_WHITE_VALUE_SCALE = 255
-DEFAULT_ON_COMMAND_TYPE = "last"
+DEFAULT_ON_COMMAND_TYPE = 'last'
 
-VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
+VALUES_ON_COMMAND_TYPE = ['first', 'last', 'brightness']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -156,7 +156,7 @@ class MqttLight(Light):
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
-                 white_value_scale, on_command_type='last'):
+                 white_value_scale, on_command_type):
         """Initialize MQTT light."""
         self._name = name
         self._effect_list = effect_list
