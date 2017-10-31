@@ -368,7 +368,7 @@ def test_api_set_color_temperature(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("result,initial", [(2500, '3000'), (2000, '2000')])
+@pytest.mark.parametrize("result,initial", [(2503, '333'), (2000, '500')])
 def test_api_decrease_color_temp(hass, result, initial):
     """Test api decrease color temp process."""
     request = get_new_request(
@@ -390,12 +390,12 @@ def test_api_decrease_color_temp(hass, result, initial):
 
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
-    assert call_light[0].data['color_temp'] == result
+    assert call_light[0].data['kelvin'] == result
     assert msg['header']['name'] == 'Response'
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("result,initial", [(3500, '3000'), (7000, '7000')])
+@pytest.mark.parametrize("result,initial", [(3503, '333'), (7000, '142')])
 def test_api_increase_color_temp(hass, result, initial):
     """Test api increase color temp process."""
     request = get_new_request(
@@ -417,5 +417,5 @@ def test_api_increase_color_temp(hass, result, initial):
 
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
-    assert call_light[0].data['color_temp'] == result
+    assert call_light[0].data['kelvin'] == result
     assert msg['header']['name'] == 'Response'
