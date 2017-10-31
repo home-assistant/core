@@ -4,9 +4,11 @@ from homeassistant.helpers.entityfilter import EntityFilter
 
 def test_no_filters_case_1():
     """If include and exclude not included, pass everything."""
-    include_filter = {}
-    exclude_filter = {}
-    testfilter = EntityFilter(include_filter, exclude_filter)
+    incl_dom = {}
+    incl_ent = {}
+    excl_dom = {}
+    excl_ent = {}
+    testfilter = EntityFilter(incl_dom, incl_ent, excl_dom, excl_ent)
 
     for value in ("sensor.test", "sun.sun", "light.test"):
         assert testfilter.check_entity(value)
@@ -14,17 +16,11 @@ def test_no_filters_case_1():
 
 def test_includes_only_case_2():
     """If include specified, only pass if specified (Case 2)."""
-    include_filter = {
-        'domains': [
-            'light',
-            'sensor'
-        ],
-        'entities': [
-            'binary_sensor.working'
-        ]
-    }
-    exclude_filter = {}
-    testfilter = EntityFilter(include_filter, exclude_filter)
+    incl_dom = {'light', 'sensor'}
+    incl_ent = {'binary_sensor.working'}
+    excl_dom = {}
+    excl_ent = {}
+    testfilter = EntityFilter(incl_dom, incl_ent, excl_dom, excl_ent)
 
     assert testfilter.check_entity("sensor.test")
     assert testfilter.check_entity("light.test")
@@ -35,17 +31,11 @@ def test_includes_only_case_2():
 
 def test_excludes_only_case_3():
     """If exclude specified, pass all but specified (Case 3)."""
-    exclude_filter = {
-        'domains': [
-            'light',
-            'sensor'
-        ],
-        'entities': [
-            'binary_sensor.working'
-        ]
-    }
-    include_filter = {}
-    testfilter = EntityFilter(include_filter, exclude_filter)
+    incl_dom = {}
+    incl_ent = {}
+    excl_dom = {'light', 'sensor'}
+    excl_ent = {'binary_sensor.working'}
+    testfilter = EntityFilter(incl_dom, incl_ent, excl_dom, excl_ent)
 
     assert testfilter.check_entity("sensor.test") is False
     assert testfilter.check_entity("light.test") is False
@@ -56,22 +46,11 @@ def test_excludes_only_case_3():
 
 def test_with_include_domain_case4a():
     """Test case 4a - include and exclude specified, with included domain."""
-    include_filter = {
-        'domains': [
-            'light',
-            'sensor'
-        ],
-        'entities': [
-            'binary_sensor.working'
-        ]
-    }
-    exclude_filter = {
-        'entities': [
-            'light.ignoreme',
-            'sensor.notworking'
-        ]
-    }
-    testfilter = EntityFilter(include_filter, exclude_filter)
+    incl_dom = {'light', 'sensor'}
+    incl_ent = {'binary_sensor.working'}
+    excl_dom = {}
+    excl_ent = {'light.ignoreme', 'sensor.notworking'}
+    testfilter = EntityFilter(incl_dom, incl_ent, excl_dom, excl_ent)
 
     assert testfilter.check_entity("sensor.test")
     assert testfilter.check_entity("sensor.notworking") is False
@@ -84,21 +63,11 @@ def test_with_include_domain_case4a():
 
 def test_exclude_domain_case4b():
     """Test case 4b - include and exclude specified, with excluded domain."""
-    include_filter = {
-        'entities': [
-            'binary_sensor.working'
-        ]
-    }
-    exclude_filter = {
-        'domains': [
-            'binary_sensor'
-        ],
-        'entities': [
-            'light.ignoreme',
-            'sensor.notworking'
-        ]
-    }
-    testfilter = EntityFilter(include_filter, exclude_filter)
+    incl_dom = {}
+    incl_ent = {'binary_sensor.working'}
+    excl_dom = {'binary_sensor'}
+    excl_ent = {'light.ignoreme', 'sensor.notworking'}
+    testfilter = EntityFilter(incl_dom, incl_ent, excl_dom, excl_ent)
 
     assert testfilter.check_entity("sensor.test")
     assert testfilter.check_entity("sensor.notworking") is False
@@ -111,18 +80,11 @@ def test_exclude_domain_case4b():
 
 def testno_domain_case4c():
     """Test case 4c - include and exclude specified, with no domains."""
-    include_filter = {
-        'entities': [
-            'binary_sensor.working'
-        ]
-    }
-    exclude_filter = {
-        'entities': [
-            'light.ignoreme',
-            'sensor.notworking'
-        ]
-    }
-    testfilter = EntityFilter(include_filter, exclude_filter)
+    incl_dom = {}
+    incl_ent = {'binary_sensor.working'}
+    excl_dom = {}
+    excl_ent = {'light.ignoreme', 'sensor.notworking'}
+    testfilter = EntityFilter(incl_dom, incl_ent, excl_dom, excl_ent)
 
     assert testfilter.check_entity("sensor.test") is False
     assert testfilter.check_entity("sensor.notworking") is False
