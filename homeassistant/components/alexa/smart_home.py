@@ -6,6 +6,7 @@ from uuid import uuid4
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.components import switch, light
+import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
 HANDLERS = Registry()
@@ -22,7 +23,10 @@ MAPPING_COMPONENT = {
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
-            light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController'
+            light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
+            light.SUPPORT_XY_COLOR: 'Alexa.ColorController',
+            light.SUPPORT_RGB_COLOR: 'Alexa.ColorController',
+            light.SUPPORT_BRIGHTNESS: 'Alexa.ColorTemperatureController',
         }
     ],
 }
@@ -222,5 +226,33 @@ def async_api_set_brightness(hass, request, entity):
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
     }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.ColorController', 'SetColor'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_color(hass, request, entity):
+    """Process a set color request."""
+    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+    # colors
+    hue = float(request[API_PAYLOAD]['color']['hue'])
+    saturation = float(request[API_PAYLOAD]['color']['saturation'])
+    brightness = float(request[API_PAYLOAD]['color']['brightness'])
+    rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness),
+
+    if supported & ligth.SUPPORT_RGB_COLOR:
+        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_RGB_COLOR: rgb,
+        }, blocking=True)
+    else:
+        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_XY_COLOR:
+                color_util.color_RGB_to_xy(rgb[0], rgb[1], rgb[2]),
+        }, blocking=True)
 
     return api_message(request)
