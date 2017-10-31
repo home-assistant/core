@@ -1,6 +1,7 @@
 """Support for alexa Smart Home Skill API."""
 import asyncio
 import logging
+import math
 from uuid import uuid4
 
 from homeassistant.const import (
@@ -25,7 +26,7 @@ MAPPING_COMPONENT = {
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
             light.SUPPORT_RGB_COLOR: 'Alexa.ColorController',
-            light.SUPPORT_BRIGHTNESS: 'Alexa.ColorTemperatureController',
+            light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
         }
     ],
 }
@@ -215,7 +216,8 @@ def async_api_adjust_brightness(hass, request, entity):
 
     # read current state
     try:
-        current = int(entity.attributes.get(light.ATTR_BRIGHTNESS) * 255/100)
+        current = math.floor(
+            int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100)
     except ZeroDivisionError:
         return api_error(request, error_type='INVALID_VALUE')
 

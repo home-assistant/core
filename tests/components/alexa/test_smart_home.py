@@ -109,13 +109,17 @@ def test_discovery_request(hass):
         'light.test_2', 'on', {
             'friendly_name': "Test light 2", 'supported_features': 1
         })
+    hass.states.async_set(
+        'light.test_3', 'on', {
+            'friendly_name': "Test light 3", 'supported_features': 19
+        })
 
     msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 3
+    assert len(msg['payload']['endpoints']) == 4
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
 
@@ -147,6 +151,22 @@ def test_discovery_request(hass):
 
             assert 'Alexa.BrightnessController' in caps
             assert 'Alexa.PowerController' in caps
+
+            continue
+
+        if appliance['endpointId'] == 'light#test_3':
+            assert appliance['displayCategories'][0] == "LIGHT"
+            assert appliance['friendlyName'] == "Test light 3"
+            assert len(appliance['capabilities']) == 4
+
+            caps = set()
+            for feature in appliance['capabilities']:
+                caps.add(feature['interface'])
+
+            assert 'Alexa.BrightnessController' in caps
+            assert 'Alexa.PowerController' in caps
+            assert 'Alexa.ColorController' in caps
+            assert 'Alexa.ColorTemperatureController' in caps
 
             continue
 
@@ -269,12 +289,12 @@ def test_api_adjust_brightness(hass, result, adjust):
         'Alexa.BrightnessController', 'AdjustBrightness', 'light#test')
 
     # add payload
-    request['directive']['payload']['brightness'] = adjust
+    request['directive']['payload']['brightnessDelta'] = adjust
 
     # settup test devices
     hass.states.async_set(
         'light.test', 'off', {
-            'friendly_name': "Test light", 'brightness': '30'
+            'friendly_name': "Test light", 'brightness': '77'
         })
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
