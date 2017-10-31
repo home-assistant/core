@@ -257,45 +257,44 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     return (ir, ig, ib)
 
 
-# http://www.docjar.com/html/api/java/awt/Color.java.html
 # pylint: disable=invalid-sequence-index
 def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
     """Convert a hsb into its rgb representation."""
     if fS == 0:
-        fV = fB * 255 + 0.5
+        fV = fB * 255
         return (fV, fV, fV)
 
     r = g = b = 0
-    h = (fH - float(math.floor(fH))) * 6
+    h = fH / 60
     f = h - float(math.floor(h))
     p = fB * (1 - fS)
     q = fB * (1 - fS * f)
     t = fB * (1 - (fS * (1 - f)))
 
     if int(h) == 0:
-        r = int(fB * 255 + 0.5)
-        g = int(t * 255 + 0.5)
-        b = int(p * 255 + 0.5)
+        r = int(fB * 255)
+        g = int(t * 255)
+        b = int(p * 255)
     elif int(h) == 1:
-        r = int(q * 255 + 0.5)
-        g = int(fB * 255 + 0.5)
-        b = int(p * 255 + 0.5)
+        r = int(q * 255)
+        g = int(fB * 255)
+        b = int(p * 255)
     elif int(h) == 2:
-        r = int(p * 255 + 0.5)
-        g = int(fB * 255 + 0.5)
-        b = int(t * 255 + 0.5)
+        r = int(p * 255)
+        g = int(fB * 255)
+        b = int(t * 255)
     elif int(h) == 3:
-        r = int(p * 255 + 0.5)
-        g = int(q * 255 + 0.5)
-        b = int(fB * 255 + 0.5)
+        r = int(p * 255)
+        g = int(q * 255)
+        b = int(fB * 255)
     elif int(h) == 4:
-        r = int(t * 255 + 0.5)
-        g = int(p * 255 + 0.5)
-        b = int(fB * 255 + 0.5)
+        r = int(t * 255)
+        g = int(p * 255)
+        b = int(fB * 255)
     elif int(h) == 5:
-        r = int(fB * 255 + 0.5)
-        g = int(p * 255 + 0.5)
-        b = int(q * 255 + 0.5)
+        r = int(fB * 255)
+        g = int(p * 255)
+        b = int(q * 255)
 
     return (r, g, b)
 
