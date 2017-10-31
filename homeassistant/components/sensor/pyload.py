@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
-    CONF_SSL, CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
+    CONF_SSL, HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'pyLoad'
 DEFAULT_PORT = 8000
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 SENSOR_TYPES = {
     'speed': ['speed', 'Speed', 'MB/s'],
@@ -77,12 +77,10 @@ class PyLoadSensor(Entity):
     def __init__(self, api, sensor_type, client_name):
         """Initialize a new pyLoad sensor."""
         self._name = '{} {}'.format(client_name, sensor_type[1])
-        self.type = sensor_type[0]
-        self.client_name = client_name
+        self.type = sensor_type[0]        
         self.api = api
         self._state = None
         self._unit_of_measurement = sensor_type[2]
-        self.update()
         _LOGGER.debug("Created pyLoad sensor: %s", self.type)
 
     @property
@@ -132,11 +130,12 @@ class PyLoadAPI(object):
         """Initialize pyLoad API and set headers needed later."""
         self.api_url = api_url
         self.status = None
-        self.headers = {'content-type': CONTENT_TYPE_JSON}
+        self.headers = {HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON}
 
         if username is not None and password is not None:
             self.payload = {'username': username, 'password': password}
-            self.login = requests.post(api_url + 'login', data=self.payload)
+            self.login = requests.post(api_url + 'login', data=self.payload, 
+                                       timeout=5)
         self.update()
 
     def post(self, method, params=None):
@@ -156,8 +155,7 @@ class PyLoadAPI(object):
             return response.json()
 
         except requests.exceptions.ConnectionError as conn_exc:
-            _LOGGER.error("Failed to update pyLoad status from %s. Error: %s",
-                          self.api_url + 'statusServer', conn_exc)
+            _LOGGER.error("Failed to update pyLoad status. Error: %s", conn_exc)
             raise
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
