@@ -240,7 +240,7 @@ def async_api_set_color(hass, request, entity):
     saturation = float(request[API_PAYLOAD]['color']['saturation'])
     brightness = float(request[API_PAYLOAD]['color']['brightness'])
 
-    rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness),
+    rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness)
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_RGB_COLOR: rgb,
