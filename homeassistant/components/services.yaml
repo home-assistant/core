@@ -453,6 +453,17 @@ input_boolean:
         description: Entity id of the input boolean to turn on.
         example: 'input_boolean.notify_alerts'
 
+input_text:
+  set_value:
+    description: Set the value of an input text entity.
+    fields:
+      entity_id: 
+        description: Entity id of the input text to set the new value.
+        example: 'input_text.text1'
+      value:
+        description: The target value the entity should be set to.
+        example: This is an example text
+
 input_number:
   set_value:
     description: Set the value of an input number entity.
