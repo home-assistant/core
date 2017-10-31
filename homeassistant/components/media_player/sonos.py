@@ -154,8 +154,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         coordinators = [SonosDevice(p) for p in players if p.is_coordinator]
         slaves = [SonosDevice(p) for p in players if not p.is_coordinator]
         hass.data[DATA_SONOS] = coordinators + slaves
-        add_devices(coordinators, True)
-        add_devices(slaves, True)
+        if coordinators:
+            add_devices(coordinators, True)
+        if slaves:
+            add_devices(slaves, True)
         _LOGGER.info("Added %s Sonos speakers", len(players))
 
     descriptions = load_yaml_config_file(
