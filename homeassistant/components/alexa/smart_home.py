@@ -247,3 +247,18 @@ def async_api_set_color(hass, request, entity):
     }, blocking=True)
 
     return api_message(request)
+
+
+@HANDLERS.register(('Alexa.ColorTemperatureController', 'SetColorTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_color_temperature(hass, request, entity):
+    """Process a set color temperature request."""
+    kelvin = int(request[API_PAYLOAD]['colorTemperatureInKelvin'])
+
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_KELVIN: kelvin,
+    }, blocking=True)
+
+    return api_message(request)

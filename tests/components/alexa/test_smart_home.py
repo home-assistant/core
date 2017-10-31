@@ -338,3 +338,30 @@ def test_api_set_color(hass):
     assert call_light[0].data['entity_id'] == 'light.test'
     assert call_light[0].data['rgb_color'] == (33, 87, 33)
     assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+def test_api_set_color_temperature(hass):
+    """Test api set color temperature process."""
+    request = get_new_request(
+        'Alexa.ColorTemperatureController', 'SetColorTemperature',
+        'light#test')
+
+    # add payload
+    request['directive']['payload']['colorTemperatureInKelvin'] = '7500'
+
+    # settup test devices
+    hass.states.async_set(
+        'light.test', 'off', {'friendly_name': "Test light"})
+
+    call_light = async_mock_service(hass, 'light', 'turn_on')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_light) == 1
+    assert call_light[0].data['entity_id'] == 'light.test'
+    assert call_light[0].data['kelvin'] == 7500
+    assert msg['header']['name'] == 'Response'
