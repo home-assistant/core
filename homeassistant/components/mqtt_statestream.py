@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt_statestream/
 """
 import asyncio
+import json
 
 import voluptuous as vol
 
@@ -12,6 +13,7 @@ from homeassistant.const import MATCH_ALL
 from homeassistant.core import callback
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.remote import JSONEncoder
 import homeassistant.helpers.config_validation as cv
 
 CONF_BASE_TOPIC = 'base_topic'
@@ -65,8 +67,9 @@ def async_setup(hass, config):
         if publish_attributes:
             for key, val in new_state.attributes.items():
                 if val:
+                    encoded_val = json.dumps(val, cls=JSONEncoder)
                     hass.components.mqtt.async_publish(mybase + key,
-                                                       val, 1, True)
+                                                       encoded_val, 1, True)
 
     async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True

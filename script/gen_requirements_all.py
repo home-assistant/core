@@ -30,13 +30,17 @@ COMMENT_REQUIREMENTS = (
     'smbus-cffi',
     'envirophat',
     'i2csense',
-    'credstash'
+    'credstash',
+    'aiocoap',  # Temp, will be removed when Python 3.4 is no longer supported.
+    'DTLSSocket'  # Requires cython.
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'apns2',
+    'coinmarketcap',
+    'defusedxml',
     'dsmr_parser',
     'ephem',
     'evohomeclient',
@@ -47,10 +51,12 @@ TEST_REQUIREMENTS = (
     'haversine',
     'hbmqtt',
     'holidays',
+    'home-assistant-frontend',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
     'mficlient',
+    'numpy',
     'paho-mqtt',
     'pexpect',
     'pilight',
@@ -75,6 +81,7 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'warrant',
     'yahoo-finance',
+    'pythonwhois'
 )
 
 IGNORE_PACKAGES = (
