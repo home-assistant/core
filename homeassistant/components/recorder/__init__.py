@@ -20,7 +20,7 @@ from typing import Optional, Dict
 import voluptuous as vol
 
 from homeassistant.core import (
-    HomeAssistant, callback, split_entity_id, CoreState)
+    HomeAssistant, callback, CoreState)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
     CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
@@ -290,8 +290,8 @@ class Recorder(threading.Thread):
                 continue
 
             entity_id = event.data.get(ATTR_ENTITY_ID)
-            if entity_id is not None and \
-                not(self.entity_filter.check_entity(entity_id)):
+            if entity_id is not None:
+                if not self.entity_filter.check_entity(entity_id):
                     self.queue.task_done()
                     continue
 
