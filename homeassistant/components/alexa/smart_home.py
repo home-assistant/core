@@ -24,7 +24,6 @@ MAPPING_COMPONENT = {
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
-            light.SUPPORT_XY_COLOR: 'Alexa.ColorController',
             light.SUPPORT_RGB_COLOR: 'Alexa.ColorController',
             light.SUPPORT_BRIGHTNESS: 'Alexa.ColorTemperatureController',
         }
@@ -218,7 +217,7 @@ def async_api_adjust_brightness(hass, request, entity):
     try:
         current = int(entity.attributes.get(light.ATTR_BRIGHTNESS) * 255/100)
     except ZeroDivisionError:
-        return api_message(request, error_type='INVALID_VALUE')
+        return api_error(request, error_type='INVALID_VALUE')
 
     # set brightness
     brightness = brightness_delta + current
@@ -235,24 +234,14 @@ def async_api_adjust_brightness(hass, request, entity):
 @asyncio.coroutine
 def async_api_set_color(hass, request, entity):
     """Process a set color request."""
-    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES)
-
-    # colors
     hue = float(request[API_PAYLOAD]['color']['hue'])
     saturation = float(request[API_PAYLOAD]['color']['saturation'])
     brightness = float(request[API_PAYLOAD]['color']['brightness'])
-    rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness),
 
-    if supported & light.SUPPORT_RGB_COLOR:
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_RGB_COLOR: rgb,
-        }, blocking=True)
-    else:
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_XY_COLOR:
-                color_util.color_RGB_to_xy(rgb[0], rgb[1], rgb[2]),
-        }, blocking=True)
+    rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness),
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_RGB_COLOR: rgb,
+    }, blocking=True)
 
     return api_message(request)

@@ -272,27 +272,27 @@ def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
     q = fB * (1 - fS * f)
     t = fB * (1 - (fS * (1 - f)))
 
-    if (int(h) == 0):
+    if int(h) == 0:
         r = int(fB * 255 + 0.5)
         g = int(t * 255 + 0.5)
         b = int(p * 255 + 0.5)
-    elif (int(h) == 1):
+    elif int(h) == 1:
         r = int(q * 255 + 0.5)
         g = int(fB * 255 + 0.5)
         b = int(p * 255 + 0.5)
-    elif (int(h) == 2):
+    elif int(h) == 2:
         r = int(p * 255 + 0.5)
         g = int(fB * 255 + 0.5)
         b = int(t * 255 + 0.5)
-    elif (int(h) == 3):
+    elif int(h) == 3:
         r = int(p * 255 + 0.5)
         g = int(q * 255 + 0.5)
         b = int(fB * 255 + 0.5)
-    elif (int(h) == 4):
+    elif int(h) == 4:
         r = int(t * 255 + 0.5)
         g = int(p * 255 + 0.5)
         b = int(fB * 255 + 0.5)
-    elif (int(h) == 5):
+    elif int(h) == 5:
         r = int(fB * 255 + 0.5)
         g = int(p * 255 + 0.5)
         b = int(q * 255 + 0.5)
