@@ -56,7 +56,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_OFF, state.state)
-        
+
         TEST_STATE = True
 
         switch.turn_on(self.hass, 'switch.wake_on_lan')
@@ -88,7 +88,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_OFF, state.state)
-        
+
         TEST_STATE = True
 
         switch.turn_on(self.hass, 'switch.wake_on_lan')
@@ -144,7 +144,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_OFF, state.state)
-        
+
         TEST_STATE = True
 
         switch.turn_on(self.hass, 'switch.wake_on_lan')
@@ -152,7 +152,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_ON, state.state)
-        
+
         TEST_STATE = False
 
         switch.turn_off(self.hass, 'switch.wake_on_lan')
@@ -178,7 +178,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_OFF, state.state)
-        
+
         TEST_STATE = True
 
         switch.turn_on(self.hass, 'switch.wake_on_lan')
