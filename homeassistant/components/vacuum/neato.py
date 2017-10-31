@@ -5,16 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/vacuum.neato/
 """
 import logging
+
 import requests
+
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.components.vacuum import (SUPPORT_BATTERY,
-                                             SUPPORT_PAUSE,
-                                             SUPPORT_RETURN_HOME,
-                                             SUPPORT_STATUS, SUPPORT_STOP,
-                                             SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-                                             SUPPORT_MAP, ATTR_STATUS,
-                                             ATTR_BATTERY_LEVEL,
-                                             ATTR_BATTERY_ICON, VacuumDevice)
+from homeassistant.components.vacuum import (
+  VacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+  SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+  SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
 
@@ -38,7 +36,7 @@ ATTR_CLEAN_SUSP_TIME = 'clean_suspension_time'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Neato switches."""
+    """Set up the Neato vacuum."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
