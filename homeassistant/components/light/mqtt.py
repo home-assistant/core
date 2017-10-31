@@ -156,7 +156,7 @@ class MqttLight(Light):
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
-                 white_value_scale, on_command_type='LAST'):
+                 white_value_scale, on_command_type='last'):
         """Initialize MQTT light."""
         self._name = name
         self._effect_list = effect_list
