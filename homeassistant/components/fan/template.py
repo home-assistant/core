@@ -128,6 +128,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class TemplateFan(FanEntity):
     """A template fan component."""
+
     def __init__(self, hass, device_id, friendly_name,
                  state_template, speed_template, oscillating_template,
                  on_action, off_action, set_speed_action,
@@ -156,7 +157,7 @@ class TemplateFan(FanEntity):
 
         self._state = False
         self._speed = None
-        self._oscillation = None
+        self._oscillating = None
 
         self._template.hass = self.hass
         if self._speed_template is not None:
