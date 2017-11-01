@@ -244,7 +244,7 @@ def async_api_set_color(hass, request, entity):
         float(request[API_PAYLOAD]['color']['brightness'])
     )
 
-    if supported & light.light.SUPPORT_RGB_COLOR > 0
+    if supported & light.light.SUPPORT_RGB_COLOR > 0:
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
             light.ATTR_RGB_COLOR: rgb,
