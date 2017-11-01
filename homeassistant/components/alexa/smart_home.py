@@ -220,10 +220,10 @@ def async_api_adjust_brightness(hass, request, entity):
         current = math.floor(
             int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100)
     except ZeroDivisionError:
-        return api_error(request, error_type='INVALID_VALUE')
+        current = 0
 
     # set brightness
-    brightness = brightness_delta + current
+    brightness = max(0, brightness_delta + current)
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
