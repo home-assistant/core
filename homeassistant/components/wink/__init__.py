@@ -12,7 +12,6 @@ import os
 from datetime import timedelta
 
 import voluptuous as vol
-import requests
 
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
@@ -27,6 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['python-wink==1.7.0', 'pubnubsub-handler==1.0.2']
 
@@ -41,9 +41,7 @@ CONF_CLIENT_SECRET = 'client_secret'
 CONF_USER_AGENT = 'user_agent'
 CONF_OAUTH = 'oauth'
 CONF_LOCAL_CONTROL = 'local_control'
-CONF_APPSPOT = 'appspot'
 CONF_MISSING_OAUTH_MSG = 'Missing oauth2 credentials.'
-CONF_TOKEN_URL = "https://winkbearertoken.appspot.com/token"
 
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
@@ -92,9 +90,9 @@ AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_EMAIL, CONF_APPSPOT,
+        vol.Inclusive(CONF_EMAIL, CONF_OAUTH,
                       msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Inclusive(CONF_PASSWORD, CONF_APPSPOT,
+        vol.Inclusive(CONF_PASSWORD, CONF_OAUTH,
                       msg=CONF_MISSING_OAUTH_MSG): cv.string,
         vol.Inclusive(CONF_CLIENT_ID, CONF_OAUTH,
                       msg=CONF_MISSING_OAUTH_MSG): cv.string,
@@ -157,25 +155,6 @@ WINK_COMPONENTS = [
 WINK_HUBS = []
 
 
-def _write_config_file(file_path, config):
-    try:
-        with open(file_path, 'w') as conf_file:
-            conf_file.write(json.dumps(config, sort_keys=True, indent=4))
-    except IOError as error:
-        _LOGGER.error("Saving config file failed: %s", error)
-        raise IOError("Saving Wink config file failed")
-    return config
-
-
-def _read_config_file(file_path):
-    try:
-        with open(file_path, 'r') as conf_file:
-            return json.loads(conf_file.read())
-    except IOError as error:
-        _LOGGER.error("Reading config file failed: %s", error)
-        raise IOError("Reading Wink config file failed")
-
-
 def _request_app_setup(hass, config):
     """Assist user with configuring the Wink dev application."""
     hass.data[DOMAIN]['configurator'] = True
@@ -192,9 +171,9 @@ def _request_app_setup(hass, config):
         client_id = callback_data.get('client_id')
         client_secret = callback_data.get('client_secret')
         if None not in (client_id, client_secret):
-            _write_config_file(_config_path,
-                               {ATTR_CLIENT_ID: client_id,
-                                ATTR_CLIENT_SECRET: client_secret})
+            save_json(_config_path,
+                      {ATTR_CLIENT_ID: client_id,
+                       ATTR_CLIENT_SECRET: client_secret})
             setup(hass, config)
             return
         else:
@@ -267,19 +246,6 @@ def setup(hass, config):
             'configurator': False
         }
 
-    def _get_wink_token_from_web():
-        _email = hass.data[DOMAIN]["oauth"]["email"]
-        _password = hass.data[DOMAIN]["oauth"]["password"]
-
-        payload = {'username': _email, 'password': _password}
-        token_response = requests.post(CONF_TOKEN_URL, data=payload)
-        try:
-            token = token_response.text.split(':')[1].split()[0].rstrip('<br')
-        except IndexError:
-            _LOGGER.error("Error getting token. Please check email/password.")
-            return False
-        pywink.set_bearer_token(token)
-
     if config.get(DOMAIN) is not None:
         client_id = config[DOMAIN].get(ATTR_CLIENT_ID)
         client_secret = config[DOMAIN].get(ATTR_CLIENT_SECRET)
@@ -303,25 +269,19 @@ def setup(hass, config):
         hass.data[DOMAIN]["oauth"]["password"] = password
         pywink.legacy_set_wink_credentials(email, password,
                                            client_id, client_secret)
-    elif None not in [email, password]:
-        _LOGGER.info("Using web form authentication")
-        pywink.disable_local_control()
-        hass.data[DOMAIN]["oauth"]["email"] = email
-        hass.data[DOMAIN]["oauth"]["password"] = password
-        _get_wink_token_from_web()
     else:
-        _LOGGER.info("Using new oauth authentication")
+        _LOGGER.info("Using oauth authentication")
         if not local_control:
             pywink.disable_local_control()
         config_path = hass.config.path(WINK_CONFIG_FILE)
         if os.path.isfile(config_path):
-            config_file = _read_config_file(config_path)
+            config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
                 _request_app_setup(hass, config)
                 return True
             # else move on because the user modified the file
         else:
-            _write_config_file(config_path, DEFAULT_CONFIG)
+            save_json(config_path, DEFAULT_CONFIG)
             _request_app_setup(hass, config)
             return True
 
@@ -402,7 +362,7 @@ def setup(hass, config):
         if hass.data[DOMAIN]["oauth"].get("email") is None:
             config_path = hass.config.path(WINK_CONFIG_FILE)
             _config = pywink.get_current_oauth_credentials()
-            _write_config_file(config_path, _config)
+            save_json(config_path, _config)
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, save_credentials)
 
@@ -629,8 +589,8 @@ class WinkAuthCallbackView(HomeAssistantView):
                 ATTR_CLIENT_ID: self.config_file["client_id"],
                 ATTR_CLIENT_SECRET: self.config_file["client_secret"]
             }
-            _write_config_file(hass.config.path(WINK_CONFIG_FILE),
-                               config_contents)
+            save_json(hass.config.path(WINK_CONFIG_FILE),
+                      config_contents)
 
             hass.async_add_job(setup, hass, self.config)
 
