@@ -96,11 +96,11 @@ def async_setup(hass, config):
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
     allow_tradfri_groups = conf.get(CONF_ALLOW_TRADFRI_GROUPS)
+    keys = yield from hass.async_add_job(_read_config, hass)
 
     @asyncio.coroutine
     def gateway_discovered(service, info):
         """Run when a gateway is discovered."""
-        keys = yield from hass.async_add_job(_read_config, hass)
         host = info['host']
 
         if host in keys:
@@ -111,11 +111,16 @@ def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_IKEA_TRADFRI, gateway_discovered)
 
-    if host is None:
+    if not host:
         return True
 
-    return (yield from _setup_gateway(hass, config, host, key,
-                                      allow_tradfri_groups))
+    if host and keys.get(host):
+        return (yield from _setup_gateway(hass, config, host,
+                                          keys[host]['key'],
+                                          allow_tradfri_groups))
+    else:
+        hass.async_add_job(request_configuration, hass, config, host)
+        return True
 
 
 @asyncio.coroutine
