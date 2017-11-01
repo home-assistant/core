@@ -5,7 +5,7 @@ from homeassistant.core import split_entity_id
 
 def generate_filter(include_domains, include_entities,
                     exclude_domains, exclude_entities):
-    """Returns a function that will filter entities based on the args."""
+    """Return a function that will filter entities based on the args."""
     include_d = set(include_domains)
     include_e = set(include_entities)
     exclude_d = set(exclude_domains)
