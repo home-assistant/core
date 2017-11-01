@@ -189,7 +189,7 @@ def test_query_request(hass_fixture, assistant_client):
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
     assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
-    assert devices['light.kitchen_lights']['color']['temperature'] == 4167
+    assert devices['light.kitchen_lights']['color']['temperature'] == 4166
 
 
 @asyncio.coroutine
@@ -256,7 +256,7 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 3
+    assert len(commands) == 5
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
     kitchen = hass_fixture.states.get('light.kitchen_lights')
