@@ -24,7 +24,7 @@ REQUIREMENTS = ['pytradfri==4.0.1',
 
 DOMAIN = 'tradfri'
 GATEWAY_IDENTITY = 'homeassistant'
-CONFIG_FILE = 'tradfri_psk.conf'
+CONFIG_FILE = '.tradfri_psk.conf'
 KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
