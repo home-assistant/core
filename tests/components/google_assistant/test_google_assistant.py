@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import setup, const, core
 from homeassistant.components import (
-    http, async_setup, light, cover, media_player, fan
+    http, async_setup, light, cover, media_player, fan, switch
 )
 from homeassistant.components import google_assistant as ga
 from tests.common import get_test_instance_port
@@ -63,6 +63,12 @@ def hass_fixture(loop, hass):
             }]
         }))
     loop.run_until_complete(
+        setup.async_setup_component(hass, switch.DOMAIN, {
+            'switch': [{
+                'platform': 'demo'
+            }]
+        }))
+    loop.run_until_complete(
         setup.async_setup_component(hass, cover.DOMAIN, {
             'cover': [{
                 'platform': 'demo'
@@ -91,6 +97,16 @@ def hass_fixture(loop, hass):
     hass.states.async_set(
         ceiling_lights_entity.entity_id,
         ceiling_lights_entity.state,
+        attributes=attrs)
+
+    # By setting the google_assistant_type = 'light'
+    # we can override how a device is reported to GA
+    switch_light = hass.states.get('switch.decorative_lights')
+    attrs = dict(switch_light.attributes)
+    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_TYPE] = "light"
+    hass.states.async_set(
+        switch_light.entity_id,
+        switch_light.state,
         attributes=attrs)
 
     return hass
@@ -189,6 +205,8 @@ def test_execute_request(hass_fixture, assistant_client):
                     "devices": [{
                         "id": "light.ceiling_lights",
                     }, {
+                        "id": "switch.decorative_lights",
+                    }, {
                         "id": "light.bed_light",
                     }],
                     "execution": [{
@@ -209,6 +227,7 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 2
+    assert len(commands) == 3
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
+    assert hass_fixture.states.get('switch.decorative_lights').state == 'off'
