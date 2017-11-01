@@ -1,11 +1,13 @@
 """Support for alexa Smart Home Skill API."""
 import asyncio
 import logging
+import math
 from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.components import switch, light
+import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
 HANDLERS = Registry()
@@ -22,7 +24,9 @@ MAPPING_COMPONENT = {
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
-            light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController'
+            light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
+            light.SUPPORT_RGB_COLOR: 'Alexa.ColorController',
+            light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
         }
     ],
 }
@@ -193,11 +197,104 @@ def async_api_turn_off(hass, request, entity):
 @asyncio.coroutine
 def async_api_set_brightness(hass, request, entity):
     """Process a set brightness request."""
-    brightness = request[API_PAYLOAD]['brightness']
+    brightness = int(request[API_PAYLOAD]['brightness'])
 
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
-        light.ATTR_BRIGHTNESS: brightness,
+        light.ATTR_BRIGHTNESS_PCT: brightness,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.BrightnessController', 'AdjustBrightness'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_brightness(hass, request, entity):
+    """Process a adjust brightness request."""
+    brightness_delta = int(request[API_PAYLOAD]['brightnessDelta'])
+
+    # read current state
+    try:
+        current = math.floor(
+            int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100)
+    except ZeroDivisionError:
+        return api_error(request, error_type='INVALID_VALUE')
+
+    # set brightness
+    brightness = brightness_delta + current
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_BRIGHTNESS_PCT: brightness,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.ColorController', 'SetColor'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_color(hass, request, entity):
+    """Process a set color request."""
+    hue = float(request[API_PAYLOAD]['color']['hue'])
+    saturation = float(request[API_PAYLOAD]['color']['saturation'])
+    brightness = float(request[API_PAYLOAD]['color']['brightness'])
+
+    rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_RGB_COLOR: rgb,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.ColorTemperatureController', 'SetColorTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_color_temperature(hass, request, entity):
+    """Process a set color temperature request."""
+    kelvin = int(request[API_PAYLOAD]['colorTemperatureInKelvin'])
+
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_KELVIN: kelvin,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(
+    ('Alexa.ColorTemperatureController', 'DecreaseColorTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_decrease_color_temp(hass, request, entity):
+    """Process a decrease color temperature request."""
+    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
+    max_mireds = int(entity.attributes.get(light.ATTR_MAX_MIREDS))
+
+    value = min(max_mireds, current + 50)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_COLOR_TEMP: value,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(
+    ('Alexa.ColorTemperatureController', 'IncreaseColorTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_increase_color_temp(hass, request, entity):
+    """Process a increase color temperature request."""
+    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
+    min_mireds = int(entity.attributes.get(light.ATTR_MIN_MIREDS))
+
+    value = max(min_mireds, current - 50)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_COLOR_TEMP: value,
     }, blocking=True)
 
     return api_message(request)
