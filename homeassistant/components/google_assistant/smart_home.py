@@ -19,7 +19,7 @@ from homeassistant.components import (
 )
 
 from .const import (
-    ATTR_GOOGLE_ASSISTANT_NAME,
+    ATTR_GOOGLE_ASSISTANT_NAME, ATTR_GOOGLE_ASSISTANT_TYPE,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE,
@@ -64,7 +64,8 @@ def make_actions_response(request_id: str, payload: dict) -> dict:
 
 def entity_to_device(entity: Entity):
     """Convert a hass entity into an google actions device."""
-    class_data = MAPPING_COMPONENT.get(entity.domain)
+    class_data = MAPPING_COMPONENT.get(
+        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) or entity.domain)
     if class_data is None:
         return None
 
