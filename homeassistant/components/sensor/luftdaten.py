@@ -70,11 +70,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     devices = []
-    try:
-        for variable in config[CONF_MONITORED_CONDITIONS]:
-            devices.append(LuftdatenSensor(hass, rest_client, name, variable))
-    except KeyError:
-        pass
+    for variable in config[CONF_MONITORED_CONDITIONS]:
+        devices.append(LuftdatenSensor(hass, rest_client, name, variable))
 
     async_add_devices(devices, True)
 
