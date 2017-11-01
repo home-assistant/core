@@ -28,6 +28,7 @@ CONF_PIN = 'pin'
 CONF_SENSOR = 'sensor'
 CONF_HUMIDITY_OFFSET = 'humidity_offset'
 CONF_TEMPERATURE_OFFSET = 'temperature_offset'
+CONF_NO_NOISE = 'no_noise'
 
 DEFAULT_NAME = 'DHT Sensor'
 
@@ -50,7 +51,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TEMPERATURE_OFFSET, default=0):
         vol.All(vol.Coerce(float), vol.Range(min=-100, max=100)),
     vol.Optional(CONF_HUMIDITY_OFFSET, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=-100, max=100))
+        vol.All(vol.Coerce(float), vol.Range(min=-100, max=100)),
+    vol.Optional(CONF_NO_NOISE, default=0):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=1))
 })
 
 
@@ -69,6 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     pin = config.get(CONF_PIN)
     temperature_offset = config.get(CONF_TEMPERATURE_OFFSET)
     humidity_offset = config.get(CONF_HUMIDITY_OFFSET)
+    no_noise = config.get(CONF_NO_NOISE)
 
     if not sensor:
         _LOGGER.error("DHT sensor type is not supported")
@@ -82,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(DHTSensor(
                 data, variable, SENSOR_TYPES[variable][1], name,
-                temperature_offset, humidity_offset))
+                temperature_offset, humidity_offset, no_noise))
     except KeyError:
         pass
 
@@ -93,7 +97,7 @@ class DHTSensor(Entity):
     """Implementation of the DHT sensor."""
 
     def __init__(self, dht_client, sensor_type, temp_unit, name,
-                 temperature_offset, humidity_offset):
+                 temperature_offset, humidity_offset, no_noise):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -102,7 +106,9 @@ class DHTSensor(Entity):
         self.type = sensor_type
         self.temperature_offset = temperature_offset
         self.humidity_offset = humidity_offset
+        self.no_noise = no_noise
         self._state = None
+        self._old_state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
@@ -125,13 +131,18 @@ class DHTSensor(Entity):
         self.dht_client.update()
         temperature_offset = self.temperature_offset
         humidity_offset = self.humidity_offset
+        no_noise = self.no_noise
         data = self.dht_client.data
 
-        if self.type == SENSOR_TEMPERATURE and SENSOR_TEMPERATURE in data:
+        if self.type == SENSOR_TEMPERATURE and SENSOR_TEMPERATURE in data:            
             temperature = data[SENSOR_TEMPERATURE]
             _LOGGER.debug("Temperature %.1f \u00b0C + offset %.1f",
                           temperature, temperature_offset)
             if (temperature >= -20) and (temperature < 80):
+                """Discard values that are less than the previous one and the difference is greater thant 1 degree (noise)"""
+                if (self._old_state is not None) and (no_noise != 0) and (temperature < self._old_state) and (self._old_state - temperature > 0.8):
+                    temperature = self._old_state
+                self._old_state = temperature
                 self._state = round(temperature + temperature_offset, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
