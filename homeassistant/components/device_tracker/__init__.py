@@ -382,7 +382,7 @@ class Device(Entity):
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
-                 picture: str=None, gravatar: str=None, icon: str=None,
+                 picture: str=None, gravatar: str=None, googleplus: str=None,icon: str=None,
                  hide_if_away: bool=False, vendor: str=None) -> None:
         """Initialize a device."""
         self.hass = hass
@@ -403,10 +403,16 @@ class Device(Entity):
         self.config_name = name
 
         # Configured picture
-        if gravatar is not None:
-            self.config_picture = get_gravatar_for_email(gravatar)
+        if googleplus is not None:
+            googlepluspthumb = get_googlepluspthumb_from_email(googleplus)
+        # Attempt to use googleplus first, but default to gravatar and picture if it fails
+        if googlepluspthumb is None:
+            if gravatar is not None:
+                self.config_picture = get_gravatar_for_email(gravatar)
+            else:
+                self.config_picture = picture
         else:
-            self.config_picture = picture
+            self.config_picture = googlepluspthumb
 
         self.icon = icon
 
@@ -640,6 +646,7 @@ def async_load_config(path: str, hass: HomeAssistantType,
             vol.Any(None, vol.All(cv.string, vol.Upper)),
         vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
         vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
+        vol.Optional('googleplus', default=None): vol.Any(None, cv.string),
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
             cv.time_period, cv.positive_timedelta),
@@ -744,3 +751,27 @@ def get_gravatar_for_email(email: str):
     import hashlib
     url = 'https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar'
     return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
+
+
+def get_googlepluspthumb_from_email(email: str):
+	"""Return a thumbnail image of a user's google plus profile image"""
+	import urllib.request
+	import re
+
+	email_namehost = email.split('@',1)
+	if len(email_namehost) == 2:
+        #remove all special characters from email
+		email= re.sub(r'[^A-Za-z0-9]', '', email_namehost[0]) + '@' + email_namehost[1] 
+
+    url = r'https://picasaweb.google.com/data/entry/api/user/' + email + '?alt=json'
+	try:
+		jsontext = urllib.request.urlopen(url).read().decode('utf-8')
+	except:
+		print('"' + url + '" timeout or invalid email')
+		return None
+
+	thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
+	thumbnail_url = re.search(thumbnail_pattern, text).group(1)
+	if thumbnail_url == '':
+        return None
+	return thumbnail_url
