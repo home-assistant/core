@@ -19,14 +19,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for sensor_id, sensor in sensors.items():
         if sensor.type == 'ZHASwitch':
-            async_add_devices([DeconzSensor(sensor_id, sensor)])
+            async_add_devices([DeconzSensor(sensor_id, sensor)], True)
 
 
 class DeconzSensor(Entity):
     """Representation of an device."""
 
     def __init__(self, sensor_id, sensor):
-        self._state = None
+        self._state = sensor.state
         self.sensor_id = sensor_id
         self.sensor = sensor
         self.sensor.callback = self._update_callback
