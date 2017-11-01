@@ -60,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensorid = config.get(CONF_SENSORID)
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
-    resource = config.get(CONF_RESOURCE) + str(sensorid) + '/'
+    resource = '{}{}/'.format(config.get(CONF_RESOURCE), str(sensorid))
 
     rest_client = LuftdatenData(resource, verify_ssl)
     rest_client.update()
