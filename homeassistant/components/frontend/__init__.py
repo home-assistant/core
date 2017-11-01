@@ -218,7 +218,10 @@ class ExternalPanel(AbstractPanel):
             URL_PANEL_COMPONENT_FP.format(self.component_name, self.md5)
 
         if self.component_name not in self.REGISTERED_COMPONENTS:
-            hass.http.register_static_path(self.webcomponent_url, self.path)
+            hass.http.register_static_path(
+                self.webcomponent_url, self.path,
+                # if path is None, we're in prod mode, so cache static assets
+                frontend_repository_path is None)
             self.REGISTERED_COMPONENTS.add(self.component_name)
 
 
@@ -280,10 +283,11 @@ def async_setup(hass, config):
     is_dev = repo_path is not None
 
     if is_dev:
-        hass.http.register_static_path("/home-assistant-polymer", repo_path)
+        hass.http.register_static_path(
+            "/home-assistant-polymer", repo_path, False)
         hass.http.register_static_path(
             "/static/translations",
-            os.path.join(repo_path, "build/translations"))
+            os.path.join(repo_path, "build/translations"), False)
         sw_path = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
     else:
@@ -293,13 +297,13 @@ def async_setup(hass, config):
         static_path = frontend_path
 
     hass.http.register_static_path("/service_worker.js", sw_path, False)
-    hass.http.register_static_path("/robots.txt",
-                                   os.path.join(static_path, "robots.txt"))
-    hass.http.register_static_path("/static", static_path)
+    hass.http.register_static_path(
+        "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
+    hass.http.register_static_path("/static", static_path, not is_dev)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
-        hass.http.register_static_path("/local", local)
+        hass.http.register_static_path("/local", local, not is_dev)
 
     index_view = IndexView(is_dev)
     hass.http.register_view(index_view)
