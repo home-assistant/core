@@ -202,4 +202,32 @@ DEMO_DEVICES = [{
     'traits': ['action.devices.traits.Scene'],
     'type': 'action.devices.types.SCENE',
     'willReportState': False
+}, {
+    'id': 'climate.hvac',
+    'name': {
+        'name': 'Hvac'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False,
+    'attributes': {
+        'availableThermostatModes': 'heat,cool,off',
+        'thermostatTemperatureUnit': 'C',
+    },
+}, {
+    'id': 'climate.heatpump',
+    'name': {
+        'name': 'HeatPump'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'climate.ecobee',
+    'name': {
+        'name': 'Ecobee'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
 }]
