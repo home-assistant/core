@@ -12,6 +12,7 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         'brightness': 95
     },
     'expected': (
+        'light',
         const.SERVICE_TURN_ON,
         {'entity_id': 'light.test', 'brightness': 242}
     )
@@ -31,28 +32,34 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
     'params': {
         'on': False
     },
-    'expected': (const.SERVICE_TURN_OFF, {'entity_id': 'light.test'})
+    'expected': ('light', const.SERVICE_TURN_OFF, {'entity_id': 'light.test'})
 }, {
     'entity_id': 'light.test',
     'command': ga.const.COMMAND_ONOFF,
     'params': {
         'on': True
     },
-    'expected': (const.SERVICE_TURN_ON, {'entity_id': 'light.test'})
+    'expected': ('light', const.SERVICE_TURN_ON, {'entity_id': 'light.test'})
 }, {  # Test Cover open close
     'entity_id': 'cover.bedroom',
     'command': ga.const.COMMAND_ONOFF,
     'params': {
         'on': True
     },
-    'expected': (const.SERVICE_OPEN_COVER, {'entity_id': 'cover.bedroom'}),
+    'expected': (
+        'cover',
+        const.SERVICE_OPEN_COVER,
+        {'entity_id': 'cover.bedroom'}),
 }, {
     'entity_id': 'cover.bedroom',
     'command': ga.const.COMMAND_ONOFF,
     'params': {
         'on': False
     },
-    'expected': (const.SERVICE_CLOSE_COVER, {'entity_id': 'cover.bedroom'}),
+    'expected': (
+        'cover',
+        const.SERVICE_CLOSE_COVER,
+        {'entity_id': 'cover.bedroom'}),
 }, {  # Test cover position
     'entity_id': 'cover.bedroom',
     'command': ga.const.COMMAND_BRIGHTNESS,
@@ -60,6 +67,7 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         'brightness': 50
     },
     'expected': (
+        'cover',
         const.SERVICE_SET_COVER_POSITION,
         {'entity_id': 'cover.bedroom', 'position': 50}
     ),
@@ -70,9 +78,19 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         'brightness': 30
     },
     'expected': (
+        'media_player',
         const.SERVICE_VOLUME_SET,
         {'entity_id': 'media_player.living_room', 'volume_level': 0.3}
     ),
+}, {
+    'entity_id': 'group.my_switches',
+    'command': ga.const.COMMAND_ONOFF,
+    'params': {
+        'on': False
+    },
+    'expected': (
+        'homeassistant', const.SERVICE_TURN_OFF,
+        {'entity_id': 'group.my_switches'}),
 }]
 
 
