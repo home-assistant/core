@@ -56,7 +56,8 @@ Here are some resources to get started:
  - [Troubleshooting your configuration](https://home-assistant.io/docs/configuration/troubleshooting/)
  - [Getting help](https://home-assistant.io/help/)
 
-To not see this card popup in the future, edit your config in `configuration.yaml` and disable the `introduction` component.
-""", 'Welcome Home!')
+To not see this card popup in the future, edit your config in
+`configuration.yaml` and disable the `introduction` component.
+""", 'Welcome Home!')  # noqa
 
     return True
