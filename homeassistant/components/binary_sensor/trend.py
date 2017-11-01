@@ -1,11 +1,13 @@
 """
-A sensor that monitors trands in other components.
+A sensor that monitors trends in other components.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.trend/
 """
 import asyncio
+from collections import deque
 import logging
+import math
 
 import voluptuous as vol
 
@@ -16,21 +18,40 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_DEVICE_CLASS, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME,
+    CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME,
+    STATE_UNKNOWN)
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.util import utcnow
+
+REQUIREMENTS = ['numpy==1.13.3']
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_ATTRIBUTE = 'attribute'
+ATTR_GRADIENT = 'gradient'
+ATTR_MIN_GRADIENT = 'min_gradient'
+ATTR_INVERT = 'invert'
+ATTR_SAMPLE_DURATION = 'sample_duration'
+ATTR_SAMPLE_COUNT = 'sample_count'
+
 CONF_SENSORS = 'sensors'
 CONF_ATTRIBUTE = 'attribute'
+CONF_MAX_SAMPLES = 'max_samples'
+CONF_MIN_GRADIENT = 'min_gradient'
 CONF_INVERT = 'invert'
+CONF_SAMPLE_DURATION = 'sample_duration'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_ATTRIBUTE): cv.string,
-    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_INVERT, default=False): cv.boolean,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
+    vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
+    vol.Optional(CONF_INVERT, default=False): cv.boolean,
+    vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -43,17 +64,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the trend sensors."""
     sensors = []
 
-    for device, device_config in config[CONF_SENSORS].items():
+    for device_id, device_config in config[CONF_SENSORS].items():
         entity_id = device_config[ATTR_ENTITY_ID]
         attribute = device_config.get(CONF_ATTRIBUTE)
-        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
+        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device_id)
         invert = device_config[CONF_INVERT]
+        max_samples = device_config[CONF_MAX_SAMPLES]
+        min_gradient = device_config[CONF_MIN_GRADIENT]
+        sample_duration = device_config[CONF_SAMPLE_DURATION]
 
         sensors.append(
             SensorTrend(
-                hass, device, friendly_name, entity_id, attribute,
-                device_class, invert)
+                hass, device_id, friendly_name, entity_id, attribute,
+                device_class, invert, max_samples, min_gradient,
+                sample_duration)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -65,30 +90,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SensorTrend(BinarySensorDevice):
     """Representation of a trend Sensor."""
 
-    def __init__(self, hass, device_id, friendly_name,
-                 target_entity, attribute, device_class, invert):
+    def __init__(self, hass, device_id, friendly_name, entity_id,
+                 attribute, device_class, invert, max_samples,
+                 min_gradient, sample_duration):
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass)
         self._name = friendly_name
-        self._target_entity = target_entity
+        self._entity_id = entity_id
         self._attribute = attribute
         self._device_class = device_class
         self._invert = invert
+        self._sample_duration = sample_duration
+        self._min_gradient = min_gradient
+        self._gradient = None
         self._state = None
-        self.from_state = None
-        self.to_state = None
-
-        @callback
-        def trend_sensor_state_listener(entity, old_state, new_state):
-            """Handle the target device state changes."""
-            self.from_state = old_state
-            self.to_state = new_state
-            hass.async_add_job(self.async_update_ha_state(True))
-
-        track_state_change(hass, target_entity,
-                           trend_sensor_state_listener)
+        self.samples = deque(maxlen=max_samples)
 
     @property
     def name(self):
@@ -106,32 +124,76 @@ class SensorTrend(BinarySensorDevice):
         return self._device_class
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {
+            ATTR_ENTITY_ID: self._entity_id,
+            ATTR_FRIENDLY_NAME: self._name,
+            ATTR_INVERT: self._invert,
+            ATTR_GRADIENT: self._gradient,
+            ATTR_MIN_GRADIENT: self._min_gradient,
+            ATTR_SAMPLE_DURATION: self._sample_duration,
+            ATTR_SAMPLE_COUNT: len(self.samples),
+        }
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
 
     @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Complete device setup after being added to hass."""
+        @callback
+        def trend_sensor_state_listener(entity, old_state, new_state):
+            """Handle state changes on the observed device."""
+            try:
+                if self._attribute:
+                    state = new_state.attributes.get(self._attribute)
+                else:
+                    state = new_state.state
+                if state != STATE_UNKNOWN:
+                    sample = (utcnow().timestamp(), float(state))
+                    self.samples.append(sample)
+                    self.async_schedule_update_ha_state(True)
+            except (ValueError, TypeError) as ex:
+                _LOGGER.error(ex)
+
+        async_track_state_change(
+            self.hass, self._entity_id,
+            trend_sensor_state_listener)
+
+    @asyncio.coroutine
     def async_update(self):
         """Get the latest data and update the states."""
-        if self.from_state is None or self.to_state is None:
-            return
-        if (self.from_state.state == STATE_UNKNOWN or
-                self.to_state.state == STATE_UNKNOWN):
-            return
-        try:
-            if self._attribute:
-                from_value = float(
-                    self.from_state.attributes.get(self._attribute))
-                to_value = float(
-                    self.to_state.attributes.get(self._attribute))
-            else:
-                from_value = float(self.from_state.state)
-                to_value = float(self.to_state.state)
+        # Remove outdated samples
+        if self._sample_duration > 0:
+            cutoff = utcnow().timestamp() - self._sample_duration
+            while self.samples and self.samples[0][0] < cutoff:
+                self.samples.popleft()
 
-            self._state = to_value > from_value
-            if self._invert:
-                self._state = not self._state
+        if len(self.samples) < 2:
+            return
 
-        except (ValueError, TypeError) as ex:
-            self._state = None
-            _LOGGER.error(ex)
+        # Calculate gradient of linear trend
+        yield from self.hass.async_add_job(self._calculate_gradient)
+
+        # Update state
+        self._state = (
+            abs(self._gradient) > abs(self._min_gradient) and
+            math.copysign(self._gradient, self._min_gradient) == self._gradient
+        )
+
+        if self._invert:
+            self._state = not self._state
+
+    def _calculate_gradient(self):
+        """Compute the linear trend gradient of the current samples.
+
+        This need run inside executor.
+        """
+        import numpy as np
+        timestamps = np.array([t for t, _ in self.samples])
+        values = np.array([s for _, s in self.samples])
+        coeffs = np.polyfit(timestamps, values, 1)
+        self._gradient = coeffs[0]

@@ -36,7 +36,8 @@ CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
 CONF_AC_MODE = 'ac_mode'
 CONF_MIN_DUR = 'min_cycle_duration'
-CONF_TOLERANCE = 'tolerance'
+CONF_COLD_TOLERANCE = 'cold_tolerance'
+CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 
 
@@ -48,7 +49,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
+    vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
+        float),
+    vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
+        float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
@@ -66,12 +70,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     target_temp = config.get(CONF_TARGET_TEMP)
     ac_mode = config.get(CONF_AC_MODE)
     min_cycle_duration = config.get(CONF_MIN_DUR)
-    tolerance = config.get(CONF_TOLERANCE)
+    cold_tolerance = config.get(CONF_COLD_TOLERANCE)
+    hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
 
     async_add_devices([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
-        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)])
+        target_temp, ac_mode, min_cycle_duration, cold_tolerance,
+        hot_tolerance, keep_alive)])
 
 
 class GenericThermostat(ClimateDevice):
@@ -79,14 +85,15 @@ class GenericThermostat(ClimateDevice):
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
-                 tolerance, keep_alive):
+                 cold_tolerance, hot_tolerance, keep_alive):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration
-        self._tolerance = tolerance
+        self._cold_tolerance = cold_tolerance
+        self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
         self._enabled = True
 
@@ -261,25 +268,29 @@ class GenericThermostat(ClimateDevice):
         if self.ac_mode:
             is_cooling = self._is_device_active
             if is_cooling:
-                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                too_cold = self._target_temp - self._cur_temp >= \
+                    self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning off AC %s', self.heater_entity_id)
                     switch.async_turn_off(self.hass, self.heater_entity_id)
             else:
-                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                too_hot = self._cur_temp - self._target_temp >= \
+                    self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning on AC %s', self.heater_entity_id)
                     switch.async_turn_on(self.hass, self.heater_entity_id)
         else:
             is_heating = self._is_device_active
             if is_heating:
-                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                too_hot = self._cur_temp - self._target_temp >= \
+                    self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning off heater %s',
                                  self.heater_entity_id)
                     switch.async_turn_off(self.hass, self.heater_entity_id)
             else:
-                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                too_cold = self._target_temp - self._cur_temp >= \
+                    self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning on heater %s', self.heater_entity_id)
                     switch.async_turn_on(self.hass, self.heater_entity_id)

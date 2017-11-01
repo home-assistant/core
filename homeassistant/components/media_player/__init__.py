@@ -12,7 +12,7 @@ import logging
 import os
 from random import SystemRandom
 
-from aiohttp import web
+from aiohttp import web, hdrs
 import async_timeout
 import voluptuous as vol
 
@@ -406,16 +406,9 @@ def async_setup(hass, config):
         update_tasks = []
         for player in target_players:
             yield from getattr(player, method['method'])(**params)
-
-        for player in target_players:
             if not player.should_poll:
                 continue
-
-            update_coro = player.async_update_ha_state(True)
-            if hasattr(player, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(player.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
@@ -497,9 +490,8 @@ class MediaPlayerDevice(Entity):
     def media_image_hash(self):
         """Hash value for media image."""
         url = self.media_image_url
-
         if url is not None:
-            return hashlib.md5(url.encode('utf-8')).hexdigest()[:5]
+            return hashlib.sha256(url.encode('utf-8')).hexdigest()[:16]
 
         return None
 
@@ -973,4 +965,8 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=500)
 
-        return web.Response(body=data, content_type=content_type)
+        headers = {hdrs.CACHE_CONTROL: 'max-age=3600'}
+        return web.Response(
+            body=data,
+            content_type=content_type,
+            headers=headers)

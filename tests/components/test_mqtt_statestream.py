@@ -127,7 +127,11 @@ class TestMqttStateStream(object):
         # mqtt_statestream state change on initialization, etc.
         mock_pub.reset_mock()
 
-        test_attributes = {"testing": "YES"}
+        test_attributes = {
+            "testing": "YES",
+            "list": ["a", "b", "c"],
+            "bool": True
+        }
 
         # Set a state of an entity
         mock_state_change_event(self.hass, State(e_id, 'off',
@@ -138,7 +142,11 @@ class TestMqttStateStream(object):
         calls = [
             call.async_publish(self.hass, 'pub/fake/entity/state', 'off', 1,
                                True),
-            call.async_publish(self.hass, 'pub/fake/entity/testing', 'YES',
+            call.async_publish(self.hass, 'pub/fake/entity/testing', '"YES"',
+                               1, True),
+            call.async_publish(self.hass, 'pub/fake/entity/list',
+                               '["a", "b", "c"]', 1, True),
+            call.async_publish(self.hass, 'pub/fake/entity/bool', "true",
                                1, True)
         ]
 
