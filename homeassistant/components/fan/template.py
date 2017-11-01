@@ -94,12 +94,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if str(temp_ids) != MATCH_ALL:
             template_entity_ids |= set(temp_ids)
 
-        if speed_template is not None:
+        if speed_template:
             temp_ids = speed_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
-        if oscillating_template is not None:
+        if oscillating_template:
             temp_ids = oscillating_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
@@ -117,10 +117,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 set_oscillating_action, speed_list, entity_ids
             )
         )
-
-    if not fans:
-        _LOGGER.error("No fans added")
-        return False
 
     async_add_devices(fans)
     return True
@@ -148,11 +144,11 @@ class TemplateFan(FanEntity):
         self._off_script = Script(hass, off_action)
 
         self._set_speed_script = None
-        if set_speed_action is not None:
+        if set_speed_action:
             self._set_speed_script = Script(hass, set_speed_action)
 
         self._set_oscillating_script = None
-        if set_oscillating_action is not None:
+        if set_oscillating_action:
             self._set_oscillating_script = Script(hass, set_oscillating_action)
 
         self._state = False
@@ -160,10 +156,10 @@ class TemplateFan(FanEntity):
         self._oscillating = None
 
         self._template.hass = self.hass
-        if self._speed_template is not None:
+        if self._speed_template:
             self._speed_template.hass = self.hass
             self._supported_features |= SUPPORT_SET_SPEED
-        if self._oscillating_template is not None:
+        if self._oscillating_template:
             self._oscillating_template.hass = self.hass
             self._supported_features |= SUPPORT_OSCILLATE
 
@@ -225,7 +221,7 @@ class TemplateFan(FanEntity):
         This method is a coroutine.
         """
         self._state = False
-        self.hass.async_add_job(self._off_script.async_run())
+        yield from self.hass.async_add_job(self._off_script.async_run())
 
     @asyncio.coroutine
     def async_set_speed(self, speed: str) -> None:
@@ -308,7 +304,7 @@ class TemplateFan(FanEntity):
             self._state = None
 
         # Update speed if 'speed_template' is configured
-        if self._speed_template is not None:
+        if self._speed_template:
             try:
                 speed = self._speed_template.async_render().lower()
             except TemplateError as ex:
@@ -328,7 +324,7 @@ class TemplateFan(FanEntity):
                 self._speed = None
 
         # Update oscillating if 'oscillating_template' is configured
-        if self._oscillating_template is not None:
+        if self._oscillating_template:
             try:
                 oscillating = self._oscillating_template.async_render().lower()
             except TemplateError as ex:
