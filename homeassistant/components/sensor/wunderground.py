@@ -22,6 +22,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://api.wunderground.com/api/{}/{}/{}/q/'
+# _RESOURCE = 'http://api.wdsdsdunderground.com/api/{}/{}/{}/q/'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
@@ -657,20 +658,51 @@ class WUndergroundSensor(Entity):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
+        self._state = None
+        self._attributes = {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_FRIENDLY_NAME: self._cfg_expand("friendly_name"),
+        }
+        self._icon = None
+        self._entity_picture = None
+        self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
 
     def _cfg_expand(self, what, default=None):
+        """Parse and return sensor data."""
         cfg = SENSOR_TYPES[self._condition]
         val = getattr(cfg, what)
-        try:
-            val = val(self.rest)
-        except (KeyError, IndexError) as err:
-            _LOGGER.warning("Failed to parse response from WU API: %s", err)
-            val = default
-        except TypeError:
-            pass  # val was not callable - keep original value
+        if callable(val):
+            try:
+                val = val(self.rest)
+            except (KeyError, IndexError, TypeError) as err:
+                _LOGGER.warning("Failed to parse response from WU API: %s",
+                                repr(err))
+                val = default
 
+        _LOGGER.debug("_cfg_expand return val: %s", val)
         return val
+
+    def _update_attrs(self):
+        """Parse and update device state attributes."""
+        attrs = self._cfg_expand("device_state_attributes", {})
+
+        for (attr, callback) in attrs.items():
+            if callable(callback):
+                try:
+                    self._attributes[attr] = callback(self.rest)
+                except (KeyError, IndexError, TypeError) as err:
+                    _LOGGER.warning("Failed to parse response from WU API: %s",
+                                    repr(err))
+            else:
+                self._attributes[attr] = callback
+
+    def _update_state(self):
+        """Parse and update state."""
+        state = self._cfg_expand("value", STATE_UNKNOWN)
+        self._state = state
+
+        # if len(state) > 255:
 
     @property
     def name(self):
@@ -680,45 +712,43 @@ class WUndergroundSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._cfg_expand("value", STATE_UNKNOWN)
+        return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = self._cfg_expand("device_state_attributes", {})
-        for (attr, callback) in attrs.items():
-            try:
-                attrs[attr] = callback(self.rest)
-            except TypeError:
-                attrs[attr] = callback
-            except (KeyError, IndexError) as err:
-                _LOGGER.warning("Failed to parse response from WU API: %s",
-                                err)
-
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        attrs[ATTR_FRIENDLY_NAME] = self._cfg_expand("friendly_name")
-        return attrs
+        return self._attributes
 
     @property
     def icon(self):
         """Return icon."""
-        return self._cfg_expand("icon", super().icon)
+        return self._icon
 
     @property
     def entity_picture(self):
         """Return the entity picture."""
-        url = self._cfg_expand("entity_picture")
-        if isinstance(url, str):
-            return re.sub(r'^http://', 'https://', url, flags=re.IGNORECASE)
+        return self._entity_picture
 
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return self._cfg_expand("unit_of_measurement")
+        return self._unit_of_measurement
 
     def update(self):
         """Update current conditions."""
         self.rest.update()
+
+        if not self.rest.data:
+            # no data, return
+            return
+
+        self._update_state()
+        self._update_attrs()
+        self._icon = self._cfg_expand("icon", super().icon)
+        url = self._cfg_expand("entity_picture")
+        if isinstance(url, str):
+            self._entity_picture = re.sub(r'^http://', 'https://',
+                                          url, flags=re.IGNORECASE)
 
 
 class WUndergroundData(object):
@@ -761,4 +791,7 @@ class WUndergroundData(object):
                 self.data = result
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
+            self.data = None
+        except requests.RequestException as err:
+            _LOGGER.error("Error fetching WUnderground data: %s", repr(err))
             self.data = None
