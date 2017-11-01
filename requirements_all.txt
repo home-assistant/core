@@ -671,6 +671,9 @@ pyharmony==1.0.16
 # homeassistant.components.binary_sensor.hikvision
 pyhik==0.1.4
 
+# homeassistant.components.hive
+pyhiveapi==0.0.41
+
 # homeassistant.components.homematic
 pyhomematic==0.1.34
 
