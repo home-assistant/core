@@ -62,7 +62,7 @@ def request_configuration(hass, config, host):
             _LOGGER.exception("Looks like something isn't installed!")
             return
 
-        api_factory = APIFactory(host)
+        api_factory = APIFactory(host, psk_id=GATEWAY_IDENTITY)
         psk = yield from api_factory.generate_psk(callback_data.get('key'))
         res = yield from _setup_gateway(hass, config, host, psk,
                                         DEFAULT_ALLOW_TRADFRI_GROUPS)
