@@ -16,11 +16,12 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_TURN_ON
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene
+    switch, light, cover, media_player, group, fan, scene, script
 )
 
 from .const import (
     ATTR_GOOGLE_ASSISTANT_NAME, COMMAND_COLOR,
+    ATTR_GOOGLE_ASSISTANT_TYPE,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE,
@@ -35,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 MAPPING_COMPONENT = {
     group.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     scene.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
+    script.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     switch.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     fan.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     light.DOMAIN: [
@@ -64,7 +66,8 @@ def make_actions_response(request_id: str, payload: dict) -> dict:
 
 def entity_to_device(entity: Entity):
     """Convert a hass entity into an google actions device."""
-    class_data = MAPPING_COMPONENT.get(entity.domain)
+    class_data = MAPPING_COMPONENT.get(
+        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) or entity.domain)
     if class_data is None:
         return None
 

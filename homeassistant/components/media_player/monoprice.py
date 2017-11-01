@@ -138,6 +138,11 @@ class MonopriceZone(MediaPlayerDevice):
         return SUPPORT_MONOPRICE
 
     @property
+    def media_title(self):
+        """Return the current source as medial title."""
+        return self._source
+
+    @property
     def source(self):
         """"Return the current input source of the device."""
         return self._source

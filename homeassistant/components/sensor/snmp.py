@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_VALUE_TEMPLATE)
 
-REQUIREMENTS = ['pysnmp==4.3.10']
+REQUIREMENTS = ['pysnmp==4.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,16 +41,15 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BASEOID): cv.string,
+    vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
     vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+    vol.Optional(CONF_DEFAULT_VALUE): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
-        vol.In(SNMP_VERSIONS),
-    vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
-    vol.Optional(CONF_DEFAULT_VALUE): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
 })
 
 

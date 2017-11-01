@@ -17,7 +17,6 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
-from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_HIDDEN
 from homeassistant.components.recorder.util import session_scope, execute
@@ -231,8 +230,8 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
     return states[0] if states else None
 
 
-# pylint: disable=unused-argument
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the history hooks."""
     filters = Filters()
     exclude = config[DOMAIN].get(CONF_EXCLUDE)
@@ -245,7 +244,8 @@ def setup(hass, config):
         filters.included_domains = include[CONF_DOMAINS]
 
     hass.http.register_view(HistoryPeriodView(filters))
-    register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'history', 'history', 'mdi:poll-box')
 
     return True
 
