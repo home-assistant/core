@@ -1,4 +1,9 @@
-"""Handle the frontend for Home Assistant."""
+"""
+Handle the frontend for Home Assistant.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/frontend/
+"""
 import asyncio
 import hashlib
 import json
@@ -7,18 +12,19 @@ import os
 
 from aiohttp import web
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.auth import is_trusted_ip
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.auth import is_trusted_ip
+
+REQUIREMENTS = ['home-assistant-frontend==20171030.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
-REQUIREMENTS = ['home-assistant-frontend==20171030.0']
 
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
@@ -30,7 +36,9 @@ FINAL_PATH = os.path.join(POLYMER_PATH, 'final')
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_FRONTEND_REPO = 'development_repo'
+
 DEFAULT_THEME_COLOR = '#03A9F4'
+
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
     'description': 'Open-source home automation platform running on Python 3.',
