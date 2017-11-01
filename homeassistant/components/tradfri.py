@@ -95,7 +95,6 @@ def async_setup(hass, config):
     """Set up the Tradfri component."""
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
-    key = conf.get(CONF_API_KEY)
     allow_tradfri_groups = conf.get(CONF_ALLOW_TRADFRI_GROUPS)
 
     @asyncio.coroutine
