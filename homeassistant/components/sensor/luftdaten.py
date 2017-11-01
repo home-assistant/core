@@ -65,7 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     rest_client.update()
 
     if rest_client.data is None:
-        _LOGGER.error("Unable to fetch REST data")
+        _LOGGER.error("Unable to fetch Luftdaten data")
         return False
 
     devices = []
@@ -79,10 +79,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class LuftdatenSensor(Entity):
-    """Implementation of a REST sensor."""
+    """Implementation of a LuftdatenSensor sensor."""
 
     def __init__(self, hass, rest_client, name, sensor_type):
-        """Initialize the REST sensor."""
+        """Initialize the LuftdatenSensor sensor."""
         self._hass = hass
         self.rest_client = rest_client
         self._name = name
