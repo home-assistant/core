@@ -13,7 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_HOST, CONF_API_KEY
+from homeassistant.const import CONF_HOST
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
 REQUIREMENTS = ['pytradfri==4.0.0',
@@ -35,7 +35,6 @@ DEFAULT_ALLOW_TRADFRI_GROUPS = True
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
-        vol.Inclusive(CONF_API_KEY, 'gateway'): cv.string,
         vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
                      default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
