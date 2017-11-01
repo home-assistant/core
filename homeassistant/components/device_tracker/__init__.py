@@ -382,7 +382,7 @@ class Device(Entity):
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
-                 picture: str=None, gravatar: str=None, googleplus: str=None,icon: str=None,
+                 picture: str=None, gravatar: str=None, googleplus: str=None, icon: str=None,
                  hide_if_away: bool=False, vendor: str=None) -> None:
         """Initialize a device."""
         self.hass = hass
@@ -403,16 +403,14 @@ class Device(Entity):
         self.config_name = name
 
         # Configured picture
-        if googleplus is not None:
-            googlepluspthumb = get_googlepluspthumb_from_email(googleplus)
-        # Attempt to use googleplus first, but default to gravatar and picture if it fails
-        if googlepluspthumb is None:
-            if gravatar is not None:
-                self.config_picture = get_gravatar_for_email(gravatar)
-            else:
-                self.config_picture = picture
+        if gravatar is not None:
+            self.config_picture = get_gravatar_for_email(gravatar)
         else:
-            self.config_picture = googlepluspthumb
+            # Attempt to use googleplus but revert to picture if it fails
+            if googleplus is not None:
+                googlepluspthumb = get_googlepluspthumb_from_email(googleplus)
+            if googlepluspthumb is None:
+                self.config_picture = picture
 
         self.icon = icon
 
@@ -754,24 +752,24 @@ def get_gravatar_for_email(email: str):
 
 
 def get_googlepluspthumb_from_email(email: str):
-	"""Return a thumbnail image of a user's google plus profile image"""
-	import urllib.request
-	import re
-
-	email_namehost = email.split('@',1)
-	if len(email_namehost) == 2:
-        #remove all special characters from email
-		email= re.sub(r'[^A-Za-z0-9]', '', email_namehost[0]) + '@' + email_namehost[1] 
-
-    url = r'https://picasaweb.google.com/data/entry/api/user/' + email + '?alt=json'
-	try:
-		jsontext = urllib.request.urlopen(url).read().decode('utf-8')
-	except:
-		print('"' + url + '" timeout or invalid email')
-		return None
-
-	thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
-	thumbnail_url = re.search(thumbnail_pattern, text).group(1)
-	if thumbnail_url == '':
+    """Return a thumbnail image of a user's google plus profile image"""
+    import urllib.request, urllib.parse
+    import re
+    
+    url = r'https://picasaweb.google.com/data/entry/api/user/'
+    url += urllib.parse.quote(email) + '?alt=json'
+    
+    print(url)
+    try:
+        jsontext = urllib.request.urlopen(url).read().decode('utf-8')
+    except:
+        print('"' + url + '" timeout or invalid email')
         return None
-	return thumbnail_url
+
+    thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
+    thumbnail_url = re.search(thumbnail_pattern, jsontext).group(1)
+    if thumbnail_url == '':
+        return None
+    return thumbnail_url
+
+
