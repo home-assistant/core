@@ -372,8 +372,8 @@ def test_api_set_color_xy(hass):
 
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
-    assert call_light[0].data['xy_color'] == (33, 87)
-    assert call_light[0].data['brightness'] == 150
+    assert call_light[0].data['xy_color'] == (0.23, 0.585)
+    assert call_light[0].data['brightness'] == 18
     assert msg['header']['name'] == 'Response'
 
 
