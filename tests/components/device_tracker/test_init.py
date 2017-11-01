@@ -200,10 +200,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
             'AB:CD:EF:GH:IJ', 'Test name', googleplus='john@gmail.com')
-        googleplus_url_pattern = r'https?\:\/\/[^\.\"]*?googleusercontent\.com\/[^\.\"]*?jpg'
-        self.assertNotEqual(re.search(googleplus_url_pattern,device.config_picture), None)
+        googleplus_url_pattern = (r'https?\:\/\/[^\.\"]*?'
+                                  r'googleusercontent\.com\/[^\.\"]*?jpg')
+        self.assertNotEqual(re.search(googleplus_url_pattern,
+                                      device.config_picture), None)
 
-        """Test that googleplus returns empty when a non-google or invalid account is used."""
+        """Test that googleplus returns empty
+        when a non-google or invalid account is used.
+        """
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
             'AB:CD:EF:GH:IJ', 'Test name', googleplus='test@example.com')
@@ -216,8 +220,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             self.hass, timedelta(seconds=180), True, dev_id,
             'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
             googleplus='john@gmail.com')
-        googleplus_url_pattern = r'https?\:\/\/[^\.\"]*?googleusercontent\.com\/[^\.\"]*?jpg'
-        self.assertNotEqual(re.search(googleplus_url_pattern,device.config_picture), None)
+        googleplus_url_pattern = (r'https?\:\/\/[^\.\"]*?'
+                                  r'googleusercontent\.com\/[^\.\"]*?jpg')
+        self.assertNotEqual(re.search(googleplus_url_pattern,
+                                      device.config_picture), None)
 
         """Test the that picture overrides googleplus when a non-google or invalid account is used."""
         device = device_tracker.Device(
@@ -234,17 +240,16 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
             gravatar='test@example.com',
             googleplus='john@gmail.com')
-        googleplus_url_pattern = r'https?\:\/\/[^\.\"]*?googleusercontent\.com\/[^\.\"]*?jpg'
-        self.assertNotEqual(re.search(googleplus_url_pattern,device.config_picture), None)
+        gravatar_url = ("https://www.gravatar.com/avatar/"
+                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
+        self.assertEqual(device.config_picture, gravatar_url)
 
-        """Test the that gravatar overrides googleplus when a non-google or invalid account is used."""
+        """Test the that gravatar overrides googleplus even when a non-google or invalid account is used."""
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
             'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
             gravatar='test@example.com',
             googleplus='test@example.com')
-        gravatar_url = ("https://www.gravatar.com/avatar/"
-                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
         self.assertEqual(device.config_picture, gravatar_url)
 
     def test_mac_vendor_lookup(self):
