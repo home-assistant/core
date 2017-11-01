@@ -4,10 +4,11 @@ Support for Luftdaten sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.luftdaten/
 """
+import asyncio
+import json
 import logging
 from datetime import timedelta
-import json
-import asyncio
+
 import requests
 import voluptuous as vol
 
