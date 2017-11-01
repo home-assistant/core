@@ -346,6 +346,7 @@ class RetryOnError(object):
         @wraps(method)
         def wrapper(*args, **kwargs):
             """Wrapped method."""
+            # pylint: disable=protected-access
             if not hasattr(wrapper, "_retry_queue"):
                 wrapper._retry_queue = []
 
