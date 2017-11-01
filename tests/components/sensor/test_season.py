@@ -3,9 +3,37 @@
 import unittest
 from datetime import datetime
 
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor.season as season
 
 from tests.common import get_test_home_assistant
+
+
+HEMISPHERE_NORTHERN = {
+    'homeassistant': {
+        'latitude': '48.864716',
+        'longitude': '2.349014',
+    }
+}
+
+HEMISPHERE_SOUTHERN = {
+    'homeassistant': {
+        'latitude': '-33.918861',
+        'longitude': '18.423300',
+    }
+}
+
+HEMISPHERE_EQUATOR = {
+    'homeassistant': {
+        'latitude': '0',
+        'longitude': '-51.065100',
+    }
+}
+
+HEMISPHERE_EMPTY = {
+    'homeassistant': {
+    }
+}
 
 
 # pylint: disable=invalid-name
@@ -181,3 +209,10 @@ class TestSeason(unittest.TestCase):
                                            season.EQUATOR,
                                            season.TYPE_ASTRONOMICAL)
         self.assertEqual(None, current_season)
+
+    def test_setup_hemisphere(self):
+        """Test platform setup of different hemispheres."""
+        assert setup_component(self.hass, 'sensor', HEMISPHERE_NORTHERN)
+        assert setup_component(self.hass, 'sensor', HEMISPHERE_SOUTHERN)
+        assert setup_component(self.hass, 'sensor', HEMISPHERE_EQUATOR)
+        assert setup_component(self.hass, 'sensor', HEMISPHERE_EMPTY)
