@@ -49,7 +49,6 @@ class HiveDevicePlug(SwitchDevice):
     def current_power_w(self):
         """Return the current power usage in W."""
         return self.h_o.get_smartplug_power_consumption(self.node_id,
-                                                        self.device_type,
                                                         self.node_name)
 
     @property
@@ -61,19 +60,16 @@ class HiveDevicePlug(SwitchDevice):
     def is_on(self):
         """Return true if switch is on."""
         return self.h_o.get_smartplug_state(self.node_id,
-                                            self.device_type,
                                             self.node_name)
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         return self.h_o.set_smartplug_turn_on(self.node_id,
                                               self.device_type,
-                                              self.node_name,
-                                              self.node_device_type)
+                                              self.node_name)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         return self.h_o.set_smartplug_turn_off(self.node_id,
                                                self.device_type,
-                                               self.node_name,
-                                               self.node_device_type)
+                                               self.node_name)
