@@ -26,7 +26,6 @@ from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           ENTITY_ID_FORMAT)
 
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
@@ -234,7 +233,7 @@ class TemplateFan(FanEntity):
 
         if speed in self._speed_list:
             self._speed = speed
-            self.hass.async_add_job(
+            yield from self.hass.async_add_job(
                 self._set_speed_script.async_run({ATTR_SPEED: speed}))
         else:
             _LOGGER.error(
@@ -253,8 +252,9 @@ class TemplateFan(FanEntity):
 
         if oscillating is True or oscillating is False:
             self._oscillating = oscillating
-            self.hass.async_add_job(self._set_oscillating_script.async_run(
-                {ATTR_OSCILLATING: oscillating}))
+            yield from self.hass.async_add_job(
+                self._set_oscillating_script.async_run(
+                    {ATTR_OSCILLATING: oscillating}))
         else:
             _LOGGER.error(
                 'Received invalid oscillating: %s. ' +
@@ -271,7 +271,7 @@ class TemplateFan(FanEntity):
         @callback
         def template_fan_startup(event):
             """Update template on startup."""
-            async_track_state_change(
+            self.hass.hepers.event.async_track_state_change(
                 self.hass, self._entities, template_fan_state_listener)
 
             self.async_schedule_update_ha_state(True)
