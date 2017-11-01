@@ -8,8 +8,6 @@ from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 from yarl import unquote
 
-from .const import KEY_DEVELOPMENT
-
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 
@@ -53,10 +51,9 @@ class CachingFileResponse(FileResponse):
         @asyncio.coroutine
         def sendfile(request, fobj, count):
             """Sendfile that includes a cache header."""
-            if not request.app[KEY_DEVELOPMENT]:
-                cache_time = 31 * 86400  # = 1 month
-                self.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
-                    cache_time)
+            cache_time = 31 * 86400  # = 1 month
+            self.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
+                cache_time)
 
             yield from orig_sendfile(request, fobj, count)
 
