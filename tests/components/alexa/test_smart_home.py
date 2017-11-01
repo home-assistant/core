@@ -282,7 +282,8 @@ def test_api_set_brightness(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("result,adjust", [(25, '-5'), (35, '5')])
+@pytest.mark.parametrize(
+    "result,adjust", [(25, '-5'), (35, '5'), (0, '-80')])
 def test_api_adjust_brightness(hass, result, adjust):
     """Test api adjust brightness process."""
     request = get_new_request(
