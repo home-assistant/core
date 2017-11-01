@@ -56,6 +56,13 @@ def request_configuration(hass, config, host):
     @asyncio.coroutine
     def configuration_callback(callback_data):
         """Handle the submitted configuration."""
+        from pytradfri import Gateway
+        try:
+            from pytradfri.api.aiocoap_api import APIFactory
+        except ImportError:
+            _LOGGER.exception("Looks like something isn't installed!")
+            return
+
         api_factory = APIFactory(host)
         psk = yield from api_factory.generate_psk(callback_data.get('key'))
         res = yield from _setup_gateway(hass, config, host, psk,
@@ -118,7 +125,7 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import Gateway, RequestError
     try:
-        from pytradfri.api.aiocoap_api import api_factory
+        from pytradfri.api.aiocoap_api import APIFactory
     except ImportError:
         _LOGGER.exception("Looks like something isn't installed!")
         return False
