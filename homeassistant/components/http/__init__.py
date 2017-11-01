@@ -28,9 +28,8 @@ from homeassistant.util.logging import HideSensitiveDataFilter
 from .auth import auth_middleware
 from .ban import ban_middleware
 from .const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
-    KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
-    KEY_DEVELOPMENT, KEY_AUTHENTICATED)
+    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS, KEY_BANS_ENABLED,
+    KEY_LOGIN_THRESHOLD, KEY_AUTHENTICATED)
 from .static import (
     staticresource_middleware, CachingFileResponse, CachingStaticResource)
 from .util import get_real_ip
