@@ -81,7 +81,14 @@ def setup_platform(hass, config, add_devices,
                                               device["Hive_NodeName"],
                                               device["HA_DeviceType"],
                                               device["Hive_DeviceType"])])
-                if device["HA_DeviceType"] == "Hive_Device_Mode":
+                if device["HA_DeviceType"] == "Hive_Device_Light_Mode":
+                    add_devices([DeviceMode(hass,
+                                            hive_comp.HGO,
+                                            device["Hive_NodeID"],
+                                            device["Hive_NodeName"],
+                                            device["HA_DeviceType"],
+                                            device["Hive_DeviceType"])])
+                if device["HA_DeviceType"] == "Hive_Device_Plug_Mode":
                     add_devices([DeviceMode(hass,
                                             hive_comp.HGO,
                                             device["Hive_NodeID"],
