@@ -107,10 +107,12 @@ class Template(object):
 
         This method must be run in the event loop.
         """
-        self._ensure_compiled()
-
         if variables is not None:
             kwargs.update(variables)
+
+        self._replace_placeholder(kwargs)
+
+        self._ensure_compiled()
 
         try:
             return self._compiled.render(kwargs).strip()
@@ -151,6 +153,27 @@ class Template(object):
             _LOGGER.error("Error parsing value: %s (value: %s, template: %s)",
                           ex, value, self.template)
             return value if error_value is _SENTINEL else error_value
+
+    def _replace_placeholder(self, variables=None):
+        """Replaced trigger and data strings with values."""
+        if variables is None or _RE_NONE_ENTITIES.search(self.template):
+            return
+        extraction = _RE_GET_ENTITIES.findall(self.template)
+
+        for result in extraction:
+            if result[0] == 'trigger.entity_id' and 'trigger' in variables \
+               and 'entity_id' in variables['trigger']:
+                self.template = self.template.replace(
+                    'states.trigger.entity_id',
+                    'states.' + variables['trigger']['entity_id'].strip())
+
+            data = result[0].split('.')[0]
+            if variables and data in variables and \
+               isinstance(variables[data], str):
+                self.template = self.template.replace(
+                    'states.' + data, 'states.' + variables[data].strip())
+
+        self._compiled_code = None
 
     def _ensure_compiled(self):
         """Bind a template to a specific hass instance."""
