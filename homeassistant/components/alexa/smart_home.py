@@ -253,8 +253,8 @@ def async_api_set_color(hass, request, entity):
         xyz =  color_util.color_RGB_to_xy(rgb[0], rgb[1], rgb[2])
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_XY_COLOR: (xyz[0], xyz[1])
-            light.ATTR_BRIGHTNESS: xyz[2]
+            light.ATTR_XY_COLOR: (xyz[0], xyz[1]),
+            light.ATTR_BRIGHTNESS: xyz[2],
         }, blocking=True)
 
     return api_message(request)
