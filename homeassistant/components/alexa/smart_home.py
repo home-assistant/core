@@ -26,6 +26,7 @@ MAPPING_COMPONENT = {
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
             light.SUPPORT_RGB_COLOR: 'Alexa.ColorController',
+            light.SUPPORT_XY_COLOR: 'Alexa.ColorController',
             light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
         }
     ],
@@ -219,10 +220,10 @@ def async_api_adjust_brightness(hass, request, entity):
         current = math.floor(
             int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100)
     except ZeroDivisionError:
-        return api_error(request, error_type='INVALID_VALUE')
+        current = 0
 
     # set brightness
-    brightness = brightness_delta + current
+    brightness = max(0, brightness_delta + current)
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
@@ -236,15 +237,25 @@ def async_api_adjust_brightness(hass, request, entity):
 @asyncio.coroutine
 def async_api_set_color(hass, request, entity):
     """Process a set color request."""
-    hue = float(request[API_PAYLOAD]['color']['hue'])
-    saturation = float(request[API_PAYLOAD]['color']['saturation'])
-    brightness = float(request[API_PAYLOAD]['color']['brightness'])
+    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES)
+    rgb = color_util.color_hsb_to_RGB(
+        float(request[API_PAYLOAD]['color']['hue']),
+        float(request[API_PAYLOAD]['color']['saturation']),
+        float(request[API_PAYLOAD]['color']['brightness'])
+    )
 
-    rgb = color_util.color_hsb_to_RGB(hue, saturation, brightness)
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-        ATTR_ENTITY_ID: entity.entity_id,
-        light.ATTR_RGB_COLOR: rgb,
-    }, blocking=True)
+    if supported & light.SUPPORT_RGB_COLOR > 0:
+        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_RGB_COLOR: rgb,
+        }, blocking=True)
+    else:
+        xyz = color_util.color_RGB_to_xy(*rgb)
+        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_XY_COLOR: (xyz[0], xyz[1]),
+            light.ATTR_BRIGHTNESS: xyz[2],
+        }, blocking=True)
 
     return api_message(request)
 

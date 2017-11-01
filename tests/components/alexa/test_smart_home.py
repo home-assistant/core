@@ -282,7 +282,8 @@ def test_api_set_brightness(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("result,adjust", [(25, '-5'), (35, '5')])
+@pytest.mark.parametrize(
+    "result,adjust", [(25, '-5'), (35, '5'), (0, '-80')])
 def test_api_adjust_brightness(hass, result, adjust):
     """Test api adjust brightness process."""
     request = get_new_request(
@@ -311,7 +312,7 @@ def test_api_adjust_brightness(hass, result, adjust):
 
 
 @asyncio.coroutine
-def test_api_set_color(hass):
+def test_api_set_color_rgb(hass):
     """Test api set color process."""
     request = get_new_request(
         'Alexa.ColorController', 'SetColor', 'light#test')
@@ -325,7 +326,10 @@ def test_api_set_color(hass):
 
     # settup test devices
     hass.states.async_set(
-        'light.test', 'off', {'friendly_name': "Test light"})
+        'light.test', 'off', {
+            'friendly_name': "Test light",
+            'supported_features': 16,
+        })
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
@@ -337,6 +341,40 @@ def test_api_set_color(hass):
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
     assert call_light[0].data['rgb_color'] == (33, 87, 33)
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+def test_api_set_color_xy(hass):
+    """Test api set color process."""
+    request = get_new_request(
+        'Alexa.ColorController', 'SetColor', 'light#test')
+
+    # add payload
+    request['directive']['payload']['color'] = {
+        'hue': '120',
+        'saturation': '0.612',
+        'brightness': '0.342',
+    }
+
+    # settup test devices
+    hass.states.async_set(
+        'light.test', 'off', {
+            'friendly_name': "Test light",
+            'supported_features': 64,
+        })
+
+    call_light = async_mock_service(hass, 'light', 'turn_on')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_light) == 1
+    assert call_light[0].data['entity_id'] == 'light.test'
+    assert call_light[0].data['xy_color'] == (0.23, 0.585)
+    assert call_light[0].data['brightness'] == 18
     assert msg['header']['name'] == 'Response'
 
 
