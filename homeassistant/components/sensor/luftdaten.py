@@ -14,8 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_RESOURCE, CONF_VERIFY_SSL,
-                                 CONF_MONITORED_CONDITIONS, STATE_UNKNOWN,
-                                 TEMP_CELSIUS)
+                                 CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -84,7 +83,7 @@ class LuftdatenSensor(Entity):
         self._hass = hass
         self.rest_client = rest_client
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._data = {}
         self.sensor_type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -97,9 +96,7 @@ class LuftdatenSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._state is not None:
-            return self._state
-        return None
+        return self._state
 
     @property
     def unit_of_measurement(self):
@@ -112,7 +109,7 @@ class LuftdatenSensor(Entity):
         value = self.rest_client.data
 
         if value is None:
-            value = STATE_UNKNOWN
+            value = None
         else:
             parsed_json = json.loads(value)
 
