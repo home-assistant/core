@@ -56,7 +56,6 @@ def request_configuration(hass, config, host):
     @asyncio.coroutine
     def configuration_callback(callback_data):
         """Handle the submitted configuration."""
-        from pytradfri import Gateway
         try:
             from pytradfri.api.aiocoap_api import APIFactory
         except ImportError:
