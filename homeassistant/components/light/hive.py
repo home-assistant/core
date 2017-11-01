@@ -57,7 +57,7 @@ class HiveDeviceLight(Light):
         if self.node_device_type == "tuneablelight" \
                 or self.node_device_type == "colourtuneablelight":
             min_color_temp = self.h_o.get_light_min_color_temp(
-                self.node_id, self.device_type, self.node_name)
+                self.node_id, self.node_name)
 
         return min_color_temp
 
@@ -68,7 +68,7 @@ class HiveDeviceLight(Light):
         if self.node_device_type == "tuneablelight" \
                 or self.node_device_type == "colourtuneablelight":
             max_color_temp = self.h_o.get_light_max_color_temp(
-                self.node_id, self.device_type, self.node_name)
+                self.node_id, self.node_name)
 
         return max_color_temp
 
@@ -79,7 +79,7 @@ class HiveDeviceLight(Light):
         if self.node_device_type == "tuneablelight" \
                 or self.node_device_type == "colourtuneablelight":
             color_temp = self.h_o.get_light_color_temp(
-                self.node_id, self.device_type, self.node_name)
+                self.node_id, self.node_name)
 
         return color_temp
 
@@ -87,14 +87,12 @@ class HiveDeviceLight(Light):
     def brightness(self):
         """Brightness of the light (an integer in the range 1-255)."""
         return self.h_o.get_light_brightness(self.node_id,
-                                             self.device_type,
                                              self.node_name)
 
     @property
     def is_on(self):
         """Return true if light is on."""
         return self.h_o.get_light_state(self.node_id,
-                                        self.device_type,
                                         self.node_name)
 
     def turn_on(self, **kwargs):
@@ -113,7 +111,6 @@ class HiveDeviceLight(Light):
 
         self.h_o.set_light_turn_on(self.node_id,
                                    self.device_type,
-                                   self.node_device_type,
                                    self.node_name,
                                    new_brightness,
                                    new_color_temp)
@@ -122,7 +119,6 @@ class HiveDeviceLight(Light):
         """Instruct the light to turn off."""
         self.h_o.set_light_turn_off(self.node_id,
                                     self.device_type,
-                                    self.node_device_type,
                                     self.node_name)
 
     @property
