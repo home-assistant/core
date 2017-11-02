@@ -161,16 +161,18 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_control.max_kelvin
-        )
+        if self._light_control.max_kelvin is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                self._light_control.max_kelvin
+            )
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_control.min_kelvin
-        )
+        if self._light_control.min_kelvin is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                self._light_control.min_kelvin
+            )
 
     @property
     def device_state_attributes(self):
@@ -219,9 +221,11 @@ class TradfriLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_data.kelvin_color_inferred
-        )
+        kelvin_color = self._light_data.kelvin_color_inferred
+        if kelvin_color is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                kelvin_color
+            )
 
     @property
     def rgb_color(self):
