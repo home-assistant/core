@@ -545,6 +545,7 @@ omit =
     homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
+    homeassistant/components/sensor/pyload.py
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/ripple.py
