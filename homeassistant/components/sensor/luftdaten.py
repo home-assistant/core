@@ -13,8 +13,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_RESOURCE, CONF_VERIFY_SSL,
-                                 CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
+from homeassistant.const import (
+  CONF_NAME, CONF_RESOURCE, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS,
+  TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -59,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensorid = config.get(CONF_SENSORID)
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
-    resource = '{}{}/'.format(config.get(CONF_RESOURCE), str(sensorid))
+    resource = '{}{}/'.format(config.get(CONF_RESOURCE), sensorid)
 
     rest_client = LuftdatenData(resource, verify_ssl)
     rest_client.update()
@@ -70,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     devices = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        devices.append(LuftdatenSensor(hass, rest_client, name, variable))
+        devices.append(LuftdatenSensor(rest_client, name, variable))
 
     async_add_devices(devices, True)
 
@@ -78,13 +79,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class LuftdatenSensor(Entity):
     """Implementation of a LuftdatenSensor sensor."""
 
-    def __init__(self, hass, rest_client, name, sensor_type):
+    def __init__(self, rest_client, name, sensor_type):
         """Initialize the LuftdatenSensor sensor."""
-        self._hass = hass
         self.rest_client = rest_client
         self._name = name
         self._state = None
-        self._data = {}
         self.sensor_type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
@@ -109,7 +108,7 @@ class LuftdatenSensor(Entity):
         value = self.rest_client.data
 
         if value is None:
-            value = None
+            self._state = None
         else:
             parsed_json = json.loads(value)
 
@@ -126,8 +125,7 @@ class LuftdatenData(object):
 
     def __init__(self, resource, verify_ssl):
         """Initialize the data object."""
-        self._request = requests.Request(
-            'GET', resource).prepare()
+        self._request = requests.Request('GET', resource).prepare()
         self._verify_ssl = verify_ssl
         self.data = None
 
