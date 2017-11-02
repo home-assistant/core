@@ -28,7 +28,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
-from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 from homeassistant import config as conf_util
@@ -169,7 +168,7 @@ class Recorder(threading.Thread):
 
         self.hass = hass
         self.keep_days = keep_days
-        self.interval = purge_interval
+        self.purge_interval = purge_interval
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -260,26 +259,30 @@ class Recorder(threading.Thread):
                 self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
                                                 notify_hass_started)
 
-            if self.keep_days and self.interval:
+            if self.keep_days and self.purge_interval:
+                async_track_point_in_time = \
+                    self.hass.helpers.event.async_track_point_in_time
+
                 @callback
                 def async_purge(now):
                     """Trigger the purge and schedule the next run."""
                     self.queue.put(PurgeTask(self.keep_days))
-                    async_track_point_in_time(self.hass, async_purge, now +
-                                              timedelta(days=self.interval))
+                    async_track_point_in_time(async_purge, now + timedelta(
+                        days=self.purge_interval))
 
                 earliest = dt_util.utcnow() + timedelta(minutes=30)
-                run = latest = dt_util.utcnow() + timedelta(days=self.interval)
+                run = latest = dt_util.utcnow() + \
+                    timedelta(days=self.purge_interval)
                 with session_scope(session=self.get_session()) as session:
                     event = session.query(Events).first()
                     if event is not None:
                         session.expunge(event)
                         run = dt_util.UTC.localize(event.time_fired) + \
-                            timedelta(days=self.keep_days + self.interval)
+                            timedelta(days=self.keep_days+self.purge_interval)
                 run = min(latest, max(run, earliest))
 
                 _LOGGER.debug("Scheduling purge run for %s", run)
-                async_track_point_in_time(self.hass, async_purge, run)
+                async_track_point_in_time(async_purge, run)
 
         self.hass.add_job(register)
         result = hass_started.result()
