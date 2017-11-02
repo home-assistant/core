@@ -37,25 +37,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     subscription = config.get(CONF_SUBSCRIPTION)
     name = config.get(CONF_NAME)
 
-    if subscription in vultr.data:
-        add_devices([VultrSwitch(vultr, subscription, name)], True)
-    else:
-        _LOGGER.error(
-            "Subscription %s not found. Perhaps API key issue?",
-            subscription)
+    if subscription not in vultr.data:
+        _LOGGER.error("Subscription %s not found", subscription)
         return False
+
+    add_devices([VultrSwitch(vultr, subscription, name)], True)
 
 
 class VultrSwitch(SwitchDevice):
-    """Representation of a Vultr subsciption switch."""
+    """Representation of a Vultr subscription switch."""
 
     def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr switch."""
         self._vultr = vultr
         self._subscription = subscription
-        self.data = self._vultr.data[subscription]
-        self._state = None
         self._name = name.format(self.data['label'])
+
+        self.data = None
 
     @property
     def name(self):
