@@ -70,8 +70,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             device = XiaomiPhilipsCeilingLamp(name, light, device_info)
             devices.append(device)
         elif device_info.model == 'philips.light.bulb':
-            from miio import Ceil
-            light = Ceil(host, token)
+            from miio import PhilipsBulb
+            light = PhilipsBulb(host, token)
             device = XiaomiPhilipsLightBall(name, light, device_info)
             devices.append(device)
         else:
