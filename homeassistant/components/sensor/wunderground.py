@@ -22,7 +22,6 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://api.wunderground.com/api/{}/{}/{}/q/'
-# _RESOURCE = 'http://api.wdsdsdunderground.com/api/{}/{}/{}/q/'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
@@ -640,10 +639,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))
 
-    try:
-        rest.update()
-    except ValueError as err:
-        _LOGGER.error("Received error from WUnderground: %s", err)
+    if not rest.update():
         return False
 
     add_devices(sensors)
@@ -661,12 +657,12 @@ class WUndergroundSensor(Entity):
         self._state = None
         self._attributes = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_FRIENDLY_NAME: self._cfg_expand("friendly_name"),
         }
         self._icon = None
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
+        self._long_text = None
 
     def _cfg_expand(self, what, default=None):
         """Parse and return sensor data."""
@@ -676,33 +672,44 @@ class WUndergroundSensor(Entity):
             try:
                 val = val(self.rest)
             except (KeyError, IndexError, TypeError) as err:
-                _LOGGER.warning("Failed to parse response from WU API: %s",
-                                repr(err))
+                _LOGGER.warning("Failed to expand cfg from WU API."
+                                " Condition: %s Attr: %s Error: %s",
+                                self._condition, what, repr(err))
                 val = default
 
-        _LOGGER.debug("_cfg_expand return val: %s", val)
         return val
 
     def _update_attrs(self):
         """Parse and update device state attributes."""
         attrs = self._cfg_expand("device_state_attributes", {})
 
+        self._attributes[ATTR_FRIENDLY_NAME] = self._cfg_expand(
+            "friendly_name")
+
+        if self._long_text:
+            self._attributes['long_text'] = self._long_text
+
         for (attr, callback) in attrs.items():
             if callable(callback):
                 try:
                     self._attributes[attr] = callback(self.rest)
                 except (KeyError, IndexError, TypeError) as err:
-                    _LOGGER.warning("Failed to parse response from WU API: %s",
-                                    repr(err))
+                    _LOGGER.warning("Failed to update attrs from WU API."
+                                    " Condition: %s Attr: %s Error: %s",
+                                    self._condition, attr, repr(err))
             else:
                 self._attributes[attr] = callback
 
     def _update_state(self):
         """Parse and update state."""
         state = self._cfg_expand("value", STATE_UNKNOWN)
-        self._state = state
 
-        # if len(state) > 255:
+        if isinstance(state, str) and len(state) > 255:
+            self._state = state[:248] + ' (more)'
+            self._long_text = state
+        else:
+            self._state = state
+            self._long_text = None
 
     @property
     def name(self):
@@ -789,6 +796,7 @@ class WUndergroundData(object):
                                  ["description"])
             else:
                 self.data = result
+                return True
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.data = None
