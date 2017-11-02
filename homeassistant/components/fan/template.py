@@ -17,6 +17,7 @@ from homeassistant.const import (
 
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
@@ -271,7 +272,7 @@ class TemplateFan(FanEntity):
         @callback
         def template_fan_startup(event):
             """Update template on startup."""
-            self.hass.hepers.event.async_track_state_change(
+            async_track_state_change(
                 self.hass, self._entities, template_fan_state_listener)
 
             self.async_schedule_update_ha_state(True)
