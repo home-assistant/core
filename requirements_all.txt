@@ -1168,3 +1168,6 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.19.1
+
+# homeassistant.components.canary
+py-canary==0.1.0
