@@ -65,6 +65,7 @@ TEST_REQUIREMENTS = (
     'pydispatcher',
     'PyJWT',
     'pylitejet',
+    'pymonoprice',
     'pynx584',
     'python-forecastio',
     'pyunifi',
