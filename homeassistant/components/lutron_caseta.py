@@ -22,9 +22,9 @@ LUTRON_CASETA_SMARTBRIDGE = 'lutron_smartbridge'
 
 DOMAIN = 'lutron_caseta'
 
-CONF_KEYFILE = 'key'
-CONF_CERTFILE = 'cert'
-CONF_CA_CERTS = 'ca'
+CONF_KEYFILE = 'keyfile'
+CONF_CERTFILE = 'certfile'
+CONF_CA_CERTS = 'ca_certs'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
