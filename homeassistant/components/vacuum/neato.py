@@ -10,9 +10,9 @@ import requests
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.components.vacuum import (
-  VacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-  SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-  SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON)
+    VacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
 
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
     _LOGGER.debug("Adding vacuums %s", dev)
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class NeatoConnectedVacuum(VacuumDevice):
@@ -54,12 +54,7 @@ class NeatoConnectedVacuum(VacuumDevice):
         self._name = '{}'.format(self.robot.name)
         self._status_state = None
         self._clean_state = None
-        try:
-            self._state = self.robot.state
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError) as ex:
-            _LOGGER.warning("Neato connection error: %s", ex)
-            self._state = None
+        self._state = None
         self._mapdata = hass.data[NEATO_MAP_DATA]
         self.clean_time_start = None
         self.clean_time_stop = None
@@ -193,9 +188,7 @@ class NeatoConnectedVacuum(VacuumDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        if self._clean_state == STATE_ON:
-            return True
-        return False
+        return self._clean_state == STATE_ON
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -214,8 +207,8 @@ class NeatoConnectedVacuum(VacuumDevice):
         """Start, pause or resume the cleaning task."""
         if self._state['state'] == 1:
             self.robot.start_cleaning()
-        elif self._state['state'] == 2:
-            if ALERTS.get(self._state['error']) is None:
-                self.robot.pause_cleaning()
+        elif self._state['state'] == 2 and\
+                ALERTS.get(self._state['error']) is None:
+            self.robot.pause_cleaning()
         if self._state['state'] == 3:
             self.robot.resume_cleaning()
