@@ -63,7 +63,8 @@ def async_setup(hass, base_config):
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
     for component in LUTRON_CASETA_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        hass.async_add_job(discovery.async_load_platform(hass, component,
+                                                         DOMAIN, {}, config))
 
     return True
 
@@ -87,13 +88,8 @@ class LutronCasetaDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
-            self._smartbridge.add_subscriber, self._device_id,
-            self._update_callback
-        )
-
-    def _update_callback(self):
-        self.schedule_update_ha_state()
+        self._smartbridge.add_subscriber(self._device_id,
+                                         self.async_schedule_update_ha_state)
 
     @property
     def name(self):
