@@ -14,8 +14,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-  CONF_NAME, CONF_RESOURCE, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS,
-  TEMP_CELSIUS)
+    CONF_NAME, CONF_RESOURCE, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS,
+    TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
