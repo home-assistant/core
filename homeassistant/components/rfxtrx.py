@@ -182,10 +182,9 @@ def setup(hass, config):
     if recv_modes is not None:
         for mode in recv_modes:
             if rfxtrxmod.lowlevel.get_recmode_tuple(mode) == (None, None):
-                raise ValueError(
-                    'recv_mode "{}" is unknown to RFXTRX.'.format(mode)
-                )
-        _LOGGER.info("Receiving modes to be enabled: %s", recv_modes)
+                _LOGGER.error('recv_mode "%s" is unknown to RFXTRX.', mode)
+                return False
+        _LOGGER.debug("Receiving modes to be enabled: %s", recv_modes)
 
     if dummy_connection:
         hass.data[RFXOBJECT] =\
