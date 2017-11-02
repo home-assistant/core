@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
-from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
+from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE_HIDDEN
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['phue==1.0']
@@ -471,7 +471,8 @@ class HueLight(Light):
         """Return the device state attributes."""
         attributes = {}
         if not self.allow_in_emulated_hue:
-            attributes[ATTR_EMULATED_HUE] = self.allow_in_emulated_hue
+            attributes[ATTR_EMULATED_HUE_HIDDEN] = \
+                not self.allow_in_emulated_hue
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
         return attributes
