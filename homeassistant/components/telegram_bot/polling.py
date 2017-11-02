@@ -117,7 +117,8 @@ class TelegramPoll(BaseTelegramBotEntity):
                     _LOGGER.error(err)
                     yield from asyncio.sleep(RETRY_SLEEP)
                 except ClientError as err:
-                    # ClientError: A client error has occurred. Pausing is advised.
+                    # ClientError: A client error has occurred.
+                    # Pausing is advised.
                     _LOGGER.error(err)
                     yield from asyncio.sleep(RETRY_SLEEP)
                 except asyncio.TimeoutError:
