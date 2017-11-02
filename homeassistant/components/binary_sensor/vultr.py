@@ -39,13 +39,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     subscription = config.get(CONF_SUBSCRIPTION)
     name = config.get(CONF_NAME)
 
-    if subscription in vultr.data:
-        add_devices([VultrBinarySensor(vultr, subscription, name)], True)
-    else:
-        _LOGGER.error(
-            "Subscription %s not found. Perhaps API key issue?",
-            subscription)
-        return
+    if subscription not in vultr.data:
+        _LOGGER.error("Subscription %s not found", subscription)
+        return False
+
+    add_devices([VultrBinarySensor(vultr, subscription, name)], True)
 
 
 class VultrBinarySensor(BinarySensorDevice):
