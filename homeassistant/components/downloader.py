@@ -113,7 +113,7 @@ def setup(hass, config):
 
                     # If file exist append a number.
                     # We test filename, filename_2..
-                    if not overwrite:
+                    if overwrite is False:
                         tries = 1
                         final_path = path + ext
                         while os.path.isfile(final_path):
