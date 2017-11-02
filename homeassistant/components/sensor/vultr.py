@@ -44,33 +44,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     subscription = config.get(CONF_SUBSCRIPTION)
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS,
-                                      MONITORED_CONDITIONS)
+    name = config.get(CONF_NAME)
+    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+
+    if subscription not in vultr.data:
+        _LOGGER.error("Subscription %s not found", subscription)
+        return False
 
     sensors = []
 
     for condition in monitored_conditions:
-        if condition not in MONITORED_CONDITIONS:
-            _LOGGER.error(
-                "Monitored condition %s not valid, should be: %s",
-                condition,
-                ', '.join(MONITORED_CONDITIONS))
-            continue
-
-        if subscription in vultr.data:
-            sensors.append(VultrSensor(vultr,
-                                       subscription,
-                                       condition,
-                                       name))
-        else:
-            _LOGGER.error(
-                "Subscription %s not found. Perhaps API key issue?",
-                subscription)
-
-    if not sensors:
-        _LOGGER.error("No Vultr sensors to be added")
-        return False
+        sensors.append(VultrSensor(vultr,
+                                   subscription,
+                                   condition,
+                                   name))
 
     add_devices(sensors, True)
 
@@ -78,18 +65,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VultrSensor(Entity):
     """Representation of a Vultr subscription sensor."""
 
-    def __init__(self, vultr, subscription, variable, name):
+    def __init__(self, vultr, subscription, condition, name):
         """Initialize a new Vultr sensor."""
         self._vultr = vultr
         self._subscription = subscription
-        self._var_id = variable
-        self.data = self._vultr.data[subscription]
+        self._condition = condition
+        self.data = None
 
-        variable_info = MONITORED_CONDITIONS[variable]
+        condition_info = MONITORED_CONDITIONS[condition]
 
-        self._name = name.format(self.data['label'], variable_info[0])
-        self._var_units = variable_info[1]
-        self._var_icon = variable_info[2]
+        self._name = name.format(self.data['label'], condition_info[0])
+        self._units = condition_info[1]
+        self._icon = condition_info[2]
 
     @property
     def name(self):
@@ -99,20 +86,20 @@ class VultrSensor(Entity):
     @property
     def icon(self):
         """Icon used in the frontend if any."""
-        return self._var_icon
+        return self._icon
 
     @property
     def unit_of_measurement(self):
         """The unit of measurement to present the value in."""
-        return self._var_units
+        return self._units
 
     @property
     def state(self):
         """Return the value of this given sensor type."""
         try:
-            return round(float(self.data.get(self._var_id)), 2)
+            return round(float(self.data.get(self._condition)), 2)
         except (TypeError, ValueError):
-            return self.data.get(self._var_id)
+            return self.data.get(self._condition)
 
     def update(self):
         """Update state of sensor."""
