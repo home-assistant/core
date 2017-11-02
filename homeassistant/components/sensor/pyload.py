@@ -1,5 +1,5 @@
 """
-Support for monitoring pyLoad download speed.
+Support for monitoring pyLoad.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pyload/
@@ -10,6 +10,7 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             requests.exceptions.HTTPError) as conn_err:
         _LOGGER.error("Error setting up pyLoad API: %s", conn_err)
         return False
+
     devices = []
     for ng_type in monitored_types:
         new_sensor = PyLoadSensor(
@@ -69,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             client_name=name)
         devices.append(new_sensor)
 
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class PyLoadSensor(Entity):
@@ -82,7 +83,6 @@ class PyLoadSensor(Entity):
         self.api = api
         self._state = None
         self._unit_of_measurement = sensor_type[2]
-        _LOGGER.debug("Created pyLoad sensor: %s", self.type)
 
     @property
     def name(self):
@@ -135,24 +135,23 @@ class PyLoadAPI(object):
 
         if username is not None and password is not None:
             self.payload = {'username': username, 'password': password}
-            self.login = requests.post(api_url + 'login', data=self.payload,
-                                       timeout=5)
+            self.login = requests.post(
+                '{}{}'.format(api_url, 'login'), data=self.payload, timeout=5)
         self.update()
 
     def post(self, method, params=None):
         """Send a POST request and return the response as a dict."""
-        payload = {"method": method}
+        payload = {'method': method}
 
         if params:
             payload['params'] = params
 
         try:
             response = requests.post(
-                self.api_url + 'statusServer', json=payload,
-                cookies=self.login.cookies,
-                headers=self.headers, timeout=5)
+                '{}{}'.format(self.api_url, 'statusServer'), json=payload,
+                cookies=self.login.cookies, headers=self.headers, timeout=5)
             response.raise_for_status()
-            _LOGGER.info("Response.json = %s", response.json())
+            _LOGGER.debug("JSON Response: %s", response.json())
             return response.json()
 
         except requests.exceptions.ConnectionError as conn_exc:
@@ -166,5 +165,5 @@ class PyLoadAPI(object):
         try:
             self.status = self.post('speed')
         except requests.exceptions.ConnectionError:
-            # failed to update status - exception already logged in self.post
+            # Failed to update status - exception already logged in self.post
             raise
