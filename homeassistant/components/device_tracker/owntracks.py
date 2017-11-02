@@ -437,7 +437,7 @@ def async_handle_message(hass, context, message):
     handler = HANDLERS.get(msgtype)
 
     if handler is None:
-        _LOGGER.warning(
+        _LOGGER.info(
             'Received unsupported message type: %s.', msgtype)
         return
 
