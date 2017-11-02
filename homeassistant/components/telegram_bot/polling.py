@@ -104,45 +104,37 @@ class TelegramPoll(BaseTelegramBotEntity):
                 yield from resp.release()
 
     @asyncio.coroutine
-    def handle(self):
-        """Receiving and processing incoming messages."""
-        try:
-            _updates = yield from self.get_updates(self.update_id)
-        except WrongHttpStatus as err:
-            # WrongHttpStatus: Non-200 status code.
-            # Occurs at times (mainly 502) and recovers
-            # automatically. Pause for a while before retrying.
-            _LOGGER.error(err)
-            yield from asyncio.sleep(RETRY_SLEEP)
-        except ClientError as err:
-            # ClientError: A client error has occurred. Pausing is advised.
-            _LOGGER.error(err)
-            yield from asyncio.sleep(RETRY_SLEEP)
-        except asyncio.TimeoutError:
-            # Long polling timeout. Nothing serious.
-            _LOGGER.debug("Long polling timed out.")
-        except ValueError:
-            # Json error. Just retry for the next message.
-            _LOGGER.debug("Json decode error. Continuing without pause.")
-        else:
-            # no exception raised. update received data.
-            _updates = _updates.get('result')
-            if _updates is None:
-                _LOGGER.error("Incorrect result received.")
-            else:
-                for update in _updates:
-                    self.update_id = update['update_id'] + 1
-                    self.process_message(update)
-
-    @asyncio.coroutine
     def check_incoming(self):
-        """Loop which continuously checks for incoming telegram messages."""
+        """Continuously check for incoming telegram messages."""
         try:
             while True:
-                # Each handle call sends a long polling post request
-                # to the telegram server. If no incoming message it will return
-                # an empty list. Calling self.handle() without any delay or
-                # timeout will for this reason not really stress the processor.
-                yield from self.handle()
+                try:
+                    _updates = yield from self.get_updates(self.update_id)
+                except WrongHttpStatus as err:
+                    # WrongHttpStatus: Non-200 status code.
+                    # Occurs at times (mainly 502) and recovers
+                    # automatically. Pause for a while before retrying.
+                    _LOGGER.error(err)
+                    yield from asyncio.sleep(RETRY_SLEEP)
+                except ClientError as err:
+                    # ClientError: A client error has occurred. Pausing is advised.
+                    _LOGGER.error(err)
+                    yield from asyncio.sleep(RETRY_SLEEP)
+                except asyncio.TimeoutError:
+                    # Long polling timeout. Nothing serious.
+                    _LOGGER.debug("Long polling timed out.")
+                except ValueError:
+                    # Json error. Just retry for the next message.
+                    _LOGGER.debug(
+                        "Json decode error. Continuing without pause.")
+                else:
+                    # no exception raised. update received data.
+                    _updates = _updates.get('result')
+                    if _updates is None:
+                        _LOGGER.error("Incorrect result received.")
+                    else:
+                        for update in _updates:
+                            self.update_id = update['update_id'] + 1
+                            self.process_message(update)
         except CancelledError:
             _LOGGER.debug("Stopping Telegram polling bot")
