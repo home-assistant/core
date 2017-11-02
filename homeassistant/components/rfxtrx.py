@@ -245,15 +245,13 @@ def get_pt2262_cmd(device_id, data_bits):
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
-        try:
-            if device.masked_id == get_pt2262_deviceid(device_id,
-                                                       device.data_bits):
-                _LOGGER.info("rfxtrx: found matching device %s for %s",
-                             device_id,
-                             get_pt2262_deviceid(device_id, device.data_bits))
-                return device
-        except AttributeError:
-            continue
+        if (hasattr(device, 'is_lighting4') and
+                device.masked_id == get_pt2262_deviceid(device_id,
+                                                        device.data_bits)):
+            _LOGGER.info("rfxtrx: found matching device %s for %s",
+                         device_id,
+                         device.masked_id)
+            return device
     return None
 
 
@@ -261,7 +259,7 @@ def get_pt2262_device(device_id):
 def find_possible_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
-        if len(dev_id) == len(device_id):
+        if hasattr(device, 'is_lighting4') and len(dev_id) == len(device_id):
             size = None
             for i in range(0, len(dev_id)):
                 if dev_id[i] != device_id[i]:

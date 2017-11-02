@@ -74,6 +74,36 @@ class TestTemplateSensor:
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.attributes['icon'] == 'mdi:check'
 
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "State",
+                            'entity_picture_template':
+                                "{% if states.sensor.test_state.state == "
+                                "'Works' %}"
+                                "/local/sensor.png"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes.get('entity_picture') == ''
+
+        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['entity_picture'] == '/local/sensor.png'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0):

@@ -9,8 +9,8 @@
     <link rel='apple-touch-icon' sizes='180x180'
           href='/static/icons/favicon-apple-180x180.png'>
     <link rel="mask-icon" href="/static/icons/home-assistant-icon.svg" color="#3fbbf4">
-    <link rel='preload' href='{{ core_url }}' as='script'/>
     {% if not dev_mode %}
+      <link rel='preload' href='{{ core_url }}' as='script'/>
       {% for panel in panels.values() -%}
         <link rel='prefetch' href='{{ panel.webcomponent_url }}'>
       {% endfor -%}
@@ -38,7 +38,7 @@
         display: block;
         content: "";
         height: 48px;
-        background-color: #03A9F4;
+        background-color: {{ theme_color }};
       }
 
       #ha-init-skeleton .message {
@@ -52,7 +52,7 @@
       }
 
       #ha-init-skeleton a {
-        color: #03A9F4;
+        color: {{ theme_color }};
         text-decoration: none;
         font-weight: bold;
       }
