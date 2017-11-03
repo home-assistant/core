@@ -20,7 +20,7 @@ DEPENDENCIES = ['lutron_caseta']
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Lutron Caseta shades as a cover device."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
@@ -29,7 +29,7 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         dev = LutronCasetaCover(cover_device, bridge)
         devs.append(dev)
 
-    add_devices(devs, True)
+    async_add_devices(devs, True)
 
 
 class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
