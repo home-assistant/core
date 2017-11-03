@@ -113,7 +113,7 @@ def setup(hass, config):
 
                     # If file exist append a number.
                     # We test filename, filename_2..
-                    if overwrite is False:
+                    if not overwrite:
                         tries = 1
                         final_path = path + ext
                         while os.path.isfile(final_path):
@@ -121,7 +121,7 @@ def setup(hass, config):
 
                             final_path = "{}_{}.{}".format(path, tries, ext)
 
-                        _LOGGER.info("%s -> %s", url, final_path)
+                    _LOGGER.info("%s -> %s", url, final_path)
 
                     with open(final_path, 'wb') as fil:
                         for chunk in req.iter_content(1024):
