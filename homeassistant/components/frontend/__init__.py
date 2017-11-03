@@ -21,7 +21,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171102.0']
+REQUIREMENTS = ['home-assistant-frontend==20171103.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
