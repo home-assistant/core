@@ -160,7 +160,6 @@ def _request_app_setup(hass, config):
     hass.data[DOMAIN]['configurator'] = True
     configurator = hass.components.configurator
 
-    # pylint: disable=unused-argument
     def wink_configuration_callback(callback_data):
         """Handle configuration updates."""
         _config_path = hass.config.path(WINK_CONFIG_FILE)
@@ -168,8 +167,8 @@ def _request_app_setup(hass, config):
             setup(hass, config)
             return
 
-        client_id = callback_data.get('client_id')
-        client_secret = callback_data.get('client_secret')
+        client_id = callback_data.get('client_id').strip()
+        client_secret = callback_data.get('client_secret').strip()
         if None not in (client_id, client_secret):
             save_json(_config_path,
                       {ATTR_CLIENT_ID: client_id,
