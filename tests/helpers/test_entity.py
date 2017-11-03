@@ -100,22 +100,6 @@ class TestHelpersEntity(object):
             fmt, 'overwrite hidden true',
             hass=self.hass) == 'test.overwrite_hidden_true_2'
 
-    def test_update_calls_async_update_if_available(self):
-        """Test async update getting called."""
-        async_update = []
-
-        class AsyncEntity(entity.Entity):
-            hass = self.hass
-            entity_id = 'sensor.test'
-
-            @asyncio.coroutine
-            def async_update(self):
-                async_update.append([1])
-
-        ent = AsyncEntity()
-        ent.update()
-        assert len(async_update) == 1
-
     def test_device_class(self):
         """Test device class attribute."""
         state = self.hass.states.get(self.entity.entity_id)
