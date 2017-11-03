@@ -7,7 +7,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import frontend
 
-from tests.common import mock_coro, mock_component
+from tests.common import mock_component
 
 
 @pytest.fixture(autouse=True)
