@@ -267,8 +267,8 @@ class Recorder(threading.Thread):
                 def async_purge(now):
                     """Trigger the purge and schedule the next run."""
                     self.queue.put(PurgeTask(self.keep_days))
-                    async_track_point_in_time(async_purge, now + timedelta(
-                        days=self.purge_interval))
+                    self.hass.helpers.event.async_track_point_in_time(
+                        async_purge, now + timedelta(days=self.purge_interval))
 
                 earliest = dt_util.utcnow() + timedelta(minutes=30)
                 run = latest = dt_util.utcnow() + \
@@ -280,9 +280,8 @@ class Recorder(threading.Thread):
                         run = dt_util.UTC.localize(event.time_fired) + \
                             timedelta(days=self.keep_days+self.purge_interval)
                 run = min(latest, max(run, earliest))
-
-                _LOGGER.debug("Scheduling purge run for %s", run)
-                async_track_point_in_time(async_purge, run)
+                self.hass.helpers.event.async_track_point_in_time(
+                    async_purge, run)
 
         self.hass.add_job(register)
         result = hass_started.result()
