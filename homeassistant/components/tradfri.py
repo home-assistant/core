@@ -24,17 +24,21 @@ REQUIREMENTS = ['pytradfri==4.0.1',
                 '#aiocoap==0.3']
 
 DOMAIN = 'tradfri'
-CONFIG_FILE = '.tradfri_identity.conf'
-KEY_CONFIG = 'tradfri_configuring'
+CONFIG_FILE = '.tradfri_identities.conf'
+KEY_CONFIGURING = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
+CONF_HOSTNAME = 'custom_hostname'
+DEFAULT_HOSTNAME = 'my_Tradfri_gateway'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
+        vol.Optional(CONF_HOSTNAME,
+                     default=DEFAULT_HOSTNAME): cv.boolean,
         vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
                      default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
@@ -43,21 +47,17 @@ CONFIG_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-def request_configuration(hass, config, host):
+def request_configuration(hass, config, host, hostname):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
-    hass.data.setdefault(KEY_CONFIG, {})
-    instance = hass.data[KEY_CONFIG].get(host)
-
-    # Configuration already in progress
-    if instance:
-        return
+    hass.data.setdefault(KEY_CONFIGURING, [])
 
     @asyncio.coroutine
     def configuration_callback(callback_data):
         """Handle the submitted configuration."""
         try:
             from pytradfri.api.aiocoap_api import APIFactory
+            from pytradfri import RequestError
         except ImportError:
             _LOGGER.exception("Looks like something isn't installed!")
             return
@@ -67,29 +67,45 @@ def request_configuration(hass, config, host):
         # new (or another) hass instance.
         identity = uuid.uuid4().hex
 
+        api_factory = APIFactory(host, psk_id=identity, loop=hass.loop)
+
+        # Need To Fix: currently entering a wrong security code sends
+        # pytradfri aiocoap API into an entless loop.
+        # posibly because of non standard response from gateway
+        # but there's no clear Error/Exception being raised.
+        # the only thing that shows up in the logs is an OSError
         try:
-            api_factory = APIFactory(host, psk_id=identity)
             token = yield from api_factory.generate_psk(
-                                            callback_data.get('key'))
-            res = yield from _setup_gateway(hass, config, host,
-                                            identity, token,
-                                            DEFAULT_ALLOW_TRADFRI_GROUPS)
-            if not res:
-                raise
-        except:
+                callback_data.get('key'))
+        except RequestError:
             hass.async_add_job(configurator.notify_errors, instance,
-                               "Unable to connect.")
+                               "Security Code not accepted.")
+            return
+
+        res = yield from _setup_gateway(hass, config, host, hostname,
+                                        identity, token,
+                                        DEFAULT_ALLOW_TRADFRI_GROUPS)
+        if not res:
+            hass.async_add_job(configurator.notify_errors, instance,
+                               "Gateway setup failed.")
             return
 
         def success():
             """Set up was successful."""
             conf = _read_config(hass)
-            conf[host] = {'identity': identity, 'token': token}
+            conf[hostname] = {'host': host,
+                              'identity': identity,
+                              'token': token}
             _write_config(hass, conf)
             hass.async_add_job(configurator.request_done, instance)
 
         hass.async_add_job(success)
 
+    # Configuration already in progress
+    if host in hass.data[KEY_CONFIGURING]:
+        return
+
+    hass.data[KEY_CONFIGURING].append(host)
     instance = configurator.request_config(
         "IKEA Trådfri", configuration_callback,
         description='Please enter the security code written at the bottom of '
@@ -104,6 +120,7 @@ def async_setup(hass, config):
     """Set up the Tradfri component."""
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
+    hostname = conf.get(CONF_HOSTNAME)
     allow_tradfri_groups = conf.get(CONF_ALLOW_TRADFRI_GROUPS)
     known_hosts = yield from hass.async_add_job(_read_config, hass)
 
@@ -111,27 +128,29 @@ def async_setup(hass, config):
     def gateway_discovered(service, info):
         """Run when a gateway is discovered."""
         host = info['host']
-
-        if host in known_hosts:
-            yield from _setup_gateway(hass, config, host,
-                                        known_hosts[host]['identity'],
-                                        known_hosts[host]['token'],
-                                        allow_tradfri_groups)
+        hostname = info['hostname']
+        if hostname in known_hosts:
+            yield from _setup_gateway(hass, config, host, hostname,
+                                      known_hosts[host]['identity'],
+                                      known_hosts[host]['token'],
+                                      allow_tradfri_groups)
         else:
-            hass.async_add_job(request_configuration, hass, config, host)
-            return True
+            hass.async_add_job(request_configuration, hass,
+                               config, host, hostname)
 
     discovery.async_listen(hass, SERVICE_IKEA_TRADFRI, gateway_discovered)
 
     if host:
-        yield from gateway_discovered(None, {'host': host})
+        yield from gateway_discovered(None,
+                                      {'host': host,
+                                       'hostname': hostname})
 
     return True
 
 
 @asyncio.coroutine
-def _setup_gateway(hass, hass_config, host,
-                    identity, token, allow_tradfri_groups):
+def _setup_gateway(hass, hass_config, host, hostname,
+                   identity, token, allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import Gateway, RequestError
     try:
@@ -145,9 +164,10 @@ def _setup_gateway(hass, hass_config, host,
         api = factory.request
         gateway = Gateway()
         gateway_info_result = yield from api(gateway.get_gateway_info())
-    except:
+    except RequestError:
         _LOGGER.exception("Tradfri setup failed. Requesting reconfiguration.")
-        hass.async_add_job(request_configuration, hass, hass_config, host)
+        hass.async_add_job(request_configuration, hass, hass_config,
+                           host, hostname)
         return False
 
     gateway_id = gateway_info_result.id
