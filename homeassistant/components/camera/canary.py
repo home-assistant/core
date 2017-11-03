@@ -65,7 +65,6 @@ class CanaryCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-
         if self._last_entry is None:
             return None
 
@@ -96,7 +95,8 @@ class CanaryCamera(Camera):
         if len(entries) > 0:
             current_entry = entries[0]
 
-            if self._last_entry is None or self._last_entry.entry_id != current_entry.entry_id:
+            if self._last_entry is None \
+                    or self._last_entry.entry_id != current_entry.entry_id:
                 thumbnail = current_entry.thumbnails[0]
                 self._image_content = requests.get(thumbnail.image_url).content
                 self._last_entry = current_entry

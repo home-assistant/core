@@ -22,7 +22,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in location.devices:
             if device.is_online:
                 for sensor_type in SensorType:
-                    devices.append(CanarySensor(data, sensor_type, location, device))
+                    devices.append(CanarySensor(data, sensor_type, location,
+                                                device))
 
     add_devices(devices, True)
 
@@ -38,7 +39,10 @@ class CanarySensor(Entity):
         self._temperature_scale = self._data.temperature_scale
         self._sensor_value = None
 
-        self._name = '{} {} {}'.format(location.name, device.name, self._sensor_type.value).replace("_", " ").title()
+        sensor_type_name = sensor_type.value.replace("_", " ").title()
+        self._name = '{} {} {}'.format(location.name,
+                                       device.name,
+                                       sensor_type_name)
 
     @property
     def name(self):
@@ -53,7 +57,8 @@ class CanarySensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return "sensor_canary_{}_{}".format(self._device_id, self._sensor_type.value)
+        return "sensor_canary_{}_{}".format(self._device_id,
+                                            self._sensor_type.value)
 
     @property
     def unit_of_measurement(self):
@@ -74,6 +79,8 @@ class CanarySensor(Entity):
 
         readings = self._data.get_readings(self._device_id)
         for reading in readings:
-            if reading.sensor_type == self._sensor_type and reading.value is not None:
-                self._sensor_value = round(float(reading.value), SENSOR_VALUE_PRECISION)
+            if reading.sensor_type == self._sensor_type \
+                    and reading.value is not None:
+                self._sensor_value = round(float(reading.value),
+                                           SENSOR_VALUE_PRECISION)
                 break
