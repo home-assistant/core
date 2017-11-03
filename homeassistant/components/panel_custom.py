@@ -61,7 +61,7 @@ def async_setup(hass, config):
             name, panel_path,
             sidebar_title=panel.get(CONF_SIDEBAR_TITLE),
             sidebar_icon=panel.get(CONF_SIDEBAR_ICON),
-            url_path=panel.get(CONF_URL_PATH),
+            frontend_url_path=panel.get(CONF_URL_PATH),
             config=panel.get(CONF_CONFIG),
         )
 
