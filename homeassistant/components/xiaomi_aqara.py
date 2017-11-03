@@ -49,7 +49,7 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema({
 
 
 GATEWAY_CONFIG = vol.Schema({
-    vol.Optional(CONF_MAC): GW_MAC,
+    vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None),
     vol.Optional(CONF_KEY, default=None):
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
