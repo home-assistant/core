@@ -9,12 +9,12 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.components.sensor import (ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_ID,
-    CONF_SENSORS, CONF_TYPE, STATE_UNKNOWN, TEMP_CELSIUS)
+    CONF_SENSORS, CONF_TYPE, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -33,16 +33,16 @@ DEFAULT_EXPIRE_AFTER = 300
 TYPES = ['battery', 'humidity', 'temperature']
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Required(CONF_TYPE): vol.In(TYPES),
     vol.Required(CONF_ID): cv.positive_int,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_TYPE): vol.In(TYPES),
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
     vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
 })
 
 
@@ -55,20 +55,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     baud = int(config.get(CONF_BAUD))
     expire_after = config.get(CONF_EXPIRE_AFTER)
 
-    _LOGGER.info("%s %s", usb_device, baud)
+    _LOGGER.debug("%s %s", usb_device, baud)
 
     try:
         lacrosse = pylacrosse.LaCrosse(usb_device, baud)
         lacrosse.open()
     except SerialException as exc:
-        _LOGGER.exception("Unable to open serial port for LaCrosse: %s", exc)
+        _LOGGER.warning("Unable to open serial port: %s", exc)
         return False
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lacrosse.close)
 
     sensors = []
     for device, device_config in config[CONF_SENSORS].items():
-        _LOGGER.info("%s %s", device, device_config)
+        _LOGGER.debug("%s %s", device, device_config)
 
         typ = device_config.get(CONF_TYPE)
         sensor_class = TYPE_CLASSES[typ]
@@ -76,18 +76,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         sensors.append(
             sensor_class(
-                hass,
-                lacrosse,
-                device,
-                name,
-                expire_after,
-                device_config
+                hass, lacrosse, device, name, expire_after, device_config
             )
         )
-
-    if not sensors:
-        _LOGGER.warning("No sensors added")
-        return False
 
     add_devices(sensors)
 
@@ -100,20 +91,19 @@ class LaCrosseSensor(Entity):
     _low_battery = None
     _new_battery = None
 
-    def __init__(self, hass, lacrosse, device_id, name,
-                 expire_after, config):
+    def __init__(self, hass, lacrosse, device_id, name, expire_after, config):
         """Initialize the sensor."""
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT,
-                                                  device_id, hass=hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, device_id, hass=hass)
         self._config = config
         self._name = name
         self._value = None
         self._expire_after = expire_after
         self._expiration_trigger = None
 
-        lacrosse.register_callback(int(self._config['id']),
-                                   self._callback_lacrosse, None)
+        lacrosse.register_callback(
+            int(self._config['id']), self._callback_lacrosse, None)
 
     @property
     def name(self):
@@ -127,9 +117,10 @@ class LaCrosseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {}
-        attributes['low_battery'] = self._low_battery
-        attributes['new_battery'] = self._new_battery
+        attributes = {
+            'low_battery': self._low_battery,
+            'new_battery': self._new_battery,
+        }
         return attributes
 
     def _callback_lacrosse(self, lacrosse_sensor, user_data):
@@ -156,7 +147,7 @@ class LaCrosseSensor(Entity):
     def value_is_expired(self, *_):
         """Triggered when value is expired."""
         self._expiration_trigger = None
-        self._value = STATE_UNKNOWN
+        self._value = None
         self.async_schedule_update_ha_state()
 
 
