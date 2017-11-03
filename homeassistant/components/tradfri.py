@@ -131,8 +131,8 @@ def async_setup(hass, config):
         hostname = info['hostname']
         if hostname in known_hosts:
             yield from _setup_gateway(hass, config, host, hostname,
-                                      known_hosts[host]['identity'],
-                                      known_hosts[host]['token'],
+                                      known_hosts[hostname]['identity'],
+                                      known_hosts[hostname]['token'],
                                       allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass,
