@@ -156,7 +156,6 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_AWAY
 
-
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
