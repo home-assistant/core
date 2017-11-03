@@ -177,7 +177,7 @@ class WemoDimmer(Light):
     @property
     def get_brightness(self):
         """Return the brightness of this light between 1 and 100"""
-        brightness = int(self.get_brightness * 255 / 100)
+        brightness = int(self.wemo.get_brightness * 255 / 100)
         return brightness
 
     @property
@@ -198,6 +198,7 @@ class WemoDimmer(Light):
             brightness = int((self._brightness / 255) * 99)
         else:
             brightness = 255
+        self.wemo.set_brightness(brightness)
 
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
