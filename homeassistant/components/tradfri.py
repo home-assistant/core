@@ -57,7 +57,8 @@ def request_configuration(hass, config, host, hostname):
         """Handle the submitted configuration."""
         try:
             from pytradfri.api.aiocoap_api import APIFactory
-        except RequestError:
+            from pytradfri import RequestError
+        except ImportError:
             _LOGGER.exception("Looks like something isn't installed!")
             return
 
@@ -76,7 +77,7 @@ def request_configuration(hass, config, host, hostname):
         try:
             token = yield from api_factory.generate_psk(
                                             callback_data.get('key'))
-        except ConnctionError:
+        except RequestError:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Security Code not accepted.")
             return
