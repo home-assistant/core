@@ -10,6 +10,7 @@ import logging
 import aiohttp
 import async_timeout
 import voluptuous as vol
+from aiohttp.hdrs import AUTHORIZATION, ACCEPT
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -122,8 +123,8 @@ class TtnDataStorage(object):
         self._url = TTN_DATA_STORAGE_URL.format(
             app_id=app_id, endpoint='api/v2/query', device_id=device_id)
         self._headers = {
-            'Accept': CONTENT_TYPE_JSON,
-            'Authorization': 'key {}'.format(access_key),
+            ACCEPT: CONTENT_TYPE_JSON,
+            AUTHORIZATION: 'key {}'.format(access_key),
         }
 
     @asyncio.coroutine
