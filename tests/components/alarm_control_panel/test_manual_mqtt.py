@@ -275,7 +275,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         state = self.hass.states.get(entity_id)
-        assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_NIGHT
+        assert state.attributes['post_pending_state'] == \
+            STATE_ALARM_ARMED_NIGHT
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
