@@ -63,6 +63,7 @@ class CanarySensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
+        from canary.api import SensorType
         if self._sensor_type == SensorType.TEMPERATURE:
             return self._temperature_scale
         elif self._sensor_type == SensorType.HUMIDITY:
