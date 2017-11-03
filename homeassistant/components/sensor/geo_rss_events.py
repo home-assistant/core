@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_RADIUS, CONF_URL)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
@@ -31,6 +31,7 @@ ATTR_CATEGORY = 'category'
 ATTR_DATE_PUBLISHED = 'date_published'
 ATTR_DATE_UPDATED = 'date_updated'
 ATTR_DISTANCE = 'distance'
+ATTR_ID = 'id'
 ATTR_TITLE = 'title'
 VALID_SORT_BY = [ATTR_DATE_PUBLISHED, ATTR_DATE_UPDATED, ATTR_DISTANCE,
                  ATTR_TITLE]
@@ -43,6 +44,7 @@ CONF_CUSTOM_ATTRIBUTES_SOURCE = 'source'
 CONF_CUSTOM_FILTERS = 'custom_filters'
 CONF_CUSTOM_FILTERS_ATTRIBUTE = 'attribute'
 CONF_CUSTOM_FILTERS_REGEXP = 'regexp'
+CONF_PUBLISH_EVENTS = 'publish_events'
 CONF_SORT_BY = 'sort_by'
 CONF_SORT_REVERSE = 'sort_reverse'
 
@@ -85,6 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CUSTOM_FILTERS,
                  default=[]): vol.All(cv.ensure_list,
                                       [CUSTOM_FILTERS_SCHEMA]),
+    vol.Optional(CONF_PUBLISH_EVENTS, default=False): cv.boolean,
 })
 
 
@@ -101,6 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sort_reverse = config.get(CONF_SORT_REVERSE)
     custom_attributes_definition = config.get(CONF_CUSTOM_ATTRIBUTES)
     custom_filters_definition = config.get(CONF_CUSTOM_FILTERS)
+    publish_events = config.get(CONF_PUBLISH_EVENTS)
 
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
                   home_latitude, home_longitude, url, radius_in_km)
@@ -114,14 +118,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Create all sensors based on categories.
     devices = []
     if not categories:
-        device = GeoRssServiceSensor(None, data, name, unit_of_measurement,
-                                     sort_by, sort_reverse)
+        device = GeoRssServiceSensor(hass, None, data, name,
+                                     unit_of_measurement, sort_by,
+                                     sort_reverse, publish_events)
         devices.append(device)
     else:
         for category in categories:
-            device = GeoRssServiceSensor(category, data, name,
+            device = GeoRssServiceSensor(hass, category, data, name,
                                          unit_of_measurement, sort_by,
-                                         sort_reverse)
+                                         sort_reverse, publish_events)
             devices.append(device)
     add_devices(devices, True)
 
@@ -140,9 +145,10 @@ class MinType(object):
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, category, data, service_name, unit_of_measurement,
-                 sort_by, sort_reverse):
+    def __init__(self, hass, category, data, service_name, unit_of_measurement,
+                 sort_by, sort_reverse, publish_events):
         """Initialize the sensor."""
+        self.hass = hass
         self._category = category
         self._data = data
         self._service_name = service_name
@@ -151,6 +157,9 @@ class GeoRssServiceSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._sort_by = sort_by
         self._sort_reverse = sort_reverse
+        self._publish_events = publish_events
+        self._event_type_id = generate_entity_id('{}', service_name, hass=hass)
+        self._previous_events = []
 
     @property
     def name(self):
@@ -213,6 +222,44 @@ class GeoRssServiceSensor(Entity):
                 matrix[event[ATTR_TITLE]] = '{:.0f}km'.format(
                     event[ATTR_DISTANCE])
             self._state_attributes = matrix
+            # Finally publish new events to the bus.
+            if self._publish_events:
+                events_to_publish = self.filter_events_to_publish(my_events)
+                _LOGGER.debug("New events to publish: %s", events_to_publish)
+                self.publish_events(events_to_publish)
+            self._previous_events = my_events
+
+    def filter_events_to_publish(self, events):
+        """Publish new or updated events, or all if this is the first call."""
+        if not self._previous_events:
+            # Publish all events.
+            return events
+        else:
+            # Find new or changed events
+            new_events = []
+            for event in events:
+                include_event = True
+                for previous_event in self._previous_events:
+                    if event[ATTR_ID] == previous_event[ATTR_ID]:
+                        # Check the update date.
+                        if hasattr(event, ATTR_DATE_UPDATED):
+                            if hasattr(previous_event,
+                                       ATTR_DATE_UPDATED):
+                                if event[ATTR_DATE_UPDATED] <= \
+                                        previous_event[ATTR_DATE_UPDATED]:
+                                    # Event has not been updated.
+                                    include_event = False
+                        else:
+                            # Event with same id but not updated found.
+                            include_event = False
+                if include_event:
+                    new_events.append(event)
+            return new_events
+
+    def publish_events(self, events):
+        """Publish the provided events as HA events to the bus."""
+        for event in events:
+            self.hass.bus.fire(self._event_type_id, event)
 
 
 class GeoRssServiceData(object):
@@ -273,7 +320,8 @@ class GeoRssServiceData(object):
                 'published_parsed') else entry.published_parsed,
             ATTR_DATE_UPDATED: None if not hasattr(
                 entry, 'updated_parsed') else entry.updated_parsed,
-            ATTR_DISTANCE: distance
+            ATTR_DISTANCE: distance,
+            ATTR_ID: None if not hasattr(entry, 'id') else entry.id
         }
         # Compute custom attributes.
         for definition in self._custom_attributes_definition:
