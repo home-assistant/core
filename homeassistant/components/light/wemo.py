@@ -9,12 +9,15 @@ from datetime import timedelta
 
 import homeassistant.util as util
 import homeassistant.util.color as color_util
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.util import convert
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
     ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
+from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
 
@@ -159,6 +162,20 @@ class WemoDimmer(Light):
         # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
 
+        wemo = get_component('wemo')
+        wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
+        wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
+
+    def _update_callback(self, _device, _type, _params):
+        """Update the state by the Wemo device."""
+        _LOGGER.info("Subscription update for  %s", _device)
+        updated = self.wemo.subscription_update(_type, _params)
+        self._update(force_update=(not updated))
+
+        if not hasattr(self, 'hass'):
+            return
+        self.schedule_update_ha_state()
+
     @property
     def unique_id(self):
         """Return the ID of this WeMo dimmer."""
@@ -184,7 +201,27 @@ class WemoDimmer(Light):
     def is_on(self):
         """Return true if dimmer is on. Standby is on."""
         return self._state
-        
+
+    def update(self):
+        """Update WeMo state."""
+        self._update(force_update=True)
+
+    def _update(self, force_update=True):
+        """Update the device state."""
+        try:
+            self._state = self.wemo.get_state(force_update)
+            if self._model_name == 'Insight':
+                self.insight_params = self.wemo.insight_params
+                self.insight_params['standby_state'] = (
+                    self.wemo.get_standby_state)
+            elif self._model_name == 'Maker':
+                self.maker_params = self.wemo.maker_params
+            elif self._model_name == 'CoffeeMaker':
+                self.coffeemaker_mode = self.wemo.mode
+        except AttributeError as err:
+            _LOGGER.warning("Could not update status for %s (%s)",
+                            self.name, err)
+
     def turn_on(self, **kwargs):
         """Turn the dimmer on."""
         self._state = WEMO_ON
