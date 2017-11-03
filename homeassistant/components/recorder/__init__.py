@@ -274,7 +274,7 @@ class Recorder(threading.Thread):
                     event = session.query(Events).first()
                     if event is not None:
                         session.expunge(event)
-                        run = dt_util.UTC.localize(event.time_fired) + \
+                        run = dt_util.as_utc(event.time_fired) + \
                             timedelta(days=self.keep_days+self.purge_interval)
                 run = min(latest, max(run, earliest))
                 self.hass.helpers.event.async_track_point_in_time(
