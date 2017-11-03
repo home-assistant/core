@@ -85,6 +85,8 @@ def test_update_alarm_device(hass, aioclient_mock, monkeypatch,
     msg = {"sia_code": sia_code, "sia_address": "1",
            "description": "House¦Sam¦1"}
     yield from spc._async_process_message(msg, hass.data[spc.DATA_REGISTRY])
+    yield from hass.async_block_till_done()
+
     assert hass.states.get(entity_id).state == state
     assert hass.states.is_state_attr(entity_id, 'changed_by', 'Sam')
 
