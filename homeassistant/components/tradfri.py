@@ -57,7 +57,7 @@ def request_configuration(hass, config, host, hostname):
         """Handle the submitted configuration."""
         try:
             from pytradfri.api.aiocoap_api import APIFactory
-        except ImportError:
+        except RequestError:
             _LOGGER.exception("Looks like something isn't installed!")
             return
 
@@ -72,10 +72,11 @@ def request_configuration(hass, config, host, hostname):
         # pytradfri aiocoap API into an entless loop.
         # posibly because of non standard response from gateway
         # but there's no clear Error/Exception being raised.
+        # the only thing that shows up in the logs is an OSError
         try:
             token = yield from api_factory.generate_psk(
                                             callback_data.get('key'))
-        except UnknownError:
+        except ConnctionError:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Security Code not accepted.")
             return
