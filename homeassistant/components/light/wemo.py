@@ -1,11 +1,9 @@
 """
-Support for Belkin WeMo Dimmers / Lights.
+Support for Belkin WeMo lights.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.wemo/
 """
-
-##THIS IS NON-Functional. Only discovers the light at this time, cannot control it!
 import logging
 from datetime import timedelta
 
@@ -42,8 +40,113 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         mac = discovery_info['mac_address']
         device = discovery.device_from_description(location, mac)
 
-        if device:
+        if device.model_name == 'Dimmer':
             add_devices_callback([WemoDimmer(device)])
+        else:		
+            setup_bridge(device, add_devices)
+
+def setup_bridge(bridge, add_devices):
+    """Set up a WeMo link."""
+    lights = {}
+
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
+    def update_lights():
+        """Update the WeMo led objects with latest info from the bridge."""
+        bridge.bridge_update()
+
+        new_lights = []
+
+        for light_id, device in bridge.Lights.items():
+            if light_id not in lights:
+                lights[light_id] = WemoLight(device, update_lights)
+                new_lights.append(lights[light_id])
+
+        if new_lights:
+            add_devices(new_lights)
+
+    update_lights()
+
+
+class WemoLight(Light):
+    """Representation of a WeMo light."""
+
+    def __init__(self, device, update_lights):
+        """Initialize the WeMo light."""
+        self.light_id = device.name
+        self.device = device
+        self.update_lights = update_lights
+
+    @property
+    def unique_id(self):
+        """Return the ID of this light."""
+        deviceid = self.device.uniqueID
+        return '{}.{}'.format(self.__class__, deviceid)
+
+    @property
+    def name(self):
+        """Return the name of the light."""
+        return self.device.name
+
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return self.device.state.get('level', 255)
+
+    @property
+    def xy_color(self):
+        """Return the XY color values of this light."""
+        return self.device.state.get('color_xy')
+
+    @property
+    def color_temp(self):
+        """Return the color temperature of this light in mireds."""
+        return self.device.state.get('temperature_mireds')
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self.device.state['onoff'] != 0
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_WEMO
+
+    def turn_on(self, **kwargs):
+        """Turn the light on."""
+        transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
+
+        if ATTR_XY_COLOR in kwargs:
+            xycolor = kwargs[ATTR_XY_COLOR]
+        elif ATTR_RGB_COLOR in kwargs:
+            xycolor = color_util.color_RGB_to_xy(
+                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+            kwargs.setdefault(ATTR_BRIGHTNESS, xycolor[2])
+        else:
+            xycolor = None
+
+        if xycolor is not None:
+            self.device.set_color(xycolor, transition=transitiontime)
+
+        if ATTR_COLOR_TEMP in kwargs:
+            colortemp = kwargs[ATTR_COLOR_TEMP]
+            self.device.set_temperature(mireds=colortemp,
+                                        transition=transitiontime)
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+            self.device.turn_on(level=brightness, transition=transitiontime)
+        else:
+            self.device.turn_on(transition=transitiontime)
+
+    def turn_off(self, **kwargs):
+        """Turn the light off."""
+        transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
+        self.device.turn_off(transition=transitiontime)
+
+    def update(self):
+        """Synchronize state with bridge."""
+        self.update_lights(no_throttle=True)
 
 class WemoDimmer(Light):
     """Representation of a WeMo dimmer"""
