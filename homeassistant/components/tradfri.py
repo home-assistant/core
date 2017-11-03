@@ -115,20 +115,14 @@ def async_setup(hass, config):
                                                     allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass, config, host)
+            return True
 
     discovery.async_listen(hass, SERVICE_IKEA_TRADFRI, gateway_discovered)
 
-    if not host:
-        return True
+    if host:
+        yield from gateway_discovered(None, {'host': host})
 
-    if host and known_hosts.get(host):
-        return (yield from _setup_gateway(hass, config, host, 
-                                                        known_hosts[host]['identity'], 
-                                                        known_hosts[host]['token'],
-                                                        allow_tradfri_groups))
-    else:
-        hass.async_add_job(request_configuration, hass, config, host)
-        return True
+    return True
 
 
 @asyncio.coroutine
