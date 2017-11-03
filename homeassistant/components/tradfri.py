@@ -63,16 +63,16 @@ def request_configuration(hass, config, host):
             return
 
         # use an unique identity to pair with gateway on every config attempt
-        # using the same id would make it unable to pair with a 
+        # using the same id would make it unable to pair with a
         # new (or another) hass instance.
         identity = uuid.uuid4().hex
 
         try:
             api_factory = APIFactory(host, psk_id=identity)
             token = yield from api_factory.generate_psk(callback_data.get('key'))
-            res = yield from _setup_gateway(hass, config, host, 
+            res = yield from _setup_gateway(hass, config, host,
                                                           identity,
-                                                          token, 
+                                                          token,
                                                           DEFAULT_ALLOW_TRADFRI_GROUPS)
             if not res:
                 raise
