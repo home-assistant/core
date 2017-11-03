@@ -87,8 +87,9 @@ def test_update_alarm_device(hass, aioclient_mock, monkeypatch,
     yield from spc._async_process_message(msg, hass.data[spc.DATA_REGISTRY])
     yield from hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == state
-    assert hass.states.is_state_attr(entity_id, 'changed_by', 'Sam')
+    state_obj = hass.states.get(entity_id)
+    assert state_obj.state == state
+    assert state_obj.attributes['changed_by'] == 'Sam'
 
 
 @asyncio.coroutine
