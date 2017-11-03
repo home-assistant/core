@@ -58,12 +58,12 @@ def _discover(hass, config, component_name, found_tellcore_devices):
 def setup(hass, config):
     """Set up the Tellstick component."""
     from tellcore.constants import TELLSTICK_DIM
-    from tellcore.telldus import AsyncioCallbackDispatcher
+    from tellcore.telldus import QueuedCallbackDispatcher
     from tellcore.telldus import TelldusCore
 
     try:
         tellcore_lib = TelldusCore(
-            callback_dispatcher=AsyncioCallbackDispatcher(hass.loop))
+            callback_dispatcher=QueuedCallbackDispatcher())
     except OSError:
         _LOGGER.exception("Could not initialize Tellstick")
         return False
