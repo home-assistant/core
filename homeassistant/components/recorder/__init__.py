@@ -260,9 +260,6 @@ class Recorder(threading.Thread):
                                                 notify_hass_started)
 
             if self.keep_days and self.purge_interval:
-                async_track_point_in_time = \
-                    self.hass.helpers.event.async_track_point_in_time
-
                 @callback
                 def async_purge(now):
                     """Trigger the purge and schedule the next run."""
