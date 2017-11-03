@@ -11,7 +11,6 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from canary.api import Api
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, \
     TEMP_FAHRENHEIT, CONF_TIMEOUT
 from homeassistant.helpers import discovery
@@ -46,6 +45,7 @@ class CanaryData(object):
 
     def __init__(self, username, password, timeout):
         """Init the Canary data object."""
+        from canary.api import Api
         self._api = Api(username, password, timeout)
         self._api.login()
 

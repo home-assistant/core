@@ -4,7 +4,6 @@ Support for Canary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.canary/
 """
-from canary.api import SensorType
 from homeassistant.components.canary import DATA_CANARY
 from homeassistant.helpers.entity import Entity
 
@@ -18,6 +17,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = hass.data[DATA_CANARY]
     devices = []
 
+    from canary.api import SensorType
     for location in data.locations:
         for device in location.devices:
             if device.is_online:
