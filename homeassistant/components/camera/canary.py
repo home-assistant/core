@@ -15,6 +15,9 @@ DEPENDENCIES = ['canary']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_MOTION_START_TIME = "motion_start_time"
+ATTR_MOTION_END_TIME = "motion_end_time"
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Canary sensors."""
@@ -24,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for location in data.locations:
         entries = data.get_motion_entries(location.location_id)
         if len(entries) > 0:
-            devices.append(CanaryCamera(data, location))
+            devices.append(CanaryCamera(data, location.location_id))
 
     add_devices(devices, True)
 
@@ -32,27 +35,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CanaryCamera(Camera):
     """An implementation of a Canary security camera."""
 
-    def __init__(self, data, location):
+    def __init__(self, data, location_id):
         """Initialize a Canary security camera."""
         super().__init__()
         self._data = data
-        self._location = location
+        self._location_id = location_id
 
-        self._thumbnail = None
-        self._image_url = None
+        self._location = None
+        self._last_entry = None
         self._image_content = None
+        self._force_update = False
 
         self.update()
 
     def camera_image(self):
         """Return bytes of camera image."""
-        if self._thumbnail is None:
-            return None
-
-        if self._image_url != self._thumbnail.image_url:
-            self._image_url = self._thumbnail.image_url
-            self._image_content = requests.get(self._image_url).content
-
         return self._image_content
 
     @property
@@ -65,6 +62,27 @@ class CanaryCamera(Camera):
         """Return true if the device is recording."""
         return not self._location.is_private
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+
+        if self._last_entry is None:
+            return None
+
+        return {
+            ATTR_MOTION_START_TIME: self._last_entry.start_time,
+            ATTR_MOTION_END_TIME: self._last_entry.end_time,
+        }
+
+    @property
+    def force_update(self) -> bool:
+        """Return True if state updates should be forced."""
+        if self._force_update:
+            self._force_update = False
+            return True
+
+        return False
+
     def should_poll(self):
         """Update the recording state periodically."""
         return True
@@ -72,11 +90,17 @@ class CanaryCamera(Camera):
     def update(self):
         """Update the status of the camera."""
         self._data.update()
+        self._location = self._data.get_location(self._location_id)
 
-        entries = self._data.get_motion_entries(self._location.location_id)
-
+        entries = self._data.get_motion_entries(self._location_id)
         if len(entries) > 0:
-            self._thumbnail = entries[0].thumbnails[0]
+            current_entry = entries[0]
+
+            if self._last_entry is None or self._last_entry.entry_id != current_entry.entry_id:
+                thumbnail = current_entry.thumbnails[0]
+                self._image_content = requests.get(thumbnail.image_url).content
+                self._last_entry = current_entry
+                self._force_update = True
 
     @property
     def motion_detection_enabled(self):

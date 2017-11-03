@@ -47,15 +47,11 @@ class CanaryData(object):
         """Init the Canary data object."""
         self._api = Api(username, password, timeout)
         self._api.login()
-        self._locations = self._api.get_locations()
+
+        self._locations_by_id = {}
         self._devices_by_id = {}
         self._readings_by_device_id = {}
         self._motion_entries_by_location_id = {}
-
-        for location in self._locations:
-            for device in location.devices:
-                if device.is_online:
-                    self._devices_by_id[device.device_id] = device
 
         self.update()
 
@@ -64,19 +60,18 @@ class CanaryData(object):
         """Get the latest data from py-canary."""
         self._me = self._api.get_me()
 
-        for location in self.locations:
+        for location in self._api.get_locations():
+            self._locations_by_id[location.location_id] = location
             self._motion_entries_by_location_id[location.location_id] = self._api.get_entries(location.location_id)
 
-        readings_by_device_id = {}
-
-        for device in self.devices:
-            readings_by_device_id[device.device_id] = self._api.get_readings(device)
-
-        self._readings_by_device_id = readings_by_device_id
+            for device in location.devices:
+                if device.is_online:
+                    self._devices_by_id[device.device_id] = device
+                    self._readings_by_device_id[device.device_id] = self._api.get_readings(device)
 
     @property
     def locations(self):
-        return self._locations
+        return self._locations_by_id.values()
 
     @property
     def devices(self):
@@ -94,6 +89,12 @@ class CanaryData(object):
             return []
 
         return self._motion_entries_by_location_id[location_id]
+
+    def get_location(self, location_id):
+        if location_id not in self._locations_by_id:
+            return []
+
+        return self._locations_by_id[location_id]
 
     def get_readings(self, device_id):
         return self._readings_by_device_id[device_id]
@@ -124,6 +125,5 @@ def setup(hass, config):
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'alarm_control_panel', DOMAIN, {}, config)
 
     return True
