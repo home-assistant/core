@@ -99,18 +99,15 @@ class ArloSensor(Entity):
     def update(self):
         """Get the latest data and updates the state."""
         try:
-            # pylint: disable=W0212
-            base_stations = self._data._session.base_stations
+            base_station = self._data.base_station
         except (AttributeError, IndexError):
             return None
 
-        if not base_stations:
+        if not base_station:
             return None
 
-        # pylint: disable=W0212
-        base_stations[0]._refresh_rate = SCAN_INTERVAL.total_seconds()
+        base_station.refresh_rate = SCAN_INTERVAL.total_seconds()
 
-        base_stations[0].update()
         self._data.update()
 
         if self._sensor_type == 'total_cameras':
@@ -128,13 +125,13 @@ class ArloSensor(Entity):
 
         elif self._sensor_type == 'battery_level':
             try:
-                self._state = self._data.get_battery_level
+                self._state = self._data.battery_level
             except TypeError:
                 self._state = None
 
         elif self._sensor_type == 'signal_strength':
             try:
-                self._state = self._data.get_signal_strength
+                self._state = self._data.signal_strength
             except TypeError:
                 self._state = None
 

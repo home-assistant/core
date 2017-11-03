@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_UNKNOWN
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,9 +38,9 @@ CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 DEPENDENCIES = ['arlo', 'ffmpeg']
 
 POWERSAVE_MODE_MAPPING = {
-    '1': 'best_battery_life',
-    '2': 'optimized',
-    '3': 'best_video'
+    1: 'best_battery_life',
+    2: 'optimized',
+    3: 'best_video'
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -162,47 +162,37 @@ class ArloCam(Camera):
         self.set_base_station_mode(ARLO_MODE_DISARMED)
 
     @staticmethod
-    def clean_attr(attr):
-        """Return unknown if attribute is None (non-subscriptable)."""
-        return str(attr) if attr is not None else STATE_UNKNOWN
+    def set_defined_attr(self, attr_name, attr_value):
+        """Set attribute if attribute is not None (non-subscriptable)."""
+        if attr_value is not None:
+            self.attrs[attr_name] = str(attr_value)
 
     def update(self):
         """Add an attribute-update task to the executor pool."""
-        # pylint: disable=W0212
-        base_stations = self._camera._session.base_stations
+        base_station = self._camera.base_station
 
-        if not base_stations:
+        if not base_station:
             return None
 
-        # pylint: disable=W0212
-        base_stations[0]._refresh_rate = SCAN_INTERVAL.total_seconds()
+        base_station.refresh_rate = SCAN_INTERVAL.total_seconds()
 
-        base_stations[0].update()
         self._camera.update()
 
-        battery_level = self.clean_attr(self._camera.get_battery_level)
-        brightness = self.clean_attr(self._camera.get_brightness)
-        flip_state = self.clean_attr(self._camera.get_flip_state)
-        mirror_state = self.clean_attr(self._camera.get_mirror_state)
-        motion_sensitivity = self.clean_attr(
-            self._camera.get_motion_detection_sensitivity)
-        powersave_mode = self.clean_attr(self._camera.get_powersave_mode)
-        signal_strength = self.clean_attr(self._camera.get_signal_strength)
-        unseen_videos = self.clean_attr(self._camera.unseen_videos)
+        self.set_defined_attr(self, ATTR_BATTERY_LEVEL, self._camera.battery_level)
+        self.set_defined_attr(self, ATTR_BRIGHTNESS, self._camera.brightness)
+        self.set_defined_attr(self, ATTR_FLIPPED, self._camera.flip_state)
+        self.set_defined_attr(self, ATTR_MIRRORED, self._camera.mirror_state)
+        self.set_defined_attr(self, ATTR_MOTION,
+                              self._camera.motion_detection_sensitivity)
+        self.set_defined_attr(self, ATTR_SIGNAL_STRENGTH,
+                              self._camera.signal_strength)
+        self.set_defined_attr(self, ATTR_UNSEEN_VIDEOS, self._camera.unseen_videos)
 
-        self.attrs[ATTR_BATTERY_LEVEL] = battery_level
-        self.attrs[ATTR_BRIGHTNESS] = brightness
-        self.attrs[ATTR_FLIPPED] = flip_state
-        self.attrs[ATTR_MIRRORED] = mirror_state
-        self.attrs[ATTR_MOTION] = motion_sensitivity
-        self.attrs[ATTR_POWERSAVE] = POWERSAVE_MODE_MAPPING[
-            powersave_mode] if powersave_mode != STATE_UNKNOWN \
-            else STATE_UNKNOWN
-        self.attrs[ATTR_SIGNAL_STRENGTH] = signal_strength
-        self.attrs[ATTR_UNSEEN_VIDEOS] = unseen_videos
+        powersave_mode = self._camera.powersave_mode
+        if powersave_mode:
+            self.attrs[ATTR_POWERSAVE] = POWERSAVE_MODE_MAPPING[powersave_mode]
 
-        # pylint: disable=W0212
-        self.attrs[ATTR_LAST_REFRESH] = datetime.fromtimestamp(
-            base_stations[0]._last_refresh).strftime(
-                "%A, %B %d, %Y %I:%M:%S") if base_stations[0]._last_refresh \
-            else STATE_UNKNOWN
+        last_refresh = base_station.last_refresh
+        if last_refresh:
+            self.attrs[ATTR_LAST_REFRESH] = datetime.fromtimestamp(
+                last_refresh).strftime("%A, %B %d, %Y %I:%M:%S")
