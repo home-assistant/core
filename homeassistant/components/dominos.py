@@ -4,6 +4,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from pizzapi import Customer, Address, Order
 import jsonpickle
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +43,10 @@ def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
     dominos = Dominos(hass, config)
 
+    hass.data[DOMAIN] = []
+
     if config[DOMAIN].get(ATTR_DUMP_MENU):
-        hass.states.set('dominos.closest_menu', jsonpickle.encode(dominos.store.get_menu()))
+        dominos.create_product_entities(hass)
 
     for order in config[DOMAIN].get(ATTR_ORDERS):
         # _LOGGER.INFO('Creating Order')
@@ -79,3 +82,26 @@ class Dominos():
         order.place()
 
         _LOGGER.warning('here')
+
+    def create_product_entities(self, hass):
+        menu = self.store.get_menu()
+        for product in menu.products:
+            _LOGGER.warning('name: ' + product.name + ' variants: ' + ''.join(product.menu_data['Variants']))
+
+        _LOGGER.warning('here')
+
+
+
+class DominosProduct(Entity):
+
+    def __init__(self, menu_item):
+        self._name = menu_item.name
+        self._variants = menu_item.menu_data['Variants']
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def variants(self):
+        return self._variants
