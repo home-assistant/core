@@ -175,9 +175,9 @@ class WemoDimmer(Light):
         return SUPPORT_WEMO
 
     @property
-    def brightness(self):
+    def get_brightness(self):
         """Return the brightness of this light between 1 and 100"""
-        brightness = self.get_brighness
+        brightness = int(self.get_brightness * 255 / 100)
         return brightness
 
     @property
@@ -188,6 +188,7 @@ class WemoDimmer(Light):
     def turn_on(self, **kwargs):
         """Turn the dimmer on."""
         self._state = WEMO_ON
+        self.wemo.on()
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
         
         # Wemo dimmer switches use a range of [0, 99] to control
