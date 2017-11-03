@@ -1,3 +1,9 @@
+"""Platform integrating Deconz binary sensor support.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor/deconz/
+"""
+
 import asyncio
 import logging
 
@@ -12,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """
-    """
+    """Setup binary sensor platform for Deconz."""
     if DATA_DECONZ in hass.data:
         sensors = hass.data[DATA_DECONZ].sensors
 
@@ -23,9 +28,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class DeconzBinarySensor(BinarySensorDevice):
-    """Representation of an device."""
+    """Representation of a binary sensor."""
 
     def __init__(self, sensor_id, sensor):
+        """Setup sensor and add update callback to get data from websocket."""
         self._state = None
         self.sensor_id = sensor_id
         self.sensor = sensor
@@ -51,9 +57,10 @@ class DeconzBinarySensor(BinarySensorDevice):
     def should_poll(self):
         """No polling needed."""
         return False
-    
+
     @property
     def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
         return {
             'reachable': self.sensor.reachable,
             'battery': self.sensor.battery,

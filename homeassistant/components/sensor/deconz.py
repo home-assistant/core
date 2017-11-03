@@ -1,3 +1,9 @@
+"""Platform integrating Deconz sensor support.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sensor/deconz/
+"""
+
 import asyncio
 import logging
 
@@ -12,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """
-    """
+    """Setup sensor platform for Deconz."""
     if DATA_DECONZ in hass.data:
         sensors = hass.data[DATA_DECONZ].sensors
 
@@ -23,9 +28,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class DeconzSensor(Entity):
-    """Representation of an device."""
+    """Representation of a sensor."""
 
     def __init__(self, sensor_id, sensor):
+        """Setup sensor and add update callback to get data from websocket."""
         self._state = sensor.state
         self.sensor_id = sensor_id
         self.sensor = sensor
@@ -54,6 +60,7 @@ class DeconzSensor(Entity):
 
     @property
     def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
         return {
             'reachable': self.sensor.reachable,
             'battery': self.sensor.battery,
