@@ -52,10 +52,12 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        self.ha_state_fired()
         self.wink.set_state(True)
 
     def turn_off(self):
         """Turn the device off."""
+        self.ha_state_fired()
         self.wink.set_state(False)
 
     @property

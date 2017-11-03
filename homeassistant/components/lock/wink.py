@@ -148,26 +148,32 @@ class WinkLockDevice(WinkDevice, LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
+        self.ha_state_fired()
         self.wink.set_state(True)
 
     def unlock(self, **kwargs):
         """Unlock the device."""
+        self.ha_state_fired()
         self.wink.set_state(False)
 
     def set_alarm_state(self, enabled):
         """Set lock's alarm state."""
+        self.ha_state_fired()
         self.wink.set_alarm_state(enabled)
 
     def set_vacation_mode(self, enabled):
         """Set lock's vacation mode."""
+        self.ha_state_fired()
         self.wink.set_vacation_mode(enabled)
 
     def set_beeper_state(self, enabled):
         """Set lock's beeper mode."""
+        self.ha_state_fired()
         self.wink.set_beeper_mode(enabled)
 
     def add_new_key(self, code, name):
         """Add a new user key code."""
+        self.ha_state_fired()
         self.wink.add_new_key(code, name)
 
     def set_alarm_sensitivity(self, sensitivity):
@@ -177,6 +183,7 @@ class WinkLockDevice(WinkDevice, LockDevice):
         Valid sensitivities:
             0.2, 0.4, 0.6, 0.8, 1.0
         """
+        self.ha_state_fired()
         self.wink.set_alarm_sensitivity(sensitivity)
 
     def set_alarm_mode(self, mode):
@@ -189,6 +196,7 @@ class WinkLockDevice(WinkDevice, LockDevice):
             forced_entry - 3 min alarm when significant force applied
                            to door when locked.
         """
+        self.ha_state_fired()
         self.wink.set_alarm_mode(mode)
 
     @property

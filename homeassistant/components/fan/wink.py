@@ -43,18 +43,22 @@ class WinkFanDevice(WinkDevice, FanEntity):
 
     def set_direction(self: ToggleEntity, direction: str) -> None:
         """Set the direction of the fan."""
+        self.ha_state_fired()
         self.wink.set_fan_direction(direction)
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
+        self.ha_state_fired()
         self.wink.set_state(True, speed)
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
+        self.ha_state_fired()
         self.wink.set_state(True, speed)
 
     def turn_off(self: ToggleEntity, **kwargs) -> None:
         """Turn off the fan."""
+        self.ha_state_fired()
         self.wink.set_state(False)
 
     @property

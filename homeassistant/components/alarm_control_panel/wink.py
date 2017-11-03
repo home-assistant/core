@@ -60,19 +60,22 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
+        self.ha_state_fired()
         self.wink.set_mode("home")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
+        self.ha_state_fired()
         self.wink.set_mode("night")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
+        self.ha_state_fired()
         self.wink.set_mode("away")
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            'private': self.wink.private()
-        }
+        attributes = super().device_state_attributes
+        attributes['private'] = self.wink.private()
+        return attributes

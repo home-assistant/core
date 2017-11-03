@@ -9,7 +9,7 @@ import logging
 import time
 import json
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -610,6 +610,9 @@ class WinkDevice(Entity):
         """Initialize the Wink device."""
         self.hass = hass
         self.wink = wink
+        current_time = datetime.now()
+        self.external_change = False
+        self.last_ha_change = current_time
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
         hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() +
@@ -624,6 +627,10 @@ class WinkDevice(Entity):
             else:
                 self.wink.pubnub_update(message)
                 self.schedule_update_ha_state()
+                current_time = datetime.now()
+                difference = current_time - self.last_ha_change
+                if difference.total_seconds() > 15:
+                    self.external_change = True
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error("Error in pubnub JSON for %s "
                           "polling API for current state", self.name)
@@ -642,6 +649,11 @@ class WinkDevice(Entity):
     def update(self):
         """Update state of the device."""
         self.wink.update_state()
+
+    def ha_state_fired(self):
+        """Used to document when HA issues a Wink state change."""
+        self.external_change = False
+        self.last_ha_change = datetime.now()
 
     @property
     def should_poll(self):
@@ -670,6 +682,7 @@ class WinkDevice(Entity):
         tamper = self._tamper
         if tamper is not None:
             attributes["tamper_detected"] = tamper
+        attributes["external_change"] = self.external_change
         return attributes
 
     @property
