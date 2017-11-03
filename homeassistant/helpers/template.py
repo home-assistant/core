@@ -107,7 +107,8 @@ class Template(object):
 
         This method must be run in the event loop.
         """
-        self._ensure_compiled()
+        if self._compiled is None:
+            self._ensure_compiled()
 
         if variables is not None:
             kwargs.update(variables)
@@ -135,7 +136,8 @@ class Template(object):
 
         This method must be run in the event loop.
         """
-        self._ensure_compiled()
+        if self._compiled is None:
+            self._ensure_compiled()
 
         variables = {
             'value': value
@@ -154,20 +156,17 @@ class Template(object):
 
     def _ensure_compiled(self):
         """Bind a template to a specific hass instance."""
-        if self._compiled is not None:
-            return
-
         self.ensure_valid()
 
         assert self.hass is not None, 'hass variable not set on template'
 
-        location_methods = LocationMethods(self.hass)
+        template_methods = TemplateMethods(self.hass)
 
         global_vars = ENV.make_globals({
-            'closest': location_methods.closest,
-            'distance': location_methods.distance,
+            'closest': template_methods.closest,
+            'distance': template_methods.distance,
             'is_state': self.hass.states.is_state,
-            'is_state_attr': self.hass.states.is_state_attr,
+            'is_state_attr': template_methods.is_state_attr,
             'states': AllStates(self.hass),
         })
 
@@ -272,11 +271,11 @@ def _wrap_state(state):
     return None if state is None else TemplateState(state)
 
 
-class LocationMethods(object):
-    """Class to expose distance helpers to templates."""
+class TemplateMethods(object):
+    """Class to expose helpers to templates."""
 
     def __init__(self, hass):
-        """Initialize the distance helpers."""
+        """Initialize the helpers."""
         self._hass = hass
 
     def closest(self, *args):
@@ -389,6 +388,12 @@ class LocationMethods(object):
 
         return self._hass.config.units.length(
             loc_util.distance(*locations[0] + locations[1]), 'm')
+
+    def is_state_attr(self, entity_id, name, value):
+        """Test if a state is a specific attribute."""
+        state_obj = self._hass.states.get(entity_id)
+        return state_obj is not None and \
+            state_obj.attributes.get(name) == value
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""
