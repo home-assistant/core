@@ -69,11 +69,11 @@ def request_configuration(hass, config, host):
 
         try:
             api_factory = APIFactory(host, psk_id=identity)
-            token = yield from api_factory.generate_psk(callback_data.get('key'))
+            token = yield from api_factory.generate_psk(
+                                            callback_data.get('key'))
             res = yield from _setup_gateway(hass, config, host,
-                                                          identity,
-                                                          token,
-                                                          DEFAULT_ALLOW_TRADFRI_GROUPS)
+                                            identity, token,
+                                            DEFAULT_ALLOW_TRADFRI_GROUPS)
             if not res:
                 raise
         except:
@@ -96,7 +96,7 @@ def request_configuration(hass, config, host):
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",
         fields=[{'id': 'key', 'name': 'Security Code'}]
-    )
+        )
 
 
 @asyncio.coroutine
@@ -114,9 +114,9 @@ def async_setup(hass, config):
 
         if host in known_hosts:
             yield from _setup_gateway(hass, config, host,
-                                                    known_hosts[host]['identity'],
-                                                    known_hosts[host]['token'],
-                                                    allow_tradfri_groups)
+                                        known_hosts[host]['identity'],
+                                        known_hosts[host]['token'],
+                                        allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass, config, host)
             return True
@@ -130,7 +130,8 @@ def async_setup(hass, config):
 
 
 @asyncio.coroutine
-def _setup_gateway(hass, hass_config, host, identity, token, allow_tradfri_groups):
+def _setup_gateway(hass, hass_config, host,
+                    identity, token, allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import Gateway, RequestError
     try:
