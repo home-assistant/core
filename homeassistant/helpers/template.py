@@ -107,7 +107,7 @@ class Template(object):
 
         This method must be run in the event loop.
         """
-        if self._compiled is not None:
+        if self._compiled is None:
             self._ensure_compiled()
 
         if variables is not None:
@@ -136,7 +136,7 @@ class Template(object):
 
         This method must be run in the event loop.
         """
-        if self._compiled is not None:
+        if self._compiled is None:
             self._ensure_compiled()
 
         variables = {
@@ -391,7 +391,7 @@ class TemplateMethods(object):
 
     def is_state_attr(self, entity_id, name, value):
         """Test if a state is a specific attribute."""
-        state_obj = self.hass.states.get(entity_id)
+        state_obj = self._hass.states.get(entity_id)
         return state_obj is not None and \
             state_obj.attributes.get(name, None) == value
 
