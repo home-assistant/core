@@ -5,10 +5,11 @@ import voluptuous as vol
 from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONF_PASSWORD,
                                  CONF_PORT, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-# REQUIREMENTS = ['deconz==xx']
+REQUIREMENTS = ['pydeconz==1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +35,13 @@ def async_setup(hass, config):
     """
     deconz_config = config[DOMAIN]
 
+    @callback
+    def _shutdown(call):  # pylint: disable=unused-argument
+        """Stop the event stream on shutdown."""
+        if DECONZ:
+            DECONZ.stop()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+
     @asyncio.coroutine
     def generate_api_key(call):
         """
@@ -57,7 +65,7 @@ def async_setup(hass, config):
 def _setup_deconz(hass, config, deconz_config):
     """
     """
-    from .deconz_lib import DeconzSession
+    from pydeconz import DeconzSession
     DECONZ = DeconzSession(hass.loop, **deconz_config)
     hass.data[DATA_DECONZ] = DECONZ
     result = yield from DECONZ.populate_config()
@@ -78,9 +86,4 @@ def _setup_deconz(hass, config, deconz_config):
                                                      DOMAIN,
                                                      {},
                                                      config))
-
-    @asyncio.coroutine
-    def listen_events():
-        while True:
-            yield from DECONZ.get_event_async()
-    hass.loop.create_task(listen_events())
+    DECONZ.start()
