@@ -16,7 +16,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['py-canary==0.1.0']
+REQUIREMENTS = ['py-canary==0.1.2']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
