@@ -62,7 +62,7 @@ class CloudIoT:
             self.client = client = yield from session.ws_connect(
                 self.cloud.relayer, headers={
                     hdrs.AUTHORIZATION:
-                        'Bearer {}'.format(self.cloud.access_token)
+                        'Bearer {}'.format(self.cloud.id_token)
                 })
             self.tries = 0
 
