@@ -161,7 +161,6 @@ class ArloCam(Camera):
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
 
-    @staticmethod
     def set_defined_attr(self, attr_name, attr_value):
         """Set attribute if attribute is not None (non-subscriptable)."""
         if attr_value is not None:
@@ -178,19 +177,19 @@ class ArloCam(Camera):
 
         self._camera.update()
 
-        self.set_defined_attr(self, ATTR_BATTERY_LEVEL,
+        self.set_defined_attr(ATTR_BATTERY_LEVEL,
                               self._camera.battery_level)
-        self.set_defined_attr(self, ATTR_BRIGHTNESS,
+        self.set_defined_attr(ATTR_BRIGHTNESS,
                               self._camera.brightness)
-        self.set_defined_attr(self, ATTR_FLIPPED,
+        self.set_defined_attr(ATTR_FLIPPED,
                               self._camera.flip_state)
-        self.set_defined_attr(self, ATTR_MIRRORED,
+        self.set_defined_attr(ATTR_MIRRORED,
                               self._camera.mirror_state)
-        self.set_defined_attr(self, ATTR_MOTION,
+        self.set_defined_attr(ATTR_MOTION,
                               self._camera.motion_detection_sensitivity)
-        self.set_defined_attr(self, ATTR_SIGNAL_STRENGTH,
+        self.set_defined_attr(ATTR_SIGNAL_STRENGTH,
                               self._camera.signal_strength)
-        self.set_defined_attr(self, ATTR_UNSEEN_VIDEOS,
+        self.set_defined_attr(ATTR_UNSEEN_VIDEOS,
                               self._camera.unseen_videos)
 
         powersave_mode = self._camera.powersave_mode
