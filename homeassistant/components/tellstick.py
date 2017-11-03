@@ -10,16 +10,18 @@ import threading
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tellcore-py==1.1.2']
+REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DISCOVER_CONFIG = 'config'
 ATTR_DISCOVER_DEVICES = 'devices'
-ATTR_SIGNAL_REPETITIONS = 'signal_repetitions'
+CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 DOMAIN = 'tellstick'
@@ -34,7 +36,9 @@ TELLCORE_REGISTRY = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(ATTR_SIGNAL_REPETITIONS,
+        vol.Inclusive(CONF_HOST, 'tellcore-net'): cv.string,
+        vol.Inclusive(CONF_PORT, 'tellcore-net'): cv.port,
+        vol.Optional(CONF_SIGNAL_REPETITIONS,
                      default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -48,7 +52,7 @@ def _discover(hass, config, component_name, found_tellcore_devices):
     _LOGGER.info("Discovered %d new %s devices", len(found_tellcore_devices),
                  component_name)
 
-    signal_repetitions = config[DOMAIN].get(ATTR_SIGNAL_REPETITIONS)
+    signal_repetitions = config[DOMAIN].get(CONF_SIGNAL_REPETITIONS)
 
     discovery.load_platform(hass, component_name, DOMAIN, {
         ATTR_DISCOVER_DEVICES: found_tellcore_devices,
@@ -58,12 +62,28 @@ def _discover(hass, config, component_name, found_tellcore_devices):
 def setup(hass, config):
     """Set up the Tellstick component."""
     from tellcore.constants import TELLSTICK_DIM
-    from tellcore.telldus import AsyncioCallbackDispatcher
+    from tellcore.telldus import QueuedCallbackDispatcher
     from tellcore.telldus import TelldusCore
+    from tellcorenet import TellCoreClient
+
+    conf = config.get(DOMAIN, {})
+    net_host = conf.get(CONF_HOST)
+    net_port = conf.get(CONF_PORT)
+
+    # Initialize remote tellcore client
+    if net_host and net_port:
+        net_client = TellCoreClient(net_host, net_port)
+        net_client.start()
+
+        def stop_tellcore_net(event):
+            """Event handler to stop the client."""
+            net_client.stop()
+
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_tellcore_net)
 
     try:
         tellcore_lib = TelldusCore(
-            callback_dispatcher=AsyncioCallbackDispatcher(hass.loop))
+            callback_dispatcher=QueuedCallbackDispatcher())
     except OSError:
         _LOGGER.exception("Could not initialize Tellstick")
         return False
