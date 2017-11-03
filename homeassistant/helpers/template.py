@@ -393,7 +393,7 @@ class TemplateMethods(object):
         """Test if a state is a specific attribute."""
         state_obj = self._hass.states.get(entity_id)
         return state_obj is not None and \
-            state_obj.attributes.get(name, None) == value
+            state_obj.attributes.get(name) == value
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""
