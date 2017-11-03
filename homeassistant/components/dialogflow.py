@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import PROJECT_NAME, HTTP_BAD_REQUEST
+from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers import intent, template
 from homeassistant.components.http import HomeAssistantView
 
@@ -25,6 +25,8 @@ DEPENDENCIES = ['http']
 DOMAIN = 'dialogflow'
 
 INTENTS_API_ENDPOINT = '/api/dialogflow'
+
+SOURCE = "Home Assistant Dialogflow"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {}
@@ -128,5 +130,5 @@ class DialogflowResponse(object):
         return {
             'speech': self.speech,
             'displayText': self.speech,
-            'source': PROJECT_NAME,
+            'source': SOURCE,
         }
