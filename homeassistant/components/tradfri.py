@@ -75,7 +75,7 @@ def request_configuration(hass, config, host, hostname):
         try:
             token = yield from api_factory.generate_psk(
                                             callback_data.get('key'))
-        except CancelledError():
+        except UnknownError:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Security Code not accepted.")
             return
