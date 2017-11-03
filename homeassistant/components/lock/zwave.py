@@ -78,13 +78,24 @@ TAMPER_ALARM_LEVEL = {
     '2': 'Cover removed'
 }
 
-LOCK_STATUS = {
+LOCK_STATE_NOTIFICATION = {
     '1': True,
     '2': False,
     '3': True,
     '4': False,
     '5': True,
     '6': False,
+    '9': False,
+    '18': True,
+    '19': False,
+    '21': True,
+    '22': False,
+    '24': True,
+    '25': False,
+    '27': True
+}
+
+LOCK_STATE_ALARM_TYPE = {
     '9': False,
     '18': True,
     '19': False,
@@ -228,21 +239,29 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         _LOGGER.debug("Lock state set from Bool value and is %s", self._state)
         if self.values.access_control:
             notification_data = self.values.access_control.data
-            self._notification = LOCK_NOTIFICATION.get(str(notification_data))
+            self._notification = LOCK_NOTIFICATION.get(
+                str(notification_data))
 
             if self._v2btze:
                 if self.values.v2btze_advanced and \
                         self.values.v2btze_advanced.data == CONFIG_ADVANCED:
-                    self._state = LOCK_STATUS.get(str(notification_data))
+                    self._state = LOCK_STATE_NOTIFICATION.get(
+                        str(notification_data))
                     _LOGGER.debug(
                         "Lock state set from Access Control value and is %s, "
-                        "get=%s", str(notification_data), self.state)
+                        "state=%s", str(notification_data), self._state)
 
         if not self.values.alarm_type:
             return
 
         alarm_type = self.values.alarm_type.data
         _LOGGER.debug("Lock alarm_type is %s", str(alarm_type))
+
+        if alarm_type and alarm_type in LOCK_STATE_ALARM_TYPE:
+            self._state = LOCK_STATE_ALARM_TYPE.get(str(alarm_type))
+            _LOGGER.debug("Lock state set from Alarm Type and is %s, "
+                          "state=%s", str(alarm_type), self._state)
+
         if self.values.alarm_level:
             alarm_level = self.values.alarm_level.data
         else:
