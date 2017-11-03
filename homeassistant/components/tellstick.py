@@ -65,7 +65,7 @@ def setup(hass, config):
     from tellcore.telldus import QueuedCallbackDispatcher
     from tellcore.telldus import TelldusCore
     from tellcorenet import TellCoreClient
-    
+
     conf = config.get(DOMAIN, {})
     net_host = conf.get(CONF_HOST)
     net_port = conf.get(CONF_PORT)
