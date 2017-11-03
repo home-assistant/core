@@ -178,15 +178,20 @@ class ArloCam(Camera):
 
         self._camera.update()
 
-        self.set_defined_attr(self, ATTR_BATTERY_LEVEL, self._camera.battery_level)
-        self.set_defined_attr(self, ATTR_BRIGHTNESS, self._camera.brightness)
-        self.set_defined_attr(self, ATTR_FLIPPED, self._camera.flip_state)
-        self.set_defined_attr(self, ATTR_MIRRORED, self._camera.mirror_state)
+        self.set_defined_attr(self, ATTR_BATTERY_LEVEL,
+                              self._camera.battery_level)
+        self.set_defined_attr(self, ATTR_BRIGHTNESS,
+                              self._camera.brightness)
+        self.set_defined_attr(self, ATTR_FLIPPED,
+                              self._camera.flip_state)
+        self.set_defined_attr(self, ATTR_MIRRORED,
+                              self._camera.mirror_state)
         self.set_defined_attr(self, ATTR_MOTION,
                               self._camera.motion_detection_sensitivity)
         self.set_defined_attr(self, ATTR_SIGNAL_STRENGTH,
                               self._camera.signal_strength)
-        self.set_defined_attr(self, ATTR_UNSEEN_VIDEOS, self._camera.unseen_videos)
+        self.set_defined_attr(self, ATTR_UNSEEN_VIDEOS,
+                              self._camera.unseen_videos)
 
         powersave_mode = self._camera.powersave_mode
         if powersave_mode:
