@@ -265,7 +265,7 @@ fixerio==0.1.1
 flux_led==0.20
 
 # homeassistant.components.notify.free_mobile
-freesms==0.1.1
+freesms==0.1.2
 
 # homeassistant.components.device_tracker.fritz
 # homeassistant.components.sensor.fritzbox_callmonitor
