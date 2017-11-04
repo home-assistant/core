@@ -24,9 +24,9 @@ ATTR_ORDERS = 'orders'
 ATTR_DUMP_MENU = 'dump_menu'
 ATTR_ORDER_ENTITY = 'order_entity_id'
 
-COMMIT = 'ae140bd640d64ce5fdb638d5b11cfc8dae6c6587'
+COMMIT = '183d0f5522e7fa99776e8c6c692b56e69f0e6b8f'
 REQUIREMENTS = [
-    'https://github.com/wardcraigj/pizzapi/archive/%s.zip#pizzapi==0.0.2' % COMMIT, 'jsonpickle']
+    'https://github.com/wardcraigj/pizzapi/archive/%s.zip#pizzapi==0.0.2' % COMMIT]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -96,13 +96,8 @@ class Dominos():
                 variants = ', '.join(product.menu_data['Variants'])
             else:
                 variants = product.menu_data['Variants']
+            
             message = 'name: ' + product.name + ' variants: ' + variants
-            try:
-                
-                _LOGGER.warning(unicodedata.normalize('NFKC', message).encode('ascii','ignore').decode('ascii'))
-            except Exception:
-                _LOGGER.warn('here')
-
-        # except Exception:
-        #     _LOGGER.error(
-        #         'Tried to dump menu but an error occurred. Check your config and make sure stores are open.')
+            
+            #We get some weird product names sometimes, so clobber this to make it logger safe
+            _LOGGER.warning(unicodedata.normalize('NFKC', message).encode('ascii','ignore').decode('ascii'))
