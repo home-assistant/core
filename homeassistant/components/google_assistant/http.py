@@ -7,7 +7,7 @@ https://home-assistant.io/components/google_assistant/
 import asyncio
 import logging
 
-from typing import Any, Dict, Tuple  # NOQA
+from typing import Any, Dict  # NOQA
 
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response  # NOQA

@@ -8,16 +8,15 @@ import asyncio
 import logging
 
 import aiohttp
+from aiohttp.hdrs import REFERER, USER_AGENT
 import async_timeout
 import voluptuous as vol
-from aiohttp.hdrs import USER_AGENT, REFERER
 
-
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['defusedxml==0.5.0']
 
