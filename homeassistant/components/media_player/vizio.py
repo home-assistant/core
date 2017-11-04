@@ -75,11 +75,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     if config.get(CONF_SUPPRESS_WARNING):
-        import requests
-        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        from requests.packages import urllib3
         _LOGGER.warning('InsecureRequestWarning is disabled '
                         'because of Vizio platform configuration.')
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     add_devices([device], True)
 
 

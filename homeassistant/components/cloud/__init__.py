@@ -6,22 +6,23 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
-
 REQUIREMENTS = ['warrant==0.5.0']
-DEPENDENCIES = ['http']
-CONF_MODE = 'mode'
+
+_LOGGER = logging.getLogger(__name__)
+
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
-CONF_USER_POOL_ID = 'user_pool_id'
-CONF_REGION = 'region'
 CONF_RELAYER = 'relayer'
+CONF_USER_POOL_ID = 'user_pool_id'
+
 MODE_DEV = 'development'
 DEFAULT_MODE = MODE_DEV
-_LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

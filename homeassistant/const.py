@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 56
-PATCH_VERSION = '2'
+MINOR_VERSION = 57
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -88,6 +88,8 @@ CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
+CONF_DISKS = 'disks'
+CONF_DISPLAY_CURRENCY = 'display_currency'
 CONF_DISPLAY_OPTIONS = 'display_options'
 CONF_DOMAIN = 'domain'
 CONF_DOMAINS = 'domains'
@@ -97,6 +99,7 @@ CONF_EMAIL = 'email'
 CONF_ENTITIES = 'entities'
 CONF_ENTITY_ID = 'entity_id'
 CONF_ENTITY_NAMESPACE = 'entity_namespace'
+CONF_ENTITY_PICTURE_TEMPLATE = 'entity_picture_template'
 CONF_EVENT = 'event'
 CONF_EXCLUDE = 'exclude'
 CONF_FILE_PATH = 'file_path'
@@ -116,8 +119,9 @@ CONF_LONGITUDE = 'longitude'
 CONF_LIGHTS = 'lights'
 CONF_MAC = 'mac'
 CONF_METHOD = 'method'
-CONF_MINIMUM = 'minimum'
 CONF_MAXIMUM = 'maximum'
+CONF_MINIMUM = 'minimum'
+CONF_MODE = 'mode'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
@@ -134,13 +138,17 @@ CONF_PIN = 'pin'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
+CONF_PROFILE_NAME = 'profile_name'
 CONF_PROTOCOL = 'protocol'
 CONF_PROXY_SSL = 'proxy_ssl'
 CONF_QUOTE = 'quote'
+CONF_RADIUS = 'radius'
 CONF_RECIPIENT = 'recipient'
+CONF_REGION = 'region'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
+CONF_ROOM = 'room'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_TYPE = 'sensor_type'
@@ -217,6 +225,9 @@ STATE_PROBLEM = 'problem'
 # Attribution
 ATTR_ATTRIBUTION = 'attribution'
 
+# Credentials
+ATTR_CREDENTIALS = 'credentials'
+
 # Contains time-related attributes
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
@@ -226,6 +237,9 @@ ATTR_TIME = 'time'
 ATTR_DOMAIN = 'domain'
 ATTR_SERVICE = 'service'
 ATTR_SERVICE_DATA = 'service_data'
+
+# IDs
+ATTR_ID = 'id'
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = 'service_call_id'
@@ -250,38 +264,6 @@ CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
 
 # Electrical attributes
 ATTR_VOLTAGE = 'voltage'
-
-# Temperature attribute
-ATTR_TEMPERATURE = 'temperature'
-TEMP_CELSIUS = '°C'
-TEMP_FAHRENHEIT = '°F'
-
-# Length units
-LENGTH_CENTIMETERS = 'cm'  # type: str
-LENGTH_METERS = 'm'  # type: str
-LENGTH_KILOMETERS = 'km'  # type: str
-
-LENGTH_INCHES = 'in'  # type: str
-LENGTH_FEET = 'ft'  # type: str
-LENGTH_YARD = 'yd'  # type: str
-LENGTH_MILES = 'mi'  # type: str
-
-# Volume units
-VOLUME_LITERS = 'L'  # type: str
-VOLUME_MILLILITERS = 'mL'  # type: str
-
-VOLUME_GALLONS = 'gal'  # type: str
-VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
-
-# Mass units
-MASS_GRAMS = 'g'  # type: str
-MASS_KILOGRAMS = 'kg'  # type: str
-
-MASS_OUNCES = 'oz'  # type: str
-MASS_POUNDS = 'lb'  # type: str
-
-# UV Index units
-UNIT_UV_INDEX = 'UV index'  # type: str
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = 'discovered'
@@ -333,6 +315,41 @@ ATTR_SUPPORTED_FEATURES = 'supported_features'
 
 # Class of device within its domain
 ATTR_DEVICE_CLASS = 'device_class'
+
+# Temperature attribute
+ATTR_TEMPERATURE = 'temperature'
+
+# #### UNITS OF MEASUREMENT ####
+# Temperature units
+TEMP_CELSIUS = '°C'
+TEMP_FAHRENHEIT = '°F'
+
+# Length units
+LENGTH_CENTIMETERS = 'cm'  # type: str
+LENGTH_METERS = 'm'  # type: str
+LENGTH_KILOMETERS = 'km'  # type: str
+
+LENGTH_INCHES = 'in'  # type: str
+LENGTH_FEET = 'ft'  # type: str
+LENGTH_YARD = 'yd'  # type: str
+LENGTH_MILES = 'mi'  # type: str
+
+# Volume units
+VOLUME_LITERS = 'L'  # type: str
+VOLUME_MILLILITERS = 'mL'  # type: str
+
+VOLUME_GALLONS = 'gal'  # type: str
+VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
+
+# Mass units
+MASS_GRAMS = 'g'  # type: str
+MASS_KILOGRAMS = 'kg'  # type: str
+
+MASS_OUNCES = 'oz'  # type: str
+MASS_POUNDS = 'lb'  # type: str
+
+# UV Index units
+UNIT_UV_INDEX = 'UV index'  # type: str
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
@@ -413,6 +430,8 @@ HTTP_DIGEST_AUTHENTICATION = 'digest'
 
 HTTP_HEADER_HA_AUTH = 'X-HA-access'
 HTTP_HEADER_ACCEPT_ENCODING = 'Accept-Encoding'
+HTTP_HEADER_AUTH = 'Authorization'
+HTTP_HEADER_USER_AGENT = 'User-Agent'
 HTTP_HEADER_CONTENT_TYPE = 'Content-type'
 HTTP_HEADER_CONTENT_ENCODING = 'Content-Encoding'
 HTTP_HEADER_VARY = 'Vary'
