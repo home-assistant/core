@@ -30,9 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vultr subscription switch."""
-    vultr = hass.data.get(DATA_VULTR)
-    if not vultr:
-        return False
+    vultr = hass.data[DATA_VULTR]
 
     subscription = config.get(CONF_SUBSCRIPTION)
     name = config.get(CONF_NAME)
