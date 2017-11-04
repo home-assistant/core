@@ -15,6 +15,9 @@ from homeassistant.components.http.const import (
 
 API_PASSWORD = 'test1234'
 
+API_USER_NAME = 'user1'
+API_USER_PASS = 'pass1'
+
 # Don't add 127.0.0.1/::1 as trusted, as it may interfere with other test cases
 TRUSTED_NETWORKS = ['192.0.2.0/24', '2001:DB8:ABCD::/48', '100.64.0.1',
                     'FD01:DB8::1']
@@ -28,7 +31,12 @@ def mock_api_client(hass, test_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'api', {
         'http': {
-            http.CONF_API_PASSWORD: API_PASSWORD,
+            http.CONF_API_USERS: {
+                API_USER_NAME: {
+                    const.CONF_PASSWORD: API_USER_PASS
+                }
+            },
+            http.CONF_API_PASSWORD: API_PASSWORD
         }
     }))
     return hass.loop.run_until_complete(test_client(hass.http.app))
@@ -125,6 +133,35 @@ def test_access_with_password_in_url(mock_api_client, caplog):
 
 
 @asyncio.coroutine
+def test_access_with_api_user_password_in_header(mock_api_client, caplog):
+    """Test access with password in URL."""
+    # Hide logging from requests package that we use to test logging
+    req = yield from mock_api_client.get(
+        const.URL_API, headers={const.HTTP_HEADER_HA_AUTH: API_USER_PASS})
+
+    assert req.status == 200
+
+    logs = caplog.text
+
+    assert const.URL_API in logs
+    assert API_USER_PASS not in logs
+
+
+@asyncio.coroutine
+def test_access_with_api_user_password_in_url(mock_api_client, caplog):
+    """Test access with password in URL."""
+    req = yield from mock_api_client.get(
+        const.URL_API, params={'api_password': API_USER_PASS})
+
+    assert req.status == 200
+
+    logs = caplog.text
+
+    assert const.URL_API in logs
+    assert API_USER_PASS not in logs
+
+
+@asyncio.coroutine
 def test_access_granted_with_x_forwarded_for(hass, mock_api_client, caplog,
                                              mock_trusted_networks):
     """Test access denied through the X-Forwarded-For http header."""
@@ -164,6 +201,17 @@ def test_basic_auth_works(mock_api_client, caplog):
 
 
 @asyncio.coroutine
+def test_basic_auth_api_user_works(mock_api_client, caplog):
+    """Test access with basic authentication."""
+    req = yield from mock_api_client.get(
+        const.URL_API,
+        auth=aiohttp.BasicAuth(API_USER_NAME, API_USER_PASS))
+
+    assert req.status == 200
+    assert const.URL_API in caplog.text
+
+
+@asyncio.coroutine
 def test_basic_auth_username_homeassistant(mock_api_client, caplog):
     """Test access with basic auth requires username homeassistant."""
     req = yield from mock_api_client.get(
@@ -179,6 +227,16 @@ def test_basic_auth_wrong_password(mock_api_client, caplog):
     req = yield from mock_api_client.get(
         const.URL_API,
         auth=aiohttp.BasicAuth('homeassistant', 'wrong password'))
+
+    assert req.status == 401
+
+
+@asyncio.coroutine
+def test_basic_auth_api_user_wrong_password(mock_api_client, caplog):
+    """Test access with basic auth not allowed with wrong password."""
+    req = yield from mock_api_client.get(
+        const.URL_API,
+        auth=aiohttp.BasicAuth(API_USER_NAME, 'wrong password'))
 
     assert req.status == 401
 

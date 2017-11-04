@@ -177,6 +177,7 @@ class TestCheckConfig(unittest.TestCase):
 
             self.assertDictEqual({
                 'components': {'http': {'api_password': 'abc123',
+                                        'api_users': None,
                                         'cors_allowed_origins': [],
                                         'ip_ban_enabled': True,
                                         'login_attempts_threshold': -1,

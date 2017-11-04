@@ -308,6 +308,7 @@ class TestSecrets(unittest.TestCase):
 
         load_yaml(self._secret_path,
                   'http_pw: pwhttp\n'
+                  'user_http_pw: userpwhttp\n'
                   'comp1_un: un1\n'
                   'comp1_pw: pw1\n'
                   'stale_pw: not_used\n'
@@ -315,6 +316,9 @@ class TestSecrets(unittest.TestCase):
         self._yaml = load_yaml(self._yaml_path,
                                'http:\n'
                                '  api_password: !secret http_pw\n'
+                               '  api_users: \n'
+                               '    userhttp: \n'
+                               '      password: !secret user_http_pw\n'
                                'component:\n'
                                '  username: !secret comp1_un\n'
                                '  password: !secret comp1_pw\n'
@@ -327,7 +331,12 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_from_yaml(self):
         """Did secrets load ok."""
-        expected = {'api_password': 'pwhttp'}
+        expected = {'api_password': 'pwhttp',
+                    'api_users': {
+                        'userhttp': {
+                            'password': 'userpwhttp'
+                        }
+                    }}
         self.assertEqual(expected, self._yaml['http'])
 
         expected = {

@@ -21,7 +21,8 @@ import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
+    CONF_PASSWORD)
 from homeassistant.core import is_callback
 from homeassistant.util.logging import HideSensitiveDataFilter
 
@@ -39,6 +40,7 @@ REQUIREMENTS = ['aiohttp_cors==0.5.3']
 DOMAIN = 'http'
 
 CONF_API_PASSWORD = 'api_password'
+CONF_API_USERS = 'api_users'
 CONF_SERVER_HOST = 'server_host'
 CONF_SERVER_PORT = 'server_port'
 CONF_BASE_URL = 'base_url'
@@ -79,6 +81,7 @@ DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
 
 HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_API_USERS, default=None): dict,
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
@@ -108,6 +111,7 @@ def async_setup(hass, config):
         conf = HTTP_SCHEMA({})
 
     api_password = conf[CONF_API_PASSWORD]
+    api_users = conf[CONF_API_USERS]
     server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf[CONF_SSL_CERTIFICATE]
@@ -122,6 +126,12 @@ def async_setup(hass, config):
         logging.getLogger('aiohttp.access').addFilter(
             HideSensitiveDataFilter(api_password))
 
+    if api_users is not None:
+        for _, api_user in api_users.items():
+            if CONF_PASSWORD in api_user:
+                logging.getLogger('aiohttp.access').addFilter(
+                    HideSensitiveDataFilter(api_user[CONF_PASSWORD]))
+
     server = HomeAssistantWSGI(
         hass,
         server_host=server_host,
@@ -133,7 +143,8 @@ def async_setup(hass, config):
         use_x_forwarded_for=use_x_forwarded_for,
         trusted_networks=trusted_networks,
         login_threshold=login_threshold,
-        is_ban_enabled=is_ban_enabled
+        is_ban_enabled=is_ban_enabled,
+        api_users=api_users
     )
 
     @asyncio.coroutine
@@ -174,7 +185,7 @@ class HomeAssistantWSGI(object):
     def __init__(self, hass, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_networks,
-                 login_threshold, is_ban_enabled):
+                 login_threshold, is_ban_enabled, api_users):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
@@ -192,6 +203,7 @@ class HomeAssistantWSGI(object):
 
         self.hass = hass
         self.api_password = api_password
+        self.api_users = api_users
         self.ssl_certificate = ssl_certificate
         self.ssl_key = ssl_key
         self.server_host = server_host

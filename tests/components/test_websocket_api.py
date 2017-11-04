@@ -11,7 +11,11 @@ from homeassistant.components import websocket_api as wapi, frontend
 
 from tests.common import mock_http_component_app, mock_coro
 
-API_PASSWORD = 'test1234'
+API_USER = {
+    'user1': {
+        'password': 'pass1'
+    }
+}
 
 
 @pytest.fixture
@@ -35,7 +39,7 @@ def websocket_client(loop, hass, test_client):
 @pytest.fixture
 def no_auth_websocket_client(hass, loop, test_client):
     """Websocket connection that requires authentication."""
-    websocket_app = mock_http_component_app(hass, API_PASSWORD)
+    websocket_app = mock_http_component_app(hass, api_users=API_USER)
     wapi.WebsocketAPIView().register(websocket_app.router)
 
     client = loop.run_until_complete(test_client(websocket_app))
@@ -62,11 +66,10 @@ def test_auth_via_msg(no_auth_websocket_client):
     """Test authenticating."""
     no_auth_websocket_client.send_json({
         'type': wapi.TYPE_AUTH,
-        'api_password': API_PASSWORD
+        'api_password': API_USER['user1']['password']
     })
 
     msg = yield from no_auth_websocket_client.receive_json()
-
     assert msg['type'] == wapi.TYPE_AUTH_OK
 
 
@@ -77,7 +80,7 @@ def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
                return_value=mock_coro()) as mock_process_wrong_login:
         no_auth_websocket_client.send_json({
             'type': wapi.TYPE_AUTH,
-            'api_password': API_PASSWORD + 'wrong'
+            'api_password': API_USER['user1']['password'] + 'wrong'
         })
 
         msg = yield from no_auth_websocket_client.receive_json()
