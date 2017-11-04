@@ -5,7 +5,7 @@ import unittest
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.switch as switch
-import homeassistant.components.input_slider as input_slider
+import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
 import homeassistant.components.media_player.universal as universal
@@ -166,7 +166,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_state_switch_id = switch.ENTITY_ID_FORMAT.format('state')
         self.hass.states.set(self.mock_state_switch_id, STATE_OFF)
 
-        self.mock_volume_id = input_slider.ENTITY_ID_FORMAT.format(
+        self.mock_volume_id = input_number.ENTITY_ID_FORMAT.format(
             'volume_level')
         self.hass.states.set(self.mock_volume_id, 0)
 

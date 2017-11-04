@@ -27,10 +27,12 @@ def get_device(hass, values, node_config, **kwargs):
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
         return ZwaveRollershutter(hass, values, invert_buttons)
-    elif (values.primary.command_class in [
-            zwave.const.COMMAND_CLASS_SWITCH_BINARY,
-            zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
-        return ZwaveGarageDoor(values)
+    elif (values.primary.command_class ==
+          zwave.const.COMMAND_CLASS_SWITCH_BINARY):
+        return ZwaveGarageDoorSwitch(values)
+    elif (values.primary.command_class ==
+          zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
+        return ZwaveGarageDoorBarrier(values)
     return None
 
 
@@ -73,8 +75,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
             return None
         if self.current_cover_position > 0:
             return False
-        else:
-            return True
+        return True
 
     @property
     def current_cover_position(self):
@@ -86,8 +87,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 return 0
             elif self._current_position >= 95:
                 return 100
-            else:
-                return self._current_position
+            return self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
@@ -106,17 +106,33 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._network.manager.releaseButton(self._open_id)
 
 
-class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
-    """Representation of an Zwave garage door device."""
+class ZwaveGarageDoorBase(zwave.ZWaveDeviceEntity, CoverDevice):
+    """Base class for a Zwave garage door device."""
 
     def __init__(self, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        self._state = None
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
         self._state = self.values.primary.data
+        _LOGGER.debug("self._state=%s", self._state)
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_GARAGE
+
+
+class ZwaveGarageDoorSwitch(ZwaveGarageDoorBase):
+    """Representation of a switch based Zwave garage door device."""
 
     @property
     def is_closed(self):
@@ -131,12 +147,29 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Open the garage door."""
         self.values.primary.data = True
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'garage'
+
+class ZwaveGarageDoorBarrier(ZwaveGarageDoorBase):
+    """Representation of a barrier operator Zwave garage door device."""
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_GARAGE
+    def is_opening(self):
+        """Return true if cover is in an opening state."""
+        return self._state == "Opening"
+
+    @property
+    def is_closing(self):
+        """Return true if cover is in an closing state."""
+        return self._state == "Closing"
+
+    @property
+    def is_closed(self):
+        """Return the current position of Zwave garage door."""
+        return self._state == "Closed"
+
+    def close_cover(self):
+        """Close the garage door."""
+        self.values.primary.data = "Closed"
+
+    def open_cover(self):
+        """Open the garage door."""
+        self.values.primary.data = "Opened"

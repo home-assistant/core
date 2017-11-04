@@ -10,7 +10,6 @@ import logging
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +139,7 @@ class MaxCubeClimate(ClimateDevice):
     def map_temperature_max_hass(temperature):
         """Map Temperature from MAX! to HASS."""
         if temperature is None:
-            return STATE_UNKNOWN
+            return 0.0
 
         return temperature
 

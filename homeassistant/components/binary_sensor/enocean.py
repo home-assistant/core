@@ -12,9 +12,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.components import enocean
 from homeassistant.const import (
-    CONF_NAME, CONF_ID, CONF_SENSOR_CLASS, CONF_DEVICE_CLASS)
+    CONF_NAME, CONF_ID, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +23,6 @@ DEFAULT_NAME = 'EnOcean binary sensor'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
@@ -33,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Binary Sensor platform for EnOcean."""
     dev_id = config.get(CONF_ID)
     devname = config.get(CONF_NAME)
-    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+    device_class = config.get(CONF_DEVICE_CLASS)
 
     add_devices([EnOceanBinarySensor(dev_id, devname, device_class)])
 

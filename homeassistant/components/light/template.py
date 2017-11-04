@@ -13,31 +13,31 @@ from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
 from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON,
-    STATE_OFF, EVENT_HOMEASSISTANT_START, MATCH_ALL
+    CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON, STATE_OFF,
+    EVENT_HOMEASSISTANT_START, MATCH_ALL, CONF_LIGHTS
 )
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
 
-CONF_LIGHTS = 'lights'
 CONF_ON_ACTION = 'turn_on'
 CONF_OFF_ACTION = 'turn_off'
 CONF_LEVEL_ACTION = 'set_level'
 CONF_LEVEL_TEMPLATE = 'level_template'
 
-
 LIGHT_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
@@ -51,12 +51,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up Template Lights."""
+    """Set up the Template Lights."""
     lights = []
 
     for device, device_config in config[CONF_LIGHTS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        entity_picture_template = device_config.get(
+            CONF_ENTITY_PICTURE_TEMPLATE)
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
@@ -74,6 +77,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
+        if icon_template is not None:
+            temp_ids = icon_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
+        if entity_picture_template is not None:
+            temp_ids = entity_picture_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
         if not template_entity_ids:
             template_entity_ids = MATCH_ALL
 
@@ -82,15 +95,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         lights.append(
             LightTemplate(
                 hass, device, friendly_name, state_template,
-                on_action, off_action, level_action, level_template,
-                entity_ids)
+                icon_template, entity_picture_template, on_action,
+                off_action, level_action, level_template, entity_ids)
         )
 
     if not lights:
         _LOGGER.error("No lights added")
         return False
 
-    async_add_devices(lights, True)
+    async_add_devices(lights)
     return True
 
 
@@ -98,14 +111,16 @@ class LightTemplate(Light):
     """Representation of a templated Light, including dimmable."""
 
     def __init__(self, hass, device_id, friendly_name, state_template,
-                 on_action, off_action, level_action, level_template,
-                 entity_ids):
+                 icon_template, entity_picture_template, on_action,
+                 off_action, level_action, level_template, entity_ids):
         """Initialize the light."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass)
         self._name = friendly_name
         self._template = state_template
+        self._icon_template = icon_template
+        self._entity_picture_template = entity_picture_template
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._level_script = None
@@ -114,6 +129,8 @@ class LightTemplate(Light):
         self._level_template = level_template
 
         self._state = False
+        self._icon = None
+        self._entity_picture = None
         self._brightness = None
         self._entities = entity_ids
 
@@ -121,11 +138,20 @@ class LightTemplate(Light):
             self._template.hass = self.hass
         if self._level_template is not None:
             self._level_template.hass = self.hass
+        if self._icon_template is not None:
+            self._icon_template.hass = self.hass
+        if self._entity_picture_template is not None:
+            self._entity_picture_template.hass = self.hass
 
     @property
     def brightness(self):
         """Return the brightness of the light."""
         return self._brightness
+
+    @property
+    def name(self):
+        """Return the display name of this light."""
+        return self._name
 
     @property
     def supported_features(self):
@@ -145,17 +171,23 @@ class LightTemplate(Light):
         """Return the polling state."""
         return False
 
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        return self._entity_picture
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._state = state.state == STATE_ON
-
         @callback
         def template_light_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         @callback
         def template_light_startup(event):
@@ -165,7 +197,7 @@ class LightTemplate(Light):
                 async_track_state_change(
                     self.hass, self._entities, template_light_state_listener)
 
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_light_startup)
@@ -189,22 +221,23 @@ class LightTemplate(Light):
             self.hass.async_add_job(self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
         else:
-            self.hass.async_add_job(self._on_script.async_run())
+            yield from self._on_script.async_run()
 
         if optimistic_set:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self.hass.async_add_job(self._off_script.async_run())
+        yield from self._off_script.async_run()
         if self._template is None:
             self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
+        print("ASYNC UPDATE")
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
@@ -236,3 +269,28 @@ class LightTemplate(Light):
                     'Expected: 0-255',
                     brightness)
                 self._brightness = None
+
+        for property_name, template in (
+                ('_icon', self._icon_template),
+                ('_entity_picture', self._entity_picture_template)):
+            if template is None:
+                continue
+
+            try:
+                setattr(self, property_name, template.async_render())
+            except TemplateError as ex:
+                friendly_property_name = property_name[1:].replace('_', ' ')
+                if ex.args and ex.args[0].startswith(
+                        "UndefinedError: 'None' has no attribute"):
+                    # Common during HA startup - so just a warning
+                    _LOGGER.warning('Could not render %s template %s,'
+                                    ' the state is unknown.',
+                                    friendly_property_name, self._name)
+                    return
+
+                try:
+                    setattr(self, property_name,
+                            getattr(super(), property_name))
+                except AttributeError:
+                    _LOGGER.error('Could not render %s template %s: %s',
+                                  friendly_property_name, self._name, ex)

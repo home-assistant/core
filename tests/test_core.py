@@ -12,7 +12,8 @@ import pytz
 import pytest
 
 import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.exceptions import (InvalidEntityFormatError,
+                                      InvalidStateError)
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
@@ -421,6 +422,10 @@ class TestState(unittest.TestCase):
             InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
 
+        self.assertRaises(
+            InvalidStateError, ha.State,
+            'domain.long_state', 't' * 256)
+
     def test_domain(self):
         """Test domain."""
         state = ha.State('some_domain.hello', 'world')
@@ -821,17 +826,20 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(('/home',))
+            self.config.whitelist_external_dirs = set(('/home', '/var'))
 
             unvalid = [
                 "/hass/config/secure",
                 "/etc/passwd",
                 "/root/secure_file",
-                "/hass/config/test/../../../etc/passwd",
+                "/var/../etc/passwd",
                 test_file,
             ]
             for path in unvalid:
                 assert not self.config.is_allowed_path(path)
+
+            with self.assertRaises(AssertionError):
+                self.config.is_allowed_path(None)
 
 
 @patch('homeassistant.core.monotonic')

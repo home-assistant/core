@@ -14,9 +14,7 @@ from aiohttp import web
 from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+from homeassistant.helpers import intent, dispatcher, entity, restore_state
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -121,7 +119,7 @@ def async_test_home_assistant(loop):
     def async_add_job(target, *args):
         """Add a magic mock."""
         if isinstance(target, Mock):
-            return mock_coro(target())
+            return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
@@ -176,7 +174,7 @@ def get_test_instance_port():
 
 
 @ha.callback
-def async_mock_service(hass, domain, service):
+def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -185,7 +183,8 @@ def async_mock_service(hass, domain, service):
         """Mock service call."""
         calls.append(call)
 
-    hass.services.async_register(domain, service, mock_service_log)
+    hass.services.async_register(
+        domain, service, mock_service_log, schema=schema)
 
     return calls
 
@@ -194,11 +193,30 @@ mock_service = threadsafe_callback_factory(async_mock_service)
 
 
 @ha.callback
+def async_mock_intent(hass, intent_typ):
+    """Set up a fake intent handler."""
+    intents = []
+
+    class MockIntentHandler(intent.IntentHandler):
+        intent_type = intent_typ
+
+        @asyncio.coroutine
+        def async_handle(self, intent):
+            """Handle the intent."""
+            intents.append(intent)
+            return intent.create_response()
+
+    intent.async_register(hass, MockIntentHandler())
+
+    return intents
+
+
+@ha.callback
 def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
-    async_dispatcher_send(
+    dispatcher.async_dispatcher_send(
         hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic,
         payload, qos)
 
@@ -352,7 +370,7 @@ class MockPlatform(object):
             self._setup_platform(hass, config, add_devices, discovery_info)
 
 
-class MockToggleDevice(ToggleEntity):
+class MockToggleDevice(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
     def __init__(self, name, state):
@@ -459,7 +477,7 @@ def assert_setup_component(count, domain=None):
     - domain: The domain to count is optional. It can be automatically
               determined most of the time
 
-    Use as a context manager aroung setup.setup_component
+    Use as a context manager around setup.setup_component
         with assert_setup_component(0) as result_config:
             setup_component(hass, domain, start_config)
             # using result_config is optional
@@ -506,10 +524,11 @@ def init_recorder_component(hass, add_config=None):
 
 def mock_restore_cache(hass, states):
     """Mock the DATA_RESTORE_CACHE."""
-    hass.data[DATA_RESTORE_CACHE] = {
+    key = restore_state.DATA_RESTORE_CACHE
+    hass.data[key] = {
         state.entity_id: state for state in states}
-    _LOGGER.debug('Restore cache: %s', hass.data[DATA_RESTORE_CACHE])
-    assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
+    _LOGGER.debug('Restore cache: %s', hass.data[key])
+    assert len(hass.data[key]) == len(states), \
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
     mock_component(hass, recorder.DOMAIN)

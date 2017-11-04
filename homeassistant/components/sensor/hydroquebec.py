@@ -39,21 +39,21 @@ SENSOR_TYPES = {
     'balance':
     ['Balance', PRICE, 'mdi:square-inc-cash'],
     'period_total_bill':
-    ['Current period bill', PRICE, 'mdi:square-inc-cash'],
+    ['Period total bill', PRICE, 'mdi:square-inc-cash'],
     'period_length':
-    ['Current period length', DAYS, 'mdi:calendar-today'],
+    ['Period length', DAYS, 'mdi:calendar-today'],
     'period_total_days':
-    ['Total number of days in this period', DAYS, 'mdi:calendar-today'],
+    ['Period total days', DAYS, 'mdi:calendar-today'],
     'period_mean_daily_bill':
-    ['Period daily average bill', PRICE, 'mdi:square-inc-cash'],
+    ['Period mean daily bill', PRICE, 'mdi:square-inc-cash'],
     'period_mean_daily_consumption':
-    ['Period daily average consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Period mean daily consumption', KILOWATT_HOUR, 'mdi:flash'],
     'period_total_consumption':
-    ['Total Consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Period total consumption', KILOWATT_HOUR, 'mdi:flash'],
     'period_lower_price_consumption':
-    ['Period Lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Period lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'period_higher_price_consumption':
-    ['Period Higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Period higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_total_consumption':
     ['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_lower_price_consumption':
@@ -125,7 +125,6 @@ class HydroQuebecSensor(Entity):
         """Initialize the sensor."""
         self.client_name = name
         self.type = sensor_type
-        self.entity_id = "sensor.{}_{}".format(name, sensor_type)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._icon = SENSOR_TYPES[sensor_type][2]

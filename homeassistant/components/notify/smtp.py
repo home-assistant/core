@@ -74,8 +74,8 @@ def get_service(hass, config, discovery_info=None):
 
     if mail_service.connection_is_valid():
         return mail_service
-    else:
-        return None
+
+    return None
 
 
 class MailNotificationService(BaseNotificationService):

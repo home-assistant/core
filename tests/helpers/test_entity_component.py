@@ -128,7 +128,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert poll_ent.async_update.called
 
     def test_polling_updates_entities_with_exception(self):
-        """Test the updated entities that not brake with a exception."""
+        """Test the updated entities that not break with a exception."""
         component = EntityComponent(
             _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
 
@@ -183,7 +183,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 2 == len(self.hass.states.entity_ids())
 
     def test_update_state_adds_entities_with_update_befor_add_true(self):
-        """Test if call update befor add to state machine."""
+        """Test if call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         ent = EntityTest()
@@ -196,7 +196,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert ent.update.called
 
     def test_update_state_adds_entities_with_update_befor_add_false(self):
-        """Test if not call update befor add to state machine."""
+        """Test if not call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         ent = EntityTest()
@@ -207,30 +207,6 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 1 == len(self.hass.states.entity_ids())
         assert not ent.update.called
-
-    def test_adds_entities_with_update_befor_add_true_deadlock_protect(self):
-        """Test if call update befor add to state machine.
-
-        It need to run update inside executor and never call
-        async_add_entities with True
-        """
-        call = []
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
-
-        @asyncio.coroutine
-        def async_add_entities_fake(entities, update_befor_add):
-            """Fake add_entities_call."""
-            call.append(update_befor_add)
-        component._platforms['core'].async_add_entities = \
-            async_add_entities_fake
-
-        ent = EntityTest()
-        ent.update = Mock(spec_set=True)
-        component.add_entities([ent], True)
-
-        assert ent.update.called
-        assert len(call) == 1
-        assert not call[0]
 
     def test_not_adding_duplicate_entities(self):
         """Test for not adding duplicate entities."""
@@ -537,6 +513,26 @@ def test_extract_from_service_available_device(hass):
 
 
 @asyncio.coroutine
+def test_updated_state_used_for_entity_id(hass):
+    """Test that first update results used for entity ID generation."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    class EntityTestNameFetcher(EntityTest):
+        """Mock entity that fetches a friendly name."""
+
+        @asyncio.coroutine
+        def async_update(self):
+            """Mock update that assigns a name."""
+            self._values['name'] = "Living Room"
+
+    yield from component.async_add_entities([EntityTestNameFetcher()], True)
+
+    entity_ids = hass.states.async_entity_ids()
+    assert 1 == len(entity_ids)
+    assert entity_ids[0] == "test_domain.living_room"
+
+
+@asyncio.coroutine
 def test_platform_not_ready(hass):
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady,
@@ -578,3 +574,100 @@ def test_platform_not_ready(hass):
         yield from hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 3
         assert 'test_domain.mod1' in hass.config.components
+
+
+@asyncio.coroutine
+def test_pararell_updates_async_platform(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    @asyncio.coroutine
+    def mock_update(*args, **kwargs):
+        pass
+
+    platform.async_setup_platform = mock_update
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'platform',
+        }
+    })
+
+    handle = list(component._platforms.values())[-1]
+
+    assert handle.parallel_updates is None
+
+
+@asyncio.coroutine
+def test_pararell_updates_async_platform_with_constant(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    @asyncio.coroutine
+    def mock_update(*args, **kwargs):
+        pass
+
+    platform.async_setup_platform = mock_update
+    platform.PARALLEL_UPDATES = 1
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'platform',
+        }
+    })
+
+    handle = list(component._platforms.values())[-1]
+
+    assert handle.parallel_updates is not None
+
+
+@asyncio.coroutine
+def test_pararell_updates_sync_platform(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'platform',
+        }
+    })
+
+    handle = list(component._platforms.values())[-1]
+
+    assert handle.parallel_updates is not None
+
+
+@asyncio.coroutine
+def test_raise_error_on_update(hass):
+    """Test the add entity if they raise an error on update."""
+    updates = []
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity1 = EntityTest(name='test_1')
+    entity2 = EntityTest(name='test_2')
+
+    def _raise():
+        """Helper to raise a exception."""
+        raise AssertionError
+
+    entity1.update = _raise
+    entity2.update = lambda: updates.append(1)
+
+    yield from component.async_add_entities([entity1, entity2], True)
+
+    assert len(updates) == 1
+    assert 1 in updates

@@ -17,7 +17,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.5']
+REQUIREMENTS = ['python-eq3bt==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,4 +164,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        self._thermostat.update()
+        from bluepy.btle import BTLEException
+        try:
+            self._thermostat.update()
+        except BTLEException as ex:
+            _LOGGER.warning("Updating the state failed: %s", ex)

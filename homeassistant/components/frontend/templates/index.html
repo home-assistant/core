@@ -8,11 +8,13 @@
     <link rel='icon' href='/static/icons/favicon.ico'>
     <link rel='apple-touch-icon' sizes='180x180'
           href='/static/icons/favicon-apple-180x180.png'>
-    <link rel="mask-icon" href="/static/icons/home-assistant-icon.svg" color="#3fbbf4">
-    <link rel='preload' href='{{ core_url }}' as='script'/>
-    {% for panel in panels.values() -%}
-      <link rel='prefetch' href='{{ panel.url }}'>
-    {% endfor -%}
+    <link rel="mask-icon" href="/static/icons/mask-icon.svg" color="#3fbbf4">
+    {% if not dev_mode %}
+      <link rel='preload' href='{{ core_url }}' as='script'/>
+      {% for panel in panels.values() -%}
+        <link rel='prefetch' href='{{ panel.webcomponent_url }}'>
+      {% endfor -%}
+    {% endif %}
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <meta name="msapplication-square70x70logo" content="/static/icons/tile-win-70x70.png"/>
     <meta name="msapplication-square150x150logo" content="/static/icons/tile-win-150x150.png"/>
@@ -21,7 +23,7 @@
     <meta name="msapplication-TileColor" content="#3fbbf4ff"/>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='viewport' content='width=device-width, user-scalable=no'>
-    <meta name='theme-color' content='#03a9f4'>
+    <meta name='theme-color' content='{{ theme_color }}'>
     <style>
       body {
         font-family: 'Roboto', 'Noto', sans-serif;
@@ -36,7 +38,7 @@
         display: block;
         content: "";
         height: 48px;
-        background-color: #03A9F4;
+        background-color: {{ theme_color }};
       }
 
       #ha-init-skeleton .message {
@@ -50,7 +52,7 @@
       }
 
       #ha-init-skeleton a {
-        color: #03A9F4;
+        color: {{ theme_color }};
         text-decoration: none;
         font-weight: bold;
       }
@@ -89,23 +91,28 @@
       }
     </script>
     <script src='{{ core_url }}'></script>
+    {% if not dev_mode %}
+    <script src='/static/custom-elements-es5-adapter.js'></script>
+    {% endif %}
+    <script>
+      var webComponentsSupported = (
+        'customElements' in window &&
+        'import' in document.createElement('link') &&
+        'content' in document.createElement('template'));
+      if (!webComponentsSupported) {
+        var e = document.createElement('script');
+        e.onerror = initError;
+        e.src = '/static/webcomponents-lite.js';
+        document.head.appendChild(e);
+      }
+    </script>
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
     {% if panel_url -%}
       <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
     {% endif -%}
     <link rel='import' href='{{ icons_url }}' async>
-    <script>
-      var webComponentsSupported = (
-        'registerElement' in document &&
-        'import' in document.createElement('link') &&
-        'content' in document.createElement('template'));
-      if (!webComponentsSupported) {
-        var e = document.createElement('script');
-        e.async = true;
-        e.onerror = initError;
-        e.src = '/static/webcomponents-lite.min.js';
-        document.head.appendChild(e);
-      }
-    </script>
+    {% for extra_url in extra_urls -%}
+      <link rel='import' href='{{ extra_url }}' async>
+    {% endfor -%}
   </body>
 </html>

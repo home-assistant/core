@@ -55,16 +55,14 @@ def get_device(node, values, node_config, **kwargs):
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         return ZwaveColorLight(values, refresh, delay)
-    else:
-        return ZwaveDimmer(values, refresh, delay)
+    return ZwaveDimmer(values, refresh, delay)
 
 
 def brightness_state(value):
     """Return the brightness and state."""
     if value.data > 0:
         return round((value.data / 99) * 255, 0), STATE_ON
-    else:
-        return 0, STATE_OFF
+    return 0, STATE_OFF
 
 
 def ct_to_rgb(temp):

@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_SENDERS), value_template)
 
     if sensor.connected:
-        add_devices([sensor])
+        add_devices([sensor], True)
     else:
         return False
 

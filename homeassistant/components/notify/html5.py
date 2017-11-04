@@ -25,7 +25,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pywebpush==1.0.5', 'PyJWT==1.5.0']
+REQUIREMENTS = ['pywebpush==1.1.0', 'PyJWT==1.5.3']
 
 DEPENDENCIES = ['frontend']
 
@@ -94,8 +94,8 @@ NOTIFY_CALLBACK_EVENT = 'html5_notification'
 
 # Badge and timestamp are Chrome specific (not in official spec)
 HTML5_SHOWNOTIFICATION_PARAMETERS = (
-    'actions', 'badge', 'body', 'dir', 'icon', 'lang', 'renotify',
-    'requireInteraction', 'tag', 'timestamp', 'vibrate')
+    'actions', 'badge', 'body', 'dir', 'icon', 'image', 'lang',
+    'renotify', 'requireInteraction', 'tag', 'timestamp', 'vibrate')
 
 
 def get_service(hass, config, discovery_info=None):

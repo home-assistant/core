@@ -50,7 +50,7 @@ class AlarmDecoderSensor(Entity):
     def _message_callback(self, message):
         if self._display != message.text:
             self._display = message.text
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @property
     def icon(self):

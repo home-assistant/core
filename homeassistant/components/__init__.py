@@ -10,12 +10,12 @@ Component design guidelines:
 import asyncio
 import itertools as it
 import logging
+import os
 
 import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import extract_entity_ids
-from homeassistant.loader import get_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
@@ -33,25 +33,27 @@ def is_on(hass, entity_id=None):
     If there is no entity id given we will check all.
     """
     if entity_id:
-        group = get_component('group')
-
-        entity_ids = group.expand_entity_ids(hass, [entity_id])
+        entity_ids = hass.components.group.expand_entity_ids([entity_id])
     else:
         entity_ids = hass.states.entity_ids()
 
-    for entity_id in entity_ids:
-        domain = ha.split_entity_id(entity_id)[0]
-
-        module = get_component(domain)
+    for ent_id in entity_ids:
+        domain = ha.split_entity_id(ent_id)[0]
 
         try:
-            if module.is_on(hass, entity_id):
-                return True
+            component = getattr(hass.components, domain)
 
-        except AttributeError:
-            # module is None or method is_on does not exist
-            _LOGGER.exception("Failed to call %s.is_on for %s",
-                              module, entity_id)
+        except ImportError:
+            _LOGGER.error('Failed to call %s.is_on: component not found',
+                          domain)
+            continue
+
+        if not hasattr(component, 'is_on'):
+            _LOGGER.warning("Component %s has no is_on method.", domain)
+            continue
+
+        if component.is_on(ent_id):
+            return True
 
     return False
 
@@ -101,8 +103,19 @@ def reload_core_config(hass):
 
 
 @asyncio.coroutine
+def async_reload_core_config(hass):
+    """Reload the core config."""
+    yield from hass.services.async_call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
+
+
+@asyncio.coroutine
 def async_setup(hass, config):
     """Set up general services related to Home Assistant."""
+    descriptions = yield from hass.async_add_job(
+        conf_util.load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
+
     @asyncio.coroutine
     def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
@@ -142,11 +155,14 @@ def async_setup(hass, config):
         yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
+        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service,
+        descriptions[ha.DOMAIN][SERVICE_TURN_OFF])
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
+        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service,
+        descriptions[ha.DOMAIN][SERVICE_TURN_ON])
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
+        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service,
+        descriptions[ha.DOMAIN][SERVICE_TOGGLE])
 
     @asyncio.coroutine
     def async_handle_core_service(call):
@@ -161,10 +177,9 @@ def async_setup(hass, config):
             return
 
         if errors:
-            notif = get_component('persistent_notification')
             _LOGGER.error(errors)
-            notif.async_create(
-                hass, "Config error. See dev-info panel for details.",
+            hass.components.persistent_notification.async_create(
+                "Config error. See dev-info panel for details.",
                 "Config validating", "{0}.check_config".format(ha.DOMAIN))
             return
 
@@ -172,11 +187,14 @@ def async_setup(hass, config):
             hass.async_add_job(hass.async_stop(RESTART_EXIT_CODE))
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)
+        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service,
+        descriptions[ha.DOMAIN][SERVICE_HOMEASSISTANT_STOP])
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service)
+        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service,
+        descriptions[ha.DOMAIN][SERVICE_HOMEASSISTANT_RESTART])
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service)
+        ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service,
+        descriptions[ha.DOMAIN][SERVICE_CHECK_CONFIG])
 
     @asyncio.coroutine
     def async_handle_reload_config(call):
@@ -191,6 +209,7 @@ def async_setup(hass, config):
             hass, conf.get(ha.DOMAIN) or {})
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config)
+        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config,
+        descriptions[ha.DOMAIN][SERVICE_RELOAD_CORE_CONFIG])
 
     return True

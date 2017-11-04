@@ -154,8 +154,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             return TEMP_CELSIUS
         elif self._unit == 'F':
             return TEMP_FAHRENHEIT
-        else:
-            return self._unit
+        return self._unit
 
     @property
     def current_temperature(self):

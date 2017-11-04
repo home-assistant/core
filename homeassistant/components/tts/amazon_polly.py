@@ -11,7 +11,7 @@ from homeassistant.components.tts import Provider, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['boto3==1.4.3']
+REQUIREMENTS = ['boto3==1.4.7']
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -164,7 +164,7 @@ class AmazonPollyProvider(Provider):
         """Request TTS file from Polly."""
         voice_id = options.get(CONF_VOICE, self.default_voice)
         voice_in_dict = self.all_voices.get(voice_id)
-        if language is not voice_in_dict.get('LanguageCode'):
+        if language != voice_in_dict.get('LanguageCode'):
             _LOGGER.error("%s does not support the %s language",
                           voice_id, language)
             return (None, None)

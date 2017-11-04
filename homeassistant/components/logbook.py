@@ -15,7 +15,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import sun
-from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
@@ -84,6 +83,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
+@asyncio.coroutine
 def setup(hass, config):
     """Listen for download events to download files."""
     @callback
@@ -100,10 +100,10 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    register_built_in_panel(
-        hass, 'logbook', 'Logbook', 'mdi:format-list-bulleted-type')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'logbook', 'logbook', 'mdi:format-list-bulleted-type')
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, 'log', log_message, schema=LOG_MESSAGE_SCHEMA)
     return True
 
@@ -367,14 +367,12 @@ def _entry_message_from_state(domain, state):
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
             return 'is away'
-        else:
-            return 'is at {}'.format(state.state)
+        return 'is at {}'.format(state.state)
 
     elif domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
             return 'has risen'
-        else:
-            return 'has set'
+        return 'has set'
 
     elif state.state == STATE_ON:
         # Future: combine groups and its entity entries ?

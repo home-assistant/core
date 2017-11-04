@@ -13,6 +13,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -43,12 +44,14 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
 def is_locked(hass, entity_id=None):
     """Return if the lock is locked based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
+@bind_hass
 def lock(hass, entity_id=None, code=None):
     """Lock all or specified locks."""
     data = {}
@@ -60,6 +63,7 @@ def lock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_LOCK, data)
 
 
+@bind_hass
 def unlock(hass, entity_id=None, code=None):
     """Unlock all or specified locks."""
     data = {}
@@ -86,24 +90,16 @@ def async_setup(hass, config):
 
         code = service.data.get(ATTR_CODE)
 
+        update_tasks = []
         for entity in target_locks:
             if service.service == SERVICE_LOCK:
                 yield from entity.async_lock(code=code)
             else:
                 yield from entity.async_unlock(code=code)
 
-        update_tasks = []
-
-        for entity in target_locks:
             if not entity.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                entity.async_update_ha_state(True))
-            if hasattr(entity, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(entity.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

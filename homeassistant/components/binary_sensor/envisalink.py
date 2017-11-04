@@ -80,4 +80,4 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     def _update_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

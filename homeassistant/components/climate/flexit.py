@@ -145,4 +145,4 @@ class Flexit(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Set new fan mode."""
-        self.unit.set_fan_speed(fan)
+        self.unit.set_fan_speed(self._fan_list.index(fan))

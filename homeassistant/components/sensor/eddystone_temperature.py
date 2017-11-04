@@ -86,8 +86,7 @@ def get_from_conf(config, config_key, length):
         _LOGGER.error("Error in config parameter %s: Must be exactly %d "
                       "bytes. Device will not be added", config_key, length/2)
         return None
-    else:
-        return string
+    return string
 
 
 class EddystoneTemp(Entity):

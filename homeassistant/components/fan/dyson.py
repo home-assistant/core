@@ -1,4 +1,8 @@
-"""Support for Dyson Pure Cool link fan."""
+"""Support for Dyson Pure Cool link fan.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/fan.dyson/
+"""
 import logging
 import asyncio
 from os import path
@@ -32,7 +36,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DYSON_FAN_DEVICES] = []
 
     # Get Dyson Devices from parent component
-    for device in hass.data[DYSON_DEVICES]:
+    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    for device in [d for d in hass.data[DYSON_DEVICES] if
+                   isinstance(d, DysonPureCoolLink)]:
         dyson_entity = DysonPureCoolLinkDevice(hass, device)
         hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
@@ -79,9 +85,11 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def on_message(self, message):
         """Called when new messages received from the fan."""
-        _LOGGER.debug(
-            "Message received for fan device %s : %s", self.name, message)
-        self.schedule_update_ha_state()
+        from libpurecoollink.dyson_pure_state import DysonPureCoolState
+        if isinstance(message, DysonPureCoolState):
+            _LOGGER.debug("Message received for fan device %s : %s", self.name,
+                          message)
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -157,8 +165,7 @@ class DysonPureCoolLinkDevice(FanEntity):
             from libpurecoollink.const import FanSpeed
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
                 return self._device.state.speed
-            else:
-                return int(self._device.state.speed)
+            return int(self._device.state.speed)
         return None
 
     @property

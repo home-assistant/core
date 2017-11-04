@@ -99,6 +99,14 @@ def hass_hue(loop, hass):
         kitchen_light_entity.entity_id, kitchen_light_entity.state,
         attributes=attrs)
 
+    # Ceiling Fan is explicitly excluded from being exposed
+    ceiling_fan_entity = hass.states.get('fan.ceiling_fan')
+    attrs = dict(ceiling_fan_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = True
+    hass.states.async_set(
+        ceiling_fan_entity.entity_id, ceiling_fan_entity.state,
+        attributes=attrs)
+
     # Expose the script
     script_entity = hass.states.get('script.set_kitchen_light')
     attrs = dict(script_entity.attributes)
@@ -146,6 +154,7 @@ def test_discover_lights(hue_client):
     assert 'media_player.walkman' in devices
     assert 'media_player.lounge_room' in devices
     assert 'fan.living_room_fan' in devices
+    assert 'fan.ceiling_fan' not in devices
 
 
 @asyncio.coroutine

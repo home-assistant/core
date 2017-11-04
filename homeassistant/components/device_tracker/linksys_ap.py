@@ -6,8 +6,6 @@ https://home-assistant.io/components/device_tracker.linksys_ap/
 """
 import base64
 import logging
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -16,9 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
-from homeassistant.util import Throttle
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
 
@@ -51,8 +47,6 @@ class LinksysAPDeviceScanner(object):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.verify_ssl = config[CONF_VERIFY_SSL]
-
-        self.lock = threading.Lock()
         self.last_results = []
 
         # Check if the access point is accessible
@@ -76,24 +70,22 @@ class LinksysAPDeviceScanner(object):
         """
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Check for connected devices."""
         from bs4 import BeautifulSoup as BS
 
-        with self.lock:
-            _LOGGER.info("Checking Linksys AP")
+        _LOGGER.info("Checking Linksys AP")
 
-            self.last_results = []
-            for interface in range(INTERFACES):
-                request = self._make_request(interface)
-                self.last_results.extend(
-                    [x.find_all('td')[1].text
-                     for x in BS(request.content, "html.parser")
-                     .find_all(class_='section-row')]
-                )
+        self.last_results = []
+        for interface in range(INTERFACES):
+            request = self._make_request(interface)
+            self.last_results.extend(
+                [x.find_all('td')[1].text
+                 for x in BS(request.content, "html.parser")
+                 .find_all(class_='section-row')]
+            )
 
-            return True
+        return True
 
     def _make_request(self, unit=0):
         # No, the '&&' is not a typo - this is expected by the web interface.

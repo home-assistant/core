@@ -16,14 +16,18 @@ from homeassistant.const import CONF_NAME
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IP_ADDRESS = 'ip'
+CONF_VERSION = 'version'
 
 DEFAULT_NAME = 'Current Energy Usage'
+DEFAULT_VERSION = 1
 
 ICON = 'mdi:flash'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
+        vol.All(vol.Coerce(int), vol.Any(1, 2))
 })
 
 
@@ -31,16 +35,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DTE energy bridge sensor."""
     name = config.get(CONF_NAME)
     ip_address = config.get(CONF_IP_ADDRESS)
+    version = config.get(CONF_VERSION, 1)
 
-    add_devices([DteEnergyBridgeSensor(ip_address, name)], True)
+    add_devices([DteEnergyBridgeSensor(ip_address, name, version)], True)
 
 
 class DteEnergyBridgeSensor(Entity):
-    """Implementation of a DTE Energy Bridge sensor."""
+    """Implementation of the DTE Energy Bridge sensors."""
 
-    def __init__(self, ip_address, name):
+    def __init__(self, ip_address, name, version):
         """Initialize the sensor."""
-        self._url = "http://{}/instantaneousdemand".format(ip_address)
+        self._version = version
+
+        if self._version == 1:
+            url_template = "http://{}/instantaneousdemand"
+        elif self._version == 2:
+            url_template = "http://{}:8888/zigbee/se/instantaneousdemand"
+
+        self._url = url_template.format(ip_address)
+
         self._name = name
         self._unit_of_measurement = "kW"
         self._state = None
@@ -91,4 +104,9 @@ class DteEnergyBridgeSensor(Entity):
                 response.text, self._name)
             return
 
-        self._state = float(response_split[0])
+        val = float(response_split[0])
+
+        # A workaround for a bug in the DTE energy bridge.
+        # The returned value can randomly be in W or kW.  Checking for a
+        # a decimal seems to be a reliable way to determine the units.
+        self._state = val if '.' in response_split[0] else val / 1000

@@ -7,8 +7,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
-    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_BASIC_LEVEL,
-    EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN)
+    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
+    ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN,
+    COMMAND_CLASS_CENTRAL_SCENE)
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,13 +108,19 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         dispatcher.connect(
             self.network_scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT)
 
-    def network_node_changed(self, node=None, args=None):
+    def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""
         if node and node.node_id != self.node_id:
             return
         if args is not None and 'nodeId' in args and \
                 args['nodeId'] != self.node_id:
             return
+
+        # Process central scene activation
+        if (value is not None and
+                value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
+            self.central_scene_activated(value.index, value.data)
+
         self.node_changed()
 
     def get_node_statistics(self):
@@ -175,6 +182,18 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_NODE_ID: self.node.node_id,
             ATTR_SCENE_ID: scene_id
+        })
+
+    def central_scene_activated(self, scene_id, scene_data):
+        """Handle an activated central scene for this node."""
+        if self.hass is None:
+            return
+
+        self.hass.bus.fire(EVENT_SCENE_ACTIVATED, {
+            ATTR_ENTITY_ID:   self.entity_id,
+            ATTR_NODE_ID:     self.node_id,
+            ATTR_SCENE_ID:    scene_id,
+            ATTR_SCENE_DATA:  scene_data
         })
 
     @property

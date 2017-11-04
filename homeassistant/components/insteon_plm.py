@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['insteonplm==0.7.4']
+REQUIREMENTS = ['insteonplm==0.7.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,8 +79,12 @@ def async_setup(hass, config):
         #
         # Override the device default capabilities for a specific address
         #
-        plm.protocol.devices.add_override(
-            device['address'], 'capabilities', [device['platform']])
+        if isinstance(device['platform'], list):
+            plm.protocol.devices.add_override(
+                device['address'], 'capabilities', device['platform'])
+        else:
+            plm.protocol.devices.add_override(
+                device['address'], 'capabilities', [device['platform']])
 
     hass.data['insteon_plm'] = plm
 
@@ -98,7 +102,7 @@ def common_attributes(entity):
         'address': 'INSTEON Address',
         'description': 'Description',
         'model': 'Model',
-        'cat': 'Cagegory',
+        'cat': 'Category',
         'subcat': 'Subcategory',
         'firmware': 'Firmware',
         'product_key': 'Product Key'

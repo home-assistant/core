@@ -85,15 +85,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if not config[ATTR_AUTOMATIC_ADD]:
                 return
 
-            poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
-
-            if poss_dev is not None:
-                poss_id = slugify(poss_dev.event.device.id_string.lower())
-                _LOGGER.info("Found possible matching deviceid %s.",
-                             poss_id)
+            if event.device.packettype == 0x13:
+                poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
+                if poss_dev is not None:
+                    poss_id = slugify(poss_dev.event.device.id_string.lower())
+                    _LOGGER.info("Found possible matching deviceid %s.",
+                                 poss_id)
 
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
+            sensor.hass = hass
             rfxtrx.RFX_DEVICES[device_id] = sensor
             add_devices_callback([sensor])
             _LOGGER.info("Added binary sensor %s "
@@ -112,11 +113,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                          event.device.__class__.__name__,
                          event.device.subtype)
 
-        if sensor.is_pt2262:
-            cmd = rfxtrx.get_pt2262_cmd(device_id, sensor.data_bits)
-            _LOGGER.info("applying cmd %s to device_id: %s)",
-                         cmd, sensor.masked_id)
-            sensor.apply_cmd(int(cmd, 16))
+        if sensor.is_lighting4:
+            if sensor.data_bits is not None:
+                cmd = rfxtrx.get_pt2262_cmd(device_id, sensor.data_bits)
+                sensor.apply_cmd(int(cmd, 16))
+            else:
+                sensor.update_state(True)
         else:
             rfxtrx.apply_received_command(event)
 
@@ -151,6 +153,7 @@ class RfxtrxBinarySensor(BinarySensorDevice):
         self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
+        self.is_lighting4 = (event.device.packettype == 0x13)
         self.delay_listener = None
         self._data_bits = data_bits
         self._cmd_on = cmd_on
@@ -169,11 +172,6 @@ class RfxtrxBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the device name."""
         return self._name
-
-    @property
-    def is_pt2262(self):
-        """Return true if the device is PT2262-based."""
-        return self._data_bits is not None
 
     @property
     def masked_id(self):

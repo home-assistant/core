@@ -78,6 +78,23 @@ def test_correct_config_discovery(hass, mqtt_mock, caplog):
 
 
 @asyncio.coroutine
+def test_discover_fan(hass, mqtt_mock, caplog):
+    """Test discovering an MQTT fan."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            ('{ "name": "Beer",'
+                             '  "command_topic": "test_topic" }'))
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('fan.beer')
+
+    assert state is not None
+    assert state.name == 'Beer'
+    assert ('fan', 'bla') in hass.data[ALREADY_DISCOVERED]
+
+
+@asyncio.coroutine
 def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
     """Test sending in correct JSON with optional node_id included."""
     yield from async_start(hass, 'homeassistant', {})

@@ -21,7 +21,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.3']
+REQUIREMENTS = ['pyemby==1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class EmbyDevice(MediaPlayerDevice):
             self.media_status_last_position = None
             self.media_status_received = None
 
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def hidden(self):
@@ -306,8 +306,7 @@ class EmbyDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
-        else:
-            return None
+        return None
 
     def async_media_play(self):
         """Play media.

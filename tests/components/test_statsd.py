@@ -86,6 +86,7 @@ class TestStatsd(unittest.TestCase):
         config = {
             'statsd': {
                 'host': 'host',
+                'value_mapping': {'custom': 3}
             }
         }
 
@@ -98,6 +99,7 @@ class TestStatsd(unittest.TestCase):
 
         valid = {'1': 1,
                  '1.0': 1.0,
+                 'custom': 3,
                  STATE_ON: 1,
                  STATE_OFF: 0}
         for in_, out in valid.items():

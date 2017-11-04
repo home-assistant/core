@@ -42,8 +42,6 @@ def async_trigger(hass, config, action):
             },
         })
 
-    # Do something to call action
     if event == SUN_EVENT_SUNRISE:
         return async_track_sunrise(hass, call_action, offset)
-    else:
-        return async_track_sunset(hass, call_action, offset)
+    return async_track_sunset(hass, call_action, offset)

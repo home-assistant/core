@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 49
-PATCH_VERSION = '0.dev0'
+MINOR_VERSION = 57
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -56,6 +56,7 @@ SUN_EVENT_SUNRISE = 'sunrise'
 # #### CONFIG ####
 CONF_ABOVE = 'above'
 CONF_ACCESS_TOKEN = 'access_token'
+CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
@@ -87,6 +88,8 @@ CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
+CONF_DISKS = 'disks'
+CONF_DISPLAY_CURRENCY = 'display_currency'
 CONF_DISPLAY_OPTIONS = 'display_options'
 CONF_DOMAIN = 'domain'
 CONF_DOMAINS = 'domains'
@@ -96,10 +99,12 @@ CONF_EMAIL = 'email'
 CONF_ENTITIES = 'entities'
 CONF_ENTITY_ID = 'entity_id'
 CONF_ENTITY_NAMESPACE = 'entity_namespace'
+CONF_ENTITY_PICTURE_TEMPLATE = 'entity_picture_template'
 CONF_EVENT = 'event'
 CONF_EXCLUDE = 'exclude'
 CONF_FILE_PATH = 'file_path'
 CONF_FILENAME = 'filename'
+CONF_FOR = 'for'
 CONF_FRIENDLY_NAME = 'friendly_name'
 CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
@@ -108,12 +113,15 @@ CONF_ICON = 'icon'
 CONF_ICON_TEMPLATE = 'icon_template'
 CONF_INCLUDE = 'include'
 CONF_ID = 'id'
+CONF_IP_ADDRESS = 'ip_address'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
+CONF_LIGHTS = 'lights'
 CONF_MAC = 'mac'
 CONF_METHOD = 'method'
-CONF_MINIMUM = 'minimum'
 CONF_MAXIMUM = 'maximum'
+CONF_MINIMUM = 'minimum'
+CONF_MODE = 'mode'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
@@ -130,18 +138,22 @@ CONF_PIN = 'pin'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
+CONF_PROFILE_NAME = 'profile_name'
 CONF_PROTOCOL = 'protocol'
 CONF_PROXY_SSL = 'proxy_ssl'
 CONF_QUOTE = 'quote'
+CONF_RADIUS = 'radius'
 CONF_RECIPIENT = 'recipient'
+CONF_REGION = 'region'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
+CONF_ROOM = 'room'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
-CONF_SENSOR_CLASS = 'sensor_class'
 CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
+CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
@@ -179,6 +191,7 @@ EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
+EVENT_THEMES_UPDATED = 'themes_updated'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -187,7 +200,9 @@ STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = 'unknown'
 STATE_OPEN = 'open'
+STATE_OPENING = 'opening'
 STATE_CLOSED = 'closed'
+STATE_CLOSING = 'closing'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
@@ -195,7 +210,10 @@ STATE_STANDBY = 'standby'
 STATE_ALARM_DISARMED = 'disarmed'
 STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'
+STATE_ALARM_ARMED_NIGHT = 'armed_night'
 STATE_ALARM_PENDING = 'pending'
+STATE_ALARM_ARMING = 'arming'
+STATE_ALARM_DISARMING = 'disarming'
 STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
@@ -207,6 +225,9 @@ STATE_PROBLEM = 'problem'
 # Attribution
 ATTR_ATTRIBUTION = 'attribution'
 
+# Credentials
+ATTR_CREDENTIALS = 'credentials'
+
 # Contains time-related attributes
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
@@ -216,6 +237,9 @@ ATTR_TIME = 'time'
 ATTR_DOMAIN = 'domain'
 ATTR_SERVICE = 'service'
 ATTR_SERVICE_DATA = 'service_data'
+
+# IDs
+ATTR_ID = 'id'
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = 'service_call_id'
@@ -238,34 +262,8 @@ ATTR_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM_METRIC = 'metric'  # type: str
 CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
 
-# Temperature attribute
-ATTR_TEMPERATURE = 'temperature'
-TEMP_CELSIUS = '°C'
-TEMP_FAHRENHEIT = '°F'
-
-# Length units
-LENGTH_CENTIMETERS = 'cm'  # type: str
-LENGTH_METERS = 'm'  # type: str
-LENGTH_KILOMETERS = 'km'  # type: str
-
-LENGTH_INCHES = 'in'  # type: str
-LENGTH_FEET = 'ft'  # type: str
-LENGTH_YARD = 'yd'  # type: str
-LENGTH_MILES = 'mi'  # type: str
-
-# Volume units
-VOLUME_LITERS = 'L'  # type: str
-VOLUME_MILLILITERS = 'mL'  # type: str
-
-VOLUME_GALLONS = 'gal'  # type: str
-VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
-
-# Mass units
-MASS_GRAMS = 'g'  # type: str
-MASS_KILOGRAMS = 'kg'  # type: str
-
-MASS_OUNCES = 'oz'  # type: str
-MASS_POUNDS = 'lb'  # type: str
+# Electrical attributes
+ATTR_VOLTAGE = 'voltage'
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = 'discovered'
@@ -279,6 +277,9 @@ ATTR_WAKEUP = 'wake_up_interval'
 # For devices which support a code attribute
 ATTR_CODE = 'code'
 ATTR_CODE_FORMAT = 'code_format'
+
+# For calling a device specific command
+ATTR_COMMAND = 'command'
 
 # For devices which support an armed state
 ATTR_ARMED = 'device_armed'
@@ -315,6 +316,41 @@ ATTR_SUPPORTED_FEATURES = 'supported_features'
 # Class of device within its domain
 ATTR_DEVICE_CLASS = 'device_class'
 
+# Temperature attribute
+ATTR_TEMPERATURE = 'temperature'
+
+# #### UNITS OF MEASUREMENT ####
+# Temperature units
+TEMP_CELSIUS = '°C'
+TEMP_FAHRENHEIT = '°F'
+
+# Length units
+LENGTH_CENTIMETERS = 'cm'  # type: str
+LENGTH_METERS = 'm'  # type: str
+LENGTH_KILOMETERS = 'km'  # type: str
+
+LENGTH_INCHES = 'in'  # type: str
+LENGTH_FEET = 'ft'  # type: str
+LENGTH_YARD = 'yd'  # type: str
+LENGTH_MILES = 'mi'  # type: str
+
+# Volume units
+VOLUME_LITERS = 'L'  # type: str
+VOLUME_MILLILITERS = 'mL'  # type: str
+
+VOLUME_GALLONS = 'gal'  # type: str
+VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
+
+# Mass units
+MASS_GRAMS = 'g'  # type: str
+MASS_KILOGRAMS = 'kg'  # type: str
+
+MASS_OUNCES = 'oz'  # type: str
+MASS_POUNDS = 'lb'  # type: str
+
+# UV Index units
+UNIT_UV_INDEX = 'UV index'  # type: str
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
@@ -340,6 +376,7 @@ SERVICE_SHUFFLE_SET = 'shuffle_set'
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
 SERVICE_ALARM_ARM_AWAY = 'alarm_arm_away'
+SERVICE_ALARM_ARM_NIGHT = 'alarm_arm_night'
 SERVICE_ALARM_TRIGGER = 'alarm_trigger'
 
 SERVICE_LOCK = 'lock'
@@ -393,6 +430,8 @@ HTTP_DIGEST_AUTHENTICATION = 'digest'
 
 HTTP_HEADER_HA_AUTH = 'X-HA-access'
 HTTP_HEADER_ACCEPT_ENCODING = 'Accept-Encoding'
+HTTP_HEADER_AUTH = 'Authorization'
+HTTP_HEADER_USER_AGENT = 'User-Agent'
 HTTP_HEADER_CONTENT_TYPE = 'Content-type'
 HTTP_HEADER_CONTENT_ENCODING = 'Content-Encoding'
 HTTP_HEADER_VARY = 'Vary'

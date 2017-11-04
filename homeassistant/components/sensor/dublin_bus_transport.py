@@ -141,7 +141,7 @@ class PublicTransportData(object):
         params = {}
         params['stopid'] = self.stop
 
-        if len(self.route) > 0:
+        if self.route:
             params['routeid'] = self.route
 
         params['maxresults'] = 2

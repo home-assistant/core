@@ -20,7 +20,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pychromecast==0.8.1']
+REQUIREMENTS = ['pychromecast==0.8.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
 
-KNOWN_HOSTS = []
+KNOWN_HOSTS_KEY = 'cast_known_hosts'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
@@ -49,22 +49,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
 
-    hosts = []
+    known_hosts = hass.data.get(KNOWN_HOSTS_KEY)
+    if known_hosts is None:
+        known_hosts = hass.data[KNOWN_HOSTS_KEY] = []
 
     if discovery_info:
         host = (discovery_info.get('host'), discovery_info.get('port'))
 
-        if host in KNOWN_HOSTS:
+        if host in known_hosts:
             return
 
         hosts = [host]
 
     elif CONF_HOST in config:
-        hosts = [(config.get(CONF_HOST), DEFAULT_PORT)]
+        host = (config.get(CONF_HOST), DEFAULT_PORT)
+
+        if host in known_hosts:
+            return
+
+        hosts = [host]
 
     else:
         hosts = [tuple(dev[:2]) for dev in pychromecast.discover_chromecasts()
-                 if tuple(dev[:2]) not in KNOWN_HOSTS]
+                 if tuple(dev[:2]) not in known_hosts]
 
     casts = []
 
@@ -73,19 +80,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     all_chromecasts = pychromecast.get_chromecasts()
 
     for host in hosts:
+        (_, port) = host
         found = [device for device in all_chromecasts
                  if (device.host, device.port) == host]
         if found:
             try:
                 casts.append(CastDevice(found[0]))
-                KNOWN_HOSTS.append(host)
+                known_hosts.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
-        else:
+
+        # do not add groups using pychromecast.Chromecast as it leads to names
+        # collision since pychromecast.Chromecast will get device name instead
+        # of group name
+        elif port == DEFAULT_PORT:
             try:
                 # add the device anyway, get_chromecasts couldn't find it
                 casts.append(CastDevice(pychromecast.Chromecast(*host)))
-                KNOWN_HOSTS.append(host)
+                known_hosts.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
 
@@ -131,8 +143,7 @@ class CastDevice(MediaPlayerDevice):
             return STATE_IDLE
         elif self.cast.is_idle:
             return STATE_OFF
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def volume_level(self):
@@ -235,18 +246,13 @@ class CastDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self.media_status is None or self.media_status_received is None or \
+        if self.media_status is None or \
                 not (self.media_status.player_is_playing or
+                     self.media_status.player_is_paused or
                      self.media_status.player_is_idle):
             return None
 
-        position = self.media_status.current_time
-
-        if self.media_status.player_is_playing:
-            position += (dt_util.utcnow() -
-                         self.media_status_received).total_seconds()
-
-        return position
+        return self.media_status.current_time
 
     @property
     def media_position_updated_at(self):
@@ -281,7 +287,7 @@ class CastDevice(MediaPlayerDevice):
         self.cast.set_volume(volume)
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         self.cast.media_controller.play()
 
     def media_pause(self):

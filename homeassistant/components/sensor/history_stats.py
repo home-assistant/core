@@ -296,8 +296,7 @@ class HistoryStatsHelper:
             return '%dd %dh %dm' % (days, hours, minutes)
         elif hours > 0:
             return '%dh %dm' % (hours, minutes)
-        else:
-            return '%dm' % minutes
+        return '%dm' % minutes
 
     @staticmethod
     def pretty_ratio(value, period):

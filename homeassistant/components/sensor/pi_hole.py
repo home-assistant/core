@@ -36,11 +36,21 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 MONITORED_CONDITIONS = {
     'dns_queries_today': ['DNS Queries Today',
-                          None, 'mdi:network-question'],
+                          'queries', 'mdi:comment-question-outline'],
     'ads_blocked_today': ['Ads Blocked Today',
-                          None, 'mdi:close-octagon-outline'],
+                          'ads', 'mdi:close-octagon-outline'],
     'ads_percentage_today': ['Ads Percentage Blocked Today',
                              '%', 'mdi:close-octagon-outline'],
+    'domains_being_blocked': ['Domains Blocked',
+                              'domains', 'mdi:block-helper'],
+    'queries_cached': ['DNS Queries Cached',
+                       'queries', 'mdi:comment-question-outline'],
+    'queries_forwarded': ['DNS Queries Forwarded',
+                          'queries', 'mdi:comment-question-outline'],
+    'unique_clients': ['DNS Unique Clients',
+                       'clients', 'mdi:account-outline'],
+    'unique_domains': ['DNS Unique Domains',
+                       'domains', 'mdi:domain'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -104,7 +114,10 @@ class PiHoleSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._api.data[self._var_id]
+        try:
+            return round(self._api.data[self._var_id], 2)
+        except TypeError:
+            return self._api.data[self._var_id]
 
     # pylint: disable=no-member
     @property

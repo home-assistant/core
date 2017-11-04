@@ -6,6 +6,7 @@ https://home-assistant.io/components/camera.onvif/
 """
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 
@@ -54,6 +55,7 @@ class ONVIFCamera(Camera):
     def __init__(self, hass, config):
         """Initialize a ONVIF camera."""
         from onvif import ONVIFService
+        import onvif
         super().__init__()
 
         self._name = config.get(CONF_NAME)
@@ -63,7 +65,7 @@ class ONVIFCamera(Camera):
                 config.get(CONF_HOST), config.get(CONF_PORT)),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
-            '{}/deps/onvif/wsdl/media.wsdl'.format(hass.config.config_dir)
+            '{}/wsdl/media.wsdl'.format(os.path.dirname(onvif.__file__))
         )
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
@@ -76,9 +78,9 @@ class ONVIFCamera(Camera):
         ffmpeg = ImageFrame(
             self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
-        image = yield from ffmpeg.get_image(
+        image = yield from asyncio.shield(ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments)
+            extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
         return image
 
     @asyncio.coroutine

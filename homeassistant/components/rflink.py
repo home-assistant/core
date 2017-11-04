@@ -8,17 +8,21 @@ import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
+import os
 
 import async_timeout
-import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
-    STATE_UNKNOWN)
+    ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
+import voluptuous as vol
+
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -27,11 +31,15 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EVENT = 'event'
 ATTR_STATE = 'state'
 
+CONF_ALIASES = 'aliases'
 CONF_ALIASSES = 'aliasses'
+CONF_GROUP_ALIASES = 'group_aliases'
 CONF_GROUP_ALIASSES = 'group_aliasses'
 CONF_GROUP = 'group'
+CONF_NOGROUP_ALIASES = 'nogroup_aliases'
 CONF_NOGROUP_ALIASSES = 'nogroup_aliasses'
 CONF_DEVICE_DEFAULTS = 'device_defaults'
+CONF_DEVICE_ID = 'device_id'
 CONF_DEVICES = 'devices'
 CONF_AUTOMATIC_ADD = 'automatic_add'
 CONF_FIRE_EVENT = 'fire_event'
@@ -57,6 +65,8 @@ RFLINK_GROUP_COMMANDS = ['allon', 'alloff']
 
 DOMAIN = 'rflink'
 
+SERVICE_SEND_COMMAND = 'send_command'
+
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS,
@@ -75,6 +85,11 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+SEND_COMMAND_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICE_ID): cv.string,
+    vol.Required(CONF_COMMAND): cv.string,
+})
+
 
 def identify_event_type(event):
     """Look at event to determine type of device.
@@ -85,8 +100,7 @@ def identify_event_type(event):
         return EVENT_KEY_COMMAND
     elif EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
-    else:
-        return 'unknown'
+    return 'unknown'
 
 
 @asyncio.coroutine
@@ -108,6 +122,24 @@ def async_setup(hass, config):
 
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
+
+    @asyncio.coroutine
+    def async_send_command(call):
+        """Send Rflink command."""
+        _LOGGER.debug('Rflink command for %s', str(call.data))
+        if not (yield from RflinkCommand.send_command(
+                call.data.get(CONF_DEVICE_ID),
+                call.data.get(CONF_COMMAND))):
+            _LOGGER.error('Failed Rflink command for %s', str(call.data))
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SEND_COMMAND, async_send_command,
+        descriptions[DOMAIN][SERVICE_SEND_COMMAND], SEND_COMMAND_SCHEMA)
 
     @callback
     def event_callback(event):
@@ -220,8 +252,8 @@ class RflinkDevice(Entity):
     platform = None
     _state = STATE_UNKNOWN
 
-    def __init__(self, device_id, hass, name=None, aliasses=None, group=True,
-                 group_aliasses=None, nogroup_aliasses=None, fire_event=False,
+    def __init__(self, device_id, hass, name=None, aliases=None, group=True,
+                 group_aliases=None, nogroup_aliases=None, fire_event=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
         self.hass = hass
@@ -242,7 +274,7 @@ class RflinkDevice(Entity):
         self._handle_event(event)
 
         # Propagate changes through ha
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(
@@ -310,6 +342,12 @@ class RflinkCommand(RflinkDevice):
         """Return connection status."""
         return bool(cls._protocol)
 
+    @classmethod
+    @asyncio.coroutine
+    def send_command(cls, device_id, action):
+        """Send device command to Rflink and wait for acknowledgement."""
+        return (yield from cls._protocol.send_command_ack(device_id, action))
+
     @asyncio.coroutine
     def _async_handle_command(self, command, *args):
         """Do bookkeeping for command, send it to rflink and update state."""
@@ -333,6 +371,19 @@ class RflinkCommand(RflinkDevice):
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
+
+        # Cover options for RFlink
+        elif command == 'close_cover':
+            cmd = 'DOWN'
+            self._state = False
+
+        elif command == 'open_cover':
+            cmd = 'UP'
+            self._state = True
+
+        elif command == 'stop_cover':
+            cmd = 'STOP'
+            self._state = True
 
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
@@ -399,3 +450,24 @@ class SwitchableRflinkDevice(RflinkCommand):
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
+
+
+DEPRECATED_CONFIG_OPTIONS = [
+    CONF_ALIASSES,
+    CONF_GROUP_ALIASSES,
+    CONF_NOGROUP_ALIASSES]
+REPLACEMENT_CONFIG_OPTIONS = [
+    CONF_ALIASES,
+    CONF_GROUP_ALIASES,
+    CONF_NOGROUP_ALIASES]
+
+
+def remove_deprecated(config):
+    """Remove deprecated config options from device config."""
+    for index, deprecated_option in enumerate(DEPRECATED_CONFIG_OPTIONS):
+        if deprecated_option in config:
+            replacement_option = REPLACEMENT_CONFIG_OPTIONS[index]
+            # generate deprecation warning
+            get_deprecated(config, replacement_option, deprecated_option)
+            # remove old config value replacing new one
+            config[replacement_option] = config.pop(deprecated_option)

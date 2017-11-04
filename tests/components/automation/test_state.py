@@ -130,25 +130,6 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-    def test_if_fires_on_entity_change_with_state_filter(self):
-        """Test for firing on entity change with state filter."""
-        assert setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'state': 'world'
-                },
-                'action': {
-                    'service': 'test.automation'
-                }
-            }
-        })
-
-        self.hass.states.set('test.entity', 'world')
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
     def test_if_fires_on_entity_change_with_both_filters(self):
         """Test for firing if both filters are a non match."""
         assert setup_component(self.hass, automation.DOMAIN, {
@@ -525,3 +506,38 @@ class TestAutomationState(unittest.TestCase):
                     },
                     'action': {'service': 'test.automation'},
                 }})
+
+    def test_wait_template_with_trigger(self):
+        """Test using wait template with 'trigger.entity_id'."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.entity',
+                    'to': 'world',
+                },
+                'action': [
+                    {'wait_template':
+                        "{{ is_state(trigger.entity_id, 'hello') }}"},
+                    {'service': 'test.automation',
+                     'data_template': {
+                        'some':
+                        '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id', 'from_state.state',
+                            'to_state.state'))
+                        }}
+                ],
+            }
+        })
+
+        self.hass.block_till_done()
+        self.calls = []
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity', 'hello')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'state - test.entity - hello - world',
+            self.calls[0].data['some'])

@@ -2,21 +2,21 @@
 import asyncio
 
 from homeassistant.bootstrap import async_setup_component
-from tests.common import async_fire_mqtt_message, async_mock_service
+from tests.common import async_fire_mqtt_message, async_mock_intent
 
 EXAMPLE_MSG = """
 {
-    "text": "turn the lights green",
+    "input": "turn the lights green",
     "intent": {
-        "intent_name": "Lights",
+        "intentName": "Lights",
         "probability": 1
     },
     "slots": [
         {
-            "slot_name": "light_color",
+            "slotName": "light_color",
             "value": {
                 "kind": "Custom",
-                "value": "blue"
+                "value": "green"
             }
         }
     ]
@@ -27,27 +27,19 @@ EXAMPLE_MSG = """
 @asyncio.coroutine
 def test_snips_call_action(hass, mqtt_mock):
     """Test calling action via Snips."""
-    calls = async_mock_service(hass, 'test', 'service')
-
     result = yield from async_setup_component(hass, "snips", {
-        "snips": {
-            "intents": {
-                "Lights": {
-                    "action": {
-                        "service": "test.service",
-                        "data_template": {
-                            "color": "{{ light_color }}"
-                        }
-                    }
-                }
-            }
-        }
+        "snips": {},
     })
     assert result
+
+    intents = async_mock_intent(hass, 'Lights')
 
     async_fire_mqtt_message(hass, 'hermes/nlu/intentParsed',
                             EXAMPLE_MSG)
     yield from hass.async_block_till_done()
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.data.get('color') == 'blue'
+    assert len(intents) == 1
+    intent = intents[0]
+    assert intent.platform == 'snips'
+    assert intent.intent_type == 'Lights'
+    assert intent.slots == {'light_color': {'value': 'green'}}
+    assert intent.text_input == 'turn the lights green'

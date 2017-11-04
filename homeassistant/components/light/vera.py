@@ -50,8 +50,7 @@ class VeraLight(VeraDevice, Light):
         """Flag supported features."""
         if self._color:
             return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
-        else:
-            return SUPPORT_BRIGHTNESS
+        return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

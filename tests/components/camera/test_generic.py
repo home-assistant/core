@@ -2,7 +2,7 @@
 import asyncio
 from unittest import mock
 
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component
 
 
 @asyncio.coroutine
@@ -10,18 +10,14 @@ def test_fetching_url(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
     aioclient_mock.get('http://example.com', text='hello world')
 
-    def setup_platform():
-        """Setup the platform."""
-        assert setup_component(hass, 'camera', {
-            'camera': {
-                'name': 'config_test',
-                'platform': 'generic',
-                'still_image_url': 'http://example.com',
-                'username': 'user',
-                'password': 'pass'
-            }})
-
-    yield from hass.loop.run_in_executor(None, setup_platform)
+    yield from async_setup_component(hass, 'camera', {
+        'camera': {
+            'name': 'config_test',
+            'platform': 'generic',
+            'still_image_url': 'http://example.com',
+            'username': 'user',
+            'password': 'pass'
+        }})
 
     client = yield from test_client(hass.http.app)
 
@@ -44,18 +40,14 @@ def test_limit_refetch(aioclient_mock, hass, test_client):
     aioclient_mock.get('http://example.com/15a', text='hello planet')
     aioclient_mock.get('http://example.com/20a', status=404)
 
-    def setup_platform():
-        """Setup the platform."""
-        assert setup_component(hass, 'camera', {
-            'camera': {
-                'name': 'config_test',
-                'platform': 'generic',
-                'still_image_url':
-                'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                'limit_refetch_to_url_change': True,
-            }})
-
-    yield from hass.loop.run_in_executor(None, setup_platform)
+    yield from async_setup_component(hass, 'camera', {
+        'camera': {
+            'name': 'config_test',
+            'platform': 'generic',
+            'still_image_url':
+            'http://example.com/{{ states.sensor.temp.state + "a" }}',
+            'limit_refetch_to_url_change': True,
+        }})
 
     client = yield from test_client(hass.http.app)
 

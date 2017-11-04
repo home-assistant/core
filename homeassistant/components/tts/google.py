@@ -129,8 +129,7 @@ class GoogleProvider(Provider):
             if len(fullstring) > MESSAGE_SIZE:
                 idx = fullstring.rfind(' ', 0, MESSAGE_SIZE)
                 return [fullstring[:idx]] + split_by_space(fullstring[idx:])
-            else:
-                return [fullstring]
+            return [fullstring]
 
         msg_parts = []
         for part in parts:

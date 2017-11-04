@@ -1,4 +1,8 @@
-"""Parent component for Dyson Pure Cool Link devices."""
+"""Parent component for Dyson Pure Cool Link devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/dyson/
+"""
 
 import logging
 
@@ -9,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
     CONF_DEVICES
 
-REQUIREMENTS = ['libpurecoollink==0.1.5']
+REQUIREMENTS = ['libpurecoollink==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,14 +69,17 @@ def setup(hass, config):
             dyson_device = next((d for d in dyson_devices if
                                  d.serial == device["device_id"]), None)
             if dyson_device:
-                connected = dyson_device.connect(None, device["device_ip"],
-                                                 timeout, retry)
-                if connected:
-                    _LOGGER.info("Connected to device %s", dyson_device)
-                    hass.data[DYSON_DEVICES].append(dyson_device)
-                else:
-                    _LOGGER.warning("Unable to connect to device %s",
-                                    dyson_device)
+                try:
+                    connected = dyson_device.connect(device["device_ip"])
+                    if connected:
+                        _LOGGER.info("Connected to device %s", dyson_device)
+                        hass.data[DYSON_DEVICES].append(dyson_device)
+                    else:
+                        _LOGGER.warning("Unable to connect to device %s",
+                                        dyson_device)
+                except OSError as ose:
+                    _LOGGER.error("Unable to connect to device %s: %s",
+                                  str(dyson_device.network_device), str(ose))
             else:
                 _LOGGER.warning(
                     "Unable to find device %s in Dyson account",
@@ -82,7 +89,7 @@ def setup(hass, config):
         for device in dyson_devices:
             _LOGGER.info("Trying to connect to device %s with timeout=%i "
                          "and retry=%i", device, timeout, retry)
-            connected = device.connect(None, None, timeout, retry)
+            connected = device.auto_connect(timeout, retry)
             if connected:
                 _LOGGER.info("Connected to device %s", device)
                 hass.data[DYSON_DEVICES].append(device)
@@ -94,5 +101,6 @@ def setup(hass, config):
         _LOGGER.debug("Starting sensor/fan components")
         discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
         discovery.load_platform(hass, "fan", DOMAIN, {}, config)
+        discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
 
     return True
