@@ -9,37 +9,7 @@ REQUIRED_PYTHON_VER = (3, 4, 2)
 REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
 CONSTRAINT_FILE = 'package_constraints.txt'
 
-PROJECT_NAME = 'Home Assistant'
-PROJECT_PACKAGE_NAME = 'homeassistant'
-PROJECT_LICENSE = 'Apache License 2.0'
-PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2013, {}'.format(PROJECT_AUTHOR)
-PROJECT_URL = 'https://home-assistant.io/'
-PROJECT_EMAIL = 'hello@home-assistant.io'
-PROJECT_DESCRIPTION = ('Open-source home automation platform '
-                       'running on Python 3.')
-PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
-                            'home automation platform running on Python 3. '
-                            'Track and control all devices at home and '
-                            'automate control. '
-                            'Installation in less than a minute.')
-PROJECT_CLASSIFIERS = [
-    'Intended Audience :: End Users/Desktop',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: Apache Software License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3.4',
-    'Topic :: Home Automation'
-]
-
-PROJECT_GITHUB_USERNAME = 'home-assistant'
-PROJECT_GITHUB_REPOSITORY = 'home-assistant'
-
-PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
-GITHUB_PATH = '{}/{}'.format(PROJECT_GITHUB_USERNAME,
-                             PROJECT_GITHUB_REPOSITORY)
-GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
-
+# Format for platforms
 PLATFORM_FORMAT = '{}.{}'
 
 # Can be used to specify a catch all when registering state or event listeners.
@@ -48,8 +18,7 @@ MATCH_ALL = '*'
 # If no name is specified
 DEVICE_DEFAULT_NAME = 'Unnamed Device'
 
-WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-
+# Sun events
 SUN_EVENT_SUNSET = 'sunset'
 SUN_EVENT_SUNRISE = 'sunrise'
 
@@ -463,3 +432,5 @@ VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
 SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
+
+WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']

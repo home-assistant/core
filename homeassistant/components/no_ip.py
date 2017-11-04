@@ -16,12 +16,15 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME, HTTP_HEADER_AUTH,
-    HTTP_HEADER_USER_AGENT, PROJECT_EMAIL)
+    HTTP_HEADER_USER_AGENT)
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'no_ip'
+
+# We should set a dedicated address for the user agent.
+EMAIL = 'hello@home-assistant.io'
 
 INTERVAL = timedelta(minutes=5)
 
@@ -38,7 +41,7 @@ NO_IP_ERRORS = {
 }
 
 UPDATE_URL = 'https://dynupdate.noip.com/nic/update'
-USER_AGENT = "{} {}".format(SERVER_SOFTWARE, PROJECT_EMAIL)
+USER_AGENT = "{} {}".format(SERVER_SOFTWARE, EMAIL)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
