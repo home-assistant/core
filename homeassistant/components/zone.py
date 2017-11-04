@@ -9,15 +9,15 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
-    CONF_LONGITUDE, CONF_ICON)
+    CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.util.async import run_callback_threadsafe
 from homeassistant.util.location import distance
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,6 @@ ATTR_PASSIVE = 'passive'
 ATTR_RADIUS = 'radius'
 
 CONF_PASSIVE = 'passive'
-CONF_RADIUS = 'radius'
 
 DEFAULT_NAME = 'Unnamed zone'
 DEFAULT_PASSIVE = False

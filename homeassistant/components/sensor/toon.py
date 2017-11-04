@@ -1,8 +1,8 @@
 """
-Toon van Eneco Utility Gages.
+Component for the rebranded Quby thermostat as provided by Eneco.
 
-This provides a component for the rebranded Quby thermostat as provided by
-Eneco.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.toon/
 """
 import logging
 import datetime as datetime
@@ -12,46 +12,33 @@ import homeassistant.components.toon as toon_main
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_ATTR_DEVICE_TYPE = "device_type"
-STATE_ATTR_LAST_CONNECTED_CHANGE = "last_connected_change"
+STATE_ATTR_DEVICE_TYPE = 'device_type'
+STATE_ATTR_LAST_CONNECTED_CHANGE = 'last_connected_change'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup sensors."""
+    """Set up the Toon sensors."""
     _toon_main = hass.data[toon_main.TOON_HANDLE]
 
     sensor_items = []
-    sensor_items.extend([ToonSensor(hass,
-                                    'Power_current',
-                                    'power-plug',
-                                    'Watt'),
-                         ToonSensor(hass,
-                                    'Power_today',
-                                    'power-plug',
-                                    'kWh')])
+    sensor_items.extend([
+        ToonSensor(hass, 'Power_current', 'power-plug', 'Watt'),
+        ToonSensor(hass, 'Power_today', 'power-plug', 'kWh'),
+    ])
 
     if _toon_main.gas:
-        sensor_items.extend([ToonSensor(hass,
-                                        'Gas_current',
-                                        'gas-cylinder',
-                                        'CM3'),
-                             ToonSensor(hass,
-                                        'Gas_today',
-                                        'gas-cylinder',
-                                        'M3')])
+        sensor_items.extend([
+            ToonSensor(hass, 'Gas_current', 'gas-cylinder', 'CM3'),
+            ToonSensor(hass, 'Gas_today', 'gas-cylinder', 'M3'),
+        ])
 
     for plug in _toon_main.toon.smartplugs:
         sensor_items.extend([
-            FibaroSensor(hass,
-                         '{}_current_power'.format(plug.name),
-                         plug.name,
-                         'power-socket-eu',
-                         'Watt'),
-            FibaroSensor(hass,
-                         '{}_today_energy'.format(plug.name),
-                         plug.name,
-                         'power-socket-eu',
-                         'kWh')])
+            FibaroSensor(hass, '{}_current_power'.format(plug.name),
+                         plug.name, 'power-socket-eu', 'Watt'),
+            FibaroSensor(hass, '{}_today_energy'.format(plug.name),
+                         plug.name, 'power-socket-eu', 'kWh'),
+        ])
 
     if _toon_main.toon.solar.produced or _toon_main.solar:
         sensor_items.extend([
@@ -61,35 +48,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             SolarSensor(hass, 'Solar_average_produced', 'kWh'),
             SolarSensor(hass, 'Solar_meter_reading_low_produced', 'kWh'),
             SolarSensor(hass, 'Solar_meter_reading_produced', 'kWh'),
-            SolarSensor(hass, 'Solar_daily_cost_produced', 'Euro')
+            SolarSensor(hass, 'Solar_daily_cost_produced', 'Euro'),
         ])
 
     for smokedetector in _toon_main.toon.smokedetectors:
         sensor_items.append(
-            FibaroSmokeDetector(hass,
-                                '{}_smoke_detector'.format(smokedetector.name),
-                                smokedetector.device_uuid,
-                                'alarm-bell',
-                                '%'))
+            FibaroSmokeDetector(
+                hass, '{}_smoke_detector'.format(smokedetector.name),
+                smokedetector.device_uuid, 'alarm-bell', '%')
+        )
 
     add_devices(sensor_items)
 
 
 class ToonSensor(Entity):
-    """Representation of a sensor."""
+    """Representation of a Toon sensor."""
 
     def __init__(self, hass, name, icon, unit_of_measurement):
-        """Initialize the sensor."""
+        """Initialize the Toon sensor."""
         self._name = name
         self._state = None
-        self._icon = "mdi:" + icon
+        self._icon = 'mdi:{}'.format(icon)
         self._unit_of_measurement = unit_of_measurement
         self.thermos = hass.data[toon_main.TOON_HANDLE]
-
-    @property
-    def should_poll(self):
-        """Polling required."""
-        return True
 
     @property
     def name(self):
@@ -117,21 +98,16 @@ class ToonSensor(Entity):
 
 
 class FibaroSensor(Entity):
-    """Representation of a sensor."""
+    """Representation of a Fibaro sensor."""
 
     def __init__(self, hass, name, plug_name, icon, unit_of_measurement):
-        """Initialize the sensor."""
+        """Initialize the Fibaro sensor."""
         self._name = name
         self._plug_name = plug_name
         self._state = None
-        self._icon = "mdi:" + icon
+        self._icon = 'mdi:{}'.format(icon)
         self._unit_of_measurement = unit_of_measurement
         self.toon = hass.data[toon_main.TOON_HANDLE]
-
-    @property
-    def should_poll(self):
-        """Polling required."""
-        return True
 
     @property
     def name(self):
@@ -160,20 +136,15 @@ class FibaroSensor(Entity):
 
 
 class SolarSensor(Entity):
-    """Representation of a sensor."""
+    """Representation of a Solar sensor."""
 
     def __init__(self, hass, name, unit_of_measurement):
-        """Initialize the sensor."""
+        """Initialize the Solar sensor."""
         self._name = name
         self._state = None
-        self._icon = "mdi:weather-sunny"
+        self._icon = 'mdi:weather-sunny'
         self._unit_of_measurement = unit_of_measurement
         self.toon = hass.data[toon_main.TOON_HANDLE]
-
-    @property
-    def should_poll(self):
-        """Polling required."""
-        return True
 
     @property
     def name(self):
@@ -201,21 +172,16 @@ class SolarSensor(Entity):
 
 
 class FibaroSmokeDetector(Entity):
-    """Representation of a smoke detector."""
+    """Representation of a Fibaro smoke detector."""
 
     def __init__(self, hass, name, uid, icon, unit_of_measurement):
-        """Initialize the sensor."""
+        """Initialize the Fibaro smoke sensor."""
         self._name = name
         self._uid = uid
         self._state = None
-        self._icon = "mdi:" + icon
+        self._icon = 'mdi:{}'.format(icon)
         self._unit_of_measurement = unit_of_measurement
         self.toon = hass.data[toon_main.TOON_HANDLE]
-
-    @property
-    def should_poll(self):
-        """Polling required."""
-        return True
 
     @property
     def name(self):
@@ -235,9 +201,9 @@ class FibaroSmokeDetector(Entity):
         ).strftime('%Y-%m-%d %H:%M:%S')
 
         return {
-            STATE_ATTR_DEVICE_TYPE: self.toon.get_data('device_type',
-                                                       self.name),
-            STATE_ATTR_LAST_CONNECTED_CHANGE: value
+            STATE_ATTR_DEVICE_TYPE:
+                self.toon.get_data('device_type', self.name),
+            STATE_ATTR_LAST_CONNECTED_CHANGE: value,
         }
 
     @property

@@ -117,6 +117,8 @@ class TelldusLiveClient(object):
                 return 'cover'
             elif device.methods & TURNON:
                 return 'switch'
+            elif device.methods == 0:
+                return 'binary_sensor'
             _LOGGER.warning(
                 "Unidentified device type (methods: %d)", device.methods)
             return 'switch'
