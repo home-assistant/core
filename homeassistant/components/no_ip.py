@@ -6,18 +6,18 @@ https://home-assistant.io/components/no_ip/
 """
 import asyncio
 import base64
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
+from aiohttp.hdrs import USER_AGENT, AUTHORIZATION
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME, HTTP_HEADER_AUTH,
-    HTTP_HEADER_USER_AGENT)
+    CONF_DOMAIN, CONF_TIMEOUT, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ NO_IP_ERRORS = {
 }
 
 UPDATE_URL = 'https://dynupdate.noip.com/nic/update'
-USER_AGENT = "{} {}".format(SERVER_SOFTWARE, EMAIL)
+HA_USER_AGENT = "{} {}".format(SERVER_SOFTWARE, EMAIL)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -92,8 +92,8 @@ def _update_no_ip(hass, session, domain, auth_str, timeout):
     }
 
     headers = {
-        HTTP_HEADER_AUTH: "Basic {}".format(auth_str.decode('utf-8')),
-        HTTP_HEADER_USER_AGENT: USER_AGENT,
+        AUTHORIZATION: "Basic {}".format(auth_str.decode('utf-8')),
+        USER_AGENT: HA_USER_AGENT,
     }
 
     try:

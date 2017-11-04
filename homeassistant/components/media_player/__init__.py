@@ -12,27 +12,27 @@ import logging
 import os
 from random import SystemRandom
 
-from aiohttp import web, hdrs
+from aiohttp import web
+from aiohttp.hdrs import CONTENT_TYPE, CACHE_CONTROL
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.config import load_yaml_config_file
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+from homeassistant.const import (
+    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
+    SERVICE_TOGGLE, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
+    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_SHUFFLE_SET,
+    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 from homeassistant.util.async import run_coroutine_threadsafe
-from homeassistant.const import (
-    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK,
-    SERVICE_SHUFFLE_SET)
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -52,8 +52,6 @@ ENTITY_IMAGE_CACHE = {
     ATTR_CACHE_URLS: [],
     ATTR_CACHE_MAXSIZE: 16
 }
-
-CONTENT_TYPE_HEADER = 'Content-Type'
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
@@ -911,7 +909,7 @@ def _async_fetch_image(hass, url):
 
             if response.status == 200:
                 content = yield from response.read()
-                content_type = response.headers.get(CONTENT_TYPE_HEADER)
+                content_type = response.headers.get(CONTENT_TYPE)
                 if content_type:
                     content_type = content_type.split(';')[0]
 
@@ -965,8 +963,6 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=500)
 
-        headers = {hdrs.CACHE_CONTROL: 'max-age=3600'}
+        headers = {CACHE_CONTROL: 'max-age=3600'}
         return web.Response(
-            body=data,
-            content_type=content_type,
-            headers=headers)
+            body=data, content_type=content_type, headers=headers)
