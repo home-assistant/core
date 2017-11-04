@@ -19,11 +19,12 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    NO_CACHE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-    HTTP_HEADER_X_REQUESTED_WITH)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_HEADER_X_REQUESTED_WITH)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+HTTP_HEADER_NO_CACHE = 'no-cache'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -373,8 +374,8 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
             HTTP_HEADER_X_REQUESTED_WITH: "XMLHttpRequest",
             REFERER: "http://{}/".format(self.host),
             CONNECTION: KEEP_ALIVE,
-            PRAGMA: NO_CACHE,
-            CACHE_CONTROL: NO_CACHE,
+            PRAGMA: HTTP_HEADER_NO_CACHE,
+            CACHE_CONTROL: HTTP_HEADER_NO_CACHE,
         }
 
         password_md5 = hashlib.md5(
