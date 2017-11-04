@@ -72,7 +72,7 @@ class EnOceanDongle:
         """
         from enocean.protocol.packet import RadioPacket
         if isinstance(temp, RadioPacket):
-            _LOGGER.debug("Received RadioPaket: {}".format(temp))
+            _LOGGER.debug("Received radio packet: %s", temp)
             rxtype = None
             value = None
             if temp.data[6] == 0x30:
