@@ -11,11 +11,8 @@ import logging
 from datetime import timedelta
 from random import randint, randrange, choice
 
-from homeassistant.util import Throttle
-
-
 import homeassistant.util.dt as dt
-from homeassistant.components.calendar import Calendar
+from homeassistant.components.calendar import Calendar, CalendarEvent
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "DemoCalendar"
@@ -60,22 +57,29 @@ class DemoCalendar(Calendar):
                                           hours=randint(1, 6),
                                           minutes=randrange(0, 60, 15))
 
-            event = {
-                'start': start,
-                'end': end,
-                'text': choice(events)
-            }
+            event = CalendarEvent(start, end, choice(events))
             self._events.append(event)
 
+        # Ensure always 1 event is active during creation of calendar 1
+        if name == 'DemoCalendar1':
+            event = CalendarEvent(dt.now() - dt.dt.timedelta(hours=1),
+                                  dt.now() + dt.dt.timedelta(hours=2),
+                                  'Programming')
+            self._events.append(event)
+
+        self._events.sort(key=lambda event: event.start)
         super().__init__(hass, name)
 
     @asyncio.coroutine
     def async_get_events(self):
         """Calendar events."""
-        return self._events
+        # TODO: reenable, serializing currently failing
+        return []  # self._events
 
     @asyncio.coroutine
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def async_update(self):
         """Update calendar events."""
-        _LOGGER.info('Updating demo calendar')
+        self._next_event = next((event for event in self._events if
+                                 event.start > dt.now() or
+                                 (event.start < dt.now() and
+                                  event.end > dt.now())), None)

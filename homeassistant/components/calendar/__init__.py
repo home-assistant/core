@@ -10,12 +10,17 @@ from datetime import timedelta
 
 from aiohttp.web_exceptions import HTTPNotFound
 
+
+import homeassistant.util.dt as dt
+
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_prepare_setup_platform
+
+from homeassistant.const import STATE_OFF, STATE_ON
 
 DEPENDENCIES = ['http']
 DOMAIN = 'calendar'
@@ -93,10 +98,7 @@ class Calendar(Entity):
         self.hass = hass
         self._name = name
 
-    @property
-    def state(self):
-        """Return the status of the calendar."""
-        return 'state'  # TODO
+        self._next_event = None
 
     @property
     def name(self):
@@ -107,6 +109,57 @@ class Calendar(Entity):
     def async_get_events(self):
         """Return a list of events."""
         raise NotImplementedError()
+
+    @property
+    def state(self):
+        """Return the state of the calendar."""
+        if self._next_event is None:
+            return STATE_OFF
+
+        if self._next_event.is_active():
+            return STATE_ON
+
+        return STATE_OFF
+
+
+class CalendarEvent(object):
+    """Representation of an event."""
+
+    def __init__(self, start, end, text):
+        """Initialize the event."""
+        self._start = start
+        self._end = end
+        self._text = text
+
+    @property
+    def start(self):
+        """Return start time set on the event."""
+        return self._start
+
+    @property
+    def end(self):
+        """Return end time set on the event."""
+        return self._end
+
+    @property
+    def text(self):
+        """Return text set on the event."""
+        return self._text
+
+    def is_active(self):
+        """Check whether event is currently active."""
+        if self._start is None:
+            return False
+
+        if self._end is None:
+            return False
+
+        now = dt.now()
+
+        if self._start <= now and self._end > now:
+            return True
+
+        return False
 
 
 class CalendarView(HomeAssistantView):

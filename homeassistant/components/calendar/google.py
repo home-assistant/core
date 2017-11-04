@@ -65,8 +65,11 @@ class GoogleCalendar(Calendar):
         return self.events
 
     @asyncio.coroutine
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def async_update(self):
+        self.refresh_events()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def refresh_events(self):
         """Update list of event."""
         service = self.calendar_service.get()
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
