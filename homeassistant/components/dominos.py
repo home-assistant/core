@@ -3,7 +3,6 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from pizzapi import Customer, Address, Order
-import jsonpickle
 from homeassistant.helpers.entity import Entity
 import unicodedata
 
