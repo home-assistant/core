@@ -35,7 +35,7 @@ DEVICE_CLASSES = [
     'smoke',         # Smoke detector
     'sound',         # On means sound detected, Off means no sound
     'vibration',     # On means vibration detected, Off means no vibration
-    'plug',          # On means plugged in, Off means plugged off
+    'plug',          # On means plugged in, Off means unplugged
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
