@@ -8,7 +8,7 @@ from components.sensor import vultr
 from components import vultr as base_vultr
 from components.vultr import CONF_SUBSCRIPTION
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_PLATFORM)
+    CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_PLATFORM)
 
 from tests.components.test_vultr import VALID_CONFIG
 from tests.common import (
@@ -28,13 +28,25 @@ class TestVultrSensorSetup(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = {
-            CONF_SUBSCRIPTION: '576965',
-            CONF_MONITORED_CONDITIONS: [
-                'current_bandwidth_gb',
-                'pending_charges'
-            ]
-        }
+        self.configs = [
+            {
+                CONF_NAME: vultr.DEFAULT_NAME,
+                CONF_SUBSCRIPTION: '576965',
+                CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS
+            },
+            {
+                CONF_NAME: 'Server {}',
+                CONF_SUBSCRIPTION: '123456',
+                CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS
+            },
+            {
+                CONF_NAME: 'VPS Charges',
+                CONF_SUBSCRIPTION: '555555',
+                CONF_MONITORED_CONDITIONS: [
+                    'pending_charges'
+                ]
+            }
+        ]
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -52,26 +64,64 @@ class TestVultrSensorSetup(unittest.TestCase):
             text=load_fixture('vultr_server_list.json'))
 
         base_vultr.setup(self.hass, VALID_CONFIG)
-        vultr.setup_platform(self.hass,
-                             self.config,
-                             self.add_devices,
-                             None)
 
-        self.assertEqual(2, len(self.DEVICES))
+        for config in self.configs:
+            setup = vultr.setup_platform(self.hass,
+                                         config,
+                                         self.add_devices,
+                                         None)
+
+            self.assertIsNone(setup)
+
+        self.assertEqual(5, len(self.DEVICES))
+
+        tested = 0
 
         for device in self.DEVICES:
+
+            # Test pre update
+            if device.subscription == '576965':
+                self.assertEqual(vultr.DEFAULT_NAME, device.name)
+
             device.update()
 
-            if device.name == 'my new server Current Bandwidth Used':
-                self.assertEqual('mdi:chart-histogram', device.icon)
-                self.assertEqual(131.51, device.state)
-                self.assertEqual('GB', device.unit_of_measurement)
-                self.assertEqual('mdi:chart-histogram', device.icon)
-            elif device.name == 'my new server Pending Charges':
-                self.assertEqual('mdi:currency-usd', device.icon)
-                self.assertEqual(46.67, device.state)
-                self.assertEqual('US$', device.unit_of_measurement)
-                self.assertEqual('mdi:currency-usd', device.icon)
+            if device.unit_of_measurement == 'GB':  # Test Bandwidth Used
+                if device.subscription == '576965':
+                    self.assertEqual(
+                        'Vultr my new server Current Bandwidth Used',
+                        device.name)
+                    self.assertEqual('mdi:chart-histogram', device.icon)
+                    self.assertEqual(131.51, device.state)
+                    self.assertEqual('mdi:chart-histogram', device.icon)
+                    tested += 1
+
+                elif device.subscription == '123456':
+                    self.assertEqual('Server Current Bandwidth Used',
+                                     device.name)
+                    self.assertEqual(957.46, device.state)
+                    tested += 1
+
+            elif device.unit_of_measurement == 'US$':  # Test Pending Charges
+
+                if device.subscription == '576965':  # Default 'Vultr {} {}'
+                    self.assertEqual('Vultr my new server Pending Charges',
+                                     device.name)
+                    self.assertEqual('mdi:currency-usd', device.icon)
+                    self.assertEqual(46.67, device.state)
+                    self.assertEqual('mdi:currency-usd', device.icon)
+                    tested += 1
+
+                elif device.subscription == '123456':  # Custom name with 1 {}
+                    self.assertEqual('Server Pending Charges', device.name)
+                    self.assertEqual('not a number', device.state)
+                    tested += 1
+
+                elif device.subscription == '555555':  # No {} in name
+                    self.assertEqual('VPS Charges', device.name)
+                    self.assertEqual(5.45, device.state)
+                    tested += 1
+
+        self.assertEqual(tested, 5)
 
     def test_invalid_sensor_config(self):
         """Test config type failures."""
@@ -79,10 +129,6 @@ class TestVultrSensorSetup(unittest.TestCase):
             vultr.PLATFORM_SCHEMA({
                 CONF_PLATFORM: base_vultr.DOMAIN,
                 CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS
-            })
-        with pytest.raises(vol.Invalid):  # No monitored_conditions
-            vultr.PLATFORM_SCHEMA({
-                CONF_PLATFORM: base_vultr.DOMAIN,
             })
         with pytest.raises(vol.Invalid):  # Bad monitored_conditions
             vultr.PLATFORM_SCHEMA({
@@ -115,19 +161,5 @@ class TestVultrSensorSetup(unittest.TestCase):
                                             self.add_devices,
                                             None)
 
-        self.assertFalse(no_sub_setup)
-        self.assertEqual(0, len(self.DEVICES))
-
-        bad_conf = {
-            CONF_SUBSCRIPTION: '123456',
-            CONF_MONITORED_CONDITIONS: ['bad-condition',
-                                        'non-existing-condition'],
-        }  # Invalid monitored_conditions
-
-        bad_conditions_setup = vultr.setup_platform(self.hass,
-                                                    bad_conf,
-                                                    self.add_devices,
-                                                    None)
-
-        self.assertFalse(bad_conditions_setup)
+        self.assertIsNotNone(no_sub_setup)
         self.assertEqual(0, len(self.DEVICES))

@@ -24,7 +24,7 @@ DEPENDENCIES = ['vultr']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
-    vol.Optional(CONF_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
@@ -51,14 +51,16 @@ class VultrSwitch(SwitchDevice):
         """Initialize a new Vultr switch."""
         self._vultr = vultr
         self._subscription = subscription
-        self._name = name.format(self.data['label'])
-
+        self._name = name
         self.data = None
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._name
+        try:
+            return self._name.format(self.data['label'])
+        except (TypeError, KeyError):
+            return self._name
 
     @property
     def is_on(self):
@@ -89,12 +91,12 @@ class VultrSwitch(SwitchDevice):
             ATTR_VCPUS: self.data.get('vcpu_count'),
         }
 
-    def turn_on(self, **kwargs):
+    def turn_on(self):
         """Boot-up the subscription."""
         if self.data['power_status'] != 'running':
             self._vultr.start(self._subscription)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self):
         """Halt the subscription."""
         if self.data['power_status'] == 'running':
             self._vultr.halt(self._subscription)

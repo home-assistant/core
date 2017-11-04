@@ -16,7 +16,8 @@ from homeassistant.components.vultr import (
     CONF_SUBSCRIPTION, ATTR_CURRENT_BANDWIDTH_USED, ATTR_PENDING_CHARGES,
     DATA_VULTR)
 
-DEFAULT_NAME = '{} {}'
+# Name defaults to {subscription label} {sensor name}
+DEFAULT_NAME = 'Vultr {} {}'
 DEPENDENCIES = ['vultr']
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,20 +69,29 @@ class VultrSensor(Entity):
     def __init__(self, vultr, subscription, condition, name):
         """Initialize a new Vultr sensor."""
         self._vultr = vultr
-        self._subscription = subscription
         self._condition = condition
+        self._name = name
+
+        self.subscription = subscription
         self.data = None
 
         condition_info = MONITORED_CONDITIONS[condition]
 
-        self._name = name.format(self.data['label'], condition_info[0])
+        self._condition_name = condition_info[0]
         self._units = condition_info[1]
         self._icon = condition_info[2]
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        try:
+            return self._name.format(self._condition_name)
+        except IndexError:  # name contains more {} than fulfilled
+            try:
+                return self._name.format(self.data['label'],
+                                         self._condition_name)
+            except (KeyError, TypeError):  # label key missing or data is None
+                return self._name
 
     @property
     def icon(self):
@@ -104,4 +114,4 @@ class VultrSensor(Entity):
     def update(self):
         """Update state of sensor."""
         self._vultr.update()
-        self.data = self._vultr.data[self._subscription]
+        self.data = self._vultr.data[self.subscription]

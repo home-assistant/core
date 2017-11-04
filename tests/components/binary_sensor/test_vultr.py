@@ -39,6 +39,10 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
             {
                 CONF_SUBSCRIPTION: '123456',
                 CONF_NAME: "Failed Server"
+            },
+            {
+                CONF_SUBSCRIPTION: '555555',
+                CONF_NAME: vultr.DEFAULT_NAME
             }
         ]
 
@@ -71,14 +75,23 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                                  self.add_devices,
                                  None)
 
-        self.assertEqual(len(self.DEVICES), 2)
+        self.assertEqual(len(self.DEVICES), 3)
 
         for device in self.DEVICES:
+
+            # Test pre data retieval
+            if device.subscription == '555555':
+                self.assertEqual('Vultr {}', device.name)
+
             device.update()
             device_attrs = device.device_state_attributes
 
+            if device.subscription == '555555':
+                self.assertEqual('Vultr Another Server', device.name)
+
             if device.name == 'A Server':
                 self.assertEqual(True, device.is_on)
+                self.assertEqual('power', device.device_class)
                 self.assertEqual('on', device.state)
                 self.assertEqual('mdi:server', device.icon)
                 self.assertEqual('1000',
@@ -97,7 +110,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                 self.assertEqual(False, device.is_on)
                 self.assertEqual('off', device.state)
                 self.assertEqual('mdi:server-off', device.icon)
-                self.assertEqual('100',
+                self.assertEqual('1000',
                                  device_attrs[ATTR_ALLOWED_BANDWIDTH])
                 self.assertEqual('no',
                                  device_attrs[ATTR_AUTO_BACKUPS])

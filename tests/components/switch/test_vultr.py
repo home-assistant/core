@@ -93,7 +93,7 @@ class TestVultrSwitchSetup(unittest.TestCase):
                 self.assertEqual(False, device.is_on)
                 self.assertEqual('off', device.state)
                 self.assertEqual('mdi:server-off', device.icon)
-                self.assertEqual('100',
+                self.assertEqual('1000',
                                  device_attrs[ATTR_ALLOWED_BANDWIDTH])
                 self.assertEqual('no',
                                  device_attrs[ATTR_AUTO_BACKUPS])
@@ -142,7 +142,7 @@ class TestVultrSwitchSetup(unittest.TestCase):
 
         self.assertEqual(2, mock.call_count)
 
-    def test_invalid_sensor_config(self):
+    def test_invalid_switch_config(self):
         """Test config type failures."""
         with pytest.raises(vol.Invalid):  # No subs
             vultr.PLATFORM_SCHEMA({
@@ -150,8 +150,8 @@ class TestVultrSwitchSetup(unittest.TestCase):
             })
 
     @requests_mock.Mocker()
-    def test_invalid_sensors(self, mock):
-        """Test the VultrBinarySensor fails."""
+    def test_invalid_switches(self, mock):
+        """Test the VultrSwitch fails."""
         mock.get(
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
@@ -169,11 +169,11 @@ class TestVultrSwitchSetup(unittest.TestCase):
                                              self.add_devices,
                                              None)
 
-        self.assertFalse(no_subs_setup)
+        self.assertIsNotNone(no_subs_setup)
 
         bad_conf = {
             CONF_NAME: "Missing Server",
-            CONF_SUBSCRIPTION: '555555'
+            CONF_SUBSCRIPTION: '665544'
         }  # Sub not associated with API key (not in server_list)
 
         wrong_subs_setup = vultr.setup_platform(self.hass,
@@ -181,4 +181,4 @@ class TestVultrSwitchSetup(unittest.TestCase):
                                                 self.add_devices,
                                                 None)
 
-        self.assertFalse(wrong_subs_setup)
+        self.assertIsNotNone(wrong_subs_setup)

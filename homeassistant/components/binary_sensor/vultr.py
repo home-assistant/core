@@ -20,6 +20,7 @@ from homeassistant.components.vultr import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_DEVICE_CLASS = 'power'
 DEFAULT_NAME = 'Vultr {}'
 DEPENDENCIES = ['vultr']
 
@@ -52,17 +53,18 @@ class VultrBinarySensor(BinarySensorDevice):
     def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr sensor."""
         self._vultr = vultr
-        self._subscription = subscription
+        self._name = name
 
-        self.data = self._vultr.data[subscription]
-
-        # If the DEFAULT_NAME is given, add the VPS label
-        self._name = name.format(self.data['label'])
+        self.subscription = subscription
+        self.data = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        try:
+            return self._name.format(self.data['label'])
+        except (KeyError, TypeError):
+            return self._name
 
     @property
     def icon(self):
@@ -73,6 +75,11 @@ class VultrBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.data['power_status'] == 'running'
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return DEFAULT_DEVICE_CLASS
 
     @property
     def device_state_attributes(self):
@@ -90,10 +97,10 @@ class VultrBinarySensor(BinarySensorDevice):
             ATTR_REGION: self.data.get('location'),
             ATTR_SUBSCRIPTION_ID: self.data.get('SUBID'),
             ATTR_SUBSCRIPTION_NAME: self.data.get('label'),
-            ATTR_VCPUS: self.data.get('vcpu_count'),
+            ATTR_VCPUS: self.data.get('vcpu_count')
         }
 
     def update(self):
         """Update state of sensor."""
         self._vultr.update()
-        self.data = self._vultr.data[self._subscription]
+        self.data = self._vultr.data[self.subscription]

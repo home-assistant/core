@@ -41,7 +41,7 @@ DOMAIN = 'vultr'
 NOTIFICATION_ID = 'vultr_notification'
 NOTIFICATION_TITLE = 'Vultr Setup'
 
-VULTR_PLATFORMS = ['binary_sensor', 'sensor']
+VULTR_PLATFORMS = ['binary_sensor', 'sensor', 'switch']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
