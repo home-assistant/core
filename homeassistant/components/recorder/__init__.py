@@ -14,19 +14,20 @@ from os import path
 import queue
 import threading
 import time
+from collections import namedtuple
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 
 import voluptuous as vol
 
 from homeassistant.core import (
-    HomeAssistant, callback, split_entity_id, CoreState)
+    HomeAssistant, callback, CoreState)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
     CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 from homeassistant import config as conf_util
@@ -120,7 +121,7 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
 def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
-    purge_days = conf.get(CONF_PURGE_KEEP_DAYS)
+    keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
     db_url = conf.get(CONF_DB_URL, None)
@@ -131,27 +132,19 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
-        hass, uri=db_url, include=include, exclude=exclude)
+        hass=hass, keep_days=keep_days, purge_interval=purge_interval,
+        uri=db_url, include=include, exclude=exclude)
     instance.async_initialize()
     instance.start()
 
     @asyncio.coroutine
-    def async_handle_purge_interval(now):
-        """Handle purge interval."""
-        instance.do_purge(purge_days)
-
-    @asyncio.coroutine
     def async_handle_purge_service(service):
         """Handle calls to the purge service."""
-        instance.do_purge(service.data[ATTR_KEEP_DAYS])
+        instance.do_adhoc_purge(service.data[ATTR_KEEP_DAYS])
 
     descriptions = yield from hass.async_add_job(
         conf_util.load_yaml_config_file, path.join(
             path.dirname(__file__), 'services.yaml'))
-
-    if purge_interval and purge_days:
-        async_track_time_interval(hass, async_handle_purge_interval,
-                                  timedelta(days=purge_interval))
 
     hass.services.async_register(DOMAIN, SERVICE_PURGE,
                                  async_handle_purge_service,
@@ -161,16 +154,21 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return (yield from instance.async_db_ready)
 
 
+PurgeTask = namedtuple('PurgeTask', ['keep_days'])
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    def __init__(self, hass: HomeAssistant, uri: str,
+    def __init__(self, hass: HomeAssistant, keep_days: int,
+                 purge_interval: int, uri: str,
                  include: Dict, exclude: Dict) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name='Recorder')
 
         self.hass = hass
-        self.purge_days = None
+        self.keep_days = keep_days
+        self.purge_interval = purge_interval
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -178,25 +176,23 @@ class Recorder(threading.Thread):
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 
-        self.include_e = include.get(CONF_ENTITIES, [])
-        self.include_d = include.get(CONF_DOMAINS, [])
-        self.exclude = exclude.get(CONF_ENTITIES, []) + \
-            exclude.get(CONF_DOMAINS, [])
+        self.entity_filter = generate_filter(include.get(CONF_DOMAINS, []),
+                                             include.get(CONF_ENTITIES, []),
+                                             exclude.get(CONF_DOMAINS, []),
+                                             exclude.get(CONF_ENTITIES, []))
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
-        self.purge_task = object()
 
     @callback
     def async_initialize(self):
         """Initialize the recorder."""
         self.hass.bus.async_listen(MATCH_ALL, self.event_listener)
 
-    def do_purge(self, purge_days=None):
-        """Event listener for purging data."""
-        if purge_days is not None:
-            self.purge_days = purge_days
-            self.queue.put(self.purge_task)
+    def do_adhoc_purge(self, keep_days):
+        """Trigger an adhoc purge retaining keep_days worth of data."""
+        if keep_days is not None:
+            self.queue.put(PurgeTask(keep_days))
 
     def run(self):
         """Start processing events to save."""
@@ -263,6 +259,27 @@ class Recorder(threading.Thread):
                 self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
                                                 notify_hass_started)
 
+            if self.keep_days and self.purge_interval:
+                @callback
+                def async_purge(now):
+                    """Trigger the purge and schedule the next run."""
+                    self.queue.put(PurgeTask(self.keep_days))
+                    self.hass.helpers.event.async_track_point_in_time(
+                        async_purge, now + timedelta(days=self.purge_interval))
+
+                earliest = dt_util.utcnow() + timedelta(minutes=30)
+                run = latest = dt_util.utcnow() + \
+                    timedelta(days=self.purge_interval)
+                with session_scope(session=self.get_session()) as session:
+                    event = session.query(Events).first()
+                    if event is not None:
+                        session.expunge(event)
+                        run = dt_util.as_utc(event.time_fired) + \
+                            timedelta(days=self.keep_days+self.purge_interval)
+                run = min(latest, max(run, earliest))
+                self.hass.helpers.event.async_track_point_in_time(
+                    async_purge, run)
+
         self.hass.add_job(register)
         result = hass_started.result()
 
@@ -278,8 +295,9 @@ class Recorder(threading.Thread):
                 self._close_connection()
                 self.queue.task_done()
                 return
-            elif event is self.purge_task:
-                purge.purge_old_data(self, self.purge_days)
+            elif isinstance(event, PurgeTask):
+                purge.purge_old_data(self, event.keep_days)
+                self.queue.task_done()
                 continue
             elif event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
@@ -290,21 +308,7 @@ class Recorder(threading.Thread):
 
             entity_id = event.data.get(ATTR_ENTITY_ID)
             if entity_id is not None:
-                domain = split_entity_id(entity_id)[0]
-
-                # Exclude entities OR
-                # Exclude domains, but include specific entities
-                if (entity_id in self.exclude) or \
-                        (domain in self.exclude and
-                         entity_id not in self.include_e):
-                    self.queue.task_done()
-                    continue
-
-                # Included domains only (excluded entities above) OR
-                # Include entities only, but only if no excludes
-                if (self.include_d and domain not in self.include_d) or \
-                        (self.include_e and entity_id not in self.include_e
-                         and not self.exclude):
+                if not self.entity_filter(entity_id):
                     self.queue.task_done()
                     continue
 

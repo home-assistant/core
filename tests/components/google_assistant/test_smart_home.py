@@ -3,6 +3,7 @@
 import asyncio
 
 from homeassistant import const
+from homeassistant.components import climate
 from homeassistant.components import google_assistant as ga
 
 DETERMINE_SERVICE_TESTS = [{  # Test light brightness
@@ -14,6 +15,16 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
     'expected': (
         const.SERVICE_TURN_ON,
         {'entity_id': 'light.test', 'brightness': 242}
+    )
+}, {  # Test switch to light custom type
+    'entity_id': 'switch.decorative_lights',
+    'command': ga.const.COMMAND_ONOFF,
+    'params': {
+        'on': True
+    },
+    'expected': (
+        const.SERVICE_TURN_ON,
+        {'entity_id': 'switch.decorative_lights'}
     )
 }, {  # Test light on / off
     'entity_id': 'light.test',
@@ -62,6 +73,34 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
     'expected': (
         const.SERVICE_VOLUME_SET,
         {'entity_id': 'media_player.living_room', 'volume_level': 0.3}
+    ),
+}, {  # Test climate temperature
+    'entity_id': 'climate.living_room',
+    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
+    'params': {'thermostatTemperatureSetpoint': 24.5},
+    'expected': (
+        climate.SERVICE_SET_TEMPERATURE,
+        {'entity_id': 'climate.living_room', 'temperature': 24.5}
+    ),
+}, {  # Test climate temperature range
+    'entity_id': 'climate.living_room',
+    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
+    'params': {
+        'thermostatTemperatureSetpointHigh': 24.5,
+        'thermostatTemperatureSetpointLow': 20.5,
+    },
+    'expected': (
+        climate.SERVICE_SET_TEMPERATURE,
+        {'entity_id': 'climate.living_room',
+         'target_temp_high': 24.5, 'target_temp_low': 20.5}
+    ),
+}, {  # Test climate operation mode
+    'entity_id': 'climate.living_room',
+    'command': ga.const.COMMAND_THERMOSTAT_SET_MODE,
+    'params': {'thermostatMode': 'heat'},
+    'expected': (
+        climate.SERVICE_SET_OPERATION_MODE,
+        {'entity_id': 'climate.living_room', 'operation_mode': 'heat'}
     ),
 }]
 

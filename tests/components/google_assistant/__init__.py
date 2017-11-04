@@ -17,6 +17,30 @@ DEMO_DEVICES = [{
     False
 }, {
     'id':
+    'switch.ac',
+    'name': {
+        'name': 'AC'
+    },
+    'traits': [
+        'action.devices.traits.OnOff'
+    ],
+    'type': 'action.devices.types.SWITCH',
+    'willReportState':
+    False
+}, {
+    'id':
+    'switch.decorative_lights',
+    'name': {
+        'name': 'Decorative Lights'
+    },
+    'traits': [
+        'action.devices.traits.OnOff'
+    ],
+    'type': 'action.devices.types.LIGHT',  # This is used for custom type
+    'willReportState':
+    False
+}, {
+    'id':
     'light.ceiling_lights',
     'name': {
         'name': 'Roof Lights',
@@ -50,6 +74,14 @@ DEMO_DEVICES = [{
     'id': 'group.all_lights',
     'name': {
         'name': 'all lights'
+    },
+    'traits': ['action.devices.traits.Scene'],
+    'type': 'action.devices.types.SCENE',
+    'willReportState': False
+}, {
+    'id': 'group.all_switches',
+    'name': {
+        'name': 'all switches'
     },
     'traits': ['action.devices.traits.Scene'],
     'type': 'action.devices.types.SCENE',
@@ -169,5 +201,33 @@ DEMO_DEVICES = [{
     },
     'traits': ['action.devices.traits.Scene'],
     'type': 'action.devices.types.SCENE',
+    'willReportState': False
+}, {
+    'id': 'climate.hvac',
+    'name': {
+        'name': 'Hvac'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False,
+    'attributes': {
+        'availableThermostatModes': 'heat,cool,off',
+        'thermostatTemperatureUnit': 'C',
+    },
+}, {
+    'id': 'climate.heatpump',
+    'name': {
+        'name': 'HeatPump'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'climate.ecobee',
+    'name': {
+        'name': 'Ecobee'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False
 }]
