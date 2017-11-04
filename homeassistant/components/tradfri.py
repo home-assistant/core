@@ -69,14 +69,14 @@ def request_configuration(hass, config, host, hostname):
 
         api_factory = APIFactory(host, psk_id=identity, loop=hass.loop)
 
-        # FIXME: currently entering a wrong security code sends
+        # Need To Fix: currently entering a wrong security code sends
         # pytradfri aiocoap API into an entless loop.
         # posibly because of non standard response from gateway
         # but there's no clear Error/Exception being raised.
         # the only thing that shows up in the logs is an OSError
         try:
             token = yield from api_factory.generate_psk(
-                                            callback_data.get('key'))
+                callback_data.get('key'))
         except RequestError:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Security Code not accepted.")
