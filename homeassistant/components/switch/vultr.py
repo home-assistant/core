@@ -50,8 +50,9 @@ class VultrSwitch(SwitchDevice):
     def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr switch."""
         self._vultr = vultr
-        self._subscription = subscription
         self._name = name
+
+        self.subscription = subscription
         self.data = None
 
     @property
@@ -94,14 +95,14 @@ class VultrSwitch(SwitchDevice):
     def turn_on(self):
         """Boot-up the subscription."""
         if self.data['power_status'] != 'running':
-            self._vultr.start(self._subscription)
+            self._vultr.start(self.subscription)
 
     def turn_off(self):
         """Halt the subscription."""
         if self.data['power_status'] == 'running':
-            self._vultr.halt(self._subscription)
+            self._vultr.halt(self.subscription)
 
     def update(self):
         """Get the latest data from the device and update the data."""
         self._vultr.update()
-        self.data = self._vultr.data[self._subscription]
+        self.data = self._vultr.data[self.subscription]

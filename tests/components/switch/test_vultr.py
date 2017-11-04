@@ -39,6 +39,10 @@ class TestVultrSwitchSetup(unittest.TestCase):
             {
                 CONF_SUBSCRIPTION: '123456',
                 CONF_NAME: "Failed Server"
+            },
+            {
+                CONF_SUBSCRIPTION: '555555',
+                CONF_NAME: vultr.DEFAULT_NAME
             }
         ]
 
@@ -67,11 +71,21 @@ class TestVultrSwitchSetup(unittest.TestCase):
                                  self.add_devices,
                                  None)
 
-        self.assertEqual(len(self.DEVICES), 2)
+        self.assertEqual(len(self.DEVICES), 3)
+
+        tested = 0
 
         for device in self.DEVICES:
+            if device.subscription == '555555':
+                self.assertEqual('Vultr {}', device.name)
+                tested += 1
+
             device.update()
             device_attrs = device.device_state_attributes
+
+            if device.subscription == '555555':
+                self.assertEqual('Vultr Another Server', device.name)
+                tested += 1
 
             if device.name == 'A Server':
                 self.assertEqual(True, device.is_on)
@@ -89,6 +103,8 @@ class TestVultrSwitchSetup(unittest.TestCase):
                                  device_attrs[ATTR_CREATED_AT])
                 self.assertEqual('576965',
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
+                tested += 1
+
             elif device.name == 'Failed Server':
                 self.assertEqual(False, device.is_on)
                 self.assertEqual('off', device.state)
@@ -105,12 +121,13 @@ class TestVultrSwitchSetup(unittest.TestCase):
                                  device_attrs[ATTR_CREATED_AT])
                 self.assertEqual('123456',
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
+                tested += 1
+
+        self.assertEqual(4, tested)
 
     @requests_mock.Mocker()
     def test_turn_on(self, mock):
         """Test turning a subscription on."""
-        self.assertEqual(len(self.DEVICES), 2)
-
         mock.get(
             'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_server_list.json'))
@@ -122,13 +139,12 @@ class TestVultrSwitchSetup(unittest.TestCase):
             if device.name == 'Failed Server':
                 device.turn_on()
 
+        # Turn on, force date update
         self.assertEqual(2, mock.call_count)
 
     @requests_mock.Mocker()
     def test_turn_off(self, mock):
         """Test turning a subscription off."""
-        self.assertEqual(len(self.DEVICES), 2)
-
         mock.get(
             'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_server_list.json'))
@@ -140,11 +156,12 @@ class TestVultrSwitchSetup(unittest.TestCase):
             if device.name == 'A Server':
                 device.turn_off()
 
+        # Turn off, force update
         self.assertEqual(2, mock.call_count)
 
     def test_invalid_switch_config(self):
         """Test config type failures."""
-        with pytest.raises(vol.Invalid):  # No subs
+        with pytest.raises(vol.Invalid):  # No subscription
             vultr.PLATFORM_SCHEMA({
                 CONF_PLATFORM: base_vultr.DOMAIN,
             })
