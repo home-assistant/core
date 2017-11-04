@@ -4,18 +4,18 @@ Support for monitoring pyLoad.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pyload/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
-    CONF_SSL, HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON,
-    CONF_MONITORED_VARIABLES)
+    CONF_SSL, CONF_HOST, CONF_NAME, CONF_PORT, CONF_PASSWORD, CONF_USERNAME,
+    CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -132,7 +132,7 @@ class PyLoadAPI(object):
         """Initialize pyLoad API and set headers needed later."""
         self.api_url = api_url
         self.status = None
-        self.headers = {HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON}
+        self.headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
         if username is not None and password is not None:
             self.payload = {'username': username, 'password': password}
