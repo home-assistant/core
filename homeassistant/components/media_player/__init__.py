@@ -12,7 +12,7 @@ import logging
 import os
 from random import SystemRandom
 
-from aiohttp import web
+from aiohttp import web, hdrs
 import async_timeout
 import voluptuous as vol
 
@@ -490,9 +490,8 @@ class MediaPlayerDevice(Entity):
     def media_image_hash(self):
         """Hash value for media image."""
         url = self.media_image_url
-
         if url is not None:
-            return hashlib.md5(url.encode('utf-8')).hexdigest()[:5]
+            return hashlib.sha256(url.encode('utf-8')).hexdigest()[:16]
 
         return None
 
@@ -966,4 +965,8 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=500)
 
-        return web.Response(body=data, content_type=content_type)
+        headers = {hdrs.CACHE_CONTROL: 'max-age=3600'}
+        return web.Response(
+            body=data,
+            content_type=content_type,
+            headers=headers)

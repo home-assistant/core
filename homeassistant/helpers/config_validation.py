@@ -12,7 +12,8 @@ import voluptuous as vol
 
 from homeassistant.loader import get_platform
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE, CONF_PLATFORM,
+    CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
@@ -105,6 +106,19 @@ def isfile(value: Any) -> str:
     if not os.access(file_in, os.R_OK):
         raise vol.Invalid('file not readable')
     return file_in
+
+
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing dir."""
+    if value is None:
+        raise vol.Invalid('not a directory')
+    dir_in = os.path.expanduser(str(value))
+
+    if not os.path.isdir(dir_in):
+        raise vol.Invalid('not a directory')
+    if not os.access(dir_in, os.R_OK):
+        raise vol.Invalid('directory not readable')
+    return dir_in
 
 
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
@@ -549,3 +563,16 @@ SCRIPT_SCHEMA = vol.All(
     [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA,
              _SCRIPT_WAIT_TEMPLATE_SCHEMA, EVENT_SCHEMA, CONDITION_SCHEMA)],
 )
+
+FILTER_SCHEMA = vol.Schema({
+    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(ensure_list, [string])
+    }),
+    vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(ensure_list, [string])
+    })
+})

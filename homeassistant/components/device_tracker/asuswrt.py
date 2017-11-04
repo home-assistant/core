@@ -12,18 +12,17 @@ from collections import namedtuple
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
-import homeassistant.helpers.config_validation as cv
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_MODE,
+    CONF_PROTOCOL)
 
 REQUIREMENTS = ['pexpect==4.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MODE = 'mode'
-CONF_PROTOCOL = 'protocol'
 CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
 
@@ -36,10 +35,8 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PROTOCOL, default='ssh'):
-            vol.In(['ssh', 'telnet']),
-        vol.Optional(CONF_MODE, default='router'):
-            vol.In(['router', 'ap']),
+        vol.Optional(CONF_PROTOCOL, default='ssh'): vol.In(['ssh', 'telnet']),
+        vol.Optional(CONF_MODE, default='router'): vol.In(['router', 'ap']),
         vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
@@ -102,21 +99,18 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 self.success_init = False
                 return
 
-            self.connection = SshConnection(self.host, self.port,
-                                            self.username,
-                                            self.password,
-                                            self.ssh_key,
-                                            self.mode == "ap")
+            self.connection = SshConnection(
+                self.host, self.port, self.username, self.password,
+                self.ssh_key, self.mode == 'ap')
         else:
             if not self.password:
                 _LOGGER.error("No password specified")
                 self.success_init = False
                 return
 
-            self.connection = TelnetConnection(self.host, self.port,
-                                               self.username,
-                                               self.password,
-                                               self.mode == "ap")
+            self.connection = TelnetConnection(
+                self.host, self.port, self.username, self.password,
+                self.mode == 'ap')
 
         self.last_results = {}
 

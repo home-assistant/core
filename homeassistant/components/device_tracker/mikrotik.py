@@ -76,25 +76,47 @@ class MikrotikScanner(DeviceScanner):
                 port=int(self.port)
             )
 
-            routerboard_info = self.client(cmd='/system/routerboard/getall')
+            try:
+                routerboard_info = self.client(
+                    cmd='/system/routerboard/getall')
+            except (librouteros.exceptions.TrapError,
+                    librouteros.exceptions.MultiTrapError,
+                    librouteros.exceptions.ConnectionError):
+                routerboard_info = None
+                raise
 
             if routerboard_info:
                 _LOGGER.info("Connected to Mikrotik %s with IP %s",
                              routerboard_info[0].get('model', 'Router'),
                              self.host)
+
                 self.connected = True
-                self.capsman_exist = self.client(
-                    cmd='/capsman/interface/getall'
-                )
+
+                try:
+                    self.capsman_exist = self.client(
+                        cmd='/caps-man/interface/getall'
+                    )
+                except (librouteros.exceptions.TrapError,
+                        librouteros.exceptions.MultiTrapError,
+                        librouteros.exceptions.ConnectionError):
+                    self.capsman_exist = False
+
                 if not self.capsman_exist:
                     _LOGGER.info(
                         'Mikrotik %s: Not a CAPSman controller. Trying '
                         'local interfaces ',
                         self.host
                     )
-                self.wireless_exist = self.client(
-                    cmd='/interface/wireless/getall'
-                )
+
+                try:
+                    self.wireless_exist = self.client(
+                        cmd='/interface/wireless/getall'
+                    )
+                except (librouteros.exceptions.TrapError,
+                        librouteros.exceptions.MultiTrapError,
+                        librouteros.exceptions.ConnectionError):
+                    self.wireless_exist = False
+
                 if not self.wireless_exist:
                     _LOGGER.info(
                         'Mikrotik %s: Wireless adapters not found. Try to '
@@ -104,6 +126,7 @@ class MikrotikScanner(DeviceScanner):
                     )
 
         except (librouteros.exceptions.TrapError,
+                librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error("Connection error: %s", api_error)
 
