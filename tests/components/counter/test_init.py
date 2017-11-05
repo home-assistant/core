@@ -42,6 +42,47 @@ class TestCounter(unittest.TestCase):
             self.assertFalse(
                 setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
+    def test_config_options(self):
+        """Test configuration options."""
+        count_start = len(self.hass.states.entity_ids())
+
+        _LOGGER.debug('ENTITIES @ start: %s', self.hass.states.entity_ids())
+
+        config = {
+            DOMAIN: {
+                'test_1': {},
+                'test_2': {
+                    CONF_NAME: 'Hello World',
+                    CONF_ICON: 'mdi:work',
+                    CONF_INITIAL: 10,
+                    CONF_STEP: 5,
+                }
+            }
+        }
+
+        assert setup_component(self.hass, 'counter', config)
+        self.hass.block_till_done()
+
+        _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
+
+        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
+        self.hass.block_till_done()
+
+        state_1 = self.hass.states.get('counter.test_1')
+        state_2 = self.hass.states.get('counter.test_2')
+
+        self.assertIsNotNone(state_1)
+        self.assertIsNotNone(state_2)
+
+        self.assertEqual(0, int(state_1.state))
+        self.assertNotIn(ATTR_ICON, state_1.attributes)
+        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
+
+        self.assertEqual(10, int(state_2.state))
+        self.assertEqual('Hello World',
+                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
+        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+
     def test_methods(self):
         """Test increment, decrement, and reset methods."""
         config = {
@@ -117,47 +158,6 @@ class TestCounter(unittest.TestCase):
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(15, int(state.state))
-
-    def test_config_options(self):
-        """Test configuration options."""
-        count_start = len(self.hass.states.entity_ids())
-
-        _LOGGER.debug('ENTITIES @ start: %s', self.hass.states.entity_ids())
-
-        config = {
-            DOMAIN: {
-                'test_1': {},
-                'test_2': {
-                    CONF_NAME: 'Hello World',
-                    CONF_ICON: 'mdi:work',
-                    CONF_INITIAL: 10,
-                    CONF_STEP: 5,
-                }
-            }
-        }
-
-        assert setup_component(self.hass, 'counter', config)
-        self.hass.block_till_done()
-
-        _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
-
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
-        self.hass.block_till_done()
-
-        state_1 = self.hass.states.get('counter.test_1')
-        state_2 = self.hass.states.get('counter.test_2')
-
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
-
-        self.assertEqual(0, int(state_1.state))
-        self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
-
-        self.assertEqual(10, int(state_2.state))
-        self.assertEqual('Hello World',
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
 
 
 @asyncio.coroutine
