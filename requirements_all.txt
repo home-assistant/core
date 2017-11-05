@@ -189,6 +189,9 @@ datadog==0.15.0
 # homeassistant.components.weather.metoffice
 datapoint==0.4.3
 
+# homeassistant.components.deconz
+pydeconz==0
+
 # homeassistant.components.light.decora
 # decora==0.6
 
