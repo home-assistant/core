@@ -169,7 +169,7 @@ class KNXClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return  self.device.setpoint_shift_step
+        return self.device.setpoint_shift_step
 
     @property
     def target_temperature(self):
