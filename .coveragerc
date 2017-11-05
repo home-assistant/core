@@ -625,7 +625,7 @@ omit =
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
     homeassistant/components/vacuum/mqtt.py
-
+    homeassistant/components/dominos.py
 
 [report]
 # Regexes for lines to exclude from consideration
