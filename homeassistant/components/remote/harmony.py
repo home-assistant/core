@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DEVICES.append(device)
         add_devices([device])
         register_services(hass)
-    except ValueError as err:
+    except ValueError:
         _LOGGER.warning("Failed to initialize remote: %s", name)
 
 
