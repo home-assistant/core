@@ -24,7 +24,7 @@ REQUIREMENTS = ['pytradfri==4.0.1',
                 '#aiocoap==0.3']
 
 DOMAIN = 'tradfri'
-CONFIG_FILE = '.tradfri_identities.conf'
+CONFIG_FILE = '.tradfri_psk.conf'
 KEY_CONFIGURING = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
