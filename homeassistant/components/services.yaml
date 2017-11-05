@@ -390,26 +390,6 @@ rflink:
         description: The command to be sent.
         example: 'on'
 
-counter:
-  decrement:
-    description: Decrement a counter.
-    fields:
-      entity_id:
-        description: Entity id of the counter to decrement.
-        example: 'counter.count0'
-  increment:
-    description: Increment a counter.
-    fields:
-      entity_id:
-        description: Entity id of the counter to increment.
-        example: 'counter.count0'
-  reset:
-    description: Reset a counter.
-    fields:
-      entity_id:
-        description: Entity id of the counter to reset.
-        example: 'counter.count0'
-
 abode:
   change_setting:
     description: Change an Abode system setting.
