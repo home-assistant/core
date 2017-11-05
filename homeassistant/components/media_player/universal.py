@@ -24,14 +24,15 @@ from homeassistant.components.media_player import (
     SUPPORT_SHUFFLE_SET, ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE,
     SERVICE_CLEAR_PLAYLIST, MediaPlayerDevice)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_NAME, SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, SERVICE_SHUFFLE_SET, STATE_IDLE,
-    STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP, ATTR_SUPPORTED_FEATURES)
+    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, CONF_NAME,
+    CONF_STATE_TEMPLATE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP,
+    SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.template import Template
 
 ATTR_ACTIVE_CHILD = 'active_child'
 
@@ -58,6 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     player = UniversalMediaPlayer(
         hass,
         config[CONF_NAME],
+        config[CONF_STATE_TEMPLATE],
         config[CONF_CHILDREN],
         config[CONF_COMMANDS],
         config[CONF_ATTRS]
@@ -75,13 +77,15 @@ def validate_config(config):
         _LOGGER.error("Universal Media Player configuration requires name")
         return False
 
+    validate_state_template(config)
     validate_children(config)
     validate_commands(config)
     validate_attributes(config)
 
     del_keys = []
     for key in config:
-        if key not in [CONF_NAME, CONF_CHILDREN, CONF_COMMANDS, CONF_ATTRS]:
+        if key not in [CONF_NAME, CONF_STATE_TEMPLATE, CONF_CHILDREN,
+                       CONF_COMMANDS, CONF_ATTRS]:
             _LOGGER.warning(
                 "Universal Media Player (%s) unrecognized parameter %s",
                 config[CONF_NAME], key)
@@ -90,6 +94,17 @@ def validate_config(config):
         del config[key]
 
     return True
+
+
+def validate_state_template(config):
+    """Validate children."""
+    if CONF_STATE_TEMPLATE not in config:
+        config[CONF_STATE_TEMPLATE] = None
+    elif not isinstance(config[CONF_STATE_TEMPLATE], str):
+        _LOGGER.warning(
+            "Universal Media Player (%s) state template not valid in config. "
+            "It will be ignored", config[CONF_NAME])
+        config[CONF_STATE_TEMPLATE] = None
 
 
 def validate_children(config):
@@ -136,7 +151,7 @@ def validate_attributes(config):
 class UniversalMediaPlayer(MediaPlayerDevice):
     """Representation of an universal media player."""
 
-    def __init__(self, hass, name, children, commands, attributes):
+    def __init__(self, hass, name, state_template, children, commands, attributes):
         """Initialize the Universal media device."""
         self.hass = hass
         self._name = name
@@ -144,6 +159,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._cmds = commands
         self._attrs = attributes
         self._child_state = None
+        self._state_template = None
+        if state_template is not None:
+            self._state_template = Template(state_template, hass)
+            self._state_template.ensure_valid()
 
         @callback
         def async_on_dependency_update(*_):
@@ -211,6 +230,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def master_state(self):
         """Return the master state for entity or None."""
+        if self._state_template is not None:
+            return self._state_template.async_render()
         if CONF_STATE in self._attrs:
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1])
@@ -232,8 +253,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         else master state or off
         """
         master_state = self.master_state  # avoid multiple lookups
-        if master_state == STATE_OFF:
-            return STATE_OFF
+        if (master_state == STATE_OFF) or (self._state_template is not None):
+            return master_state
 
         active_child = self._child_state
         if active_child:
