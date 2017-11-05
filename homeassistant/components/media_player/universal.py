@@ -9,20 +9,22 @@ import logging
 # pylint: disable=import-error
 from copy import copy
 
+import voluptuous as vol
+
 from homeassistant.core import callback
 from homeassistant.components.media_player import (
-    ATTR_APP_ID, ATTR_APP_NAME, ATTR_MEDIA_ALBUM_ARTIST, ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ARTIST, ATTR_MEDIA_CHANNEL, ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_DURATION, ATTR_MEDIA_EPISODE,
-    ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_POSITION, ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_POSITION_UPDATED_AT, DOMAIN, SERVICE_PLAY_MEDIA,
+    ATTR_APP_ID, ATTR_APP_NAME, ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_ALBUM_ARTIST, ATTR_MEDIA_ALBUM_NAME, ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CHANNEL, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION, ATTR_MEDIA_EPISODE, ATTR_MEDIA_PLAYLIST,
+    ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT, ATTR_MEDIA_SEASON,
+    ATTR_MEDIA_SEEK_POSITION, ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK, ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, MediaPlayerDevice, PLATFORM_SCHEMA,
+    SERVICE_CLEAR_PLAYLIST, SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SHUFFLE_SET, ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE,
-    SERVICE_CLEAR_PLAYLIST, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, CONF_NAME,
     CONF_STATE_TEMPLATE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
@@ -30,6 +32,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP,
     SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.helpers.template import Template
@@ -49,109 +52,45 @@ OFF_STATES = [STATE_IDLE, STATE_OFF]
 REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
+ATTRS_SCHEMA = vol.Schema({cv.slug: cv.string})
+CMD_SCHEMA = vol.Schema({cv.slug: cv.SERVICE_SCHEMA})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_CHILDREN): cv.entity_ids,
+    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COMMANDS): CMD_SCHEMA,
+    vol.Optional(CONF_ATTRS): ATTRS_SCHEMA
+})
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the universal media players."""
-    if not validate_config(config):
-        return
+    attrs = {}
+    for key, val in config.get(CONF_ATTRS, {}).items():
+        attr = val.split('|', 1)
+        if len(attr) == 1:
+            attr.append(None)
+        attrs[key] = attr
 
     player = UniversalMediaPlayer(
         hass,
-        config[CONF_NAME],
-        config[CONF_STATE_TEMPLATE],
-        config[CONF_CHILDREN],
-        config[CONF_COMMANDS],
-        config[CONF_ATTRS]
+        config.get(CONF_NAME),
+        config.get(CONF_STATE_TEMPLATE),
+        config.get(CONF_CHILDREN),
+        config.get(CONF_COMMANDS),
+        attrs
     )
 
     async_add_devices([player])
 
 
-def validate_config(config):
-    """Validate universal media player configuration."""
-    del config[CONF_PLATFORM]
-
-    # Validate name
-    if CONF_NAME not in config:
-        _LOGGER.error("Universal Media Player configuration requires name")
-        return False
-
-    validate_state_template(config)
-    validate_children(config)
-    validate_commands(config)
-    validate_attributes(config)
-
-    del_keys = []
-    for key in config:
-        if key not in [CONF_NAME, CONF_STATE_TEMPLATE, CONF_CHILDREN,
-                       CONF_COMMANDS, CONF_ATTRS]:
-            _LOGGER.warning(
-                "Universal Media Player (%s) unrecognized parameter %s",
-                config[CONF_NAME], key)
-            del_keys.append(key)
-    for key in del_keys:
-        del config[key]
-
-    return True
-
-
-def validate_state_template(config):
-    """Validate children."""
-    if CONF_STATE_TEMPLATE not in config:
-        config[CONF_STATE_TEMPLATE] = None
-    elif not isinstance(config[CONF_STATE_TEMPLATE], str):
-        _LOGGER.warning(
-            "Universal Media Player (%s) state template not valid in config. "
-            "It will be ignored", config[CONF_NAME])
-        config[CONF_STATE_TEMPLATE] = None
-
-
-def validate_children(config):
-    """Validate children."""
-    if CONF_CHILDREN not in config:
-        _LOGGER.info(
-            "No children under Universal Media Player (%s)", config[CONF_NAME])
-        config[CONF_CHILDREN] = []
-    elif not isinstance(config[CONF_CHILDREN], list):
-        _LOGGER.warning(
-            "Universal Media Player (%s) children not list in config. "
-            "They will be ignored", config[CONF_NAME])
-        config[CONF_CHILDREN] = []
-
-
-def validate_commands(config):
-    """Validate commands."""
-    if CONF_COMMANDS not in config:
-        config[CONF_COMMANDS] = {}
-    elif not isinstance(config[CONF_COMMANDS], dict):
-        _LOGGER.warning(
-            "Universal Media Player (%s) specified commands not dict in "
-            "config. They will be ignored", config[CONF_NAME])
-        config[CONF_COMMANDS] = {}
-
-
-def validate_attributes(config):
-    """Validate attributes."""
-    if CONF_ATTRS not in config:
-        config[CONF_ATTRS] = {}
-    elif not isinstance(config[CONF_ATTRS], dict):
-        _LOGGER.warning(
-            "Universal Media Player (%s) specified attributes "
-            "not dict in config. They will be ignored", config[CONF_NAME])
-        config[CONF_ATTRS] = {}
-
-    for key, val in config[CONF_ATTRS].items():
-        attr = val.split('|', 1)
-        if len(attr) == 1:
-            attr.append(None)
-        config[CONF_ATTRS][key] = attr
-
-
 class UniversalMediaPlayer(MediaPlayerDevice):
     """Representation of an universal media player."""
 
-    def __init__(self, hass, name, state_template, children, commands, attributes):
+    def __init__(self, hass, name, state_template,
+                 children, commands, attributes):
         """Initialize the Universal media device."""
         self.hass = hass
         self._name = name
@@ -159,10 +98,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._cmds = commands
         self._attrs = attributes
         self._child_state = None
-        self._state_template = None
-        if state_template is not None:
-            self._state_template = Template(state_template, hass)
-            self._state_template.ensure_valid()
+        self._state_template = state_template
 
         @callback
         def async_on_dependency_update(*_):
@@ -172,6 +108,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         depend = copy(children)
         [depend.append(entity[0]) for entity in attributes.values()]
         if state_template is not None:
+            self._state_template.hass = hass
             [depend.append(entity)
              for entity in self._state_template.extract_entities()]
 
