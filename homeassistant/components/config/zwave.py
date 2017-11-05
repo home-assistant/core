@@ -34,14 +34,14 @@ def async_setup(hass):
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
-    """View to save the ZWave configuration to zwcfg_xxxxx.xml"""
+    """View to save the ZWave configuration to zwcfg_xxxxx.xml."""
 
     url = "/api/zwave/saveconfig"
     name = "api:zwave:saveconfig"
 
     @ha.callback
     def post(self, request):
-        """Save cache configuration to zwcfg_xxxxx.xml"""
+        """Save cache configuration to zwcfg_xxxxx.xml."""
         hass = request.app['hass']
         network = hass.data.get(const.DATA_NETWORK)
         if network is None:
