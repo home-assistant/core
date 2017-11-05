@@ -108,7 +108,7 @@ class TradfriGroup(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
-            if ATTR_BRIGHTNESS == 255:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
                 ATTR_BRIGHTNESS = 254
 
             self.hass.async_add_job(self._api(
@@ -263,7 +263,7 @@ class TradfriLight(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
-            if ATTR_BRIGHTNESS == 255:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
                 ATTR_BRIGHTNESS = 254
 
             self.hass.async_add_job(self._api(
