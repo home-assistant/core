@@ -27,8 +27,26 @@ def async_setup(hass):
     hass.http.register_view(ZWaveUserCodeView)
     hass.http.register_static_path(
         URL_API_OZW_LOG, hass.config.path(OZW_LOG_FILENAME), False)
+    hass.http.register_view(ZWaveConfigWriteView)
 
     return True
+
+
+class ZWaveConfigWriteView(HomeAssistantView):
+    """View to save the ZWave configuration to zwcfg_xxxxxx.xml"""
+
+    url = "/api/zwave/saveconfig"
+    name = "api:zwave:saveconfig"
+
+    @ha.callback
+    def post(self, request):
+        """Save cache configuration to zwcfg_xxxxx.xml"""
+        hass = request.app['hass']
+        network = hass.data.get(const.DATA_NETWORK)
+        if network is None:
+            return self.json_message('No Z-Wave network data found',
+                                     HTTP_NOT_FOUND)
+        network.write_config()
 
 
 class ZWaveNodeValueView(HomeAssistantView):
