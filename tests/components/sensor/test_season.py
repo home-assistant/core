@@ -13,6 +13,10 @@ HEMISPHERE_NORTHERN = {
     'homeassistant': {
         'latitude': '48.864716',
         'longitude': '2.349014',
+    },
+    'sensor': {
+        'platform': 'season',
+        'type': 'astronomical',
     }
 }
 
@@ -20,6 +24,10 @@ HEMISPHERE_SOUTHERN = {
     'homeassistant': {
         'latitude': '-33.918861',
         'longitude': '18.423300',
+    },
+    'sensor': {
+        'platform': 'season',
+        'type': 'astronomical',
     }
 }
 
@@ -27,11 +35,19 @@ HEMISPHERE_EQUATOR = {
     'homeassistant': {
         'latitude': '0',
         'longitude': '-51.065100',
+    },
+    'sensor': {
+        'platform': 'season',
+        'type': 'astronomical',
     }
 }
 
 HEMISPHERE_EMPTY = {
     'homeassistant': {
+    },
+    'sensor': {
+        'platform': 'season',
+        'type': 'meteorological',
     }
 }
 
@@ -210,9 +226,38 @@ class TestSeason(unittest.TestCase):
                                            season.TYPE_ASTRONOMICAL)
         self.assertEqual(None, current_season)
 
-    def test_setup_hemisphere(self):
-        """Test platform setup of different hemispheres."""
+    def test_setup_hemisphere_northern(self):
+        """Test platform setup of northern hemisphere."""
+        self.hass.config.latitude = HEMISPHERE_NORTHERN[
+            'homeassistant']['latitude']
         assert setup_component(self.hass, 'sensor', HEMISPHERE_NORTHERN)
+        self.assertEqual(self.hass.config.as_dict()['latitude'],
+                         HEMISPHERE_NORTHERN['homeassistant']['latitude'])
+        state = self.hass.states.get('sensor.season')
+        self.assertEqual(state.attributes.get('friendly_name'), 'Season')
+
+    def test_setup_hemisphere_southern(self):
+        """Test platform setup of southern hemisphere."""
+        self.hass.config.latitude = HEMISPHERE_SOUTHERN[
+            'homeassistant']['latitude']
         assert setup_component(self.hass, 'sensor', HEMISPHERE_SOUTHERN)
+        self.assertEqual(self.hass.config.as_dict()['latitude'],
+                         HEMISPHERE_SOUTHERN['homeassistant']['latitude'])
+        state = self.hass.states.get('sensor.season')
+        self.assertEqual(state.attributes.get('friendly_name'), 'Season')
+
+    def test_setup_hemisphere_equator(self):
+        """Test platform setup of equator."""
+        self.hass.config.latitude = HEMISPHERE_EQUATOR[
+            'homeassistant']['latitude']
         assert setup_component(self.hass, 'sensor', HEMISPHERE_EQUATOR)
+        self.assertEqual(self.hass.config.as_dict()['latitude'],
+                         HEMISPHERE_EQUATOR['homeassistant']['latitude'])
+        state = self.hass.states.get('sensor.season')
+        self.assertEqual(state.attributes.get('friendly_name'), 'Season')
+
+    def test_setup_hemisphere_empty(self):
+        """Test platform setup of missing latlong."""
+        self.hass.config.latitude = None
         assert setup_component(self.hass, 'sensor', HEMISPHERE_EMPTY)
+        self.assertEqual(self.hass.config.as_dict()['latitude'], None)

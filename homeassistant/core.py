@@ -387,7 +387,7 @@ class EventBus(object):
 
     @callback
     def async_fire(self, event_type: str, event_data=None,
-                   origin=EventOrigin.local, wait=False):
+                   origin=EventOrigin.local):
         """Fire an event.
 
         This method must be run in the event loop.
@@ -395,8 +395,10 @@ class EventBus(object):
         listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
-        if event_type != EVENT_HOMEASSISTANT_CLOSE:
-            listeners = self._listeners.get(MATCH_ALL, []) + listeners
+        match_all_listeners = self._listeners.get(MATCH_ALL)
+        if (match_all_listeners is not None and
+                event_type != EVENT_HOMEASSISTANT_CLOSE):
+            listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin)
 
@@ -672,15 +674,6 @@ class StateMachine(object):
         """
         state_obj = self.get(entity_id)
         return state_obj is not None and state_obj.state == state
-
-    def is_state_attr(self, entity_id, name, value):
-        """Test if entity exists and has a state attribute set to value.
-
-        Async friendly.
-        """
-        state_obj = self.get(entity_id)
-        return state_obj is not None and \
-            state_obj.attributes.get(name, None) == value
 
     def remove(self, entity_id):
         """Remove the state of an entity.
