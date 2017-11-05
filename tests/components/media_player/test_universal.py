@@ -319,6 +319,21 @@ class TestMediaPlayer(unittest.TestCase):
         self.hass.states.set(self.mock_state_switch_id, STATE_ON)
         self.assertEqual(STATE_ON, ump.master_state)
 
+    def test_master_state_with_state_template(self):
+        """Test the state_template option."""
+        config = copy(self.config_children_and_attr)
+        self.hass.states.set('input_boolean.test', STATE_OFF)
+        templ = '{% if states.input_boolean.test.state == "off" %}on' \
+                '{% else %}{{ states.media_player.mock1.state }}{% endif %}'
+        config['state_template'] = templ
+        config = validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+
+        self.assertEqual(STATE_ON, ump.master_state)
+        self.hass.states.set('input_boolean.test', STATE_ON)
+        self.assertEqual(STATE_OFF, ump.master_state)
+
     def test_master_state_with_bad_attrs(self):
         """Test master state property."""
         config = copy(self.config_children_and_attr)
