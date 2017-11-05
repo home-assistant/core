@@ -109,7 +109,7 @@ class TradfriGroup(Light):
 
         if ATTR_BRIGHTNESS in kwargs:
             if kwargs[ATTR_BRIGHTNESS] == 255:
-                ATTR_BRIGHTNESS = 254
+                kwargs[ATTR_BRIGHTNESS] = 254
 
             self.hass.async_add_job(self._api(
                 self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys)))
@@ -264,7 +264,7 @@ class TradfriLight(Light):
 
         if ATTR_BRIGHTNESS in kwargs:
             if kwargs[ATTR_BRIGHTNESS] == 255:
-                ATTR_BRIGHTNESS = 254
+                kwargs[ATTR_BRIGHTNESS] = 254
 
             self.hass.async_add_job(self._api(
                 self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
