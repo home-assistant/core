@@ -29,13 +29,16 @@ KEY_CONFIGURING = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
+DEFAULT_NAME = None
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME,
+                     default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
                      default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })])
@@ -44,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-def request_configuration(hass, config, host, name=None):
+def request_configuration(hass, config, host, name, allow_tradfri_groups):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
     hass.data.setdefault(KEY_CONFIGURING, [])
@@ -104,6 +107,11 @@ def request_configuration(hass, config, host, name=None):
     title = "IKEA Trådfri"
     if name:
         title = "{} ({})".format(title, name)
+
+    checbox_field = {'id': 'allow_tradfri_groups',
+                     'name': 'use Tradfri groups', 'type': 'checkbox'}
+    if allow_tradfri_groups:
+        checbox_field['checked'] = 'checked'
     instance = configurator.request_config(
         title, configuration_callback,
         description='Please enter the security code written at the bottom of '
@@ -120,16 +128,28 @@ def async_setup(hass, config):
     known_hosts = yield from hass.async_add_job(_read_config, hass)
 
     @asyncio.coroutine
-    def gateway_discovered(service, info):
+    def gateway_discovered(service, info,
+                           allow_tradfri_groups=DEFAULT_ALLOW_TRADFRI_GROUPS):
         """Run when a gateway is discovered."""
         host = info['hostname']
+        name = info.get('name', DEFAULT_NAME)
+
         if host in known_hosts:
+            # fallback for old config style
+            # identity was hard coded
+            # GATEWAY_IDENTITY = 'homeassistant'
+            # token was called 'key'
+            identity = known_hosts[host].get('identity', 'homeassistant')
+            token = known_hosts[host].get('tokem',
+                                          known_hosts[host].get('key'))
+
             yield from _setup_gateway(hass, config, host,
-                                      known_hosts[host]['identity'],
-                                      known_hosts[host]['token'])
+                                      identity,
+                                      known_hosts[host]['token'],
+                                      allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass,
-                               config, host)
+                               config, host, name, allow_tradfri_groups)
 
     discovery.async_listen(hass, SERVICE_IKEA_TRADFRI, gateway_discovered)
 
@@ -137,14 +157,9 @@ def async_setup(hass, config):
         host = gateway_conf.get(CONF_HOST)
         name = gateway_conf.get(CONF_NAME)
         allow_groups = gateway_conf.get(CONF_ALLOW_TRADFRI_GROUPS)
-        if host in known_hosts:
-            yield from _setup_gateway(hass, config, host,
-                                      known_hosts[host]['identity'],
-                                      known_hosts[host]['token'],
-                                      allow_groups)
-        else:
-            hass.async_add_job(request_configuration, hass,
-                               config, host, name)
+
+        gateway_discovered(None, {'hostname': host, 'name': name},
+                           allow_groups)
 
     return True
 
@@ -152,7 +167,7 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host,
                    identity, token,
-                   allow_tradfri_groups=DEFAULT_ALLOW_TRADFRI_GROUPS):
+                   allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import Gateway, RequestError
     try:
@@ -169,7 +184,7 @@ def _setup_gateway(hass, hass_config, host,
     except RequestError:
         _LOGGER.exception("Tradfri setup failed. Requesting reconfiguration.")
         hass.async_add_job(request_configuration, hass, hass_config,
-                           host)
+                           host, allow_tradfri_groups)
         return False
 
     gateway_id = gateway_info_result.id
