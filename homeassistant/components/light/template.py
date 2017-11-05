@@ -21,7 +21,6 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
@@ -194,7 +193,7 @@ class LightTemplate(Light):
             """Update template on startup."""
             if (self._template is not None or
                     self._level_template is not None):
-                async_track_state_change(
+                self.hass.helpers.event.async_track_state_change(
                     self.hass, self._entities, template_light_state_listener)
 
             self.async_schedule_update_ha_state(True)
@@ -218,10 +217,10 @@ class LightTemplate(Light):
             optimistic_set = True
 
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            self.hass.async_add_job(self._level_script.async_run(
+            self.hass.async_add_job(yield from self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
         else:
-            self.hass.async_add_job(self._on_script.async_run())
+            self.hass.async_add_job(yield from self._on_script.async_run())
 
         if optimistic_set:
             self.async_schedule_update_ha_state()
@@ -229,7 +228,7 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self.hass.async_add_job(self._off_script.async_run())
+        self.hass.async_add_job(yield from self._off_script.async_run())
         if self._template is None:
             self._state = False
             self.async_schedule_update_ha_state()
