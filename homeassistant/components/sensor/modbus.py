@@ -1,6 +1,5 @@
 """
 Support for Modbus Register sensors.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.modbus/
 """
@@ -11,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
 from homeassistant.const import (
-    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE)
+    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE, CONF_STRUCTURE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -32,7 +31,9 @@ REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 
 DATA_TYPE_INT = 'int'
+DATA_TYPE_UINT = 'uint'
 DATA_TYPE_FLOAT = 'float'
+DATA_TYPE_CUSTOM = 'custom'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGISTERS): [{
@@ -46,7 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT):
-            vol.In([DATA_TYPE_INT, DATA_TYPE_FLOAT]),
+            vol.In([DATA_TYPE_INT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]),
+        vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
     }]
 })
@@ -55,7 +57,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
+    data_types = {DATA_TYPE_INT:{1:'h', 2:'i', 4:'q'}}
+    data_types [DATA_TYPE_UINT] = {1:'H', 2:'I', 4:'Q'}
+    data_types [DATA_TYPE_FLOAT] = {1:'e', 2:'f', 4:'d'}
+
     for register in config.get(CONF_REGISTERS):
+        structure = '>i'
+        if register.get(CONF_DATA_TYPE) != DATA_TYPE_CUSTOM :
+            try:
+                structure = '>%c'%(data_types[
+                    register.get(CONF_DATA_TYPE)][register.get(CONF_COUNT)])
+            except KeyError:
+                _LOGGER.error("Unable to detect data type for %s sensor, try a custom type.",
+                              register.get(CONF_NAME))
+                continue
+        else:
+            structure = register.get(CONF_STRUCTURE)
+
+        try:
+            size = struct.calcsize(structure)
+        except error as err:
+            _LOGGER.error("Error in sensor %s structure: %s", register.get(CONF_NAME), err)
+            continue
+
+        if register.get(CONF_COUNT) * 2 != size :
+            _LOGGER.error("Structure size (%d bytes) mismatch registers count (%d words)",
+                          size, register.get(CONF_COUNT))
+            continue
+
         sensors.append(ModbusRegisterSensor(
             register.get(CONF_NAME),
             register.get(CONF_SLAVE),
@@ -65,8 +94,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             register.get(CONF_COUNT),
             register.get(CONF_SCALE),
             register.get(CONF_OFFSET),
-            register.get(CONF_DATA_TYPE),
+            structure,
             register.get(CONF_PRECISION)))
+
+    if len(sensors) < 1 :
+        return False
     add_devices(sensors)
 
 
@@ -74,7 +106,7 @@ class ModbusRegisterSensor(Entity):
     """Modbus register sensor."""
 
     def __init__(self, name, slave, register, register_type,
-                 unit_of_measurement, count, scale, offset, data_type,
+                 unit_of_measurement, count, scale, offset, structure,
                  precision):
         """Initialize the modbus register sensor."""
         self._name = name
@@ -86,7 +118,7 @@ class ModbusRegisterSensor(Entity):
         self._scale = scale
         self._offset = offset
         self._precision = precision
-        self._data_type = data_type
+        self._structure = structure
         self._value = None
 
     @property
@@ -124,13 +156,10 @@ class ModbusRegisterSensor(Entity):
             _LOGGER.error("No response from modbus slave %s register %s",
                           self._slave, self._register)
             return
-        if self._data_type == DATA_TYPE_FLOAT:
-            byte_string = b''.join(
-                [x.to_bytes(2, byteorder='big') for x in registers]
-            )
-            val = struct.unpack(">f", byte_string)[0]
-        elif self._data_type == DATA_TYPE_INT:
-            for i, res in enumerate(registers):
-                val += res * (2**(i*16))
+        byte_string = b''.join(
+            [x.to_bytes(2, byteorder='big') for x in registers]
+        )
+        val = struct.unpack(self._structure, byte_string)[0]
         self._value = format(
             self._scale * val + self._offset, '.{}f'.format(self._precision))
+        
