@@ -61,7 +61,7 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_DEVICE): cv.string,
     vol.Optional(
         ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
-    ATTR_DELAY_SECS: vol.Coerce(float),
+    vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
 })
 
 
