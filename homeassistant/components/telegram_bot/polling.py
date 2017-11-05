@@ -10,6 +10,7 @@ import logging
 
 import async_timeout
 from aiohttp.client_exceptions import ClientError
+from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
 
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity,
@@ -41,20 +42,14 @@ def async_setup_platform(hass, config):
         """Stop the bot."""
         pol.stop_polling()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START,
-        _start_bot
-    )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        _stop_bot
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_bot)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_bot)
 
     return True
 
 
 class TelegramPoll(BaseTelegramBotEntity):
-    """asyncio telegram incoming message handler."""
+    """Asyncio telegram incoming message handler."""
 
     def __init__(self, bot, hass, allowed_chat_ids):
         """Initialize the polling instance."""
@@ -62,9 +57,9 @@ class TelegramPoll(BaseTelegramBotEntity):
         self.update_id = 0
         self.websession = async_get_clientsession(hass)
         self.update_url = '{0}/getUpdates'.format(bot.base_url)
-        self.polling_task = None  # The actuall polling task.
+        self.polling_task = None  # The actual polling task.
         self.timeout = 15  # async post timeout
-        # polling timeout should always be less than async post timeout.
+        # Polling timeout should always be less than async post timeout.
         self.post_data = {'timeout': self.timeout - 5}
 
     def start_polling(self):
@@ -87,7 +82,7 @@ class TelegramPoll(BaseTelegramBotEntity):
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 resp = yield from self.websession.post(
                     self.update_url, data=self.post_data,
-                    headers={'connection': 'keep-alive'}
+                    headers={CONNECTION: KEEP_ALIVE}
                 )
             if resp.status == 200:
                 _json = yield from resp.json()

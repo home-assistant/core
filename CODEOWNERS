@@ -51,6 +51,7 @@ homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/media_player/monoprice.py @etsinko
+homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
 homeassistant/components/sensor/airvisual.py @bachya
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen
@@ -59,7 +60,7 @@ homeassistant/components/sensor/tibber.py @danielhiversen
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
-homeassistant/components/xiaomi_aqara.py @danielhiversen
+homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/rfxtrx.py @danielhiversen

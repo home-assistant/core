@@ -22,9 +22,9 @@ BASE_CONFIG = (
 
 
 def change_yaml_files(check_dict):
-    """Change the ['yaml_files'] property and remove the config path.
+    """Change the ['yaml_files'] property and remove the configuration path.
 
-    Also removes other files like service.yaml that gets loaded
+    Also removes other files like service.yaml that gets loaded.
     """
     root = get_test_config_dir()
     keys = check_dict['yaml_files'].keys()
@@ -178,7 +178,6 @@ class TestCheckConfig(unittest.TestCase):
             self.assertDictEqual({
                 'components': {'http': {'api_password': 'abc123',
                                         'cors_allowed_origins': [],
-                                        'development': '0',
                                         'ip_ban_enabled': True,
                                         'login_attempts_threshold': -1,
                                         'server_host': '0.0.0.0',
