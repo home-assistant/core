@@ -62,6 +62,10 @@ def request_configuration(hass, config, host, name, allow_tradfri_groups):
             _LOGGER.exception("Looks like something isn't installed!")
             return
 
+        security_code = callback_data.get('security_code')
+        allow_tradfri_groups = callback_data.get('allow_tradfri_groups',
+                                                 DEFAULT_ALLOW_TRADFRI_GROUPS)
+
         # use an unique identity to pair with gateway on every config attempt
         # using the same id would make it unable to pair with a
         # new (or another) hass instance.
@@ -75,8 +79,7 @@ def request_configuration(hass, config, host, name, allow_tradfri_groups):
         # but there's no clear Error/Exception being raised.
         # the only thing that shows up in the logs is an OSError
         try:
-            token = yield from api_factory.generate_psk(
-                callback_data.get('key'))
+            token = yield from api_factory.generate_psk(security_code)
         except RequestError:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Security Code not accepted.")
@@ -84,7 +87,7 @@ def request_configuration(hass, config, host, name, allow_tradfri_groups):
 
         res = yield from _setup_gateway(hass, config, host,
                                         identity, token,
-                                        DEFAULT_ALLOW_TRADFRI_GROUPS)
+                                        allow_tradfri_groups)
         if not res:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Gateway setup failed.")
@@ -93,7 +96,9 @@ def request_configuration(hass, config, host, name, allow_tradfri_groups):
         def success():
             """Set up was successful."""
             conf = _read_config(hass)
-            conf[host] = {'identity': identity, 'token': token}
+            conf[host] = {'identity': identity,
+                          'token': token,
+                          'allow_tradfri_groups': allow_tradfri_groups}
             _write_config(hass, conf)
             hass.async_add_job(configurator.request_done, instance)
 
@@ -117,7 +122,7 @@ def request_configuration(hass, config, host, name, allow_tradfri_groups):
         description='Please enter the security code written at the bottom of '
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",
-        fields=[{'id': 'key', 'name': 'Security Code'}]
+        fields=[{'id': 'security_code', 'name': 'Security Code'}]
         )
 
 
