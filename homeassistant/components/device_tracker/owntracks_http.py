@@ -43,8 +43,11 @@ class OwnTracksView(HomeAssistantView):
         """Handle an OwnTracks message."""
         hass = request.app['hass']
 
-        message = yield from request.json()
-        message['topic'] = 'owntracks/{}/{}'.format(user, device)
+        try:
+            message = yield from request.json()
+            message['topic'] = 'owntracks/{}/{}'.format(user, device)
+        except:
+            return self.json([])
 
         try:
             yield from async_handle_message(hass, self.context, message)
