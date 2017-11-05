@@ -42,8 +42,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP):
-        vol.All(float, vol.Range(min=0, max=2)),
+    vol.Optional(CONF_SETPOINT_SHIFT_STEP,
+                 default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
+                     float, vol.Range(min=0, max=2)),
     vol.Optional(CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX):
         vol.All(int, vol.Range(min=-32, max=0)),
     vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
