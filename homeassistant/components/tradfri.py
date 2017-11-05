@@ -140,7 +140,8 @@ def async_setup(hass, config):
         if host in known_hosts:
             yield from _setup_gateway(hass, config, host,
                                       known_hosts[host]['identity'],
-                                      known_hosts[host]['token'])
+                                      known_hosts[host]['token'],
+                                      allow_groups)
         else:
             hass.async_add_job(request_configuration, hass,
                                config, host, name)
