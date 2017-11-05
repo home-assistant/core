@@ -20,15 +20,12 @@ DOMAIN = "DemoCalendar"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
-@asyncio.coroutine
-def async_get_handler(hass, config, discovery_info=None):
-    """Setup demo calendar platform."""
-    calendars = []
-
-    calendars.append(DemoCalendar(hass, 'DemoCalendar1'))
-    calendars.append(DemoCalendar(hass, 'DemoCalendar2'))
-
-    return calendars
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Demo Calendar platform."""
+    add_devices([
+        DemoCalendar(hass, 'DemoCalendar1'),
+        DemoCalendar(hass, 'DemoCalendar2')
+    ])
 
 
 class DemoCalendar(Calendar):
@@ -37,6 +34,8 @@ class DemoCalendar(Calendar):
     def __init__(self, hass, name):
         """Initialize Demo Calender entity."""
         self._events = []
+        self._name = name
+        self._next_event = None
 
         events = [
             'Football',
@@ -68,7 +67,16 @@ class DemoCalendar(Calendar):
             self._events.append(event)
 
         self._events.sort(key=lambda event: event.start)
-        super().__init__(hass, name)
+
+    @property
+    def name(self):
+        """Return the name of the calendar."""
+        return self._name
+
+    @property
+    def next_event(self):
+        """Return the next occuring event."""
+        return self._next_event
 
     @asyncio.coroutine
     def async_get_events(self):

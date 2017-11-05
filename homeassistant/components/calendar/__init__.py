@@ -13,12 +13,9 @@ from aiohttp.web_exceptions import HTTPNotFound
 
 import homeassistant.util.dt as dt
 
-from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_prepare_setup_platform
 
 from homeassistant.const import STATE_OFF, STATE_ON
 
@@ -27,83 +24,25 @@ DOMAIN = 'calendar'
 SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
-    calendars = []
-
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.components.frontend.register_built_in_panel(
         'calendar', 'Calendar', 'mdi:calendar')
-    hass.http.register_view(CalendarPlatformsView(calendars))
-    hass.http.register_view(CalendarEventView(calendars))
+    hass.http.register_view(CalendarPlatformsView(component))
+    hass.http.register_view(CalendarEventView(component))
 
-    @asyncio.coroutine
-    def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a calendar platform."""
-        platform = yield from async_prepare_setup_platform(
-            hass, config, DOMAIN, p_type)
-
-        if platform is None:
-            _LOGGER.error("Unknown calendar platform specified")
-            return
-
-        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
-        calendar = None
-        try:
-            if hasattr(platform, 'async_get_handler'):
-                calendar = yield from platform.async_get_handler(
-                    hass, p_config, discovery_info)
-            elif hasattr(platform, 'get_handler'):
-                calendar = yield from hass.async_add_job(
-                    platform.get_handler, hass, p_config, discovery_info)
-            else:
-                raise HomeAssistantError("Invalid calendar platform.")
-
-            if calendar is None:
-                _LOGGER.error(
-                    "Failed to initialize calendar platform %s", p_type)
-                return
-
-        except Exception:
-            _LOGGER.exception("Error setting up platform %s", p_type)
-            return
-
-        calendars.extend(calendar)
-        yield from component.async_add_entities(calendar)
-
-    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
-
-    if setup_tasks:
-        yield from asyncio.wait(setup_tasks, loop=hass.loop)
-
-    @asyncio.coroutine
-    def async_platform_discovered(platform, info):
-        """Setup discovered platform."""
-        yield from async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
+    yield from component.async_setup(config)
     return True
 
 
 class Calendar(Entity):
     """Entity for each calendar platform."""
-
-    def __init__(self, hass, name):
-        """Initialze calendar entity."""
-        self.hass = hass
-        self._name = name
-
-        self._next_event = None
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
     @asyncio.coroutine
     def async_get_events(self):
@@ -111,12 +50,17 @@ class Calendar(Entity):
         raise NotImplementedError()
 
     @property
+    def next_event(self):
+        """Return next occuring event."""
+        return None
+
+    @property
     def state(self):
         """Return the state of the calendar."""
-        if self._next_event is None:
+        if self.next_event is None:
             return STATE_OFF
 
-        if self._next_event.is_active():
+        if self.next_event.is_active():
             return STATE_ON
 
         return STATE_OFF
@@ -165,16 +109,16 @@ class CalendarEvent(object):
 class CalendarView(HomeAssistantView):
     """Base Calendar view."""
 
-    def __init__(self, calendars):
+    def __init__(self, component):
         """Initialize base calendar view."""
-        self.calendars = calendars
+        self._component = component
 
     def get_calendar(self, platform):
         """Get calendar by name."""
-        for calendar in self.calendars:
+        for key, calendar in self._component.entities.items():
             if calendar.name == platform:
                 return calendar
-        return HTTPNotFound
+        return None
 
 
 class CalendarPlatformsView(CalendarView):
@@ -186,10 +130,10 @@ class CalendarPlatformsView(CalendarView):
     @asyncio.coroutine
     def get(self, request):
         """Get all calendars."""
-        platforms = []
-        for calendar in self.calendars:
-            platforms.append(calendar.name)
-        return self.json(platforms)
+        for key, value in self._component.entities.items():
+            _LOGGER.info('Entity: %s', value.name)
+
+        return self.json([v.name for k, v in self._component.entities.items()])
 
 
 class CalendarEventView(CalendarView):
@@ -202,5 +146,7 @@ class CalendarEventView(CalendarView):
     def get(self, request, platform):
         """Get all events for platform."""
         calendar = self.get_calendar(platform)
+        if calendar is None:
+            return HTTPNotFound
         events = yield from calendar.async_get_events()
         return self.json(events)
