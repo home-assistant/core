@@ -24,7 +24,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for sensor_id, sensor in sensors.items():
         if sensor.type == 'ZHAPresence':
-            async_add_devices([DeconzBinarySensor(sensor_id, sensor)])
+            async_add_devices([DeconzBinarySensor(sensor_id, sensor)], True)
 
 
 class DeconzBinarySensor(BinarySensorDevice):
@@ -33,14 +33,14 @@ class DeconzBinarySensor(BinarySensorDevice):
     def __init__(self, sensor_id, sensor):
         """Setup sensor and add update callback to get data from websocket."""
         self._state = None
-        self.sensor_id = sensor_id
-        self.sensor = sensor
-        self.sensor.callback = self._update_callback
+        self._sensor_id = sensor_id
+        self._sensor = sensor
+        self._sensor.register_callback(self._update_callback)
 
     @callback
     def _update_callback(self):
         """Update the sensor's state, if needed."""
-        self._state = self.sensor.is_tripped
+        self._state = self._sensor.is_tripped
         self.async_schedule_update_ha_state()
 
     @property
@@ -51,7 +51,7 @@ class DeconzBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the event."""
-        return self.sensor_id
+        return self._sensor.name
 
     @property
     def should_poll(self):
@@ -62,12 +62,11 @@ class DeconzBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            'reachable': self.sensor.reachable,
-            'battery': self.sensor.battery,
-            'manufacturer': self.sensor.manufacturer,
-            'modelid': self.sensor.modelid,
-            'swversion': self.sensor.swversion,
-            'type': self.sensor.type,
-            'uniqueid': self.sensor.uniqueid,
-            'dark': self.sensor.dark
+            'battery': self._sensor.battery,
+            'dark': self._sensor.dark,
+            'manufacturer': self._sensor.manufacturer,
+            'modelid': self._sensor.modelid,
+            'reachable': self._sensor.reachable,
+            'swversion': self._sensor.swversion,
+            'uniqueid': self._sensor.uniqueid,
         }

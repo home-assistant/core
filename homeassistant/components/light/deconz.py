@@ -24,7 +24,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         lights = hass.data[DATA_DECONZ].lights
 
     for light_id, light in lights.items():
-        print('setup platform light', light_id, light.__dict__)
         async_add_devices([DeconzLight(light_id, light)], True)
 
 
@@ -38,14 +37,15 @@ class DeconzLight(Light):
         """Setup light and add update callback to get data from websocket."""
         self._state = light.state
         self._brightness = light.brightness
-        self.light_id = light_id
-        self.light = light
-        self.light.callback = self._update_callback
+        self._light_id = light_id
+        self._light = light
+        self._light.register_callback(self._update_callback)
 
     @callback
     def _update_callback(self):
         """Update the sensor's state, if needed."""
-        self._state = self.light.state
+        self._state = self._light.state
+        self._brightness = self._light.brightness
         self.async_schedule_update_ha_state()
 
     @property
@@ -61,7 +61,7 @@ class DeconzLight(Light):
     @property
     def name(self):
         """Return the name of the event."""
-        return self.light_id
+        return self._light.name
 
     @property
     def supported_features(self):
@@ -76,15 +76,26 @@ class DeconzLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn on light."""
-        field = '/lights/' + self.light_id + '/state'
+        field = '/lights/' + self._light_id + '/state'
         data = {'on': True}
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
-        yield from self.light.set_state(field, data)
+        yield from self._light.set_state(field, data)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn off light."""
-        field = '/lights/' + self.light_id + '/state'
+        field = '/lights/' + self._light_id + '/state'
         data = {'on': False}
-        yield from self.light.set_state(field, data)
+        yield from self._light.set_state(field, data)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {
+            'manufacturer': self._light.manufacturer,
+            'modelid': self._light.modelid,
+            'reachable': self._light.reachable,
+            'swversion': self._light.swversion,
+            'uniqueid': self._light.uniqueid,
+        }

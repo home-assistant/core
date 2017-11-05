@@ -43,13 +43,14 @@ def async_setup(hass, config):
     @callback
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the connections to Deconz on shutdown."""
-        if DECONZ:
-            DECONZ.stop()
+        if DATA_DECONZ in hass.data:
+            _LOGGER.info("Stopping Deconz session.")
+            hass.data[DATA_DECONZ].close()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     @asyncio.coroutine
     def generate_api_key(call):
-        """Generate API key in order to communicate with Deconz."""
+        """Generate API key needed to communicate with Deconz."""
         from pydeconz.utils import get_api_key
         api_key = yield from get_api_key(**deconz_config)
         hass.states.async_set('deconz.api_key', api_key)
@@ -82,17 +83,17 @@ def _setup_deconz(hass, config, deconz_config):
     yield from DECONZ.populate_lights()
     yield from DECONZ.populate_sensors()
     hass.async_add_job(discovery.async_load_platform(hass,
+                                                     'light',
+                                                     DOMAIN,
+                                                     {},
+                                                     config))
+    hass.async_add_job(discovery.async_load_platform(hass,
                                                      'binary_sensor',
                                                      DOMAIN,
                                                      {},
                                                      config))
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'sensor',
-                                                     DOMAIN,
-                                                     {},
-                                                     config))
-    hass.async_add_job(discovery.async_load_platform(hass,
-                                                     'light',
                                                      DOMAIN,
                                                      {},
                                                      config))
