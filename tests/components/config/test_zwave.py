@@ -418,6 +418,7 @@ def test_get_usercodes_no_genreuser(hass, test_client):
 
     assert result == {}
 
+
 @asyncio.coroutine
 def test_save_config_no_network(hass, test_client):
     """Test saving configuration without network data."""
@@ -432,8 +433,8 @@ def test_save_config_no_network(hass, test_client):
 
     assert resp.status == 404
     result = yield from resp.json()
-
     assert result == {'message': 'No Z-Wave network data found'}
+
 
 @asyncio.coroutine
 def test_save_config(hass, test_client):
@@ -449,5 +450,5 @@ def test_save_config(hass, test_client):
 
     assert resp.status == 200
     result = yield from resp.json()
-
+    assert network.write_config.called
     assert result == {'message': 'Z-Wave configuration saved to file.'}

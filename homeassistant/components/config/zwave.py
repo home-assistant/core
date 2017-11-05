@@ -49,7 +49,8 @@ class ZWaveConfigWriteView(HomeAssistantView):
                                      HTTP_NOT_FOUND)
         _LOGGER.info("Z-Wave configuration written to file.")
         network.write_config()
-        return self.json_message('Z-Wave configuration saved to file.', HTTP_OK)
+        return self.json_message('Z-Wave configuration saved to file.',
+                                 HTTP_OK)
 
 
 class ZWaveNodeValueView(HomeAssistantView):
