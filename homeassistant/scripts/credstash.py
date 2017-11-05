@@ -4,7 +4,7 @@ import getpass
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-REQUIREMENTS = ['credstash==1.14.0', 'botocore==1.7.34']
+REQUIREMENTS = ['credstash==1.14.0', 'botocore==1.7.39']
 
 
 def run(args):
