@@ -82,7 +82,7 @@ def request_configuration(hass, config, host, hostname):
                                "Security Code not accepted.")
             return
 
-        res = yield from _setup_gateway(hass, config, host, hostname,
+        res = yield from _setup_gateway(hass, config, host,
                                         identity, token,
                                         DEFAULT_ALLOW_TRADFRI_GROUPS)
         if not res:
@@ -129,14 +129,22 @@ def async_setup(hass, config):
         """Run when a gateway is discovered."""
         host = info['host']
         hostname = info['hostname']
+
         if hostname in known_hosts:
+            known_host = hostname
+        else if host in known_hosts:
+            known_host = hostname
+        else:
+            known_host = False
+
+        if known_host
             yield from _setup_gateway(hass, config, host, hostname,
                                       known_hosts[hostname]['identity'],
                                       known_hosts[hostname]['token'],
                                       allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass,
-                               config, host, hostname)
+                               config, hostname)
 
     discovery.async_listen(hass, SERVICE_IKEA_TRADFRI, gateway_discovered)
 
