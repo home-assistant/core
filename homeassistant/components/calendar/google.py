@@ -8,15 +8,15 @@ https://home-assistant.io/components/binary_sensor.google_calendar/
 import logging
 import asyncio
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
-import homeassistant.util.dt as dt
-from homeassistant.components.calendar import Calendar
+from homeassistant.components.calendar import Calendar, CalendarEvent
 from homeassistant.components.google import (
     GoogleCalendarService, TOKEN_FILE, CONF_TRACK, CONF_ENTITIES, CONF_CAL_ID)
+from homeassistant.util import Throttle, dt
 
-from homeassistant.util import Throttle
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'GoogleCalendar'
 
@@ -26,25 +26,22 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
 }
 
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=2)
-
-_LOGGER = logging.getLogger(__name__)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-@asyncio.coroutine
-def async_get_handler(hass, config, discovery_info=None):
+def setup_platform(hass, config, add_devices, disc_info=None):
     """Set up the calendar platform for event devices."""
-    if discovery_info is None:
-        return []
+    if disc_info is None:
+        return
 
-    if not any(data[CONF_TRACK] for data in discovery_info[CONF_ENTITIES]):
-        return []
+    if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
+        return
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
 
-    return [GoogleCalendar(hass, calendar_service, data,
-                           discovery_info[CONF_CAL_ID])
-            for data in discovery_info[CONF_ENTITIES] if data[CONF_TRACK]]
+    add_devices([GoogleCalendar(hass, calendar_service,
+                                data, disc_info[CONF_CAL_ID])
+                 for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
 
 class GoogleCalendar(Calendar):
@@ -55,18 +52,31 @@ class GoogleCalendar(Calendar):
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = data.get('search', None)
-        self.events = []
+        self._events = []
 
-        super().__init__(hass, data.get('name', DOMAIN))
+        self._name = data.get('name', DOMAIN)
+        self._next_event = None
+
+    @property
+    def name(self):
+        """Return the name of the calendar."""
+        return self._name
+
+    @property
+    def next_event(self):
+        """Return the next occuring event."""
+        return self._next_event
 
     @asyncio.coroutine
     def async_get_events(self):
         """Return a list of events."""
-        return self.events
+        return self._events
 
     @asyncio.coroutine
     def async_update(self):
+        """Update Calendar."""
         self.refresh_events()
+        self._next_event = self.update_next_event()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def refresh_events(self):
@@ -85,7 +95,21 @@ class GoogleCalendar(Calendar):
         events = service.events()
         result = events.list(**params).execute()
 
-        _LOGGER.info('Finding events: %s', result)
-
         items = result.get('items', [])
-        self.events = items
+
+        for item in items:
+            event = CalendarEvent(self.convertDatetime(item['start']),
+                                  self.convertDatetime(item['end']),
+                                  item['summary'])
+            self._events.append(event)
+
+        self._events.sort(key=lambda event: event.start)
+
+        _LOGGER.info('Events: %s', self._events)
+
+    def convertDatetime(self, dateObject):
+        """Convert dateTime returned from Google."""
+        dateString = dateObject['dateTime']
+        if ":" == dateString[-3:-2]:
+            dateString = dateString[:-3]+dateString[-2:]
+        return datetime.strptime(dateString, '%Y-%m-%dT%H:%M:%S%z')

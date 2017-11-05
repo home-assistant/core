@@ -10,21 +10,23 @@ from datetime import timedelta
 
 from aiohttp.web_exceptions import HTTPNotFound
 
-
-import homeassistant.util.dt as dt
-
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util import dt
 from homeassistant.components.http import HomeAssistantView
 
-from homeassistant.const import STATE_OFF, STATE_ON
 
 DEPENDENCIES = ['http']
-DOMAIN = 'calendar'
-SCAN_INTERVAL = timedelta(seconds=10)
+
+
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'calendar'
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 @asyncio.coroutine
@@ -48,6 +50,13 @@ class Calendar(Entity):
     def async_get_events(self):
         """Return a list of events."""
         raise NotImplementedError()
+
+    def update_next_event(self):
+        """Find next occuring event in all events."""
+        return next((event for event in self._events if
+                    event.start > dt.now() or
+                    (event.start < dt.now() and
+                     event.end > dt.now())), None)
 
     @property
     def next_event(self):

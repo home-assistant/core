@@ -11,13 +11,14 @@ import logging
 from datetime import timedelta
 from random import randint, randrange, choice
 
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 from homeassistant.components.calendar import Calendar, CalendarEvent
 
 _LOGGER = logging.getLogger(__name__)
+
 DOMAIN = "DemoCalendar"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -87,7 +88,4 @@ class DemoCalendar(Calendar):
     @asyncio.coroutine
     def async_update(self):
         """Update calendar events."""
-        self._next_event = next((event for event in self._events if
-                                 event.start > dt.now() or
-                                 (event.start < dt.now() and
-                                  event.end > dt.now())), None)
+        self._next_event = self.update_next_event()
