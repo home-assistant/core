@@ -70,8 +70,7 @@ class CanarySensor(Entity):
             return "%"
         elif self._sensor_type == SensorType.AIR_QUALITY:
             return "PM"
-        else:
-            return None
+        return None
 
     def update(self):
         """Get the latest state of the sensor."""

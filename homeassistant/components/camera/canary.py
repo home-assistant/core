@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for location in data.locations:
         entries = data.get_motion_entries(location.location_id)
-        if len(entries) > 0:
+        if entries:
             devices.append(CanaryCamera(data, location.location_id))
 
     add_devices(devices, True)
@@ -92,7 +92,7 @@ class CanaryCamera(Camera):
         self._location = self._data.get_location(self._location_id)
 
         entries = self._data.get_motion_entries(self._location_id)
-        if len(entries) > 0:
+        if entries:
             current_entry = entries[0]
 
             if self._last_entry is None \

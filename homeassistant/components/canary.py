@@ -52,7 +52,7 @@ class CanaryData(object):
         self._locations_by_id = {}
         self._devices_by_id = {}
         self._readings_by_device_id = {}
-        self._motion_entries_by_location_id = {}
+        self._entries_by_location_id = {}
 
         self.update()
 
@@ -62,10 +62,11 @@ class CanaryData(object):
         self._me = self._api.get_me()
 
         for location in self._api.get_locations():
-            self._locations_by_id[location.location_id] = location
-            self._motion_entries_by_location_id[
-                location.location_id] = self._api.get_entries(
-                location.location_id)
+            location_id = location.location_id
+
+            self._locations_by_id[location_id] = location
+            self._entries_by_location_id[location_id] = self._api.get_entries(
+                location_id)
 
             for device in location.devices:
                 if device.is_online:
@@ -88,15 +89,14 @@ class CanaryData(object):
         """Return temperature scale."""
         if self._me.is_celsius:
             return TEMP_CELSIUS
-        else:
-            return TEMP_FAHRENHEIT
+        return TEMP_FAHRENHEIT
 
     def get_motion_entries(self, location_id):
         """Return a list of motion entries based on location_id."""
-        if location_id not in self._motion_entries_by_location_id:
+        if location_id not in self._entries_by_location_id:
             return []
 
-        return self._motion_entries_by_location_id[location_id]
+        return self._entries_by_location_id[location_id]
 
     def get_location(self, location_id):
         """Return a location based on location_id."""
