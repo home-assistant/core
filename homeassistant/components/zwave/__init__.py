@@ -123,6 +123,17 @@ SET_WAKEUP_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), cv.positive_int),
 })
 
+HEAL_NODE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Optional(const.ATTR_RETURN_ROUTES, default=False): cv.boolean,
+})
+
+TEST_NODE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Optional(const.ATTR_MESSAGES, default=1): cv.positive_int,
+})
+
+
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
@@ -564,6 +575,22 @@ def setup(hass, config):
         _LOGGER.info("Node %s on instance %s does not have resettable "
                      "meters.", node_id, instance)
 
+    def heal_node(service):
+        """Heal a node on the network."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        update_return_routes = service.data.get(const.ATTR_RETURN_ROUTES)
+        node = network.nodes[node_id]
+        _LOGGER.info("Z-Wave node heal running for node %s", node_id)
+        node.heal(update_return_routes)
+
+    def test_node(service):
+        """Send test messages to a node on the network."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        messages = service.data.get(const.ATTR_MESSAGES)
+        node = network.nodes[node_id]
+        _LOGGER.info("Sending %s test-messages to node %s.", messages, node_id)
+        node.test(messages)
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting Z-Wave network...")
@@ -684,6 +711,16 @@ def setup(hass, config):
                                set_poll_intensity,
                                descriptions[const.SERVICE_SET_POLL_INTENSITY],
                                schema=SET_POLL_INTENSITY_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_HEAL_NODE,
+                               heal_node,
+                               descriptions[
+                                   const.SERVICE_HEAL_NODE],
+                               schema=HEAL_NODE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_TEST_NODE,
+                               test_node,
+                               descriptions[
+                                   const.SERVICE_TEST_NODE],
+                               schema=TEST_NODE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
