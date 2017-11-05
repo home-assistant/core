@@ -209,7 +209,7 @@ class TemplateFan(FanEntity):
         This method is a coroutine.
         """
         self._state = True
-        self.hass.async_add_job(self._on_script.async_run())
+        yield from self.hass.async_add_job(self._on_script.async_run())
 
         if speed:
             yield from self.async_set_speed(speed)
