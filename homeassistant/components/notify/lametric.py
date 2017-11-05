@@ -13,9 +13,10 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ICON
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.lametric import DOMAIN
+from homeassistant.components.lametric import DOMAIN as LAMETRIC_DOMAIN
 
 REQUIREMENTS = ['lmnotify==0.0.4']
+DEPENDENCIES = ['lametric']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-variable
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
-    hlmn = hass.data.get(DOMAIN)
+    hlmn = hass.data.get(LAMETRIC_DOMAIN)
     return LaMetricNotificationService(hlmn,
                                        config[CONF_ICON],
                                        config[CONF_DISPLAY_TIME] * 1000)
@@ -82,10 +83,10 @@ class LaMetricNotificationService(BaseNotificationService):
         _LOGGER.debug(frames)
 
         model = Model(frames=frames)
-        lmn = self.hasslametricmanager.manager()
+        lmn = self.hasslametricmanager.manager
         devices = lmn.get_devices()
         for dev in devices:
-            if (targets is None) or (dev["name"] in targets):
+            if targets is None or dev["name"] in targets:
                 lmn.set_device(dev)
                 lmn.send_notification(model, lifetime=self._display_time)
                 _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
