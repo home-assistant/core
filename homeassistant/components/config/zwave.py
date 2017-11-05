@@ -1,14 +1,15 @@
 """Provide configuration end points for Z-Wave."""
 import asyncio
+import logging
 
 import homeassistant.core as ha
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.config import EditKeyBasedConfigView
 from homeassistant.components.zwave import const, DEVICE_CONFIG_SCHEMA_ENTRY
 import homeassistant.helpers.config_validation as cv
 
-
+_LOGGER = logging.getLogger(__name__)
 CONFIG_PATH = 'zwave_device_config.yaml'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
 URL_API_OZW_LOG = '/api/zwave/ozwlog'
@@ -33,7 +34,7 @@ def async_setup(hass):
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
-    """View to save the ZWave configuration to zwcfg_xxxxxx.xml"""
+    """View to save the ZWave configuration to zwcfg_xxxxx.xml"""
 
     url = "/api/zwave/saveconfig"
     name = "api:zwave:saveconfig"
@@ -46,7 +47,9 @@ class ZWaveConfigWriteView(HomeAssistantView):
         if network is None:
             return self.json_message('No Z-Wave network data found',
                                      HTTP_NOT_FOUND)
+        _LOGGER.info("Z-Wave configuration written to file.")
         network.write_config()
+        return self.json_message('Z-Wave configuration saved to file.', HTTP_OK)
 
 
 class ZWaveNodeValueView(HomeAssistantView):
