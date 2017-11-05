@@ -591,7 +591,6 @@ def setup(hass, config):
         _LOGGER.info("Sending %s test-messages to node %s.", messages, node_id)
         node.test(messages)
 
-
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting Z-Wave network...")
