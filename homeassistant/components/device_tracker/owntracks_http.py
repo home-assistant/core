@@ -42,11 +42,11 @@ class OwnTracksView(HomeAssistantView):
     def post(self, request, user, device):
         """Handle an OwnTracks message."""
         hass = request.app['hass']
-        
+
         try:
             message = yield from request.json()
             message['topic'] = 'owntracks/{}/{}'.format(user, device)
-        except JSONDecodeError:
+        except:
             return self.json([])
 
         try:
