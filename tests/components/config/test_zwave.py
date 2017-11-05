@@ -425,8 +425,6 @@ def test_save_config_no_network(hass, test_client):
     app = mock_http_component_app(hass)
     ZWaveConfigWriteView().register(app.router)
 
-    network = hass.data[DATA_NETWORK] = None
-
     client = yield from test_client(app)
 
     resp = yield from client.post('/api/zwave/saveconfig')
