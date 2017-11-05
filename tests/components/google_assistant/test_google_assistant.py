@@ -1,18 +1,18 @@
-"""The tests for the Google Actions component."""
+"""The tests for the Google Assistant component."""
 # pylint: disable=protected-access
-import json
 import asyncio
-import pytest
+import json
 
-from homeassistant import setup, const, core
-from homeassistant.components import (
-    http, async_setup, light, cover, media_player, fan
-)
-from homeassistant.components import google_assistant as ga
+from aiohttp.hdrs import CONTENT_TYPE, AUTHORIZATION
+import pytest
 from tests.common import get_test_instance_port
 
-from . import DEMO_DEVICES
+from homeassistant import core, const, setup
+from homeassistant.components import (
+    fan, http, cover, light, switch, climate, async_setup, media_player)
+from homeassistant.components import google_assistant as ga
 
+from . import DEMO_DEVICES
 
 API_PASSWORD = "test1234"
 SERVER_PORT = get_test_instance_port()
@@ -20,7 +20,7 @@ BASE_API_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
 HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
+    CONTENT_TYPE: const.CONTENT_TYPE_JSON,
 }
 
 AUTHCFG = {
@@ -28,12 +28,12 @@ AUTHCFG = {
     'client_id': 'helloworld',
     'access_token': 'superdoublesecret'
 }
-AUTH_HEADER = {'Authorization': 'Bearer {}'.format(AUTHCFG['access_token'])}
+AUTH_HEADER = {AUTHORIZATION: 'Bearer {}'.format(AUTHCFG['access_token'])}
 
 
 @pytest.fixture
 def assistant_client(loop, hass_fixture, test_client):
-    """Create web client for emulated hue api."""
+    """Create web client for the Google Assistant API."""
     hass = hass_fixture
     web_app = hass.http.app
 
@@ -45,7 +45,7 @@ def assistant_client(loop, hass_fixture, test_client):
 
 @pytest.fixture
 def hass_fixture(loop, hass):
-    """Setup a hass instance for these tests."""
+    """Set up a HOme Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(async_setup(hass, {core.DOMAIN: {}}))
 
@@ -59,6 +59,12 @@ def hass_fixture(loop, hass):
     loop.run_until_complete(
         setup.async_setup_component(hass, light.DOMAIN, {
             'light': [{
+                'platform': 'demo'
+            }]
+        }))
+    loop.run_until_complete(
+        setup.async_setup_component(hass, switch.DOMAIN, {
+            'switch': [{
                 'platform': 'demo'
             }]
         }))
@@ -83,6 +89,13 @@ def hass_fixture(loop, hass):
             }]
         }))
 
+    loop.run_until_complete(
+        setup.async_setup_component(hass, climate.DOMAIN, {
+            'climate': [{
+                'platform': 'demo'
+            }]
+        }))
+
     # Kitchen light is explicitly excluded from being exposed
     ceiling_lights_entity = hass.states.get('light.ceiling_lights')
     attrs = dict(ceiling_lights_entity.attributes)
@@ -91,6 +104,16 @@ def hass_fixture(loop, hass):
     hass.states.async_set(
         ceiling_lights_entity.entity_id,
         ceiling_lights_entity.state,
+        attributes=attrs)
+
+    # By setting the google_assistant_type = 'light'
+    # we can override how a device is reported to GA
+    switch_light = hass.states.get('switch.decorative_lights')
+    attrs = dict(switch_light.attributes)
+    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_TYPE] = "light"
+    hass.states.async_set(
+        switch_light.entity_id,
+        switch_light.state,
         attributes=attrs)
 
     return hass
@@ -126,15 +149,18 @@ def test_sync_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     devices = body['payload']['devices']
-    # assert len(devices) == 4
-    assert len(devices) == len(DEMO_DEVICES)
-    # HACK this is kind of slow and lazy
-    for dev in devices:
-        for demo in DEMO_DEVICES:
-            if dev['id'] == demo['id']:
-                assert dev['name'] == demo['name']
-                assert set(dev['traits']) == set(demo['traits'])
-                assert dev['type'] == demo['type']
+    assert (
+        sorted([dev['id'] for dev in devices])
+        == sorted([dev['id'] for dev in DEMO_DEVICES]))
+
+    for dev, demo in zip(
+            sorted(devices, key=lambda d: d['id']),
+            sorted(DEMO_DEVICES, key=lambda d: d['id'])):
+        assert dev['name'] == demo['name']
+        assert set(dev['traits']) == set(demo['traits'])
+        assert dev['type'] == demo['type']
+        if 'attributes' in demo:
+            assert dev['attributes'] == demo['attributes']
 
 
 @asyncio.coroutine
@@ -189,6 +215,8 @@ def test_execute_request(hass_fixture, assistant_client):
                     "devices": [{
                         "id": "light.ceiling_lights",
                     }, {
+                        "id": "switch.decorative_lights",
+                    }, {
                         "id": "light.bed_light",
                     }],
                     "execution": [{
@@ -209,6 +237,7 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 2
+    assert len(commands) == 3
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
+    assert hass_fixture.states.get('switch.decorative_lights').state == 'off'

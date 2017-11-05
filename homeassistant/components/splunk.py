@@ -7,11 +7,12 @@ https://home-assistant.io/components/splunk/
 import json
 import logging
 
+from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, EVENT_STATE_CHANGED)
+    CONF_SSL, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.remote import JSONEncoder
@@ -52,7 +53,7 @@ def setup(hass, config):
 
     event_collector = '{}{}:{}/services/collector/event'.format(
         uri_scheme, host, port)
-    headers = {'Authorization': 'Splunk {}'.format(token)}
+    headers = {AUTHORIZATION: 'Splunk {}'.format(token)}
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""

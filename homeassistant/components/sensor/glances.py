@@ -13,8 +13,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES,
-    TEMP_CELSIUS)
+    CONF_HOST, CONF_PORT, CONF_NAME, CONF_RESOURCES, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -28,21 +27,21 @@ DEFAULT_PORT = '61208'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
-    'disk_use_percent': ['Disk used', '%'],
-    'disk_use': ['Disk used', 'GiB'],
-    'disk_free': ['Disk free', 'GiB'],
-    'memory_use_percent': ['RAM used', '%'],
-    'memory_use': ['RAM used', 'MiB'],
-    'memory_free': ['RAM free', 'MiB'],
-    'swap_use_percent': ['Swap used', '%'],
-    'swap_use': ['Swap used', 'GiB'],
-    'swap_free': ['Swap free', 'GiB'],
-    'processor_load': ['CPU load', '15 min'],
-    'process_running': ['Running', 'Count'],
-    'process_total': ['Total', 'Count'],
-    'process_thread': ['Thread', 'Count'],
-    'process_sleeping': ['Sleeping', 'Count'],
-    'cpu_temp': ['CPU Temp', TEMP_CELSIUS],
+    'disk_use_percent': ['Disk used', '%', 'mdi:harddisk'],
+    'disk_use': ['Disk used', 'GiB', 'mdi:harddisk'],
+    'disk_free': ['Disk free', 'GiB', 'mdi:harddisk'],
+    'memory_use_percent': ['RAM used', '%', 'mdi:memory'],
+    'memory_use': ['RAM used', 'MiB', 'mdi:memory'],
+    'memory_free': ['RAM free', 'MiB', 'mdi:memory'],
+    'swap_use_percent': ['Swap used', '%', 'mdi:memory'],
+    'swap_use': ['Swap used', 'GiB', 'mdi:memory'],
+    'swap_free': ['Swap free', 'GiB', 'mdi:memory'],
+    'processor_load': ['CPU load', '15 min', 'mdi:memory'],
+    'process_running': ['Running', 'Count', 'mdi:memory'],
+    'process_total': ['Total', 'Count', 'mdi:memory'],
+    'process_thread': ['Thread', 'Count', 'mdi:memory'],
+    'process_sleeping': ['Sleeping', 'Count', 'mdi:memory'],
+    'cpu_temp': ['CPU Temp', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -81,15 +80,18 @@ class GlancesSensor(Entity):
         self.rest = rest
         self._name = name
         self.type = sensor_type
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._name is None:
-            return SENSOR_TYPES[self.type][0]
         return '{} {}'.format(self._name, SENSOR_TYPES[self.type][0])
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SENSOR_TYPES[self.type][2]
 
     @property
     def unit_of_measurement(self):
@@ -161,7 +163,7 @@ class GlancesData(object):
     def __init__(self, resource):
         """Initialize the data object."""
         self._resource = resource
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

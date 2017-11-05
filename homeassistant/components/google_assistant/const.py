@@ -5,6 +5,7 @@ GOOGLE_ASSISTANT_API_ENDPOINT = '/api/google_assistant'
 
 ATTR_GOOGLE_ASSISTANT = 'google_assistant'
 ATTR_GOOGLE_ASSISTANT_NAME = 'google_assistant_name'
+ATTR_GOOGLE_ASSISTANT_TYPE = 'google_assistant_type'
 
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
@@ -15,8 +16,9 @@ CONF_ALIASES = 'aliases'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
-    'switch', 'light', 'group', 'media_player', 'fan', 'cover'
+    'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate'
 ]
+CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', 'heatcool'}
 
 PREFIX_TRAITS = 'action.devices.traits.'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
@@ -24,14 +26,21 @@ TRAIT_BRIGHTNESS = PREFIX_TRAITS + 'Brightness'
 TRAIT_RGB_COLOR = PREFIX_TRAITS + 'ColorSpectrum'
 TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
+TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
 COMMAND_BRIGHTNESS = PREFIX_COMMANDS + 'BrightnessAbsolute'
 COMMAND_COLOR = PREFIX_COMMANDS + 'ColorAbsolute'
 COMMAND_ACTIVATESCENE = PREFIX_COMMANDS + 'ActivateScene'
+COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
+    PREFIX_COMMANDS + 'ThermostatTemperatureSetpoint')
+COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
+    PREFIX_COMMANDS + 'ThermostatTemperatureSetRange')
+COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
 
 PREFIX_TYPES = 'action.devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'
 TYPE_SWITCH = PREFIX_TYPES + 'SWITCH'
 TYPE_SCENE = PREFIX_TYPES + 'SCENE'
+TYPE_THERMOSTAT = PREFIX_TYPES + 'THERMOSTAT'

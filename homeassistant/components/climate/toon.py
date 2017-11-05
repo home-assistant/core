@@ -3,23 +3,20 @@ Toon van Eneco Thermostat Support.
 
 This provides a component for the rebranded Quby thermostat as provided by
 Eneco.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.toon/
 """
-
-from homeassistant.components.climate import (ClimateDevice,
-                                              ATTR_TEMPERATURE,
-                                              STATE_PERFORMANCE,
-                                              STATE_HEAT,
-                                              STATE_ECO,
-                                              STATE_COOL)
-from homeassistant.const import TEMP_CELSIUS
-
 import homeassistant.components.toon as toon_main
+from homeassistant.components.climate import (
+    ClimateDevice, ATTR_TEMPERATURE, STATE_PERFORMANCE, STATE_HEAT, STATE_ECO,
+    STATE_COOL)
+from homeassistant.const import TEMP_CELSIUS
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup thermostat."""
-    # Add toon
-    add_devices((ThermostatDevice(hass), ), True)
+    """Set up the Toon thermostat."""
+    add_devices([ThermostatDevice(hass)], True)
 
 
 class ThermostatDevice(ClimateDevice):
@@ -31,24 +28,20 @@ class ThermostatDevice(ClimateDevice):
         self.hass = hass
         self.thermos = hass.data[toon_main.TOON_HANDLE]
 
-        # set up internal state vars
         self._state = None
         self._temperature = None
         self._setpoint = None
-        self._operation_list = [STATE_PERFORMANCE,
-                                STATE_HEAT,
-                                STATE_ECO,
-                                STATE_COOL]
+        self._operation_list = [
+            STATE_PERFORMANCE,
+            STATE_HEAT,
+            STATE_ECO,
+            STATE_COOL,
+        ]
 
     @property
     def name(self):
         """Name of this Thermostat."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Polling is required."""
-        return True
 
     @property
     def temperature_unit(self):
@@ -83,10 +76,12 @@ class ThermostatDevice(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode as toonlib requires it."""
-        toonlib_values = {STATE_PERFORMANCE: 'Comfort',
-                          STATE_HEAT: 'Home',
-                          STATE_ECO: 'Away',
-                          STATE_COOL: 'Sleep'}
+        toonlib_values = {
+            STATE_PERFORMANCE: 'Comfort',
+            STATE_HEAT: 'Home',
+            STATE_ECO: 'Away',
+            STATE_COOL: 'Sleep',
+        }
 
         self.thermos.set_state(toonlib_values[operation_mode])
 

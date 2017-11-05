@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, TEMP_CELSIUS,
-    CONF_MONITORED_CONDITIONS, EVENT_HOMEASSISTANT_START)
+    CONF_MONITORED_CONDITIONS, EVENT_HOMEASSISTANT_START, CONF_DISKS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -21,7 +21,6 @@ REQUIREMENTS = ['python-synology==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DISKS = 'disks'
 CONF_VOLUMES = 'volumes'
 DEFAULT_NAME = 'Synology DSM'
 DEFAULT_PORT = 5000

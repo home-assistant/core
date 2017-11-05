@@ -88,7 +88,7 @@ def async_from_config_dict(config: Dict[str, Any],
     if sys.version_info[:2] < (3, 5):
         _LOGGER.warning(
             'Python 3.4 support has been deprecated and will be removed in '
-            'the begining of 2018. Please upgrade Python or your operating '
+            'the beginning of 2018. Please upgrade Python or your operating '
             'system. More info: https://home-assistant.io/blog/2017/10/06/'
             'deprecating-python-3.4-support/'
         )

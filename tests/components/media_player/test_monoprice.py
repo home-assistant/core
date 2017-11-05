@@ -9,7 +9,8 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import STATE_ON, STATE_OFF
 
-from components.media_player.monoprice import MonopriceZone, PLATFORM_SCHEMA
+from homeassistant.components.media_player.monoprice import (
+    MonopriceZone, PLATFORM_SCHEMA)
 
 
 class MockState(object):
@@ -218,6 +219,12 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertIsNone(self.media_player.source)
         self.media_player.update()
         self.assertEqual('one', self.media_player.source)
+
+    def test_media_title(self):
+        """Test media title property."""
+        self.assertIsNone(self.media_player.media_title)
+        self.media_player.update()
+        self.assertEqual('one', self.media_player.media_title)
 
     def test_source_list(self):
         """Test source list property."""

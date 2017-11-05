@@ -100,22 +100,6 @@ class TestHelpersEntity(object):
             fmt, 'overwrite hidden true',
             hass=self.hass) == 'test.overwrite_hidden_true_2'
 
-    def test_update_calls_async_update_if_available(self):
-        """Test async update getting called."""
-        async_update = []
-
-        class AsyncEntity(entity.Entity):
-            hass = self.hass
-            entity_id = 'sensor.test'
-
-            @asyncio.coroutine
-            def async_update(self):
-                async_update.append([1])
-
-        ent = AsyncEntity()
-        ent.update()
-        assert len(async_update) == 1
-
     def test_device_class(self):
         """Test device class attribute."""
         state = self.hass.states.get(self.entity.entity_id)
@@ -190,6 +174,30 @@ def test_warn_slow_update_with_exception(hass):
 
         assert mock_call().cancel.called
 
+        assert update_call
+
+
+@asyncio.coroutine
+def test_warn_slow_device_update_disabled(hass):
+    """Disable slow update warning with async_device_update."""
+    update_call = False
+
+    @asyncio.coroutine
+    def async_update():
+        """Mock async update."""
+        nonlocal update_call
+        update_call = True
+
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.async_update = async_update
+
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from mock_entity.async_device_update(warning=False)
+
+        assert not mock_call.called
         assert update_call
 
 
