@@ -35,7 +35,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_call_from_config
-from homeassistant.helpers.template import Template
 
 ATTR_ACTIVE_CHILD = 'active_child'
 
@@ -57,30 +56,24 @@ CMD_SCHEMA = vol.Schema({cv.slug: cv.SERVICE_SCHEMA})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_CHILDREN): cv.entity_ids,
-    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-    vol.Optional(CONF_COMMANDS): CMD_SCHEMA,
-    vol.Optional(CONF_ATTRS): ATTRS_SCHEMA
-})
+    vol.Optional(CONF_CHILDREN, default=[]): cv.entity_ids,
+    vol.Optional(CONF_COMMANDS, default={}): CMD_SCHEMA,
+    vol.Optional(CONF_ATTRS, default={}):
+        vol.Or(cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA),
+    vol.Optional(CONF_STATE_TEMPLATE): cv.template
+}, extra=vol.REMOVE_EXTRA)
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the universal media players."""
-    attrs = {}
-    for key, val in config.get(CONF_ATTRS, {}).items():
-        attr = val.split('|', 1)
-        if len(attr) == 1:
-            attr.append(None)
-        attrs[key] = attr
-
     player = UniversalMediaPlayer(
         hass,
         config.get(CONF_NAME),
-        config.get(CONF_STATE_TEMPLATE),
         config.get(CONF_CHILDREN),
         config.get(CONF_COMMANDS),
-        attrs
+        config.get(CONF_ATTRS),
+        config.get(CONF_STATE_TEMPLATE)
     )
 
     async_add_devices([player])
@@ -89,14 +82,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class UniversalMediaPlayer(MediaPlayerDevice):
     """Representation of an universal media player."""
 
-    def __init__(self, hass, name, state_template,
-                 children, commands, attributes):
+    def __init__(self, hass, name, children,
+                 commands, attributes, state_template=None):
         """Initialize the Universal media device."""
         self.hass = hass
         self._name = name
         self._children = children
         self._cmds = commands
-        self._attrs = attributes
+        self._attrs = {}
+        if attributes is not None:
+            for key, val in attributes.items():
+                attr = val.split('|', 1)
+                if len(attr) == 1:
+                    attr.append(None)
+                self._attrs[key] = attr
         self._child_state = None
         self._state_template = state_template
 
@@ -106,7 +105,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             self.async_schedule_update_ha_state(True)
 
         depend = copy(children)
-        [depend.append(entity[0]) for entity in attributes.values()]
+        [depend.append(entity[0]) for entity in self._attrs.values()]
         if state_template is not None:
             self._state_template.hass = hass
             [depend.append(entity)
