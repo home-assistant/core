@@ -170,10 +170,13 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             self.async_schedule_update_ha_state(True)
 
         depend = copy(children)
-        for entity in attributes.values():
-            depend.append(entity[0])
+        [depend.append(entity[0]) for entity in attributes.values()]
+        if state_template is not None:
+            [depend.append(entity)
+             for entity in self._state_template.extract_entities()]
 
-        async_track_state_change(hass, depend, async_on_dependency_update)
+        async_track_state_change(hass, list(set(depend)),
+                                 async_on_dependency_update)
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
