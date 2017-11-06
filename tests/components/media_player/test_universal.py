@@ -17,6 +17,7 @@ from tests.common import mock_service, get_test_home_assistant
 
 
 def validate_config(config):
+    """Use the platform schema to validate configuration."""
     validated_config = universal.PLATFORM_SCHEMA(config)
     validated_config.pop('platform')
     return validated_config
@@ -124,9 +125,9 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         """Mock turn_off function."""
         self._state = STATE_OFF
 
-    def mute_volume(self):
+    def mute_volume(self, mute):
         """Mock mute function."""
-        self._is_volume_muted = ~self._is_volume_muted
+        self._is_volume_muted = mute
 
     def set_volume_level(self, volume):
         """Mock set volume level."""
@@ -319,7 +320,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.hass.states.set(self.mock_state_switch_id, STATE_ON)
         self.assertEqual(STATE_ON, ump.master_state)
 
-    def test_master_state_with_state_template(self):
+    def test_master_state_with_template(self):
         """Test the state_template option."""
         config = copy(self.config_children_and_attr)
         self.hass.states.set('input_boolean.test', STATE_OFF)
@@ -455,7 +456,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_media_image_url(self):
         """Test media_image_url property."""
-        TEST_URL = "test_url"
+        test_url = "test_url"
         config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
@@ -465,7 +466,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertEqual(None, ump.media_image_url)
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1._media_image_url = TEST_URL
+        self.mock_mp_1._media_image_url = test_url
         self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()

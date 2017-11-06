@@ -105,11 +105,12 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             self.async_schedule_update_ha_state(True)
 
         depend = copy(children)
-        [depend.append(entity[0]) for entity in self._attrs.values()]
-        if state_template is not None:
+        for entity in self._attrs.values():
+            depend.append(entity[0])
+        if self._state_template is not None:
             self._state_template.hass = hass
-            [depend.append(entity)
-             for entity in self._state_template.extract_entities()]
+            for entity in self._state_template.extract_entities():
+                depend.append(entity)
 
         async_track_state_change(hass, list(set(depend)),
                                  async_on_dependency_update)
