@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
     data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'}}
-    data_types[DATA_TYPE_UINT] = {1: 'H', 2: 'I', 4:'Q'}
+    data_types[DATA_TYPE_UINT] = {1: 'H', 2: 'I', 4: 'Q'}
     data_types[DATA_TYPE_FLOAT] = {1: 'e', 2: 'f', 4: 'd'}
 
     for register in config.get(CONF_REGISTERS):
@@ -73,8 +73,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 structure = '>%c' % (data_types[
                     register.get(CONF_DATA_TYPE)][register.get(CONF_COUNT)])
             except KeyError:
-                _LOGGER.error("Unable to detect data type for %s sensor, try a custom type.",
-                              register.get(CONF_NAME))
+                _LOGGER.error("Unable to detect data type for %s sensor, "
+                              "try a custom type.", register.get(CONF_NAME))
                 continue
         else:
             structure = register.get(CONF_STRUCTURE)
@@ -82,12 +82,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
-            _LOGGER.error("Error in sensor %s structure: %s", register.get(CONF_NAME), err)
+            _LOGGER.error(
+                "Error in sensor %s structure: %s", 
+                register.get(CONF_NAME), err)
             continue
 
         if register.get(CONF_COUNT) * 2 != size:
-            _LOGGER.error("Structure size (%d bytes) mismatch registers count (%d words)",
-                          size, register.get(CONF_COUNT))
+            _LOGGER.error(
+                "Structure size (%d bytes) mismatch registers count "
+                "(%d words)", size, register.get(CONF_COUNT))
             continue
 
         sensors.append(ModbusRegisterSensor(
