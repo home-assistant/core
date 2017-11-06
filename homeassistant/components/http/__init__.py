@@ -182,8 +182,6 @@ class HomeAssistantWSGI(object):
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
-        import aiohttp_cors
-
         middlewares = [auth_middleware, staticresource_middleware]
 
         if is_ban_enabled:
@@ -206,6 +204,8 @@ class HomeAssistantWSGI(object):
         self.server = None
 
         if cors_origins:
+            import aiohttp_cors
+
             self.cors = aiohttp_cors.setup(self.app, defaults={
                 host: aiohttp_cors.ResourceOptions(
                     allow_headers=ALLOWED_CORS_HEADERS,
@@ -335,7 +335,9 @@ class HomeAssistantWSGI(object):
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
 
-        self.app._frozen = False  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        self.app._middlewares = tuple(self.app._prepare_middleware())
+        self.app._frozen = False
 
     @asyncio.coroutine
     def stop(self):
@@ -345,7 +347,7 @@ class HomeAssistantWSGI(object):
             yield from self.server.wait_closed()
         yield from self.app.shutdown()
         if self._handler:
-            yield from self._handler.finish_connections(60.0)
+            yield from self._handler.shutdown(10)
         yield from self.app.cleanup()
 
 
