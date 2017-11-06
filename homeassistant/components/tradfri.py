@@ -10,7 +10,6 @@ import logging
 import os
 
 import voluptuous as vol
-import uuid
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
@@ -59,6 +58,7 @@ def request_configuration(hass, config, host):
         """Handle the submitted configuration."""
         try:
             from pytradfri.api.aiocoap_api import APIFactory
+            import uuid
         except ImportError:
             _LOGGER.exception("Looks like something isn't installed!")
             return
