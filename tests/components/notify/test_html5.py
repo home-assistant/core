@@ -57,7 +57,8 @@ class TestHtml5Notify(object):
 
         m = mock_open()
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             service = html5.get_service(hass, {})
 
@@ -69,7 +70,8 @@ class TestHtml5Notify(object):
 
         m = mock_open(read_data='I am not JSON')
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             service = html5.get_service(hass, {})
 
@@ -86,7 +88,8 @@ class TestHtml5Notify(object):
 
         m = mock_open(read_data=json.dumps(data))
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             service = html5.get_service(hass, {'gcm_sender_id': '100'})
 
@@ -120,7 +123,8 @@ class TestHtml5Notify(object):
 
         m = mock_open()
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             hass.config.path.return_value = 'file.conf'
             service = html5.get_service(hass, {})
@@ -158,7 +162,8 @@ class TestHtml5Notify(object):
 
         m = mock_open()
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             hass.config.path.return_value = 'file.conf'
             service = html5.get_service(hass, {})
@@ -193,7 +198,8 @@ class TestHtml5Notify(object):
 
         m = mock_open()
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             hass.config.path.return_value = 'file.conf'
             service = html5.get_service(hass, {})
@@ -222,7 +228,7 @@ class TestHtml5Notify(object):
             }))
             assert resp.status == 400
 
-            with patch('homeassistant.components.notify.html5._save_config',
+            with patch('homeassistant.components.notify.html5.save_json',
                        return_value=False):
                 # resp = view.post(Request(builder.get_environ()))
                 resp = yield from client.post(REGISTER_URL, data=json.dumps({
@@ -243,14 +249,12 @@ class TestHtml5Notify(object):
         }
 
         m = mock_open(read_data=json.dumps(config))
-
-        with patch('homeassistant.components.notify.html5.open', m,
-                   create=True):
+        with patch(
+            'homeassistant.util.json.open',
+            m, create=True
+        ):
             hass.config.path.return_value = 'file.conf'
-
-            with patch('homeassistant.components.notify.html5.os.path.isfile',
-                       return_value=True):
-                service = html5.get_service(hass, {})
+            service = html5.get_service(hass, {})
 
             assert service is not None
 
@@ -291,12 +295,11 @@ class TestHtml5Notify(object):
 
         m = mock_open(read_data=json.dumps(config))
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             hass.config.path.return_value = 'file.conf'
-            with patch('homeassistant.components.notify.html5.os.path.isfile',
-                       return_value=True):
-                service = html5.get_service(hass, {})
+            service = html5.get_service(hass, {})
 
             assert service is not None
 
@@ -324,7 +327,7 @@ class TestHtml5Notify(object):
 
     @asyncio.coroutine
     def test_unregistering_device_view_handles_json_safe_error(
-            self, loop,  test_client):
+            self, loop, test_client):
         """Test that the HTML unregister view handles JSON write errors."""
         hass = MagicMock()
 
@@ -335,12 +338,11 @@ class TestHtml5Notify(object):
 
         m = mock_open(read_data=json.dumps(config))
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             hass.config.path.return_value = 'file.conf'
-            with patch('homeassistant.components.notify.html5.os.path.isfile',
-                       return_value=True):
-                service = html5.get_service(hass, {})
+            service = html5.get_service(hass, {})
 
             assert service is not None
 
@@ -357,7 +359,7 @@ class TestHtml5Notify(object):
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False
 
-            with patch('homeassistant.components.notify.html5._save_config',
+            with patch('homeassistant.components.notify.html5.save_json',
                        return_value=False):
                 resp = yield from client.delete(REGISTER_URL, data=json.dumps({
                     'subscription': SUBSCRIPTION_1['subscription'],
@@ -375,7 +377,8 @@ class TestHtml5Notify(object):
 
         m = mock_open()
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             hass.config.path.return_value = 'file.conf'
             service = html5.get_service(hass, {})
@@ -406,17 +409,16 @@ class TestHtml5Notify(object):
         hass = MagicMock()
 
         data = {
-            'device': SUBSCRIPTION_1,
+            'device': SUBSCRIPTION_1
         }
 
         m = mock_open(read_data=json.dumps(data))
         with patch(
-                'homeassistant.components.notify.html5.open', m, create=True
+            'homeassistant.util.json.open',
+            m, create=True
         ):
             hass.config.path.return_value = 'file.conf'
-            with patch('homeassistant.components.notify.html5.os.path.isfile',
-                       return_value=True):
-                service = html5.get_service(hass, {'gcm_sender_id': '100'})
+            service = html5.get_service(hass, {'gcm_sender_id': '100'})
 
             assert service is not None
 
