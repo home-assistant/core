@@ -140,9 +140,9 @@ def async_setup(hass, config):
         host = info['hostname']
         name = info.get('name', DEFAULT_NAME)
 
-        # try to keep old autoconf setups working
+        # try to keep old autoconf setups working, but prefer newer config
         discovered_host = info.get('host', None)
-        if discovered_host:
+        if (host not in known_hosts) and (discovered_host in known_hosts):
             host = discovered_host
 
         if host in known_hosts:
