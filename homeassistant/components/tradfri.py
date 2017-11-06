@@ -11,7 +11,6 @@ import os
 
 import voluptuous as vol
 import uuid
-import async_timeout
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
@@ -33,8 +32,6 @@ KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
-
-DEFAULT_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -71,14 +68,11 @@ def request_configuration(hass, config, host):
 
         api_factory = APIFactory(host, psk_id=identity, loop=hass.loop)
         # Need To Fix: currently entering a wrong security code sends
-        # pytradfri aiocoap API into a loop for 1.5minutes.
+        # pytradfri aiocoap API into an endless loop.
         # Should just raise a requestError or something.
-        # For now, for sake of user experience we'll just catch a TimeOut
-        # and let the api call timout in the background.
         try:
-            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
-                key = yield from api_factory.generate_psk(security_code)
-        except asyncio.TimeoutError:
+            key = yield from api_factory.generate_psk(security_code)
+        except RequestError:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Security Code not accepted.")
             return
