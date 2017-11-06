@@ -113,16 +113,17 @@ def request_configuration(hass, config, host, name, allow_tradfri_groups):
     if name:
         title = "{} ({})".format(title, name)
 
+    security_code_field = {'id': 'security_code', 'name': 'Security Code'}
     checbox_field = {'id': 'allow_tradfri_groups',
-                     'name': 'use Tradfri groups', 'type': 'checkbox'}
-    if allow_tradfri_groups:
-        checbox_field['checked'] = 'checked'
+                     'name': 'use Tradfri groups',
+                     'type': 'checkbox',
+                     'checked': allow_tradfri_groups}
     instance = configurator.request_config(
         title, configuration_callback,
         description='Please enter the security code written at the bottom of '
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",
-        fields=[{'id': 'security_code', 'name': 'Security Code'}]
+        fields=[security_code_field, checbox_field]
         )
 
 
