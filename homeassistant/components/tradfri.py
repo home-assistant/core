@@ -205,6 +205,13 @@ def _setup_gateway(hass, hass_config, host, name,
         _LOGGER.warning("Timeout on setting up Tradfri gateway: %s "
                         "at %s. Host probably not reachable",
                         name, host)
+        hass.components.persistent_notification.create(
+            'Could not setup your IKEA Trådfri gateway: {} @ {}.<br>'
+            'The connection timed out. <br>'
+            'Please check that your gateway is connected and reachable on the '
+            'network.'.format(name, host),
+            title='IKEA Trådfri setup error'
+            )
         return False
 
     gateway_id = gateway_info_result.id
