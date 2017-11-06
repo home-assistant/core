@@ -199,6 +199,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
         if self._attributes[ATTR_FAILED]:
             return 'dead'
+        if self._attributes[ATTR_QUERY_STAGE] != 'Complete':
+            return 'initializing'
         if not self._attributes[ATTR_AWAKE]:
             return 'sleeping'
         if self._attributes[ATTR_READY]:
