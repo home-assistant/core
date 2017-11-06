@@ -10,6 +10,8 @@ import logging
 import os
 
 import voluptuous as vol
+import uuid
+import async_timeout
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
@@ -31,6 +33,8 @@ KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
+
+DEFAULT_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -62,9 +66,24 @@ def request_configuration(hass, config, host):
             _LOGGER.exception("Looks like something isn't installed!")
             return
 
-        api_factory = APIFactory(host, psk_id=GATEWAY_IDENTITY)
-        psk = yield from api_factory.generate_psk(callback_data.get('key'))
-        res = yield from _setup_gateway(hass, config, host, psk,
+        identity = uuid.uuid4().hex
+        security_code = callback_data.get('security_code')
+
+        api_factory = APIFactory(host, psk_id=identity, loop=hass.loop)
+        # Need To Fix: currently entering a wrong security code sends
+        # pytradfri aiocoap API into a loop for 1.5minutes.
+        # Should just raise a requestError or something.
+        # For now, for sake of user experience we'll just catch a TimeOut
+        # and let the api call timout in the background.
+        try:
+            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
+                key = yield from api_factory.generate_psk(security_code)
+        except asyncio.TimeoutError:
+            hass.async_add_job(configurator.notify_errors, instance,
+                               "Security Code not accepted.")
+            return
+
+        res = yield from _setup_gateway(hass, config, host, identity, key,
                                         DEFAULT_ALLOW_TRADFRI_GROUPS)
 
         if not res:
@@ -75,7 +94,8 @@ def request_configuration(hass, config, host):
         def success():
             """Set up was successful."""
             conf = _read_config(hass)
-            conf[host] = {'key': psk}
+            conf[host] = {'identity': identity,
+                          'key': key}
             _write_config(hass, conf)
             hass.async_add_job(configurator.request_done, instance)
 
@@ -86,7 +106,8 @@ def request_configuration(hass, config, host):
         description='Please enter the security code written at the bottom of '
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",
-        fields=[{'id': 'key', 'name': 'Security Code', 'type': 'password'}]
+        fields=[{'id': 'security_code', 'name': 'Security Code',
+                'type': 'password'}]
     )
 
 
@@ -96,35 +117,36 @@ def async_setup(hass, config):
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
     allow_tradfri_groups = conf.get(CONF_ALLOW_TRADFRI_GROUPS)
-    keys = yield from hass.async_add_job(_read_config, hass)
+    known_hosts = yield from hass.async_add_job(_read_config, hass)
 
     @asyncio.coroutine
-    def gateway_discovered(service, info):
+    def gateway_discovered(service, info,
+                           allow_tradfri_groups=DEFAULT_ALLOW_TRADFRI_GROUPS):
         """Run when a gateway is discovered."""
         host = info['host']
 
-        if host in keys:
-            yield from _setup_gateway(hass, config, host, keys[host]['key'],
+        if host in known_hosts:
+            # use fallbacks for old config style
+            # identity was hard coded as 'homeassistant'
+            identity = known_hosts[host].get('identity', 'homeassistant')
+            key = known_hosts[host].get('key')
+            yield from _setup_gateway(hass, config, host, identity, key,
                                       allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass, config, host)
 
     discovery.async_listen(hass, SERVICE_IKEA_TRADFRI, gateway_discovered)
 
-    if not host:
-        return True
-
-    if host and keys.get(host):
-        return (yield from _setup_gateway(hass, config, host,
-                                          keys[host]['key'],
-                                          allow_tradfri_groups))
-    else:
-        hass.async_add_job(request_configuration, hass, config, host)
-        return True
+    if host:
+        yield from gateway_discovered(None,
+                                      {'host': host},
+                                      allow_tradfri_groups)
+    return True
 
 
 @asyncio.coroutine
-def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
+def _setup_gateway(hass, hass_config, host, identity, key,
+                   allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import Gateway, RequestError
     try:
@@ -134,7 +156,7 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
         return False
 
     try:
-        factory = APIFactory(host, psk_id=GATEWAY_IDENTITY, psk=key,
+        factory = APIFactory(host, psk_id=identity, psk=key,
                              loop=hass.loop)
         api = factory.request
         gateway = Gateway()
