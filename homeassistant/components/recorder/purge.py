@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from sqlalchemy import exc
+
 import homeassistant.util.dt as dt_util
 
 from .util import session_scope
@@ -29,4 +31,7 @@ def purge_old_data(instance, purge_days):
     _LOGGER.debug("DB engine driver: %s", instance.engine.driver)
     if instance.engine.driver == 'pysqlite':
         _LOGGER.info("Vacuuming SQLite to free space")
-        instance.engine.execute("VACUUM")
+        try:
+            instance.engine.execute("VACUUM")
+        except exc.OperationalError as err:
+            _LOGGER.error("Error vacuuming SQLite: %s.", err)
