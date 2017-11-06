@@ -60,15 +60,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
-    data_types = {DATA_TYPE_INT:{1:'h', 2:'i', 4:'q'}}
-    data_types [DATA_TYPE_UINT] = {1:'H', 2:'I', 4:'Q'}
-    data_types [DATA_TYPE_FLOAT] = {1:'e', 2:'f', 4:'d'}
+    data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'}}
+    data_types[DATA_TYPE_UINT] = {1: 'H', 2: 'I', 4:'Q'}
+    data_types[DATA_TYPE_FLOAT] = {1: 'e', 2: 'f', 4: 'd'}
 
     for register in config.get(CONF_REGISTERS):
         structure = '>i'
-        if register.get(CONF_DATA_TYPE) != DATA_TYPE_CUSTOM :
+        if register.get(CONF_DATA_TYPE) != DATA_TYPE_CUSTOM:
             try:
-                structure = '>%c'%(data_types[
+                structure = '>%c' % (data_types[
                     register.get(CONF_DATA_TYPE)][register.get(CONF_COUNT)])
             except KeyError:
                 _LOGGER.error("Unable to detect data type for %s sensor, try a custom type.",
@@ -79,11 +79,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         try:
             size = struct.calcsize(structure)
-        except error as err:
+        except struct.error as err:
             _LOGGER.error("Error in sensor %s structure: %s", register.get(CONF_NAME), err)
             continue
 
-        if register.get(CONF_COUNT) * 2 != size :
+        if register.get(CONF_COUNT) * 2 != size:
             _LOGGER.error("Structure size (%d bytes) mismatch registers count (%d words)",
                           size, register.get(CONF_COUNT))
             continue
@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             structure,
             register.get(CONF_PRECISION)))
 
-    if len(sensors) < 1 :
+    if len(sensors) < 1:
         return False
     add_devices(sensors)
 
@@ -169,4 +169,3 @@ class ModbusRegisterSensor(Entity):
         val = struct.unpack(self._structure, byte_string)[0]
         self._value = format(
             self._scale * val + self._offset, '.{}f'.format(self._precision))
-        
