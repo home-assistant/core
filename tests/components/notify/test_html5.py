@@ -64,19 +64,6 @@ class TestHtml5Notify(object):
 
         assert service is not None
 
-    def test_get_service_with_bad_json(self):
-        """Test ."""
-        hass = MagicMock()
-
-        m = mock_open(read_data='I am not JSON')
-        with patch(
-            'homeassistant.util.json.open',
-            m, create=True
-        ):
-            service = html5.get_service(hass, {})
-
-        assert service is None
-
     @patch('pywebpush.WebPusher')
     def test_sending_message(self, mock_wp):
         """Test sending message."""
