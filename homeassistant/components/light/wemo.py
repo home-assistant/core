@@ -194,7 +194,7 @@ class WemoDimmer(Light):
     @property
     def get_brightness(self):
         """Return the brightness of this light between 1 and 100"""
-        brightness = int(self.wemo.get_brightness * 255 / 100)
+        brightness = int(self.wemo.get_brightness())
         return brightness
 
     @property
@@ -210,14 +210,7 @@ class WemoDimmer(Light):
         """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
-            if self._model_name == 'Insight':
-                self.insight_params = self.wemo.insight_params
-                self.insight_params['standby_state'] = (
-                    self.wemo.get_standby_state)
-            elif self._model_name == 'Maker':
-                self.maker_params = self.wemo.maker_params
-            elif self._model_name == 'CoffeeMaker':
-                self.coffeemaker_mode = self.wemo.mode
+            self._brightness = self.get_brightness(force_update)
         except AttributeError as err:
             _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)
