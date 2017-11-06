@@ -169,7 +169,7 @@ def async_setup(hass, config):
         name = gateway_conf.get(CONF_NAME)
         allow_groups = gateway_conf.get(CONF_ALLOW_TRADFRI_GROUPS)
 
-        gateway_discovered(None, {'hostname': host, 'name': name},
+        yield from gateway_discovered(None, {'hostname': host, 'name': name},
                            allow_groups)
 
     return True
