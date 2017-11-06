@@ -90,12 +90,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._children = children
         self._cmds = commands
         self._attrs = {}
-        if attributes is not None:
-            for key, val in attributes.items():
-                attr = val.split('|', 1)
-                if len(attr) == 1:
-                    attr.append(None)
-                self._attrs[key] = attr
+        for key, val in attributes.items():
+            attr = val.split('|', 1)
+            if len(attr) == 1:
+                attr.append(None)
+            self._attrs[key] = attr
         self._child_state = None
         self._state_template = state_template
 
