@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'deconz'
 
-DECONZ = None
 DATA_DECONZ = 'data_deconz'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -77,11 +76,11 @@ def _setup_deconz(hass, config, deconz_config):
     Start websocket for push notification of state changes from Deconz.
     """
     from pydeconz import DeconzSession
-    DECONZ = DeconzSession(hass.loop, **deconz_config)
-    hass.data[DATA_DECONZ] = DECONZ
-    yield from DECONZ.populate_config()
-    yield from DECONZ.populate_lights()
-    yield from DECONZ.populate_sensors()
+    deconz = DeconzSession(hass.loop, **deconz_config)
+    hass.data[DATA_DECONZ] = deconz
+    yield from deconz.populate_config()
+    yield from deconz.populate_lights()
+    yield from deconz.populate_sensors()
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'light',
                                                      DOMAIN,
@@ -97,4 +96,4 @@ def _setup_deconz(hass, config, deconz_config):
                                                      DOMAIN,
                                                      {},
                                                      config))
-    DECONZ.start()
+    deconz.start()
