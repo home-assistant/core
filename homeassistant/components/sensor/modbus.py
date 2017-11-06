@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             size = struct.calcsize(structure)
         except struct.error as err:
             _LOGGER.error(
-                "Error in sensor %s structure: %s", 
+                "Error in sensor %s structure: %s",
                 register.get(CONF_NAME), err)
             continue
 
