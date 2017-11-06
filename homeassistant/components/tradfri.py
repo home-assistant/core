@@ -102,7 +102,7 @@ def request_configuration(hass, config, host):
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",
         fields=[{'id': 'security_code', 'name': 'Security Code',
-                'type': 'password'}]
+                 'type': 'password'}]
     )
 
 
