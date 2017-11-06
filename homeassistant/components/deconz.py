@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['pydeconz==1']
+REQUIREMENTS = ['pydeconz==2']
 
 _LOGGER = logging.getLogger(__name__)
 
