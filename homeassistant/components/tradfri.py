@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ikea_tradfri/
 """
 import asyncio
+import async_timeout
 import json
 import logging
 import os
@@ -33,6 +34,7 @@ DEFAULT_NAME = None
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
 
+DEFAULT_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
@@ -188,14 +190,21 @@ def _setup_gateway(hass, hass_config, host, name,
         return False
 
     try:
-        factory = APIFactory(host, psk_id=identity, psk=token, loop=hass.loop)
-        api = factory.request
-        gateway = Gateway()
-        gateway_info_result = yield from api(gateway.get_gateway_info())
+        with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
+            factory = APIFactory(host, psk_id=identity,
+                                 psk=token, loop=hass.loop)
+            api = factory.request
+            gateway = Gateway()
+            gateway_info_result = yield from api(gateway.get_gateway_info())
     except RequestError:
         _LOGGER.exception("Tradfri setup failed. Requesting reconfiguration.")
         hass.async_add_job(request_configuration, hass, hass_config,
                            host, name, allow_tradfri_groups)
+        return False
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Timeout on setting up Tradfri gateway: %s "
+                        "at %s. Host probably not reachable",
+                        name, host)
         return False
 
     gateway_id = gateway_info_result.id
