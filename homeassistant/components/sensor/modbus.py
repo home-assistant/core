@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
 CONF_COUNT = 'count'
+CONF_REVERSE_ORDER = 'reverse_order'
 CONF_PRECISION = 'precision'
 CONF_REGISTER = 'register'
 CONF_REGISTERS = 'registers'
@@ -43,12 +44,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
             vol.In([REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
         vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
         vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT):
-            vol.In([DATA_TYPE_INT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]),
+            vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]),
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
     }]
@@ -93,6 +95,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             register.get(CONF_REGISTER_TYPE),
             register.get(CONF_UNIT_OF_MEASUREMENT),
             register.get(CONF_COUNT),
+            register.get(CONF_REVERSE_ORDER),
             register.get(CONF_SCALE),
             register.get(CONF_OFFSET),
             structure,
@@ -107,8 +110,8 @@ class ModbusRegisterSensor(Entity):
     """Modbus register sensor."""
 
     def __init__(self, name, slave, register, register_type,
-                 unit_of_measurement, count, scale, offset, structure,
-                 precision):
+                 unit_of_measurement, count, reverse_order, scale, offset,
+                 structure, precision):
         """Initialize the modbus register sensor."""
         self._name = name
         self._slave = int(slave) if slave else None
@@ -116,6 +119,7 @@ class ModbusRegisterSensor(Entity):
         self._register_type = register_type
         self._unit_of_measurement = unit_of_measurement
         self._count = int(count)
+        self._reverse_order = reverse_order
         self._scale = scale
         self._offset = offset
         self._precision = precision
@@ -153,6 +157,8 @@ class ModbusRegisterSensor(Entity):
 
         try:
             registers = result.registers
+            if self._reverse_order:
+                registers.reverse()
         except AttributeError:
             _LOGGER.error("No response from modbus slave %s register %s",
                           self._slave, self._register)
