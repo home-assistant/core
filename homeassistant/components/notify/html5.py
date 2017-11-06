@@ -391,7 +391,7 @@ class HTML5NotificationService(BaseNotificationService):
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
                 if not save_json(self.registrations_json_path,
-                                    self.registrations):
+                                 self.registrations):
                     self.registrations[target] = reg
                     _LOGGER.error("Error saving registration")
                 else:
