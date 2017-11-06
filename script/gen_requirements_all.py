@@ -39,6 +39,7 @@ TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'apns2',
+    'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
     'ephem',
@@ -80,7 +81,9 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'warrant',
     'yahoo-finance',
-    'pythonwhois'
+    'pythonwhois',
+    'wakeonlan',
+    'vultr'
 )
 
 IGNORE_PACKAGES = (

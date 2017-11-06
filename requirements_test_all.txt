@@ -36,6 +36,9 @@ aiohttp_cors==0.5.3
 # homeassistant.components.notify.apns
 apns2==0.1.1
 
+# homeassistant.components.sensor.coinmarketcap
+coinmarketcap==4.1.1
+
 # homeassistant.components.device_tracker.upc_connect
 defusedxml==0.5.0
 
@@ -71,7 +74,7 @@ hbmqtt==0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171021.2
+home-assistant-frontend==20171106.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -134,7 +137,7 @@ pyunifi==2.13
 pywebpush==1.1.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0a3
+restrictedpython==4.0b2
 
 # homeassistant.components.rflink
 rflink==0.0.34
@@ -153,13 +156,23 @@ somecomfort==0.4.1
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.14
+sqlalchemy==1.1.15
 
 # homeassistant.components.statsd
 statsd==3.2.1
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
+
+# homeassistant.components.vultr
+vultr==0.1.2
+
+# homeassistant.components.wake_on_lan
+# homeassistant.components.media_player.panasonic_viera
+# homeassistant.components.media_player.samsungtv
+# homeassistant.components.media_player.webostv
+# homeassistant.components.switch.wake_on_lan
+wakeonlan==0.2.2
 
 # homeassistant.components.cloud
 warrant==0.5.0

@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.0']
+REQUIREMENTS = ['python-miio==0.3.1']
 
 ATTR_TEMPERATURE = 'temperature'
 ATTR_HUMIDITY = 'humidity'
@@ -69,7 +69,7 @@ SERVICE_SCHEMA_LED_BRIGHTNESS = AIRPURIFIER_SERVICE_SCHEMA.extend({
 
 SERVICE_SCHEMA_FAVORITE_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_LEVEL):
-        vol.All(vol.Coerce(int), vol.Clamp(min=0, max=17))
+        vol.All(vol.Coerce(int), vol.Clamp(min=0, max=16))
 })
 
 SERVICE_TO_METHOD = {

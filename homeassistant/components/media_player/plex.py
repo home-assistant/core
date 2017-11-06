@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
-import os
 from datetime import timedelta
 
 import requests
@@ -22,6 +21,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['plexapi==3.0.3']
 
@@ -48,35 +48,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def config_from_file(filename, config=None):
-    """Small configuration file management function."""
-    if config:
-        # We're writing configuration
-        try:
-            with open(filename, 'w') as fdesc:
-                fdesc.write(json.dumps(config))
-        except IOError as error:
-            _LOGGER.error("Saving config file failed: %s", error)
-            return False
-        return True
-    else:
-        # We're reading config
-        if os.path.isfile(filename):
-            try:
-                with open(filename, 'r') as fdesc:
-                    return json.loads(fdesc.read())
-            except IOError as error:
-                _LOGGER.error("Reading config file failed: %s", error)
-                # This won't work yet
-                return False
-        else:
-            return {}
-
-
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Plex platform."""
     # get config from plex.conf
-    file_config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
+    file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
 
     if file_config:
         # Setup a configured PlexServer
@@ -146,7 +121,7 @@ def setup_plexserver(
         _LOGGER.info("Discovery configuration done")
 
     # Save config
-    if not config_from_file(
+    if not save_json(
             hass.config.path(PLEX_CONFIG_FILE), {host: {
                 'token': token,
                 'ssl': has_ssl,

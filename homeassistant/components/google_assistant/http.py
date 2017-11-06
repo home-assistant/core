@@ -7,27 +7,24 @@ https://home-assistant.io/components/google_assistant/
 import asyncio
 import logging
 
+from typing import Any, Dict  # NOQA
+
+from aiohttp.hdrs import AUTHORIZATION
+from aiohttp.web import Request, Response  # NOQA
+
 # Typing imports
 # pylint: disable=using-constant-test,unused-import,ungrouped-imports
 # if False:
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED
 from homeassistant.core import HomeAssistant  # NOQA
-from aiohttp.web import Request, Response  # NOQA
-from typing import Dict, Tuple, Any  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA
 
-from homeassistant.components.http import HomeAssistantView
-
-from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
-
 from .const import (
-    GOOGLE_ASSISTANT_API_ENDPOINT,
-    CONF_ACCESS_TOKEN,
-    DEFAULT_EXPOSE_BY_DEFAULT,
-    DEFAULT_EXPOSED_DOMAINS,
-    CONF_EXPOSE_BY_DEFAULT,
-    CONF_EXPOSED_DOMAINS,
-    ATTR_GOOGLE_ASSISTANT)
-from .smart_home import entity_to_device, query_device, determine_service
+    CONF_ACCESS_TOKEN, CONF_EXPOSED_DOMAINS, ATTR_GOOGLE_ASSISTANT,
+    CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSED_DOMAINS, DEFAULT_EXPOSE_BY_DEFAULT,
+    GOOGLE_ASSISTANT_API_ENDPOINT)
+from .smart_home import query_device, entity_to_device, determine_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +137,7 @@ class GoogleAssistantView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request: Request) -> Response:
         """Handle Google Assistant requests."""
-        auth = request.headers.get('Authorization', None)
+        auth = request.headers.get(AUTHORIZATION, None)
         if 'Bearer {}'.format(self.access_token) != auth:
             return self.json_message(
                 "missing authorization", status_code=HTTP_UNAUTHORIZED)

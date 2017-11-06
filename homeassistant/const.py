@@ -9,37 +9,7 @@ REQUIRED_PYTHON_VER = (3, 4, 2)
 REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
 CONSTRAINT_FILE = 'package_constraints.txt'
 
-PROJECT_NAME = 'Home Assistant'
-PROJECT_PACKAGE_NAME = 'homeassistant'
-PROJECT_LICENSE = 'Apache License 2.0'
-PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2013, {}'.format(PROJECT_AUTHOR)
-PROJECT_URL = 'https://home-assistant.io/'
-PROJECT_EMAIL = 'hello@home-assistant.io'
-PROJECT_DESCRIPTION = ('Open-source home automation platform '
-                       'running on Python 3.')
-PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
-                            'home automation platform running on Python 3. '
-                            'Track and control all devices at home and '
-                            'automate control. '
-                            'Installation in less than a minute.')
-PROJECT_CLASSIFIERS = [
-    'Intended Audience :: End Users/Desktop',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: Apache Software License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3.4',
-    'Topic :: Home Automation'
-]
-
-PROJECT_GITHUB_USERNAME = 'home-assistant'
-PROJECT_GITHUB_REPOSITORY = 'home-assistant'
-
-PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
-GITHUB_PATH = '{}/{}'.format(PROJECT_GITHUB_USERNAME,
-                             PROJECT_GITHUB_REPOSITORY)
-GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
-
+# Format for platforms
 PLATFORM_FORMAT = '{}.{}'
 
 # Can be used to specify a catch all when registering state or event listeners.
@@ -48,8 +18,7 @@ MATCH_ALL = '*'
 # If no name is specified
 DEVICE_DEFAULT_NAME = 'Unnamed Device'
 
-WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-
+# Sun events
 SUN_EVENT_SUNSET = 'sunset'
 SUN_EVENT_SUNRISE = 'sunrise'
 
@@ -88,6 +57,8 @@ CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
+CONF_DISKS = 'disks'
+CONF_DISPLAY_CURRENCY = 'display_currency'
 CONF_DISPLAY_OPTIONS = 'display_options'
 CONF_DOMAIN = 'domain'
 CONF_DOMAINS = 'domains'
@@ -97,6 +68,7 @@ CONF_EMAIL = 'email'
 CONF_ENTITIES = 'entities'
 CONF_ENTITY_ID = 'entity_id'
 CONF_ENTITY_NAMESPACE = 'entity_namespace'
+CONF_ENTITY_PICTURE_TEMPLATE = 'entity_picture_template'
 CONF_EVENT = 'event'
 CONF_EXCLUDE = 'exclude'
 CONF_FILE_PATH = 'file_path'
@@ -116,8 +88,9 @@ CONF_LONGITUDE = 'longitude'
 CONF_LIGHTS = 'lights'
 CONF_MAC = 'mac'
 CONF_METHOD = 'method'
-CONF_MINIMUM = 'minimum'
 CONF_MAXIMUM = 'maximum'
+CONF_MINIMUM = 'minimum'
+CONF_MODE = 'mode'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
@@ -134,13 +107,17 @@ CONF_PIN = 'pin'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
+CONF_PROFILE_NAME = 'profile_name'
 CONF_PROTOCOL = 'protocol'
 CONF_PROXY_SSL = 'proxy_ssl'
 CONF_QUOTE = 'quote'
+CONF_RADIUS = 'radius'
 CONF_RECIPIENT = 'recipient'
+CONF_REGION = 'region'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
+CONF_ROOM = 'room'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_TYPE = 'sensor_type'
@@ -217,6 +194,9 @@ STATE_PROBLEM = 'problem'
 # Attribution
 ATTR_ATTRIBUTION = 'attribution'
 
+# Credentials
+ATTR_CREDENTIALS = 'credentials'
+
 # Contains time-related attributes
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
@@ -226,6 +206,9 @@ ATTR_TIME = 'time'
 ATTR_DOMAIN = 'domain'
 ATTR_SERVICE = 'service'
 ATTR_SERVICE_DATA = 'service_data'
+
+# IDs
+ATTR_ID = 'id'
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = 'service_call_id'
@@ -250,38 +233,6 @@ CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
 
 # Electrical attributes
 ATTR_VOLTAGE = 'voltage'
-
-# Temperature attribute
-ATTR_TEMPERATURE = 'temperature'
-TEMP_CELSIUS = '°C'
-TEMP_FAHRENHEIT = '°F'
-
-# Length units
-LENGTH_CENTIMETERS = 'cm'  # type: str
-LENGTH_METERS = 'm'  # type: str
-LENGTH_KILOMETERS = 'km'  # type: str
-
-LENGTH_INCHES = 'in'  # type: str
-LENGTH_FEET = 'ft'  # type: str
-LENGTH_YARD = 'yd'  # type: str
-LENGTH_MILES = 'mi'  # type: str
-
-# Volume units
-VOLUME_LITERS = 'L'  # type: str
-VOLUME_MILLILITERS = 'mL'  # type: str
-
-VOLUME_GALLONS = 'gal'  # type: str
-VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
-
-# Mass units
-MASS_GRAMS = 'g'  # type: str
-MASS_KILOGRAMS = 'kg'  # type: str
-
-MASS_OUNCES = 'oz'  # type: str
-MASS_POUNDS = 'lb'  # type: str
-
-# UV Index units
-UNIT_UV_INDEX = 'UV index'  # type: str
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = 'discovered'
@@ -333,6 +284,41 @@ ATTR_SUPPORTED_FEATURES = 'supported_features'
 
 # Class of device within its domain
 ATTR_DEVICE_CLASS = 'device_class'
+
+# Temperature attribute
+ATTR_TEMPERATURE = 'temperature'
+
+# #### UNITS OF MEASUREMENT ####
+# Temperature units
+TEMP_CELSIUS = '°C'
+TEMP_FAHRENHEIT = '°F'
+
+# Length units
+LENGTH_CENTIMETERS = 'cm'  # type: str
+LENGTH_METERS = 'm'  # type: str
+LENGTH_KILOMETERS = 'km'  # type: str
+
+LENGTH_INCHES = 'in'  # type: str
+LENGTH_FEET = 'ft'  # type: str
+LENGTH_YARD = 'yd'  # type: str
+LENGTH_MILES = 'mi'  # type: str
+
+# Volume units
+VOLUME_LITERS = 'L'  # type: str
+VOLUME_MILLILITERS = 'mL'  # type: str
+
+VOLUME_GALLONS = 'gal'  # type: str
+VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
+
+# Mass units
+MASS_GRAMS = 'g'  # type: str
+MASS_KILOGRAMS = 'kg'  # type: str
+
+MASS_OUNCES = 'oz'  # type: str
+MASS_POUNDS = 'lb'  # type: str
+
+# UV Index units
+UNIT_UV_INDEX = 'UV index'  # type: str
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
@@ -412,22 +398,7 @@ HTTP_BASIC_AUTHENTICATION = 'basic'
 HTTP_DIGEST_AUTHENTICATION = 'digest'
 
 HTTP_HEADER_HA_AUTH = 'X-HA-access'
-HTTP_HEADER_ACCEPT_ENCODING = 'Accept-Encoding'
-HTTP_HEADER_CONTENT_TYPE = 'Content-type'
-HTTP_HEADER_CONTENT_ENCODING = 'Content-Encoding'
-HTTP_HEADER_VARY = 'Vary'
-HTTP_HEADER_CONTENT_LENGTH = 'Content-Length'
-HTTP_HEADER_CACHE_CONTROL = 'Cache-Control'
-HTTP_HEADER_EXPIRES = 'Expires'
-HTTP_HEADER_ORIGIN = 'Origin'
 HTTP_HEADER_X_REQUESTED_WITH = 'X-Requested-With'
-HTTP_HEADER_ACCEPT = 'Accept'
-HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = 'Access-Control-Allow-Origin'
-HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS = 'Access-Control-Allow-Headers'
-
-ALLOWED_CORS_HEADERS = [HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT,
-                        HTTP_HEADER_X_REQUESTED_WITH, HTTP_HEADER_CONTENT_TYPE,
-                        HTTP_HEADER_HA_AUTH]
 
 CONTENT_TYPE_JSON = 'application/json'
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
@@ -444,3 +415,5 @@ VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
 SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
+
+WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
