@@ -11,7 +11,8 @@ import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
 from homeassistant.const import (
-    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE, CONF_STRUCTURE)
+    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE,
+    CONF_STRUCTURE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -50,7 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT):
-            vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]),
+            vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT,
+                    DATA_TYPE_CUSTOM]),
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
     }]
