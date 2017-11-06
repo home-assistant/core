@@ -5,13 +5,13 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ikea_tradfri/
 """
 import asyncio
-import async_timeout
 import json
 import logging
 import os
 import uuid
 
 import voluptuous as vol
+import async_timeout
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
