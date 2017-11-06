@@ -139,18 +139,23 @@ def async_setup(hass, config):
         host = info['hostname']
         name = info.get('name', DEFAULT_NAME)
 
+        # try to keep old autoconf setups working
+        discovered_host = info.get('host', None)
+        if discovered_host:
+            host = discovered_host
+
         if host in known_hosts:
             # fallback for old config style
             # identity was hard coded
             # GATEWAY_IDENTITY = 'homeassistant'
             # token was called 'key'
             identity = known_hosts[host].get('identity', 'homeassistant')
-            token = known_hosts[host].get('tokem',
+            token = known_hosts[host].get('token',
                                           known_hosts[host].get('key'))
 
             yield from _setup_gateway(hass, config, host,
                                       identity,
-                                      known_hosts[host]['token'],
+                                      token,
                                       allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass,
