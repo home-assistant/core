@@ -85,7 +85,7 @@ def request_configuration(hass, config, host, name, allow_tradfri_groups):
                                "Security Code not accepted.")
             return
 
-        res = yield from _setup_gateway(hass, config, host,
+        res = yield from _setup_gateway(hass, config, host, name,
                                         identity, token,
                                         allow_tradfri_groups)
         if not res:
@@ -153,7 +153,7 @@ def async_setup(hass, config):
             token = known_hosts[host].get('token',
                                           known_hosts[host].get('key'))
 
-            yield from _setup_gateway(hass, config, host,
+            yield from _setup_gateway(hass, config, host, name,
                                       identity,
                                       token,
                                       allow_tradfri_groups)
@@ -175,7 +175,7 @@ def async_setup(hass, config):
 
 
 @asyncio.coroutine
-def _setup_gateway(hass, hass_config, host,
+def _setup_gateway(hass, hass_config, host, name,
                    identity, token,
                    allow_tradfri_groups):
     """Create a gateway."""
@@ -194,7 +194,7 @@ def _setup_gateway(hass, hass_config, host,
     except RequestError:
         _LOGGER.exception("Tradfri setup failed. Requesting reconfiguration.")
         hass.async_add_job(request_configuration, hass, hass_config,
-                           host, allow_tradfri_groups)
+                           host, name, allow_tradfri_groups)
         return False
 
     gateway_id = gateway_info_result.id
