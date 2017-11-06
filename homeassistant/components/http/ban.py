@@ -38,7 +38,7 @@ SCHEMA_IP_BAN_ENTRY = vol.Schema({
 def ban_middleware(request, handler):
     """IP Ban middleware."""
     if not request.app[KEY_BANS_ENABLED]:
-        return handler
+        return (yield from handler(request))
 
     if KEY_BANNED_IPS not in request.app:
         hass = request.app['hass']

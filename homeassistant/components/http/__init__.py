@@ -181,8 +181,6 @@ class HomeAssistantWSGI(object):
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
-        import aiohttp_cors
-
         middlewares = [auth_middleware, staticresource_middleware]
 
         if is_ban_enabled:
@@ -207,6 +205,8 @@ class HomeAssistantWSGI(object):
         self.server = None
 
         if cors_origins:
+            import aiohttp_cors
+
             self.cors = aiohttp_cors.setup(self.app, defaults={
                 host: aiohttp_cors.ResourceOptions(
                     allow_headers=ALLOWED_CORS_HEADERS,
