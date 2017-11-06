@@ -495,18 +495,6 @@ class TestStateMachine(unittest.TestCase):
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
 
-    def test_is_state_attr(self):
-        """Test is_state_attr method."""
-        self.states.set("light.Bowl", "on", {"brightness": 100})
-        self.assertTrue(
-            self.states.is_state_attr('light.Bowl', 'brightness', 100))
-        self.assertFalse(
-            self.states.is_state_attr('light.Bowl', 'friendly_name', 200))
-        self.assertFalse(
-            self.states.is_state_attr('light.Bowl', 'friendly_name', 'Bowl'))
-        self.assertFalse(
-            self.states.is_state_attr('light.Non_existing', 'brightness', 100))
-
     def test_entity_ids(self):
         """Test get_entity_ids method."""
         ent_ids = self.states.entity_ids()

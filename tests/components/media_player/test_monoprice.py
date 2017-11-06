@@ -10,7 +10,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import STATE_ON, STATE_OFF
 
 import tests.common
-from components.media_player.monoprice import (
+from homeassistant.components.media_player.monoprice import (
     DATA_MONOPRICE, PLATFORM_SCHEMA, SERVICE_SNAPSHOT,
     SERVICE_RESTORE, setup_platform)
 

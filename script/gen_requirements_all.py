@@ -83,7 +83,8 @@ TEST_REQUIREMENTS = (
     'warrant',
     'yahoo-finance',
     'pythonwhois',
-    'wakeonlan'
+    'wakeonlan',
+    'vultr'
 )
 
 IGNORE_PACKAGES = (
