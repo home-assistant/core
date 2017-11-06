@@ -58,12 +58,13 @@ def request_configuration(hass, config, host):
         """Handle the submitted configuration."""
         try:
             from pytradfri.api.aiocoap_api import APIFactory
-            import uuid
+            from pytradfri import RequestError
+            from uuid import uuid4
         except ImportError:
             _LOGGER.exception("Looks like something isn't installed!")
             return
 
-        identity = uuid.uuid4().hex
+        identity = uuid4().hex
         security_code = callback_data.get('security_code')
 
         api_factory = APIFactory(host, psk_id=identity, loop=hass.loop)
