@@ -63,8 +63,7 @@ def get_engine(hass, config):
     return MicrosoftProvider(config[CONF_API_KEY], config[CONF_LANG],
                              config[CONF_GENDER], config[CONF_TYPE],
                              config[CONF_RATE], config[CONF_VOLUME],
-                             config[CONF_PITCH], config[CONF_CONTOUR]
-                            )
+                             config[CONF_PITCH], config[CONF_CONTOUR])
 
 
 class MicrosoftProvider(Provider):
