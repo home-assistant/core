@@ -19,11 +19,15 @@ REQUIREMENTS = ['pyserial-asyncio==0.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL_PORT = 'serial_port'
+CONF_BAUDRATE = 'baudrate'
 
 DEFAULT_NAME = "Serial Sensor"
+DEFAULT_BAUDRATE = 9600
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERIAL_PORT): cv.string,
+    vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE):
+        cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -33,8 +37,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Serial sensor platform."""
     name = config.get(CONF_NAME)
     port = config.get(CONF_SERIAL_PORT)
+    baudrate = config.get(CONF_BAUDRATE)
 
-    sensor = SerialSensor(name, port)
+    sensor = SerialSensor(name, port, baudrate)
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
@@ -44,25 +49,26 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SerialSensor(Entity):
     """Representation of a Serial sensor."""
 
-    def __init__(self, name, port):
+    def __init__(self, name, port, baudrate):
         """Initialize the Serial sensor."""
         self._name = name
         self._state = None
         self._port = port
+        self._baudrate = baudrate
         self._serial_loop_task = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         self._serial_loop_task = self.hass.loop.create_task(
-            self.serial_read(self._port))
+            self.serial_read(self._port, self._baudrate))
 
     @asyncio.coroutine
-    def serial_read(self, device, **kwargs):
+    def serial_read(self, device, rate, **kwargs):
         """Read the data from the port."""
         import serial_asyncio
         reader, _ = yield from serial_asyncio.open_serial_connection(
-            url=device, **kwargs)
+            url=device, baudrate=rate, **kwargs)
         while True:
             line = yield from reader.readline()
             self._state = line.decode('utf-8').strip()
