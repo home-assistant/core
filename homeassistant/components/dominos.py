@@ -3,6 +3,7 @@ import unicodedata
 from datetime import timedelta
 
 import voluptuous as vol
+import time
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, generate_entity_id
@@ -26,13 +27,22 @@ ATTR_ADDRESS = 'address'
 ATTR_ORDERS = 'orders'
 ATTR_DUMP_MENU = 'dump_menu'
 ATTR_ORDER_ENTITY = 'order_entity_id'
+ATTR_ORDER_NAME = 'name'
+ATTR_ORDER_CODES = 'codes'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1800)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_STORE_UPDATES = 1800
 
 REV = '183d0f5522e7fa99776e8c6c692b56e69f0e6b8f'
 REQUIREMENTS = [
     'https://github.com/wardcraigj/pizzapi/archive/%s.zip#pizzapi==0.0.2'
     % REV]
+
+_ORDERS_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ORDER_NAME): cv.string,
+    vol.Required(ATTR_ORDER_CODES): vol.All(cv.ensure_list, [cv.string]),
+})
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -42,8 +52,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(ATTR_EMAIL): cv.string,
         vol.Required(ATTR_PHONE): cv.string,
         vol.Required(ATTR_ADDRESS): cv.string,
-        vol.Optional(ATTR_ORDERS): cv.ensure_list,
         vol.Optional(ATTR_DUMP_MENU): cv.boolean,
+        vol.Optional(ATTR_ORDERS): vol.All(cv.ensure_list, [_ORDERS_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -84,6 +94,9 @@ class Dominos():
             *self.customer.address.split(','),
             country=config[DOMAIN].get(ATTR_COUNTRY))
         self.country = config[DOMAIN].get(ATTR_COUNTRY)
+        self._closest_store = False
+        self._last_store_check = 0
+        self.update_closest_store()
 
     def handle_order(self, call=None):
         """Handle ordering pizza."""
@@ -96,9 +109,23 @@ class Dominos():
         for order in target_orders:
             order.place()
 
+    def update_closest_store(self):
+
+        cur_time = time.time()
+        if self._last_store_check + MIN_TIME_BETWEEN_STORE_UPDATES < cur_time:
+            self._last_store_check = cur_time
+            try:
+                self._closest_store = self.address.closest_store()
+            except Exception:
+                self._closest_store = False
+
+    @property
+    def closest_store(self):
+        return self._closest_store
+
     def dump_menu(self, hass):
 
-        store = self.address.closest_store()
+        store = self._closest_store
         menu = store.get_menu()
         for product in menu.products:
             if isinstance(product.menu_data['Variants'], list):
@@ -140,10 +167,21 @@ class DominosOrder(Entity):
 
     @property
     def state(self):
-        return 'orderable' if self._orderable else 'unorderable'
+
+        if self.dominos.closest_store is False:
+            return 'closed'
+        else:
+            return 'orderable' if self._orderable else 'unorderable'
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+
+        try:
+            self.dominos.update_closest_store()
+        except Exception:
+            self._orderable = False
+            return
+
         try:
             order = self.order()
             order.pay_with()
@@ -152,15 +190,14 @@ class DominosOrder(Entity):
             self._orderable = False
 
     def order(self):
-        store = self.dominos.address.closest_store()
         order = Order(
-            store,
+            self.dominos.closest_store,
             self.dominos.customer,
             self.dominos.address,
             self.dominos.country)
 
         for code in self._product_codes:
-            order.add_item(code['code'])
+            order.add_item(code)
 
         return order
 
