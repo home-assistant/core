@@ -32,12 +32,12 @@ _SWITCHES_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
-    vol.Optional(CONF_INACTIVE_POSTION, default=DEFAULT_INACTIVE_POSITION):
-        cv.positive_int,
-    vol.Optional(CONF_POSITION_ON, default=DEFAULT_POSITION_ON):
-        cv.positive_int,
-    vol.Optional(CONF_POSITION_OFF, default=DEFAULT_POSITION_OFF)
-    : cv.positive_int,
+    vol.Optional(CONF_INACTIVE_POSTION,
+                 default=DEFAULT_INACTIVE_POSITION): cv.positive_int,
+    vol.Optional(CONF_POSITION_ON,
+                 default=DEFAULT_POSITION_ON): cv.positive_int,
+    vol.Optional(CONF_POSITION_OFF,
+                 default=DEFAULT_POSITION_OFF): cv.positive_int,
     vol.Optional(CONF_POSITION_DURATION,
                  default=DEFAULT_POSITION_DURATION): cv.positive_int,
 })
@@ -54,7 +54,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
         switches.append(RPiGPIOServo(name, port, inactive_position,
-                                     position_on, position_off, enabled_duration))
+                                     position_on, position_off,
+                                     enabled_duration))
     add_devices(switches)
 
 
