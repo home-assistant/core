@@ -50,6 +50,7 @@ class LaMetricNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to some LaMetric deviced."""
         from lmnotify import SimpleFrame, Sound, Model
+        from oauthlib.oauth2 import TokenExpiredError
 
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA)
@@ -84,7 +85,11 @@ class LaMetricNotificationService(BaseNotificationService):
 
         model = Model(frames=frames)
         lmn = self.hasslametricmanager.manager
-        devices = lmn.get_devices()
+        try:
+            devices = lmn.get_devices()
+        except TokenExpiredError:
+            self.hasslametricmanager.manager.get_token()
+            devices = lmn.get_devices()
         for dev in devices:
             if targets is None or dev["name"] in targets:
                 lmn.set_device(dev)
