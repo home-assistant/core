@@ -6,7 +6,7 @@ https://home-assistant.io/components/scene.vera/
 """
 import logging
 
-from homeassistant.util import convert, slugify
+from homeassistant.util import slugify
 from homeassistant.components.scene import Scene
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_SCENES, VERA_ID_FORMAT)

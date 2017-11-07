@@ -48,7 +48,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 VERA_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate', 'cover', 'scene'
+    'binary_sensor', 'sensor', 'light', 'switch',
+    'lock', 'climate', 'cover', 'scene'
 ]
 
 
