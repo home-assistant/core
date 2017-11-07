@@ -7,7 +7,7 @@ https://home-assistant.io/components/camera.ring/
 import asyncio
 import logging
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import voluptuous as vol
 
