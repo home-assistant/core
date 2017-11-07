@@ -106,10 +106,10 @@ class FreeboxDeviceScanner(DeviceScanner):
         for device in resultat["result"]:
             if device['active'] is True:
                 last_results.append(Device(
-                  device['l2ident']['id'],
-                  device['names'][0]['name'],
-                  device['l3connectivities'][0]['addr'],
-                  now))
+                    device['l2ident']['id'],
+                    device['names'][0]['name'],
+                    device['l3connectivities'][0]['addr'],
+                    now))
                 _LOGGER.info("Freebox - Device at Home : " +
                              device['names'][0]['name'])
         self.last_results = last_results
