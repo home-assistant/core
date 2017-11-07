@@ -83,9 +83,8 @@ class FreeboxDeviceScanner(DeviceScanner):
             _LOGGER.info("Freebox - Challenge : "+challenge)
             challenge = challenge.encode('utf-8')
 
-        data = {"app_id": username, "password": hmac.new(token,
-                                                         challenge,
-                                                         hashlib.sha1).hexdigest()}
+        data = {"app_id": username,
+                "password": hmac.new(token, challenge, hashlib.sha1).hexdigest()}
         json_data = json.dumps(data)
         post_data = json_data.encode('utf-8')
         with urllib.request.urlopen(self.host+"login/session/",
