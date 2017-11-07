@@ -74,7 +74,7 @@ hbmqtt==0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171103.0
+home-assistant-frontend==20171106.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -156,13 +156,16 @@ somecomfort==0.4.1
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.14
+sqlalchemy==1.1.15
 
 # homeassistant.components.statsd
 statsd==3.2.1
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
+
+# homeassistant.components.vultr
+vultr==0.1.2
 
 # homeassistant.components.wake_on_lan
 # homeassistant.components.media_player.panasonic_viera

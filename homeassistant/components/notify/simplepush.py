@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_PASSWORD
 
-REQUIREMENTS = ['simplepush==1.1.3']
+REQUIREMENTS = ['simplepush==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
