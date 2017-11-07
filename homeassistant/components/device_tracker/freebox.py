@@ -1,13 +1,17 @@
 """
 Support for French FAI Free routers.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.freebox/
 """
 from collections import namedtuple
-import logging, voluptuous as vol
+import logging
+import voluptuous as vol
 from datetime import timedelta
-import json, hmac, hashlib, urllib.request, urllib.parse
+import json
+import hmac
+import hashlib
+import urllib.request
+import urllib.parse
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -30,12 +34,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string
 })
 
+
 def get_scanner(hass, config):
     """Validate the configuration and return a Freebox scanner."""
     scanner = FreeboxDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
+
 
 class FreeboxDeviceScanner(DeviceScanner):
     """This class scans for devices connected to the bbox."""
@@ -45,8 +51,8 @@ class FreeboxDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        _LOGGER.info("Freebox - Credentials : " + self.username
-          + " & "+self.password)
+        _LOGGER.info("Freebox - Credentials : " + self.username +
+                     " & "+self.password)
 
         self.last_results = []  # type: List[Device]
         self.success_init = self._update_info()
@@ -69,7 +75,7 @@ class FreeboxDeviceScanner(DeviceScanner):
     def _update_info(self):
         username = self.username
         password = self.password
-        token = bytes(password , 'latin-1')
+        token = bytes(password, 'latin-1')
 
         with urllib.request.urlopen(self.host+"login/") as url:
             content = url.read().decode('UTF-8')
@@ -78,11 +84,11 @@ class FreeboxDeviceScanner(DeviceScanner):
             challenge = challenge.encode('utf-8')
 
         data = {"app_id": username, "password": hmac.new(token,
-          challenge, hashlib.sha1).hexdigest()}
+                challenge, hashlib.sha1).hexdigest()}
         json_data = json.dumps(data)
         post_data = json_data.encode('utf-8')
-        with urllib.request.urlopen(self.host+"login/session/", post_data)
-          as url:
+        with urllib.request.urlopen(self.host+"login/session/",
+                                    post_data) as url:
             content = url.read().decode('UTF-8')
             session_token = json.loads(content)["result"]["session_token"]
             _LOGGER.info("Freebox - Token : "+session_token)
@@ -93,20 +99,20 @@ class FreeboxDeviceScanner(DeviceScanner):
         headers = {}
         headers['X-Fbx-App-Auth'] = session_token
         req = urllib.request.Request(self.host+"lan/browser/pub/",
-          None,
-          headers)
+                                     None,
+                                     headers)
         res = urllib.request.urlopen(req).read().decode('UTF-8')
         resultat = json.loads(res)
 
         for device in resultat["result"]:
-            if device['active'] == True:
+            if device['active'] is True:
                 last_results.append(Device(
                   device['l2ident']['id'],
                   device['names'][0]['name'],
                   device['l3connectivities'][0]['addr'],
                   now))
-                _LOGGER.info("Freebox - Device at Home : "
-                  +device['names'][0]['name'])
+                _LOGGER.info("Freebox - Device at Home : " +
+                             device['names'][0]['name'])
         self.last_results = last_results
         _LOGGER.info("Freebox - Devices : Scan successful")
         return True
