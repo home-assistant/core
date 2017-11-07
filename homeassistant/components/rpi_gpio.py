@@ -47,6 +47,14 @@ def setup_input(port, pull_mode):
     GPIO.setup(port, GPIO.IN,
                GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)
 
+def run_pwm(port, frequency, duty_cycle, duration):
+    """Write a value as PWM"""
+    import RPi.GPIO as GPIO
+    import time
+    p = GPIO.PWM(port, frequency)
+    p.start(duty_cycle)
+    time.sleep(duration)
+    p.stop()
 
 def write_output(port, value):
     """Write a value to a GPIO."""
