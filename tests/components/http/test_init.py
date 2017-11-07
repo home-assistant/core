@@ -143,21 +143,9 @@ def test_registering_view_while_running(hass, test_client):
         }
     )
 
-    yield from setup.async_setup_component(hass, 'api')
-
     yield from hass.async_start()
-
-    yield from hass.async_block_till_done()
-
+    # This raises a RuntimeError if app is frozen
     hass.http.register_view(TestView)
-
-    client = yield from test_client(hass.http.app)
-
-    resp = yield from client.get('/hello')
-    assert resp.status == 200
-
-    text = yield from resp.text()
-    assert text == 'hello'
 
 
 @asyncio.coroutine
