@@ -132,6 +132,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Optional(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -317,7 +318,8 @@ def media_seek(hass, position, entity_id=None):
 
 
 @bind_hass
-def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
+def play_media(hass, media_type, media_id, entity_id=None,
+               enqueue=None, shuffle=None):
     """Send the media player the command for playing media."""
     data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
             ATTR_MEDIA_CONTENT_ID: media_id}
@@ -327,6 +329,9 @@ def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
 
     if enqueue:
         data[ATTR_MEDIA_ENQUEUE] = enqueue
+
+    if shuffle:
+        data[ATTR_MEDIA_SHUFFLE] = shuffle
 
     hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
 
@@ -396,6 +401,8 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
+            params[ATTR_MEDIA_SHUFFLE] = \
+                service.data.get(ATTR_MEDIA_SHUFFLE)
         elif service.service == SERVICE_SHUFFLE_SET:
             params[ATTR_MEDIA_SHUFFLE] = \
                 service.data.get(ATTR_MEDIA_SHUFFLE)
