@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.38']
+REQUIREMENTS = ['pyvera==0.2.39']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 
 VERA_DEVICES = defaultdict(list)
+VERA_SCENES = []
 
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
@@ -47,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 VERA_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate', 'cover'
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate', 'cover', 'scene'
 ]
 
 
@@ -75,6 +76,8 @@ def setup(hass, base_config):
 
     try:
         all_devices = VERA_CONTROLLER.get_devices()
+
+        all_scenes = VERA_CONTROLLER.get_scenes()
     except RequestException:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
@@ -90,6 +93,9 @@ def setup(hass, base_config):
             continue
 
         VERA_DEVICES[device_type].append(device)
+
+    for scene in all_scenes:
+        VERA_SCENES.append(scene)
 
     for component in VERA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
