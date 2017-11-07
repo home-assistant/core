@@ -9,6 +9,7 @@ from datetime import timedelta
 import logging
 import os
 import csv
+import json
 
 import voluptuous as vol
 
@@ -100,6 +101,14 @@ VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
+
+def _forgiving_tuple(value):
+    if isinstance(value, str):
+        # required for generating tuples in templates more easily
+        return json.loads(value)
+    return tuple(value)
+
+
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
@@ -108,11 +117,11 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
-        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                vol.Coerce(tuple)),
+        vol.All(vol.Coerce(_forgiving_tuple),
+                vol.ExactSequence((cv.byte, cv.byte, cv.byte))),
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
-        vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
-                vol.Coerce(tuple)),
+        vol.All(vol.Coerce(_forgiving_tuple),
+                vol.ExactSequence((cv.small_float, cv.small_float))),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
