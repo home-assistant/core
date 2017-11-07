@@ -137,7 +137,6 @@ class Dominos():
     def dump_menu(self, hass):
         """Dumps the closest stores menu into the logs."""
 
-        store = self._closest_store
         if self._closest_store is False:
             _LOGGER.warning('Cannot get menu. Store may be closed')
             return
