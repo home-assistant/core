@@ -89,7 +89,7 @@ class LaMetricNotificationService(BaseNotificationService):
             devices = lmn.get_devices()
         except TokenExpiredError:
             _LOGGER.debug("Token expired, fetching new token")
-            self.hasslametricmanager.manager.get_token()
+            lmn.get_token()
             devices = lmn.get_devices()
         for dev in devices:
             if targets is None or dev["name"] in targets:
