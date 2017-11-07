@@ -1,16 +1,22 @@
 import json
 import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from pizzapi import Customer, Address, Order
 import unicodedata
+from datetime import timedelta
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util import Throttle
+from pizzapi import Address, Customer, Order
 
 _LOGGER = logging.getLogger(__name__)
 
 
 # The domain of your component. Should be equal to the name of your component.
 DOMAIN = 'dominos'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_COUNTRY = 'country_code'
 ATTR_FIRST_NAME = 'first_name'
@@ -21,6 +27,8 @@ ATTR_ADDRESS = 'address'
 ATTR_ORDERS = 'orders'
 ATTR_DUMP_MENU = 'dump_menu'
 ATTR_ORDER_ENTITY = 'order_entity_id'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1800)
 
 REV = '183d0f5522e7fa99776e8c6c692b56e69f0e6b8f'
 REQUIREMENTS = [
@@ -45,17 +53,19 @@ def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
     dominos = Dominos(hass, config)
 
-    hass.data[DOMAIN] = []
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]['entities'] = []
+
+    hass.services.register(DOMAIN, 'order', dominos.handle_order)
 
     if config[DOMAIN].get(ATTR_DUMP_MENU):
         dominos.dump_menu(hass)
 
-    for order in config[DOMAIN].get(ATTR_ORDERS):
-        # _LOGGER.INFO('Creating Order')
-        hass.states.set(
-            'dominos.' + order['name'].replace(" ", "_"),
-            json.dumps(order['codes']))
-    hass.services.register(DOMAIN, 'order', dominos.handle_order)
+    for order_info in config[DOMAIN].get(ATTR_ORDERS):
+        hass.data[DOMAIN]['entities'].append(DominosOrder(order_info, dominos))
+
+    component.add_entities(hass.data[DOMAIN]['entities'])
 
     # Return boolean to indicate that initialization was successfully.
     return True
@@ -79,18 +89,13 @@ class Dominos():
     def handle_order(self, call=None):
         """Handle ordering pizza."""
 
-        store = self.address.closest_store()
+        entity_ids = call.data.get(ATTR_ORDER_ENTITY, None)
 
-        order_key = call.data.get(ATTR_ORDER_ENTITY)
-        state = self.hass.states._states[order_key]
-        order_codes = json.loads(state.state)
+        target_orders = [order for order in self.hass.data[DOMAIN]['entities']
+                         if order.entity_id in entity_ids]
 
-        order = Order(store, self.customer, self.address, self.country)
-
-        for code in order_codes:
-            order.add_item(code['code'])
-
-        order.place()
+        for order in target_orders:
+            order.place()
 
     def dump_menu(self, hass):
 
@@ -109,3 +114,59 @@ class Dominos():
             _LOGGER.warning(
                 unicodedata.normalize('NFKC', message)
                 .encode('ascii', 'ignore').decode('ascii'))
+
+
+class DominosOrder(Entity):
+
+    def __init__(self, order_info, dominos):
+        self._name = order_info['name']
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, self._name, hass=dominos.hass)
+
+        self._product_codes = order_info['codes']
+        self._orderable = False
+        self.dominos = dominos
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def product_codes(self):
+        return self._product_codes
+
+    @property
+    def orderable(self):
+        return self._orderable
+
+    @property
+    def state(self):
+        return 'orderable' if self._orderable else 'unorderable'
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        try:
+            order = self.order()
+            order.pay_with()
+            self._orderable = True
+        except Exception:
+            self._orderable = False
+
+    def order(self):
+        store = self.dominos.address.closest_store()
+        order = Order(
+            store,
+            self.dominos.customer,
+            self.dominos.address,
+            self.dominos.country)
+
+        for code in self._product_codes:
+            order.add_item(code['code'])
+
+        return order
+
+    def place(self):
+        try:
+            order = self.order()
+            order.place()
+        except Exception:
