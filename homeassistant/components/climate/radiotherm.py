@@ -4,12 +4,9 @@ Support for Radio Thermostat wifi-enabled home thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.radiotherm/
 """
-# pylint: disable=no-member
-# pylint: disable=broad-except
 import datetime
-import json
 import logging
-import requests
+
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -57,15 +54,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Radio Thermostat."""
+    import radiotherm
+
     hosts = []
     if CONF_HOST in config:
         hosts = config[CONF_HOST]
     else:
-        # Only needed for automatic discovery.  Using radiotherm for
-        # the regular communication is way too slow.  Testing shows
-        # that direct comm is less error prone and has much fewer
-        # time outs.
-        import radiotherm
         hosts.append(radiotherm.discover.discover_address())
 
     if hosts is None:
@@ -80,7 +74,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     tstats = []
 
     for host in hosts:
-        tstats.append(RadioThermostat(host, hold_temp, away_temps))
+        try:
+            tstat = radiotherm.get_thermostat(host)
+            tstats.append(RadioThermostat(tstat, hold_temp, away_temps))
+        except OSError:
+            _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
+                              host)
 
     add_devices(tstats, True)
 
@@ -88,10 +87,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RadioThermostat(ClimateDevice):
     """Representation of a Radio Thermostat."""
 
-    def __init__(self, host, hold_temp, away_temps):
+    def __init__(self, device, hold_temp, away_temps):
         """Initialize the thermostat."""
-        self._host = host
-        self._time_updated = False
+        self.device = device
+        # It would be better if this was in update() since it triggers
+        # a network call but the thermostat will clear any temporary
+        # mode or temperature if this is called so we have to leave it here.
+        self.set_time()
         self._target_temperature = None
         self._current_temperature = None
         self._current_operation = STATE_IDLE
@@ -99,7 +101,8 @@ class RadioThermostat(ClimateDevice):
         self._fmode = None
         self._tmode = None
         self._tstate = None
-        self._hold_temp = self.round_temp(hold_temp)
+        self._hold_temp = hold_temp
+        self._hold_set = False
         self._away = False
         self._away_temps = [self.round_temp(i) for i in away_temps]
         self._prev_temp = None
@@ -141,14 +144,10 @@ class RadioThermostat(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Turn fan on/off."""
-        tstat = {}
         if fan == STATE_AUTO or fan == STATE_OFF:
-            tstat["fmode"] = 0
+            self.device.fmode = 0
         elif fan == STATE_ON:
-            tstat["fmode"] = 2
-
-        if tstat:
-            self.url_post("tstat", tstat)
+            self.device.fmode = 2
 
     @property
     def current_temperature(self):
@@ -185,32 +184,20 @@ class RadioThermostat(ClimateDevice):
         # thermostats tend to time out sometimes when they're actively
         # heating or cooling.
 
-        # Only set the time if the name has been found.  This keeps
-        # the number of calls to the thermostat at a max of 2 per
-        # update.
-        if self._name and not self._time_updated:
-            self.set_time()
-
         # First time - get the name from the thermostat.  This is
         # normally set in the radio thermostat web app.
         if self._name is None:
-            data = self.url_get('sys/name')
-            if data is not -1:
-                self._name = data['name']
+            self._name = self.device.name['raw']
 
-        # Get the current thermostat state.
-        data = self.url_get('tstat')
-        if data is -1:
+        data = self.device.tstat['raw']
+
+        current_temp = data['temp']
+        if current_temp == -1:
+            _LOGGER.error('%s (%s) was busy (temp == -1)', self._name,
+                          self._host)
             return
 
-        # If the thermostat is busy, it may return -1 as the temp in
-        # which case it couldn't answer the request.
-        elif data['temp'] == -1:
-            _LOGGER.warning('%s (%s) was busy (temp == -1)',
-                            self._name, self._host)
-            return
-
-        self._current_temperature = data['temp']
+        self._current_temperature = current_temp
         self._fmode = NAME_FAN_MODE[data['fmode']]
         self._tmode = NAME_TEMP_MODE[data['tmode']]
         self._tstate = NAME_TEMP_STATE[data['tstate']]
@@ -221,6 +208,9 @@ class RadioThermostat(ClimateDevice):
         elif self._tmode == STATE_HEAT:
             self._target_temperature = data['t_heat']
         elif self._tmode == STATE_AUTO:
+            # This doesn't really work - tstate is only set if the HVAC is
+            # active. If it's idle, we don't know what to do with the target
+            # temperature.
             if self._tstate == STATE_COOL:
                 self._target_temperature = data['t_cool']
             elif self._tstate == STATE_HEAT:
@@ -236,50 +226,46 @@ class RadioThermostat(ClimateDevice):
 
         temperature = self.round_temp(temperature)
 
-        tstat = {}
         if self._current_operation == STATE_COOL:
-            tstat['t_cool'] = temperature
-
+            self.device.t_cool = temperature
         elif self._current_operation == STATE_HEAT:
-            tstat['t_heat'] = temperature
-
+            self.device.t_heat = temperature
         elif self._current_operation == STATE_AUTO:
             if self._tstate == STATE_COOL:
-                tstat['t_cool'] = temperature
+                self.device.t_cool = temperature
             elif self._tstate == STATE_HEAT:
-                tstat['t_heat'] = temperature
+                self.device.t_heat = temperature
 
-        if self._hold_temp or self._away:
-            tstat['hold'] = 1
-        else:
-            tstat['hold'] = 0
-
-        self.url_post('tstat', tstat)
+        # Only change the hold if requested or if hold mode was turned
+        # on and we haven't set it yet.
+        if kwargs.get('hold_changed', False) or not self._hold_set:
+            if self._hold_temp or self._away:
+                self.device.hold = 1
+                self._hold_set = True
+            else:
+                self.device.hold = 0
 
     def set_time(self):
         """Set device time."""
         now = datetime.datetime.now()
-        tstat = {
+        self.device.time = {
             'day': now.weekday(),
             'hour': now.hour,
             'minute': now.minute
         }
-        if self.url_post('tstat', tstat) is not -1:
-            self._time_updated = True
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""
-        tstat = {}
         if operation_mode == STATE_OFF:
-            tstat['tmode'] = 0
+            self.device.tmode = 0
         elif operation_mode == STATE_AUTO:
-            tstat['tmode'] = 3
-        elif operation_mode == STATE_COOL:
-            tstat['t_cool'] = self._target_temperature
-        elif operation_mode == STATE_HEAT:
-            tstat['t_heat'] = self._target_temperature
+            self.device.tmode = 3
 
-        self.url_post('tstat', tstat)
+        # Setting t_cool or t_heat automatically changes tmode.
+        elif operation_mode == STATE_COOL:
+            self.device.t_cool = self._target_temperature
+        elif operation_mode == STATE_HEAT:
+            self.device.t_heat = self._target_temperature
 
     def turn_away_mode_on(self):
         """Turn away on.
@@ -293,58 +279,14 @@ class RadioThermostat(ClimateDevice):
                 away_temp = self._away_temps[0]
             elif self._current_operation == STATE_COOL:
                 away_temp = self._away_temps[1]
+                
         self._away = True
-        self.set_temperature(temperature=away_temp)
+        self.set_temperature(temperature=away_temp, hold_changed=True)
 
     def turn_away_mode_off(self):
         """Turn away off."""
         self._away = False
-        self.set_temperature(temperature=self._prev_temp)
-
-    def url_get(self, path, timeout=8):
-        """Call the thermostat at the input path.
-
-        Return value is the results as a json dictionary or -1 for an
-        error which will be logged.
-        """
-        url = 'http://%s/%s' % (self._host, path)
-        try:
-            result = requests.get(url, timeout=timeout)
-        except Exception:
-            _LOGGER.warning('%s (%s) URL %s timed out (%s sec)',
-                            self._name, self._host, path, timeout)
-            return -1
-
-        if result.status_code != requests.codes.ok:
-            _LOGGER.warning('%s (%s) URL %s failed with status %s',
-                            self._name, self._host, path, result.status_code)
-            return -1
-
-        return result.json()
-
-    def url_post(self, path, data, timeout=8):
-        """Call the thermostat at the input path.
-
-        Return value is 0 for success or -1 for an error which will
-        be logged.
-        """
-        # The thermostats don't accept regular json data, it must be
-        # encoded into a string first.
-        url = 'http://%s/%s' % (self._host, path)
-        payload = json.dumps(data).encode('UTF-8')
-        try:
-            result = requests.post(url, data=payload, timeout=timeout)
-        except Exception:
-            _LOGGER.warning('%s (%s) URL %s timed out (%s sec)',
-                            self._name, self._host, path, timeout)
-            return -1  # error
-
-        if result.status_code != requests.codes.ok:
-            _LOGGER.warning('%s (%s) URL %s failed with status %s',
-                            self._name, self._host, path, result.status_code)
-            return -1  # error
-
-        return 0   # OK
+        self.set_temperature(temperature=self._prev_temp, hold_changed=True)
 
     @staticmethod
     def round_temp(temperature):
