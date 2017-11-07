@@ -13,10 +13,10 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
-    SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+    ATTR_MEDIA_SHUFFLE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -243,31 +243,31 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._player.transfer_playback(self._devices[source],
                                            self._state == STATE_PLAYING)
 
-    def play_media(self, media_type, media_id, shuffle=None, **kwargs):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
-        kwargs = {}
+        shuffle = kwargs.get(ATTR_MEDIA_SHUFFLE)
+        play_args = {}
         if media_type == MEDIA_TYPE_MUSIC:
-            kwargs['uris'] = [media_id]
+            play_args['uris'] = [media_id]
             if shuffle:
                 _LOGGER.error("ignoring shuffle for media_type music")
                 shuffle = False
         elif media_type == MEDIA_TYPE_PLAYLIST:
-            kwargs['context_uri'] = media_id
+            play_args['context_uri'] = media_id
             if shuffle:
                 _, _, playlist_user, _, playlist_id = media_id.split(':')
                 playlist_data = self._player.user_playlist(
                     playlist_user, playlist_id, fields='tracks')
                 playlist_total = playlist_data['tracks']['total']
-                kwargs['offset'] = {
-                  'position': _RND.randint(0, playlist_total - 1)
-                }
+                play_args['offset'] = {'position':
+                                    _RND.randint(0, playlist_total - 1)}
         else:
             _LOGGER.error("media type %s is not supported", media_type)
             return
         if not media_id.startswith('spotify:'):
             _LOGGER.error("media id must be spotify uri")
             return
-        self._player.start_playback(**kwargs)
+        self._player.start_playback(**play_args)
         if shuffle:
             self.set_shuffle(True)
 
