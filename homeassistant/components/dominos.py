@@ -170,3 +170,6 @@ class DominosOrder(Entity):
             order = self.order()
             order.place()
         except Exception:
+            self._orderable = False
+            _LOGGER.warning('Attempted to order Dominos - Order invalid or store closed')
+
