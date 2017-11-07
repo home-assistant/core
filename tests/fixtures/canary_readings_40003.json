@@ -1,0 +1,17 @@
+[
+  {
+    "sensor_type": "air_quality",
+    "status": null,
+    "value": "0.7324493527412413"
+  },
+  {
+    "sensor_type": "humidity",
+    "status": null,
+    "value": "50.15429666803238"
+  },
+  {
+    "sensor_type": "temperature",
+    "status": null,
+    "value": "15.313241179445956"
+  }
+]
