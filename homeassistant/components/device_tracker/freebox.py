@@ -3,15 +3,17 @@ Support for French FAI Free routers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.freebox/
 """
-from collections import namedtuple
 import logging
 import voluptuous as vol
-from datetime import timedelta
 import json
 import hmac
 import hashlib
+
 import urllib.request
 import urllib.parse
+
+from collections import namedtuple
+from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
