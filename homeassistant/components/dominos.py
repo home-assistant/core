@@ -22,7 +22,6 @@ from pizzapi import Address, Customer, Order
 
 _LOGGER = logging.getLogger(__name__)
 
-
 # The domain of your component. Should be equal to the name of your component.
 DOMAIN = 'dominos'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -66,6 +65,8 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+# pylint: disable=broad-except
+
 
 def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
@@ -88,12 +89,11 @@ def setup(hass, config):
     # Return boolean to indicate that initialization was successfully.
     return True
 
-# pylint: disable=broad-except
+
 class Dominos():
     """Main Dominos service."""
     def __init__(self, hass, config):
         """Set up main service."""
- 
         self.hass = hass
         self.customer = Customer(
             config[DOMAIN].get(ATTR_FIRST_NAME),
@@ -157,7 +157,7 @@ class Dominos():
                 unicodedata.normalize('NFKC', message)
                 .encode('ascii', 'ignore').decode('ascii'))
 
-# pylint: disable=broad-except
+
 class DominosOrder(Entity):
     """Represents a Dominos order entity."""
     def __init__(self, order_info, dominos):
