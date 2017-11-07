@@ -40,6 +40,7 @@ def get_scanner(hass, config):
     scanner = FreeboxDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
 
+
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
 
