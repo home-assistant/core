@@ -1,5 +1,6 @@
 """
 Support for reading data from a serial port.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.serial/
 """
@@ -18,14 +19,14 @@ REQUIREMENTS = ['pyserial-asyncio==0.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL_PORT = 'serial_port'
-CONF_SERIAL_BAUDRATE = 'baudrate'
+CONF_BAUDRATE = 'baudrate'
 
 DEFAULT_NAME = "Serial Sensor"
 DEFAULT_BAUDRATE = 9600
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERIAL_PORT): cv.string,
-    vol.Optional(CONF_SERIAL_BAUDRATE, default=DEFAULT_BAUDRATE):
+    vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE):
         cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
