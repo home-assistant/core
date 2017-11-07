@@ -92,6 +92,7 @@ def setup(hass, config):
 
 class Dominos():
     """Main Dominos service."""
+
     def __init__(self, hass, config):
         """Set up main service."""
         self.hass = hass
@@ -120,7 +121,7 @@ class Dominos():
             order.place()
 
     def update_closest_store(self):
-        """Updates the shared closest store (if open)."""
+        """Update the shared closest store (if open)."""
         cur_time = time.time()
         if self._last_store_check + MIN_TIME_BETWEEN_STORE_UPDATES < cur_time:
             self._last_store_check = cur_time
@@ -131,11 +132,11 @@ class Dominos():
 
     @property
     def closest_store(self):
-        """Returns the shared closest store (or False if all closed)."""
+        """Return the shared closest store (or False if all closed)."""
         return self._closest_store
 
     def dump_menu(self, hass):
-        """Dumps the closest stores menu into the logs."""
+        """Dump the closest stores menu into the logs."""
 
         if self._closest_store is False:
             _LOGGER.warning('Cannot get menu. Store may be closed')
@@ -159,9 +160,9 @@ class Dominos():
 
 class DominosOrder(Entity):
     """Represents a Dominos order entity."""
-    def __init__(self, order_info, dominos):
-        """Sets up the entity."""
 
+    def __init__(self, order_info, dominos):
+        """Set up the entity."""
         self._name = order_info['name']
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self._name, hass=dominos.hass)
@@ -172,22 +173,22 @@ class DominosOrder(Entity):
 
     @property
     def name(self):
-        """Returns the orders name."""
+        """Return the orders name."""
         return self._name
 
     @property
     def product_codes(self):
-        """Returns the orders product codes."""
+        """Return the orders product codes."""
         return self._product_codes
 
     @property
     def orderable(self):
-        """Returns the true if orderable."""
+        """Return the true if orderable."""
         return self._orderable
 
     @property
     def state(self):
-        """Returns the state (closed, orderable or unorderable)"""
+        """Return the state either closed, orderable or unorderable."""
         if self.dominos.closest_store is False:
             return 'closed'
         else:
@@ -195,7 +196,7 @@ class DominosOrder(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Updates the order state and refreshes the store"""
+        """Update the order state and refreshes the store."""
         try:
             self.dominos.update_closest_store()
         except Exception:
@@ -210,7 +211,7 @@ class DominosOrder(Entity):
             self._orderable = False
 
     def order(self):
-        """Creates the order object"""
+        """Create the order object."""
         order = Order(
             self.dominos.closest_store,
             self.dominos.customer,
@@ -223,7 +224,7 @@ class DominosOrder(Entity):
         return order
 
     def place(self):
-        """Places the order"""
+        """Place the order."""
         try:
             order = self.order()
             order.place()
