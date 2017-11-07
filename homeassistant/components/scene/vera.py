@@ -39,6 +39,7 @@ class VeraScene(Scene):
         self.update()
 
     def update(self):
+        """Update the scene status."""
         self.vera_scene.refresh()
 
     def activate(self, **kwargs):
@@ -66,5 +67,5 @@ class VeraScene(Scene):
 
     @property
     def is_on(self):
-        """Is the scene active."""
+        """Return the state of the scene."""
         return self.vera_scene.is_active
