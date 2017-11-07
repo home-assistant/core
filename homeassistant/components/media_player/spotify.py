@@ -260,7 +260,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                     playlist_user, playlist_id, fields='tracks')
                 playlist_total = playlist_data['tracks']['total']
                 play_args['offset'] = {'position':
-                                    _RND.randint(0, playlist_total - 1)}
+                                       _RND.randint(0, playlist_total - 1)}
         else:
             _LOGGER.error("media type %s is not supported", media_type)
             return
