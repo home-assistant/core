@@ -26,21 +26,20 @@ DEFAULT_POSITION_ON = 180
 DEFAULT_POSITION_OFF = 0
 DEFAULT_POSITION_DURATION = 1
 
-
 _SWITCHES_SCHEMA = vol.Schema({
     cv.positive_int: cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
-        vol.Optional(CONF_INACTIVE_POSTION, default=DEFAULT_INACTIVE_POSITION):
+    vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
+    vol.Optional(CONF_INACTIVE_POSTION, default=DEFAULT_INACTIVE_POSITION):
         cv.positive_int,
-        vol.Optional(CONF_POSITION_ON, default=DEFAULT_POSITION_ON):
+    vol.Optional(CONF_POSITION_ON, default=DEFAULT_POSITION_ON):
         cv.positive_int,
-        vol.Optional(CONF_POSITION_OFF, default=DEFAULT_POSITION_OFF)
-        : cv.positive_int,
-        vol.Optional(CONF_POSITION_DURATION,
-            default=DEFAULT_POSITION_DURATION): cv.positive_int,
+    vol.Optional(CONF_POSITION_OFF, default=DEFAULT_POSITION_OFF)
+    : cv.positive_int,
+    vol.Optional(CONF_POSITION_DURATION,
+                 default=DEFAULT_POSITION_DURATION): cv.positive_int,
 })
 
 
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
         switches.append(RPiGPIOServo(name, port, inactive_position,
-            position_on, position_off, enabled_duration))
+                                     position_on, position_off, enabled_duration))
     add_devices(switches)
 
 
@@ -63,7 +62,7 @@ class RPiGPIOServo(ToggleEntity):
     """Representation of a  Raspberry Pi GPIO Servo."""
 
     def __init__(self, name, port, inactive_position, position_on,
-            position_off, enabled_duration):
+                 position_off, enabled_duration):
         """Initialize the servo"""
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
@@ -117,4 +116,3 @@ class RPiGPIOServo(ToggleEntity):
 def get_duty(degrees):
     """Calculates the duty cycle given a number of degrees"""
     return float(degrees) / 18.0 + 2.5
-
