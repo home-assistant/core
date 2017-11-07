@@ -1,4 +1,3 @@
-import json
 import logging
 import unicodedata
 from datetime import timedelta
@@ -171,5 +170,5 @@ class DominosOrder(Entity):
             order.place()
         except Exception:
             self._orderable = False
-            _LOGGER.warning('Attempted to order Dominos - Order invalid or store closed')
-
+            _LOGGER.warning(
+                'Attempted to order Dominos - Order invalid or store closed')
