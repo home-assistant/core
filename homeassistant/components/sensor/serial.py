@@ -25,7 +25,8 @@ DEFAULT_BAUDRATE = 9600
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERIAL_PORT): cv.string,
-    vol.Optional(CONF_SERIAL_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
+    vol.Optional(CONF_SERIAL_BAUDRATE, default=DEFAULT_BAUDRATE): 
+        cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
