@@ -15,10 +15,9 @@ import urllib.parse
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import (
-  DOMAIN,
-  PLATFORM_SCHEMA,
-  DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN,
+                                                     PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.util import Throttle
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
