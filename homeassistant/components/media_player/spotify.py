@@ -28,6 +28,7 @@ REQUIREMENTS = ['https://github.com/happyleavesaoc/spotipy/'
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
+_RND = SystemRandom()
 
 SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
