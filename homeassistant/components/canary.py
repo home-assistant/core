@@ -7,8 +7,8 @@ https://home-assistant.io/components/canary/
 import logging
 from datetime import timedelta
 
-import requests
 import voluptuous as vol
+from requests import ConnectTimeout, HTTPError
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, \
@@ -18,16 +18,13 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = ['py-canary==0.1.2']
 
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_ID = 'canary_notification'
 NOTIFICATION_TITLE = 'Canary Setup'
 
 DOMAIN = 'canary'
-
 DATA_CANARY = 'canary'
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 DEFAULT_TIMEOUT = 15
 
@@ -38,6 +35,31 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+
+def setup(hass, config):
+    """Set up the Canary component."""
+    conf = config[DOMAIN]
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    timeout = conf.get(CONF_TIMEOUT)
+
+    try:
+        hass.data[DATA_CANARY] = CanaryData(username, password, timeout)
+    except (ConnectTimeout, HTTPError) as ex:
+        _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
+        hass.components.persistent_notification.create(
+            'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
+
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
+
+    return True
 
 
 class CanaryData(object):
@@ -108,26 +130,3 @@ class CanaryData(object):
     def get_readings(self, device_id):
         """Return a list of readings based on device_id."""
         return self._readings_by_device_id[device_id]
-
-
-def setup(hass, config):
-    """Set up the Canary.
-
-    Will automatically load thermostat and sensor components to support
-    devices discovered on the network.
-    """
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    timeout = conf.get(CONF_TIMEOUT)
-
-    try:
-        hass.data[DATA_CANARY] = CanaryData(username, password, timeout)
-    except (requests.exceptions.RequestException, ValueError):
-        _LOGGER.exception("Error when initializing Canary")
-        return False
-
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
-
-    return True
