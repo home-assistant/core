@@ -37,7 +37,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Serial sensor platform."""
     name = config.get(CONF_NAME)
     port = config.get(CONF_SERIAL_PORT)
-    baudrate = config.get(CONF_SERIAL_BAUDRATE)
+    baudrate = config.get(CONF_BAUDRATE)
 
     sensor = SerialSensor(name, port, baudrate)
 
