@@ -55,6 +55,36 @@ DATA_TYPES = OrderedDict([
     ('Counter value', ''),
     ('UV', 'uv')])
 
+KNOWN_RECVMODES = [
+    "ac",
+    "adlightwave",
+    "aeblyss",
+    "arc",
+    "ati",
+    "blindst0",
+    "blindst1234",
+    "byronsx",
+    "fineoffset",
+    "fs20",
+    "hideki",
+    "homeconfort",
+    "homeeasy",
+    "imagintronix",
+    "keeloq",
+    "lacrosse",
+    "lighting4",
+    "meiantech",
+    "mertik",
+    "oregon",
+    "proguard",
+    "rsl",
+    "rubicson",
+    "undecoded",
+    "visonic",
+    "x10"
+]
+
+
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +136,16 @@ def valid_binary_sensor(value):
 
 
 def _valid_light_switch(value):
+    """Validate light switch configuration."""
     return _valid_device(value, "light_switch")
+
+
+def valid_recvmode(value):
+    """Test if a recv_mode value is known by pyRFXTRX"""
+    if value in KNOWN_RECVMODES:
+        return value
+
+    raise vol.Invalid('Recv_mode "{}" is unknown to RFXTRX.'.format(value))
 
 
 DEVICE_SCHEMA = vol.Schema({
@@ -146,7 +185,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
         vol.Optional(ATTR_RECV_MODES, default=None):
-            vol.All(vol.All(cv.ensure_list, [cv.string]),
+            vol.All(vol.All(cv.ensure_list, [valid_recvmode]),
                     vol.Length(min=1))
     }),
 }, extra=vol.ALLOW_EXTRA)
