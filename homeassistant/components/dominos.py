@@ -1,3 +1,12 @@
+"""
+Support for Dominos Pizza ordering.
+
+The Dominos Pizza component ceates a service which can be invoked to order
+from their menu
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/dominos/.
+"""
 import logging
 import unicodedata
 from datetime import timedelta
@@ -79,10 +88,12 @@ def setup(hass, config):
     # Return boolean to indicate that initialization was successfully.
     return True
 
-
+# pylint: disable=broad-except
 class Dominos():
-
+    """Main Dominos service."""
     def __init__(self, hass, config):
+        """Set up main service."""
+ 
         self.hass = hass
         self.customer = Customer(
             config[DOMAIN].get(ATTR_FIRST_NAME),
@@ -100,7 +111,6 @@ class Dominos():
 
     def handle_order(self, call=None):
         """Handle ordering pizza."""
-
         entity_ids = call.data.get(ATTR_ORDER_ENTITY, None)
 
         target_orders = [order for order in self.hass.data[DOMAIN]['entities']
@@ -110,7 +120,7 @@ class Dominos():
             order.place()
 
     def update_closest_store(self):
-
+        """Updates the shared closest store (if open)."""
         cur_time = time.time()
         if self._last_store_check + MIN_TIME_BETWEEN_STORE_UPDATES < cur_time:
             self._last_store_check = cur_time
@@ -121,12 +131,18 @@ class Dominos():
 
     @property
     def closest_store(self):
+        """Returns the shared closest store (or False if all closed)."""
         return self._closest_store
 
     def dump_menu(self, hass):
+        """Dumps the closest stores menu into the logs."""
 
         store = self._closest_store
-        menu = store.get_menu()
+        if self._closest_store is False:
+            _LOGGER.warning('Cannot get menu. Store may be closed')
+            return
+
+        menu = self._closest_store.get_menu()
         for product in menu.products:
             if isinstance(product.menu_data['Variants'], list):
                 variants = ', '.join(product.menu_data['Variants'])
@@ -141,10 +157,12 @@ class Dominos():
                 unicodedata.normalize('NFKC', message)
                 .encode('ascii', 'ignore').decode('ascii'))
 
-
+# pylint: disable=broad-except
 class DominosOrder(Entity):
-
+    """Represents a Dominos order entity."""
     def __init__(self, order_info, dominos):
+        """Sets up the entity."""
+
         self._name = order_info['name']
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self._name, hass=dominos.hass)
@@ -155,19 +173,22 @@ class DominosOrder(Entity):
 
     @property
     def name(self):
+        """Returns the orders name."""
         return self._name
 
     @property
     def product_codes(self):
+        """Returns the orders product codes."""
         return self._product_codes
 
     @property
     def orderable(self):
+        """Returns the true if orderable."""
         return self._orderable
 
     @property
     def state(self):
-
+        """Returns the state (closed, orderable or unorderable)"""
         if self.dominos.closest_store is False:
             return 'closed'
         else:
@@ -175,7 +196,7 @@ class DominosOrder(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-
+        """Updates the order state and refreshes the store"""
         try:
             self.dominos.update_closest_store()
         except Exception:
@@ -190,6 +211,7 @@ class DominosOrder(Entity):
             self._orderable = False
 
     def order(self):
+        """Creates the order object"""
         order = Order(
             self.dominos.closest_store,
             self.dominos.customer,
@@ -202,6 +224,7 @@ class DominosOrder(Entity):
         return order
 
     def place(self):
+        """Places the order"""
         try:
             order = self.order()
             order.place()
