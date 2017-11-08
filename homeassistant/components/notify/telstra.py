@@ -6,12 +6,13 @@ https://home-assistant.io/components/notify.telstra/
 """
 import logging
 
+from aiohttp.hdrs import CONTENT_TYPE, AUTHORIZATION
 import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    BaseNotificationService, ATTR_TITLE, PLATFORM_SCHEMA)
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_HEADER_CONTENT_TYPE
+    ATTR_TITLE, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,8 +74,8 @@ class TelstraNotificationService(BaseNotificationService):
         }
         message_resource = 'https://api.telstra.com/v1/sms/messages'
         message_headers = {
-            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
-            'Authorization': 'Bearer ' + token_response['access_token'],
+            CONTENT_TYPE: CONTENT_TYPE_JSON,
+            AUTHORIZATION: 'Bearer {}'.format(token_response['access_token']),
         }
         message_response = requests.post(
             message_resource, headers=message_headers, json=message_data,

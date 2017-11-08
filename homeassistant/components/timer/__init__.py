@@ -166,8 +166,8 @@ def async_setup(hass, config):
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), os.path.join(DOMAIN, 'services.yaml'))
+        load_yaml_config_file,
+        os.path.join(os.path.dirname(__file__), 'services.yaml')
     )
 
     hass.services.async_register(

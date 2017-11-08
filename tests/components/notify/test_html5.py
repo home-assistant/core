@@ -2,6 +2,7 @@
 import asyncio
 import json
 from unittest.mock import patch, MagicMock, mock_open
+from aiohttp.hdrs import AUTHORIZATION
 
 from homeassistant.components.notify import html5
 
@@ -278,8 +279,8 @@ class TestHtml5Notify(object):
             assert json.loads(handle.write.call_args[0][0]) == config
 
     @asyncio.coroutine
-    def test_unregister_device_view_handle_unknown_subscription(self, loop,
-                                                                test_client):
+    def test_unregister_device_view_handle_unknown_subscription(
+            self, loop, test_client):
         """Test that the HTML unregister view handles unknown subscriptions."""
         hass = MagicMock()
 
@@ -322,8 +323,8 @@ class TestHtml5Notify(object):
             assert handle.write.call_count == 0
 
     @asyncio.coroutine
-    def test_unregistering_device_view_handles_json_safe_error(self, loop,
-                                                               test_client):
+    def test_unregistering_device_view_handles_json_safe_error(
+            self, loop,  test_client):
         """Test that the HTML unregister view handles JSON write errors."""
         hass = MagicMock()
 
@@ -423,8 +424,8 @@ class TestHtml5Notify(object):
             assert len(hass.mock_calls) == 3
 
             with patch('pywebpush.WebPusher') as mock_wp:
-                service.send_message('Hello', target=['device'],
-                                     data={'icon': 'beer.png'})
+                service.send_message(
+                    'Hello', target=['device'], data={'icon': 'beer.png'})
 
             assert len(mock_wp.mock_calls) == 3
 
@@ -453,7 +454,7 @@ class TestHtml5Notify(object):
 
             resp = yield from client.post(PUBLISH_URL, data=json.dumps({
                 'type': 'push',
-            }), headers={'Authorization': bearer_token})
+            }), headers={AUTHORIZATION: bearer_token})
 
             assert resp.status == 200
             body = yield from resp.json()
