@@ -320,7 +320,7 @@ class ActiveConnection:
 
                 else:
                     handler_name = 'handle_{}'.format(msg['type'])
-                    getattr(self, handler_name)(msg)
+                    getattr(self, handler_name)(msg, request)
 
                 last_id = cur_id
                 msg = yield from wsock.receive_json()
@@ -394,7 +394,7 @@ class ActiveConnection:
 
         return wsock
 
-    def handle_subscribe_events(self, msg):
+    def handle_subscribe_events(self, msg, _):
         """Handle subscribe events command.
 
         Async friendly.
@@ -414,7 +414,7 @@ class ActiveConnection:
 
         self.to_write.put_nowait(result_message(msg['id']))
 
-    def handle_unsubscribe_events(self, msg):
+    def handle_unsubscribe_events(self, msg, _):
         """Handle unsubscribe events command.
 
         Async friendly.
@@ -431,7 +431,7 @@ class ActiveConnection:
                 msg['id'], ERR_NOT_FOUND,
                 'Subscription not found.'))
 
-    def handle_call_service(self, msg):
+    def handle_call_service(self, msg, _):
         """Handle call service command.
 
         This is a coroutine.
@@ -447,7 +447,7 @@ class ActiveConnection:
 
         self.hass.async_add_job(call_service_helper(msg))
 
-    def handle_get_states(self, msg):
+    def handle_get_states(self, msg, _):
         """Handle get states command.
 
         Async friendly.
@@ -457,7 +457,7 @@ class ActiveConnection:
         self.to_write.put_nowait(result_message(
             msg['id'], self.hass.states.async_all()))
 
-    def handle_get_services(self, msg):
+    def handle_get_services(self, msg, _):
         """Handle get services command.
 
         Async friendly.
@@ -467,7 +467,7 @@ class ActiveConnection:
         self.to_write.put_nowait(result_message(
             msg['id'], self.hass.services.async_services()))
 
-    def handle_get_config(self, msg):
+    def handle_get_config(self, msg, _):
         """Handle get config command.
 
         Async friendly.
@@ -477,7 +477,7 @@ class ActiveConnection:
         self.to_write.put_nowait(result_message(
             msg['id'], self.hass.config.as_dict()))
 
-    def handle_get_panels(self, msg):
+    def handle_get_panels(self, msg, request):
         """Handle get panels command.
 
         Async friendly.
@@ -485,9 +485,12 @@ class ActiveConnection:
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
 
         self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.data[frontend.DATA_PANELS]))
+            msg['id'], [
+                self.hass.data[frontend.DATA_PANELS][panel]
+                .to_response(self.hass, request)
+                for panel in self.hass.data[frontend.DATA_PANELS]]))
 
-    def handle_ping(self, msg):
+    def handle_ping(self, msg, _):
         """Handle ping command.
 
         Async friendly.

@@ -63,7 +63,11 @@ def test_frontend_and_static(mock_http_client):
 @asyncio.coroutine
 def test_dont_cache_service_worker(mock_http_client):
     """Test that we don't cache the service worker."""
-    resp = yield from mock_http_client.get('/service_worker.js')
+    resp = yield from mock_http_client.get('/service_worker_es5.js')
+    assert resp.status == 200
+    assert 'cache-control' not in resp.headers
+
+    resp = yield from mock_http_client.get('/service_worker_es6.js')
     assert resp.status == 200
     assert 'cache-control' not in resp.headers
 

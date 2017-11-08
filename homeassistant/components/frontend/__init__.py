@@ -9,6 +9,7 @@ import hashlib
 import json
 import logging
 import os
+from urllib.parse import urlparse
 
 from aiohttp import web
 import voluptuous as vol
@@ -24,18 +25,16 @@ from homeassistant.loader import bind_hass
 REQUIREMENTS = ['home-assistant-frontend==20171106.0']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api']
+DEPENDENCIES = ['api', 'websocket_api', 'http']
 
-URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
-
-POLYMER_PATH = os.path.join(os.path.dirname(__file__),
-                            'home-assistant-polymer/')
-FINAL_PATH = os.path.join(POLYMER_PATH, 'final')
 
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_FRONTEND_REPO = 'development_repo'
+CONF_JS_VERSION = 'javascript_version'
+JS_DEFAULT_OPTION = 'es5'
+JS_OPTIONS = ['es5', 'es6', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
 
@@ -61,6 +60,7 @@ for size in (192, 384, 512, 1024):
 
 DATA_FINALIZE_PANEL = 'frontend_finalize_panel'
 DATA_PANELS = 'frontend_panels'
+DATA_JS_VERSION = 'frontend_js_version'
 DATA_EXTRA_HTML_URL = 'frontend_extra_html_url'
 DATA_THEMES = 'frontend_themes'
 DATA_DEFAULT_THEME = 'frontend_default_theme'
@@ -68,8 +68,6 @@ DEFAULT_THEME = 'default'
 
 PRIMARY_COLOR = 'primary-color'
 
-# To keep track we don't register a component twice (gives a warning)
-# _REGISTERED_COMPONENTS = set()
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
@@ -80,6 +78,8 @@ CONFIG_SCHEMA = vol.Schema({
         }),
         vol.Optional(CONF_EXTRA_HTML_URL):
             vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_JS_VERSION, default=JS_DEFAULT_OPTION):
+            vol.In(JS_OPTIONS)
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -102,8 +102,9 @@ class AbstractPanel:
     # Title to show in the sidebar (optional)
     sidebar_title = None
 
-    # Url to the webcomponent
-    webcomponent_url = None
+    # Url to the webcomponent (depending on JS version)
+    webcomponent_url_es5 = None
+    webcomponent_url_es6 = None
 
     # Url to show the panel in the frontend
     frontend_url_path = None
@@ -135,13 +136,16 @@ class AbstractPanel:
             'get', '/{}/{{extra:.+}}'.format(self.frontend_url_path),
             index_view.get)
 
-    def as_dict(self):
+    def to_response(self, hass, request):
         """Panel as dictionary."""
         return {
             'component_name': self.component_name,
             'icon': self.sidebar_icon,
             'title': self.sidebar_title,
-            'url': self.webcomponent_url,
+            'url':
+                (self.webcomponent_url_es6 if
+                 _is_es6(hass.data[DATA_JS_VERSION], request) else
+                 self.webcomponent_url_es5),
             'url_path': self.frontend_url_path,
             'config': self.config,
         }
@@ -170,15 +174,19 @@ class BuiltInPanel(AbstractPanel):
 
         if frontend_repository_path is None:
             import hass_frontend
+            import hass_frontend_es6
 
-            self.webcomponent_url = \
+            self.webcomponent_url_es5 = \
                 '/static/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
                     hass_frontend.FINGERPRINTS[panel_path])
-
+            self.webcomponent_url_es6 = \
+                '/static/panels/ha-panel-{}-{}.html'.format(
+                    self.component_name,
+                    hass_frontend_es6.FINGERPRINTS[panel_path])
         else:
             # Dev mode
-            self.webcomponent_url = \
+            self.webcomponent_url_es5 = self.webcomponent_url_es6 = \
                 '/home-assistant-polymer/panels/{}/ha-panel-{}.html'.format(
                     self.component_name, self.component_name)
 
@@ -208,18 +216,20 @@ class ExternalPanel(AbstractPanel):
         """
         try:
             if self.md5 is None:
-                yield from hass.async_add_job(_fingerprint, self.path)
+                self.md5 = yield from hass.async_add_job(
+                    _fingerprint, self.path)
         except OSError:
             _LOGGER.error('Cannot find or access %s at %s',
                           self.component_name, self.path)
             hass.data[DATA_PANELS].pop(self.frontend_url_path)
+            return
 
-        self.webcomponent_url = \
+        self.webcomponent_url_es5 = self.webcomponent_url_es6 = \
             URL_PANEL_COMPONENT_FP.format(self.component_name, self.md5)
 
         if self.component_name not in self.REGISTERED_COMPONENTS:
             hass.http.register_static_path(
-                self.webcomponent_url, self.path,
+                self.webcomponent_url_es5, self.path,
                 # if path is None, we're in prod mode, so cache static assets
                 frontend_repository_path is None)
             self.REGISTERED_COMPONENTS.add(self.component_name)
@@ -281,22 +291,51 @@ def async_setup(hass, config):
 
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None
+    hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
         hass.http.register_static_path(
             "/home-assistant-polymer", repo_path, False)
         hass.http.register_static_path(
             "/static/translations",
-            os.path.join(repo_path, "build/translations"), False)
-        sw_path = os.path.join(repo_path, "build/service_worker.js")
+            os.path.join(repo_path, "build-translations"), False)
+        sw_path_es5 = os.path.join(repo_path, "build/service_worker.js")
+        sw_path_es6 = os.path.join(repo_path, "build-es6/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
     else:
         import hass_frontend
-        frontend_path = hass_frontend.where()
-        sw_path = os.path.join(frontend_path, "service_worker.js")
-        static_path = frontend_path
+        import hass_frontend_es6
+        sw_path_es5 = os.path.join(hass_frontend.where(), "service_worker.js")
+        sw_path_es6 = os.path.join(hass_frontend_es6.where(),
+                                   "service_worker.js")
+        # /static points to es5 dir. However all files that differ between the
+        # dirs are registered separately.
+        static_path = hass_frontend.where()
+        hass.http.register_static_path(
+            '/static/frontend-{}.html'.format(
+                hass_frontend.FINGERPRINTS['frontend.html']),
+            os.path.join(hass_frontend.where(), 'frontend.html'), True)
+        hass.http.register_static_path(
+            '/static/frontend-{}.html'.format(
+                hass_frontend_es6.FINGERPRINTS['frontend.html']),
+            os.path.join(hass_frontend_es6.where(), 'frontend.html'), True)
+        hass.http.register_static_path(
+            '/static/core-{}.js'.format(
+                hass_frontend.FINGERPRINTS['core.js']),
+            os.path.join(hass_frontend.where(), 'core.js'), True)
+        hass.http.register_static_path(
+            '/static/core-{}.js'.format(
+                hass_frontend_es6.FINGERPRINTS['core.js']),
+            os.path.join(hass_frontend_es6.where(), 'core.js'), True)
+        hass.http.register_static_path(
+            '/static/compatibility-{}.js'.format(
+                hass_frontend.FINGERPRINTS['compatibility.js']),
+            os.path.join(hass_frontend.where(), 'compatibility.js'), True)
 
-    hass.http.register_static_path("/service_worker.js", sw_path, False)
+    hass.http.register_static_path(
+        "/service_worker_es5.js", sw_path_es5, False)
+    hass.http.register_static_path(
+        "/service_worker_es6.js", sw_path_es6, False)
     hass.http.register_static_path(
         "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
     hass.http.register_static_path("/static", static_path, not is_dev)
@@ -305,7 +344,7 @@ def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(is_dev)
+    index_view = IndexView(is_dev, js_version)
     hass.http.register_view(index_view)
 
     @asyncio.coroutine
@@ -405,7 +444,7 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self, use_repo):
+    def __init__(self, use_repo, js_option):
         """Initialize the frontend view."""
         from jinja2 import FileSystemLoader, Environment
 
@@ -416,27 +455,31 @@ class IndexView(HomeAssistantView):
                 os.path.join(os.path.dirname(__file__), 'templates/')
             )
         )
+        self.js_option = js_option
 
     @asyncio.coroutine
     def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
+        es6 = _is_es6(self.js_option, request)
 
         if self.use_repo:
-            core_url = '/home-assistant-polymer/build/core.js'
-            compatibility_url = \
-                '/home-assistant-polymer/build/compatibility.js'
+            core_url = '/home-assistant-polymer/{}/core.js'.format(
+                'build-es6' if es6 else 'build')
+            compatibility_url = None
             ui_url = '/home-assistant-polymer/src/home-assistant.html'
             icons_fp = ''
             icons_url = '/static/mdi.html'
         else:
-            import hass_frontend
+            hass_frontend_versioned = _get_frontend_package(es6)
             core_url = '/static/core-{}.js'.format(
-                hass_frontend.FINGERPRINTS['core.js'])
-            compatibility_url = '/static/compatibility-{}.js'.format(
-                hass_frontend.FINGERPRINTS['compatibility.js'])
+                hass_frontend_versioned.FINGERPRINTS['core.js'])
+            compatibility_url = None if es6 else \
+                '/static/compatibility-{}.js'.format(
+                    hass_frontend_versioned.FINGERPRINTS['compatibility.js'])
             ui_url = '/static/frontend-{}.html'.format(
-                hass_frontend.FINGERPRINTS['frontend.html'])
+                hass_frontend_versioned.FINGERPRINTS['frontend.html'])
+            import hass_frontend
             icons_fp = '-{}'.format(hass_frontend.FINGERPRINTS['mdi.html'])
             icons_url = '/static/mdi{}.html'.format(icons_fp)
 
@@ -448,7 +491,8 @@ class IndexView(HomeAssistantView):
         if panel == 'states':
             panel_url = ''
         else:
-            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url
+            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es6 if \
+                es6 else hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = 'true'
         if hass.config.api.api_password and not is_trusted_ip(request):
@@ -468,7 +512,10 @@ class IndexView(HomeAssistantView):
             panel_url=panel_url, panels=hass.data[DATA_PANELS],
             dev_mode=self.use_repo,
             theme_color=MANIFEST_JSON['theme_color'],
-            extra_urls=hass.data[DATA_EXTRA_HTML_URL])
+            extra_urls=hass.data[DATA_EXTRA_HTML_URL],
+            es6=es6,
+            service_worker_name='/service_worker_es6.js' if es6 else
+            '/service_worker_es5.js')
 
         return web.Response(text=resp, content_type='text/html')
 
@@ -509,3 +556,28 @@ def _fingerprint(path):
     """Fingerprint a file."""
     with open(path) as fil:
         return hashlib.md5(fil.read().encode('utf-8')).hexdigest()
+
+
+def _is_es6(js_option, request):
+    """
+    Return whether we should serve es6 code.
+
+    Set according to user's preference and URL override.
+    """
+    es6_in_query = 'es6' in request.query or (
+        request.headers.get('Referer') and
+        'es6' in urlparse(request.headers['Referer']).query)
+    es5_in_query = 'es5' in request.query or (
+        request.headers.get('Referer') and
+        'es5' in urlparse(request.headers['Referer']).query)
+    es6 = es6_in_query or (not es5_in_query and js_option == 'es6')
+    return es6
+
+
+def _get_frontend_package(es6):
+    """Return either the transpiled or not transpiled version of frontend."""
+    if es6:
+        import hass_frontend_es6
+        return hass_frontend_es6
+    import hass_frontend
+    return hass_frontend
