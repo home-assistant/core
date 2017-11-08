@@ -1,4 +1,5 @@
 """The tests for the Canary component."""
+import copy
 import unittest
 
 import requests_mock
@@ -74,7 +75,7 @@ class TestCanary(unittest.TestCase):
     def setUp(self):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
+        self.config = copy.deepcopy(VALID_CONFIG)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -91,7 +92,7 @@ class TestCanary(unittest.TestCase):
     def test_setup_component_no_login(self, mock):
         """Test the setup when no login is configured."""
         _setUpResponses(mock)
-        conf = self.config.copy()
+        conf = self.config
         del conf["canary"]["username"]
         assert not setup.setup_component(self.hass, canary.DOMAIN, conf)
 
@@ -99,6 +100,6 @@ class TestCanary(unittest.TestCase):
     def test_setup_component_no_pwd(self, mock):
         """Test the setup when no password is configured."""
         _setUpResponses(mock)
-        conf = self.config.copy()
+        conf = self.config
         del conf["canary"]["password"]
         assert not setup.setup_component(self.hass, canary.DOMAIN, conf)

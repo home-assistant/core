@@ -1,4 +1,5 @@
 """The tests for the Canary sensor platform."""
+import copy
 import unittest
 
 import requests_mock
@@ -22,7 +23,7 @@ class TestCanarySensorSetup(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG.copy()
+        self.config = copy.deepcopy(VALID_CONFIG)
 
     def tearDown(self):
         """Stop everything that was started."""
