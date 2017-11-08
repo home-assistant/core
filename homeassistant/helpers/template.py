@@ -498,6 +498,16 @@ def rgb_to_hsv(value):
     return list(color_RGB_to_hsv(*value))
 
 
+def lshift(value, bits):
+    """Shift bits to the left by the given number of bits."""
+    return value << bits
+
+
+def rshift(value, bits):
+    """Shift bits to the right by the given number of bits."""
+    return value >> bits
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -528,6 +538,8 @@ ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
 ENV.filters['hsv_to_rgb'] = hsv_to_rgb
 ENV.filters['rgb_to_hsv'] = rgb_to_hsv
+ENV.filters['lshift'] = lshift
+ENV.filters['rshift'] = rshift
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow

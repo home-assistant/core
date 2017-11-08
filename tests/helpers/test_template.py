@@ -181,6 +181,36 @@ class TestHelpersTemplate(unittest.TestCase):
                 template.Template('{{ %s | hsv_to_rgb }}' % inp,
                                   self.hass).render())
 
+    def test_rshift(self):
+        """Test rshift."""
+        tests = [
+            ((65535, 8), '255'),
+            ((32767, 8), '127'),
+            ((0, 8), '0'),
+            ((65535, 0), '65535')
+        ]
+
+        for inp, out in tests:
+            self.assertEqual(
+                out,
+                template.Template('{{ %s | rshift(%s) }}' % inp,
+                                  self.hass).render())
+
+    def test_lshift(self):
+        """Test rshift."""
+        tests = [
+            ((255, 8), '65280'),
+            ((127, 8), '32512'),
+            ((0, 8), '0'),
+            ((255, 0), '255')
+        ]
+
+        for inp, out in tests:
+            self.assertEqual(
+                out,
+                template.Template('{{ %s | lshift(%s) }}' % inp,
+                                  self.hass).render())
+
     def test_timestamp_custom(self):
         """Test the timestamps to custom filter."""
         now = dt_util.utcnow()
