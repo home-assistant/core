@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+import colorsys
 from datetime import datetime
 import json
 import logging
@@ -487,6 +488,22 @@ def forgiving_float(value):
         return value
 
 
+def hsv_to_rgb(value):
+    """Try to convert hsv value to rgb"""
+    try:
+        return [int(rv * 255) for rv in colorsys.hsv_to_rgb(*(v / 255 for v in value))]
+    except ValueError:
+        return value
+
+
+def rgb_to_hsv(value):
+    """Try to convert rgb value to a hsv"""
+    try:
+        return [int(rv * 255) for rv in colorsys.rgb_to_hsv(*(v / 255 for v in value))]
+    except ValueError:
+        return value
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -515,6 +532,8 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['hsv_to_rgb'] = hsv_to_rgb
+ENV.filters['rgb_to_hsv'] = rgb_to_hsv
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow
