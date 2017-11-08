@@ -10,6 +10,7 @@ import threading
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
+from homeassistant.core import callback
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
@@ -124,17 +125,21 @@ class TellstickRegistry(object):
     def __init__(self, hass, tellcore_lib):
         """Initialize the Tellstick mappings and callbacks."""
         # used when map callback device id to ha entities.
+        self.hass
         self._id_to_ha_device_map = {}
         self._id_to_tellcore_device_map = {}
         self._setup_tellcore_callback(hass, tellcore_lib)
 
-    def _tellcore_event_callback(self, tellcore_id, tellcore_command,
-                                 tellcore_data, cid):
+    @callback
+    def _async_tellcore_event_callback(self, tellcore_id, tellcore_command,
+                                       tellcore_data, cid):
         """Handle the actual callback from Tellcore."""
         ha_device = self._id_to_ha_device_map.get(tellcore_id, None)
         if ha_device is not None:
             # Pass it on to the HA device object
-            ha_device.update_from_callback(tellcore_command, tellcore_data)
+            self.hass.async_add_job(
+                ha_device.update_from_callback, tellcore_command,
+                tellcore_data)
 
     def _setup_tellcore_callback(self, hass, tellcore_lib):
         """Register the callback handler."""
@@ -283,7 +288,7 @@ class TellstickDevice(Entity):
         # This is a benign race on _repeats_left -- it's checked with the lock
         # in _send_repeated_command.
         if self._repeats_left > 0:
-            self.hass.async_add_job(self._send_repeated_command)
+            self.hass.add_job(self._send_repeated_command)
 
     def _update_from_tellcore(self):
         """Read the current state of the device from the tellcore library."""
@@ -303,4 +308,3 @@ class TellstickDevice(Entity):
     def update(self):
         """Poll the current state of the device."""
         self._update_from_tellcore()
-        self.schedule_update_ha_state()
