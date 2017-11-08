@@ -11,6 +11,8 @@ from homeassistant.components.deconz import DATA_DECONZ
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
+from pydeconz.sensor import DECONZ_SENSOR
+
 DEPENDENCIES = ['deconz']
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +25,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         sensors = hass.data[DATA_DECONZ].sensors
 
     for sensor_id, sensor in sensors.items():
-        if sensor.type == 'ZHASwitch':
+        if sensor.type in DECONZ_SENSOR:
             async_add_devices([DeconzSensor(sensor_id, sensor)], True)
 
 
@@ -61,7 +63,7 @@ class DeconzSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
+        attr = {
             'battery': self._sensor.battery,
             'manufacturer': self._sensor.manufacturer,
             'modelid': self._sensor.modelid,
@@ -69,3 +71,4 @@ class DeconzSensor(Entity):
             'swversion': self._sensor.swversion,
             'uniqueid': self._sensor.uniqueid,
         }
+        return attr

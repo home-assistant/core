@@ -10,6 +10,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.components.deconz import DATA_DECONZ
+from pydeconz.sensor import DECONZ_BINARY_SENSOR
 
 DEPENDENCIES = ['deconz']
 
@@ -23,7 +24,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         sensors = hass.data[DATA_DECONZ].sensors
 
     for sensor_id, sensor in sensors.items():
-        if sensor.type == 'ZHAPresence':
+        if sensor.type in DECONZ_BINARY_SENSOR:
             async_add_devices([DeconzBinarySensor(sensor_id, sensor)], True)
 
 
@@ -61,12 +62,14 @@ class DeconzBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
+        attr = {
             'battery': self._sensor.battery,
-            'dark': self._sensor.dark,
             'manufacturer': self._sensor.manufacturer,
             'modelid': self._sensor.modelid,
             'reachable': self._sensor.reachable,
             'swversion': self._sensor.swversion,
             'uniqueid': self._sensor.uniqueid,
         }
+        if self._sensor.type == 'ZHAPresence':
+            attr['dark'] = self._sensor.dark
+        return attr
