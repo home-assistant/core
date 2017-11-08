@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['pydeconz==3']
+REQUIREMENTS = ['pydeconz==4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +79,7 @@ def _setup_deconz(hass, config, deconz_config):
     deconz = DeconzSession(hass.loop, **deconz_config)
     hass.data[DATA_DECONZ] = deconz
     yield from deconz.populate_config()
+    yield from deconz.populate_groups()
     yield from deconz.populate_lights()
     yield from deconz.populate_sensors()
     hass.async_add_job(discovery.async_load_platform(hass,

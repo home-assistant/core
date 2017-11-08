@@ -22,9 +22,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup light platform for Deconz."""
     if DATA_DECONZ in hass.data:
         lights = hass.data[DATA_DECONZ].lights
+        groups = hass.data[DATA_DECONZ].groups
 
     for light_id, light in lights.items():
         async_add_devices([DeconzLight(light_id, light)], True)
+
+    for group_id, group in groups.items():
+        async_add_devices([DeconzLight(group_id, group)], True)
 
 
 class DeconzLight(Light):
@@ -77,6 +81,8 @@ class DeconzLight(Light):
     def async_turn_on(self, **kwargs):
         """Turn on light."""
         field = '/lights/' + self._light_id + '/state'
+        if self._light.type == 'LightGroup':
+            field = '/groups/' + self._light_id + '/action'
         data = {'on': True}
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
@@ -86,16 +92,20 @@ class DeconzLight(Light):
     def async_turn_off(self, **kwargs):
         """Turn off light."""
         field = '/lights/' + self._light_id + '/state'
+        if self._light.type == 'LightGroup':
+            field = '/groups/' + self._light_id + '/action'
         data = {'on': False}
         yield from self._light.set_state(field, data)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            'manufacturer': self._light.manufacturer,
-            'modelid': self._light.modelid,
-            'reachable': self._light.reachable,
-            'swversion': self._light.swversion,
-            'uniqueid': self._light.uniqueid,
-        }
+        if self._light.type != 'LightGroup':
+            attr = {
+                'manufacturer': self._light.manufacturer,
+                'modelid': self._light.modelid,
+                'reachable': self._light.reachable,
+                'swversion': self._light.swversion,
+                'uniqueid': self._light.uniqueid,
+            }
+            return attr
