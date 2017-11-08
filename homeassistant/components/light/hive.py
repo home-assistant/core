@@ -17,14 +17,13 @@ def setup_platform(hass, config, add_devices,
     """Setup Hive light devices."""
     hive_comp = get_component('hive')
 
-    if len(device_list) > 0:
-        for a_device in device_list:
-            add_devices([HiveDeviceLight(hass,
-                                         hive_comp.HGO,
-                                         a_device["Hive_NodeID"],
-                                         a_device["Hive_NodeName"],
-                                         a_device["HA_DeviceType"],
-                                         a_device["Hive_Light_DeviceType"])])
+    for a_device in device_list:
+        add_devices([HiveDeviceLight(hass,
+                                     hive_comp.HGO,
+                                     a_device["Hive_NodeID"],
+                                     a_device["Hive_NodeName"],
+                                     a_device["HA_DeviceType"],
+                                     a_device["Hive_Light_DeviceType"])])
 
 
 class HiveDeviceLight(Light):

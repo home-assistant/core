@@ -13,13 +13,12 @@ def setup_platform(hass, config, add_devices,
     """Setup Hive switches."""
     hive_comp = get_component('hive')
 
-    if len(device_list) > 0:
-        for a_device in device_list:
-            add_devices([HiveDevicePlug(hass, hive_comp.HGO,
-                                        a_device["Hive_NodeID"],
-                                        a_device["Hive_NodeName"],
-                                        a_device["HA_DeviceType"],
-                                        a_device["Hive_Plug_DeviceType"])])
+    for a_device in device_list:
+        add_devices([HiveDevicePlug(hass, hive_comp.HGO,
+                                    a_device["Hive_NodeID"],
+                                    a_device["Hive_NodeName"],
+                                    a_device["HA_DeviceType"],
+                                    a_device["Hive_Plug_DeviceType"])])
 
 
 class HiveDevicePlug(SwitchDevice):
