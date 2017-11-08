@@ -128,7 +128,7 @@ class TellstickRegistry(object):
         self.hass = hass
         self._id_to_ha_device_map = {}
         self._id_to_tellcore_device_map = {}
-        self._setup_tellcore_callback(hass, tellcore_lib)
+        self._setup_tellcore_callback(tellcore_lib)
 
     @callback
     def _async_tellcore_event_callback(self, tellcore_id, tellcore_command,
@@ -152,7 +152,8 @@ class TellstickRegistry(object):
                 tellcore_lib.unregister_callback(callback_id)
                 _LOGGER.debug("Tellstick callback unregistered")
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, clean_up_callback)
+        self.hass.bus.listen_once(
+            EVENT_HOMEASSISTANT_STOP, clean_up_callback)
 
     def register_ha_device(self, tellcore_id, ha_device):
         """Register a new HA device to receive callback updates."""
