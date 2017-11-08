@@ -1,5 +1,4 @@
 """Template helper methods for rendering strings with Home Assistant data."""
-import colorsys
 from datetime import datetime
 import json
 import logging
@@ -19,6 +18,7 @@ from homeassistant.helpers import location as loc_helper
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -489,19 +489,13 @@ def forgiving_float(value):
 
 
 def hsv_to_rgb(value):
-    """Try to convert hsv value to rgb"""
-    try:
-        return [int(rv * 255) for rv in colorsys.hsv_to_rgb(*(v / 255 for v in value))]
-    except ValueError:
-        return value
+    """Try to convert hsv (16,8,8 bits respectively) to rgb 8-bits."""
+    return list(color_hsv_to_RGB(*value))
 
 
 def rgb_to_hsv(value):
-    """Try to convert rgb value to a hsv"""
-    try:
-        return [int(rv * 255) for rv in colorsys.rgb_to_hsv(*(v / 255 for v in value))]
-    except ValueError:
-        return value
+    """Try to convert rgb 8-bits values to hsv (16,8,8 bits respectively)."""
+    return list(color_RGB_to_hsv(*value))
 
 
 @contextfilter
