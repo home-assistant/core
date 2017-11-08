@@ -312,6 +312,8 @@ class APIDomainServicesView(HomeAssistantView):
         Returns a list of changed states.
         """
         hass = request.app['hass']
+        if not hass.services.has_service(domain, service):
+            return self.json_message('Service not found', HTTP_NOT_FOUND)
         body = yield from request.text()
         try:
             data = json.loads(body) if body else None
@@ -321,7 +323,6 @@ class APIDomainServicesView(HomeAssistantView):
 
         with AsyncTrackStates(hass) as changed_states:
             yield from hass.services.async_call(domain, service, data, True)
-
         return self.json(changed_states)
 
 
