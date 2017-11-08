@@ -27,6 +27,8 @@ CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 DEFAULT_SIGNAL_REPETITIONS = 1
 DOMAIN = 'tellstick'
 
+DATA_TELLSTICK = 'tellcore_registry'
+
 # Use a global tellstick domain lock to avoid getting Tellcore errors when
 # calling concurrently.
 TELLSTICK_LOCK = threading.RLock()
@@ -95,7 +97,7 @@ def setup(hass, config):
     # Register devices
     tellcore_registry = TellstickRegistry(hass, tellcore_lib)
     tellcore_registry.register_tellcore_devices(all_tellcore_devices)
-    hass.data['tellcore_registry'] = tellcore_registry
+    hass.data[DATA_TELLSTICK] = tellcore_registry
 
     # Discover the switches
     _discover(hass, config, 'switch',
@@ -188,10 +190,16 @@ class TellstickDevice(Entity):
         self._tellcore_device = tellcore_registry.get_tellcore_device(
             tellcore_id)
         self._name = self._tellcore_device.name
-        # Query tellcore for the current state
-        self._update_from_tellcore()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        tellcore_registry = self.hass.data[DATA_TELLSTICK]
+
         # Add ourselves to the mapping for callbacks
-        tellcore_registry.register_ha_device(tellcore_id, self)
+        self.hass.async_add_job(
+            tellcore_registry.register_ha_device,
+            self._tellcore_device.id, self)
 
     @property
     def should_poll(self):
