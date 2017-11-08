@@ -279,9 +279,9 @@ def async_setup(hass, config):
         if msgtype == SERVICE_SEND_MESSAGE:
             yield from hass.async_add_job(
                 partial(notify_service.send_message, **kwargs))
-        elif msgtype == SERVICE_SEND_PHOTO or \
-             msgtype == SERVICE_SEND_VIDEO or \
-             msgtype == SERVICE_SEND_DOCUMENT:
+        elif (msgtype == SERVICE_SEND_PHOTO or
+              msgtype == SERVICE_SEND_VIDEO or
+              msgtype == SERVICE_SEND_DOCUMENT):
             yield from hass.async_add_job(
                 partial(notify_service.send_file, msgtype, **kwargs))
         elif msgtype == SERVICE_SEND_LOCATION:
