@@ -144,10 +144,10 @@ class TellstickRegistry(object):
                 ha_device.update_from_callback, tellcore_command,
                 tellcore_data)
 
-    def _setup_tellcore_callback(self, hass, tellcore_lib):
+    def _setup_tellcore_callback(self, tellcore_lib):
         """Register the callback handler."""
         callback_id = tellcore_lib.register_device_event(
-            self._tellcore_event_callback)
+            self._async_tellcore_event_callback)
 
         def clean_up_callback(event):
             """Unregister the callback bindings."""
