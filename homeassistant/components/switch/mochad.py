@@ -60,14 +60,30 @@ class MochadSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._state = True
+        """Recycle socket everytime new command to recover in case mochad restarted"""
+        _LOGGER.debug("Reconnect to mochad {} : {} ".format(self._controller.server, 
+                                                            self._controller.port))
+        self._controller.socket.close()
+        self._controller.__init__(self._controller.server, self._controller.port)
         self.device.send_cmd('on')
-        self._controller.read_data()
+        try:
+            self._controller.read_data()
+        except socket.error as e:
+            _LOGGER.error("Socket error when reading data from mochad {}".format(e.message))
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._state = False
+        """Recycle socket everytime new command to recover in case mochad restarted"""
+        _LOGGER.debug("Reconnect to mochad {} : {} ".format(self._controller.server, 
+                                                            self._controller.port))
+        self._controller.socket.close()
+        self._controller.__init__(self._controller.server, self._controller.port)
         self.device.send_cmd('off')
-        self._controller.read_data()
+        try:
+            self._controller.read_data()
+        except socket.error as e:
+            _LOGGER.error("Socket error when reading data from mochad {}".format(e.message))
 
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
