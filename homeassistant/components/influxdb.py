@@ -30,6 +30,7 @@ CONF_TAGS_ATTRIBUTES = 'tags_attributes'
 CONF_COMPONENT_CONFIG = 'component_config'
 CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
 CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
+CONF_DB_CONNECTION_POOL_SIZE = "database_connection_pool_size"
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -71,6 +72,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_DB_CONNECTION_POOL_SIZE, default=10): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -87,7 +89,8 @@ def setup(hass, config):
     kwargs = {
         'database': conf[CONF_DB_NAME],
         'verify_ssl': conf[CONF_VERIFY_SSL],
-        'timeout': TIMEOUT
+        'timeout': TIMEOUT,
+        'pool_size': conf[CONF_DB_CONNECTION_POOL_SIZE]
     }
 
     if CONF_HOST in conf:
