@@ -56,7 +56,7 @@ class TellstickLight(TellstickDevice, Light):
 
     def _parse_tellcore_data(self, tellcore_data):
         """Turn the value received from tellcore into something useful."""
-        if tellcore_data is not None:
+        if tellcore_data:
             return int(tellcore_data)  # brightness
         return None
 
