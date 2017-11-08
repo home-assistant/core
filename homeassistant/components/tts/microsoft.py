@@ -41,8 +41,8 @@ DEFAULT_LANG = 'en-us'
 DEFAULT_GENDER = 'Female'
 DEFAULT_TYPE = 'ZiraRUS'
 DEFAULT_OUTPUT = 'audio-16khz-128kbitrate-mono-mp3'
-DEFAULT_RATE = "+0%"
-DEFAULT_VOLUME = "+0%"
+DEFAULT_RATE = 0
+DEFAULT_VOLUME = 0
 DEFAULT_PITCH = "default"
 DEFAULT_CONTOUR = ""
 
@@ -51,8 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
     vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): vol.In(GENDERS),
     vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
-    vol.Optional(CONF_RATE, default=DEFAULT_RATE): cv.string,
-    vol.Optional(CONF_VOLUME, default=DEFAULT_VOLUME): cv.string,
+    vol.Optional(CONF_RATE, default=DEFAULT_RATE):
+        vol.All(vol.Coerce(int), vol.Range(-100, 100)),
+    vol.Optional(CONF_VOLUME, default=DEFAULT_VOLUME):
+        vol.All(vol.Coerce(int), vol.Range(-100, 100)),
     vol.Optional(CONF_PITCH, default=DEFAULT_PITCH): cv.string,
     vol.Optional(CONF_CONTOUR, default=DEFAULT_CONTOUR): cv.string,
 })
@@ -77,8 +79,8 @@ class MicrosoftProvider(Provider):
         self._gender = gender
         self._type = ttype
         self._output = DEFAULT_OUTPUT
-        self._rate = rate
-        self._volume = volume
+        self._rate = "{}%".format(rate)
+        self._volume = "{}%".format(volume)
         self._pitch = pitch
         self._contour = contour
         self.name = 'Microsoft'
