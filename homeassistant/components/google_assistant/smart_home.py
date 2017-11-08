@@ -74,25 +74,12 @@ def entity_to_device(entity: Entity):
     device = {
         'id': entity.entity_id,
         'name': {},
-        'deviceInfo': {},
         'attributes': {},
         'traits': [],
         'willReportState': False,
     }
     device['type'] = class_data[0]
     device['traits'].append(class_data[1])
-
-    if entity.attributes.get('manufacturer') is not None:
-        device['deviceInfo']['manufacturer'] = \
-            entity.attributes.get('manufacturer')
-
-    if entity.attributes.get('model_number') is not None:
-        device['deviceInfo']['model'] = \
-            entity.attributes.get('model_number')
-
-    if entity.attributes.get('firmware_version') is not None:
-        device['deviceInfo']['swVersion'] = \
-            entity.attributes.get('firmware_version')
 
     # handle custom names
     device['name']['name'] = \
@@ -221,7 +208,7 @@ def determine_service(entity_id: str, command: str,
                 service_data[light.ATTR_KELVIN] = color_data.get('temperature')
                 return (SERVICE_TURN_ON, service_data)
             if color_data.get('spectrumRGB', 0) > 0:
-                # blue is 255 so pad up to 6
+                # blue is 255 so pad up to 6 chars
                 hex_value = \
                     ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
                 service_data[light.ATTR_RGB_COLOR] = \
