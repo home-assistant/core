@@ -22,10 +22,7 @@ class TestCanarySensorSetup(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = {
-            "username": "foo@bar.org",
-            "password": "bar",
-        }
+        self.config = VALID_CONFIG.copy()
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -35,7 +32,7 @@ class TestCanarySensorSetup(unittest.TestCase):
     def test_sensor(self, mock):
         """Test the Canary senskor class and methods."""
         _setUpResponses(mock)
-        base_canary.setup(self.hass, VALID_CONFIG)
+        base_canary.setup(self.hass, self.config)
         canary.setup_platform(self.hass, self.config, self.add_devices, None)
 
         self.assertEqual(6, len(self.DEVICES))
