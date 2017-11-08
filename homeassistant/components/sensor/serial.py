@@ -12,8 +12,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, 
-    EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyserial-asyncio==0.4']
