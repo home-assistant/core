@@ -15,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pytradfri==4.0.1',
                 'DTLSSocket==0.1.4',
@@ -88,10 +89,10 @@ def request_configuration(hass, config, host):
 
         def success():
             """Set up was successful."""
-            conf = _read_config(hass)
+            conf = load_json(hass.config.path(CONFIG_FILE))
             conf[host] = {'identity': identity,
                           'key': key}
-            _write_config(hass, conf)
+            save_json(hass.config.path(CONFIG_FILE), conf)
             hass.async_add_job(configurator.request_done, instance)
 
         hass.async_add_job(success)
@@ -112,7 +113,8 @@ def async_setup(hass, config):
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
     allow_tradfri_groups = conf.get(CONF_ALLOW_TRADFRI_GROUPS)
-    known_hosts = yield from hass.async_add_job(_read_config, hass)
+    known_hosts = yield from hass.async_add_job(load_json,
+                                                hass.config.path(CONFIG_FILE))
 
     @asyncio.coroutine
     def gateway_discovered(service, info,
@@ -180,22 +182,3 @@ def _setup_gateway(hass, hass_config, host, identity, key,
     hass.async_add_job(discovery.async_load_platform(
         hass, 'sensor', DOMAIN, {'gateway': gateway_id}, hass_config))
     return True
-
-
-def _read_config(hass):
-    """Read tradfri config."""
-    path = hass.config.path(CONFIG_FILE)
-
-    if not os.path.isfile(path):
-        return {}
-
-    with open(path) as f_handle:
-        # Guard against empty file
-        return json.loads(f_handle.read() or '{}')
-
-
-def _write_config(hass, config):
-    """Write tradfri config."""
-    data = json.dumps(config)
-    with open(hass.config.path(CONFIG_FILE), 'w', encoding='utf-8') as outfile:
-        outfile.write(data)
