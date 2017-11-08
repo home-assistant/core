@@ -15,12 +15,24 @@ from homeassistant.const import (
     CONF_EMAIL, CONF_MONITORED_VARIABLES, CONF_PASSWORD)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
+from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pytile==1.0.0']
 
+CLIENT_UUID_CONFIG_FILE = '.tile.conf'
+DEFAULT_ICON = 'mdi:bluetooth'
 DEVICE_TYPES = ['PHONE', 'TILE']
+
+ATTR_ALTITUDE = 'altitude'
+ATTR_CONNECTION_STATE = 'connection_state'
+ATTR_IS_DEAD = 'is_dead'
+ATTR_IS_LOST = 'is_lost'
+ATTR_LAST_SEEN = 'last_seen'
+ATTR_LAST_UPDATED = 'last_updated'
+ATTR_RING_STATE = 'ring_state'
+ATTR_VOIP_STATE = 'voip_state'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
@@ -43,9 +55,30 @@ class TileDeviceScanner(DeviceScanner):
         """Initialize."""
         from pytile import Client as TileAPI
 
-        self._client = TileAPI(
-            config[CONF_EMAIL],
-            config[CONF_PASSWORD])
+        _LOGGER.debug('Received configuration data: %s', config)
+
+        # Load the client UUID (if it exists):
+        config_data = load_json(hass.config.path(CLIENT_UUID_CONFIG_FILE))
+        if config_data:
+            _LOGGER.debug('Using existing client UUID')
+            self._client = TileAPI(
+                config[CONF_EMAIL],
+                config[CONF_PASSWORD],
+                config_data['client_uuid'])
+        else:
+            _LOGGER.debug('Generating new client UUID')
+            self._client = TileAPI(
+                config[CONF_EMAIL],
+                config[CONF_PASSWORD])
+
+            if not save_json(
+                    hass.config.path(CLIENT_UUID_CONFIG_FILE),
+                    {'client_uuid': self._client.client_uuid}):
+                _LOGGER.error("Failed to save configuration file")
+
+        _LOGGER.debug('Client UUID: %s', self._client.client_uuid)
+        _LOGGER.debug('User UUID: %s', self._client.user_uuid)
+
         self._types = config.get(CONF_MONITORED_VARIABLES)
 
         self.devices = {}
@@ -63,6 +96,7 @@ class TileDeviceScanner(DeviceScanner):
             self.devices = device_data['result']
         except KeyError:
             _LOGGER.warning('No Tiles found')
+            _LOGGER.debug(device_data)
             return False
 
         for _, info in self.devices.items():
@@ -71,12 +105,19 @@ class TileDeviceScanner(DeviceScanner):
             lon = info['tileState']['longitude']
 
             attrs = {
-                'altitude': info['tileState']['altitude'],
-                'is_lost': info['tileState']['is_lost'],
-                'last_seen': info['tileState']['timestamp'],
-                'last_updated': device_data['timestamp_ms'],
+                ATTR_ALTITUDE: info['tileState']['altitude'],
+                ATTR_CONNECTION_STATE: info['tileState']['connection_state'],
+                ATTR_IS_DEAD: info['is_dead'],
+                ATTR_IS_LOST: info['tileState']['is_lost'],
+                ATTR_LAST_SEEN: info['tileState']['timestamp'],
+                ATTR_LAST_UPDATED: device_data['timestamp_ms'],
+                ATTR_RING_STATE: info['tileState']['ring_state'],
+                ATTR_VOIP_STATE: info['tileState']['voip_state'],
             }
 
             self.see(
-                dev_id=dev_id, gps=(lat, lon), attributes=attrs
+                dev_id=dev_id,
+                gps=(lat, lon),
+                attributes=attrs,
+                icon=DEFAULT_ICON
             )
