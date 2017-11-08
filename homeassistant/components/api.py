@@ -324,6 +324,7 @@ class APIDomainServicesView(HomeAssistantView):
             return self.json_message('Data should be valid JSON',
                                      HTTP_BAD_REQUEST)
 
+        # pylint: disable=protected-access
         service_handler = hass.services._services[domain][service]
         try:
             if service_handler.schema:
