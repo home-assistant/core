@@ -84,8 +84,6 @@ class RingCam(Camera):
             'timezone': self._camera.timezone,
             'type': self._camera.family,
             'video_url': self._video_url,
-            'expires_at': self._expires_at,
-            'utcnow': self._utcnow,
             'video_id': self._last_video_id
         }
 
