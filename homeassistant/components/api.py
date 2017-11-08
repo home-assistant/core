@@ -327,7 +327,7 @@ class APIDomainServicesView(HomeAssistantView):
         service_handler = hass.services._services[domain][service]
         try:
             if service_handler.schema:
-                service_data = service_handler.schema(data)
+                service_handler.schema(data)
         except vol.Invalid as ex:
             _LOGGER.error("Invalid service data for %s.%s: %s",
                           domain, service, humanize_error(data, ex))
