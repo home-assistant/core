@@ -12,7 +12,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, 
+    EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyserial-asyncio==0.4']
@@ -80,8 +81,7 @@ class SerialSensor(Entity):
         while True:
             line = yield from reader.readline()
             line = line.decode('utf-8').strip()
-            
-            """ Parse the return text as JSON and save the json as an attribute. """
+
             try:
                 self._attributes = json.loads(line)
             except json.JSONDecodeError:
