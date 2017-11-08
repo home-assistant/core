@@ -125,7 +125,7 @@ class TellstickRegistry(object):
     def __init__(self, hass, tellcore_lib):
         """Initialize the Tellstick mappings and callbacks."""
         # used when map callback device id to ha entities.
-        self.hass
+        self.hass = hass
         self._id_to_ha_device_map = {}
         self._id_to_tellcore_device_map = {}
         self._setup_tellcore_callback(hass, tellcore_lib)
