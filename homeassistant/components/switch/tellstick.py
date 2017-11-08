@@ -36,11 +36,11 @@ class TellstickSwitch(TellstickDevice, ToggleEntity):
 
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""
-        return None
+        pass
 
     def _parse_tellcore_data(self, tellcore_data):
         """Turn the value received from tellcore into something useful."""
-        return None
+        pass
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
