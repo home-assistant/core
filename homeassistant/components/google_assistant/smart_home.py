@@ -102,14 +102,6 @@ def entity_to_device(entity: Entity):
         for feature, trait in class_data[2].items():
             if feature & supported > 0:
                 device['traits'].append(trait)
-    if entity.domain == climate.DOMAIN:
-        modes = ','.join(
-            m for m in entity.attributes.get(climate.ATTR_OPERATION_LIST, [])
-            if m in CLIMATE_SUPPORTED_MODES)
-        device['attributes'] = {
-            'availableThermostatModes': modes,
-            'thermostatTemperatureUnit': 'C',
-        }
 
                 # Actions require this attributes for a device
                 # supporting temperature
@@ -121,12 +113,20 @@ def entity_to_device(entity: Entity):
                         device['attributes']['temperatureMinK'] =  \
                             int(round(color.color_temperature_mired_to_kelvin(
                                 entity.attributes.get(light.ATTR_MAX_MIREDS))))
-
                     if entity.attributes.get(
                             light.ATTR_MIN_MIREDS) is not None:
                         device['attributes']['temperatureMaxK'] =  \
                             int(round(color.color_temperature_mired_to_kelvin(
                                 entity.attributes.get(light.ATTR_MIN_MIREDS))))
+
+    if entity.domain == climate.DOMAIN:
+        modes = ','.join(
+            m for m in entity.attributes.get(climate.ATTR_OPERATION_LIST, [])
+            if m in CLIMATE_SUPPORTED_MODES)
+        device['attributes'] = {
+            'availableThermostatModes': modes,
+            'thermostatTemperatureUnit': 'C',
+        }
 
     return device
 
