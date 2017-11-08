@@ -11,6 +11,9 @@ import logging
 from aiohttp import web
 import async_timeout
 
+import voluptuous as vol
+from voluptuous.humanize import humanize_error
+
 import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant.bootstrap import DATA_LOGGING
@@ -316,10 +319,22 @@ class APIDomainServicesView(HomeAssistantView):
             return self.json_message('Service not found', HTTP_NOT_FOUND)
         body = yield from request.text()
         try:
-            data = json.loads(body) if body else None
+            data = json.loads(body) if body else {}
         except ValueError:
             return self.json_message('Data should be valid JSON',
                                      HTTP_BAD_REQUEST)
+
+        service_handler = hass.services._services[domain][service]
+        try:
+            if service_handler.schema:
+                service_data = service_handler.schema(data)
+        except vol.Invalid as ex:
+            _LOGGER.error("Invalid service data for %s.%s: %s",
+                          domain, service, humanize_error(data, ex))
+            err_str = "Invalid service data for {}.{}: {}"
+            filled_err_str = err_str.format(domain,
+                                            service, humanize_error(data, ex))
+            return self.json_message(filled_err_str, HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
             yield from hass.services.async_call(domain, service, data, True)
