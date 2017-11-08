@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -135,8 +134,6 @@ class KNXClimate(ClimateDevice):
         self.async_register_callbacks()
 
         self._unit_of_measurement = TEMP_CELSIUS
-        self._away = False  # not yet supported
-        self._is_fan_on = False  # not yet supported
 
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
@@ -180,18 +177,12 @@ class KNXClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(
-            self.device.target_temperature_min,
-            TEMP_CELSIUS,
-            self.temperature_unit)
+        return self.device.target_temperature_min
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(
-            self.device.target_temperature_max,
-            TEMP_CELSIUS,
-            self.temperature_unit)
+        return self.device.target_temperature_max
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
