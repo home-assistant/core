@@ -7,12 +7,11 @@ https://home-assistant.io/components/light.tellstick/
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 from homeassistant.components.tellstick import (
     DEFAULT_SIGNAL_REPETITIONS, ATTR_DISCOVER_DEVICES, ATTR_DISCOVER_CONFIG,
-    DOMAIN, TellstickDevice)
+    DATA_TELLSTICK, TellstickDevice)
 
-PLATFORM_SCHEMA = vol.Schema({vol.Required("platform"): DOMAIN})
 
 SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 
@@ -27,9 +26,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     signal_repetitions = discovery_info.get(
         ATTR_DISCOVER_CONFIG, DEFAULT_SIGNAL_REPETITIONS)
 
-    add_devices(TellstickLight(tellcore_id, hass.data['tellcore_registry'],
+    add_devices(TellstickLight(tellcore_id, hass.data[DATA_TELLSTICK],
                                signal_repetitions)
-                for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES])
+                for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES], True)
 
 
 class TellstickLight(TellstickDevice, Light):
