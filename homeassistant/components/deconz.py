@@ -27,9 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_USERNAME, default='delight'): cv.string,
-        vol.Optional(CONF_PASSWORD, default='delight'): cv.string
+        vol.Optional(CONF_PORT, default=80): cv.port
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -51,7 +49,9 @@ def async_setup(hass, config):
     def generate_api_key(call):
         """Generate API key needed to communicate with Deconz."""
         from pydeconz.utils import get_api_key
-        api_key = yield from get_api_key(**deconz_config)
+        deconz_config[CONF_USERNAME] = call.data.get(CONF_USERNAME, 'delight')
+        deconz_config[CONF_PASSWORD] = call.data.get(CONF_PASSWORD, 'delight')
+        api_key = yield from get_api_key(hass.loop, **deconz_config)
         hass.states.async_set('deconz.api_key', api_key)
         deconz_config[CONF_API_KEY] = api_key
         yield from _setup_deconz(hass, config, deconz_config)
