@@ -64,7 +64,7 @@ class TelegramNotificationService(BaseNotificationService):
             keys = keys if isinstance(keys, list) else [keys]
             service_data.update(inline_keyboard=keys)
 
-        # Send a photo, a video, a document or a location
+        # Send a photo, video, document, or location
         if data is not None and ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO, None)
             photos = photos if isinstance(photos, list) else [photos]

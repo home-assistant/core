@@ -520,7 +520,7 @@ class TelegramNotificationService:
                        text=message, show_alert=show_alert, **params)
 
     def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
-        """Send a photo or video or document."""
+        """Send a photo, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
         func_send = {
