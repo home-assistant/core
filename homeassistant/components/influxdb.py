@@ -5,11 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
 import logging
-
 import re
 
 import requests.exceptions
-
 import voluptuous as vol
 
 from homeassistant.const import (
