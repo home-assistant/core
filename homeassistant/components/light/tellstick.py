@@ -34,9 +34,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TellstickLight(TellstickDevice, Light):
     """Representation of a Tellstick light."""
 
-    def __init__(self, tellcore_id, tellcore_registry, signal_repetitions):
+    def __init__(self, tellcore_device, signal_repetitions):
         """Initialize the Tellstick light."""
-        super().__init__(tellcore_id, tellcore_registry, signal_repetitions)
+        super().__init__(tellcore_device, signal_repetitions)
 
         self._brightness = 255
 
