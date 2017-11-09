@@ -1,0 +1,273 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<script>
+(function () {
+  'use strict';
+
+  function range(start, end) {
+    var result = [];
+    var i;
+
+    for (i = start; i < end; i++) {
+      result.push(i);
+    }
+
+    return result;
+  }
+
+  function saveParseFloat(value) {
+    var parsed = parseFloat(value);
+    return !isNaN(parsed) && isFinite(parsed) ? parsed : null;
+  }
+
+  Polymer({
+    is: 'state-history-chart-line',
+
+    properties: {
+      data: {
+        type: Object,
+        observer: 'dataChanged',
+      },
+
+      unit: {
+        type: String,
+      },
+
+      isSingleDevice: {
+        type: Boolean,
+        value: false,
+      },
+
+      isAttached: {
+        type: Boolean,
+        value: false,
+        observer: 'dataChanged',
+      },
+
+      chartEngine: {
+        type: Object,
+      },
+    },
+
+    created: function () {
+      this.style.display = 'block';
+    },
+
+    attached: function () {
+      this.isAttached = true;
+    },
+
+    dataChanged: function () {
+      this.drawChart();
+    },
+
+    drawChart: function () {
+      var unit = this.unit;
+      var deviceStates = this.data;
+      var options;
+      var startTime;
+      var endTime;
+      var dataTables;
+      var finalDataTable;
+      var daysDelta;
+
+      if (!this.isAttached) {
+        return;
+      }
+
+      if (!this.chartEngine) {
+        this.chartEngine = new window.google.visualization.LineChart(this);
+      }
+
+      if (deviceStates.length === 0) {
+        return;
+      }
+
+      options = {
+        backgroundColor: '#fafafa',
+        legend: { position: 'top' },
+        interpolateNulls: true,
+        titlePosition: 'none',
+        vAxes: {
+          // Adds units to the left hand side of the graph
+          0: { title: unit },
+        },
+        hAxis: {
+          format: 'H:mm',
+        },
+        chartArea: { left: '60', width: '95%' },
+        explorer: {
+          actions: ['dragToZoom', 'rightClickToReset', 'dragToPan'],
+          keepInBounds: true,
+          axis: 'horizontal',
+          maxZoomIn: 0.1,
+        },
+      };
+
+      if (this.isSingleDevice) {
+        options.legend.position = 'none';
+        options.vAxes[0].title = null;
+        options.chartArea.left = 40;
+        options.chartArea.height = '80%';
+        options.chartArea.top = 5;
+      }
+
+      startTime = new Date(Math.min.apply(null, deviceStates.map(function (states) {
+        return new Date(states[0].last_changed);
+      })));
+
+      endTime = new Date(Math.max.apply(null, deviceStates.map(function (states) {
+        return new Date(states[states.length - 1].last_changed);
+      })));
+      if (endTime > new Date()) {
+        endTime = new Date();
+      }
+
+      daysDelta = (endTime - startTime) / (24 * 3600 * 1000);
+      // Avoid rounding up when the API returns a few extra seconds.
+      if (daysDelta > 30.1) {
+        options.hAxis.format = 'MMM d';
+      } else if (daysDelta > 3.1) {
+        options.hAxis.format = 'EEE, MMM d';
+      } else if (daysDelta > 1.1) {
+        options.hAxis.format = 'EEE, MMM d, H:mm';
+      }
+
+      dataTables = deviceStates.map(function (states) {
+        var last = states[states.length - 1];
+        var domain = window.hassUtil.computeDomain(last);
+        var name = window.hassUtil.computeStateName(last);
+        var data = [];
+        var dataTable = new window.google.visualization.DataTable();
+        // array containing [time, value1, value2, etc]
+        var prevValues;
+        var hasTargetRange;
+        var processState;
+        var noInterpolations;
+        dataTable.addColumn({ type: 'datetime', id: 'Time' });
+
+        function pushData(values, noInterpolationValues) {
+          if (prevValues && noInterpolationValues) {
+            // if we have to prevent interpolation, we add an old value for each
+            // value that should not be interpolated at the same time that our new
+            // line will be published.
+            data.push([values[0]].concat(prevValues.slice(1).map(
+              function (val, index) {
+                return noInterpolationValues[index] ? val : null;
+              })));
+          }
+          data.push(values);
+          prevValues = values;
+        }
+
+        if (domain === 'thermostat') {
+          // We differentiate between thermostats that have a target temperature
+          // range versus ones that have just a target temperature
+          hasTargetRange = states.reduce(
+            function (cum, cur) {
+              return cum || cur.attributes.target_temp_high !== cur.attributes.target_temp_low;
+            }, false);
+
+          dataTable.addColumn('number', name + ' current temperature');
+
+          if (hasTargetRange) {
+            dataTable.addColumn('number', name + ' target temperature high');
+            dataTable.addColumn('number', name + ' target temperature low');
+
+            noInterpolations = [false, true, true];
+
+            processState = function (state) {
+              var curTemp = saveParseFloat(state.attributes.current_temperature);
+              var targetHigh = saveParseFloat(state.attributes.target_temp_high);
+              var targetLow = saveParseFloat(state.attributes.target_temp_low);
+              pushData(
+                [new Date(state.last_updated), curTemp, targetHigh, targetLow],
+                noInterpolations);
+            };
+          } else {
+            dataTable.addColumn('number', name + ' target temperature');
+
+            noInterpolations = [false, true];
+
+            processState = function (state) {
+              var curTemp = saveParseFloat(state.attributes.current_temperature);
+              var target = saveParseFloat(state.attributes.temperature);
+              pushData([new Date(state.last_updated), curTemp, target], noInterpolations);
+            };
+          }
+
+          states.forEach(processState);
+        } else if (domain === 'climate') {
+          // We differentiate between thermostats that have a target temperature
+          // range versus ones that have just a target temperature
+          hasTargetRange = states.reduce(
+            function (cum, cur) {
+              return cum || cur.attributes.target_temp_high !== cur.attributes.target_temp_low;
+            }, false);
+
+          dataTable.addColumn('number', name + ' current temperature');
+
+          if (hasTargetRange) {
+            dataTable.addColumn('number', name + ' target temperature high');
+            dataTable.addColumn('number', name + ' target temperature low');
+
+            noInterpolations = [false, true, true];
+
+            processState = function (state) {
+              var curTemp = saveParseFloat(state.attributes.current_temperature);
+              var targetHigh = saveParseFloat(state.attributes.target_temp_high);
+              var targetLow = saveParseFloat(state.attributes.target_temp_low);
+              pushData(
+                [new Date(state.last_updated), curTemp, targetHigh, targetLow],
+                noInterpolations);
+            };
+          } else {
+            dataTable.addColumn('number', name + ' target temperature');
+
+            noInterpolations = [false, true];
+
+            processState = function (state) {
+              var curTemp = saveParseFloat(state.attributes.current_temperature);
+              var target = saveParseFloat(state.attributes.temperature);
+              pushData([new Date(state.last_updated), curTemp, target], noInterpolations);
+            };
+          }
+
+          states.forEach(processState);
+        } else {
+          dataTable.addColumn('number', name);
+
+          // Only disable interpolation for sensors
+          noInterpolations = domain !== 'sensor' && [true];
+
+          states.forEach(function (state) {
+            var value = saveParseFloat(state.state);
+            pushData([new Date(state.last_changed), value], noInterpolations);
+          });
+        }
+
+        // Add an entry for final values
+        pushData([endTime].concat(prevValues.slice(1)), false);
+
+        dataTable.addRows(data);
+        return dataTable;
+      });
+
+      if (dataTables.length === 1) {
+        finalDataTable = dataTables[0];
+      } else {
+        finalDataTable = dataTables.slice(1).reduce(
+          function (tot, cur) {
+            return window.google.visualization.data.join(
+            tot, cur, 'full', [[0, 0]],
+            range(1, tot.getNumberOfColumns()),
+            range(1, cur.getNumberOfColumns()));
+          },
+          dataTables[0]);
+      }
+
+      this.chartEngine.draw(finalDataTable, options);
+    },
+  });
+}());
+</script>

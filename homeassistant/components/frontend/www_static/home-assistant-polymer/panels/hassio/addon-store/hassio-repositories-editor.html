@@ -1,0 +1,70 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/iron-autogrow-textarea/iron-autogrow-textarea.html">
+
+<link rel="import" href="../../../src/components/buttons/ha-call-api-button.html">
+
+<dom-module id="hassio-repositories-editor">
+  <template>
+    <style include="ha-style">
+      :host {
+        display: block;
+      }
+      paper-card {
+        display: block;
+      }
+      iron-autogrow-textarea {
+        width: 100%;
+      }
+    </style>
+    <paper-card heading='Add-On Repositories'>
+      <div class="card-content">
+        <p>Configure which add-on repositories to fetch data from. One repository per line.</p>
+        <iron-autogrow-textarea value="{{options}}"></iron-autogrow-textarea>
+      </div>
+      <div class="card-actions">
+        <ha-call-api-button
+          hass='[[hass]]'
+          data='[[computeOptionsData(options)]]'
+          path="hassio/supervisor/options"
+        >Save</ha-call-api-button>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-repositories-editor',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    options: {
+      type: String,
+      value: '',
+    },
+
+    repos: {
+      type: Array,
+      value: [],
+      observer: 'reposChanged',
+    },
+  },
+
+  reposChanged: function (repos) {
+    this.options = repos.join('\n');
+  },
+
+  computeOptionsData: function (options) {
+    var parsed = options.trim();
+    parsed = parsed ?
+      parsed.split('\n').map(function (ent) { return ent.trim(); }) : [];
+    return {
+      addons_repositories: parsed,
+    };
+  },
+});
+</script>

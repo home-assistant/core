@@ -1,0 +1,50 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../components/ha-relative-time.html">
+
+<dom-module id="more-info-automation">
+  <template>
+    <style>
+      paper-button {
+        color: var(--primary-color);
+        font-weight: 500;
+        top: 3px;
+        height: 37px;
+      }
+    </style>
+
+    <p>
+      Last triggered:
+      <ha-relative-time datetime="[[stateObj.attributes.last_triggered]]"></ha-relative-time>
+    </p>
+
+    <paper-button on-tap='handleTriggerTapped'>TRIGGER</paper-button>
+
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-automation',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  handleTriggerTapped: function () {
+    this.hass.callService('automation', 'trigger', {
+      entity_id: this.stateObj.entity_id,
+    });
+  },
+});
+</script>

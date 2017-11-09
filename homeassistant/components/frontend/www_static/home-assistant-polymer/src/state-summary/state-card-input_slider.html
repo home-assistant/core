@@ -1,0 +1,83 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-slider/paper-slider.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+
+<dom-module id="state-card-input_slider">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      paper-slider {
+        margin-left: 16px;
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <paper-slider
+        min='[[min]]' max='[[max]]' value='{{value}}' step='[[step]]' pin
+        on-change='selectedValueChanged' on-tap='stopPropagation'>
+      </paper-slider>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-input_slider',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjectChanged',
+    },
+    min: {
+      type: Number,
+      value: 0,
+    },
+    max: {
+      type: Number,
+      value: 100,
+    },
+    step: {
+      type: Number,
+    },
+    value: {
+      type: Number,
+    },
+  },
+
+  stateObjectChanged: function (newVal) {
+    this.min = Number(newVal.attributes.min);
+    this.max = Number(newVal.attributes.max);
+    this.step = Number(newVal.attributes.step);
+    this.value = Number(newVal.state);
+  },
+
+  selectedValueChanged: function () {
+    if (this.value === Number(this.stateObj.state)) {
+      return;
+    }
+    this.hass.callService('input_slider', 'select_value', {
+      value: this.value,
+      entity_id: this.stateObj.entity_id,
+    });
+  },
+
+  stopPropagation: function (ev) {
+    ev.stopPropagation();
+  },
+});
+</script>

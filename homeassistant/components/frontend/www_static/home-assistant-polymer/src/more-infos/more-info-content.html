@@ -1,0 +1,53 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='more-info-alarm_control_panel.html'>
+<link rel='import' href='more-info-automation.html'>
+<link rel='import' href='more-info-camera.html'>
+<link rel='import' href='more-info-climate.html'>
+<link rel='import' href='more-info-configurator.html'>
+<link rel='import' href='more-info-cover.html'>
+<link rel='import' href='more-info-default.html'>
+<link rel='import' href='more-info-fan.html'>
+<link rel='import' href='more-info-group.html'>
+<link rel='import' href='more-info-light.html'>
+<link rel='import' href='more-info-lock.html'>
+<link rel='import' href='more-info-media_player.html'>
+<link rel='import' href='more-info-script.html'>
+<link rel='import' href='more-info-sun.html'>
+<link rel='import' href='more-info-updater.html'>
+
+<script>
+Polymer({
+  is: 'more-info-content',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjChanged',
+    },
+  },
+
+  created: function () {
+    this.style.display = 'block';
+  },
+
+  stateObjChanged: function (stateObj) {
+    var rootEl;
+    if (!stateObj) {
+      // If root has lastChild, set 'isVisible' attribute of that child to false.
+      rootEl = Polymer.dom(this);
+      if (rootEl.lastChild) {
+        rootEl.lastChild.isVisible = false;
+      }
+    } else {
+      window.hassUtil.dynamicContentUpdater(
+        this, 'MORE-INFO-' + window.hassUtil.stateMoreInfoType(stateObj).toUpperCase(),
+        { hass: this.hass, stateObj: stateObj, isVisible: true });
+    }
+  },
+});
+</script>

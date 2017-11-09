@@ -1,0 +1,47 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+
+<dom-module id="state-card-display">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      .state {
+        @apply(--paper-font-body1);
+        color: var(--primary-text-color);
+
+        margin-left: 16px;
+        text-align: right;
+        line-height: 40px;
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <div class='state'>[[computeStateDisplay(stateObj)]]</div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-display',
+
+  properties: {
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  computeStateDisplay: function (stateObj) {
+    return window.hassUtil.computeStateState(stateObj);
+  },
+});
+</script>

@@ -1,0 +1,80 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel='import' href='../../bower_components/iron-image/iron-image.html'>
+<link rel='import' href='../../bower_components/iron-icon/iron-icon.html'>
+
+<dom-module id='ha-entity-marker'>
+  <template>
+    <style is="custom-style" include="iron-positioning"></style>
+    <style>
+    .marker {
+      vertical-align: top;
+      position: relative;
+      display: block;
+      margin: 0 auto;
+      width: 2.5em;
+      text-align: center;
+      height: 2.5em;
+      line-height: 2.5em;
+      font-size: 1.5em;
+      border-radius: 50%;
+      border: 0.1em solid var(--ha-marker-color, --default-primary-color);
+      color: rgb(76, 76, 76);
+      background-color: white;
+    }
+    iron-image {
+      border-radius: 50%;
+    }
+    </style>
+
+    <div class='marker'>
+      <template is='dom-if' if='[[entityName]]'>[[entityName]]</template>
+      <template is='dom-if' if='[[entityPicture]]'>
+        <iron-image sizing='cover' class='fit' src='[[entityPicture]]'></iron-image>
+      </template>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-entity-marker',
+
+  hostAttributes: {
+    entityId: null,
+    entityName: null,
+    entityPicture: null,
+  },
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    entityId: {
+      type: String,
+      value: '',
+    },
+
+    entityName: {
+      type: String,
+      value: null,
+    },
+
+    entityPicture: {
+      type: String,
+      value: null,
+    }
+  },
+
+  listeners: {
+    tap: 'badgeTap',
+  },
+
+  badgeTap: function (ev) {
+    ev.stopPropagation();
+    if (this.entityId) {
+      this.fire('hass-more-info', { entityId: this.entityId });
+    }
+  },
+});
+</script>

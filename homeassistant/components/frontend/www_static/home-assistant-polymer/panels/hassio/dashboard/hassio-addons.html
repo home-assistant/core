@@ -1,0 +1,62 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item-body.html">
+
+<dom-module id="hassio-addons">
+  <template>
+    <style include="ha-style">
+      paper-card {
+        display: block;
+        padding-top: 16px;
+        padding-right: 16px;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+    </style>
+    <paper-card heading="Installed Addons">
+      <template is='dom-repeat' items='[[data]]' as='addon'>
+        <paper-item>
+          <paper-item-body two-line on-tap='addonTapped'>
+            <div>[[addon.name]]</div>
+            <div secondary>[[addon.description]]</div>
+          </paper-item-body>
+          [[addon.installed]]
+        </paper-item>
+      </template>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addons',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    data: {
+      type: Object,
+      value: [],
+    },
+  },
+
+  addonTapped: function (ev) {
+    this.fire('hassio-select-addon', { addon: this.data[ev.model.index].slug });
+    ev.target.blur();
+  },
+});
+</script>

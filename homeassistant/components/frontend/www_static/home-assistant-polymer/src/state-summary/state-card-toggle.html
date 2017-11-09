@@ -1,0 +1,44 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+<link rel="import" href="../components/entity/ha-entity-toggle.html">
+
+<dom-module id="state-card-toggle">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      ha-entity-toggle {
+        margin-left: 16px;
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <ha-entity-toggle state-obj="[[stateObj]]" hass='[[hass]]'></ha-entity-toggle>
+    </div>
+
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-toggle',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+  },
+});
+</script>

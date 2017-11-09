@@ -1,0 +1,191 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+
+<dom-module id="ha-voice-command-dialog">
+  <template>
+    <style>
+      iron-icon {
+        margin-right: 8px;
+      }
+
+      .content {
+        width: 300px;
+        min-height: 80px;
+        font-size: 18px;
+      }
+
+      .icon {
+        float: left;
+      }
+
+      .text {
+        margin-left: 48px;
+        margin-right: 24px;
+      }
+
+      .error {
+        color: red;
+      }
+
+      .interimTranscript {
+        color: darkgrey;
+      }
+
+      @media all and (max-width: 450px) {
+        paper-dialog {
+          margin: 0;
+          width: 100%;
+          max-height: calc(100% - 64px);
+
+          position: fixed !important;
+          bottom: 0px;
+          left: 0px;
+          right: 0px;
+          overflow: scroll;
+        }
+      }
+    </style>
+
+    <paper-dialog id="dialog" with-backdrop opened='{{dialogOpen}}'>
+      <div class='content'>
+        <div class='icon'>
+          <iron-icon icon="mdi:text-to-speech" hidden$="[[isTransmitting]]"></iron-icon>
+          <paper-spinner active$="[[isTransmitting]]" hidden$="[[!isTransmitting]]"></paper-spinner>
+        </div>
+        <div class='text' hidden$='[[hasError]]'>
+          <span>{{results.final}}</span>
+          <span class='interimTranscript'>[[results.interim]]</span>
+          …
+        </div>
+        <div class='text red' hidden$='[[!hasError]]'>
+          An error occurred. Unable to fulfill request.
+        </div>
+      </div>
+    </paper-dialog>
+  </template>
+
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-voice-command-dialog',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    dialogOpen: {
+      type: Boolean,
+      value: false,
+      observer: 'dialogOpenChanged',
+    },
+
+    results: {
+      type: Object,
+    },
+
+    isTransmitting: {
+      type: Boolean,
+      value: false,
+    },
+
+    isListening: {
+      type: Boolean,
+      value: false,
+    },
+
+    hasError: {
+      type: Boolean,
+      value: false,
+    },
+
+    showListenInterface: {
+      type: Boolean,
+      computed: 'computeShowListenInterface(isListening, isTransmitting)',
+      observer: 'showListenInterfaceChanged',
+    },
+  },
+
+  initRecognition: function () {
+    /* eslint-disable new-cap */
+    this.recognition = new webkitSpeechRecognition();
+    /* eslint-enable new-cap */
+
+    this.recognition.onstart = function () {
+      this.isListening = true;
+      this.isTransmitting = false;
+      this.hasError = false;
+      this.results = {
+        final: '',
+        interim: '',
+      };
+    }.bind(this);
+    this.recognition.onerror = function () {
+      this.recognition.abort();
+      this.hasError = true;
+    }.bind(this);
+    this.recognition.onend = function () {
+      this.isListening = false;
+      this.isTransmitting = true;
+      var text = this.results.final || this.results.interim;
+
+      var listeningDone = function () {
+        this.isTransmitting = false;
+      }.bind(this);
+
+      this.hass.callService('conversation', 'process', { text: text })
+        .then(listeningDone, listeningDone);
+    }.bind(this);
+
+    this.recognition.onresult = function (event) {
+      var oldResults = this.results;
+      var finalTranscript = '';
+      var interimTranscript = '';
+
+      for (var ind = event.resultIndex; ind < event.results.length; ind++) {
+        if (event.results[ind].isFinal) {
+          finalTranscript += event.results[ind][0].transcript;
+        } else {
+          interimTranscript += event.results[ind][0].transcript;
+        }
+      }
+
+      this.results = {
+        interim: interimTranscript,
+        final: oldResults.final + finalTranscript,
+      };
+    }.bind(this);
+  },
+
+  startListening: function () {
+    if (!this.recognition) {
+      this.initRecognition();
+    }
+
+    this.recognition.start();
+  },
+
+  computeShowListenInterface: function (isListening, isTransmitting) {
+    return isListening || isTransmitting;
+  },
+
+  dialogOpenChanged: function (newVal) {
+    if (!newVal && this.isListening) {
+      this.recognition.abort();
+    }
+  },
+
+  showListenInterfaceChanged: function (newVal) {
+    if (!newVal && this.dialogOpen) {
+      this.dialogOpen = false;
+    } else if (newVal) {
+      this.dialogOpen = true;
+    }
+  },
+});
+</script>

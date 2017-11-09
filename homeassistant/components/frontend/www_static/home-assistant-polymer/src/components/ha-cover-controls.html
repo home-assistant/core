@@ -1,0 +1,61 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../util/cover-model.html">
+
+<dom-module id="ha-cover-controls">
+  <template>
+    <style>
+      .state {
+        white-space: nowrap;
+      }
+      [invisible] {
+        visibility: hidden !important;
+      }
+    </style>
+
+    <div class='state'>
+      <paper-icon-button icon="mdi:arrow-up" on-tap='onOpenTap'
+        invisible$='[[!entityObj.supportsOpen]]'
+        disabled='[[entityObj.isFullyOpen]]'></paper-icon-button>
+      <paper-icon-button icon="mdi:stop" on-tap='onStopTap'
+        invisible$='[[!entityObj.supportsStop]]'></paper-icon-button>
+      <paper-icon-button icon="mdi:arrow-down" on-tap='onCloseTap'
+        invisible$='[[!entityObj.supportsClose]]'
+        disabled='[[entityObj.isFullyClosed]]'></paper-icon-button>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-cover-controls',
+  properties: {
+    hass: {
+      type: Object,
+    },
+    stateObj: {
+      type: Object,
+    },
+    entityObj: {
+      type: Object,
+      computed: 'computeEntityObj(hass, stateObj)',
+    },
+  },
+  computeEntityObj: function (hass, stateObj) {
+    return new window.CoverEntity(hass, stateObj);
+  },
+  onOpenTap: function (ev) {
+    ev.stopPropagation();
+    this.entityObj.openCover();
+  },
+  onCloseTap: function (ev) {
+    ev.stopPropagation();
+    this.entityObj.closeCover();
+  },
+  onStopTap: function (ev) {
+    ev.stopPropagation();
+    this.entityObj.stopCover();
+  },
+});
+</script>

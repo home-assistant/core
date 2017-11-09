@@ -1,0 +1,81 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="./ha-progress-button.html">
+
+<dom-module id='ha-call-service-button'>
+  <template>
+    <ha-progress-button
+      id='progress'
+      progress='[[progress]]'
+      on-tap='buttonTapped'
+    ><slot></slot></ha-progress-button>
+  <template is='dom-if' if='[[showDescription]]'>
+    <div style="color: grey">[[getDescription(hass, domain, service)]]</div>
+  </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-call-service-button',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    progress: {
+      type: Boolean,
+      value: false,
+    },
+
+    domain: {
+      type: String,
+    },
+
+    service: {
+      type: String,
+    },
+
+    serviceData: {
+      type: Object,
+      value: {},
+    },
+
+    showDescription: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  buttonTapped: function () {
+    this.progress = true;
+    var el = this;
+    var eventData = {
+      domain: this.domain,
+      service: this.service,
+      serviceData: this.serviceData,
+    };
+
+    this.hass.callService(this.domain, this.service, this.serviceData)
+      .then(function () {
+        el.progress = false;
+        el.$.progress.actionSuccess();
+        eventData.success = true;
+      }, function () {
+        el.progress = false;
+        el.$.progress.actionError();
+        eventData.success = false;
+      }).then(function () {
+        el.fire('hass-service-called', eventData);
+      });
+  },
+
+  getDescription: function (hass, domain, service) {
+    var domainServices = hass.config.services[domain];
+    if (!domainServices) return '';
+    var serviceObject = domainServices[service];
+    if (!serviceObject) return '';
+    return serviceObject.description;
+  },
+});
+</script>

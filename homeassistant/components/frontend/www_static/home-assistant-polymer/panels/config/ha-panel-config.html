@@ -1,0 +1,120 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../src/components/ha-menu-button.html">
+<link rel='import' href='../../bower_components/iron-media-query/iron-media-query.html'>
+<link rel="import" href="./core/ha-config-section-core.html">
+<link rel="import" href="./group/ha-config-section-group.html">
+<link rel="import" href="./hassbian/ha-config-section-hassbian.html">
+<link rel="import" href="./z-wave/ha-config-section-zwave.html">
+
+<dom-module id="ha-panel-config">
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        padding-bottom: 32px;
+      }
+
+      .border {
+        margin: 32px auto 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        max-width: 1040px;
+      }
+
+      .narrow .border {
+        max-width: 640px;
+      }
+    </style>
+    <iron-media-query query="(min-width: 1040px)" query-matches="{{wide}}">
+    </iron-media-query>
+    <iron-media-query query="(min-width: 1296px)" query-matches="{{wideSidebar}}">
+    </iron-media-query>
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>Configuration</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class$='[[computeClasses(isWide)]]'>
+        <ha-config-section-group
+          is-wide='[[isWide]]'
+          hass='[[hass]]'
+        ></ha-config-section-group>
+
+        <ha-config-section-core
+          is-wide='[[isWide]]'
+          hass='[[hass]]'
+        ></ha-config-section-core>
+
+        <template is='dom-if' if='[[computeIsHassbianLoaded(hass)]]'>
+          <div class='border'></div>
+          <ha-config-section-hassbian
+            is-wide='[[isWide]]'
+            hass='[[hass]]'
+          ></ha-config-section-hassbian>
+        </template>
+
+        <template is='dom-if' if='[[computeIsZwaveLoaded(hass)]]'>
+          <div class='border'></div>
+          <ha-config-section-zwave
+            is-wide='[[isWide]]'
+            hass='[[hass]]'
+          ></ha-config-section-zwave>
+        </template>
+      </div>
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-config',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    wide: {
+      type: Boolean,
+    },
+
+    wideSidebar: {
+      type: Boolean,
+    },
+
+    isWide: {
+      type: Boolean,
+      computed: 'computeIsWide(showMenu, wideSidebar, wide)'
+    },
+  },
+
+  computeIsWide: function (showMenu, wideSidebar, wide) {
+    return showMenu ? wideSidebar : wide;
+  },
+
+  computeClasses: function (isWide) {
+    return isWide ? 'content' : 'content narrow';
+  },
+
+  computeIsHassbianLoaded(hass) {
+    return window.hassUtil.isComponentLoaded(hass, 'config.hassbian');
+  },
+
+  computeIsZwaveLoaded(hass) {
+    return window.hassUtil.isComponentLoaded(hass, 'config.zwave');
+  },
+});
+</script>

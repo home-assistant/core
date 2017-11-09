@@ -1,0 +1,105 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../src/resources/ha-style.html">
+
+<dom-module id="ha-config-section">
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        padding: 28px 20px 0;
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+
+      .header {
+        @apply(--paper-font-display1);
+        opacity: var(--dark-primary-opacity);
+      }
+
+      .together {
+        margin-top: 32px;
+      }
+
+      .intro {
+        @apply(--paper-font-subhead);
+        width: 100%;
+        max-width: 400px;
+        margin-right: 40px;
+        opacity: var(--dark-primary-opacity);
+      }
+
+      .panel {
+        margin-top: -24px;
+      }
+
+      .panel ::slotted(*) {
+        margin-top: 24px;
+        display: block;
+      }
+
+      .narrow.content {
+        max-width: 640px;
+      }
+      .narrow .together {
+        margin-top: 20px;
+      }
+      .narrow .header {
+        @apply(--paper-font-headline);
+      }
+      .narrow .intro {
+        font-size: 14px;
+        padding-bottom: 20px;
+        margin-right: 0;
+        max-width: 500px;
+      }
+    </style>
+    <div class$='[[computeContentClasses(isWide)]]'>
+      <div class='header'><slot name="header"></slot></div>
+      <div class$='[[computeClasses(isWide)]]'>
+        <div class='intro'>
+          <slot name="introduction"></slot>
+        </div>
+        <div class='flex panel'>
+          <slot>
+        </div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-config-section',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    isWide: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  computeContentClasses: function (isWide) {
+    var classes = 'content ';
+
+    return isWide ? classes : classes + 'narrow';
+  },
+
+  computeClasses: function (isWide) {
+    var classes = 'together layout ';
+
+    return classes + (isWide ? 'horizontal' : 'vertical narrow');
+  },
+});
+</script>

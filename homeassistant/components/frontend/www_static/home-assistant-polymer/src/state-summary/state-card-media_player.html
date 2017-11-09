@@ -1,0 +1,77 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+
+<dom-module id="state-card-media_player">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      :host {
+        line-height: 1.5;
+      }
+
+      .state {
+        @apply(--paper-font-common-nowrap);
+        @apply(--paper-font-body1);
+        margin-left: 16px;
+        text-align: right;
+      }
+
+      .main-text {
+        @apply(--paper-font-common-nowrap);
+        color: var(--primary-text-color);
+        text-transform: capitalize;
+      }
+
+      .main-text[take-height] {
+        line-height: 40px;
+      }
+
+      .secondary-text {
+        @apply(--paper-font-common-nowrap);
+        color: var(--secondary-text-color);
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <div class='state'>
+        <div class='main-text' take-height$='[[!playerObj.secondaryText]]'>[[playerObj.primaryText]]</div>
+        <div class='secondary-text'>[[playerObj.secondaryText]]</div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  PLAYING_STATES: ['playing', 'paused'],
+  is: 'state-card-media_player',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    playerObj: {
+      type: Object,
+      computed: 'computePlayerObj(hass, stateObj)',
+    },
+  },
+
+  computePlayerObj: function (hass, stateObj) {
+    return new window.MediaPlayerEntity(hass, stateObj);
+  },
+});
+</script>

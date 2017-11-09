@@ -1,0 +1,47 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../src/components/ha-menu-button.html">
+<link rel="import" href="../../src/resources/ha-style.html">
+
+<dom-module id='ha-panel-iframe'>
+  <template>
+    <style include='ha-style'>
+      iframe {
+        border: 0;
+        width: 100%;
+        height: calc(100% - 64px);
+      }
+    </style>
+    <app-toolbar>
+      <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+      <div main-title>[[panel.title]]</div>
+    </app-toolbar>
+
+    <iframe
+      src='[[panel.config.url]]'
+      sandbox="allow-forms allow-popups allow-pointer-lock allow-same-origin allow-scripts"
+    ></iframe>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-iframe',
+
+  properties: {
+    panel: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+    },
+  },
+});
+</script>

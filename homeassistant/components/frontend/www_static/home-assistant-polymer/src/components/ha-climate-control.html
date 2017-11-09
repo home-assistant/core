@@ -1,0 +1,106 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+
+
+<dom-module id="ha-climate-control">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      /* local DOM styles go here */
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-horizontal);
+        @apply(--layout-justified);
+      }
+      .target-temperature {
+        @apply(--layout-self-center);
+        font-size: 200%;
+      }
+      .control-buttons {
+        font-size: 200%;
+        text-align: right;
+      }
+      paper-icon-button {
+        height: 48px;
+        width: 48px;
+      }
+    </style>
+
+    <!-- local DOM goes here -->
+    <div class="target-temperature">
+      [[value]] [[units]]
+    </div>
+    <div class="control-buttons">
+      <div>
+        <paper-icon-button icon="mdi:chevron-up" on-tap="incrementValue"></paper-icon-button>
+      </div>
+      <div>
+        <paper-icon-button icon="mdi:chevron-down" on-tap="decrementValue"></paper-icon-button>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'ha-climate-control',
+      properties: {
+        value: {
+          type: Number,
+          observer: 'valueChanged'
+        },
+        units: {
+          type: String,
+        },
+        min: {
+          type: Number,
+        },
+        max: {
+          type: Number,
+        },
+        step: {
+          type: Number,
+          value: 1,
+        },
+      },
+      incrementValue: function () {
+        var newval = this.value + this.step;
+        this.last_changed = Date.now();
+        if (newval <= this.max) {
+          this.value = newval;
+        } else {
+          this.value = this.max;
+        }
+      },
+      decrementValue: function () {
+        var newval = this.value - this.step;
+        this.last_changed = Date.now();
+        if (newval >= this.min) {
+          this.value = newval;
+        } else {
+          this.value = this.min;
+        }
+      },
+      valueChanged: function () {
+        // when the value is changed, trigger a potential even fire in
+        // the future, as long as last changed is far enough in the
+        // past.
+        //
+        // from a UX perspective it would probably be worth changing
+        // font color on the temperature when it's in the flux state
+        // (like set to red), then animate back to black when the
+        // change event is fired, and the signal sent to home-assistant.
+        if (this.last_changed) {
+          window.setTimeout(function (val) {
+            var now = Date.now();
+            if (now - val.last_changed >= 2000) {
+              val.fire('change');
+              val.last_changed = null;
+            }
+          }, 2010, this);
+        }
+      },
+    }
+ );
+  </script>
+
+</dom-module>

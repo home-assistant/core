@@ -1,0 +1,55 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+
+<dom-module id="state-card-scene">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      paper-button {
+        color: var(--primary-color);
+        font-weight: 500;
+        top: 3px;
+        height: 37px;
+        margin-right: -.57em;
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <paper-button on-tap='activateScene'>ACTIVATE</paper-button>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-scene',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  activateScene: function (ev) {
+    ev.stopPropagation();
+    this.hass.callService(
+      'scene', 'turn_on',
+      { entity_id: this.stateObj.entity_id });
+  },
+});
+</script>

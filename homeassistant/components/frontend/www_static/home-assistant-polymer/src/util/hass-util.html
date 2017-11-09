@@ -1,0 +1,449 @@
+<script src='../../bower_components/fecha/fecha.min.js'></script>
+
+<!--
+collection of utility functions.
+-->
+<script>
+window.hassUtil = window.hassUtil || {};
+
+window.hassUtil.DEFAULT_ICON = 'mdi:bookmark';
+
+window.hassUtil.OFF_STATES = ['off', 'closed', 'unlocked'];
+
+window.hassUtil.DOMAINS_WITH_CARD = [
+  'binary_sensor',
+  'climate',
+  'cover',
+  'configurator',
+  'input_select',
+  'input_slider',
+  'media_player',
+  'scene',
+  'script',
+  'weblink',
+];
+
+window.hassUtil.DOMAINS_WITH_MORE_INFO = [
+  'alarm_control_panel', 'automation', 'camera', 'climate', 'configurator',
+  'cover', 'fan', 'group', 'light', 'lock', 'media_player', 'script',
+  'sun', 'updater',
+];
+
+window.hassUtil.DOMAINS_WITH_NO_HISTORY = ['camera', 'configurator', 'scene'];
+
+window.hassUtil.HIDE_MORE_INFO = [
+  'input_select', 'scene', 'script', 'input_slider',
+];
+
+window.hassUtil.LANGUAGE = navigator.languages ?
+  navigator.languages[0] : navigator.language || navigator.userLanguage;
+
+window.hassUtil.attributeClassNames = function (stateObj, attributes) {
+  if (!stateObj) return '';
+  return attributes.map(
+    function (attribute) {
+      return attribute in stateObj.attributes ? 'has-' + attribute : '';
+    }
+  ).join(' ');
+};
+
+// Expects featureClassNames to be an object mapping feature-bit -> className
+window.hassUtil.featureClassNames = function (stateObj, featureClassNames) {
+  if (!stateObj || !stateObj.attributes.supported_features) return '';
+
+  var features = stateObj.attributes.supported_features;
+
+  return Object.keys(featureClassNames).map(
+    function (feature) {
+      return (features & feature) !== 0 ? featureClassNames[feature] : '';
+    }
+  ).join(' ');
+};
+
+
+window.hassUtil.canToggleState = function (hass, stateObj) {
+  var domain = window.hassUtil.computeDomain(stateObj);
+  if (domain === 'group') {
+    return stateObj.state === 'on' || stateObj.state === 'off';
+  }
+
+  return window.hassUtil.canToggleDomain(hass, domain);
+};
+
+window.hassUtil.canToggleDomain = function (hass, domain) {
+  var turnOnService;
+  var services = hass.config.services[domain];
+
+  if (domain === 'lock') {
+    turnOnService = 'lock';
+  } else if (domain === 'cover') {
+    turnOnService = 'open_cover';
+  } else {
+    turnOnService = 'turn_on';
+  }
+
+  return services && turnOnService in services;
+};
+
+// Update root's child element to be newElementTag replacing another existing child if any.
+// Copy attributes into the child element.
+window.hassUtil.dynamicContentUpdater = function (root, newElementTag, attributes) {
+  var rootEl = Polymer.dom(root);
+  var customEl;
+
+  if (rootEl.lastChild && rootEl.lastChild.tagName === newElementTag) {
+    customEl = rootEl.lastChild;
+  } else {
+    if (rootEl.lastChild) {
+      rootEl.removeChild(rootEl.lastChild);
+    }
+    customEl = document.createElement(newElementTag);
+  }
+
+  Object.keys(attributes).forEach(function (key) {
+    customEl[key] = attributes[key];
+  });
+
+  if (customEl.parentNode === null) {
+    rootEl.appendChild(customEl);
+  }
+};
+
+// Check for support of native locale string options
+function toLocaleStringSupportsOptions() {
+  try {
+    new Date().toLocaleString('i');
+  } catch (e) {
+    return e.name === 'RangeError';
+  }
+  return false;
+}
+function toLocaleDateStringSupportsOptions() {
+  try {
+    new Date().toLocaleDateString('i');
+  } catch (e) {
+    return e.name === 'RangeError';
+  }
+  return false;
+}
+function toLocaleTimeStringSupportsOptions() {
+  try {
+    new Date().toLocaleTimeString('i');
+  } catch (e) {
+    return e.name === 'RangeError';
+  }
+  return false;
+}
+
+window.fecha.masks.haDateTime = (window.fecha.masks.shortTime + ' ' +
+                                 window.fecha.masks.mediumDate);
+
+if (toLocaleStringSupportsOptions()) {
+  window.hassUtil.formatDateTime = function (dateObj) {
+    return dateObj.toLocaleString(window.hassUtil.LANGUAGE, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+} else {
+  window.hassUtil.formatDateTime = function (dateObj) {
+    return window.fecha.format(dateObj, 'haDateTime');
+  };
+}
+
+if (toLocaleDateStringSupportsOptions()) {
+  window.hassUtil.formatDate = function (dateObj) {
+    return dateObj.toLocaleDateString(window.hassUtil.LANGUAGE,
+      { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+} else {
+  window.hassUtil.formatDate = function (dateObj) {
+    return window.fecha.format(dateObj, 'mediumDate');
+  };
+}
+
+if (toLocaleTimeStringSupportsOptions()) {
+  window.hassUtil.formatTime = function (dateObj) {
+    return dateObj.toLocaleTimeString(window.hassUtil.LANGUAGE,
+      { hour: 'numeric', minute: '2-digit' });
+  };
+} else {
+  window.hassUtil.formatTime = function (dateObj) {
+    return window.fecha.format(dateObj, 'shortTime');
+  };
+}
+
+window.hassUtil.relativeTime = function (dateObj) {
+  var delta = Math.abs(new Date() - dateObj) / 1000;
+  var format = new Date() > dateObj ? '%s ago' : 'in %s';
+  var tests = window.hassUtil.relativeTime.tests;
+  var i;
+
+  for (i = 0; i < tests.length; i += 2) {
+    if (delta < tests[i]) {
+      delta = Math.floor(delta);
+      return format.replace('%s',
+        delta === 1 ? '1 ' + tests[i + 1] : delta + ' ' + tests[i + 1] + 's');
+    }
+
+    delta /= tests[i];
+  }
+
+  delta = Math.floor(delta);
+  return format.replace('%s', delta === 1 ? '1 week' : delta + ' weeks');
+};
+
+window.hassUtil.relativeTime.tests = [
+  60, 'second',
+  60, 'minute',
+  24, 'hour',
+  7, 'day',
+];
+
+window.hassUtil.stateCardType = function (hass, stateObj) {
+  if (stateObj.state === 'unavailable') {
+    return 'display';
+  }
+
+  var domain = window.hassUtil.computeDomain(stateObj);
+
+  if (window.hassUtil.DOMAINS_WITH_CARD.indexOf(domain) !== -1) {
+    return domain;
+  } else if (window.hassUtil.canToggleState(hass, stateObj) &&
+             stateObj.attributes.control !== 'hidden') {
+    return 'toggle';
+  }
+  return 'display';
+};
+
+window.hassUtil.stateMoreInfoType = function (stateObj) {
+  var domain = window.hassUtil.computeDomain(stateObj);
+
+  if (window.hassUtil.DOMAINS_WITH_MORE_INFO.indexOf(domain) !== -1) {
+    return domain;
+  }
+  if (window.hassUtil.HIDE_MORE_INFO.indexOf(domain) !== -1) {
+    return 'hidden';
+  }
+  return 'default';
+};
+
+window.hassUtil.domainIcon = function (domain, state) {
+  switch (domain) {
+    case 'alarm_control_panel':
+      return state && state === 'disarmed' ? 'mdi:bell-outline' : 'mdi:bell';
+
+    case 'automation':
+      return 'mdi:playlist-play';
+
+    case 'binary_sensor':
+      return state && state === 'off' ? 'mdi:radiobox-blank' : 'mdi:checkbox-marked-circle';
+
+    case 'calendar':
+      return 'mdi:calendar';
+
+    case 'camera':
+      return 'mdi:video';
+
+    case 'climate':
+      return 'mdi:nest-thermostat';
+
+    case 'configurator':
+      return 'mdi:settings';
+
+    case 'conversation':
+      return 'mdi:text-to-speech';
+
+    case 'cover':
+      return state && state === 'open' ? 'mdi:window-open' : 'mdi:window-closed';
+
+    case 'device_tracker':
+      return 'mdi:account';
+
+    case 'fan':
+      return 'mdi:fan';
+
+    case 'group':
+      return 'mdi:google-circles-communities';
+
+    case 'homeassistant':
+      return 'mdi:home';
+
+    case 'image_processing':
+      return 'mdi:image-filter-frames';
+
+    case 'input_boolean':
+      return 'mdi:drawing';
+
+    case 'input_select':
+      return 'mdi:format-list-bulleted';
+
+    case 'input_slider':
+      return 'mdi:ray-vertex';
+
+    case 'light':
+      return 'mdi:lightbulb';
+
+    case 'lock':
+      return state && state === 'unlocked' ? 'mdi:lock-open' : 'mdi:lock';
+
+    case 'media_player':
+      return state && state !== 'off' && state !== 'idle' ?
+        'mdi:cast-connected' : 'mdi:cast';
+
+    case 'notify':
+      return 'mdi:comment-alert';
+
+    case 'proximity':
+      return 'mdi:apple-safari';
+
+    case 'remote':
+      return 'mdi:remote';
+
+    case 'scene':
+      return 'mdi:google-pages';
+
+    case 'script':
+      return 'mdi:file-document';
+
+    case 'sensor':
+      return 'mdi:eye';
+
+    case 'simple_alarm':
+      return 'mdi:bell';
+
+    case 'sun':
+      return 'mdi:white-balance-sunny';
+
+    case 'switch':
+      return 'mdi:flash';
+
+    case 'updater':
+      return 'mdi:cloud-upload';
+
+    case 'weblink':
+      return 'mdi:open-in-new';
+
+    case 'zwave':
+      if (state) {
+        if (state.indexOf('Dead') !== -1) return 'mdi:emoticon-dead';
+        if (state.indexOf('Sleeping') !== -1) return 'mdi:sleep';
+      }
+      return 'mdi:nfc';
+
+    default:
+      /* eslint-disable no-console */
+      console.warn(
+        'Unable to find icon for domain ' + domain + ' (' + state + ')');
+      /* eslint-enable no-console */
+      return window.hassUtil.DEFAULT_ICON;
+  }
+};
+
+window.hassUtil.binarySensorIcon = function (state) {
+  var activated = state.state && state.state === 'off';
+  switch (state.attributes.device_class) {
+    case 'connectivity':
+      return activated ? 'mdi:server-network-off' : 'mdi:server-network';
+    case 'light':
+      return activated ? 'mdi:brightness-5' : 'mdi:brightness-7';
+    case 'moisture':
+      return activated ? 'mdi:water-off' : 'mdi:water';
+    case 'motion':
+      return activated ? 'mdi:walk' : 'mdi:run';
+    case 'occupancy':
+      return activated ? 'mdi:home' : 'mdi:home-outline';
+    case 'opening':
+      return activated ? 'mdi:crop-square' : 'mdi:exit-to-app';
+    case 'sound':
+      return activated ? 'mdi:music-note-off' : 'mdi:music-note';
+    case 'vibration':
+      return activated ? 'mdi:crop-portrait' : 'mdi:vibrate';
+    case 'gas':
+    case 'power':
+    case 'safety':
+    case 'smoke':
+      return activated ? 'mdi:verified' : 'mdi:alert';
+    default:
+      return activated ? 'mdi:radiobox-blank' : 'mdi:checkbox-marked-circle';
+  }
+};
+
+window.hassUtil.coverIcon = function (state) {
+  var open = state.state && state.state === 'open';
+  switch (state.attributes.device_class) {
+    case 'garage':
+      return open ? 'mdi:garage-open' : 'mdi:garage';
+    default:
+      return open ? 'mdi:window-open' : 'mdi:window-closed';
+  }
+};
+
+window.hassUtil.stateIcon = function (state) {
+  if (!state) {
+    return window.hassUtil.DEFAULT_ICON;
+  } else if (state.attributes.icon) {
+    return state.attributes.icon;
+  }
+
+  var unit = state.attributes.unit_of_measurement;
+  var domain = window.hassUtil.computeDomain(state);
+
+  if (unit && domain === 'sensor') {
+    if (unit === '°C' || unit === '°F') {
+      return 'mdi:thermometer';
+    } else if (unit === 'Mice') {
+      return 'mdi:mouse-variant';
+    }
+  } else if (domain === 'binary_sensor') {
+    return window.hassUtil.binarySensorIcon(state);
+  } else if (domain === 'cover') {
+    return window.hassUtil.coverIcon(state);
+  }
+
+  return window.hassUtil.domainIcon(domain, state.state);
+};
+
+window.hassUtil.computeDomain = function (stateObj) {
+  if (!stateObj._domain) {
+    stateObj._domain = window.HAWS.extractDomain(stateObj.entity_id);
+  }
+
+  return stateObj._domain;
+};
+
+window.hassUtil.computeStateName = function (stateObj) {
+  if (stateObj._entityDisplay === undefined) {
+    stateObj._entityDisplay = (
+      stateObj.attributes.friendly_name ||
+      window.HAWS.extractObjectId(stateObj.entity_id)
+          .replace(/_/g, ' '));
+  }
+
+  return stateObj._entityDisplay;
+};
+
+window.hassUtil.computeStateState = function (stateObj) {
+  if (!stateObj._stateDisplay) {
+    stateObj._stateDisplay = stateObj.state.replace(/_/g, ' ');
+
+    if (stateObj.attributes.unit_of_measurement) {
+      stateObj._stateDisplay += ` ${stateObj.attributes.unit_of_measurement}`;
+    }
+  }
+
+  return stateObj._stateDisplay;
+};
+
+window.hassUtil.isComponentLoaded = function (hass, component) {
+  return hass.config.core.components.indexOf(component) !== -1;
+};
+
+window.hassUtil.computeLocationName = function (hass) {
+  return hass.config.core.location_name;
+};
+
+</script>

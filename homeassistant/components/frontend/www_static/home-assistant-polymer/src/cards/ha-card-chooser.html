@@ -1,0 +1,28 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='./ha-camera-card.html'>
+<link rel='import' href='./ha-entities-card.html'>
+<link rel='import' href='./ha-introduction-card.html'>
+<link rel='import' href='./ha-media_player-card.html'>
+<link rel='import' href='./ha-weather-card.html'>
+<link rel='import' href='./ha-persistent_notification-card.html'>
+
+<script>
+Polymer({
+  is: 'ha-card-chooser',
+
+  properties: {
+    cardData: {
+      type: Object,
+      observer: 'cardDataChanged',
+    },
+  },
+
+  cardDataChanged: function (newData) {
+    if (!newData) return;
+
+    window.hassUtil.dynamicContentUpdater(this, 'HA-' + newData.cardType.toUpperCase() + '-CARD',
+                          newData);
+  },
+});
+</script>

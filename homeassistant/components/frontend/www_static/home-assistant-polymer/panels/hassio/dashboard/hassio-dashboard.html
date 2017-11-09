@@ -1,0 +1,113 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../../../src/components/ha-menu-button.html">
+
+<link rel="import" href="./hassio-host-info.html">
+<link rel="import" href="./hassio-hass-info.html">
+<link rel="import" href="./hassio-supervisor-info.html">
+<link rel="import" href="./hassio-addons.html">
+
+<dom-module id="hassio-dashboard">
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        padding: 24px 0 32px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .status {
+        @apply(--layout-horizontal);
+        margin-bottom: 24px;
+      }
+      .status > * {
+        @apply(--layout-flex);
+      }
+
+      .status > *:first-child {
+        margin-right: 24px;
+      }
+    </style>
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>Hass.io</div>
+          <paper-icon-button
+            icon="mdi:shopping"
+            on-tap="storeTapped"
+          ></paper-icon-button>
+        </app-toolbar>
+      </app-header>
+
+      <div class='content'>
+        <div class='status'>
+          <hassio-supervisor-info
+            hass='[[hass]]'
+            data='[[supervisorInfo]]'
+          ></hassio-supervisor-info>
+
+          <hassio-host-info
+            hass='[[hass]]'
+            data='[[hostInfo]]'
+          ></hassio-host-info>
+        </div>
+        <div class='status'>
+          <hassio-hass-info
+            hass='[[hass]]'
+            data='[[hassInfo]]'
+          ></hassio-hass-info>
+          <div></div>
+        </div>
+        <hassio-addons
+          hass='[[hass]]'
+          data='[[supervisorInfo.addons]]'
+        ></hassio-addons>
+      </div>
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-dashboard',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    supervisorInfo: {
+      type: Object,
+      value: {},
+    },
+
+    hostInfo: {
+      type: Object,
+      value: {},
+    },
+
+    hassInfo: {
+      type: Object,
+      value: {},
+    },
+  },
+
+  storeTapped: function () {
+    this.fire('hassio-show-page', { page: 'addon-store' });
+  },
+});
+</script>

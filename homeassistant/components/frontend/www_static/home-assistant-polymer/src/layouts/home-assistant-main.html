@@ -1,0 +1,131 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel='import' href='../../bower_components/paper-drawer-panel/paper-drawer-panel.html'>
+<link rel='import' href='../../bower_components/iron-media-query/iron-media-query.html'>
+<link rel='import' href='../../bower_components/iron-pages/iron-pages.html'>
+
+<link rel='import' href='../layouts/partial-cards.html'>
+<link rel='import' href='../layouts/partial-panel-resolver.html'>
+<link rel="import" href="../dialogs/more-info-dialog.html">
+<link rel="import" href="../dialogs/ha-voice-command-dialog.html">
+<link rel='import' href='../util/ha-url-sync.html'>
+
+<link rel='import' href='../components/ha-sidebar.html'>
+
+<dom-module id='home-assistant-main'>
+  <template>
+    <more-info-dialog hass='[[hass]]'></more-info-dialog>
+    <ha-url-sync hass='[[hass]]'></ha-url-sync>
+    <ha-voice-command-dialog
+      hass='[[hass]]'
+      id='voiceDialog'
+    ></ha-voice-command-dialog>
+    <iron-media-query query="(max-width: 870px)" query-matches="{{narrow}}">
+    </iron-media-query>
+
+    <paper-drawer-panel id='drawer'
+      force-narrow='[[computeForceNarrow(narrow, dockedSidebar)]]'
+      responsive-width='0' disable-swipe='[[isSelectedMap]]'
+      disable-edge-swipe='[[isSelectedMap]]'>
+      <ha-sidebar slot="drawer" narrow='[[narrow]]' hass='[[hass]]'></ha-sidebar>
+
+      <iron-pages
+        slot="main"
+        attr-for-selected='id'
+        fallback-selection='panel-resolver'
+        selected='[[currentPanel]]'
+        selected-attribute='panel-visible'
+      >
+        <partial-cards
+          id='states'
+          narrow='[[narrow]]'
+          hass='[[hass]]'
+          show-menu='[[dockedSidebar]]'
+        ></partial-cards>
+
+        <partial-panel-resolver
+          id='panel-resolver'
+          narrow='[[narrow]]'
+          hass='[[hass]]'
+          show-menu='[[dockedSidebar]]'
+        ></partial-panel-resolver>
+
+      </iron-pages>
+    </paper-drawer-panel>
+
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'home-assistant-main',
+
+  properties: {
+    hass: {
+      type: Object,
+      value: null,
+      observer: 'hassChanged',
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    currentPanel: {
+      type: String,
+    },
+
+    dockedSidebar: {
+      type: Boolean,
+      computed: 'computeDockedSidebar(hass)',
+    },
+  },
+
+  listeners: {
+    'hass-open-menu': 'handleOpenMenu',
+    'hass-close-menu': 'handleCloseMenu',
+    'hass-start-voice': 'handleStartVoice',
+  },
+
+  hassChanged: function (hass) {
+    if (this.currentPanel !== hass.currentPanel) {
+      this.currentPanel = hass.currentPanel;
+
+      if (this.narrow) {
+        this.$.drawer.closeDrawer();
+      }
+    }
+  },
+
+  handleStartVoice: function (ev) {
+    ev.stopPropagation();
+    this.$.voiceDialog.startListening();
+  },
+
+  handleOpenMenu: function () {
+    if (this.narrow) {
+      this.$.drawer.openDrawer();
+    } else {
+      this.fire('hass-dock-sidebar', { dock: true });
+    }
+  },
+
+  handleCloseMenu: function () {
+    this.$.drawer.closeDrawer();
+    if (this.dockedSidebar) {
+      this.fire('hass-dock-sidebar', { dock: false });
+    }
+  },
+
+  attached: function () {
+    window.removeInitMsg();
+  },
+
+  computeForceNarrow: function (narrow, dockedSidebar) {
+    return narrow || !dockedSidebar;
+  },
+
+  computeDockedSidebar: function (hass) {
+    return hass.dockedSidebar;
+  },
+});
+</script>

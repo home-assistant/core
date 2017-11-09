@@ -1,0 +1,105 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+
+<link rel="import" href="../../bower_components/google-apis/google-legacy-loader.html">
+
+<link rel="import" href="./state-history-chart-timeline.html">
+<link rel="import" href="./state-history-chart-line.html">
+
+<dom-module id="state-history-charts">
+  <template>
+    <link href="https://ajax.googleapis.com/ajax/static/modules/gviz/1.0/core/tooltip.css" rel="stylesheet" type="text/css">
+    <style>
+    :host {
+      display: block;
+    }
+
+    .loading-container {
+      text-align: center;
+      padding: 8px;
+    }
+
+    .loading {
+      height: 0px;
+      overflow: hidden;
+    }
+    </style>
+
+    <google-legacy-loader on-api-load="_googleApiLoaded"></google-legacy-loader>
+
+    <template is='dom-if' if='[[_isLoading]]'>
+      <div class='loading-container'>
+        <paper-spinner active alt='Updating history data'></paper-spinner>
+      </div>
+    </template>
+
+    <template is='dom-if' if='[[!_isLoading]]'>
+      <template is='dom-if' if='[[_computeIsEmpty(historyData)]]'>
+        No state history found.
+      </template>
+
+      <state-history-chart-timeline
+        data='[[historyData.timeline]]'>
+      </state-history-chart-timeline>
+
+      <template is='dom-repeat' items='[[historyData.line]]'>
+        <state-history-chart-line
+          unit='[[item.unit]]'
+          data='[[item.data]]'
+          is-single-device='[[_computeIsSingleLineChart(historyData)]]'>
+        </state-history-chart-line>
+      </template>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-history-charts',
+
+  properties: {
+    historyData: {
+      type: Object,
+      value: null,
+    },
+
+    isLoadingData: {
+      type: Boolean,
+      value: true,
+    },
+
+    _apiLoaded: {
+      type: Boolean,
+      value: false,
+    },
+
+    _isLoading: {
+      type: Boolean,
+      computed: '_computeIsLoading(isLoadingData, _apiLoaded)',
+    },
+  },
+
+  _computeIsSingleLineChart: function (historyData) {
+    return historyData && historyData.line.length === 1;
+  },
+
+  _googleApiLoaded: function () {
+    window.google.load('visualization', '1', {
+      packages: ['timeline', 'corechart'],
+      callback: function () {
+        this._apiLoaded = true;
+      }.bind(this),
+    });
+  },
+
+  _computeIsLoading: function (_isLoadingData, _apiLoaded) {
+    return _isLoadingData || !_apiLoaded;
+  },
+
+  _computeIsEmpty: function (historyData) {
+    return (historyData &&
+            historyData.timeline.length === 0 &&
+            historyData.line.length === 0);
+  },
+});
+</script>

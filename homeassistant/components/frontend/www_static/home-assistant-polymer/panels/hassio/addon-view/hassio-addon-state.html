@@ -1,0 +1,143 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../../../src/components/buttons/ha-call-api-button.html">
+
+<dom-module id="hassio-addon-state">
+  <template>
+    <style include="ha-style">
+      :host {
+        display: block;
+      }
+      paper-card {
+        display: block;
+      }
+    </style>
+    <paper-card heading='Installed'>
+      <template is='dom-if' if='[[!addonState]]'>
+        <div class="card-content">
+          <div>Add-on is not installed.</div>
+        </div>
+        <div class="card-actions">
+          <ha-call-api-button
+            hass='[[hass]]'
+            path="[[pathInstall(addon)]]"
+          >Install</ha-call-api-button>
+        </div>
+      </template>
+
+      <template is='dom-if' if='[[addonState]]'>
+        <div class="card-content">
+          <table class='info'>
+            <tr>
+              <td>Version</td>
+              <td>[[addonState.version]]</td>
+            </tr>
+            <tr>
+              <td>State</td>
+              <td>[[addonState.state]]</td>
+            </tr>
+            <tr>
+              <td>Boot</td>
+              <td>[[addonState.boot]]</td>
+            </tr>
+          </table>
+        </div>
+        <div class="card-actions">
+          <template is='dom-if' if='[[!isRunning]]'>
+            <ha-call-api-button
+              hass='[[hass]]'
+              path="[[pathStart(addon)]]"
+            >Start</ha-call-api-button>
+          </template>
+          <template is='dom-if' if='[[isRunning]]'>
+            <ha-call-api-button
+              class='warning'
+              hass='[[hass]]'
+              path="[[pathRestart(addon)]]"
+            >Restart</ha-call-api-button>
+            <ha-call-api-button
+              class='warning'
+              hass='[[hass]]'
+              path="[[pathStop(addon)]]"
+            >Stop</ha-call-api-button>
+          </template>
+          <template is='dom-if' if='[[computeUpdateAvailable(addonState)]]'>
+            <ha-call-api-button
+              hass='[[hass]]'
+              path="[[pathUpdate(addon)]]"
+            >Update</ha-call-api-button>
+          </template>
+          <ha-call-api-button
+            class='warning'
+            hass='[[hass]]'
+            path="[[pathUninstall(addon)]]"
+          >Uninstall</ha-call-api-button>
+        </div>
+      </template>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addon-state',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    addon: {
+      type: String,
+    },
+
+    isRunning: {
+      type: Boolean,
+      computed: 'computeIsRunning(addonState)',
+    },
+
+    addonInfo: {
+      type: Object,
+      value: null,
+    },
+
+    addonState: {
+      type: Object,
+      value: null,
+    },
+  },
+
+  computeIsRunning: function (addonState) {
+    return addonState && addonState.state === 'started';
+  },
+
+  computeUpdateAvailable: function (data) {
+    return data && !data.detached && data.version !== data.last_version;
+  },
+
+  pathStart: function (addon) {
+    return 'hassio/addons/' + addon + '/start';
+  },
+
+  pathStop: function (addon) {
+    return 'hassio/addons/' + addon + '/stop';
+  },
+
+  pathRestart: function (addon) {
+    return 'hassio/addons/' + addon + '/restart';
+  },
+
+  pathInstall: function (addon) {
+    return 'hassio/addons/' + addon + '/install';
+  },
+
+  pathUninstall: function (addon) {
+    return 'hassio/addons/' + addon + '/uninstall';
+  },
+
+  pathUpdate: function (addon) {
+    return 'hassio/addons/' + addon + '/update';
+  },
+});
+</script>
