@@ -114,9 +114,7 @@ class SerialSensor(Entity):
 
     @property
     def state_attributes(self):
-        """Return the attributes of the entity.
-
-           Provide the parsed JSON data (if any).
+        """Return the attributes of the entity (if any JSON present).
         """
 
         return self._attributes
