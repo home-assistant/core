@@ -97,7 +97,7 @@ def setup(hass, config):
     tellcore_devices = tellcore_lib.devices()
 
     # Register devices
-    hass.data[DATA_TELLSTICK] = {device.id: device for 
+    hass.data[DATA_TELLSTICK] = {device.id: device for
                                  device in tellcore_devices}
 
     # Discover the switches
@@ -114,9 +114,9 @@ def setup(hass, config):
     def async_handle_callback(tellcore_id, tellcore_command,
                               tellcore_data, cid):
         """Handle the actual callback from Tellcore."""
-            hass.helpers.dispatcher.async_dispatcher_send(
-                SIGNAL_TELLCORE_CALLBACK, tellcore_id,
-                tellcore_command, tellcore_data)
+        hass.helpers.dispatcher.async_dispatcher_send(
+            SIGNAL_TELLCORE_CALLBACK, tellcore_id,
+            tellcore_command, tellcore_data)
 
     # Register callback
     callback_id = tellcore_lib.register_device_event(
