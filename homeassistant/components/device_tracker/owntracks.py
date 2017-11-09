@@ -369,6 +369,7 @@ def async_handle_transition_message(hass, context, message):
 
 @asyncio.coroutine
 def async_handle_waypoint(hass, name_base, waypoint):
+    """Handle a waypoint."""
     name = waypoint['desc']
     pretty_name = '{} - {}'.format(name_base, name)
     lat = waypoint['lat']
@@ -438,14 +439,16 @@ def async_handle_encrypted_message(hass, context, message):
 @HANDLERS.register('steps')
 @HANDLERS.register('card')
 @asyncio.coroutine
-def async_handle_not_implemented_message(hass, context, message):
+def async_handle_not_impl_msg(hass, context, message):
     """Handle valid but not implemented message types."""
     _LOGGER.debug('Not handling %s message: %s', message.get("_type"), message)
 
 
 @asyncio.coroutine
-def async_handle_unsupported_message(hass, context, message):
-    _LOGGER.warning('Received unsupported message type: %s.', message.get('_type'))
+def async_handle_unsupported_msg(hass, context, message):
+    """Handle an unsupported or invalid message type."""
+    _LOGGER.warning('Received unsupported message type: %s.',
+                    message.get('_type'))
 
 
 @asyncio.coroutine
@@ -453,6 +456,6 @@ def async_handle_message(hass, context, message):
     """Handle an OwnTracks message."""
     msgtype = message.get('_type')
 
-    handler = HANDLERS.get(msgtype, async_handle_unsupported_message)
+    handler = HANDLERS.get(msgtype, async_handle_unsupported_msg)
 
     yield from handler(hass, context, message)

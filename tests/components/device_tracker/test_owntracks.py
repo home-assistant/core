@@ -1154,17 +1154,17 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     def test_not_implemented_message(self):
         """Handle not implemented message type."""
-        patch_handler = patch('homeassistant.components.device_tracker.owntracks.async_handle_not_implemented_message',
+        patch_handler = patch('homeassistant.components.device_tracker.'
+                              'owntracks.async_handle_not_impl_msg',
                               return_value=mock_coro(False))
         patch_handler.start()
         self.assertFalse(self.send_message(LWT_TOPIC, LWT_MESSAGE))
         patch_handler.stop()
 
-    @patch('homeassistant.components.device_tracker.owntracks.async_handle_unsupported_message',
-           raise_on_not_implemented)
-    def test_not_implemented_message(self):
+    def test_unsupported_message(self):
         """Handle not implemented message type."""
-        patch_handler = patch('homeassistant.components.device_tracker.owntracks.async_handle_unsupported_message',
+        patch_handler = patch('homeassistant.components.device_tracker.'
+                              'owntracks.async_handle_unsupported_msg',
                               return_value=mock_coro(False))
         patch_handler.start()
         self.assertFalse(self.send_message(BAD_TOPIC, BAD_MESSAGE))
