@@ -82,7 +82,7 @@ class AdsLight(Light):
         if brightness is not None:
             self._brightness = brightness
 
-        bval = math.floor(self._brightness / 256.0 * 100.0)
+        bval = math.floor(self._brightness)
 
         self._ads_hub.write_by_name(self.varname_enable, True,
                                     self._ads_hub.PLCTYPE_BOOL)
@@ -98,7 +98,7 @@ class AdsLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
             self._brightness = brightness
-        bval = math.floor(self._brightness / 256.0 * 100.0)
+        bval = math.floor(self._brightness)
         self._ads_hub.write_by_name(self.varname_enable, False,
                                     self._ads_hub.PLCTYPE_BOOL)
         if self.varname_brightness is not None:
@@ -108,7 +108,7 @@ class AdsLight(Light):
 
     def value_changed(self, val):
         """Handle value change."""
-        self._brightness = math.floor(val / 100.0 * 256.0)
+        self._brightness = val
         self._on_state = bool(val != 0)
         self.schedule_update_ha_state()
 
