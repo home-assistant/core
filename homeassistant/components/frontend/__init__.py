@@ -34,7 +34,7 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
 JS_DEFAULT_OPTION = 'es5'
-JS_OPTIONS = ['es5', 'es6', 'auto']
+JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
 
@@ -104,7 +104,7 @@ class AbstractPanel:
 
     # Url to the webcomponent (depending on JS version)
     webcomponent_url_es5 = None
-    webcomponent_url_es6 = None
+    webcomponent_url_latest = None
 
     # Url to show the panel in the frontend
     frontend_url_path = None
@@ -143,8 +143,8 @@ class AbstractPanel:
             'icon': self.sidebar_icon,
             'title': self.sidebar_title,
             'url':
-                (self.webcomponent_url_es6 if
-                 _is_es6(hass.data[DATA_JS_VERSION], request) else
+                (self.webcomponent_url_latest if
+                 _is_latest(hass.data[DATA_JS_VERSION], request) else
                  self.webcomponent_url_es5),
             'url_path': self.frontend_url_path,
             'config': self.config,
@@ -174,19 +174,19 @@ class BuiltInPanel(AbstractPanel):
 
         if frontend_repository_path is None:
             import hass_frontend
-            import hass_frontend_es6
+            import hass_frontend_es5
 
-            self.webcomponent_url_es5 = \
+            self.webcomponent_url_latest = \
                 '/static/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
                     hass_frontend.FINGERPRINTS[panel_path])
-            self.webcomponent_url_es6 = \
+            self.webcomponent_url_es5 = \
                 '/static/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
-                    hass_frontend_es6.FINGERPRINTS[panel_path])
+                    hass_frontend_es5.FINGERPRINTS[panel_path])
         else:
             # Dev mode
-            self.webcomponent_url_es5 = self.webcomponent_url_es6 = \
+            self.webcomponent_url_es5 = self.webcomponent_url_latest = \
                 '/home-assistant-polymer/panels/{}/ha-panel-{}.html'.format(
                     self.component_name, self.component_name)
 
@@ -224,12 +224,12 @@ class ExternalPanel(AbstractPanel):
             hass.data[DATA_PANELS].pop(self.frontend_url_path)
             return
 
-        self.webcomponent_url_es5 = self.webcomponent_url_es6 = \
+        self.webcomponent_url_es5 = self.webcomponent_url_latest = \
             URL_PANEL_COMPONENT_FP.format(self.component_name, self.md5)
 
         if self.component_name not in self.REGISTERED_COMPONENTS:
             hass.http.register_static_path(
-                self.webcomponent_url_es5, self.path,
+                self.webcomponent_url_latest, self.path,
                 # if path is None, we're in prod mode, so cache static assets
                 frontend_repository_path is None)
             self.REGISTERED_COMPONENTS.add(self.component_name)
@@ -299,43 +299,42 @@ def async_setup(hass, config):
         hass.http.register_static_path(
             "/static/translations",
             os.path.join(repo_path, "build-translations"), False)
-        sw_path_es5 = os.path.join(repo_path, "build/service_worker.js")
-        sw_path_es6 = os.path.join(repo_path, "build-es6/service_worker.js")
+        sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
+        sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
     else:
         import hass_frontend
-        import hass_frontend_es6
-        sw_path_es5 = os.path.join(hass_frontend.where(), "service_worker.js")
-        sw_path_es6 = os.path.join(hass_frontend_es6.where(),
+        import hass_frontend_es5
+        sw_path_es5 = os.path.join(hass_frontend_es5.where(),
                                    "service_worker.js")
-        # /static points to es5 dir. However all files that differ between the
-        # dirs are registered separately.
+        sw_path_latest = os.path.join(hass_frontend.where(),
+                                      "service_worker.js")
+        # /static points to latest dir. However all files that differ between
+        # the dirs are registered separately.
         static_path = hass_frontend.where()
-        hass.http.register_static_path(
-            '/static/frontend-{}.html'.format(
-                hass_frontend.FINGERPRINTS['frontend.html']),
-            os.path.join(hass_frontend.where(), 'frontend.html'), True)
-        hass.http.register_static_path(
-            '/static/frontend-{}.html'.format(
-                hass_frontend_es6.FINGERPRINTS['frontend.html']),
-            os.path.join(hass_frontend_es6.where(), 'frontend.html'), True)
-        hass.http.register_static_path(
-            '/static/core-{}.js'.format(
-                hass_frontend.FINGERPRINTS['core.js']),
-            os.path.join(hass_frontend.where(), 'core.js'), True)
-        hass.http.register_static_path(
-            '/static/core-{}.js'.format(
-                hass_frontend_es6.FINGERPRINTS['core.js']),
-            os.path.join(hass_frontend_es6.where(), 'core.js'), True)
+        paths = {
+            '/static/frontend-{}.html': 'frontend.html',
+            '/static/core-{}.js': 'core.js',
+        }
+        for url_path, file_path in paths.items():
+            hass.http.register_static_path(
+                url_path.format(
+                    hass_frontend.FINGERPRINTS[file_path]),
+                os.path.join(hass_frontend.where(), file_path), True)
+            hass.http.register_static_path(
+                url_path.format(
+                    hass_frontend_es5.FINGERPRINTS[file_path]),
+                os.path.join(hass_frontend_es5.where(), file_path), True)
+
         hass.http.register_static_path(
             '/static/compatibility-{}.js'.format(
-                hass_frontend.FINGERPRINTS['compatibility.js']),
-            os.path.join(hass_frontend.where(), 'compatibility.js'), True)
+                hass_frontend_es5.FINGERPRINTS['compatibility.js']),
+            os.path.join(hass_frontend_es5.where(), 'compatibility.js'), True)
 
     hass.http.register_static_path(
         "/service_worker_es5.js", sw_path_es5, False)
     hass.http.register_static_path(
-        "/service_worker_es6.js", sw_path_es6, False)
+        "/service_worker.js", sw_path_latest, False)
     hass.http.register_static_path(
         "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
     hass.http.register_static_path("/static", static_path, not is_dev)
@@ -461,20 +460,20 @@ class IndexView(HomeAssistantView):
     def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
-        es6 = _is_es6(self.js_option, request)
+        latest = _is_latest(self.js_option, request)
 
         if self.use_repo:
             core_url = '/home-assistant-polymer/{}/core.js'.format(
-                'build-es6' if es6 else 'build')
+                'build' if latest else 'build-es5')
             compatibility_url = None
             ui_url = '/home-assistant-polymer/src/home-assistant.html'
             icons_fp = ''
             icons_url = '/static/mdi.html'
         else:
-            hass_frontend_versioned = _get_frontend_package(es6)
+            hass_frontend_versioned = _get_frontend_package(latest)
             core_url = '/static/core-{}.js'.format(
                 hass_frontend_versioned.FINGERPRINTS['core.js'])
-            compatibility_url = None if es6 else \
+            compatibility_url = None if latest else \
                 '/static/compatibility-{}.js'.format(
                     hass_frontend_versioned.FINGERPRINTS['compatibility.js'])
             ui_url = '/static/frontend-{}.html'.format(
@@ -491,8 +490,9 @@ class IndexView(HomeAssistantView):
         if panel == 'states':
             panel_url = ''
         else:
-            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es6 if \
-                es6 else hass.data[DATA_PANELS][panel].webcomponent_url_es5
+            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_latest \
+                if latest else \
+                hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = 'true'
         if hass.config.api.api_password and not is_trusted_ip(request):
@@ -513,8 +513,8 @@ class IndexView(HomeAssistantView):
             dev_mode=self.use_repo,
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[DATA_EXTRA_HTML_URL],
-            es6=es6,
-            service_worker_name='/service_worker_es6.js' if es6 else
+            latest=latest,
+            service_worker_name='/service_worker.js' if latest else
             '/service_worker_es5.js')
 
         return web.Response(text=resp, content_type='text/html')
@@ -558,26 +558,25 @@ def _fingerprint(path):
         return hashlib.md5(fil.read().encode('utf-8')).hexdigest()
 
 
-def _is_es6(js_option, request):
+def _is_latest(js_option, request):
     """
-    Return whether we should serve es6 code.
+    Return whether we should serve latest untranspiled code.
 
     Set according to user's preference and URL override.
     """
-    es6_in_query = 'es6' in request.query or (
+    latest_in_query = 'latest' in request.query or (
         request.headers.get('Referer') and
-        'es6' in urlparse(request.headers['Referer']).query)
+        'latest' in urlparse(request.headers['Referer']).query)
     es5_in_query = 'es5' in request.query or (
         request.headers.get('Referer') and
         'es5' in urlparse(request.headers['Referer']).query)
-    es6 = es6_in_query or (not es5_in_query and js_option == 'es6')
-    return es6
+    return latest_in_query or (not es5_in_query and js_option == 'latest')
 
 
-def _get_frontend_package(es6):
+def _get_frontend_package(latest):
     """Return either the transpiled or not transpiled version of frontend."""
-    if es6:
-        import hass_frontend_es6
-        return hass_frontend_es6
-    import hass_frontend
-    return hass_frontend
+    if latest:
+        import hass_frontend
+        return hass_frontend
+    import hass_frontend_es5
+    return hass_frontend_es5

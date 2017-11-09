@@ -80,7 +80,7 @@
     </div>
     <home-assistant></home-assistant>
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> -#}
-    {% if not es6 -%}
+    {% if not latest -%}
     <script>
       var compatibilityRequired = (typeof Object.assign != 'function');
       if (compatibilityRequired) {
@@ -92,7 +92,7 @@
     </script>
     {% endif -%}
     <script src='{{ core_url }}'></script>
-    {% if not dev_mode and not es6 -%}
+    {% if not dev_mode and not latest -%}
     <script src='/static/custom-elements-es5-adapter.js'></script>
     {% endif -%}
     <script>
