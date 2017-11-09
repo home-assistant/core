@@ -4,11 +4,13 @@ Support for Tahoma devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tahoma/
 """
+from collections import defaultdict
 import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import (slugify)
@@ -31,6 +33,9 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+TAHOMA_COMPONENTS = [
+    'sensor', 'cover'
+]
 
 def setup(hass, config):
     """Activate Tahoma component."""
@@ -42,7 +47,6 @@ def setup(hass, config):
     exclude = conf.get(CONF_EXCLUDE)
     try:
         api = TahomaApi(username, password)
-        hass.data['TAHOMA_CONTROLLER'] = api
     except HomeAssistantError:
         _LOGGER.exception("Error communicating with Tahoma API")
         return False
@@ -54,8 +58,10 @@ def setup(hass, config):
         _LOGGER.exception("Cannot fetch informations from Tahoma API")
         return False
 
-    hass.data['tahomacover'] = []
-    hass.data['tahomasensor'] = []
+    hass.data[DOMAIN] = {
+        'controller': api,
+        'devices': defaultdict(list)
+    }
 
     for device in devices:
         _device = api.get_device(device)
@@ -63,7 +69,10 @@ def setup(hass, config):
             device_type = map_tahoma_device(_device)
             if device_type is None:
                 continue
-            hass.data[device_type].append(_device)
+            hass.data[DOMAIN]['devices'][device_type].append(_device)
+
+    for component in TAHOMA_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
@@ -71,9 +80,9 @@ def setup(hass, config):
 def map_tahoma_device(tahoma_device):
     """Map tahoma classes to Home Assistant types."""
     if tahoma_device.type.lower().find("shutter") != -1:
-        return 'tahomacover'
+        return 'cover'
     elif tahoma_device.type == 'io:LightIOSystemSensor':
-        return 'tahomasensor'
+        return 'sensor'
     return None
 
 
@@ -86,9 +95,14 @@ class TahomaDevice(Entity):
         self.controller = controller
         # Append device id to prevent name clashes in HA.
         # self.tahoma_id = tahoma_device.url
-        self.tahoma_id = TAHOMA_ID_FORMAT.format(
+        self._unique_id = TAHOMA_ID_FORMAT.format(
             slugify(tahoma_device.label), slugify(tahoma_device.url))
         self._name = self.tahoma_device.label
+
+    @property
+    def unique_id(self):
+        """Return the unique ID for this cover."""
+        return self._unique_id
 
     @property
     def name(self):

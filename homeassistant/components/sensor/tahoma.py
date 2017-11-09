@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.tahoma import (TahomaDevice)
+from homeassistant.components.tahoma import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 DEPENDENCIES = ['tahoma']
 
@@ -21,9 +21,11 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma controller devices."""
-    add_devices(
-        TahomaSensor(device, hass.data['TAHOMA_CONTROLLER'])
-        for device in hass.data['tahomasensor'])
+    controller = hass.data[TAHOMA_DOMAIN]['controller']
+    devices = []
+    for device in hass.data[TAHOMA_DOMAIN]['devices']['sensor']:
+        devices.append(TahomaSensor(device, controller))
+    add_devices(devices, True)
 
 
 class TahomaSensor(TahomaDevice, Entity):
@@ -35,7 +37,7 @@ class TahomaSensor(TahomaDevice, Entity):
         self._temperature_units = None
         self.last_changed_time = None
         TahomaDevice.__init__(self, tahoma_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tahoma_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
 
     @property
     def state(self):

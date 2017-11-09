@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.tahoma/
 import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
-from homeassistant.components.tahoma import (TahomaDevice)
+from homeassistant.components.tahoma import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 DEPENDENCIES = ['tahoma']
 
@@ -16,9 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma covers."""
-    add_devices(
-        TahomaCover(device, hass.data['TAHOMA_CONTROLLER']) for
-        device in hass.data['tahomacover'])
+    controller = hass.data[TAHOMA_DOMAIN]['controller']
+    devices = []
+    for device in hass.data[TAHOMA_DOMAIN]['devices']['cover']:
+        devices.append(TahomaCover(device, controller))
+    add_devices(devices, True)
 
 
 class TahomaCover(TahomaDevice, CoverDevice):
@@ -27,13 +29,13 @@ class TahomaCover(TahomaDevice, CoverDevice):
     def __init__(self, tahoma_device, controller):
         """Initialize the Tahoma device."""
         TahomaDevice.__init__(self, tahoma_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tahoma_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
 
     def update(self):
         """Update method."""
         self.controller.get_states([self.tahoma_device])
         self.schedule_update_ha_state()
-
+    
     @property
     def current_cover_position(self):
         """
