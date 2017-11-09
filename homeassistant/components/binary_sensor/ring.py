@@ -27,7 +27,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
-    'ding': ['Ding', ['doorbell', 'stickup_cams'], 'occupancy'],
+    'ding': ['Ding', ['doorbell'], 'occupancy'],
     'motion': ['Motion', ['doorbell', 'stickup_cams'], 'motion'],
 }
 
