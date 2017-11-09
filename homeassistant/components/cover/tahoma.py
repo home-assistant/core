@@ -7,7 +7,8 @@ https://home-assistant.io/components/cover.tahoma/
 import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
-from homeassistant.components.tahoma import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
+from homeassistant.components.tahoma import (
+    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 
 DEPENDENCIES = ['tahoma']
 
@@ -35,7 +36,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
         """Update method."""
         self.controller.get_states([self.tahoma_device])
         self.schedule_update_ha_state()
-    
+
     @property
     def current_cover_position(self):
         """

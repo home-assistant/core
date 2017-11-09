@@ -37,6 +37,7 @@ TAHOMA_COMPONENTS = [
     'sensor', 'cover'
 ]
 
+
 def setup(hass, config):
     """Activate Tahoma component."""
     from tahoma_api import TahomaApi
