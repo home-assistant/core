@@ -193,7 +193,7 @@ def setup(hass, config):
 
     if dummy_connection:
         hass.data[RFXOBJECT] =\
-            rfxtrxmod.Connect(device, handle_receive, debug=debug, 
+            rfxtrxmod.Connect(device, handle_receive, debug=debug,
                               transport_protocol=rfxtrxmod.DummyTransport2)
     else:
         hass.data[RFXOBJECT] = rfxtrxmod.Connect(
@@ -406,7 +406,7 @@ class RfxtrxDevice(Entity):
     def _received_command(event):
         """Apply command from rfxtrx."""
         # Check if entity exists or previously added automatically
-        if slugify(event.device.id_string.lower() != self._device_id:
+        if slugify(event.device.id_string.lower()) != self._device_id:
             return
 
         if event.values['Command'] == 'On'\
