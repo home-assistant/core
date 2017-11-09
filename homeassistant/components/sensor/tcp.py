@@ -127,13 +127,12 @@ class TcpSensor(Entity):
 
         if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
-                self._state = self._config[CONF_VALUE_TEMPLATE].render(
-                    value=value)
-                return
+                self._state = self._config[CONF_VALUE_TEMPLATE].\
+                    render_with_possible_json_value(value)
             except TemplateError as err:
                 _LOGGER.error(
                     "Unable to render template of %r with value: %r",
                     self._config[CONF_VALUE_TEMPLATE], value)
-                return
+            return
 
         self._state = value
