@@ -4,6 +4,7 @@ Support for RESTful API sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
+import json
 import logging
 import voluptuous as vol
 import requests
@@ -78,6 +79,7 @@ class RestSensor(Entity):
         self._hass = hass
         self.rest = rest
         self._name = name
+        self._attributes = []
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
@@ -102,6 +104,11 @@ class RestSensor(Entity):
         """Return the state of the device."""
         return self._state
 
+    @property
+    def state_attributes(self):
+        """Return the attributes of the entity."""
+        return self._attributes
+
     def update(self):
         """Get the latest data from REST API and update the state."""
         self.rest.update()
@@ -118,6 +125,12 @@ class RestSensor(Entity):
             value = value[0:255]    
 
         self._state = value
+
+        """ Try parsing the return text as JSON and save the json items as an attributes. """
+        try:
+            self._attributes = json.loads(value)
+        except json.JSONDecodeError:
+            self._attributes = []  
 
 
 class RestData(object):
