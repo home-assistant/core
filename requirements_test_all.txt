@@ -34,7 +34,7 @@ aioautomatic==0.6.4
 aiohttp_cors==0.5.3
 
 # homeassistant.components.notify.apns
-apns2==0.1.1
+apns2==0.3.0
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==4.1.1
