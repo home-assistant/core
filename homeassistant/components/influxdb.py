@@ -81,6 +81,7 @@ RE_DECIMAL = re.compile(r'[^\d.]+')
 def setup(hass, config):
     """Set up the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
+    import requests.exceptions
 
     conf = config[DOMAIN]
 
@@ -123,10 +124,12 @@ def setup(hass, config):
     try:
         influx = InfluxDBClient(**kwargs)
         influx.query("SHOW SERIES LIMIT 1;", database=conf[CONF_DB_NAME])
-    except exceptions.InfluxDBClientError as exc:
+    except (exceptions.InfluxDBClientError,
+            requests.exceptions.ConnectionError) as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
-                      "check your entries in the configuration file and that "
-                      "the database exists and is READ/WRITE.", exc)
+                      "check your entries in the configuration file (host, "
+                      "port, etc.) and verify that the database exists and is "
+                      "READ/WRITE.", exc)
         return False
 
     def influx_event_listener(event):
