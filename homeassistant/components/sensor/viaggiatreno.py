@@ -3,10 +3,6 @@ Support for information about the Italian train system using ViaggiaTreno API.
 
 For more details about this platform please refer to the documentation at
 https://home-assistant.io/components/sensor.viaggiatreno
-
-TODO: Resolve station name to station id using API
-TODO: Resolve station name from train id (potential errors warning)
-TODO: Entity state should always be numerical (delay)?
 """
 import logging
 import asyncio
@@ -19,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +25,17 @@ VIAGGIATRENO_ENDPOINT = ("http://www.viaggiatreno.it/viaggiatrenonew/"
 
 REQUEST_TIMEOUT = 5  # seconds
 ICON = 'mdi:train'
-MONITORED_INFO = ['numeroTreno', 'origine',
-                  'destinazione', 'categoria',
-                  'orarioPartenza', 'orarioArrivo',
-                  'subTitle', 'compOrarioPartenzaZeroEffettivo',
-                  'compOrarioArrivoZeroEffettivo']
+MONITORED_INFO = [
+    'numeroTreno',
+    'origine',
+    'destinazione',
+    'categoria',
+    'orarioPartenza',
+    'orarioArrivo',
+    'subTitle',
+    'compOrarioPartenzaZeroEffettivo',
+    'compOrarioArrivoZeroEffettivo'
+    ]
 
 DEFAULT_NAME = 'Train {}'
 
@@ -70,7 +71,7 @@ def async_setup_platform(hass, config,
 def async_http_request(hass, uri):
     """Perform actual request."""
     try:
-        session = async_get_clientsession(hass)
+        session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             req = yield from session.get(uri)
         if req.status != 200:
@@ -79,37 +80,9 @@ def async_http_request(hass, uri):
             json_response = yield from req.json()
             return json_response
     except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
-        _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s",
-                      str(exc))
+        _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s", exc)
     except ValueError:
         _LOGGER.error("Received non-JSON data from ViaggiaTreno API endpoint")
-
-
-def has_departed(data):
-    """Check if the train has actually departed."""
-    try:
-        first_station = data['fermate'][0]
-        if not data['oraUltimoRilevamento'] and not first_station['effettiva']:
-            return False
-    except ValueError:
-        _LOGGER.error('Cannot fetch first station: %s',
-                      str(data))
-    return True
-
-
-def has_arrived(data):
-    """Check if the train has already arrived."""
-    last_station = data["fermate"][-1]
-    if not last_station["effettiva"]:
-        return False
-    return True
-
-
-def is_cancelled(data):
-    """Check if the train is cancelled."""
-    if data['tipoTreno'] == 'ST' and data['provvedimento'] == 1:
-        return True
-    return False
 
 
 class ViaggiaTrenoSensor(Entity):
@@ -159,6 +132,32 @@ class ViaggiaTrenoSensor(Entity):
         self._attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return self._attributes
 
+    @staticmethod
+    def has_departed(data):
+        """Check if the train has actually departed."""
+        try:
+            first_station = data['fermate'][0]
+            if data['oraUltimoRilevamento'] or first_station['effettiva']:
+                return True
+        except ValueError:
+            _LOGGER.error('Cannot fetch first station: %s', data)
+        return False
+
+    @staticmethod
+    def has_arrived(data):
+        """Check if the train has already arrived."""
+        last_station = data["fermate"][-1]
+        if not last_station["effettiva"]:
+            return False
+        return True
+
+    @staticmethod
+    def is_cancelled(data):
+        """Check if the train is cancelled."""
+        if data['tipoTreno'] == 'ST' and data['provvedimento'] == 1:
+            return True
+        return False
+
     @asyncio.coroutine
     def async_update(self):
         """Update state."""
@@ -175,16 +174,17 @@ class ViaggiaTrenoSensor(Entity):
             for i in MONITORED_INFO:
                 self._attributes[i] = res[i]
 
-            if is_cancelled(res):
+            if self.is_cancelled(res):
                 self._state = CANCELLED_STRING
                 self._icon = 'mdi:cancel'
                 self._unit = ''
-            elif not has_departed(res):
+            elif not self.has_departed(res):
                 self._state = NOT_DEPARTED_STRING
                 self._unit = ''
-            elif has_arrived(res):
+            elif self.has_arrived(res):
                 self._state = ARRIVED_STRING
                 self._unit = ''
             else:
                 self._state = res.get('ritardo', '0')
                 self._unit = 'min'
+                self._icon = ICON
