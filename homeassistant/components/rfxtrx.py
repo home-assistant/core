@@ -4,8 +4,6 @@ Support for RFXtrx components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
-
-import asyncio
 import logging
 from collections import OrderedDict
 import voluptuous as vol
@@ -56,32 +54,12 @@ DATA_TYPES = OrderedDict([
     ('UV', 'uv')])
 
 KNOWN_RECVMODES = [
-    "ac",
-    "adlightwave",
-    "aeblyss",
-    "arc",
-    "ati",
-    "blindst0",
-    "blindst1234",
-    "byronsx",
-    "fineoffset",
-    "fs20",
-    "hideki",
-    "homeconfort",
-    "homeeasy",
-    "imagintronix",
-    "keeloq",
-    "lacrosse",
-    "lighting4",
-    "meiantech",
-    "mertik",
-    "oregon",
-    "proguard",
-    "rsl",
-    "rubicson",
-    "undecoded",
-    "visonic",
-    "x10"
+    "ac", "adlightwave", "aeblyss", "arc", "ati",
+    "blindst0", "blindst1234", "byronsx", "fineoffset",
+    "fs20", "hideki", "homeconfort", "homeeasy",
+    "imagintronix", "keeloq", "lacrosse", "lighting4",
+    "meiantech", "mertik", "oregon", "proguard", "rsl",
+    "rubicson", "undecoded", "visonic", "x10"
 ]
 
 
@@ -140,14 +118,6 @@ def _valid_light_switch(value):
     return _valid_device(value, "light_switch")
 
 
-def valid_recvmode(value):
-    """Test if a recv_mode value is known by pyRFXTRX."""
-    if value in KNOWN_RECVMODES:
-        return value
-
-    raise vol.Invalid('Recv_mode "{}" is unknown to RFXTRX.'.format(value))
-
-
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
@@ -185,7 +155,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
         vol.Optional(ATTR_RECV_MODES, default=None):
-            vol.All(vol.All(cv.ensure_list, [valid_recvmode]),
+            vol.All(vol.All(cv.ensure_list, [vol.In(KNOWN_RECVMODES)]),
                     vol.Length(min=1))
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -422,14 +392,6 @@ def apply_received_command(event):
                 ATTR_STATE: event.values['Command'].lower()
             }
         )
-        _LOGGER.info(
-            "Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
-            EVENT_BUTTON_PRESSED,
-            ATTR_ENTITY_ID,
-            RFX_DEVICES[device_id].entity_id,
-            ATTR_STATE,
-            event.values['Command'].lower()
-        )
 
 
 class RfxtrxDevice(Entity):
@@ -446,12 +408,6 @@ class RfxtrxDevice(Entity):
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
         self._brightness = 0
-        self.added_to_hass = False
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Subscribe RFXtrx events."""
-        self.added_to_hass = True
 
     @property
     def should_poll(self):
@@ -486,8 +442,7 @@ class RfxtrxDevice(Entity):
         """Update det state of the device."""
         self._state = state
         self._brightness = brightness
-        if self.added_to_hass:
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     def _send_command(self, command, brightness=0):
         if not self._event:
@@ -527,5 +482,4 @@ class RfxtrxDevice(Entity):
                 self._event.device.send_stop(self.hass.data[RFXOBJECT]
                                              .transport)
 
-        if self.added_to_hass:
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
