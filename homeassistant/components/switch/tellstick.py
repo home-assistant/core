@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     signal_repetitions = discovery_info.get(ATTR_DISCOVER_CONFIG,
                                             DEFAULT_SIGNAL_REPETITIONS)
 
-    add_devices([TellstickSwitch(tellcore_id, hass.data[DATA_TELLSTICK],
+    add_devices([TellstickSwitch(hass.data[DATA_TELLSTICK][tellcore_id],
                                  signal_repetitions)
                  for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]],
                 True)
