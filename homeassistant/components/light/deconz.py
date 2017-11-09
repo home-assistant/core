@@ -24,11 +24,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         lights = hass.data[DATA_DECONZ].lights
         groups = hass.data[DATA_DECONZ].groups
 
-    for light_id, light in lights.items():
-        async_add_devices([DeconzLight(light_id, light)], True)
+    for _, light in lights.items():
+        async_add_devices([DeconzLight(light)], True)
 
-    for group_id, group in groups.items():
-        async_add_devices([DeconzLight(group_id, group)], True)
+    for _, group in groups.items():
+        if group.lights:
+            async_add_devices([DeconzLight(group)], True)
 
 
 class DeconzLight(Light):
@@ -37,11 +38,10 @@ class DeconzLight(Light):
     Only supports dimmable lights at the moment.
     """
 
-    def __init__(self, light_id, light):
+    def __init__(self, light):
         """Setup light and add update callback to get data from websocket."""
         self._state = light.state
         self._brightness = light.brightness
-        self._light_id = light_id
         self._light = light
         self._light.register_callback(self._update_callback)
 
@@ -80,22 +80,16 @@ class DeconzLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn on light."""
-        field = '/lights/' + self._light_id + '/state'
-        if self._light.type == 'LightGroup':
-            field = '/groups/' + self._light_id + '/action'
         data = {'on': True}
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
-        yield from self._light.set_state(field, data)
+        yield from self._light.set_state(data)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn off light."""
-        field = '/lights/' + self._light_id + '/state'
-        if self._light.type == 'LightGroup':
-            field = '/groups/' + self._light_id + '/action'
         data = {'on': False}
-        yield from self._light.set_state(field, data)
+        yield from self._light.set_state(data)
 
     @property
     def device_state_attributes(self):

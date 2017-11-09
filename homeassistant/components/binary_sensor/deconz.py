@@ -23,18 +23,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if DATA_DECONZ in hass.data:
         sensors = hass.data[DATA_DECONZ].sensors
 
-    for sensor_id, sensor in sensors.items():
+    for _, sensor in sensors.items():
         if sensor.type in DECONZ_BINARY_SENSOR:
-            async_add_devices([DeconzBinarySensor(sensor_id, sensor)], True)
+            async_add_devices([DeconzBinarySensor(sensor)], True)
 
 
 class DeconzBinarySensor(BinarySensorDevice):
     """Representation of a binary sensor."""
 
-    def __init__(self, sensor_id, sensor):
+    def __init__(self, sensor):
         """Setup sensor and add update callback to get data from websocket."""
         self._state = None
-        self._sensor_id = sensor_id
         self._sensor = sensor
         self._sensor.register_callback(self._update_callback)
 
