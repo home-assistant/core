@@ -22,6 +22,8 @@ REQUIREMENTS = ['pyRFXtrx==0.21.1']
 
 DOMAIN = 'rfxtrx'
 
+SIGNAL_RFXTRX_EVENT = 'tfxtrx_event'
+
 DEFAULT_SIGNAL_REPETITIONS = 1
 
 ATTR_AUTOMATIC_ADD = 'automatic_add'
@@ -63,8 +65,6 @@ KNOWN_RECVMODES = [
 ]
 
 
-RECEIVED_EVT_SUBSCRIBERS = []
-RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = 'rfxobject'
 
@@ -177,8 +177,8 @@ def setup(hass, config):
                       "".join("{0:02x}".format(x) for x in event.data))
 
         # Callback to HA registered components.
-        for subscriber in RECEIVED_EVT_SUBSCRIBERS:
-            subscriber(event)
+        hass.helpers.dispatcher.dispatch_send(
+            SIGNAL_RFXTRX_EVENT, event)
 
     # Try to load the RFXtrx module.
     import RFXtrx as rfxtrxmod
@@ -193,19 +193,16 @@ def setup(hass, config):
 
     if dummy_connection:
         hass.data[RFXOBJECT] =\
-            rfxtrxmod.Connect(device, None, debug=debug,
+            rfxtrxmod.Connect(device, handle_receive, debug=debug, 
                               transport_protocol=rfxtrxmod.DummyTransport2)
     else:
-        hass.data[RFXOBJECT] = rfxtrxmod.Connect(device, None, debug=debug,
-                                                 modes=recv_modes)
-
-    def _start_rfxtrx(event):
-        hass.data[RFXOBJECT].event_callback = handle_receive
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
+        hass.data[RFXOBJECT] = rfxtrxmod.Connect(
+            device, handle_receive, debug=debug, modes=recv_modes)
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
         hass.data[RFXOBJECT].close_connection()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     return True
@@ -315,26 +312,20 @@ def get_devices_from_config(config, device):
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         device_id = slugify(event.device.id_string.lower())
-        if device_id in RFX_DEVICES:
-            continue
-        _LOGGER.info("Add %s rfxtrx", entity_info[ATTR_NAME])
 
         # Check if i must fire event
         fire_event = entity_info[ATTR_FIREEVENT]
         datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
 
-        new_device = device(entity_info[ATTR_NAME], event, datas,
-                            signal_repetitions)
-        RFX_DEVICES[device_id] = new_device
-        devices.append(new_device)
+        devices.append(device(
+            entity_info[ATTR_NAME], device_id, event, datas, signal_repetitions))
+
     return devices
 
 
 def get_new_device(event, config, device):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
-    if device_id in RFX_DEVICES:
-        return
 
     if not config[ATTR_AUTOMATIC_ADD]:
         return
@@ -349,49 +340,10 @@ def get_new_device(event, config, device):
     )
     datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
-    new_device = device(pkt_id, event, datas,
-                        signal_repetitions)
-    RFX_DEVICES[device_id] = new_device
+    new_device = device(
+        pkt_id, device_id, event, datas, signal_repetitions)
+
     return new_device
-
-
-def apply_received_command(event):
-    """Apply command from rfxtrx."""
-    device_id = slugify(event.device.id_string.lower())
-    # Check if entity exists or previously added automatically
-    if device_id not in RFX_DEVICES:
-        return
-
-    _LOGGER.debug(
-        "Device_id: %s device_update. Command: %s",
-        device_id,
-        event.values['Command']
-    )
-
-    if event.values['Command'] == 'On'\
-            or event.values['Command'] == 'Off':
-
-        # Update the rfxtrx device state
-        is_on = event.values['Command'] == 'On'
-        RFX_DEVICES[device_id].update_state(is_on)
-
-    elif hasattr(RFX_DEVICES[device_id], 'brightness')\
-            and event.values['Command'] == 'Set level':
-        _brightness = (event.values['Dim level'] * 255 // 100)
-
-        # Update the rfxtrx device state
-        is_on = _brightness > 0
-        RFX_DEVICES[device_id].update_state(is_on, _brightness)
-
-    # Fire event
-    if RFX_DEVICES[device_id].should_fire_event:
-        RFX_DEVICES[device_id].hass.bus.fire(
-            EVENT_BUTTON_PRESSED, {
-                ATTR_ENTITY_ID:
-                    RFX_DEVICES[device_id].entity_id,
-                ATTR_STATE: event.values['Command'].lower()
-            }
-        )
 
 
 class RfxtrxDevice(Entity):
@@ -400,7 +352,7 @@ class RfxtrxDevice(Entity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, name, event, datas, signal_repetitions):
+    def __init__(self, name, device_id, event, datas, signal_repetitions):
         """Initialize the device."""
         self.signal_repetitions = signal_repetitions
         self._name = name
@@ -408,6 +360,13 @@ class RfxtrxDevice(Entity):
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
         self._brightness = 0
+        self._device_id = device_id
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Attach to callbacks."""
+        self.hass.helpers.dispatcher.async_dispatch_connect(
+            SIGNAL_RFXTRX_EVENT, self._receive_command)
 
     @property
     def should_poll(self):
@@ -443,6 +402,36 @@ class RfxtrxDevice(Entity):
         self._state = state
         self._brightness = brightness
         self.schedule_update_ha_state()
+    
+    def _received_command(event):
+        """Apply command from rfxtrx."""
+        # Check if entity exists or previously added automatically
+        if slugify(event.device.id_string.lower() != self._device_id:
+            return
+
+        if event.values['Command'] == 'On'\
+                or event.values['Command'] == 'Off':
+
+            # Update the rfxtrx device state
+            is_on = event.values['Command'] == 'On'
+            self.update_state(is_on)
+
+        elif hasattr(self, 'brightness')\
+                and event.values['Command'] == 'Set level':
+            _brightness = (event.values['Dim level'] * 255 // 100)
+
+            # Update the rfxtrx device state
+            is_on = _brightness > 0
+            self.update_state(is_on, _brightness)
+
+        # Fire event
+        if self.should_fire_event:
+            self.hass.bus.fire(
+                EVENT_BUTTON_PRESSED, {
+                    ATTR_ENTITY_ID: self.entity_id,
+                    ATTR_STATE: event.values['Command'].lower()
+                }
+            )
 
     def _send_command(self, command, brightness=0):
         if not self._event:
