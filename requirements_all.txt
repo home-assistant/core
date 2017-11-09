@@ -816,7 +816,7 @@ python-etherscan-api==0.0.1
 python-forecastio==1.3.5
 
 # homeassistant.components.gc100
-python-gc100==1.0.1a
+python-gc100==1.0.3a
 
 # homeassistant.components.sensor.hp_ilo
 python-hpilo==3.9
