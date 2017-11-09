@@ -4,6 +4,7 @@ Support for RFXtrx components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
+import asyncio
 import logging
 from collections import OrderedDict
 import voluptuous as vol
