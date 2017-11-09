@@ -1,5 +1,5 @@
 """
-Support for Tile® Bluetooth trackers
+Support for Tile® Bluetooth trackers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tile/
@@ -53,7 +53,7 @@ class TileDeviceScanner(DeviceScanner):
 
     def __init__(self, hass, config, see):
         """Initialize."""
-        from pytile import Client as TileAPI
+        from pytile import Client
 
         _LOGGER.debug('Received configuration data: %s', config)
 
@@ -61,13 +61,13 @@ class TileDeviceScanner(DeviceScanner):
         config_data = load_json(hass.config.path(CLIENT_UUID_CONFIG_FILE))
         if config_data:
             _LOGGER.debug('Using existing client UUID')
-            self._client = TileAPI(
+            self._client = Client(
                 config[CONF_EMAIL],
                 config[CONF_PASSWORD],
                 config_data['client_uuid'])
         else:
             _LOGGER.debug('Generating new client UUID')
-            self._client = TileAPI(
+            self._client = Client(
                 config[CONF_EMAIL],
                 config[CONF_PASSWORD])
 
@@ -87,6 +87,8 @@ class TileDeviceScanner(DeviceScanner):
 
         track_utc_time_change(
             self.hass, self._update_info, second=range(0, 60, 30))
+
+        self._update_info()
 
     def _update_info(self, now=None) -> None:
         """Update the device info."""
