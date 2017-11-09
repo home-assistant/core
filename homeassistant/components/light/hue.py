@@ -83,7 +83,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
-GROUP_NAME_ALL_HUE_LIGHTS = "All Hue Lights"
+GROUP_NAME_ALL_HUE_LIGHTS_SUFFIX = " All Lights"
 
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
@@ -170,6 +170,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     lights = {}
     lightgroups = {}
     skip_groups = not allow_hue_groups
+    bridge_name = bridge.name
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_lights():
@@ -216,7 +217,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
                 return
             # Hue hub returns name of group 0 as "Group 0", so rename
             # for ease of use in HA.
-            all_lights['name'] = GROUP_NAME_ALL_HUE_LIGHTS
+            all_lights['name'] = bridge_name + GROUP_NAME_ALL_HUE_LIGHTS_SUFFIX
             api_groups["0"] = all_lights
 
         new_lights = []
