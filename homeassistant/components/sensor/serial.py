@@ -84,11 +84,10 @@ class SerialSensor(Entity):
 
             try:
                 data = json.loads(line)
-            except json.JSONDecodeError:
-                _LOGGER.error("Invalid JSON data received: %s", data)
-
-            if isinstance(data, dict):
-                self._attributes = data
+                if isinstance(data, dict):
+                    self._attributes = data
+            except:
+                pass
 
             if self._template is not None:
                 line = self._template.async_render_with_possible_json_value(
