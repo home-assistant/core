@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
 import logging
-
 import voluptuous as vol
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -113,6 +112,10 @@ class RestSensor(Entity):
         elif self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(
                 value, STATE_UNKNOWN)
+
+        # Limit the length of the state to less than 255 characters, otherwise HA > 0.57 complains.
+        if len(value) >= 255:
+            value = value[0:255]    
 
         self._state = value
 
