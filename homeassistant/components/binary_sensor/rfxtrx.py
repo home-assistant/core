@@ -5,9 +5,10 @@ Lighting4 devices (sensors based on PT2262 encoder) are supported and
 tested. Other types may need some work.
 
 """
-
 import logging
+
 import voluptuous as vol
+
 from homeassistant.const import CONF_NAME
 from homeassistant.components import rfxtrx
 from homeassistant.util import slugify
