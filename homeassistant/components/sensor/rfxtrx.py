@@ -10,8 +10,7 @@ import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_PLATFORM, ATTR_ENTITY_ID, CONF_NAME)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.sensor import PLATFORM_SCHEMA
