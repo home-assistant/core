@@ -40,6 +40,9 @@ CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
 CONF_FIREEVENT = 'fire_event'
 CONF_DATA_BITS = 'data_bits'
+CONF_DUMMY = 'dummy'
+CONF_DEVICE = 'device'
+CONF_DEBUG = 'debug'
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
@@ -63,73 +66,11 @@ _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = 'rfxobject'
 
 
-def _valid_device(value, device_type):
-    """Validate a dictionary of devices definitions."""
-    config = OrderedDict()
-    for key, device in value.items():
-
-        # Still accept old configuration
-        if 'packetid' in device.keys():
-            msg = 'You are using an outdated configuration of the rfxtrx ' +\
-                  'device, {}.'.format(key) +\
-                  ' Your new config should be:\n    {}: \n        name: {}'\
-                  .format(device.get('packetid'),
-                          device.get(ATTR_NAME, 'deivce_name'))
-            _LOGGER.warning(msg)
-            key = device.get('packetid')
-            device.pop('packetid')
-
-        key = str(key)
-        if not len(key) % 2 == 0:
-            key = '0' + key
-
-        if device_type == 'sensor':
-            config[key] = DEVICE_SCHEMA_SENSOR(device)
-        elif device_type == 'binary_sensor':
-            config[key] = DEVICE_SCHEMA_BINARYSENSOR(device)
-        elif device_type == 'light_switch':
-            config[key] = DEVICE_SCHEMA(device)
-        else:
-            raise vol.Invalid('Rfxtrx device is invalid')
-
-        if not config[key][ATTR_NAME]:
-            config[key][ATTR_NAME] = key
-    return config
-
-
-def valid_sensor(value):
-    """Validate sensor configuration."""
-    return _valid_device(value, "sensor")
-
-
-def _valid_light_switch(value):
-    return _valid_device(value, "light_switch")
-
-
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NAME): cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
-})
-
-DEVICE_SCHEMA_SENSOR = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
-    vol.Optional(ATTR_DATA_TYPE, default=[]):
-        vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
-})
-
-DEFAULT_SCHEMA = vol.Schema({
-    vol.Optional(CONF_DEVICES, default={}): vol.All(dict, _valid_light_switch),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
-    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
-        vol.Coerce(int),
-})
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(ATTR_DEVICE): cv.string,
-        vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
-        vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
+        vol.Required(CONF_DEVICE): cv.string,
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DUMMY, default=False): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
