@@ -67,7 +67,7 @@ KNOWN_RECVMODES = [
 
 
 _LOGGER = logging.getLogger(__name__)
-RFXOBJECT = 'rfxobject'
+DATA_RFXOBJECT = 'rfxobject'
 
 
 def _valid_device(value, device_type):
@@ -194,18 +194,19 @@ def setup(hass, config):
         _LOGGER.debug("Receiving modes to be enabled: %s", recv_modes)
 
     if dummy_connection:
-        hass.data[RFXOBJECT] =\
+        rfx_object =\
             rfxtrxmod.Connect(device, handle_receive, debug=debug,
                               transport_protocol=rfxtrxmod.DummyTransport2)
     else:
-        hass.data[RFXOBJECT] = rfxtrxmod.Connect(
+        rfx_object = rfxtrxmod.Connect(
             device, handle_receive, debug=debug, modes=recv_modes)
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
-        hass.data[RFXOBJECT].close_connection()
+        rfx_object.close_connection()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
+    hass.data[DATA_RFXOBJECT] = rfx_object
 
     return True
 
@@ -438,39 +439,35 @@ class RfxtrxDevice(Entity):
     def _send_command(self, command, brightness=0):
         if not self._event:
             return
+        rfx_object = hass.data[DATA_RFXOBJECT]
 
         if command == "turn_on":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_on(self.hass.data[RFXOBJECT]
-                                           .transport)
+                self._event.device.send_on(rfx_object.transport)
             self._state = True
 
         elif command == "dim":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_dim(self.hass.data[RFXOBJECT]
-                                            .transport, brightness)
+                self._event.device.send_dim(
+                    rfx_object.transport, brightness)
             self._state = True
 
         elif command == 'turn_off':
             for _ in range(self.signal_repetitions):
-                self._event.device.send_off(self.hass.data[RFXOBJECT]
-                                            .transport)
+                self._event.device.send_off(rfx_object.transport)
             self._state = False
             self._brightness = 0
 
         elif command == "roll_up":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_open(self.hass.data[RFXOBJECT]
-                                             .transport)
+                self._event.device.send_open(rfx_object.transport)
 
         elif command == "roll_down":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_close(self.hass.data[RFXOBJECT]
-                                              .transport)
+                self._event.device.send_close(rfx_object.transport)
 
         elif command == "stop_roll":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_stop(self.hass.data[RFXOBJECT]
-                                             .transport)
+                self._event.device.send_stop(rfx_object.transport)
 
         self.schedule_update_ha_state()
