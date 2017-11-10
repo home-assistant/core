@@ -138,9 +138,27 @@ class AlexaResponse(object):
         # Intent is None if request was a LaunchRequest or SessionEndedRequest
         if intent_info is not None:
             for key, value in intent_info.get('slots', {}).items():
+                underscored_key = key.replace('.', '_')
+
                 if 'value' in value:
-                    underscored_key = key.replace('.', '_')
                     self.variables[underscored_key] = value['value']
+
+                if 'resolutions' in value:
+                    self._populate_resolved_values(underscored_key, value)
+
+    def _populate_resolved_values(self, underscored_key, value):
+        for resolution in value['resolutions']['resolutionsPerAuthority']:
+            if 'values' not in resolution:
+                continue
+
+            for resolved in resolution['values']:
+                if 'value' not in resolved:
+                    continue
+
+                if 'id' in resolved['value']:
+                    self.variables[underscored_key] = resolved['value']['id']
+                elif 'name' in resolved['value']:
+                    self.variables[underscored_key] = resolved['value']['name']
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""
