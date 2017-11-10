@@ -370,6 +370,11 @@ class RfxtrxDevice(Entity):
         """Attach to callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_RFXTRX_EVENT, self._receive_command)
+    
+    @property
+    def unique_id(self):
+        """Return unique device id."""
+        return self._device_id
 
     @property
     def should_poll(self):
