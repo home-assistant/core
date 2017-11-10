@@ -12,8 +12,8 @@ from homeassistant.components import rfxtrx
 from homeassistant.util import slugify
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import event as evt
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.rfxtrx import (
     ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_OFF_DELAY, ATTR_FIREEVENT,
     ATTR_DATA_BITS, CONF_DEVICES
@@ -26,8 +26,7 @@ DEPENDENCIES = ["rfxtrx"]
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required("platform"): rfxtrx.DOMAIN,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): vol.All(
         dict, rfxtrx.valid_binary_sensor),
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
@@ -57,7 +56,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device = RfxtrxBinarySensor(event, entity[ATTR_NAME],
                                     entity[CONF_DEVICE_CLASS],
                                     entity[ATTR_FIREEVENT],
-                                    entity[ATTR_OFF_DELAY],
                                     entity[ATTR_DATA_BITS],
                                     entity[CONF_COMMAND_ON],
                                     entity[CONF_COMMAND_OFF])
@@ -89,7 +87,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
                 if poss_dev is not None:
                     poss_id = slugify(poss_dev.event.device.id_string.lower())
-                    _LOGGER.info("Found possible matching deviceid %s.",
+                    _LOGGER.debug("Found possible matching deviceid %s.",
                                  poss_id)
 
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
@@ -97,7 +95,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             sensor.hass = hass
             rfxtrx.RFX_DEVICES[device_id] = sensor
             add_devices_callback([sensor])
-            _LOGGER.info("Added binary sensor %s "
+            _LOGGER.debug("Added binary sensor %s "
                          "(Device_id: %s Class: %s Sub: %s)",
                          pkt_id,
                          slugify(event.device.id_string.lower()),
@@ -107,7 +105,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         elif not isinstance(sensor, RfxtrxBinarySensor):
             return
         else:
-            _LOGGER.info("Binary sensor update "
+            _LOGGER.debug("Binary sensor update "
                          "(Device_id: %s Class: %s Sub: %s)",
                          slugify(event.device.id_string.lower()),
                          event.device.__class__.__name__,
@@ -122,17 +120,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         else:
             rfxtrx.apply_received_command(event)
 
-        if (sensor.is_on and sensor.off_delay is not None and
-                sensor.delay_listener is None):
-
-            def off_delay_listener(now):
-                """Switch device off after a delay."""
-                sensor.delay_listener = None
-                sensor.update_state(False)
-
-            sensor.delay_listener = evt.track_point_in_time(
-                hass, off_delay_listener, dt_util.utcnow() + sensor.off_delay
-            )
+        if sensor.is_on:
+            sensor.update_state(False)
 
     # Subscribe to main rfxtrx events
     if binary_sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
@@ -144,17 +133,15 @@ class RfxtrxBinarySensor(BinarySensorDevice):
     """An Rfxtrx binary sensor."""
 
     def __init__(self, event, name, device_class=None,
-                 should_fire=False, off_delay=None, data_bits=None,
+                 should_fire=False, data_bits=None,
                  cmd_on=None, cmd_off=None):
         """Initialize the sensor."""
         self.event = event
         self._name = name
         self._should_fire_event = should_fire
         self._device_class = device_class
-        self._off_delay = off_delay
         self._state = False
         self.is_lighting4 = (event.device.packettype == 0x13)
-        self.delay_listener = None
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
@@ -163,10 +150,6 @@ class RfxtrxBinarySensor(BinarySensorDevice):
             self._masked_id = rfxtrx.get_pt2262_deviceid(
                 event.device.id_string.lower(),
                 data_bits)
-
-    def __str__(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def name(self):
@@ -207,11 +190,6 @@ class RfxtrxBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the sensor class."""
         return self._device_class
-
-    @property
-    def off_delay(self):
-        """Return the off_delay attribute value."""
-        return self._off_delay
 
     @property
     def is_on(self):
