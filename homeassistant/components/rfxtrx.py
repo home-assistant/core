@@ -178,8 +178,9 @@ def setup(hass, config):
                       "".join("{0:02x}".format(x) for x in event.data))
 
         # Callback to HA registered components.
-        hass.helpers.dispatcher.dispatch_send(
-            SIGNAL_RFXTRX_EVENT, event)
+        device_id, slugify(event.device.id_string.lower())
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_RFXTRX_EVENT, device_id, event)
 
     # Try to load the RFXtrx module.
     import RFXtrx as rfxtrxmod
@@ -366,7 +367,7 @@ class RfxtrxDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Attach to callbacks."""
-        self.hass.helpers.dispatcher.async_dispatch_connect(
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_RFXTRX_EVENT, self._receive_command)
 
     @property
@@ -403,11 +404,11 @@ class RfxtrxDevice(Entity):
         self._state = state
         self._brightness = brightness
         self.schedule_update_ha_state()
-    
-    def _received_command(event):
+
+    def _received_command(self, device_id, event):
         """Apply command from rfxtrx."""
         # Check if entity exists or previously added automatically
-        if slugify(event.device.id_string.lower()) != self._device_id:
+        if device_id != self._device_id:
             return
 
         if event.values['Command'] == 'On'\
