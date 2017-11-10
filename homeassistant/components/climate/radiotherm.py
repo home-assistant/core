@@ -42,13 +42,23 @@ NAME_FAN_MODE = {0: STATE_AUTO, 1: "circulate", 2: STATE_ON}
 # Active fan state
 NAME_FAN_STATE = {0: STATE_OFF, 1: STATE_ON}
 
+def round_temp(temperature):
+    """Round a temperature to the resolution of the thermostat.
+
+    RadioThermostats can handle 0.5 degree temps so the input
+    temperature is rounded to that value and returned.
+    """
+    return round(temperature * 2.0) / 2.0
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
     vol.Optional(CONF_AWAY_TEMPERATURE_HEAT,
-                 default=DEFAULT_AWAY_TEMPERATURE_HEAT): vol.Coerce(float),
+                 default=DEFAULT_AWAY_TEMPERATURE_HEAT):
+                     vol.All(vol.Coerce(float), round_temp),
     vol.Optional(CONF_AWAY_TEMPERATURE_COOL,
-                 default=DEFAULT_AWAY_TEMPERATURE_COOL): vol.Coerce(float),
+                 default=DEFAULT_AWAY_TEMPERATURE_COOL): 
+                     vol.All(vol.Coerce(float), round_temp),
 })
 
 
@@ -104,7 +114,7 @@ class RadioThermostat(ClimateDevice):
         self._hold_temp = hold_temp
         self._hold_set = False
         self._away = False
-        self._away_temps = [self.round_temp(i) for i in away_temps]
+        self._away_temps = away_temps
         self._prev_temp = None
         self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
         self._fan_list = [STATE_ON, STATE_AUTO]
@@ -226,7 +236,7 @@ class RadioThermostat(ClimateDevice):
         if temperature is None:
             return
 
-        temperature = self.round_temp(temperature)
+        temperature = round_temp(temperature)
 
         if self._current_operation == STATE_COOL:
             self.device.t_cool = temperature
@@ -292,11 +302,3 @@ class RadioThermostat(ClimateDevice):
         self._away = False
         self.set_temperature(temperature=self._prev_temp, hold_changed=True)
 
-    @staticmethod
-    def round_temp(temperature):
-        """Round a temperature to the resolution of the thermostat.
-
-        RadioThermostats can handle 0.5 degree temps so the input
-        temperature is rounded to that value and returned.
-        """
-        return round(temperature * 2.0) / 2.0
