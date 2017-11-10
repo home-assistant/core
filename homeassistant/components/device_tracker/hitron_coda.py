@@ -77,7 +77,7 @@ class HitronCODADeviceScanner(DeviceScanner):
                 ('user', self._username),
                 ('pws', self._password),
             ]
-            res = requests.post(self._loginurl, data=data. timeout=10)
+            res = requests.post(self._loginurl, data=data, timeout=10)
         except requests.exceptions.Timeout:
             _LOGGER.error(
                 "Connection to the router timed out at URL %s", self._url)
