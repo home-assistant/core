@@ -10,17 +10,14 @@ import logging
 import voluptuous as vol
 from homeassistant.components import rfxtrx
 from homeassistant.util import slugify
-from homeassistant.util import dt as dt_util
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_OFF_DELAY, ATTR_FIREEVENT,
-    ATTR_DATA_BITS, CONF_DEVICES
-)
+    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT,
+    ATTR_DATA_BITS, CONF_DEVICES)
 from homeassistant.const import (
-    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
-)
+    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF)
 
 DEPENDENCIES = ["rfxtrx"]
 
@@ -48,7 +45,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if entity[ATTR_DATA_BITS] is not None:
             _LOGGER.debug("Masked device id: %s",
                           rfxtrx.get_pt2262_deviceid(device_id,
-                                                    entity[ATTR_DATA_BITS]))
+                                                     entity[ATTR_DATA_BITS]))
 
         _LOGGER.debug("Add %s rfxtrx.binary_sensor (class %s)",
                       entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
