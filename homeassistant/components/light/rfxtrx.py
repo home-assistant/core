@@ -7,14 +7,14 @@ https://home-assistant.io/components/light.rfxtrx/
 import logging
 
 import homeassistant.components.rfxtrx as rfxtrx
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (
+  ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 
 DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(rfxtrx.DEFAULT_SCHEMA)
 
 SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
