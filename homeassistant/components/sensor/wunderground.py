@@ -671,7 +671,7 @@ class WUndergroundSensor(Entity):
         if callable(val):
             try:
                 val = val(self.rest)
-            except (KeyError, IndexError, TypeError) as err:
+            except (KeyError, IndexError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to expand cfg from WU API."
                                 " Condition: %s Attr: %s Error: %s",
                                 self._condition, what, repr(err))
@@ -693,7 +693,7 @@ class WUndergroundSensor(Entity):
             if callable(callback):
                 try:
                     self._attributes[attr] = callback(self.rest)
-                except (KeyError, IndexError, TypeError) as err:
+                except (KeyError, IndexError, TypeError, ValueError) as err:
                     _LOGGER.warning("Failed to update attrs from WU API."
                                     " Condition: %s Attr: %s Error: %s",
                                     self._condition, attr, repr(err))
