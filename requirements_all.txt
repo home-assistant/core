@@ -730,7 +730,7 @@ pymodbus==1.3.1
 pymonoprice==0.2
 
 # homeassistant.components.media_player.yamaha_musiccast
-pymusiccast==0.1.3
+pymusiccast==0.1.5
 
 # homeassistant.components.cover.myq
 pymyq==0.0.8
