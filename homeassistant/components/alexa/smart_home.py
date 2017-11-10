@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.components import switch, light
+from homeassistant.components import switch, light, script
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -21,6 +21,7 @@ API_ENDPOINT = 'endpoint'
 
 
 MAPPING_COMPONENT = {
+    script.DOMAIN: ['ACTIVITY_TRIGGER', ('Alexa.SceneController',), None],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
@@ -167,6 +168,17 @@ def extract_entity(funct):
         return (yield from funct(hass, request, entity))
 
     return async_api_entity_wrapper
+
+
+@HANDLERS.register(('Alexa.SceneController', 'Activate'))
+@extract_entity
+@asyncio.coroutine
+def async_api_activate(hass, request, entity):
+    """Process an activate request."""
+    service = entity.entity_id.split('.')[1]
+    yield from hass.services.async_call(entity.domain, service, blocking=True)
+
+    return api_message(request)
 
 
 @HANDLERS.register(('Alexa.PowerController', 'TurnOn'))
