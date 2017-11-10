@@ -10,21 +10,29 @@ import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import (
+    CONF_PLATFORM, ATTR_ENTITY_ID, CONF_NAME)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT, CONF_DEVICES, DATA_TYPES,
-    ATTR_DATA_TYPE, ATTR_ENTITY_ID)
+    CONF_AUTOMATIC_ADD, CONF_FIREEVENT, CONF_DEVICES, DATA_TYPES,
+    CONF_DATA_TYPE)
 
 DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): rfxtrx.DOMAIN,
-    vol.Optional(CONF_DEVICES, default={}): vol.All(dict, rfxtrx.valid_sensor),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_FIREEVENT, default=False): cv.boolean,
+            vol.Optional(CONF_DATA_TYPE, default=[]):
+            vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
+        })
+    },
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
 
