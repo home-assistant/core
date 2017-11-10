@@ -1,4 +1,6 @@
 """Temperature util functions."""
+from math import log as ln
+
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_NOT_RECOGNIZED_TEMPLATE, TEMPERATURE)
 
@@ -27,3 +29,21 @@ def convert(temperature: float, from_unit: str, to_unit: str) -> float:
     elif from_unit == TEMP_CELSIUS:
         return celsius_to_fahrenheit(temperature)
     return fahrenheit_to_celsius(temperature)
+
+
+def calculate_dewpoint(temperature: float, humidity: float,
+                       units: str) -> float:
+    """Calculate dewpoint from temperature and relative humidity.
+
+    Uses the Magnus formula approximation.
+    See https://en.wikipedia.org/wiki/Dew_point#Calculating_the_dew_point
+    """
+    if units not in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(
+            units, TEMPERATURE))
+    temp = convert(temperature, units, TEMP_CELSIUS)
+    const_b = 17.67
+    const_c = 243.5
+    gamma = ln(humidity / 100) + (const_b * temp / (const_c + temp))
+    dewpoint = (const_c * gamma) / (const_b - gamma)
+    return convert(dewpoint, TEMP_CELSIUS, units)
