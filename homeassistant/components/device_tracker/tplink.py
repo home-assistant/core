@@ -54,9 +54,11 @@ class TplinkDeviceScanner(DeviceScanner):
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
         self.parse_macs_hyphens = re.compile('[0-9A-F]{2}-[0-9A-F]{2}-' +
-                     '[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}')
-        self.parse_macs_colons  = re.compile('[0-9A-F]{2}:[0-9A-F]{2}:' +
-                     '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}')
+                                             '[0-9A-F]{2}-[0-9A-F]{2}-' +
+                                             '[0-9A-F]{2}-[0-9A-F]{2}')
+        self.parse_macs_colons = re.compile('[0-9A-F]{2}:[0-9A-F]{2}:' +
+                                            '[0-9A-F]{2}:[0-9A-F]{2}:' +
+                                            '[0-9A-F]{2}:[0-9A-F]{2}')
 
         self.host = host
         self.username = username
@@ -135,20 +137,26 @@ class Tplink1DeviceScanner(TplinkDeviceScanner):
         for clients_frequency in ('1', '2'):
 
             # Refresh associated clients.
-            page = requests.post( 'http://{}/cgi?7'.format(self.host),
+            page = requests.post(
+                'http://{}/cgi?7'.format(self.host),
                 headers={REFERER: referer, COOKIE: cookie},
-                data=('[ACT_WLAN_UPDATE_ASSOC#1,{},0,0,0,0#0,0,0,0,0,0]0,0\r\n'
-                ).format(clients_frequency), timeout=4)
+                data=(
+                  '[ACT_WLAN_UPDATE_ASSOC#1,{},0,0,0,0#0,0,0,0,0,0]0,0\r\n'
+                  ).format(clients_frequency),
+                timeout=4)
             if not page.status_code == 200:
                 _LOGGER.error("Error %s from router", page.status_code)
                 return False
 
             # Retrieve associated clients.
-            page = requests.post('http://{}/cgi?6'.format(self.host),
+            page = requests.post(
+                'http://{}/cgi?6'.format(self.host),
                 headers={REFERER: referer, COOKIE: cookie},
-                data=('[LAN_WLAN_ASSOC_DEV#0,0,0,0,0,0#1,{},0,0,0,0]0,1\r\n'
-                      'AssociatedDeviceMACAddress\r\n'
-                ).format(clients_frequency), timeout=4)
+                data=(
+                  '[LAN_WLAN_ASSOC_DEV#0,0,0,0,0,0#1,{},0,0,0,0]0,1\r\n'
+                  'AssociatedDeviceMACAddress\r\n'
+                  ).format(clients_frequency),
+                timeout=4)
             if not page.status_code == 200:
                 _LOGGER.error("Error %s from router", page.status_code)
                 return False
