@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ALARM, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
         vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
-        vol.Optional(CONF_GIID, default=None): cv.string,
+        vol.Optional(CONF_GIID): cv.string,
         vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
         vol.Optional(CONF_LOCKS, default=True): cv.boolean,
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
@@ -111,8 +111,10 @@ class VerisureHub(object):
         self.session = verisure.Session(
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
-
-        self.giid = domain_config[CONF_GIID]
+        try:
+            self.giid = domain_config[CONF_GIID]
+        except KeyError:
+            self.giid = None
 
         import jsonpath
         self.jsonpath = jsonpath.jsonpath
