@@ -87,8 +87,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
                 if poss_dev is not None:
                     poss_id = slugify(poss_dev.event.device.id_string.lower())
-                    _LOGGER.debug("Found possible matching deviceid %s.",
-                                 poss_id)
+                    _LOGGER.info("Found possible matching deviceid %s.",
+                                  poss_id)
 
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
