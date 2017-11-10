@@ -493,6 +493,7 @@ def as_json(value):
     except ValueError:
         return value
 
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
