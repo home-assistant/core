@@ -138,17 +138,18 @@ class AbstractPanel:
 
     def to_response(self, hass, request):
         """Panel as dictionary."""
-        return {
+        result = {
             'component_name': self.component_name,
             'icon': self.sidebar_icon,
             'title': self.sidebar_title,
-            'url':
-                (self.webcomponent_url_latest if
-                 _is_latest(hass.data[DATA_JS_VERSION], request) else
-                 self.webcomponent_url_es5),
             'url_path': self.frontend_url_path,
             'config': self.config,
         }
+        if _is_latest(hass.data[DATA_JS_VERSION], request):
+            result['url'] = self.webcomponent_url_latest
+        else:
+            result['url'] = self.webcomponent_url_es5
+        return result
 
 
 class BuiltInPanel(AbstractPanel):
@@ -461,11 +462,11 @@ class IndexView(HomeAssistantView):
         """Serve the index view."""
         hass = request.app['hass']
         latest = _is_latest(self.js_option, request)
+        compatibility_url = None
 
         if self.use_repo:
             core_url = '/home-assistant-polymer/{}/core.js'.format(
                 'build' if latest else 'build-es5')
-            compatibility_url = None
             ui_url = '/home-assistant-polymer/src/home-assistant.html'
             icons_fp = ''
             icons_url = '/static/mdi.html'
@@ -473,8 +474,8 @@ class IndexView(HomeAssistantView):
             hass_frontend_versioned = _get_frontend_package(latest)
             core_url = '/static/core-{}.js'.format(
                 hass_frontend_versioned.FINGERPRINTS['core.js'])
-            compatibility_url = None if latest else \
-                '/static/compatibility-{}.js'.format(
+            if not latest:
+                compatibility_url = '/static/compatibility-{}.js'.format(
                     hass_frontend_versioned.FINGERPRINTS['compatibility.js'])
             ui_url = '/static/frontend-{}.html'.format(
                 hass_frontend_versioned.FINGERPRINTS['frontend.html'])
@@ -489,10 +490,10 @@ class IndexView(HomeAssistantView):
 
         if panel == 'states':
             panel_url = ''
+        elif latest:
+            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_latest
         else:
-            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_latest \
-                if latest else \
-                hass.data[DATA_PANELS][panel].webcomponent_url_es5
+            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = 'true'
         if hass.config.api.api_password and not is_trusted_ip(request):
