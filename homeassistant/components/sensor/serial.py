@@ -86,7 +86,7 @@ class SerialSensor(Entity):
                 data = json.loads(line)
                 if isinstance(data, dict):
                     self._attributes = data
-            except:
+            except json.decoder.JSONDecodeError:
                 pass
 
             if self._template is not None:
