@@ -4,33 +4,30 @@ Support for displaying IPs banned by fail2ban.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fail2ban/
 """
-import os
 import asyncio
-import logging
-
 from datetime import timedelta
-
+import logging
+import os
 import re
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_SCAN_INTERVAL, CONF_FILE_PATH
-)
+from homeassistant.const import CONF_NAME, CONF_FILE_PATH, CONF_SCAN_INTERVAL
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_JAILS = 'jails'
 
-DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
-SCAN_INTERVAL = timedelta(seconds=120)
+DEFAULT_NAME = 'fail2ban'
+DEFAULT_SCAN_INTERVAL = 120
 
-STATE_CURRENT_BANS = 'current_bans'
 STATE_ALL_BANS = 'total_bans'
+STATE_CURRENT_BANS = 'current_bans'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_JAILS, default=[]):
@@ -45,7 +42,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the fail2ban sensor."""
     name = config.get(CONF_NAME)
     jails = config.get(CONF_JAILS)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     log_file = config.get(CONF_FILE_PATH)
 
     device_list = []
@@ -118,7 +115,7 @@ class BanLogParser(object):
 
     def __init__(self, interval, log_file):
         """Initialize the parser."""
-        self.interval = interval
+        self.interval = timedelta(seconds=interval)
         self.log_file = log_file
         self.data = list()
         self.last_update = dt_util.now()
