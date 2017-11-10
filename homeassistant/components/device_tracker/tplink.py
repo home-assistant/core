@@ -141,8 +141,8 @@ class Tplink1DeviceScanner(TplinkDeviceScanner):
                 'http://{}/cgi?7'.format(self.host),
                 headers={REFERER: referer, COOKIE: cookie},
                 data=(
-                  '[ACT_WLAN_UPDATE_ASSOC#1,{},0,0,0,0#0,0,0,0,0,0]0,0\r\n'
-                  ).format(clients_frequency),
+                    '[ACT_WLAN_UPDATE_ASSOC#1,{},0,0,0,0#0,0,0,0,0,0]0,0\r\n'
+                    ).format(clients_frequency),
                 timeout=4)
             if not page.status_code == 200:
                 _LOGGER.error("Error %s from router", page.status_code)
@@ -153,9 +153,9 @@ class Tplink1DeviceScanner(TplinkDeviceScanner):
                 'http://{}/cgi?6'.format(self.host),
                 headers={REFERER: referer, COOKIE: cookie},
                 data=(
-                  '[LAN_WLAN_ASSOC_DEV#0,0,0,0,0,0#1,{},0,0,0,0]0,1\r\n'
-                  'AssociatedDeviceMACAddress\r\n'
-                  ).format(clients_frequency),
+                    '[LAN_WLAN_ASSOC_DEV#0,0,0,0,0,0#1,{},0,0,0,0]0,1\r\n'
+                    'AssociatedDeviceMACAddress\r\n'
+                    ).format(clients_frequency),
                 timeout=4)
             if not page.status_code == 200:
                 _LOGGER.error("Error %s from router", page.status_code)
