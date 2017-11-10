@@ -178,11 +178,11 @@ class BuiltInPanel(AbstractPanel):
             import hass_frontend_es5
 
             self.webcomponent_url_latest = \
-                '/static/panels/ha-panel-{}-{}.html'.format(
+                '/frontend_latest/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
                     hass_frontend.FINGERPRINTS[panel_path])
             self.webcomponent_url_es5 = \
-                '/static/panels/ha-panel-{}-{}.html'.format(
+                '/frontend_es5/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
                     hass_frontend_es5.FINGERPRINTS[panel_path])
         else:
@@ -303,6 +303,8 @@ def async_setup(hass, config):
         sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
         sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
+        frontend_es5_path = os.path.join(repo_path, 'build-es5')
+        frontend_latest_path = os.path.join(repo_path, 'build')
     else:
         import hass_frontend
         import hass_frontend_es5
@@ -310,27 +312,12 @@ def async_setup(hass, config):
                                    "service_worker.js")
         sw_path_latest = os.path.join(hass_frontend.where(),
                                       "service_worker.js")
-        # /static points to latest dir. However all files that differ between
-        # the dirs are registered separately.
+        # /static points to dir with files that are JS-type agnostic.
+        # ES5 files are served from /frontend_es5.
+        # ES6 files are served from /frontend_latest.
         static_path = hass_frontend.where()
-        paths = {
-            '/static/frontend-{}.html': 'frontend.html',
-            '/static/core-{}.js': 'core.js',
-        }
-        for url_path, file_path in paths.items():
-            hass.http.register_static_path(
-                url_path.format(
-                    hass_frontend.FINGERPRINTS[file_path]),
-                os.path.join(hass_frontend.where(), file_path), True)
-            hass.http.register_static_path(
-                url_path.format(
-                    hass_frontend_es5.FINGERPRINTS[file_path]),
-                os.path.join(hass_frontend_es5.where(), file_path), True)
-
-        hass.http.register_static_path(
-            '/static/compatibility-{}.js'.format(
-                hass_frontend_es5.FINGERPRINTS['compatibility.js']),
-            os.path.join(hass_frontend_es5.where(), 'compatibility.js'), True)
+        frontend_es5_path = hass_frontend_es5.where()
+        frontend_latest_path = static_path
 
     hass.http.register_static_path(
         "/service_worker_es5.js", sw_path_es5, False)
@@ -339,6 +326,10 @@ def async_setup(hass, config):
     hass.http.register_static_path(
         "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
     hass.http.register_static_path("/static", static_path, not is_dev)
+    hass.http.register_static_path(
+        "/frontend_latest", frontend_latest_path, not is_dev)
+    hass.http.register_static_path(
+        "/frontend_es5", frontend_es5_path, not is_dev)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
@@ -471,14 +462,20 @@ class IndexView(HomeAssistantView):
             icons_fp = ''
             icons_url = '/static/mdi.html'
         else:
-            hass_frontend_versioned = _get_frontend_package(latest)
-            core_url = '/static/core-{}.js'.format(
-                hass_frontend_versioned.FINGERPRINTS['core.js'])
-            if not latest:
-                compatibility_url = '/static/compatibility-{}.js'.format(
-                    hass_frontend_versioned.FINGERPRINTS['compatibility.js'])
-            ui_url = '/static/frontend-{}.html'.format(
-                hass_frontend_versioned.FINGERPRINTS['frontend.html'])
+            if latest:
+                import hass_frontend
+                core_url = '/frontend_latest/core-{}.js'.format(
+                    hass_frontend.FINGERPRINTS['core.js'])
+                ui_url = '/frontend_latest/frontend-{}.html'.format(
+                    hass_frontend.FINGERPRINTS['frontend.html'])
+            else:
+                import hass_frontend_es5
+                core_url = '/frontend_es5/core-{}.js'.format(
+                    hass_frontend_es5.FINGERPRINTS['core.js'])
+                compatibility_url = '/frontend_es5/compatibility-{}.js'.format(
+                    hass_frontend_es5.FINGERPRINTS['compatibility.js'])
+                ui_url = '/frontend_es5/frontend-{}.html'.format(
+                    hass_frontend_es5.FINGERPRINTS['frontend.html'])
             import hass_frontend
             icons_fp = '-{}'.format(hass_frontend.FINGERPRINTS['mdi.html'])
             icons_url = '/static/mdi{}.html'.format(icons_fp)
@@ -565,6 +562,8 @@ def _is_latest(js_option, request):
 
     Set according to user's preference and URL override.
     """
+    if request is None:
+        return js_option == 'latest'
     latest_in_query = 'latest' in request.query or (
         request.headers.get('Referer') and
         'latest' in urlparse(request.headers['Referer']).query)
@@ -572,12 +571,3 @@ def _is_latest(js_option, request):
         request.headers.get('Referer') and
         'es5' in urlparse(request.headers['Referer']).query)
     return latest_in_query or (not es5_in_query and js_option == 'latest')
-
-
-def _get_frontend_package(latest):
-    """Return either the transpiled or not transpiled version of frontend."""
-    if latest:
-        import hass_frontend
-        return hass_frontend
-    import hass_frontend_es5
-    return hass_frontend_es5
