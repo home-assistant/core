@@ -8,14 +8,15 @@ tested. Other types may need some work.
 
 import logging
 import voluptuous as vol
+from homeassistant.const import CONF_NAME
 from homeassistant.components import rfxtrx
 from homeassistant.util import slugify
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT,
-    ATTR_DATA_BITS, CONF_DEVICES)
+    CONF_AUTOMATIC_ADD, CONF_FIREEVENT,
+    CONF_DATA_BITS, CONF_DEVICES)
 from homeassistant.const import (
     CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF)
 
@@ -24,8 +25,16 @@ DEPENDENCIES = ["rfxtrx"]
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): vol.All(
-        dict, rfxtrx.valid_binary_sensor),
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            vol.Optional(CONF_FIREEVENT, default=False): cv.boolean,
+            vol.Optional(CONF_DATA_BITS): cv.positive_int,
+            vol.Optional(CONF_COMMAND_ON): cv.byte,
+            vol.Optional(CONF_COMMAND_OFF): cv.byte
+        })
+    }
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
