@@ -244,9 +244,8 @@ def get_pt2262_device(device_id):
         if (hasattr(device, 'is_lighting4') and
                 device.masked_id == get_pt2262_deviceid(device_id,
                                                         device.data_bits)):
-            _LOGGER.info("rfxtrx: found matching device %s for %s",
-                         device_id,
-                         device.masked_id)
+            _LOGGER.debug("rfxtrx: found matching device %s for %s",
+                          device_id, device.masked_id)
             return device
     return None
 
@@ -264,15 +263,13 @@ def find_possible_pt2262_device(device_id):
 
             if size is not None:
                 size = len(dev_id) - size - 1
-                _LOGGER.debug("rfxtrx: found possible device %s for %s "
-                             "with the following configuration:\n"
-                             "data_bits=%d\n"
-                             "command_on=0x%s\n"
-                             "command_off=0x%s\n",
-                             device_id,
-                             dev_id,
-                             size * 4,
-                             dev_id[-size:], device_id[-size:])
+                _LOGGER.info("rfxtrx: found possible device %s for %s "
+                              "with the following configuration:\n"
+                              "data_bits=%d\n"
+                              "command_on=0x%s\n"
+                              "command_off=0x%s\n",
+                              device_id, dev_id, size * 4,
+                              dev_id[-size:], device_id[-size:])
                 return device
 
     return None
