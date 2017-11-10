@@ -43,8 +43,8 @@ class HitronCODADeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.last_results = []
 
-        self._url = 'http://%s/data/getConnectInfo.asp' % config[CONF_HOST]
-        self._loginurl = 'http://%s/goform/login' % config[CONF_HOST]
+        self._url = 'http://{}/data/getConnectInfo.asp'.format(config[CONF_HOST])
+        self._loginurl = 'http://{}/goform/login'.format(config[CONF_HOST])
 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
@@ -61,13 +61,11 @@ class HitronCODADeviceScanner(DeviceScanner):
         return [device.mac for device in self.last_results]
 
     def get_device_name(self, mac):
-        """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
-
-        if filter_named:
-            return filter_named[0]
-        return None
+        """Return the name of the device with the given MAC address."""
+        name = next((
+            device.name for device in self.last_result
+            if device.mac == mac), None)
+        return name
 
     def _login(self):
         """Log in to the router. This is required for subsequent api calls."""
@@ -78,7 +76,7 @@ class HitronCODADeviceScanner(DeviceScanner):
                 ('user', self._username),
                 ('pws', self._password),
             ]
-            res = requests.post(self._loginurl, data=data)
+            res = requests.post(self._loginurl, data=data. timeout=10)
         except requests.exceptions.Timeout:
             _LOGGER.error(
                 "Connection to the router timed out at URL %s", self._url)
