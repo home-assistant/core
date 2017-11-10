@@ -42,6 +42,7 @@ NAME_FAN_MODE = {0: STATE_AUTO, 1: "circulate", 2: STATE_ON}
 # Active fan state
 NAME_FAN_STATE = {0: STATE_OFF, 1: STATE_ON}
 
+
 def round_temp(temperature):
     """Round a temperature to the resolution of the thermostat.
 
@@ -50,15 +51,16 @@ def round_temp(temperature):
     """
     return round(temperature * 2.0) / 2.0
 
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
     vol.Optional(CONF_AWAY_TEMPERATURE_HEAT,
                  default=DEFAULT_AWAY_TEMPERATURE_HEAT):
-                     vol.All(vol.Coerce(float), round_temp),
+                    vol.All(vol.Coerce(float), round_temp),
     vol.Optional(CONF_AWAY_TEMPERATURE_COOL,
-                 default=DEFAULT_AWAY_TEMPERATURE_COOL): 
-                     vol.All(vol.Coerce(float), round_temp),
+                 default=DEFAULT_AWAY_TEMPERATURE_COOL):
+                    vol.All(vol.Coerce(float), round_temp),
 })
 
 
@@ -301,4 +303,3 @@ class RadioThermostat(ClimateDevice):
         """Turn away off."""
         self._away = False
         self.set_temperature(temperature=self._prev_temp, hold_changed=True)
-
