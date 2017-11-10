@@ -363,14 +363,6 @@ def apply_received_command(event):
                 ATTR_STATE: event.values['Command'].lower()
             }
         )
-        _LOGGER.debug(
-            "Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
-            EVENT_BUTTON_PRESSED,
-            ATTR_ENTITY_ID,
-            RFX_DEVICES[device_id].entity_id,
-            ATTR_STATE,
-            event.values['Command'].lower()
-        )
 
 
 class RfxtrxDevice(Entity):
