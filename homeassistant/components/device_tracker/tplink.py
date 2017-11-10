@@ -37,7 +37,7 @@ def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
     for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
                 Tplink3DeviceScanner, Tplink2DeviceScanner,
-                TplinkDeviceScanner]:
+                Tplink1DeviceScanner, TplinkDeviceScanner]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -53,8 +53,10 @@ class TplinkDeviceScanner(DeviceScanner):
         host = config[CONF_HOST]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
-        self.parse_macs = re.compile('[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}-' +
-                                     '[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}')
+        self.parse_macs_hyphens = re.compile('[0-9A-F]{2}-[0-9A-F]{2}-' +
+                     '[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}')
+        self.parse_macs_colons  = re.compile('[0-9A-F]{2}:[0-9A-F]{2}:' +
+                     '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}')
 
         self.host = host
         self.username = username
@@ -86,10 +88,75 @@ class TplinkDeviceScanner(DeviceScanner):
             url, auth=(self.username, self.password),
             headers={REFERER: referer}, timeout=4)
 
-        result = self.parse_macs.findall(page.text)
+        result = self.parse_macs_hyphens.findall(page.text)
 
         if result:
             self.last_results = [mac.replace("-", ":") for mac in result]
+            return True
+
+        return False
+
+    def get_base64_cookie_string(self):
+        """Encode Base 64 authentication string for Tplink1/Tplink2."""
+        username_password = '{}:{}'.format(self.username, self.password)
+        b64_encoded_username_password = base64.b64encode(
+            username_password.encode('ascii')
+        ).decode('ascii')
+        return 'Authorization=Basic {}'.format(b64_encoded_username_password)
+
+
+class Tplink1DeviceScanner(TplinkDeviceScanner):
+    """This class queries TP-Link N600 routers and similar models."""
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+        return self.last_results
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """Get firmware doesn't save the name of the wireless device."""
+        return None
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        _LOGGER.info("Loading wireless clients...")
+
+        # Router uses Authorization cookie instead of header.
+        cookie = self.get_base64_cookie_string()
+
+        referer = 'http://{}'.format(self.host)
+        mac_results = []
+
+        # Check both the 2.4GHz and 5GHz client lists.
+        for clients_frequency in ('1', '2'):
+
+            # Refresh associated clients.
+            page = requests.post( 'http://{}/cgi?7'.format(self.host),
+                headers={REFERER: referer, COOKIE: cookie},
+                data=('[ACT_WLAN_UPDATE_ASSOC#1,{},0,0,0,0#0,0,0,0,0,0]0,0\r\n'
+                ).format(clients_frequency), timeout=4)
+            if not page.status_code == 200:
+                _LOGGER.error("Error %s from router", page.status_code)
+                return False
+
+            # Retrieve associated clients.
+            page = requests.post('http://{}/cgi?6'.format(self.host),
+                headers={REFERER: referer, COOKIE: cookie},
+                data=('[LAN_WLAN_ASSOC_DEV#0,0,0,0,0,0#1,{},0,0,0,0]0,1\r\n'
+                      'AssociatedDeviceMACAddress\r\n'
+                ).format(clients_frequency), timeout=4)
+            if not page.status_code == 200:
+                _LOGGER.error("Error %s from router", page.status_code)
+                return False
+
+            mac_results.extend(self.parse_macs_colons.findall(page.text))
+
+        if mac_results:
+            self.last_results = mac_results
             return True
 
         return False
@@ -121,12 +188,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
 
         # Router uses Authorization cookie instead of header
         # Let's create the cookie
-        username_password = '{}:{}'.format(self.username, self.password)
-        b64_encoded_username_password = base64.b64encode(
-            username_password.encode('ascii')
-        ).decode('ascii')
-        cookie = 'Authorization=Basic {}' \
-            .format(b64_encoded_username_password)
+        cookie = self.get_base64_cookie_string()
 
         response = requests.post(
             url, headers={REFERER: referer, COOKIE: cookie},
@@ -332,7 +394,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
                 COOKIE: cookie,
                 REFERER: referer,
             })
-            mac_results.extend(self.parse_macs.findall(page.text))
+            mac_results.extend(self.parse_macs_hyphens.findall(page.text))
 
         if not mac_results:
             return False
