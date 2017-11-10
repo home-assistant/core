@@ -178,7 +178,7 @@ def setup(hass, config):
                       "".join("{0:02x}".format(x) for x in event.data))
 
         # Callback to HA registered components.
-        device_id, slugify(event.device.id_string.lower())
+        device_id = slugify(event.device.id_string.lower())
         hass.helpers.dispatcher.dispatcher_send(
             SIGNAL_RFXTRX_EVENT, device_id, event)
 
@@ -321,17 +321,18 @@ def get_devices_from_config(config, device):
         datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
 
         devices.append(device(
-            entity_info[ATTR_NAME], device_id, event, datas, signal_repetitions))
+            entity_info[ATTR_NAME], device_id, event, datas,
+            signal_repetitions)
+        )
 
     return devices
 
 
 def get_new_device(event, config, device):
     """Add entity if not exist and the automatic_add is True."""
-    device_id = slugify(event.device.id_string.lower())
-
     if not config[ATTR_AUTOMATIC_ADD]:
         return
+    device_id = slugify(event.device.id_string.lower())
 
     pkt_id = "".join("{0:02x}".format(x) for x in event.data)
     _LOGGER.info(
