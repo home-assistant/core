@@ -5,11 +5,11 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.rfxtrx/
 """
 import homeassistant.components.rfxtrx as rfxtrx
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 
 DEPENDENCIES = ['rfxtrx']
 
-PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(rfxtrx.DEFAULT_SCHEMA)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
