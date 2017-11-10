@@ -46,12 +46,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             continue
 
         if entity[ATTR_DATA_BITS] is not None:
-            _LOGGER.info("Masked device id: %s",
-                         rfxtrx.get_pt2262_deviceid(device_id,
+            _LOGGER.debug("Masked device id: %s",
+                          rfxtrx.get_pt2262_deviceid(device_id,
                                                     entity[ATTR_DATA_BITS]))
 
-        _LOGGER.info("Add %s rfxtrx.binary_sensor (class %s)",
-                     entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
+        _LOGGER.debug("Add %s rfxtrx.binary_sensor (class %s)",
+                      entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
 
         device = RfxtrxBinarySensor(event, entity[ATTR_NAME],
                                     entity[CONF_DEVICE_CLASS],
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 if poss_dev is not None:
                     poss_id = slugify(poss_dev.event.device.id_string.lower())
                     _LOGGER.info("Found possible matching deviceid %s.",
-                                  poss_id)
+                                 poss_id)
 
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
@@ -96,20 +96,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             rfxtrx.RFX_DEVICES[device_id] = sensor
             add_devices_callback([sensor])
             _LOGGER.debug("Added binary sensor %s "
-                         "(Device_id: %s Class: %s Sub: %s)",
-                         pkt_id,
-                         slugify(event.device.id_string.lower()),
-                         event.device.__class__.__name__,
-                         event.device.subtype)
+                          "(Device_id: %s Class: %s Sub: %s)",
+                          pkt_id,
+                          slugify(event.device.id_string.lower()),
+                          event.device.__class__.__name__,
+                          event.device.subtype)
 
         elif not isinstance(sensor, RfxtrxBinarySensor):
             return
         else:
             _LOGGER.debug("Binary sensor update "
-                         "(Device_id: %s Class: %s Sub: %s)",
-                         slugify(event.device.id_string.lower()),
-                         event.device.__class__.__name__,
-                         event.device.subtype)
+                          "(Device_id: %s Class: %s Sub: %s)",
+                          slugify(event.device.id_string.lower()),
+                          event.device.__class__.__name__,
+                          event.device.subtype)
 
         if sensor.is_lighting4:
             if sensor.data_bits is not None:
