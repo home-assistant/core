@@ -27,8 +27,8 @@ FAN_OPERATION_LIST = ['On', 'Auto', 'Cycle']
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up of Vera thermostats."""
     add_devices_callback(
-        VeraThermostat(device, VERA_CONTROLLER) for
-        device in VERA_DEVICES['climate'])
+        VeraThermostat(device, hass.data[VERA_CONTROLLER]) for
+        device in hass.data[VERA_DEVICES]['climate'])
 
 
 class VeraThermostat(VeraDevice, ClimateDevice):

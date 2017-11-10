@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera scenes."""
     add_devices(
-        VeraScene(scene, VERA_CONTROLLER) for
-        scene in VERA_SCENES)
+        VeraScene(scene, hass.data[VERA_CONTROLLER]) for
+        scene in hass.data[VERA_SCENES])
 
 
 class VeraScene(Scene):
