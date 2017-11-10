@@ -42,10 +42,9 @@ class HitronCODADeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         self.last_results = []
-
-        self._url = 'http://{}/data/getConnectInfo.asp'
-            .format(config[CONF_HOST])
-        self._loginurl = 'http://{}/goform/login'.format(config[CONF_HOST])
+        host = config[CONF_HOST]
+        self._url = 'http://{}/data/getConnectInfo.asp'.format(host)
+        self._loginurl = 'http://{}/goform/login'.format(host)
 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
