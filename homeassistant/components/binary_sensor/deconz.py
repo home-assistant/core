@@ -8,8 +8,8 @@ import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
 from homeassistant.components.deconz import DATA_DECONZ
+from homeassistant.core import callback
 
 DEPENDENCIES = ['deconz']
 

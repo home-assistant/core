@@ -7,11 +7,12 @@ https://home-assistant.io/components/light/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.light import (Light,
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_XY_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, SUPPORT_XY_COLOR)
-from homeassistant.core import callback
 from homeassistant.components.deconz import DATA_DECONZ
+from homeassistant.components.light import (
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    SUPPORT_XY_COLOR)
+from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
 

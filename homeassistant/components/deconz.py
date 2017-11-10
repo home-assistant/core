@@ -8,9 +8,9 @@ import asyncio
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONF_PASSWORD,
-                                 CONF_PORT, CONF_USERNAME,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
