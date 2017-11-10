@@ -486,6 +486,7 @@ def forgiving_float(value):
     except (ValueError, TypeError):
         return value
 
+
 def as_json(value):
     """Try to convert the value to a JSON object."""
     try:
