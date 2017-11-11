@@ -105,10 +105,7 @@ class RPiGPIOServo(ToggleEntity):
         self.schedule_update_ha_state()
 
     def _run_with_duty(self, duty):
-        """Turn the servo to the given duty.
-
-         Also turns it back to inactive unless duration is 0.
-         """
+        """Turn the servo to the given duty."""
         if self._enabled_duration == 0:
             GPIO.run_pwm(self._port, 50, duty, 2)
         else:
