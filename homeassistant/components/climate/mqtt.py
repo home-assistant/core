@@ -190,7 +190,7 @@ class MqttClimate(ClimateDevice):
 
     def set_if_has_topics(self, val, topic_list):
         """Return true and val if any of the topics in topic_list is set."""
-        if any(map(lambda topic: self._topic[topic] is not None, topic_list)):
+        if any((self._topic[topic] is not None for topic in topic_list)):
             return (True, val)
         else:
             return (False, None)
