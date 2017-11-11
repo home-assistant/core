@@ -427,7 +427,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         Return the current fan mode.
 
         The official Wink app only supports 3 modes [low, medium, high]
-        which are equal to [0.33, 0.66, 1.0] respectively. 
+        which are equal to [0.33, 0.66, 1.0] respectively.
         """
         speed = self.wink.current_fan_speed()
         if speed <= 0.33:
