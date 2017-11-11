@@ -88,7 +88,7 @@ class Metrics(object):
 
     def _metric(self, metric, factory, documentation, labels=None):
         if labels is None:
-            labels = ['entity', 'friendly_name']
+            labels = ['entity', 'friendly_name', 'domain']
 
         try:
             return self._metrics[metric]
@@ -100,6 +100,7 @@ class Metrics(object):
     def _labels(state):
         return {
             'entity': state.entity_id,
+            'domain': state.domain,
             'friendly_name': state.attributes.get('friendly_name'),
         }
 
