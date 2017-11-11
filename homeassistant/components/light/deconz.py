@@ -9,10 +9,10 @@ import logging
 
 from homeassistant.components.deconz import DECONZ_DATA
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    SUPPORT_XY_COLOR)
+    Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
+    ATTR_RGB_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
@@ -56,6 +56,8 @@ class DeconzLight(Light):
         if self._light.xy:
             self._features |= SUPPORT_XY_COLOR
             self._features |= SUPPORT_RGB_COLOR
+        if self._light.effect:
+            self._features |= SUPPORT_EFFECT
 
     @callback
     def _update_callback(self):
@@ -107,7 +109,8 @@ class DeconzLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             data['ct'] = kwargs[ATTR_COLOR_TEMP]
-        elif ATTR_RGB_COLOR in kwargs:
+
+        if ATTR_RGB_COLOR in kwargs:
             xyb = color_RGB_to_xy(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
             data['xy'] = xyb[0], xyb[1]
@@ -123,6 +126,12 @@ class DeconzLight(Light):
             elif kwargs[ATTR_FLASH] == FLASH_LONG:
                 data['alert'] = 'lselect'
                 del data['on']
+
+        if ATTR_EFFECT in kwargs:
+            if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                data['effect'] = 'colorloop'
+            else:
+                data['effect'] = 'none'
 
         yield from self._light.set_state(data)
 
