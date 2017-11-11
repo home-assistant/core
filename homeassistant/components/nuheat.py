@@ -29,6 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup(hass, config):
     """Set up the NuHeat thermostat component."""
     import nuheat
