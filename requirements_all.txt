@@ -893,6 +893,9 @@ pythonegardia==1.0.22
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
 
+# homeassistant.components.device_tracker.tile
+pytile==1.0.0
+
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
