@@ -143,6 +143,9 @@ omit =
     homeassistant/components/netatmo.py
     homeassistant/components/*/netatmo.py
 
+    homeassistant/components/nuheat.py
+    homeassistant/components/*/nuheat.py
+
     homeassistant/components/octoprint.py
     homeassistant/components/*/octoprint.py
 
