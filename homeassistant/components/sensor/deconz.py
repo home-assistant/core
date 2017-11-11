@@ -10,6 +10,8 @@ import logging
 from homeassistant.components.deconz import (
     DECONZ_DATA, DOMAIN, TYPE_AS_EVENT)
 from homeassistant.core import (callback, EventOrigin)
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = [DOMAIN]
@@ -31,6 +33,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if sensor.type in DECONZ_SENSOR:
             if sensor.type == type_as_event:
                 DeconzEvent(hass, sensor)
+                if sensor.battery:
+                    async_add_devices([DeconzBattery(hass, sensor)], True)
             else:
                 async_add_devices([DeconzSensor(sensor)], True)
 
@@ -85,6 +89,7 @@ class DeconzEvent(object):
         self._hass = hass
         self._device = device
         self._device.register_callback(self._update_callback)
+        self._signal = DOMAIN + '_' + self._device.name
 
     @callback
     def _update_callback(self):
@@ -92,3 +97,38 @@ class DeconzEvent(object):
         event = 'deconz_event'
         data = {'id': self._device.name, 'event': self._device.state}
         self._hass.bus.async_fire(event, data, EventOrigin.remote)
+        async_dispatcher_send(self._hass, self._signal)
+
+
+class DeconzBattery(Entity):
+    """Battery class for when a device is only represented as an event."""
+
+    def __init__(self, hass, device):
+        """Register dispatcher callback for update of battery state."""
+        self._device = device
+        self._battery = device.battery
+        self._name = self._device.name + '_battery'
+        signal = DOMAIN + '_' + self._device.name
+        async_dispatcher_connect(hass, signal, self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Update the battery's state, if needed."""
+        if self._battery != self._device.battery:
+            self._battery = self._device.battery
+            self.async_schedule_update_ha_state()
+
+    @property
+    def state(self):
+        """Return the state of the battery."""
+        return self._battery
+
+    @property
+    def name(self):
+        """Return the name of the battery."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
