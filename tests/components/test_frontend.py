@@ -52,7 +52,7 @@ def test_frontend_and_static(mock_http_client):
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(
-        r'(?P<app>\/static\/frontend-[A-Za-z0-9]{32}.html)', text)
+        r'(?P<app>\/frontend_es5\/frontend-[A-Za-z0-9]{32}.html)', text)
 
     assert frontendjs is not None
     resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
@@ -63,6 +63,10 @@ def test_frontend_and_static(mock_http_client):
 @asyncio.coroutine
 def test_dont_cache_service_worker(mock_http_client):
     """Test that we don't cache the service worker."""
+    resp = yield from mock_http_client.get('/service_worker_es5.js')
+    assert resp.status == 200
+    assert 'cache-control' not in resp.headers
+
     resp = yield from mock_http_client.get('/service_worker.js')
     assert resp.status == 200
     assert 'cache-control' not in resp.headers
