@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 """
 import logging
 
-from datetime import timedelta
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_DEVICES
@@ -25,7 +23,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, cv.string)
+        vol.Required(CONF_DEVICES, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
