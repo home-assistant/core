@@ -438,6 +438,7 @@ class IndexView(HomeAssistantView):
         """Initialize the frontend view."""
         self.repo_path = repo_path
         self.js_option = js_option
+        self._template_cache = {}
 
     def get_template(self, latest):
         """Get template."""
@@ -450,8 +451,17 @@ class IndexView(HomeAssistantView):
             import hass_frontend_es5
             root = hass_frontend_es5.where()
 
-        with open(os.path.join(root, 'index.html')) as file:
-            return jinja2.Template(file.read())
+        tpl = self._template_cache.get(root)
+
+        if tpl is None:
+            with open(os.path.join(root, 'index.html')) as file:
+                tpl = jinja2.Template(file.read())
+
+            # Cache template if not running from repository
+            if self.repo_path is None:
+                self._template_cache[root] = tpl
+
+        return tpl
 
     @asyncio.coroutine
     def get(self, request, extra=None):
