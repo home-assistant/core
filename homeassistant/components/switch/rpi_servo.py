@@ -1,5 +1,6 @@
 """
 Allows to configure a switch using RPi GPIO Servos.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rpi_gpio/
 """
@@ -64,7 +65,7 @@ class RPiGPIOServo(ToggleEntity):
 
     def __init__(self, name, port, inactive_position, position_on,
                  position_off, enabled_duration):
-        """Initialize the servo"""
+        """Initialize the servo."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._state = False
@@ -104,8 +105,10 @@ class RPiGPIOServo(ToggleEntity):
         self.schedule_update_ha_state()
 
     def _run_with_duty(self, duty):
-        """Turn the servo to the given duty, and back to inactive unless
-        duration is 0"""
+        """Turn the servo to the given duty.
+
+         Also turns it back to inactive unless duration is 0.
+         """
         if self._enabled_duration == 0:
             GPIO.run_pwm(self._port, 50, duty, 2)
         else:
@@ -115,5 +118,5 @@ class RPiGPIOServo(ToggleEntity):
 
 
 def get_duty(degrees):
-    """Calculates the duty cycle given a number of degrees"""
+    """Calculate the duty cycle given a number of degrees."""
     return float(degrees) / 18.0 + 2.5

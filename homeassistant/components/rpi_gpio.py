@@ -49,7 +49,7 @@ def setup_input(port, pull_mode):
 
 
 def run_pwm(port, frequency, duty_cycle, duration):
-    """Run GPIO as PWM"""
+    """Run GPIO as PWM."""
     import RPi.GPIO as GPIO
     import time
     p = GPIO.PWM(port, frequency)
