@@ -103,7 +103,6 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.target_temperature, 22)
 
-
     def test_target_temperature_low(self):
         """Test low target temperature."""
         self.assertEqual(self.thermostat.target_temperature_low, 72)
