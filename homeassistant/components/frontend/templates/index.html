@@ -78,11 +78,11 @@
         <a href='/'>TRY AGAIN</a>
       </div>
     </div>
-    <home-assistant icons='{{ icons }}'></home-assistant>
-    {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
+    <home-assistant></home-assistant>
+    {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> -#}
+    {% if not latest -%}
     <script>
-      var compatibilityRequired = (
-        typeof Object.assign != 'function');
+      var compatibilityRequired = (typeof Object.assign != 'function');
       if (compatibilityRequired) {
         var e = document.createElement('script');
         e.onerror = initError;
@@ -90,10 +90,11 @@
         document.head.appendChild(e);
       }
     </script>
+    {% endif -%}
     <script src='{{ core_url }}'></script>
-    {% if not dev_mode %}
-    <script src='/static/custom-elements-es5-adapter.js'></script>
-    {% endif %}
+    {% if not dev_mode and not latest -%}
+    <script src='/frontend_es5/custom-elements-es5-adapter.js'></script>
+    {% endif -%}
     <script>
       var webComponentsSupported = (
         'customElements' in window &&
@@ -104,6 +105,11 @@
         e.onerror = initError;
         e.src = '/static/webcomponents-lite.js';
         document.head.appendChild(e);
+      }
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('{{ service_worker_name }}');
+        });
       }
     </script>
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
