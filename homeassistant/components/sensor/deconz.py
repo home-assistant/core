@@ -7,11 +7,12 @@ https://home-assistant.io/components/sensor/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import DECONZ_DATA
-from homeassistant.core import callback
+from homeassistant.components.deconz import (
+    DECONZ_DATA, DOMAIN, TYPE_AS_EVENT)
+from homeassistant.core import (callback, EventOrigin)
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['deconz']
+DEPENDENCIES = [DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,12 +21,18 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup sensor platform for Deconz."""
     from pydeconz.sensor import DECONZ_SENSOR
+
+    type_as_event = discovery_info.get(TYPE_AS_EVENT)
+
     if DECONZ_DATA in hass.data:
         sensors = hass.data[DECONZ_DATA].sensors
 
     for _, sensor in sensors.items():
         if sensor.type in DECONZ_SENSOR:
-            async_add_devices([DeconzSensor(sensor)], True)
+            if sensor.type == type_as_event:
+                DeconzEvent(hass, sensor)
+            else:
+                async_add_devices([DeconzSensor(sensor)], True)
 
 
 class DeconzSensor(Entity):
@@ -70,3 +77,20 @@ class DeconzSensor(Entity):
             'uniqueid': self._sensor.uniqueid,
         }
         return attr
+
+
+class DeconzEvent(object):
+    """When you want signals instead of entities."""
+
+    def __init__(self, hass, device):
+        """Register callback that will be used for signals."""
+        self._hass = hass
+        self._device = device
+        self._device.register_callback(self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Fire the event."""
+        event = 'deconz_event'
+        data = {'id': self._device.name, 'event': self._device.state}
+        self._hass.bus.async_fire(event, data, EventOrigin.remote)

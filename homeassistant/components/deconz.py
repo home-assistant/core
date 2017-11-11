@@ -23,11 +23,14 @@ DOMAIN = 'deconz'
 
 DECONZ_DATA = 'deconz_data'
 
+TYPE_AS_EVENT = 'type_as_event'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port
+        vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(TYPE_AS_EVENT, default='ZHASwitch'): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -95,6 +98,6 @@ def _setup_deconz(hass, config, deconz_config):
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'sensor',
                                                      DOMAIN,
-                                                     {},
+                                                     deconz_config,
                                                      config))
     deconz.start()
