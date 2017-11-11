@@ -189,6 +189,14 @@ class Metrics(object):
                 'electricity_usage_w', self.prometheus_client.Gauge,
                 'Currently reported electricity draw in Watts',
             ),
+            'min': (
+                'sensor_min', self.prometheus_client.Gauge,
+                'Time in minutes reported by a sensor'
+            ),
+            'Events': (
+                'sensor_event_count', self.prometheus_client.Gauge,
+                'Number of events for a sensor'
+            ),
         }
 
         unit = state.attributes.get('unit_of_measurement')
