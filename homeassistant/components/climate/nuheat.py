@@ -175,6 +175,11 @@ class NuHeatThermostat(ClimateDevice):
         if not self.is_away_mode_on:
             return
 
+        self.resume_program()
+        self._force_update = True
+
+    def resume_program(self):
+        """Resume the thermostat's programmed schedule."""
         self._thermostat.resume_schedule()
         self._force_update = True
 
