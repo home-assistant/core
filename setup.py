@@ -23,6 +23,7 @@ REQUIRES = [
     'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.2.5',
+    'yarl==0.13',  # Update this whenever you update aiohttp
     'async_timeout==2.0.0',
     'chardet==3.0.4',
     'astral==1.4',
