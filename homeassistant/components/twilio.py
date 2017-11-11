@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 
-REQUIREMENTS = ['twilio==5.7.0']
+REQUIREMENTS = ['twilio==6.8.3']
 
 DOMAIN = 'twilio'
 
