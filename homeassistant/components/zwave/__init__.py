@@ -49,7 +49,6 @@ CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_INVERT_OPENCLOSE_BUTTONS = 'invert_openclose_buttons'
 CONF_REFRESH_VALUE = 'refresh_value'
-CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
@@ -65,7 +64,6 @@ DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
-DEFAULT_CONF_REFRESH_DELAY = 5
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -140,9 +138,7 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_INVERT_OPENCLOSE_BUTTONS,
                  default=DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
-        cv.boolean,
-    vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
-        cv.positive_int
+        cv.boolean
 })
 
 SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
@@ -846,6 +842,11 @@ class ZWaveDeviceEntityValues():
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
+        if node_config.get(CONF_REFRESH_VALUE):
+            self.primary.set_change_verified(True)
+        else:
+            self.primary.set_change_verified(DEFAULT_CONF_REFRESH_VALUE)
+
         platform = get_platform(component, DOMAIN)
         device = platform.get_device(
             node=self._node, values=self,
@@ -886,7 +887,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         from pydispatch import dispatcher
         self.values = values
         self.node = values.primary.node
-        self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
         self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,

@@ -8,7 +8,6 @@ import logging
 
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
     ATTR_RGB_COLOR, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, DOMAIN, Light
@@ -47,15 +46,9 @@ TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 def get_device(node, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
-    refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
-    delay = node_config.get(zwave.CONF_REFRESH_DELAY)
-    _LOGGER.debug("node=%d value=%d node_config=%s CONF_REFRESH_VALUE=%s"
-                  " CONF_REFRESH_DELAY=%s", node.node_id,
-                  values.primary.value_id, node_config, refresh, delay)
-
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
-        return ZwaveColorLight(values, refresh, delay)
-    return ZwaveDimmer(values, refresh, delay)
+        return ZwaveColorLight(values)
+    return ZwaveDimmer(values)
 
 
 def brightness_state(value):
@@ -75,14 +68,12 @@ def ct_to_rgb(temp):
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     """Representation of a Z-Wave dimmer."""
 
-    def __init__(self, values, refresh, delay):
+    def __init__(self, values):
         """Initialize the light."""
         zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._brightness = None
         self._state = None
         self._supported_features = None
-        self._delay = delay
-        self._refresh_value = refresh
         self._zw098 = None
 
         # Enable appropriate workaround flags for our device
@@ -96,11 +87,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
 
-        # Used for value change event handling
-        self._refreshing = False
-        self._timer = None
-        _LOGGER.debug('self._refreshing=%s self.delay=%s',
-                      self._refresh_value, self._delay)
         self.value_added()
         self.update_properties()
 
@@ -114,25 +100,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._supported_features = SUPPORT_BRIGHTNESS
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
-
-    def value_changed(self):
-        """Call when a value for this entity's node has changed."""
-        if self._refresh_value:
-            if self._refreshing:
-                self._refreshing = False
-            else:
-                def _refresh_value():
-                    """Use timer callback for delayed value refresh."""
-                    self._refreshing = True
-                    self.values.primary.refresh()
-
-                if self._timer is not None and self._timer.isAlive():
-                    self._timer.cancel()
-
-                self._timer = Timer(self._delay, _refresh_value)
-                self._timer.start()
-                return
-        super().value_changed()
 
     @property
     def brightness(self):
@@ -206,13 +173,13 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 class ZwaveColorLight(ZwaveDimmer):
     """Representation of a Z-Wave color changing light."""
 
-    def __init__(self, values, refresh, delay):
+    def __init__(self, values):
         """Initialize the light."""
         self._color_channels = None
         self._rgb = None
         self._ct = None
 
-        super().__init__(values, refresh, delay)
+        super().__init__(values)
 
     def value_added(self):
         """Call when a new value is added to this entity."""

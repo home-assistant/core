@@ -1,7 +1,6 @@
 """Test Z-Wave lights."""
 from unittest.mock import patch, MagicMock
 
-import homeassistant.components.zwave
 from homeassistant.components.zwave import const
 from homeassistant.components.light import (
     zwave, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
@@ -162,45 +161,6 @@ def test_dimmer_value_changed(mock_openzwave):
 
     assert device.is_on
     assert device.brightness == 118
-
-
-def test_dimmer_refresh_value(mock_openzwave):
-    """Test value changed for dimmer lights."""
-    node = MockNode()
-    value = MockValue(data=0, node=node)
-    values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={
-        homeassistant.components.zwave.CONF_REFRESH_VALUE: True,
-        homeassistant.components.zwave.CONF_REFRESH_DELAY: 5,
-    })
-
-    assert not device.is_on
-
-    with patch.object(zwave, 'Timer', MagicMock()) as mock_timer:
-        value.data = 46
-        value_changed(value)
-
-        assert not device.is_on
-        assert mock_timer.called
-        assert len(mock_timer.mock_calls) == 2
-        timeout, callback = mock_timer.mock_calls[0][1][:2]
-        assert timeout == 5
-        assert mock_timer().start.called
-        assert len(mock_timer().start.mock_calls) == 1
-
-        with patch.object(zwave, 'Timer', MagicMock()) as mock_timer_2:
-            value_changed(value)
-            assert not device.is_on
-            assert mock_timer().cancel.called
-            assert len(mock_timer_2.mock_calls) == 2
-            timeout, callback = mock_timer_2.mock_calls[0][1][:2]
-            assert timeout == 5
-            assert mock_timer_2().start.called
-            assert len(mock_timer_2().start.mock_calls) == 1
-
-            callback()
-            assert device.is_on
-            assert device.brightness == 118
 
 
 def test_set_rgb_color(mock_openzwave):
