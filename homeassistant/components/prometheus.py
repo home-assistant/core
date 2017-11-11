@@ -14,12 +14,13 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components import recorder
 from homeassistant.const import (
     CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE, TEMP_CELSIUS,
-    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN)
+    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
+    STATE_UNAVAILABLE)
 from homeassistant import core as hacore
 from homeassistant.helpers import state as state_helper
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
-REQUIREMENTS = ['prometheus_client==0.0.19']
+REQUIREMENTS = ['prometheus_client==0.0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -220,8 +221,15 @@ class Metrics(object):
             self.prometheus_client.Gauge,
             'State of the switch (0/1)',
         )
-        value = state_helper.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+
+        if state.state == STATE_UNAVAILABLE:
+            metric.labels(**self._labels(state)).set(0)
+
+        try:
+            value = state_helper.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
 
     def _handle_zwave(self, state):
         self._battery(state)
