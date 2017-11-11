@@ -7,7 +7,9 @@ from homeassistant.components import spc
 from homeassistant.bootstrap import async_setup_component
 from tests.common import async_test_home_assistant
 from tests.test_util.aiohttp import mock_aiohttp_client
-from homeassistant.const import (STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
 
 @pytest.fixture
@@ -57,7 +59,13 @@ def aioclient_mock():
 
 
 @asyncio.coroutine
-def test_update_alarm_device(hass, aioclient_mock, monkeypatch):
+@pytest.mark.parametrize("sia_code,state", [
+    ('NL', STATE_ALARM_ARMED_HOME),
+    ('CG', STATE_ALARM_ARMED_AWAY),
+    ('OG', STATE_ALARM_DISARMED)
+])
+def test_update_alarm_device(hass, aioclient_mock, monkeypatch,
+                             sia_code, state):
     """Test that alarm panel state changes on incoming websocket data."""
     monkeypatch.setattr("homeassistant.components.spc.SpcWebGateway."
                         "start_listener", lambda x, *args: None)
@@ -65,8 +73,8 @@ def test_update_alarm_device(hass, aioclient_mock, monkeypatch):
         'spc': {
             'api_url': 'http://localhost/',
             'ws_url': 'ws://localhost/'
-            }
         }
+    }
     yield from async_setup_component(hass, 'spc', config)
     yield from hass.async_block_till_done()
 
@@ -74,38 +82,48 @@ def test_update_alarm_device(hass, aioclient_mock, monkeypatch):
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    msg = {"sia_code": "NL", "sia_address": "1", "description": "House|Sam|1"}
+    msg = {"sia_code": sia_code, "sia_address": "1",
+           "description": "House¦Sam¦1"}
     yield from spc._async_process_message(msg, hass.data[spc.DATA_REGISTRY])
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    yield from hass.async_block_till_done()
 
-    msg = {"sia_code": "OQ", "sia_address": "1", "description": "Sam"}
-    yield from spc._async_process_message(msg, hass.data[spc.DATA_REGISTRY])
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    state_obj = hass.states.get(entity_id)
+    assert state_obj.state == state
+    assert state_obj.attributes['changed_by'] == 'Sam'
 
 
 @asyncio.coroutine
-def test_update_sensor_device(hass, aioclient_mock, monkeypatch):
-    """Test that sensors change state on incoming websocket data."""
+@pytest.mark.parametrize("sia_code,state", [
+    ('ZO', STATE_ON),
+    ('ZC', STATE_OFF)
+])
+def test_update_sensor_device(hass, aioclient_mock, monkeypatch,
+                              sia_code, state):
+    """
+    Test that sensors change state on incoming websocket data.
+
+    Note that we don't test for the ZD (disconnected) and ZX (problem/short)
+    codes since the binary sensor component is hardcoded to only
+    let on/off states through.
+    """
     monkeypatch.setattr("homeassistant.components.spc.SpcWebGateway."
                         "start_listener", lambda x, *args: None)
     config = {
         'spc': {
             'api_url': 'http://localhost/',
             'ws_url': 'ws://localhost/'
-            }
         }
+    }
     yield from async_setup_component(hass, 'spc', config)
     yield from hass.async_block_till_done()
 
-    assert hass.states.get('binary_sensor.hallway_pir').state == 'off'
+    assert hass.states.get('binary_sensor.hallway_pir').state == STATE_OFF
 
-    msg = {"sia_code": "ZO", "sia_address": "3", "description": "Hallway PIR"}
+    msg = {"sia_code": sia_code, "sia_address": "3",
+           "description": "Hallway PIR"}
     yield from spc._async_process_message(msg, hass.data[spc.DATA_REGISTRY])
-    assert hass.states.get('binary_sensor.hallway_pir').state == 'on'
-
-    msg = {"sia_code": "ZC", "sia_address": "3", "description": "Hallway PIR"}
-    yield from spc._async_process_message(msg, hass.data[spc.DATA_REGISTRY])
-    assert hass.states.get('binary_sensor.hallway_pir').state == 'off'
+    yield from hass.async_block_till_done()
+    assert hass.states.get('binary_sensor.hallway_pir').state == state
 
 
 class TestSpcRegistry:
@@ -139,7 +157,7 @@ class TestSpcWebGateway:
         ('set', spc.SpcWebGateway.AREA_COMMAND_SET),
         ('unset', spc.SpcWebGateway.AREA_COMMAND_UNSET),
         ('set_a', spc.SpcWebGateway.AREA_COMMAND_PART_SET)
-        ])
+    ])
     def test_area_commands(self, spcwebgw, url_command, command):
         """Test alarm arming/disarming."""
         with mock_aiohttp_client() as aioclient_mock:

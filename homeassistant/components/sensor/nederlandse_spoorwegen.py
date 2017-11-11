@@ -135,6 +135,10 @@ class NSDepartureSensor(Entity):
             'departure_delay':
                 self._trips[0].departure_time_planned !=
                 self._trips[0].departure_time_actual,
+            'departure_platform':
+                self._trips[0].trip_parts[0].stops[0].platform,
+            'departure_platform_changed':
+                self._trips[0].trip_parts[0].stops[0].platform_changed,
             'arrival_time_planned':
                 self._trips[0].arrival_time_planned.strftime('%H:%M'),
             'arrival_time_actual':
@@ -142,6 +146,10 @@ class NSDepartureSensor(Entity):
             'arrival_delay':
                 self._trips[0].arrival_time_planned !=
                 self._trips[0].arrival_time_actual,
+            'arrival_platform':
+                self._trips[0].trip_parts[0].stops[-1].platform,
+            'arrival_platform_changed':
+                self._trips[0].trip_parts[0].stops[-1].platform_changed,
             'next':
                 self._trips[1].departure_time_actual.strftime('%H:%M'),
             'status': self._trips[0].status.lower(),
