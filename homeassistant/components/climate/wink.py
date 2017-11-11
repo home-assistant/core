@@ -139,7 +139,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
 
     @property
     def eco_target(self):
-        """Return status of eco target (Is the termostat in eco mode)."""
+        """Return status of eco target (Is the thermostat in eco mode)."""
         return self.wink.eco_target()
 
     @property
@@ -249,7 +249,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             if ha_mode is not None:
                 op_list.append(ha_mode)
             else:
-                error = "Invaid operation mode mapping. " + mode + \
+                error = "Invalid operation mode mapping. " + mode + \
                     " doesn't map. Please report this."
                 _LOGGER.error(error)
         return op_list
@@ -297,7 +297,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         minimum = 7  # Default minimum
         min_min = self.wink.min_min_set_point()
         min_max = self.wink.min_max_set_point()
-        return_value = minimum
         if self.current_operation == STATE_HEAT:
             if min_min:
                 return_value = min_min
@@ -323,7 +322,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         maximum = 35  # Default maximum
         max_min = self.wink.max_min_set_point()
         max_max = self.wink.max_max_set_point()
-        return_value = maximum
         if self.current_operation == STATE_HEAT:
             if max_min:
                 return_value = max_min
@@ -377,11 +375,14 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
+        """Return current operation ie. auto_eco, cool_only, fan_only."""
         if not self.wink.is_on():
             current_op = STATE_OFF
         else:
-            current_op = WINK_STATE_TO_HA.get(self.wink.current_hvac_mode())
+            wink_mode = self.wink.current_mode()
+            if wink_mode == "auto_eco":
+                wink_mode = "eco"
+            current_op = WINK_STATE_TO_HA.get(wink_mode)
             if current_op is None:
                 current_op = STATE_UNKNOWN
         return current_op
@@ -392,11 +393,13 @@ class WinkAC(WinkDevice, ClimateDevice):
         op_list = ['off']
         modes = self.wink.modes()
         for mode in modes:
+            if mode == "auto_eco":
+                mode = "eco"
             ha_mode = WINK_STATE_TO_HA.get(mode)
             if ha_mode is not None:
                 op_list.append(ha_mode)
             else:
-                error = "Invaid operation mode mapping. " + mode + \
+                error = "Invalid operation mode mapping. " + mode + \
                     " doesn't map. Please report this."
                 _LOGGER.error(error)
         return op_list
@@ -420,15 +423,19 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def current_fan_mode(self):
-        """Return the current fan mode."""
+        """
+        Return the current fan mode.
+
+        The official Wink app only supports 3 modes [low, medium, high]
+        which are equal to [0.33, 0.66, 1.0] respectively.
+        """
         speed = self.wink.current_fan_speed()
-        if speed <= 0.4 and speed > 0.3:
+        if speed <= 0.33:
             return SPEED_LOW
-        elif speed <= 0.8 and speed > 0.5:
+        elif speed <= 0.66:
             return SPEED_MEDIUM
-        elif speed <= 1.0 and speed > 0.8:
+        else:
             return SPEED_HIGH
-        return STATE_UNKNOWN
 
     @property
     def fan_list(self):
@@ -436,11 +443,16 @@ class WinkAC(WinkDevice, ClimateDevice):
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def set_fan_mode(self, fan):
-        """Set fan speed."""
+        """
+        Set fan speed.
+
+        The official Wink app only supports 3 modes [low, medium, high]
+        which are equal to [0.33, 0.66, 1.0] respectively.
+        """
         if fan == SPEED_LOW:
-            speed = 0.4
+            speed = 0.33
         elif fan == SPEED_MEDIUM:
-            speed = 0.8
+            speed = 0.66
         elif fan == SPEED_HIGH:
             speed = 1.0
         self.wink.set_ac_fan_speed(speed)
@@ -492,7 +504,7 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
             if ha_mode is not None:
                 op_list.append(ha_mode)
             else:
-                error = "Invaid operation mode mapping. " + mode + \
+                error = "Invalid operation mode mapping. " + mode + \
                     " doesn't map. Please report this."
                 _LOGGER.error(error)
         return op_list
