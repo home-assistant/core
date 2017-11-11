@@ -9,9 +9,9 @@ import logging
 
 from homeassistant.components.deconz import DECONZ_DATA
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR,
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_XY_COLOR)
+    SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
@@ -47,7 +47,7 @@ class DeconzLight(Light):
         self._light = light
         self._light.register_callback(self._update_callback)
 
-        self._features = SUPPORT_BRIGHTNESS
+        self._features = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
         if self._light.xy:
             self._features |= SUPPORT_XY_COLOR
             self._features |= SUPPORT_RGB_COLOR
@@ -108,12 +108,17 @@ class DeconzLight(Light):
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
             data['xy'] = xyb[0], xyb[1]
             data['bri'] = xyb[2]
+        if ATTR_TRANSITION in kwargs:
+            data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
         yield from self._light.set_state(data)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn off light."""
         data = {'on': False}
+        if ATTR_TRANSITION in kwargs:
+            data = {'bri': 0}
+            data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
         yield from self._light.set_state(data)
 
     @property
