@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import DATA_DECONZ
+from homeassistant.components.deconz import DECONZ_DATA
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup sensor platform for Deconz."""
     from pydeconz.sensor import DECONZ_SENSOR
-    if DATA_DECONZ in hass.data:
-        sensors = hass.data[DATA_DECONZ].sensors
+    if DECONZ_DATA in hass.data:
+        sensors = hass.data[DECONZ_DATA].sensors
 
     for _, sensor in sensors.items():
         if sensor.type in DECONZ_SENSOR:

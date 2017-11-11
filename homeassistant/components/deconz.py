@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'deconz'
 
-DATA_DECONZ = 'data_deconz'
+DECONZ_DATA = 'deconz_data'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -40,9 +40,9 @@ def async_setup(hass, config):
     @callback
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the connections to Deconz on shutdown."""
-        if DATA_DECONZ in hass.data:
+        if DECONZ_DATA in hass.data:
             _LOGGER.info("Stopping Deconz session.")
-            hass.data[DATA_DECONZ].close()
+            hass.data[DECONZ_DATA].close()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     @asyncio.coroutine
@@ -77,7 +77,7 @@ def _setup_deconz(hass, config, deconz_config):
     """
     from pydeconz import DeconzSession
     deconz = DeconzSession(hass.loop, **deconz_config)
-    hass.data[DATA_DECONZ] = deconz
+    hass.data[DECONZ_DATA] = deconz
     yield from deconz.populate_config()
     yield from deconz.populate_groups()
     yield from deconz.populate_lights()

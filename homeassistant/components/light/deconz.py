@@ -7,7 +7,7 @@ https://home-assistant.io/components/light/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import DATA_DECONZ
+from homeassistant.components.deconz import DECONZ_DATA
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
@@ -24,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup light platform for Deconz."""
-    if DATA_DECONZ in hass.data:
-        lights = hass.data[DATA_DECONZ].lights
-        groups = hass.data[DATA_DECONZ].groups
+    if DECONZ_DATA in hass.data:
+        lights = hass.data[DECONZ_DATA].lights
+        groups = hass.data[DECONZ_DATA].groups
 
     for _, light in lights.items():
         async_add_devices([DeconzLight(light)], True)
