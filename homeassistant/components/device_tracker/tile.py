@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_EMAIL, CONF_MONITORED_VARIABLES, CONF_PASSWORD)
+    CONF_USERNAME, CONF_MONITORED_VARIABLES, CONF_PASSWORD)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
@@ -35,7 +35,7 @@ ATTR_RING_STATE = 'ring_state'
 ATTR_VOIP_STATE = 'voip_state'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES):
         vol.All(cv.ensure_list, [vol.In(DEVICE_TYPES)]),
@@ -62,13 +62,13 @@ class TileDeviceScanner(DeviceScanner):
         if config_data:
             _LOGGER.debug('Using existing client UUID')
             self._client = Client(
-                config[CONF_EMAIL],
+                config[CONF_USERNAME],
                 config[CONF_PASSWORD],
                 config_data['client_uuid'])
         else:
             _LOGGER.debug('Generating new client UUID')
             self._client = Client(
-                config[CONF_EMAIL],
+                config[CONF_USERNAME],
                 config[CONF_PASSWORD])
 
             if not save_json(
@@ -82,11 +82,10 @@ class TileDeviceScanner(DeviceScanner):
         self._types = config.get(CONF_MONITORED_VARIABLES)
 
         self.devices = {}
-        self.hass = hass
         self.see = see
 
         track_utc_time_change(
-            self.hass, self._update_info, second=range(0, 60, 30))
+            hass, self._update_info, second=range(0, 60, 30))
 
         self._update_info()
 
@@ -99,9 +98,9 @@ class TileDeviceScanner(DeviceScanner):
         except KeyError:
             _LOGGER.warning('No Tiles found')
             _LOGGER.debug(device_data)
-            return False
+            return
 
-        for _, info in self.devices.items():
+        for info in self.devices.values():
             dev_id = 'tile_{0}'.format(slugify(info['name']))
             lat = info['tileState']['latitude']
             lon = info['tileState']['longitude']
