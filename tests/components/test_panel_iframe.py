@@ -34,7 +34,7 @@ class TestPanelIframe(unittest.TestCase):
                 })
 
     @patch.dict('hass_frontend_es5.FINGERPRINTS',
-                {'panels/ha-panel-iframe.html': 'md5md5'})
+                {'iframe': 'md5md5'})
     def test_correct_config(self):
         """Test correct config."""
         assert setup.setup_component(
