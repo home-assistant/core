@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 from aiohttp import web
 import voluptuous as vol
+import jinja2
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
@@ -171,8 +172,6 @@ class BuiltInPanel(AbstractPanel):
         If frontend_repository_path is set, will be prepended to path of
         built-in components.
         """
-        panel_path = 'panels/ha-panel-{}.html'.format(self.component_name)
-
         if frontend_repository_path is None:
             import hass_frontend
             import hass_frontend_es5
@@ -180,11 +179,11 @@ class BuiltInPanel(AbstractPanel):
             self.webcomponent_url_latest = \
                 '/frontend_latest/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
-                    hass_frontend.FINGERPRINTS[panel_path])
+                    hass_frontend.FINGERPRINTS[self.component_name])
             self.webcomponent_url_es5 = \
                 '/frontend_es5/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
-                    hass_frontend_es5.FINGERPRINTS[panel_path])
+                    hass_frontend_es5.FINGERPRINTS[self.component_name])
         else:
             # Dev mode
             self.webcomponent_url_es5 = self.webcomponent_url_latest = \
@@ -335,7 +334,7 @@ def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(is_dev, js_version)
+    index_view = IndexView(repo_path, js_version)
     hass.http.register_view(index_view)
 
     @asyncio.coroutine
@@ -435,50 +434,30 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self, use_repo, js_option):
+    def __init__(self, repo_path, js_option):
         """Initialize the frontend view."""
-        from jinja2 import FileSystemLoader, Environment
-
-        self.use_repo = use_repo
-        self.templates = Environment(
-            autoescape=True,
-            loader=FileSystemLoader(
-                os.path.join(os.path.dirname(__file__), 'templates/')
-            )
-        )
+        self.repo_path = repo_path
         self.js_option = js_option
+
+    def get_template(self, latest):
+        """Get template."""
+        if self.repo_path is not None:
+            root = self.repo_path
+        elif latest:
+            import hass_frontend
+            root = hass_frontend.where()
+        else:
+            import hass_frontend_es5
+            root = hass_frontend_es5.where()
+
+        with open(os.path.join(root, 'index.html')) as file:
+            return jinja2.Template(file.read())
 
     @asyncio.coroutine
     def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
         latest = _is_latest(self.js_option, request)
-        compatibility_url = None
-
-        if self.use_repo:
-            core_url = '/home-assistant-polymer/{}/core.js'.format(
-                'build' if latest else 'build-es5')
-            ui_url = '/home-assistant-polymer/src/home-assistant.html'
-            icons_fp = ''
-            icons_url = '/static/mdi.html'
-        else:
-            if latest:
-                import hass_frontend
-                core_url = '/frontend_latest/core-{}.js'.format(
-                    hass_frontend.FINGERPRINTS['core.js'])
-                ui_url = '/frontend_latest/frontend-{}.html'.format(
-                    hass_frontend.FINGERPRINTS['frontend.html'])
-            else:
-                import hass_frontend_es5
-                core_url = '/frontend_es5/core-{}.js'.format(
-                    hass_frontend_es5.FINGERPRINTS['core.js'])
-                compatibility_url = '/frontend_es5/compatibility-{}.js'.format(
-                    hass_frontend_es5.FINGERPRINTS['compatibility.js'])
-                ui_url = '/frontend_es5/frontend-{}.html'.format(
-                    hass_frontend_es5.FINGERPRINTS['frontend.html'])
-            import hass_frontend
-            icons_fp = '-{}'.format(hass_frontend.FINGERPRINTS['mdi.html'])
-            icons_url = '/static/mdi{}.html'.format(icons_fp)
 
         if request.path == '/':
             panel = 'states'
@@ -497,23 +476,17 @@ class IndexView(HomeAssistantView):
             # do not try to auto connect on load
             no_auth = 'false'
 
-        template = yield from hass.async_add_job(
-            self.templates.get_template, 'index.html')
+        template = yield from hass.async_add_job(self.get_template, latest)
 
-        # pylint is wrong
-        # pylint: disable=no-member
-        # This is a jinja2 template, not a HA template so we call 'render'.
         resp = template.render(
-            core_url=core_url, ui_url=ui_url,
-            compatibility_url=compatibility_url, no_auth=no_auth,
-            icons_url=icons_url, icons=icons_fp,
-            panel_url=panel_url, panels=hass.data[DATA_PANELS],
-            dev_mode=self.use_repo,
+            no_auth=no_auth,
+            panel_url=panel_url,
+            panels=hass.data[DATA_PANELS],
+            dev_mode=self.repo_path is not None,
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[DATA_EXTRA_HTML_URL],
             latest=latest,
-            service_worker_name='/service_worker.js' if latest else
-            '/service_worker_es5.js')
+        )
 
         return web.Response(text=resp, content_type='text/html')
 
@@ -528,8 +501,8 @@ class ManifestJSONView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):    # pylint: disable=no-self-use
         """Return the manifest.json."""
-        msg = json.dumps(MANIFEST_JSON, sort_keys=True).encode('UTF-8')
-        return web.Response(body=msg, content_type="application/manifest+json")
+        msg = json.dumps(MANIFEST_JSON, sort_keys=True)
+        return web.Response(text=msg, content_type="application/manifest+json")
 
 
 class ThemesView(HomeAssistantView):
