@@ -13,6 +13,7 @@ SCHEDULE_TEMPORARY_HOLD = 2
 
 class TestNuHeat(unittest.TestCase):
     """Tests for NuHeat climate."""
+    # pylint: disable=protected-access, no-self-use
 
     def setUp(self):
 
@@ -41,6 +42,25 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat = nuheat.NuHeatThermostat(
             api, serial_number, temperature_unit)
 
+    @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
+    def test_setup_platform(self, mocked_thermostat):
+        """Test setup_platform."""
+        api = Mock()
+        data = {"nuheat": (api, ["12345"])}
+
+        hass = Mock()
+        hass.config.units.temperature_unit.return_value = "F"
+        hass.data = Mock()
+        hass.data.__getitem__ = Mock(side_effect=data.__getitem__)
+
+        config = {}
+        add_devices = Mock()
+        discovery_info = {}
+
+        nuheat.setup_platform(hass, config, add_devices, discovery_info)
+        thermostats = [mocked_thermostat(api, "12345", "F")]
+        add_devices.assert_called_once_with(thermostats, True)
+
     def test_name(self):
         """Test name property."""
         self.assertEqual(self.thermostat.name, "Master bathroom")
@@ -48,42 +68,36 @@ class TestNuHeat(unittest.TestCase):
     def test_temperature_unit(self):
         """Test temperature unit."""
         self.assertEqual(self.thermostat.temperature_unit, TEMP_FAHRENHEIT)
-
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.temperature_unit, TEMP_CELSIUS)
 
     def test_current_temperature(self):
         """Test current temperature."""
         self.assertEqual(self.thermostat.current_temperature, 72)
-
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.current_temperature, 22)
 
     def test_current_operation(self):
         """Test current operation."""
         self.assertEqual(self.thermostat.current_operation, STATE_HEAT)
-
         self.thermostat._thermostat.heating = False
         self.assertEqual(self.thermostat.current_operation, STATE_IDLE)
 
     def test_min_temp(self):
         """Test min temp."""
         self.assertEqual(self.thermostat.min_temp, 41)
-
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.min_temp, 5)
 
     def test_max_temp(self):
         """Test max temp."""
         self.assertEqual(self.thermostat.max_temp, 157)
-
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.max_temp, 69)
 
     def test_target_temperature(self):
         """Test target temperature."""
         self.assertEqual(self.thermostat.target_temperature, 72)
-
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.target_temperature, 22)
 
@@ -91,14 +105,12 @@ class TestNuHeat(unittest.TestCase):
     def test_target_temperature_low(self):
         """Test low target temperature."""
         self.assertEqual(self.thermostat.target_temperature_low, 72)
-
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.target_temperature_low, 22)
 
     def test_target_temperature_high(self):
         """Test high target temperature."""
         self.assertEqual(self.thermostat.target_temperature_high, 72)
-
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.target_temperature_high, 22)
 
@@ -143,7 +155,7 @@ class TestNuHeat(unittest.TestCase):
     @patch.object(
         nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
     @patch.object(nuheat.NuHeatThermostat, "set_temperature")
-    def test_turn_away_mode_on_while_home(self, set_temp, is_away_mode_on):
+    def test_turn_away_mode_on_home(self, set_temp, is_away_mode_on):
         """Test turn away mode on when not away."""
         is_away_mode_on.return_value = False
         self.thermostat.turn_away_mode_on()
@@ -153,7 +165,7 @@ class TestNuHeat(unittest.TestCase):
     @patch.object(
         nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
     @patch.object(nuheat.NuHeatThermostat, "set_temperature")
-    def test_turn_away_mode_on_while_away(self, set_temp, is_away_mode_on):
+    def test_turn_away_mode_on_away(self, set_temp, is_away_mode_on):
         """Test turn away mode on when away."""
         is_away_mode_on.return_value = True
         self.thermostat.turn_away_mode_on()
