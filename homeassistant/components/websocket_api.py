@@ -483,12 +483,14 @@ class ActiveConnection:
         Async friendly.
         """
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
+        panels = {
+            panel:
+            self.hass.data[frontend.DATA_PANELS][panel].to_response(self.hass,
+                                                                    request)
+            for panel in self.hass.data[frontend.DATA_PANELS]}
 
         self.to_write.put_nowait(result_message(
-            msg['id'], [
-                self.hass.data[frontend.DATA_PANELS][panel]
-                .to_response(self.hass, request)
-                for panel in self.hass.data[frontend.DATA_PANELS]]))
+            msg['id'], panels))
 
     def handle_ping(self, msg, _):
         """Handle ping command.

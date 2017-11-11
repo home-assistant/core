@@ -300,14 +300,14 @@ def test_get_panels(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
-    assert msg['result'] == [{
+    assert msg['result'] == {'map': {
         'component_name': 'map',
         'url_path': 'map',
         'config': None,
         'url': None,
         'icon': 'mdi:account-location',
         'title': 'Map',
-    }]
+    }}
 
 
 @asyncio.coroutine
