@@ -4,7 +4,7 @@ import requests_mock
 
 from copy import deepcopy
 from homeassistant import setup
-import components.vultr as vultr
+import homeassistant.components.vultr as vultr
 
 from tests.common import (
     get_test_home_assistant, load_fixture)
