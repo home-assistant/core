@@ -202,15 +202,16 @@ class WebsocketAPIView(HomeAssistantView):
     def get(self, request):
         """Handle an incoming websocket connection."""
         # pylint: disable=no-self-use
-        return ActiveConnection(request.app['hass']).handle(request)
+        return ActiveConnection(request.app['hass'], request).handle()
 
 
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, request):
         """Initialize an active connection."""
         self.hass = hass
+        self.request = request
         self.wsock = None
         self.event_listeners = {}
         self.to_write = asyncio.Queue(maxsize=MAX_PENDING_MSG, loop=hass.loop)
@@ -259,8 +260,9 @@ class ActiveConnection:
         self._writer_task.cancel()
 
     @asyncio.coroutine
-    def handle(self, request):
+    def handle(self):
         """Handle the websocket connection."""
+        request = self.request
         wsock = self.wsock = web.WebSocketResponse()
         yield from wsock.prepare(request)
         self.debug("Connected")
@@ -320,7 +322,7 @@ class ActiveConnection:
 
                 else:
                     handler_name = 'handle_{}'.format(msg['type'])
-                    getattr(self, handler_name)(msg, request)
+                    getattr(self, handler_name)(msg)
 
                 last_id = cur_id
                 msg = yield from wsock.receive_json()
@@ -350,7 +352,7 @@ class ActiveConnection:
             if wsock.closed:
                 self.debug("Connection closed by client")
             else:
-                self.log_error("Unexpected TypeError", msg)
+                _LOGGER.exception("Unexpected TypeError: %s", msg)
 
         except ValueError as err:
             msg = "Received invalid JSON"
@@ -394,7 +396,7 @@ class ActiveConnection:
 
         return wsock
 
-    def handle_subscribe_events(self, msg, _):
+    def handle_subscribe_events(self, msg):
         """Handle subscribe events command.
 
         Async friendly.
@@ -414,7 +416,7 @@ class ActiveConnection:
 
         self.to_write.put_nowait(result_message(msg['id']))
 
-    def handle_unsubscribe_events(self, msg, _):
+    def handle_unsubscribe_events(self, msg):
         """Handle unsubscribe events command.
 
         Async friendly.
@@ -431,7 +433,7 @@ class ActiveConnection:
                 msg['id'], ERR_NOT_FOUND,
                 'Subscription not found.'))
 
-    def handle_call_service(self, msg, _):
+    def handle_call_service(self, msg):
         """Handle call service command.
 
         This is a coroutine.
@@ -447,7 +449,7 @@ class ActiveConnection:
 
         self.hass.async_add_job(call_service_helper(msg))
 
-    def handle_get_states(self, msg, _):
+    def handle_get_states(self, msg):
         """Handle get states command.
 
         Async friendly.
@@ -457,7 +459,7 @@ class ActiveConnection:
         self.to_write.put_nowait(result_message(
             msg['id'], self.hass.states.async_all()))
 
-    def handle_get_services(self, msg, _):
+    def handle_get_services(self, msg):
         """Handle get services command.
 
         Async friendly.
@@ -467,7 +469,7 @@ class ActiveConnection:
         self.to_write.put_nowait(result_message(
             msg['id'], self.hass.services.async_services()))
 
-    def handle_get_config(self, msg, _):
+    def handle_get_config(self, msg):
         """Handle get config command.
 
         Async friendly.
@@ -477,7 +479,7 @@ class ActiveConnection:
         self.to_write.put_nowait(result_message(
             msg['id'], self.hass.config.as_dict()))
 
-    def handle_get_panels(self, msg, request):
+    def handle_get_panels(self, msg):
         """Handle get panels command.
 
         Async friendly.
@@ -485,14 +487,14 @@ class ActiveConnection:
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
         panels = {
             panel:
-            self.hass.data[frontend.DATA_PANELS][panel].to_response(self.hass,
-                                                                    request)
+            self.hass.data[frontend.DATA_PANELS][panel].to_response(
+                self.hass, self.request)
             for panel in self.hass.data[frontend.DATA_PANELS]}
 
         self.to_write.put_nowait(result_message(
             msg['id'], panels))
 
-    def handle_ping(self, msg, _):
+    def handle_ping(self, msg):
         """Handle ping command.
 
         Async friendly.
