@@ -65,6 +65,7 @@ DOMAIN = 'telegram_bot'
 
 SERVICE_SEND_MESSAGE = 'send_message'
 SERVICE_SEND_PHOTO = 'send_photo'
+SERVICE_SEND_VIDEO = 'send_video'
 SERVICE_SEND_DOCUMENT = 'send_document'
 SERVICE_SEND_LOCATION = 'send_location'
 SERVICE_EDIT_MESSAGE = 'edit_message'
@@ -154,6 +155,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
@@ -277,12 +279,11 @@ def async_setup(hass, config):
         if msgtype == SERVICE_SEND_MESSAGE:
             yield from hass.async_add_job(
                 partial(notify_service.send_message, **kwargs))
-        elif msgtype == SERVICE_SEND_PHOTO:
+        elif (msgtype == SERVICE_SEND_PHOTO or
+              msgtype == SERVICE_SEND_VIDEO or
+              msgtype == SERVICE_SEND_DOCUMENT):
             yield from hass.async_add_job(
-                partial(notify_service.send_file, True, **kwargs))
-        elif msgtype == SERVICE_SEND_DOCUMENT:
-            yield from hass.async_add_job(
-                partial(notify_service.send_file, False, **kwargs))
+                partial(notify_service.send_file, msgtype, **kwargs))
         elif msgtype == SERVICE_SEND_LOCATION:
             yield from hass.async_add_job(
                 partial(notify_service.send_location, **kwargs))
@@ -518,11 +519,15 @@ class TelegramNotificationService:
                        callback_query_id,
                        text=message, show_alert=show_alert, **params)
 
-    def send_file(self, is_photo=True, target=None, **kwargs):
-        """Send a photo or a document."""
+    def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
+        """Send a photo, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
-        func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
+        func_send = {
+            SERVICE_SEND_PHOTO: self.bot.sendPhoto,
+            SERVICE_SEND_VIDEO: self.bot.sendVideo,
+            SERVICE_SEND_DOCUMENT: self.bot.sendDocument
+        }.get(file_type)
         file_content = load_data(
             self.hass,
             url=kwargs.get(ATTR_URL),
