@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     ClimateDevice,
     STATE_HEAT,
     STATE_IDLE)
+from homeassistant.components.nuheat import DATA_NUHEAT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
@@ -26,7 +27,6 @@ MODE_AUTO = "auto"  # Run device schedule
 MODE_AWAY = "away"
 MODE_HOLD_TEMPERATURE = "temperature"
 MODE_TEMPORARY_HOLD = "temporary_temperature"
-# TODO: offline?
 
 OPERATION_LIST = [STATE_HEAT, STATE_IDLE]
 
@@ -36,15 +36,13 @@ SCHEDULE_TEMPORARY_HOLD = 2
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the NuHeat thermostat(s)."""
     if discovery_info is None:
         return
 
-    _LOGGER.info("Loading NuHeat thermostat component")
-
+    _LOGGER.info("Loading NuHeat thermostat climate component")
     temperature_unit = hass.config.units.temperature_unit
-    _LOGGER.debug("temp_unit is %s", temperature_unit)
     api, serial_numbers = hass.data[DATA_NUHEAT]
-
     thermostats = [
         NuHeatThermostat(api, serial_number, temperature_unit)
         for serial_number in serial_numbers
@@ -77,7 +75,7 @@ class NuHeatThermostat(ClimateDevice):
         """Return the current temperature."""
         if self._temperature_unit == "C":
             return self._thermostat.celsius
-        
+
         return self._thermostat.fahrenheit
 
     @property
@@ -158,7 +156,7 @@ class NuHeatThermostat(ClimateDevice):
 
         if self._thermostat.schedule_mode != SCHEDULE_HOLD:
             return False
-        
+
         return True
 
     def turn_away_mode_on(self):
@@ -203,6 +201,6 @@ class NuHeatThermostat(ClimateDevice):
             self._throttled_update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _throttled_update(self):
+    def _throttled_update(self, **kwargs):
         """Get the latest state from the thermostat... but throttled!"""
         self._thermostat.get_data()
