@@ -36,6 +36,8 @@ class TestNuHeat(unittest.TestCase):
             target_celsius=22,
             target_fahrenheit=72)
 
+        thermostat.resume_schedule = Mock()
+
         api = Mock()
         api.get_thermostat.return_value = thermostat
 
@@ -170,6 +172,32 @@ class TestNuHeat(unittest.TestCase):
         is_away_mode_on.return_value = True
         self.thermostat.turn_away_mode_on()
         set_temp.assert_not_called()
+
+    @patch.object(
+        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
+    @patch.object(nuheat.NuHeatThermostat, "resume_program")
+    def test_turn_away_mode_off_home(self, resume, is_away_mode_on):
+        """Test turn away mode off when home."""
+        is_away_mode_on.return_value = False
+        self.thermostat.turn_away_mode_off()
+        self.assertFalse(self.thermostat._force_update)
+        resume.assert_not_called()
+
+    @patch.object(
+        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
+    @patch.object(nuheat.NuHeatThermostat, "resume_program")
+    def test_turn_away_mode_off_away(self, resume, is_away_mode_on):
+        """Test turn away mode off when away."""
+        is_away_mode_on.return_value = True
+        self.thermostat.turn_away_mode_off()
+        self.assertTrue(self.thermostat._force_update)
+        resume.assert_called_once()
+
+    def test_resume_program(self):
+        """Test resume schedule."""
+        self.thermostat.resume_program()
+        self.thermostat._thermostat.resume_schedule.assert_called_once()
+        self.assertTrue(self.thermostat._force_update)
 
     def test_set_temperature(self):
         """Test set temperature."""
