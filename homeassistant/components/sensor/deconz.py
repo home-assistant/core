@@ -40,20 +40,18 @@ class DeconzSensor(Entity):
 
     def __init__(self, sensor):
         """Setup sensor and add update callback to get data from websocket."""
-        self._state = sensor.state
         self._sensor = sensor
         self._sensor.register_callback(self._update_callback)
 
     @callback
     def _update_callback(self):
         """Update the sensor's state, if needed."""
-        self._state = self._sensor.state
         self.async_schedule_update_ha_state()
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self._sensor.state
 
     @property
     def name(self):
