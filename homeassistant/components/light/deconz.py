@@ -9,9 +9,10 @@ import logging
 
 from homeassistant.components.deconz import DECONZ_DATA
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
+    Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_RGB_COLOR,
+    ATTR_TRANSITION, FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+    SUPPORT_XY_COLOR)
 from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
@@ -47,13 +48,14 @@ class DeconzLight(Light):
         self._light = light
         self._light.register_callback(self._update_callback)
 
-        self._features = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        self._features = SUPPORT_BRIGHTNESS
+        self._features |= SUPPORT_FLASH
+        self._features |= SUPPORT_TRANSITION
+        if self._light.ct:
+            self._features |= SUPPORT_COLOR_TEMP
         if self._light.xy:
             self._features |= SUPPORT_XY_COLOR
             self._features |= SUPPORT_RGB_COLOR
-
-        if self._light.ct:
-            self._features |= SUPPORT_COLOR_TEMP
 
     @callback
     def _update_callback(self):
@@ -99,26 +101,48 @@ class DeconzLight(Light):
     def async_turn_on(self, **kwargs):
         """Turn on light."""
         data = {'on': True}
+
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
+
         if ATTR_COLOR_TEMP in kwargs:
             data['ct'] = kwargs[ATTR_COLOR_TEMP]
-        if ATTR_RGB_COLOR in kwargs:
+        elif ATTR_RGB_COLOR in kwargs:
             xyb = color_RGB_to_xy(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
             data['xy'] = xyb[0], xyb[1]
             data['bri'] = xyb[2]
+
         if ATTR_TRANSITION in kwargs:
             data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
+
+        if ATTR_FLASH in kwargs:
+            if kwargs[ATTR_FLASH] == FLASH_SHORT:
+                data['alert'] = 'select'
+                del data['on']
+            elif kwargs[ATTR_FLASH] == FLASH_LONG:
+                data['alert'] = 'lselect'
+                del data['on']
+
         yield from self._light.set_state(data)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn off light."""
         data = {'on': False}
+
         if ATTR_TRANSITION in kwargs:
             data = {'bri': 0}
             data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
+
+        if ATTR_FLASH in kwargs:
+            if kwargs[ATTR_FLASH] == FLASH_SHORT:
+                data['alert'] = 'select'
+                del data['on']
+            elif kwargs[ATTR_FLASH] == FLASH_LONG:
+                data['alert'] = 'lselect'
+                del data['on']
+
         yield from self._light.set_state(data)
 
     @property
