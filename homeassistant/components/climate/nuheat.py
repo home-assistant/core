@@ -2,6 +2,7 @@
 Support for NuHeat thermostats.
 
 For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.nuheat/
 """
 import logging
 from datetime import timedelta
