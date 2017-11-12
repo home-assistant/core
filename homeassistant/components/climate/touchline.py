@@ -52,11 +52,11 @@ class Touchline(ClimateDevice):
 
     def update(self):
         """Update unit attributes."""
-        self.unit.update()     
+        self.unit.update()
         self._name = self.unit.get_name()
         self._target_temperature = self.unit.get_target_temperature()
         self._current_temperature = self.unit.get_current_temperature()
- 
+
     @property
     def should_poll(self):
         """Return the polling state."""
