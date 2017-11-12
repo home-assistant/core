@@ -83,7 +83,7 @@ def setup(hass, config):
     def get_model_from_uuid(uuid):
         if uuid is None:
             return None
-        for model, component in WEMO_MODEL_DISPATCH.items():
+        for model in WEMO_MODEL_DISPATCH:
             if uuid.startswith('uuid:{}'.format(model)):
                 return model
         return None
