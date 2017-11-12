@@ -103,8 +103,12 @@ def setup(hass, config, session=None):
                     {DOMAIN: {CONF_TOKEN: session.access_token,
                               CONF_TOKEN_SECRET: session.access_token_secret}})
                 save_json(config_filename, conf)
-                hass.async_add_job(configurator.request_done,
-                                   hass.data[KEY_CONFIG].get(data_key))
+                # Close all open configurators: for now, we only support one
+                # tellstick device, and configuration via either cloud service
+                # or via local API, not both at the same time
+                for instance in hass.data[KEY_CONFIG].values():
+                    hass.async_add_job(configurator.request_done,
+                                       instance)
 
             hass.async_add_job(success)
 
