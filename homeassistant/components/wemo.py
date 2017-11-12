@@ -66,7 +66,7 @@ def setup(hass, config):
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for WeMo discovery events."""
         # name, model, location, mac
-        component = discovery_info.get('component')
+        model_name = discovery_info.get('model_name')
         serial = discovery_info.get('serial')
 
         # Only register a device once
@@ -75,15 +75,17 @@ def setup(hass, config):
         _LOGGER.debug('Discovered unique device %s', serial)
         KNOWN_DEVICES.append(serial)
 
+        component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
+
         discovery.load_platform(hass, component, DOMAIN, discovery_info,
                                 config)
 
-    def get_component_from_uuid(uuid):
+    def get_model_from_uuid(uuid):
         if uuid is None:
-            return 'switch'
+            return None
         for model, component in WEMO_MODEL_DISPATCH.items():
             if uuid.startswith('uuid:{}'.format(model)):
-                return component
+                return model
         return None
 
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
@@ -110,10 +112,10 @@ def setup(hass, config):
         uuid = deviceParser.parseString(xml.content).device.UDN
 
         _LOGGER.debug("Device UUID is %s, this makes it a %s ",
-                      uuid, get_component_from_uuid(uuid))
+                      uuid, get_model_from_uuid(uuid))
 
         discovery_info = {
-            'component': get_component_from_uuid(uuid),
+            'model_name': get_model_from_uuid(uuid),
             'serial': device.serialnumber,
             'mac_address': device.mac,
             'ssdp_description': url,
