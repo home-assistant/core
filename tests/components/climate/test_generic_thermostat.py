@@ -28,7 +28,8 @@ ENT_SWITCH = 'switch.test'
 MIN_TEMP = 3.0
 MAX_TEMP = 65.0
 TARGET_TEMP = 42.0
-TOLERANCE = 0.5
+COLD_TOLERANCE = 0.5
+HOT_TOLERANCE = 0.5
 
 
 class TestSetupClimateGenericThermostat(unittest.TestCase):
@@ -88,7 +89,8 @@ class TestClimateGenericThermostat(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
-            'tolerance': 2,
+            'cold_tolerance': 2,
+            'hot_tolerance': 4,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR
         }})
@@ -183,11 +185,11 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_on_outside_tolerance(self):
-        """Test if temperature change turn heater on outside tolerance."""
+        """Test if temperature change turn heater on outside cold tolerance."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self._setup_sensor(25)
+        self._setup_sensor(27)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
@@ -200,12 +202,12 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self._setup_sensor(31)
+        self._setup_sensor(33)
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_off_outside_tolerance(self):
-        """Test if temperature change turn heater off outside tolerance."""
+        """Test if temperature change turn heater off outside hot tolerance."""
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
@@ -271,7 +273,8 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
-            'tolerance': 0.3,
+            'cold_tolerance': 2,
+            'hot_tolerance': 4,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True
@@ -321,7 +324,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self._setup_sensor(25)
+        self._setup_sensor(27)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
@@ -405,7 +408,8 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
-            'tolerance': 0.3,
+            'cold_tolerance': 0.3,
+            'hot_tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
@@ -498,7 +502,8 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
-            'tolerance': 0.3,
+            'cold_tolerance': 0.3,
+            'hot_tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'min_cycle_duration': datetime.timedelta(minutes=10)
@@ -590,7 +595,8 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
-            'tolerance': 0.3,
+            'cold_tolerance': 0.3,
+            'hot_tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
@@ -681,7 +687,8 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
-            'tolerance': 0.3,
+            'cold_tolerance': 0.3,
+            'hot_tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'keep_alive': datetime.timedelta(minutes=10)

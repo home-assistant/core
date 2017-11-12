@@ -677,9 +677,18 @@ def async_notify_setup_error(hass, component, link=False):
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
     errors[component] = errors.get(component) or link
-    _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
-            if link else name for name, link in errors.items()]
-    message = ('The following components and platforms could not be set up:\n'
-               '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
+
+    message = 'The following components and platforms could not be set up:\n\n'
+
+    for name, link in errors.items():
+        if link:
+            part = HA_COMPONENT_URL.format(name.replace('_', '-'), name)
+        else:
+            part = name
+
+        message += ' - {}\n'.format(part)
+
+    message += '\nPlease check your config.'
+
     persistent_notification.async_create(
         hass, message, 'Invalid config', 'invalid_config')

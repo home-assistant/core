@@ -108,6 +108,9 @@ class TradfriGroup(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
+                kwargs[ATTR_BRIGHTNESS] = 254
+
             self.hass.async_add_job(self._api(
                 self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys)))
         else:
@@ -161,14 +164,18 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        from pytradfri.color import MAX_KELVIN_WS
-        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
+        if self._light_control.max_kelvin is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                self._light_control.max_kelvin
+            )
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        from pytradfri.color import MIN_KELVIN_WS
-        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
+        if self._light_control.min_kelvin is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                self._light_control.min_kelvin
+            )
 
     @property
     def device_state_attributes(self):
@@ -217,13 +224,11 @@ class TradfriLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if (self._light_data.kelvin_color is None or
-                self.supported_features & SUPPORT_COLOR_TEMP == 0 or
-                not self._temp_supported):
-            return None
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_data.kelvin_color
-        )
+        kelvin_color = self._light_data.kelvin_color_inferred
+        if kelvin_color is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                kelvin_color
+            )
 
     @property
     def rgb_color(self):
@@ -262,6 +267,9 @@ class TradfriLight(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
+                kwargs[ATTR_BRIGHTNESS] = 254
+
             self.hass.async_add_job(self._api(
                 self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
                                                **keys)))
@@ -297,10 +305,13 @@ class TradfriLight(Light):
         self._rgb_color = None
         self._features = SUPPORTED_FEATURES
 
-        if self._light_data.hex_color is not None:
-            if self._light.device_info.manufacturer == IKEA:
+        if self._light.device_info.manufacturer == IKEA:
+            if self._light_control.can_set_kelvin:
                 self._features |= SUPPORT_COLOR_TEMP
-            else:
+            if self._light_control.can_set_color:
+                self._features |= SUPPORT_RGB_COLOR
+        else:
+            if self._light_data.hex_color is not None:
                 self._features |= SUPPORT_RGB_COLOR
 
         self._temp_supported = self._light.device_info.manufacturer \
@@ -309,11 +320,7 @@ class TradfriLight(Light):
     def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
-
-        # Handle Hue lights paired with the gateway
-        # hex_color is 0 when bulb is unreachable
-        if self._light_data.hex_color not in (None, '0'):
-            self._rgb_color = color_util.rgb_hex_to_rgb_list(
-                self._light_data.hex_color)
-
+        self._rgb_color = color_util.rgb_hex_to_rgb_list(
+            self._light_data.hex_color_inferred
+        )
         self.hass.async_add_job(self.async_update_ha_state())

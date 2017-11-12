@@ -8,11 +8,13 @@
     <link rel='icon' href='/static/icons/favicon.ico'>
     <link rel='apple-touch-icon' sizes='180x180'
           href='/static/icons/favicon-apple-180x180.png'>
-    <link rel="mask-icon" href="/static/icons/home-assistant-icon.svg" color="#3fbbf4">
-    <link rel='preload' href='{{ core_url }}' as='script'/>
-    {% for panel in panels.values() -%}
-      <link rel='prefetch' href='{{ panel.url }}'>
-    {% endfor -%}
+    <link rel="mask-icon" href="/static/icons/mask-icon.svg" color="#3fbbf4">
+    {% if not dev_mode %}
+      <link rel='preload' href='{{ core_url }}' as='script'/>
+      {% for panel in panels.values() -%}
+        <link rel='prefetch' href='{{ panel.webcomponent_url }}'>
+      {% endfor -%}
+    {% endif %}
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <meta name="msapplication-square70x70logo" content="/static/icons/tile-win-70x70.png"/>
     <meta name="msapplication-square150x150logo" content="/static/icons/tile-win-150x150.png"/>
@@ -36,7 +38,7 @@
         display: block;
         content: "";
         height: 48px;
-        background-color: #03A9F4;
+        background-color: {{ theme_color }};
       }
 
       #ha-init-skeleton .message {
@@ -50,7 +52,7 @@
       }
 
       #ha-init-skeleton a {
-        color: #03A9F4;
+        color: {{ theme_color }};
         text-decoration: none;
         font-weight: bold;
       }

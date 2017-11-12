@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_extractor/
 """
 import logging
 import os
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -15,16 +16,16 @@ from homeassistant.components.media_player import (
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2017.10.12']
+REQUIREMENTS = ['youtube_dl==2017.10.29']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'media_extractor'
-DEPENDENCIES = ['media_player']
-
 CONF_CUSTOMIZE_ENTITIES = 'customize'
 CONF_DEFAULT_STREAM_QUERY = 'default_query'
+
 DEFAULT_STREAM_QUERY = 'best'
+DEPENDENCIES = ['media_player']
+DOMAIN = 'media_extractor'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

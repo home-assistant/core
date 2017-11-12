@@ -47,7 +47,8 @@ def test_setup_fails_on_no_dir(hass, caplog):
         res = yield from async_setup_component(hass, 'python_script', {})
 
     assert not res
-    assert 'Folder python_scripts not found in config folder' in caplog.text
+    assert 'Folder python_scripts not found in configuration folder' in \
+           caplog.text
 
 
 @asyncio.coroutine

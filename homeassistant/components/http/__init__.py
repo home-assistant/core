@@ -28,9 +28,8 @@ from homeassistant.util.logging import HideSensitiveDataFilter
 from .auth import auth_middleware
 from .ban import ban_middleware
 from .const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
-    KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
-    KEY_DEVELOPMENT, KEY_AUTHENTICATED)
+    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS, KEY_BANS_ENABLED,
+    KEY_LOGIN_THRESHOLD, KEY_AUTHENTICATED)
 from .static import (
     staticresource_middleware, CachingFileResponse, CachingStaticResource)
 from .util import get_real_ip
@@ -43,7 +42,6 @@ CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
 CONF_SERVER_PORT = 'server_port'
 CONF_BASE_URL = 'base_url'
-CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
@@ -84,7 +82,6 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
-    vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
     vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
     vol.Optional(CONF_CORS_ORIGINS, default=[]):
@@ -113,7 +110,6 @@ def async_setup(hass, config):
     api_password = conf[CONF_API_PASSWORD]
     server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
-    development = conf[CONF_DEVELOPMENT] == '1'
     ssl_certificate = conf[CONF_SSL_CERTIFICATE]
     ssl_key = conf[CONF_SSL_KEY]
     cors_origins = conf[CONF_CORS_ORIGINS]
@@ -128,7 +124,6 @@ def async_setup(hass, config):
 
     server = HomeAssistantWSGI(
         hass,
-        development=development,
         server_host=server_host,
         server_port=server_port,
         api_password=api_password,
@@ -176,7 +171,7 @@ def async_setup(hass, config):
 class HomeAssistantWSGI(object):
     """WSGI server for Home Assistant."""
 
-    def __init__(self, hass, development, api_password, ssl_certificate,
+    def __init__(self, hass, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
@@ -194,10 +189,8 @@ class HomeAssistantWSGI(object):
         self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
         self.app[KEY_BANS_ENABLED] = is_ban_enabled
         self.app[KEY_LOGIN_THRESHOLD] = login_threshold
-        self.app[KEY_DEVELOPMENT] = development
 
         self.hass = hass
-        self.development = development
         self.api_password = api_password
         self.ssl_certificate = ssl_certificate
         self.ssl_key = ssl_key
