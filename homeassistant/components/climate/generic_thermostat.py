@@ -303,7 +303,7 @@ class GenericThermostat(ClimateDevice):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
-        return comps.is_on(self.hass, self.heater_entity_id)
+        return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
 
     def _heater_on(self):
         """Turn toggable device on."""
