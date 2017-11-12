@@ -7,15 +7,18 @@ from their menu
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/dominos/.
 """
+import asyncio
 import logging
+import time
 import unicodedata
 from datetime import timedelta
 
 import voluptuous as vol
-import time
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.components import http
+from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import Throttle
 from pizzapi import Address, Customer, Order
@@ -33,24 +36,22 @@ ATTR_EMAIL = 'email'
 ATTR_PHONE = 'phone'
 ATTR_ADDRESS = 'address'
 ATTR_ORDERS = 'orders'
-ATTR_DUMP_MENU = 'dump_menu'
+ATTR_SHOW_MENU = 'show_menu'
 ATTR_ORDER_ENTITY = 'order_entity_id'
 ATTR_ORDER_NAME = 'name'
 ATTR_ORDER_CODES = 'codes'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_STORE_UPDATES = 1800
 
-REV = '183d0f5522e7fa99776e8c6c692b56e69f0e6b8f'
-REQUIREMENTS = [
-    'https://github.com/wardcraigj/pizzapi/archive/%s.zip#pizzapi==0.0.2'
-    % REV]
+REQUIREMENTS = ['pizzapi==0.0.2']
+
+DEPENDENCIES = ['http']
 
 _ORDERS_SCHEMA = vol.Schema({
     vol.Required(ATTR_ORDER_NAME): cv.string,
     vol.Required(ATTR_ORDER_CODES): vol.All(cv.ensure_list, [cv.string]),
 })
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -60,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(ATTR_EMAIL): cv.string,
         vol.Required(ATTR_PHONE): cv.string,
         vol.Required(ATTR_ADDRESS): cv.string,
-        vol.Optional(ATTR_DUMP_MENU): cv.boolean,
+        vol.Optional(ATTR_SHOW_MENU): cv.boolean,
         vol.Optional(ATTR_ORDERS): vol.All(cv.ensure_list, [_ORDERS_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -68,23 +69,28 @@ CONFIG_SCHEMA = vol.Schema({
 # pylint: disable=broad-except
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
     dominos = Dominos(hass, config)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]['entities'] = []
+    entities = []
 
-    hass.services.register(DOMAIN, 'order', dominos.handle_order)
+    hass.services.async_register(DOMAIN, 'order', dominos.handle_order)
 
     if config[DOMAIN].get(ATTR_DUMP_MENU):
-        dominos.dump_menu(hass)
+        yield from dominos.dump_menu(hass)
+        hass.http.register_view(DominosProductListView)
+        yield from hass.components.frontend.async_register_built_in_panel(
+            'dominos', 'dominos', 'mdi:pizza')
 
     for order_info in config[DOMAIN].get(ATTR_ORDERS):
-        hass.data[DOMAIN]['entities'].append(DominosOrder(order_info, dominos))
+        order = DominosOrder(order_info, dominos)
+        entities.append(order)
 
-    component.add_entities(hass.data[DOMAIN]['entities'])
+    yield from component.async_add_entities(entities)
 
     # Return boolean to indicate that initialization was successfully.
     return True
@@ -135,6 +141,7 @@ class Dominos():
         """Return the shared closest store (or False if all closed)."""
         return self._closest_store
 
+    @asyncio.coroutine
     def dump_menu(self, hass):
         """Dump the closest stores menu into the logs."""
 
@@ -143,19 +150,31 @@ class Dominos():
             return
 
         menu = self._closest_store.get_menu()
+        hass.data[DOMAIN]['products'] = []
+
         for product in menu.products:
+            item = {}
             if isinstance(product.menu_data['Variants'], list):
                 variants = ', '.join(product.menu_data['Variants'])
             else:
                 variants = product.menu_data['Variants']
+            item['name'] = product.name
+            item['variants'] = variants
+            hass.data[DOMAIN]['products'].append(item)
 
-            message = 'name: ' + product.name + ' variants: ' + variants
 
-            # We get some weird product names sometimes,
-            # so clobber this to make it logger safe
-            _LOGGER.warning(
-                unicodedata.normalize('NFKC', message)
-                .encode('ascii', 'ignore').decode('ascii'))
+class DominosProductListView(http.HomeAssistantView):
+    """View to retrieve product list content."""
+
+    url = '/api/dominos'
+    name = "api:dominos"
+
+    @callback
+    def get(self, request):
+        """Retrieve if API is running."""
+        hass = request.app['hass']
+
+        return self.json(request.app['hass'].data[DOMAIN]['products'])
 
 
 class DominosOrder(Entity):
@@ -164,7 +183,7 @@ class DominosOrder(Entity):
     def __init__(self, order_info, dominos):
         """Set up the entity."""
         self._name = order_info['name']
-        self.entity_id = generate_entity_id(
+        self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, self._name, hass=dominos.hass)
 
         self._product_codes = order_info['codes']
