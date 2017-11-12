@@ -81,7 +81,7 @@ def setup(hass, config):
                                 config)
 
     def get_model_from_uuid(uuid):
-         """Determine model based on UUID"""
+        """Determine model based on UUID"""
         if uuid is None:
             return 'Socket'
         for model in WEMO_MODEL_DISPATCH:
