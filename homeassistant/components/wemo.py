@@ -82,7 +82,7 @@ def setup(hass, config):
 
     def get_model_from_uuid(uuid):
         if uuid is None:
-            return None
+            return 'Socket'
         for model in WEMO_MODEL_DISPATCH:
             if uuid.startswith('uuid:{}'.format(model)):
                 return model
