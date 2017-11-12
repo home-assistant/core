@@ -1,5 +1,5 @@
 """
-Demo platform that offers a fake climate device.
+Platform for Roth Touchline heat pump controller.
 
 Example configuration:
 climate:
@@ -32,10 +32,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from pytouchline import PyTouchline
     host = config[CONF_HOST]
     py_touchline = PyTouchline()
-    numberOfDevices = int(py_touchline.get_number_of_devices(host))
+    number_of_devices = int(py_touchline.get_number_of_devices(host))
     devices = []
-    for id in range(0, numberOfDevices):
-        devices.append(Touchline(PyTouchline(id=id)))
+    for device_id in range(0, numberOfDevices):
+        devices.append(Touchline(PyTouchline(device_id)))
     add_devices(devices)
 
 
