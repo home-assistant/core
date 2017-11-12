@@ -79,6 +79,7 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'order', dominos.handle_order)
 
     if config[DOMAIN].get(ATTR_SHOW_MENU):
+        # pylint: disable=not-an-iterable
         yield from dominos.show_menu(hass)
         hass.http.register_view(DominosProductListView)
         yield from hass.components.frontend.async_register_built_in_panel(
@@ -99,7 +100,7 @@ class Dominos():
 
     def __init__(self, hass, config):
         """Set up main service."""
-        from pizzapi import Address, Customer
+        from pizzapi import Address, Customer, Store
         self.hass = hass
         self.customer = Customer(
             config[DOMAIN].get(ATTR_FIRST_NAME),
@@ -111,7 +112,7 @@ class Dominos():
             *self.customer.address.split(','),
             country=config[DOMAIN].get(ATTR_COUNTRY))
         self.country = config[DOMAIN].get(ATTR_COUNTRY)
-        self._closest_store = False
+        self._closest_store = Store()
         self._last_store_check = 0
         self.update_closest_store()
 
@@ -140,7 +141,6 @@ class Dominos():
         """Return the shared closest store (or False if all closed)."""
         return self._closest_store
 
-    # pylint: disable=not-an-iterable
     @asyncio.coroutine
     def show_menu(self, hass):
         """Dump the closest stores menu into the logs."""
