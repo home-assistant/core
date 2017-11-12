@@ -33,7 +33,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP,
     SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_call_from_config
 
 ATTR_ACTIVE_CHILD = 'active_child'
@@ -97,22 +96,29 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             self._attrs[key] = attr
         self._child_state = None
         self._state_template = state_template
+        if state_template is not None:
+            self._state_template.hass = hass
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe to children and template state changes.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         @callback
         def async_on_dependency_update(*_):
             """Update ha state when dependencies update."""
             self.async_schedule_update_ha_state(True)
 
-        depend = copy(children)
+        depend = copy(self._children)
         for entity in self._attrs.values():
             depend.append(entity[0])
         if self._state_template is not None:
-            self._state_template.hass = hass
             for entity in self._state_template.extract_entities():
                 depend.append(entity)
 
-        async_track_state_change(hass, list(set(depend)),
-                                 async_on_dependency_update)
+        self.hass.helpers.event.async_track_state_change(
+            list(set(depend)), async_on_dependency_update)
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
