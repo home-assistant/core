@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['pydeconz==7']
+REQUIREMENTS = ['pydeconz==8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(TYPE_AS_EVENT, default='ZHASwitch'): cv.string,
+        vol.Optional(TYPE_AS_EVENT, default=['ZHASwitch']):
+            vol.All(cv.ensure_list, [cv.string]),
     })
 }, extra=vol.ALLOW_EXTRA)
 

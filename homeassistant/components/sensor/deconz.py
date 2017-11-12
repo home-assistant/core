@@ -13,6 +13,7 @@ from homeassistant.core import (callback, EventOrigin)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 DEPENDENCIES = [DOMAIN]
 
@@ -31,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for _, sensor in sensors.items():
         if sensor.type in DECONZ_SENSOR:
-            if sensor.type == type_as_event:
+            if sensor.type in type_as_event:
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
                     async_add_devices([DeconzBattery(hass, sensor)], True)
