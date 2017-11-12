@@ -143,7 +143,6 @@ class Dominos():
     @asyncio.coroutine
     def dump_menu(self, hass):
         """Dump the closest stores menu into the logs."""
-
         if self._closest_store is False:
             _LOGGER.warning('Cannot get menu. Store may be closed')
             return
@@ -171,7 +170,6 @@ class DominosProductListView(http.HomeAssistantView):
     @callback
     def get(self, request):
         """Retrieve if API is running."""
-
         return self.json(request.app['hass'].data[DOMAIN]['products'])
 
 
