@@ -158,7 +158,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -171,7 +171,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -193,7 +193,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -215,7 +215,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -228,7 +228,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -259,8 +259,8 @@ class TestClimateGenericThermostat(unittest.TestCase):
             """Log service calls."""
             self.calls.append(call)
 
-        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
-        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
 
 
 class TestClimateGenericThermostatACMode(unittest.TestCase):
@@ -293,7 +293,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -306,7 +306,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -328,7 +328,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -350,7 +350,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -363,7 +363,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -394,8 +394,8 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
             """Log service calls."""
             self.calls.append(call)
 
-        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
-        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
 
 
 class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
@@ -442,7 +442,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -468,7 +468,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -488,8 +488,8 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
             """Log service calls."""
             self.calls.append(call)
 
-        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
-        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
 
 
 class TestClimateGenericThermostatMinCycle(unittest.TestCase):
@@ -544,7 +544,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -561,7 +561,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -581,8 +581,8 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
             """Log service calls."""
             self.calls.append(call)
 
-        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
-        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
 
 
 class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
@@ -626,7 +626,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -649,7 +649,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -673,8 +673,8 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
             """Log service calls."""
             self.calls.append(call)
 
-        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
-        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
 
 
 class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
@@ -717,7 +717,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -740,7 +740,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
@@ -764,8 +764,8 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
             """Log service calls."""
             self.calls.append(call)
 
-        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
-        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
 
 
 @asyncio.coroutine
