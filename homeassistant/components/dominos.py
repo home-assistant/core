@@ -79,7 +79,7 @@ def async_setup(hass, config):
 
     hass.services.async_register(DOMAIN, 'order', dominos.handle_order)
 
-    if config[DOMAIN].get(ATTR_DUMP_MENU):
+    if config[DOMAIN].get(ATTR_SHOW_MENU):
         yield from dominos.dump_menu(hass)
         hass.http.register_view(DominosProductListView)
         yield from hass.components.frontend.async_register_built_in_panel(
