@@ -79,7 +79,7 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'order', dominos.handle_order)
 
     if config[DOMAIN].get(ATTR_SHOW_MENU):
-        yield from dominos.dump_menu(hass)
+        yield from dominos.show_menu(hass)
         hass.http.register_view(DominosProductListView)
         yield from hass.components.frontend.async_register_built_in_panel(
             'dominos', 'dominos', 'mdi:pizza')
@@ -99,7 +99,7 @@ class Dominos():
 
     def __init__(self, hass, config):
         """Set up main service."""
-        from pizzapi import Address, Customer, Order
+        from pizzapi import Address, Customer
         self.hass = hass
         self.customer = Customer(
             config[DOMAIN].get(ATTR_FIRST_NAME),
@@ -140,8 +140,9 @@ class Dominos():
         """Return the shared closest store (or False if all closed)."""
         return self._closest_store
 
+    # pylint: disable=not-an-iterable
     @asyncio.coroutine
-    def dump_menu(self, hass):
+    def show_menu(self, hass):
         """Dump the closest stores menu into the logs."""
         if self._closest_store is False:
             _LOGGER.warning('Cannot get menu. Store may be closed')
@@ -178,7 +179,6 @@ class DominosOrder(Entity):
 
     def __init__(self, order_info, dominos):
         """Set up the entity."""
-        from pizzapi import Order
         self._name = order_info['name']
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, self._name, hass=dominos.hass)
@@ -228,6 +228,7 @@ class DominosOrder(Entity):
 
     def order(self):
         """Create the order object."""
+        from pizzapi import Order
         order = Order(
             self.dominos.closest_store,
             self.dominos.customer,
