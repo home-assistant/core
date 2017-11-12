@@ -10,7 +10,6 @@ https://home-assistant.io/components/dominos/.
 import asyncio
 import logging
 import time
-import unicodedata
 from datetime import timedelta
 
 import voluptuous as vol
@@ -172,7 +171,6 @@ class DominosProductListView(http.HomeAssistantView):
     @callback
     def get(self, request):
         """Retrieve if API is running."""
-        hass = request.app['hass']
 
         return self.json(request.app['hass'].data[DOMAIN]['products'])
 
