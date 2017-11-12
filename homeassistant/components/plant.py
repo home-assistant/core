@@ -31,6 +31,7 @@ READING_CONDUCTIVITY = 'conductivity'
 READING_BRIGHTNESS = 'brightness'
 
 ATTR_PROBLEM = 'problem'
+ATTR_SENSORS = 'sensors'
 PROBLEM_NONE = 'none'
 ATTR_MAX_BRIGHTNESS_HISTORY = 'max. brightness in history'
 
@@ -43,7 +44,6 @@ CONF_MIN_CONDUCTIVITY = 'min_' + READING_CONDUCTIVITY
 CONF_MAX_CONDUCTIVITY = 'max_' + READING_CONDUCTIVITY
 CONF_MIN_BRIGHTNESS = 'min_' + READING_BRIGHTNESS
 CONF_MAX_BRIGHTNESS = 'max_' + READING_BRIGHTNESS
-CONF_GROUP_NAME = 'group_name'
 CONF_CHECK_DAYS = 'check_days'
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
@@ -71,12 +71,11 @@ PLANT_SCHEMA = vol.Schema({
     vol.Optional(CONF_MAX_CONDUCTIVITY): cv.positive_int,
     vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
-    vol.Optional(CONF_GROUP_NAME): cv.string,
     vol.Optional(CONF_CHECK_DAYS): cv.positive_int,
 })
 
 DOMAIN = 'plant'
-DEPENDENCIES = ['zone', 'group']
+DEPENDENCIES = ['zone']
 
 GROUP_NAME_ALL_PLANTS = 'all plants'
 ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
@@ -97,14 +96,7 @@ def async_setup(hass, config):
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
-        group_name = None
-        if CONF_GROUP_NAME in plant_config and \
-                plant_config[CONF_GROUP_NAME] is not None:
-            group_name = plant_config[CONF_GROUP_NAME]
-            hass.components.group.set_group(group_name)
-            _LOGGER.debug("Added plant group %s for plant %s",
-                          group_name, plant_name)
-        entity = Plant(hass, plant_name, plant_config, group_name)
+        entity = Plant(hass, plant_name, plant_config)
         sensor_entity_ids = list(plant_config[CONF_SENSORS].values())
         _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
         async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
@@ -153,11 +145,10 @@ class Plant(Entity):
         }
     }
 
-    def __init__(self, hass, name, config, group_name=None):
+    def __init__(self, hass, name, config):
         """Initialize the Plant component."""
         self._hass = hass
         self._config = config
-        self._group_name = group_name
         self._sensormap = dict()
         self._readingmap = dict()
         for reading, entity_id in config['sensors'].items():
@@ -308,6 +299,7 @@ class Plant(Entity):
         attrib = {
             ATTR_ICON: self._icon,
             ATTR_PROBLEM: self._problems,
+            ATTR_SENSORS: self._readingmap,
         }
 
         for reading in self._sensormap.values():
@@ -317,19 +309,6 @@ class Plant(Entity):
             attrib[ATTR_MAX_BRIGHTNESS_HISTORY] = self._brightness_history.max
 
         return attrib
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Create a group with all sensors.
-
-        This must be run after the component was created to that we get the
-        valid entity_id.
-        """
-        if self._group_name is not None:
-            members = [self.entity_id]
-            members.extend(list(self._config[CONF_SENSORS].values()))
-            self.hass.components.group.set_group(self._group_name,
-                                                 entity_ids=members)
 
 
 class DailyHistory(object):
