@@ -47,14 +47,12 @@ class Touchline(ClimateDevice):
         self.unit = touchline_thermostat
         self.unit.update()
         self._name = self.unit.get_name()
-        self._target_temperature = self.unit.get_target_temperature()
         self._current_temperature = self.unit.get_current_temperature()
 
     def update(self):
         """Update unit attributes."""
         self.unit.update()
         self._name = self.unit.get_name()
-        self._target_temperature = self.unit.get_target_temperature()
         self._current_temperature = self.unit.get_current_temperature()
 
     @property
@@ -74,10 +72,3 @@ class Touchline(ClimateDevice):
 
     @property
     def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
