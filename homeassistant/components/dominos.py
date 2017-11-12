@@ -20,7 +20,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import Throttle
-from pizzapi import Address, Customer, Order
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +99,7 @@ class Dominos():
 
     def __init__(self, hass, config):
         """Set up main service."""
+        from pizzapi import Address, Customer, Order
         self.hass = hass
         self.customer = Customer(
             config[DOMAIN].get(ATTR_FIRST_NAME),
@@ -178,6 +178,7 @@ class DominosOrder(Entity):
 
     def __init__(self, order_info, dominos):
         """Set up the entity."""
+        from pizzapi import Order
         self._name = order_info['name']
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, self._name, hass=dominos.hass)
