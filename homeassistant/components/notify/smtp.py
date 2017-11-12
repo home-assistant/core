@@ -204,7 +204,7 @@ def _build_multipart_msg(message, images):
     msg.attach(msg_alt)
     body_txt = MIMEText(message)
     msg_alt.attach(body_txt)
-    body_text = ['<p>{}</p><br>'.format(message)]
+    body_text = ['<pre>{}</pre><br>'.format(message)]
 
     for atch_num, atch_name in enumerate(images):
         cid = 'image{}'.format(atch_num)
