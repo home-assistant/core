@@ -13,7 +13,6 @@ from homeassistant.core import (callback, EventOrigin)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 
 DEPENDENCIES = [DOMAIN]
 
@@ -108,7 +107,7 @@ class DeconzBattery(Entity):
         """Register dispatcher callback for update of battery state."""
         self._device = device
         self._battery = device.battery
-        self._name = self._device.name + '_battery'
+        self._name = self._device.name + ' battery'
         signal = DOMAIN + '_' + self._device.name
         async_dispatcher_connect(hass, signal, self._update_callback)
 
