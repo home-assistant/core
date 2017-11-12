@@ -13,7 +13,7 @@ import async_timeout
 
 import homeassistant.core as ha
 import homeassistant.remote as rem
-from homeassistant.bootstrap import ERROR_LOG_FILENAME
+from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED,
     HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_NOT_FOUND,
@@ -51,8 +51,9 @@ def setup(hass, config):
     hass.http.register_view(APIComponentsView)
     hass.http.register_view(APITemplateView)
 
-    hass.http.register_static_path(
-        URL_API_ERROR_LOG, hass.config.path(ERROR_LOG_FILENAME), False)
+    log_path = hass.data.get(DATA_LOGGING, None)
+    if log_path:
+        hass.http.register_static_path(URL_API_ERROR_LOG, log_path, False)
 
     return True
 
@@ -261,7 +262,11 @@ class APIEventView(HomeAssistantView):
     def post(self, request, event_type):
         """Fire events."""
         body = yield from request.text()
-        event_data = json.loads(body) if body else None
+        try:
+            event_data = json.loads(body) if body else None
+        except ValueError:
+            return self.json_message('Event data should be valid JSON',
+                                     HTTP_BAD_REQUEST)
 
         if event_data is not None and not isinstance(event_data, dict):
             return self.json_message('Event data should be a JSON object',
@@ -308,7 +313,11 @@ class APIDomainServicesView(HomeAssistantView):
         """
         hass = request.app['hass']
         body = yield from request.text()
-        data = json.loads(body) if body else None
+        try:
+            data = json.loads(body) if body else None
+        except ValueError:
+            return self.json_message('Data should be valid JSON',
+                                     HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
             yield from hass.services.async_call(domain, service, data, True)

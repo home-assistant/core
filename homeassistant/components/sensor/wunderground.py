@@ -139,7 +139,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
             wu_unit (string): "fahrenheit", "celsius", "degrees" etc.
                  see the example json at:
         https://www.wunderground.com/weather/api/d/docs?d=data/forecast&MR=1
-            ha_unit (string): coresponding unit in home assistant
+            ha_unit (string): corresponding unit in home assistant
             title (string): friendly_name of the sensor
         """
         super().__init__(
@@ -607,10 +607,10 @@ LANG_CODES = [
     'KR', 'KU', 'LA', 'LV', 'LT', 'ND',
     'MK', 'MT', 'GM', 'MI', 'MR', 'MN',
     'NO', 'OC', 'PS', 'GN', 'PL', 'BR',
-    'PA', 'PU', 'RO', 'RU', 'SR', 'SK',
-    'SL', 'SP', 'SI', 'SW', 'CH', 'TL',
-    'TT', 'TH', 'UA', 'UZ', 'VU', 'CY',
-    'SN', 'JI', 'YI',
+    'PA', 'RO', 'RU', 'SR', 'SK', 'SL',
+    'SP', 'SI', 'SW', 'CH', 'TL', 'TT',
+    'TH', 'TR', 'TK', 'UA', 'UZ', 'VU',
+    'CY', 'SN', 'JI', 'YI',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -708,7 +708,7 @@ class WUndergroundSensor(Entity):
     def entity_picture(self):
         """Return the entity picture."""
         url = self._cfg_expand("entity_picture")
-        if url is not None:
+        if isinstance(url, str):
             return re.sub(r'^http://', 'https://', url, flags=re.IGNORECASE)
 
     @property

@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except KeyError:
         pass
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class DHTSensor(Entity):
@@ -104,7 +104,6 @@ class DHTSensor(Entity):
         self.humidity_offset = humidity_offset
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -128,7 +127,7 @@ class DHTSensor(Entity):
         humidity_offset = self.humidity_offset
         data = self.dht_client.data
 
-        if self.type == SENSOR_TEMPERATURE:
+        if self.type == SENSOR_TEMPERATURE and SENSOR_TEMPERATURE in data:
             temperature = data[SENSOR_TEMPERATURE]
             _LOGGER.debug("Temperature %.1f \u00b0C + offset %.1f",
                           temperature, temperature_offset)
@@ -136,7 +135,7 @@ class DHTSensor(Entity):
                 self._state = round(temperature + temperature_offset, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
-        elif self.type == SENSOR_HUMIDITY:
+        elif self.type == SENSOR_HUMIDITY and SENSOR_HUMIDITY in data:
             humidity = data[SENSOR_HUMIDITY]
             _LOGGER.debug("Humidity %.1f%% + offset %.1f",
                           humidity, humidity_offset)

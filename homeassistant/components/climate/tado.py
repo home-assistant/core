@@ -288,7 +288,7 @@ class TadoClimate(ClimateDevice):
 
             if 'setting' in overlay_data:
                 setting_data = overlay_data['setting']
-                setting = setting is not None
+                setting = setting_data is not None
 
             if setting:
                 if 'mode' in setting_data:

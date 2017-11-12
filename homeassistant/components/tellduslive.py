@@ -53,7 +53,8 @@ def setup(hass, config):
     if not client.validate_session():
         _LOGGER.error(
             "Authentication Error: Please make sure you have configured your "
-            "keys that can be aquired from https://api.telldus.com/keys/index")
+            "keys that can be acquired from "
+            "https://api.telldus.com/keys/index")
         return False
 
     hass.data[DOMAIN] = client
@@ -116,6 +117,8 @@ class TelldusLiveClient(object):
                 return 'cover'
             elif device.methods & TURNON:
                 return 'switch'
+            elif device.methods == 0:
+                return 'binary_sensor'
             _LOGGER.warning(
                 "Unidentified device type (methods: %d)", device.methods)
             return 'switch'
@@ -173,7 +176,7 @@ class TelldusLiveEntity(Entity):
 
     @property
     def device(self):
-        """Return the representaion of the device."""
+        """Return the representation of the device."""
         return self._client.device(self.device_id)
 
     @property

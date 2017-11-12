@@ -9,6 +9,7 @@ import time
 
 import requests
 import voluptuous as vol
+from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
@@ -16,11 +17,15 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'octoprint'
+CONF_NUMBER_OF_TOOLS = 'number_of_tools'
+CONF_BED = 'bed'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
+        vol.Optional(CONF_BED, default=False): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -29,11 +34,13 @@ def setup(hass, config):
     """Set up the OctoPrint component."""
     base_url = 'http://{}/api/'.format(config[DOMAIN][CONF_HOST])
     api_key = config[DOMAIN][CONF_API_KEY]
+    number_of_tools = config[DOMAIN][CONF_NUMBER_OF_TOOLS]
+    bed = config[DOMAIN][CONF_BED]
 
     hass.data[DOMAIN] = {"api": None}
 
     try:
-        octoprint_api = OctoPrintAPI(base_url, api_key)
+        octoprint_api = OctoPrintAPI(base_url, api_key, bed, number_of_tools)
         hass.data[DOMAIN]["api"] = octoprint_api
         octoprint_api.get('printer')
         octoprint_api.get('job')
@@ -46,11 +53,13 @@ def setup(hass, config):
 class OctoPrintAPI(object):
     """Simple JSON wrapper for OctoPrint's API."""
 
-    def __init__(self, api_url, key):
+    def __init__(self, api_url, key, bed, number_of_tools):
         """Initialize OctoPrint API and set headers needed later."""
         self.api_url = api_url
-        self.headers = {'content-type': CONTENT_TYPE_JSON,
-                        'X-Api-Key': key}
+        self.headers = {
+            CONTENT_TYPE: CONTENT_TYPE_JSON,
+            'X-Api-Key': key,
+        }
         self.printer_last_reading = [{}, None]
         self.job_last_reading = [{}, None]
         self.job_available = False
@@ -58,11 +67,23 @@ class OctoPrintAPI(object):
         self.available = False
         self.printer_error_logged = False
         self.job_error_logged = False
+        self.bed = bed
+        self.number_of_tools = number_of_tools
+        _LOGGER.error(str(bed) + " " + str(number_of_tools))
 
     def get_tools(self):
-        """Get the dynamic list of tools that temperature is monitored on."""
-        tools = self.printer_last_reading[0]['temperature']
-        return tools.keys()
+        """Get the list of tools that temperature is monitored on."""
+        tools = []
+        if self.number_of_tools > 0:
+            for tool_number in range(0, self.number_of_tools):
+                tools.append("tool" + str(tool_number))
+        if self.bed:
+            tools.append('bed')
+        if not self.bed and self.number_of_tools == 0:
+            temps = self.printer_last_reading[0].get('temperature')
+            if temps is not None:
+                tools = temps.keys()
+        return tools
 
     def get(self, endpoint):
         """Send a get request, and return the response as a dict."""

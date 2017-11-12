@@ -12,45 +12,49 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET)
+    ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET,
+    ATTR_ID)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, distance
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_EMPTY_SLOTS = 'empty_slots'
+ATTR_EXTRA = 'extra'
+ATTR_FREE_BIKES = 'free_bikes'
+ATTR_NAME = 'name'
+ATTR_NETWORK = 'network'
+ATTR_NETWORKS_LIST = 'networks'
+ATTR_STATIONS_LIST = 'stations'
+ATTR_TIMESTAMP = 'timestamp'
+ATTR_UID = 'uid'
+
+CONF_NETWORK = 'network'
+CONF_STATIONS_LIST = 'stations'
+
 DEFAULT_ENDPOINT = 'https://api.citybik.es/{uri}'
+DOMAIN = 'citybikes'
+
+MONITORED_NETWORKS = 'monitored-networks'
+
 NETWORKS_URI = 'v2/networks'
-STATIONS_URI = 'v2/networks/{uid}?fields=network.stations'
 
 REQUEST_TIMEOUT = 5  # In seconds; argument to asyncio.timeout
+
 SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
-DOMAIN = 'citybikes'
-MONITORED_NETWORKS = 'monitored-networks'
-CONF_NETWORK = 'network'
-CONF_RADIUS = 'radius'
-CONF_STATIONS_LIST = 'stations'
-ATTR_NETWORKS_LIST = 'networks'
-ATTR_NETWORK = 'network'
-ATTR_STATIONS_LIST = 'stations'
-ATTR_ID = 'id'
-ATTR_UID = 'uid'
-ATTR_NAME = 'name'
-ATTR_EXTRA = 'extra'
-ATTR_TIMESTAMP = 'timestamp'
-ATTR_EMPTY_SLOTS = 'empty_slots'
-ATTR_FREE_BIKES = 'free_bikes'
-ATTR_TIMESTAMP = 'timestamp'
+
+STATIONS_URI = 'v2/networks/{uid}?fields=network.stations'
+
 CITYBIKES_ATTRIBUTION = "Information provided by the CityBikes Project "\
                         "(https://citybik.es/#about)"
-
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
@@ -61,10 +65,7 @@ PLATFORM_SCHEMA = vol.All(
         vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
         vol.Optional(CONF_RADIUS, 'station_filter'): cv.positive_int,
         vol.Optional(CONF_STATIONS_LIST, 'station_filter'):
-            vol.All(
-                cv.ensure_list,
-                vol.Length(min=1),
-                [cv.string])
+            vol.All(cv.ensure_list, vol.Length(min=1), [cv.string])
     }))
 
 NETWORK_SCHEMA = vol.Schema({
@@ -88,9 +89,8 @@ STATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_ID): cv.string,
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(ATTR_TIMESTAMP): cv.string,
-    vol.Optional(ATTR_EXTRA): vol.Schema({
-        vol.Optional(ATTR_UID): cv.string
-        }, extra=vol.REMOVE_EXTRA)
+    vol.Optional(ATTR_EXTRA):
+        vol.Schema({vol.Optional(ATTR_UID): cv.string}, extra=vol.REMOVE_EXTRA)
     }, extra=vol.REMOVE_EXTRA)
 
 STATIONS_RESPONSE_SCHEMA = vol.Schema({
@@ -129,7 +129,7 @@ def async_citybikes_request(hass, uri, schema):
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the CityBikes platform."""
     if DOMAIN not in hass.data:
@@ -159,7 +159,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
     yield from network.ready.wait()
 
-    entities = []
+    devices = []
     for station in network.stations:
         dist = location.distance(latitude, longitude,
                                  station[ATTR_LATITUDE],
@@ -169,9 +169,9 @@ def async_setup_platform(hass, config, async_add_entities,
 
         if radius > dist or stations_list.intersection((station_id,
                                                         station_uid)):
-            entities.append(CityBikesStation(network, station_id, name))
+            devices.append(CityBikesStation(network, station_id, name))
 
-    async_add_entities(entities, True)
+    async_add_devices(devices, True)
 
 
 class CityBikesNetwork:

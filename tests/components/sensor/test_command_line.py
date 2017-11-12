@@ -26,7 +26,7 @@ class TestCommandSensorSensor(unittest.TestCase):
                   }
         devices = []
 
-        def add_dev_callback(devs):
+        def add_dev_callback(devs, update):
             """Add callback to add devices."""
             for dev in devs:
                 devices.append(dev)
@@ -35,6 +35,7 @@ class TestCommandSensorSensor(unittest.TestCase):
 
         self.assertEqual(1, len(devices))
         entity = devices[0]
+        entity.update()
         self.assertEqual('Test', entity.name)
         self.assertEqual('in', entity.unit_of_measurement)
         self.assertEqual('5', entity.state)
@@ -51,17 +52,29 @@ class TestCommandSensorSensor(unittest.TestCase):
 
     def test_template(self):
         """Test command sensor with template."""
-        data = command_line.CommandSensorData('echo 50')
+        data = command_line.CommandSensorData(self.hass, 'echo 50')
 
         entity = command_line.CommandSensor(
             self.hass, data, 'test', 'in',
             Template('{{ value | multiply(0.1) }}', self.hass))
 
+        entity.update()
         self.assertEqual(5, float(entity.state))
+
+    def test_template_render(self):
+        """Ensure command with templates get rendered properly."""
+        self.hass.states.set('sensor.test_state', 'Works')
+        data = command_line.CommandSensorData(
+            self.hass,
+            'echo {{ states.sensor.test_state.state }}'
+        )
+        data.update()
+
+        self.assertEqual("Works", data.value)
 
     def test_bad_command(self):
         """Test bad command."""
-        data = command_line.CommandSensorData('asdfasdf')
+        data = command_line.CommandSensorData(self.hass, 'asdfasdf')
         data.update()
 
         self.assertEqual(None, data.value)

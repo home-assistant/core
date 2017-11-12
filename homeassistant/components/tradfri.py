@@ -13,16 +13,21 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_HOST, CONF_API_KEY
-from homeassistant.loader import get_component
+from homeassistant.const import CONF_HOST
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['pytradfri==1.1']
+REQUIREMENTS = ['pytradfri==4.0.1',
+                'DTLSSocket==0.1.4',
+                'https://github.com/chrysn/aiocoap/archive/'
+                '3286f48f0b949901c8b5c04c0719dc54ab63d431.zip'
+                '#aiocoap==0.3']
 
 DOMAIN = 'tradfri'
-CONFIG_FILE = 'tradfri.conf'
+GATEWAY_IDENTITY = 'homeassistant'
+CONFIG_FILE = '.tradfri_psk.conf'
 KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
+KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
@@ -30,7 +35,6 @@ DEFAULT_ALLOW_TRADFRI_GROUPS = True
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
-        vol.Inclusive(CONF_API_KEY, 'gateway'): cv.string,
         vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
                      default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
@@ -41,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def request_configuration(hass, config, host):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     hass.data.setdefault(KEY_CONFIG, {})
     instance = hass.data[KEY_CONFIG].get(host)
 
@@ -52,9 +56,17 @@ def request_configuration(hass, config, host):
     @asyncio.coroutine
     def configuration_callback(callback_data):
         """Handle the submitted configuration."""
-        res = yield from _setup_gateway(hass, config, host,
-                                        callback_data.get('key'),
+        try:
+            from pytradfri.api.aiocoap_api import APIFactory
+        except ImportError:
+            _LOGGER.exception("Looks like something isn't installed!")
+            return
+
+        api_factory = APIFactory(host, psk_id=GATEWAY_IDENTITY)
+        psk = yield from api_factory.generate_psk(callback_data.get('key'))
+        res = yield from _setup_gateway(hass, config, host, psk,
                                         DEFAULT_ALLOW_TRADFRI_GROUPS)
+
         if not res:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Unable to connect.")
@@ -63,14 +75,14 @@ def request_configuration(hass, config, host):
         def success():
             """Set up was successful."""
             conf = _read_config(hass)
-            conf[host] = {'key': callback_data.get('key')}
+            conf[host] = {'key': psk}
             _write_config(hass, conf)
             hass.async_add_job(configurator.request_done, instance)
 
         hass.async_add_job(success)
 
     instance = configurator.request_config(
-        hass, "IKEA Trådfri", configuration_callback,
+        "IKEA Trådfri", configuration_callback,
         description='Please enter the security code written at the bottom of '
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",
@@ -83,13 +95,12 @@ def async_setup(hass, config):
     """Set up the Tradfri component."""
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
-    key = conf.get(CONF_API_KEY)
     allow_tradfri_groups = conf.get(CONF_ALLOW_TRADFRI_GROUPS)
+    keys = yield from hass.async_add_job(_read_config, hass)
 
     @asyncio.coroutine
     def gateway_discovered(service, info):
         """Run when a gateway is discovered."""
-        keys = yield from hass.async_add_job(_read_config, hass)
         host = info['host']
 
         if host in keys:
@@ -100,27 +111,43 @@ def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_IKEA_TRADFRI, gateway_discovered)
 
-    if host is None:
+    if not host:
         return True
 
-    return (yield from _setup_gateway(hass, config, host, key,
-                                      allow_tradfri_groups))
+    if host and keys.get(host):
+        return (yield from _setup_gateway(hass, config, host,
+                                          keys[host]['key'],
+                                          allow_tradfri_groups))
+    else:
+        hass.async_add_job(request_configuration, hass, config, host)
+        return True
 
 
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
-    from pytradfri import cli_api_factory, Gateway, RequestError, retry_timeout
-
+    from pytradfri import Gateway, RequestError
     try:
-        api = retry_timeout(cli_api_factory(host, key))
-    except RequestError:
+        from pytradfri.api.aiocoap_api import APIFactory
+    except ImportError:
+        _LOGGER.exception("Looks like something isn't installed!")
         return False
 
-    gateway = Gateway(api)
-    gateway_id = gateway.get_gateway_info().id
+    try:
+        factory = APIFactory(host, psk_id=GATEWAY_IDENTITY, psk=key,
+                             loop=hass.loop)
+        api = factory.request
+        gateway = Gateway()
+        gateway_info_result = yield from api(gateway.get_gateway_info())
+    except RequestError:
+        _LOGGER.exception("Tradfri setup failed.")
+        return False
+
+    gateway_id = gateway_info_result.id
+    hass.data.setdefault(KEY_API, {})
     hass.data.setdefault(KEY_GATEWAY, {})
     gateways = hass.data[KEY_GATEWAY]
+    hass.data[KEY_API][gateway_id] = api
 
     hass.data.setdefault(KEY_TRADFRI_GROUPS, {})
     tradfri_groups = hass.data[KEY_TRADFRI_GROUPS]
@@ -133,6 +160,8 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     gateways[gateway_id] = gateway
     hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {'gateway': gateway_id}, hass_config))
+    hass.async_add_job(discovery.async_load_platform(
+        hass, 'sensor', DOMAIN, {'gateway': gateway_id}, hass_config))
     return True
 
 

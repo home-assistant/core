@@ -4,42 +4,18 @@ Support for MySensors covers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.mysensors/
 """
-import logging
-
 from homeassistant.components import mysensors
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION, DOMAIN
 from homeassistant.const import STATE_ON, STATE_OFF
-
-_LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MySensors platform for covers."""
-    if discovery_info is None:
-        return
-
-    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
-    if not gateways:
-        return
-
-    for gateway in gateways:
-        pres = gateway.const.Presentation
-        set_req = gateway.const.SetReq
-        map_sv_types = {
-            pres.S_COVER: [set_req.V_DIMMER, set_req.V_LIGHT],
-        }
-        if float(gateway.protocol_version) >= 1.5:
-            map_sv_types.update({
-                pres.S_COVER: [set_req.V_PERCENTAGE, set_req.V_STATUS],
-            })
-        devices = {}
-        gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, MySensorsCover, add_devices))
+    """Setup the mysensors platform for covers."""
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsCover, add_devices=add_devices)
 
 
-class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
+class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
     """Representation of the value of a MySensors Cover child node."""
 
     @property

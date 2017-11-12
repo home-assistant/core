@@ -10,11 +10,12 @@ from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
+    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL,
+    ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import get_component
+from homeassistant.loader import get_component, bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -24,11 +25,12 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+))",
-    re.I | re.M
+    r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
+    r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
 
+@bind_hass
 def attach(hass, obj):
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
@@ -41,14 +43,27 @@ def attach(hass, obj):
         obj.hass = hass
 
 
-def extract_entities(template):
+def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)
-    if extraction:
-        return list(set(extraction))
+    extraction_final = []
+
+    for result in extraction:
+        if result[0] == 'trigger.entity_id' and 'trigger' in variables and \
+           'entity_id' in variables['trigger']:
+            extraction_final.append(variables['trigger']['entity_id'])
+        elif result[0]:
+            extraction_final.append(result[0])
+
+        if variables and result[1] in variables and \
+           isinstance(variables[result[1]], str):
+            extraction_final.append(variables[result[1]])
+
+    if extraction_final:
+        return list(set(extraction_final))
     return MATCH_ALL
 
 
@@ -75,9 +90,9 @@ class Template(object):
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
-    def extract_entities(self):
+    def extract_entities(self, variables=None):
         """Extract all entities for state_changed listener."""
-        return extract_entities(self.template)
+        return extract_entities(self.template, variables)
 
     def render(self, variables=None, **kwargs):
         """Render given template."""
@@ -92,7 +107,8 @@ class Template(object):
 
         This method must be run in the event loop.
         """
-        self._ensure_compiled()
+        if self._compiled is None:
+            self._ensure_compiled()
 
         if variables is not None:
             kwargs.update(variables)
@@ -120,7 +136,8 @@ class Template(object):
 
         This method must be run in the event loop.
         """
-        self._ensure_compiled()
+        if self._compiled is None:
+            self._ensure_compiled()
 
         variables = {
             'value': value
@@ -139,20 +156,17 @@ class Template(object):
 
     def _ensure_compiled(self):
         """Bind a template to a specific hass instance."""
-        if self._compiled is not None:
-            return
-
         self.ensure_valid()
 
         assert self.hass is not None, 'hass variable not set on template'
 
-        location_methods = LocationMethods(self.hass)
+        template_methods = TemplateMethods(self.hass)
 
         global_vars = ENV.make_globals({
-            'closest': location_methods.closest,
-            'distance': location_methods.distance,
+            'closest': template_methods.closest,
+            'distance': template_methods.distance,
             'is_state': self.hass.states.is_state,
-            'is_state_attr': self.hass.states.is_state_attr,
+            'is_state_attr': template_methods.is_state_attr,
             'states': AllStates(self.hass),
         })
 
@@ -181,8 +195,14 @@ class AllStates(object):
 
     def __iter__(self):
         """Return all states."""
-        return iter(sorted(self._hass.states.async_all(),
-                           key=lambda state: state.entity_id))
+        return iter(
+            _wrap_state(state) for state in
+            sorted(self._hass.states.async_all(),
+                   key=lambda state: state.entity_id))
+
+    def __len__(self):
+        """Return number of states."""
+        return len(self._hass.states.async_entity_ids())
 
     def __call__(self, entity_id):
         """Return the states."""
@@ -200,21 +220,62 @@ class DomainStates(object):
 
     def __getattr__(self, name):
         """Return the states."""
-        return self._hass.states.get('{}.{}'.format(self._domain, name))
+        return _wrap_state(
+            self._hass.states.get('{}.{}'.format(self._domain, name)))
 
     def __iter__(self):
         """Return the iteration over all the states."""
         return iter(sorted(
-            (state for state in self._hass.states.async_all()
+            (_wrap_state(state) for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
 
+    def __len__(self):
+        """Return number of states."""
+        return len(self._hass.states.async_entity_ids(self._domain))
 
-class LocationMethods(object):
-    """Class to expose distance helpers to templates."""
+
+class TemplateState(State):
+    """Class to represent a state object in a template."""
+
+    # Inheritance is done so functions that check against State keep working
+    # pylint: disable=super-init-not-called
+    def __init__(self, state):
+        """Initialize template state."""
+        self._state = state
+
+    @property
+    def state_with_unit(self):
+        """Return the state concatenated with the unit if available."""
+        state = object.__getattribute__(self, '_state')
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if unit is None:
+            return state.state
+        return "{} {}".format(state.state, unit)
+
+    def __getattribute__(self, name):
+        """Return an attribute of the state."""
+        if name in TemplateState.__dict__:
+            return object.__getattribute__(self, name)
+        else:
+            return getattr(object.__getattribute__(self, '_state'), name)
+
+    def __repr__(self):
+        """Representation of Template State."""
+        rep = object.__getattribute__(self, '_state').__repr__()
+        return '<template ' + rep[1:]
+
+
+def _wrap_state(state):
+    """Helper function to wrap a state."""
+    return None if state is None else TemplateState(state)
+
+
+class TemplateMethods(object):
+    """Class to expose helpers to templates."""
 
     def __init__(self, hass):
-        """Initialize the distance helpers."""
+        """Initialize the helpers."""
         self._hass = hass
 
     def closest(self, *args):
@@ -278,7 +339,7 @@ class LocationMethods(object):
             states = [self._hass.states.get(entity_id) for entity_id
                       in group.expand_entity_ids(self._hass, [gr_entity_id])]
 
-        return loc_helper.closest(latitude, longitude, states)
+        return _wrap_state(loc_helper.closest(latitude, longitude, states))
 
     def distance(self, *args):
         """Calculate distance.
@@ -327,6 +388,12 @@ class LocationMethods(object):
 
         return self._hass.config.units.length(
             loc_util.distance(*locations[0] + locations[1]), 'm')
+
+    def is_state_attr(self, entity_id, name, value):
+        """Test if a state is a specific attribute."""
+        state_obj = self._hass.states.get(entity_id)
+        return state_obj is not None and \
+            state_obj.attributes.get(name) == value
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""

@@ -20,9 +20,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an Online Status binary sensor."""
-    add_entities((OnlineStatus(config, apcupsd.DATA),))
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up an APCUPSd Online Status binary sensor."""
+    add_devices([OnlineStatus(config, apcupsd.DATA)], True)
 
 
 class OnlineStatus(BinarySensorDevice):
@@ -33,7 +33,6 @@ class OnlineStatus(BinarySensorDevice):
         self._config = config
         self._data = data
         self._state = None
-        self.update()
 
     @property
     def name(self):

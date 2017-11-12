@@ -4,18 +4,18 @@ Support for custom shell commands to retrieve values.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.command_line/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.command_line import CommandSensorData
 from homeassistant.const import (
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_NAME, CONF_VALUE_TEMPLATE,
     CONF_COMMAND, CONF_DEVICE_CLASS)
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +46,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(command)
+    data = CommandSensorData(hass, command)
 
     add_devices([CommandBinarySensor(
         hass, data, name, device_class, payload_on, payload_off,
-        value_template)])
+        value_template)], True)
 
 
 class CommandBinarySensor(BinarySensorDevice):
@@ -67,7 +67,6 @@ class CommandBinarySensor(BinarySensorDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
-        self.update()
 
     @property
     def name(self):

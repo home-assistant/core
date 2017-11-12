@@ -11,13 +11,13 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_TIMEOUT)
-from homeassistant.components.mqtt import CONF_STATE_TOPIC
-import homeassistant.helpers.config_validation as cv
+    CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME, ATTR_ID)
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt, slugify
 
@@ -27,19 +27,15 @@ DEPENDENCIES = ['mqtt']
 
 ATTR_DEVICE_ID = 'device_id'
 ATTR_DISTANCE = 'distance'
-ATTR_ID = 'id'
 ATTR_ROOM = 'room'
 
 CONF_DEVICE_ID = 'device_id'
-CONF_ROOM = 'room'
 CONF_AWAY_TIMEOUT = 'away_timeout'
 
+DEFAULT_AWAY_TIMEOUT = 0
 DEFAULT_NAME = 'Room Sensor'
 DEFAULT_TIMEOUT = 5
-DEFAULT_AWAY_TIMEOUT = 0
 DEFAULT_TOPIC = 'room_presence'
-
-STATE_AWAY = 'away'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_ID): cv.string,
@@ -73,7 +69,7 @@ class MQTTRoomSensor(Entity):
 
     def __init__(self, name, state_topic, device_id, timeout, consider_home):
         """Initialize the sensor."""
-        self._state = STATE_AWAY
+        self._state = STATE_NOT_HOME
         self._name = name
         self._state_topic = '{}{}'.format(state_topic, '/+')
         self._device_id = slugify(device_id).upper()
@@ -96,7 +92,7 @@ class MQTTRoomSensor(Entity):
             self._distance = distance
             self._updated = dt.utcnow()
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         @callback
         def message_received(topic, payload, qos):
@@ -148,7 +144,7 @@ class MQTTRoomSensor(Entity):
         if self._updated \
                 and self._consider_home \
                 and dt.utcnow() - self._updated > self._consider_home:
-            self._state = STATE_AWAY
+            self._state = STATE_NOT_HOME
 
 
 def _parse_update_data(topic, data):

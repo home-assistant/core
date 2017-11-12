@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except lnetatmo.NoDevice:
         return None
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class NetAtmoSensor(Entity):
@@ -115,7 +115,6 @@ class NetAtmoSensor(Entity):
         self.module_id = module_id[1]
         self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(
             self._name, module_id, self.type)
-        self.update()
 
     @property
     def name(self):

@@ -123,7 +123,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         entities.append(APCUPSdSensor(apcupsd.DATA, sensor_type))
 
-    add_entities(entities)
+    add_entities(entities, True)
 
 
 def infer_unit(value):
@@ -149,7 +149,7 @@ class APCUPSdSensor(Entity):
         self._name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
         self._unit = SENSOR_TYPES[sensor_type][1]
         self._inferred_unit = None
-        self.update()
+        self._state = None
 
     @property
     def name(self):

@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
 # names do not have spaces in them so that we can compare against
-# reuqests more easily (by removing spaces from the requests as well).
+# requests more easily (by removing spaces from the requests as well).
 # This lets "dark seagreen" and "dark sea green" both match the same
 # color "darkseagreen".
 COLORS = {
@@ -258,6 +258,48 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
 
 
 # pylint: disable=invalid-sequence-index
+def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
+    """Convert a hsb into its rgb representation."""
+    if fS == 0:
+        fV = fB * 255
+        return (fV, fV, fV)
+
+    r = g = b = 0
+    h = fH / 60
+    f = h - float(math.floor(h))
+    p = fB * (1 - fS)
+    q = fB * (1 - fS * f)
+    t = fB * (1 - (fS * (1 - f)))
+
+    if int(h) == 0:
+        r = int(fB * 255)
+        g = int(t * 255)
+        b = int(p * 255)
+    elif int(h) == 1:
+        r = int(q * 255)
+        g = int(fB * 255)
+        b = int(p * 255)
+    elif int(h) == 2:
+        r = int(p * 255)
+        g = int(fB * 255)
+        b = int(t * 255)
+    elif int(h) == 3:
+        r = int(p * 255)
+        g = int(q * 255)
+        b = int(fB * 255)
+    elif int(h) == 4:
+        r = int(t * 255)
+        g = int(p * 255)
+        b = int(fB * 255)
+    elif int(h) == 5:
+        r = int(fB * 255)
+        g = int(p * 255)
+        b = int(q * 255)
+
+    return (r, g, b)
+
+
+# pylint: disable=invalid-sequence-index
 def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
     """Convert an rgb color to its hsv representation."""
     fHSV = colorsys.rgb_to_hsv(iR/255.0, iG/255.0, iB/255.0)
@@ -308,7 +350,7 @@ def color_rgbw_to_rgb(r, g, b, w):
     # Add the white channel back into the rgb channels.
     rgb = (r + w, g + w, b + w)
 
-    # Match the output maximum value to the input. This ensures the the
+    # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
     return _match_max_scale((r, g, b, w), rgb)
 
@@ -392,9 +434,9 @@ def _get_blue(temperature: float) -> float:
 
 def color_temperature_mired_to_kelvin(mired_temperature):
     """Convert absolute mired shift to degrees kelvin."""
-    return 1000000 / mired_temperature
+    return math.floor(1000000 / mired_temperature)
 
 
 def color_temperature_kelvin_to_mired(kelvin_temperature):
     """Convert degrees kelvin to mired shift."""
-    return 1000000 / kelvin_temperature
+    return math.floor(1000000 / kelvin_temperature)

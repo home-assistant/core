@@ -4,6 +4,7 @@ import asyncio
 from ipaddress import ip_address, ip_network
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 
 from homeassistant import const
@@ -149,3 +150,46 @@ def test_access_granted_with_trusted_ip(mock_api_client, caplog,
 
             assert resp.status == 200, \
                 '{} should be trusted'.format(remote_addr)
+
+
+@asyncio.coroutine
+def test_basic_auth_works(mock_api_client, caplog):
+    """Test access with basic authentication."""
+    req = yield from mock_api_client.get(
+        const.URL_API,
+        auth=aiohttp.BasicAuth('homeassistant', API_PASSWORD))
+
+    assert req.status == 200
+    assert const.URL_API in caplog.text
+
+
+@asyncio.coroutine
+def test_basic_auth_username_homeassistant(mock_api_client, caplog):
+    """Test access with basic auth requires username homeassistant."""
+    req = yield from mock_api_client.get(
+        const.URL_API,
+        auth=aiohttp.BasicAuth('wrong_username', API_PASSWORD))
+
+    assert req.status == 401
+
+
+@asyncio.coroutine
+def test_basic_auth_wrong_password(mock_api_client, caplog):
+    """Test access with basic auth not allowed with wrong password."""
+    req = yield from mock_api_client.get(
+        const.URL_API,
+        auth=aiohttp.BasicAuth('homeassistant', 'wrong password'))
+
+    assert req.status == 401
+
+
+@asyncio.coroutine
+def test_authorization_header_must_be_basic_type(mock_api_client, caplog):
+    """Test only basic authorization is allowed for auth header."""
+    req = yield from mock_api_client.get(
+        const.URL_API,
+        headers={
+            'authorization': 'NotBasic abcdefg'
+        })
+
+    assert req.status == 401

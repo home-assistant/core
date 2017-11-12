@@ -50,20 +50,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Broadlink device sensors."""
+    host = config.get(CONF_HOST)
     mac = config.get(CONF_MAC).encode().replace(b':', b'')
     mac_addr = binascii.unhexlify(mac)
-    broadlink_data = BroadlinkData(
-        config.get(CONF_UPDATE_INTERVAL),
-        config.get(CONF_HOST),
-        mac_addr, config.get(CONF_TIMEOUT))
+    name = config.get(CONF_NAME)
+    timeout = config.get(CONF_TIMEOUT)
+    update_interval = config.get(CONF_UPDATE_INTERVAL)
+
+    broadlink_data = BroadlinkData(update_interval, host, mac_addr, timeout)
 
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BroadlinkSensor(
-            config.get(CONF_NAME),
-            broadlink_data,
-            variable))
-    add_devices(dev)
+        dev.append(BroadlinkSensor(name, broadlink_data, variable))
+    add_devices(dev, True)
 
 
 class BroadlinkSensor(Entity):
@@ -76,7 +75,6 @@ class BroadlinkSensor(Entity):
         self._type = sensor_type
         self._broadlink_data = broadlink_data
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):

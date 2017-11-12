@@ -1,10 +1,11 @@
 """
-Support for the DirecTV recievers.
+Support for the DirecTV receivers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.directv/
 """
 import voluptuous as vol
+import requests
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
@@ -15,7 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['directpy==0.1']
+REQUIREMENTS = ['directpy==0.2']
 
 DEFAULT_DEVICE = '0'
 DEFAULT_NAME = 'DirecTV Receiver'
@@ -25,7 +26,7 @@ SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
-KNOWN_HOSTS = []
+DATA_DIRECTV = "data_directv"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -37,38 +38,51 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DirecTV platform."""
+    known_devices = hass.data.get(DATA_DIRECTV)
+    if not known_devices:
+        known_devices = []
     hosts = []
 
-    if discovery_info:
-        host = discovery_info.get('host')
-
-        if host in KNOWN_HOSTS:
-            return
-
-        hosts.append([
-            'DirecTV_' + discovery_info.get('serial', ''),
-            host, DEFAULT_PORT
-        ])
-
-    elif CONF_HOST in config:
+    if CONF_HOST in config:
         hosts.append([
             config.get(CONF_NAME), config.get(CONF_HOST),
             config.get(CONF_PORT), config.get(CONF_DEVICE)
         ])
 
+    elif discovery_info:
+        host = discovery_info.get('host')
+        name = 'DirecTV_' + discovery_info.get('serial', '')
+
+        # attempt to discover additional RVU units
+        try:
+            resp = requests.get(
+                'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
+            if "locations" in resp:
+                for loc in resp["locations"]:
+                    if("locationName" in loc and "clientAddr" in loc
+                       and loc["clientAddr"] not in known_devices):
+                        hosts.append([str.title(loc["locationName"]), host,
+                                      DEFAULT_PORT, loc["clientAddr"]])
+
+        except requests.exceptions.RequestException:
+            # bail out and just go forward with uPnP data
+            if DEFAULT_DEVICE not in known_devices:
+                hosts.append([name, host, DEFAULT_PORT, DEFAULT_DEVICE])
+
     dtvs = []
 
     for host in hosts:
         dtvs.append(DirecTvDevice(*host))
-        KNOWN_HOSTS.append(host)
+        known_devices.append(host[-1])
 
     add_devices(dtvs)
+    hass.data[DATA_DIRECTV] = known_devices
 
     return True
 
 
 class DirecTvDevice(MediaPlayerDevice):
-    """Representation of a DirecTV reciever on the network."""
+    """Representation of a DirecTV receiver on the network."""
 
     def __init__(self, name, host, port, device):
         """Initialize the device."""

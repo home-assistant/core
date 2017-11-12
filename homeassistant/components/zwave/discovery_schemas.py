@@ -28,7 +28,12 @@ DISCOVERY_SCHEMAS = [
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_BINARY],
              const.DISC_TYPE: const.TYPE_BOOL,
-             const.DISC_GENRE: const.GENRE_USER
+             const.DISC_GENRE: const.GENRE_USER,
+         },
+         'off_delay': {
+             const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_CONFIGURATION],
+             const.DISC_INDEX: [9],
+             const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'climate',
      const.DISC_GENERIC_DEVICE_CLASS: [const.GENERIC_TYPE_THERMOSTAT],

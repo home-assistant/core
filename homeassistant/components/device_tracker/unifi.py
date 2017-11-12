@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.unifi/
 """
 import logging
+from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -12,16 +13,19 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pyunifi==2.13']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
+CONF_DETECTION_TIME = 'detection_time'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
+DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
@@ -32,7 +36,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): vol.Any(
+        cv.boolean, cv.isfile),
+    vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
+        cv.time_period, cv.positive_timedelta)
 })
 
 
@@ -46,6 +53,7 @@ def get_scanner(hass, config):
     site_id = config[DOMAIN].get(CONF_SITE_ID)
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
+    detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
 
     try:
         ctrl = Controller(host, username, password, port, version='v4',
@@ -61,14 +69,15 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl)
+    return UnifiScanner(ctrl, detection_time)
 
 
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
-    def __init__(self, controller):
+    def __init__(self, controller, detection_time: timedelta):
         """Initialize the scanner."""
+        self._detection_time = detection_time
         self._controller = controller
         self._update()
 
@@ -81,7 +90,11 @@ class UnifiScanner(DeviceScanner):
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
-        self._clients = {client['mac']: client for client in clients}
+        self._clients = {
+            client['mac']: client
+            for client in clients
+            if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
+                client['last_seen']))) < self._detection_time}
 
     def scan_devices(self):
         """Scan for devices."""
@@ -96,5 +109,5 @@ class UnifiScanner(DeviceScanner):
         """
         client = self._clients.get(mac, {})
         name = client.get('name') or client.get('hostname')
-        _LOGGER.debug("Device %s name %s", mac, name)
+        _LOGGER.debug("Device mac %s name %s", mac, name)
         return name

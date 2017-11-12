@@ -15,16 +15,16 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA)
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE,
-    HTTP_DIGEST_AUTHENTICATION)
+    ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
+    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==7.0.1']
+REQUIREMENTS = ['python-telegram-bot==8.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,6 @@ ATTR_CALLBACK_QUERY_ID = 'callback_query_id'
 ATTR_CAPTION = 'caption'
 ATTR_CHAT_ID = 'chat_id'
 ATTR_CHAT_INSTANCE = 'chat_instance'
-ATTR_COMMAND = 'command'
 ATTR_DISABLE_NOTIF = 'disable_notification'
 ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
 ATTR_EDITED_MSG = 'edited_message'
@@ -66,6 +65,7 @@ DOMAIN = 'telegram_bot'
 
 SERVICE_SEND_MESSAGE = 'send_message'
 SERVICE_SEND_PHOTO = 'send_photo'
+SERVICE_SEND_VIDEO = 'send_video'
 SERVICE_SEND_DOCUMENT = 'send_document'
 SERVICE_SEND_LOCATION = 'send_location'
 SERVICE_EDIT_MESSAGE = 'edit_message'
@@ -155,6 +155,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
@@ -278,12 +279,11 @@ def async_setup(hass, config):
         if msgtype == SERVICE_SEND_MESSAGE:
             yield from hass.async_add_job(
                 partial(notify_service.send_message, **kwargs))
-        elif msgtype == SERVICE_SEND_PHOTO:
+        elif (msgtype == SERVICE_SEND_PHOTO or
+              msgtype == SERVICE_SEND_VIDEO or
+              msgtype == SERVICE_SEND_DOCUMENT):
             yield from hass.async_add_job(
-                partial(notify_service.send_file, True, **kwargs))
-        elif msgtype == SERVICE_SEND_DOCUMENT:
-            yield from hass.async_add_job(
-                partial(notify_service.send_file, False, **kwargs))
+                partial(notify_service.send_file, msgtype, **kwargs))
         elif msgtype == SERVICE_SEND_LOCATION:
             yield from hass.async_add_job(
                 partial(notify_service.send_location, **kwargs))
@@ -519,11 +519,15 @@ class TelegramNotificationService:
                        callback_query_id,
                        text=message, show_alert=show_alert, **params)
 
-    def send_file(self, is_photo=True, target=None, **kwargs):
-        """Send a photo or a document."""
+    def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
+        """Send a photo, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
-        func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
+        func_send = {
+            SERVICE_SEND_PHOTO: self.bot.sendPhoto,
+            SERVICE_SEND_VIDEO: self.bot.sendVideo,
+            SERVICE_SEND_DOCUMENT: self.bot.sendDocument
+        }.get(file_type)
         file_content = load_data(
             self.hass,
             url=kwargs.get(ATTR_URL),

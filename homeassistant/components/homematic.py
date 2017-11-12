@@ -4,8 +4,8 @@ Support for HomeMatic devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
+import asyncio
 import os
-import time
 import logging
 from datetime import timedelta
 from functools import partial
@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['pyhomematic==0.1.30']
+REQUIREMENTS = ['pyhomematic==0.1.34']
 
 DOMAIN = 'homematic'
 
@@ -65,10 +65,12 @@ HM_DEVICE_TYPES = {
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
-        'FillingLevel', 'ValveDrive', 'EcoLogic'],
+        'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
+        'IPSmoke'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
-        'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall'],
+        'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
+        'ThermostatGroup'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
@@ -121,7 +123,6 @@ CONF_RESOLVENAMES_OPTIONS = [
 ]
 
 DATA_HOMEMATIC = 'homematic'
-DATA_DELAY = 'homematic_delay'
 DATA_DEVINIT = 'homematic_devinit'
 DATA_STORE = 'homematic_store'
 
@@ -129,23 +130,23 @@ CONF_LOCAL_IP = 'local_ip'
 CONF_LOCAL_PORT = 'local_port'
 CONF_IP = 'ip'
 CONF_PORT = 'port'
+CONF_PATH = 'path'
 CONF_CALLBACK_IP = 'callback_ip'
 CONF_CALLBACK_PORT = 'callback_port'
 CONF_RESOLVENAMES = 'resolvenames'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
-CONF_DELAY = 'delay'
 CONF_PRIMARY = 'primary'
 
 DEFAULT_LOCAL_IP = '0.0.0.0'
 DEFAULT_LOCAL_PORT = 0
 DEFAULT_RESOLVENAMES = False
 DEFAULT_PORT = 2001
+DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
 DEFAULT_PASSWORD = ''
 DEFAULT_VARIABLES = False
 DEFAULT_DEVICES = True
-DEFAULT_DELAY = 0.5
 DEFAULT_PRIMARY = False
 
 
@@ -162,8 +163,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOSTS): {cv.match_all: {
             vol.Required(CONF_IP): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-                cv.port,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_VARIABLES, default=DEFAULT_VARIABLES):
@@ -177,7 +178,6 @@ CONFIG_SCHEMA = vol.Schema({
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
         vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(float),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -249,7 +249,6 @@ def setup(hass, config):
     """Set up the Homematic component."""
     from pyhomematic import HMConnection
 
-    hass.data[DATA_DELAY] = config[DOMAIN].get(CONF_DELAY)
     hass.data[DATA_DEVINIT] = {}
     hass.data[DATA_STORE] = set()
 
@@ -262,6 +261,7 @@ def setup(hass, config):
         remotes[rname] = {}
         remotes[rname][CONF_IP] = server
         remotes[rname][CONF_PORT] = rconfig.get(CONF_PORT)
+        remotes[rname][CONF_PATH] = rconfig.get(CONF_PATH)
         remotes[rname][CONF_RESOLVENAMES] = rconfig.get(CONF_RESOLVENAMES)
         remotes[rname][CONF_USERNAME] = rconfig.get(CONF_USERNAME)
         remotes[rname][CONF_PASSWORD] = rconfig.get(CONF_PASSWORD)
@@ -277,7 +277,7 @@ def setup(hass, config):
 
     # Create server thread
     bound_system_callback = partial(_system_callback_handler, hass, config)
-    hass.data[DATA_HOMEMATIC] = HMConnection(
+    hass.data[DATA_HOMEMATIC] = homematic = HMConnection(
         local=config[DOMAIN].get(CONF_LOCAL_IP),
         localport=config[DOMAIN].get(CONF_LOCAL_PORT),
         remotes=remotes,
@@ -286,7 +286,7 @@ def setup(hass, config):
     )
 
     # Start server thread, connect to hosts, initialize to receive events
-    hass.data[DATA_HOMEMATIC].start()
+    homematic.start()
 
     # Stops server when HASS is shutting down
     hass.bus.listen_once(
@@ -296,7 +296,7 @@ def setup(hass, config):
     entity_hubs = []
     for _, hub_data in hosts.items():
         entity_hubs.append(HMHub(
-            hass, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
+            hass, homematic, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
 
     # Register HomeMatic services
     descriptions = load_yaml_config_file(
@@ -359,7 +359,7 @@ def setup(hass, config):
 
     def _service_handle_reconnect(service):
         """Service to reconnect all HomeMatic hubs."""
-        hass.data[DATA_HOMEMATIC].reconnect()
+        homematic.reconnect()
 
     hass.services.register(
         DOMAIN, SERVICE_RECONNECT, _service_handle_reconnect,
@@ -575,24 +575,25 @@ def _device_from_servicecall(hass, service):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
-    def __init__(self, hass, name, use_variables):
+    def __init__(self, hass, homematic, name, use_variables):
         """Initialize HomeMatic hub."""
         self.hass = hass
         self.entity_id = "{}.{}".format(DOMAIN, name.lower())
-        self._homematic = hass.data[DATA_HOMEMATIC]
+        self._homematic = homematic
         self._variables = {}
         self._name = name
         self._state = STATE_UNKNOWN
         self._use_variables = use_variables
 
         # Load data
-        track_time_interval(hass, self._update_hub, SCAN_INTERVAL_HUB)
-        self._update_hub(None)
+        track_time_interval(
+            self.hass, self._update_hub, SCAN_INTERVAL_HUB)
+        self.hass.add_job(self._update_hub, None)
 
         if self._use_variables:
             track_time_interval(
-                hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
-            self._update_variables(None)
+                self.hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
+            self.hass.add_job(self._update_variables, None)
 
     @property
     def name(self):
@@ -622,9 +623,13 @@ class HMHub(Entity):
 
     def _update_hub(self, now):
         """Retrieve latest state."""
-        state = self._homematic.getServiceMessages(self._name)
-        self._state = STATE_UNKNOWN if state is None else len(state)
-        self.schedule_update_ha_state()
+        service_message = self._homematic.getServiceMessages(self._name)
+        state = None if service_message is None else len(service_message)
+
+        # state have change?
+        if self._state != state:
+            self._state = state
+            self.schedule_update_ha_state()
 
     def _update_variables(self, now):
         """Retrive all variable data and update hmvariable states."""
@@ -662,16 +667,15 @@ class HMHub(Entity):
 class HMDevice(Entity):
     """The HomeMatic device base object."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Initialize a generic HomeMatic device."""
-        self.hass = hass
-        self._homematic = hass.data[DATA_HOMEMATIC]
         self._name = config.get(ATTR_NAME)
         self._address = config.get(ATTR_ADDRESS)
         self._proxy = config.get(ATTR_PROXY)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
         self._data = {}
+        self._homematic = None
         self._hmdevice = None
         self._connected = False
         self._available = False
@@ -679,6 +683,11 @@ class HMDevice(Entity):
         # Set parameter to uppercase
         if self._state:
             self._state = self._state.upper()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Load data init callbacks."""
+        yield from self.hass.async_add_job(self.link_homematic)
 
     @property
     def should_poll(self):
@@ -728,16 +737,13 @@ class HMDevice(Entity):
             return True
 
         # Initialize
+        self._homematic = self.hass.data[DATA_HOMEMATIC]
         self._hmdevice = self._homematic.devices[self._proxy][self._address]
         self._connected = True
 
         try:
             # Initialize datapoints of this object
             self._init_data()
-            if self.hass.data[DATA_DELAY]:
-                # We optionally delay / pause loading of data to avoid
-                # overloading of CCU / Homegear
-                time.sleep(self.hass.data[DATA_DELAY])
             self._load_data_from_hm()
 
             # Link events from pyhomematic

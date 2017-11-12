@@ -100,7 +100,7 @@ class MqttSensor(Entity):
                 payload = self._template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         return mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
@@ -110,7 +110,7 @@ class MqttSensor(Entity):
         """Triggered when value is expired."""
         self._expiration_trigger = None
         self._state = STATE_UNKNOWN
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):

@@ -9,12 +9,13 @@ import subprocess
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
-                                             ENTITY_ID_FORMAT)
+import homeassistant.helpers.config_validation as cv
+
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, ENTITY_ID_FORMAT)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF,
     CONF_COMMAND_ON, CONF_COMMAND_STATE)
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,30 +81,30 @@ class CommandSwitch(SwitchDevice):
     @staticmethod
     def _switch(command):
         """Execute the actual commands."""
-        _LOGGER.info('Running command: %s', command)
+        _LOGGER.info("Running command: %s", command)
 
         success = (subprocess.call(command, shell=True) == 0)
 
         if not success:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
         return success
 
     @staticmethod
     def _query_state_value(command):
         """Execute state command for return value."""
-        _LOGGER.info('Running state command: %s', command)
+        _LOGGER.info("Running state command: %s", command)
 
         try:
             return_value = subprocess.check_output(command, shell=True)
             return return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
     @staticmethod
     def _query_state_code(command):
         """Execute state command for return code."""
-        _LOGGER.info('Running state command: %s', command)
+        _LOGGER.info("Running state command: %s", command)
         return subprocess.call(command, shell=True) == 0
 
     @property
@@ -129,7 +130,7 @@ class CommandSwitch(SwitchDevice):
     def _query_state(self):
         """Query for state."""
         if not self._command_state:
-            _LOGGER.error('No state command specified')
+            _LOGGER.error("No state command specified")
             return
         if self._value_template:
             return CommandSwitch._query_state_value(self._command_state)
@@ -142,7 +143,7 @@ class CommandSwitch(SwitchDevice):
             if self._value_template:
                 payload = self._value_template.render_with_possible_json_value(
                     payload)
-            self._state = (payload.lower() == "true")
+            self._state = (payload.lower() == 'true')
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

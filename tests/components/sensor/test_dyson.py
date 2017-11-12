@@ -2,14 +2,16 @@
 import unittest
 from unittest import mock
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, \
+    STATE_OFF
 from homeassistant.components.sensor import dyson
 from tests.common import get_test_home_assistant
+from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
 
 def _get_device_without_state():
     """Return a valid device provide by Dyson web services."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureCoolLink)
     device.name = "Device_name"
     device.state = None
     device.environmental_state = None
@@ -26,6 +28,21 @@ def _get_with_state():
     device.environmental_state.dust = 5
     device.environmental_state.humidity = 45
     device.environmental_state.temperature = 295
+    device.environmental_state.volatil_organic_compounds = 2
+
+    return device
+
+
+def _get_with_standby_monitoring():
+    """Return a valid device with state but with standby monitoring disable."""
+    device = mock.Mock()
+    device.name = "Device_name"
+    device.state = mock.Mock()
+    device.state.filter_life = 100
+    device.environmental_state = mock.Mock()
+    device.environmental_state.dust = 5
+    device.environmental_state.humidity = 0
+    device.environmental_state.temperature = 0
     device.environmental_state.volatil_organic_compounds = 2
 
     return device
@@ -59,8 +76,9 @@ class DysonTest(unittest.TestCase):
             assert devices[3].name == "Device_name temperature"
             assert devices[4].name == "Device_name air quality"
 
-        device = _get_device_without_state()
-        self.hass.data[dyson.DYSON_DEVICES] = [device]
+        device_fan = _get_device_without_state()
+        device_non_fan = _get_with_state()
+        self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
 
     def test_dyson_filter_life_sensor(self):
@@ -128,6 +146,17 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(sensor.name, "Device_name humidity")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")
 
+    def test_dyson_humidity_standby_monitoring(self):
+        """Test humidity sensor while device is in standby monitoring."""
+        sensor = dyson.DysonHumiditySensor(self.hass,
+                                           _get_with_standby_monitoring())
+        sensor.entity_id = "sensor.dyson_1"
+        self.assertFalse(sensor.should_poll)
+        self.assertEqual(sensor.state, STATE_OFF)
+        self.assertEqual(sensor.unit_of_measurement, '%')
+        self.assertEqual(sensor.name, "Device_name humidity")
+        self.assertEqual(sensor.entity_id, "sensor.dyson_1")
+
     def test_dyson_temperature_sensor(self):
         """Test temperature sensor with no value."""
         sensor = dyson.DysonTemperatureSensor(self.hass,
@@ -159,6 +188,18 @@ class DysonTest(unittest.TestCase):
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, 71.3)
         self.assertEqual(sensor.unit_of_measurement, '°F')
+        self.assertEqual(sensor.name, "Device_name temperature")
+        self.assertEqual(sensor.entity_id, "sensor.dyson_1")
+
+    def test_dyson_temperature_standby_monitoring(self):
+        """Test temperature sensor while device is in standby monitoring."""
+        sensor = dyson.DysonTemperatureSensor(self.hass,
+                                              _get_with_standby_monitoring(),
+                                              TEMP_CELSIUS)
+        sensor.entity_id = "sensor.dyson_1"
+        self.assertFalse(sensor.should_poll)
+        self.assertEqual(sensor.state, STATE_OFF)
+        self.assertEqual(sensor.unit_of_measurement, '°C')
         self.assertEqual(sensor.name, "Device_name temperature")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")
 
