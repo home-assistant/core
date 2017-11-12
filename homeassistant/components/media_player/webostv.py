@@ -202,29 +202,25 @@ class LgWebOSDevice(MediaPlayerDevice):
 
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
-                    if conf_sources:
-                        if app['id'] == self._current_source_id:
-                            self._current_source = app['title']
-                            self._source_list[app['title']] = app
-                        elif (app['id'] in conf_sources or
-                              any(word in app['title']
-                                  for word in conf_sources) or
-                              any(word in app['id']
-                                  for word in conf_sources)):
-                            self._source_list[app['title']] = app
-                    else:
+                    if app['id'] == self._current_source_id:
                         self._current_source = app['title']
+                        self._source_list[app['title']] = app
+                    elif (not conf_sources or
+                          app['id'] in conf_sources or
+                          any(word in app['title']
+                              for word in conf_sources) or
+                          any(word in app['id']
+                              for word in conf_sources)):
                         self._source_list[app['title']] = app
 
                 for source in self._client.get_inputs():
-                    if conf_sources:
-                        if source['id'] == self._current_source_id:
-                            self._source_list[source['label']] = source
-                        elif (source['label'] in conf_sources or
-                              any(source['label'].find(word) != -1
-                                  for word in conf_sources)):
-                            self._source_list[source['label']] = source
-                    else:
+                    if source['id'] == self._current_source_id:
+                        self._current_source = source['label']
+                        self._source_list[source['label']] = source
+                    elif (not conf_sources or
+                          source['label'] in conf_sources or
+                          any(source['label'].find(word) != -1
+                              for word in conf_sources)):
                         self._source_list[source['label']] = source
         except (OSError, ConnectionClosed, TypeError,
                 asyncio.TimeoutError):
