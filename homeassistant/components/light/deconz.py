@@ -7,7 +7,7 @@ https://home-assistant.io/components/light/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import DECONZ_DATA
+from homeassistant.components.deconz import (DECONZ_DATA, DOMAIN)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
     ATTR_RGB_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -17,7 +17,7 @@ from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
 
-DEPENDENCIES = ['deconz']
+DEPENDENCIES = [DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 

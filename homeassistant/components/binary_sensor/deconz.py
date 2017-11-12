@@ -8,10 +8,10 @@ import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.deconz import DECONZ_DATA
+from homeassistant.components.deconz import (DECONZ_DATA, DOMAIN)
 from homeassistant.core import callback
 
-DEPENDENCIES = ['deconz']
+DEPENDENCIES = [DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
