@@ -69,6 +69,3 @@ class Touchline(ClimateDevice):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def current_temperature(self):
