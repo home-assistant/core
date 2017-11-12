@@ -31,8 +31,6 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'aiocoap',  # Temp, will be removed when Python 3.4 is no longer supported.
-    'DTLSSocket'  # Requires cython.
 )
 
 TEST_REQUIREMENTS = (
