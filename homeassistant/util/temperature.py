@@ -37,10 +37,17 @@ def calculate_dewpoint(temperature: float, humidity: float,
 
     Uses the Magnus formula approximation.
     See https://en.wikipedia.org/wiki/Dew_point#Calculating_the_dew_point
+
+    Humidity should be a percentage (0-100)
     """
     if units not in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(
             units, TEMPERATURE))
+    if humidity <= 0 or humidity > 100:
+        # Zero relative humidity doesn't work because natural log of zero
+        # is undefined
+        raise ValueError('Relative humidity value {} invalid, '
+                         'must be 0 < rh <= 100'.format(humidity))
     temp = convert(temperature, units, TEMP_CELSIUS)
     const_b = 17.67
     const_c = 243.5
