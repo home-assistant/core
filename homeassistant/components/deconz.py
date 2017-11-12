@@ -14,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pydeconz==8']
 
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'deconz'
 
 DECONZ_DATA = 'deconz_data'
+CONFIG_FILE = 'deconz.conf'
 
 TYPE_AS_EVENT = 'type_as_event'
 
@@ -40,6 +42,7 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Setup services for Deconz."""
     deconz_config = config[DOMAIN]
+    config_file = load_json(hass.config.path(CONFIG_FILE))
 
     @callback
     def _shutdown(call):  # pylint: disable=unused-argument
@@ -51,21 +54,29 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def generate_api_key(call):
-        """Generate API key needed to communicate with Deconz."""
+        """Generate API key needed to communicate with Deconz.
+
+        Store API key in deconz.conf.
+        """
         from pydeconz.utils import get_api_key
         deconz_config[CONF_USERNAME] = call.data.get(CONF_USERNAME, 'delight')
         deconz_config[CONF_PASSWORD] = call.data.get(CONF_PASSWORD, 'delight')
         api_key = yield from get_api_key(hass.loop, **deconz_config)
-        hass.states.async_set('deconz.api_key', api_key)
+        if not save_json(
+                hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key}):
+            _LOGGER.error("Failed to save API key to %s", CONFIG_FILE)
         deconz_config[CONF_API_KEY] = api_key
         yield from _setup_deconz(hass, config, deconz_config)
 
     if CONF_API_KEY in deconz_config:
         yield from _setup_deconz(hass, config, deconz_config)
+    elif CONF_API_KEY in config_file:
+        deconz_config[CONF_API_KEY] = config_file[CONF_API_KEY]
+        yield from _setup_deconz(hass, config, deconz_config)
     else:
         hass.services.async_register(
             DOMAIN, 'generate_api_key', generate_api_key)
-        _LOGGER.warning("Deconz lacking API key to set up session. See docs.")
+        _LOGGER.warning("Deconz needs API key to set up session. See docs.")
 
     return True
 
