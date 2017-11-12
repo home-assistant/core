@@ -4,7 +4,7 @@ Demo platform that offers a fake climate device.
 Example configuration:
 climate:
   - platform: touchline
-    host: http://192.168.1.1 
+    host: http://192.168.1.1
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.touchline/
@@ -15,7 +15,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.const import CONF_HOST, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pytouchline==0.5']
@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string
 })
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Touchline devices."""
@@ -51,11 +52,11 @@ class Touchline(ClimateDevice):
 
     def update(self):
         """Update unit attributes."""
-        self.unit.update()      
+        self.unit.update()     
         self._name = self.unit.get_name()
         self._target_temperature = self.unit.get_target_temperature()
         self._current_temperature = self.unit.get_current_temperature()
-    
+ 
     @property
     def should_poll(self):
         """Return the polling state."""
