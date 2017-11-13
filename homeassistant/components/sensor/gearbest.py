@@ -1,5 +1,6 @@
 """
 Parse prices of a item from gearbest.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.gearbest/
 """
@@ -21,7 +22,7 @@ CONF_ITEMS = 'items'
 CONF_CURRENCY = 'currency'
 
 ICON = 'mdi:coin'
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2*60*60)  #2h * 60min * 60sec
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2*60*60)  # 2h * 60min * 60sec
 
 _ITEM_SCHEMA = vol.Schema({
     vol.Optional("url"): cv.string,
@@ -41,8 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Gearbest sensor."""
-
-    del discovery_info  #unused
+    del discovery_info  # unused
 
     hass.loop.run_in_executor(None, _add_items, hass, config,
                               async_add_devices)
@@ -69,7 +69,6 @@ class GearbestSensor(Entity):
 
     def __init__(self, hass, item, currency):
         """Initialize the sensor."""
-
         from gearbest_parser import GearbestParser
 
         self._hass = hass
@@ -100,7 +99,7 @@ class GearbestSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the currency """
+        """Return the currency."""
         return self._item.currency
 
     @property
