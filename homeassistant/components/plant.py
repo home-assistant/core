@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
-    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
+    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.components import group
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -151,6 +151,7 @@ class Plant(Entity):
         self._config = config
         self._sensormap = dict()
         self._readingmap = dict()
+        self._unit_of_measurement = dict()
         for reading, entity_id in config['sensors'].items():
             self._sensormap[entity_id] = reading
             self._readingmap[reading] = entity_id
@@ -201,6 +202,8 @@ class Plant(Entity):
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
+        if new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT, None) is not None:
+            self._unit_of_measurement[reading] = new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT)
         self._update_state()
 
     def _update_state(self):
@@ -300,6 +303,7 @@ class Plant(Entity):
             ATTR_ICON: self._icon,
             ATTR_PROBLEM: self._problems,
             ATTR_SENSORS: self._readingmap,
+            CONF_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
         }
 
         for reading in self._sensormap.values():
