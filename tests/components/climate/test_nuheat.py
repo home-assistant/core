@@ -137,13 +137,29 @@ class TestNuHeat(unittest.TestCase):
     def test_is_away_mode_on(self):
         """Test is away mode on."""
         _thermostat = self.thermostat._thermostat
-        _thermostat.target_celsius = _thermostat.min_celsius
         _thermostat.schedule_mode = SCHEDULE_HOLD
+
+        # user-defined minimum fahrenheit
+        self.thermostat._min_away_temp = 59
+        _thermostat.target_fahrenheit = 59
         self.assertTrue(self.thermostat.is_away_mode_on)
 
+        # user-defined minimum celsius
+        self.thermostat._temperature_unit = "C"
+        self.thermostat._min_away_temp = 15
+        _thermostat.target_celsius = 15
+        self.assertTrue(self.thermostat.is_away_mode_on)
+
+        # thermostat's minimum supported temperature
+        self.thermostat._min_away_temp = None
+        _thermostat.target_celsius = _thermostat.min_celsius
+        self.assertTrue(self.thermostat.is_away_mode_on)
+
+        # thermostat held at a temperature above the minimum
         _thermostat.target_celsius = _thermostat.min_celsius + 1
         self.assertFalse(self.thermostat.is_away_mode_on)
 
+        # thermostat not on HOLD
         _thermostat.target_celsius = _thermostat.min_celsius
         _thermostat.schedule_mode = SCHEDULE_RUN
         self.assertFalse(self.thermostat.is_away_mode_on)
