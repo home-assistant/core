@@ -103,18 +103,6 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.target_temperature, 22)
 
-    def test_target_temperature_low(self):
-        """Test low target temperature."""
-        self.assertEqual(self.thermostat.target_temperature_low, 72)
-        self.thermostat._temperature_unit = "C"
-        self.assertEqual(self.thermostat.target_temperature_low, 22)
-
-    def test_target_temperature_high(self):
-        """Test high target temperature."""
-        self.assertEqual(self.thermostat.target_temperature_high, 72)
-        self.thermostat._temperature_unit = "C"
-        self.assertEqual(self.thermostat.target_temperature_high, 22)
-
     @patch.object(
         nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
     def test_current_hold_mode_away(self, is_away_mode_on):

@@ -112,16 +112,6 @@ class NuHeatThermostat(ClimateDevice):
         return self._thermostat.target_fahrenheit
 
     @property
-    def target_temperature_low(self):
-        """Return the lower bound temperature we try to reach."""
-        return self.target_temperature
-
-    @property
-    def target_temperature_high(self):
-        """Return the upper bound temperature we try to reach."""
-        return self.target_temperature
-
-    @property
     def current_hold_mode(self):
         """Return current hold mode."""
         if self.is_away_mode_on:
