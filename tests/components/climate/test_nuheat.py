@@ -4,7 +4,7 @@ from unittest.mock import PropertyMock, Mock, patch
 
 from homeassistant.components.climate import STATE_HEAT, STATE_IDLE
 import homeassistant.components.climate.nuheat as nuheat
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_HOME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SCHEDULE_HOLD = 3
 SCHEDULE_RUN = 1
