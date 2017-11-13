@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
-    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON, CONF_UNIT_OF_MEASUREMENT)
+    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.components import group
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -117,31 +117,26 @@ class Plant(Entity):
         READING_BATTERY: {
             ATTR_UNIT_OF_MEASUREMENT:  '%',
             'min': CONF_MIN_BATTERY_LEVEL,
-            'icon': 'mdi:battery-outline'
         },
         READING_TEMPERATURE: {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             'min': CONF_MIN_TEMPERATURE,
             'max': CONF_MAX_TEMPERATURE,
-            'icon': 'mdi:thermometer'
         },
         READING_MOISTURE: {
             ATTR_UNIT_OF_MEASUREMENT: '%',
             'min': CONF_MIN_MOISTURE,
             'max': CONF_MAX_MOISTURE,
-            'icon': 'mdi:water'
         },
         READING_CONDUCTIVITY: {
             ATTR_UNIT_OF_MEASUREMENT: 'µS/cm',
             'min': CONF_MIN_CONDUCTIVITY,
             'max': CONF_MAX_CONDUCTIVITY,
-            'icon': 'mdi:emoticon-poop'
         },
         READING_BRIGHTNESS: {
             ATTR_UNIT_OF_MEASUREMENT: 'lux',
             # minimum brightness is checked separately
             'max': CONF_MAX_BRIGHTNESS,
-            'icon': 'mdi:white-balance-sunny'
         }
     }
 
@@ -162,7 +157,6 @@ class Plant(Entity):
         self._conductivity = None
         self._temperature = None
         self._brightness = None
-        self._icon = 'mdi:help-circle'
         self._problems = PROBLEM_NONE
 
         self._conf_check_days = 3  # default check interval: 3 days
@@ -227,7 +221,6 @@ class Plant(Entity):
             self._problems = ', '.join(result)
         else:
             self._state = STATE_OK
-            self._icon = 'mdi:thumb-up'
             self._problems = PROBLEM_NONE
         _LOGGER.debug("New data processed")
         self.async_schedule_update_ha_state()
@@ -237,7 +230,6 @@ class Plant(Entity):
         if 'min' in params and params['min'] in self._config:
             min_value = self._config[params['min']]
             if value < min_value:
-                self._icon = params['icon']
                 return '{} low'.format(sensor_name)
 
     def _check_max(self, sensor_name, value, params):
@@ -245,7 +237,6 @@ class Plant(Entity):
         if 'max' in params and params['max'] in self._config:
             max_value = self._config[params['max']]
             if value > max_value:
-                self._icon = params['icon']
                 return '{} high'.format(sensor_name)
         return None
 
@@ -300,7 +291,6 @@ class Plant(Entity):
         sensor in the attributes of the device.
         """
         attrib = {
-            ATTR_ICON: self._icon,
             ATTR_PROBLEM: self._problems,
             ATTR_SENSORS: self._readingmap,
             CONF_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
