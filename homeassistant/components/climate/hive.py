@@ -1,55 +1,55 @@
-"""Hive Integration - climate."""
+"""
+Support for the Hive devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hive/
+"""
 import logging
-from homeassistant.components.climate import (ClimateDevice, ENTITY_ID_FORMAT)
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.loader import get_component
+from datetime import datetime
+
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 DEPENDENCIES = ['hive']
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices,
-                   device_list, discovery_info=None):
-    """Setup Hive climate devices."""
-    hive_comp = get_component('hive')
+def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
+    """Set up Hive climate devices."""
+    session = hass.data.get('DATA_HIVE')
 
-    for a_device in device_list:
-        if ("HA_DeviceType" in a_device and "Hive_NodeID" in a_device and
-                "Hive_NodeName" in a_device):
-            add_devices([HiveClimateEntity(hass,
-                                           hive_comp.HGO,
-                                           a_device["Hive_NodeID"],
-                                           a_device["Hive_NodeName"],
-                                           a_device["HA_DeviceType"])])
+    add_devices([HiveClimateEntity(hass, session, hivedevice)])
 
 
 class HiveClimateEntity(ClimateDevice):
     """Hive Climate Device."""
 
-    def __init__(self, hass, HiveComponent_HiveObjects,
-                 NodeID, NodeName, DeviceType):
+    def __init__(self, hass, Session, HiveDevice):
         """Initialize the Climate device."""
-        self.h_o = HiveComponent_HiveObjects
-        self.node_id = NodeID
-        self.node_name = NodeName
-        self.device_type = DeviceType
+        self.node_id = HiveDevice["Hive_NodeID"]
+        self.node_name = HiveDevice["Hive_NodeName"]
+        self.device_type = HiveDevice["HA_DeviceType"]
+        self.hass = hass
+        self.session = Session
 
         if self.device_type == "Heating":
             set_entity_id = "Hive_Heating"
+            self.session.heating = self.session.core.Heating()
         elif self.device_type == "HotWater":
             set_entity_id = "Hive_HotWater"
-
+            self.session.hotwater = self.session.core.Hotwater()
         if self.node_name is not None:
             set_entity_id = set_entity_id + "_" \
                             + self.node_name.replace(" ", "_")
         self.entity_id = ENTITY_ID_FORMAT.format(set_entity_id.lower())
 
-        def handle_event(event):
-            """Handle the new event."""
-            self.schedule_update_ha_state()
+        self.hass.bus.listen('Event_Hive_NewNodeData', self.handle_event)
 
-        hass.bus.listen('Event_Hive_NewNodeData', handle_event)
+    def handle_event(self, event):
+        """Handle the new event."""
+        if self.device_type + "." + self.node_id not in str(event):
+            self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -84,26 +84,72 @@ class HiveClimateEntity(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         if self.device_type == "Heating":
-            return self.h_o.get_current_temperature(self.node_id,
-                                                    self.device_type)
+            nodeid = self.node_id
+            curtempret = self.session.heating.current_temperature(nodeid)
+
+            if curtempret != -1000:
+                if nodeid in self.session.data.minmax:
+                    if (self.session.data.minmax[nodeid]['TodayDate'] !=
+                            datetime.date(datetime.now())):
+                        self.session.data.minmax[nodeid]['TodayMin'] = 1000
+                        self.session.data.minmax[nodeid]['TodayMax'] = -1000
+                        self.session.data.minmax[nodeid]['TodayDate'] = \
+                            datetime.date(datetime.now())
+
+                    if (curtempret < self.session.data.minmax[nodeid]
+                            ['TodayMin']):
+                        self.session.data.minmax[nodeid]['TodayMin'] = \
+                            curtempret
+
+                    if (curtempret > self.session.data.minmax[nodeid]
+                            ['TodayMax']):
+                        self.session.data.minmax[nodeid]['TodayMax'] = \
+                            curtempret
+
+                    if (curtempret < self.session.data.minmax[nodeid]
+                            ['RestartMin']):
+                        self.session.data.minmax[nodeid]['RestartMin'] = \
+                            curtempret
+
+                    if (curtempret >
+                            self.session.data.minmax[nodeid]
+                            ['RestartMax']):
+                        self.session.data.minmax[nodeid]['RestartMax'] = \
+                            curtempret
+                else:
+                    current_node_max_min_data = {}
+                    current_node_max_min_data['TodayMin'] = curtempret
+                    current_node_max_min_data['TodayMax'] = curtempret
+                    current_node_max_min_data['TodayDate'] = \
+                        datetime.date(datetime.now())
+                    current_node_max_min_data['RestartMin'] = curtempret
+                    current_node_max_min_data['RestartMax'] = curtempret
+                    self.session.data.minmax[nodeid] = \
+                        current_node_max_min_data
+            else:
+                curtempret = 0
+            return curtempret
         elif self.device_type == "HotWater":
             return None
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
+        set_result = None
+
         if self.device_type == "Heating":
-            return self.h_o.get_target_temperature(self.node_id,
-                                                   self.device_type)
+            set_result = self.session.heating.get_target_temperature(
+                self.node_id)
         elif self.device_type == "HotWater":
-            return None
+            set_result = None
+
+        return set_result
 
     @property
     def min_temp(self):
         """Return minimum temperature."""
         if self.device_type == "Heating":
-            return self.h_o.get_min_temperature(self.node_id,
-                                                self.device_type)
+            return self.session.heating.min_temperature(self.node_id)
         elif self.device_type == "HotWater":
             return None
 
@@ -111,8 +157,7 @@ class HiveClimateEntity(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         if self.device_type == "Heating":
-            return self.h_o.get_max_temperature(self.node_id,
-                                                self.device_type)
+            return self.session.heating.max_temperature(self.node_id)
         elif self.device_type == "HotWater":
             return None
 
@@ -120,40 +165,40 @@ class HiveClimateEntity(ClimateDevice):
     def operation_list(self):
         """List of the operation modes."""
         if self.device_type == "Heating":
-            return self.h_o.get_heating_mode_list(self.node_id,
-                                                  self.device_type)
+            return self.session.heating.get_operation_modes(self.node_id)
         elif self.device_type == "HotWater":
-            return self.h_o.get_hotwater_mode_list(self.node_id,
-                                                   self.device_type)
+            return self.session.hotwater.get_operation_modes(self.node_id)
 
     @property
     def current_operation(self):
         """Return current mode."""
         if self.device_type == "Heating":
-            return self.h_o.get_heating_mode(self.node_id,
-                                             self.device_type)
+            return self.session.heating.get_mode(self.node_id)
         elif self.device_type == "HotWater":
-            return self.h_o.get_hotwater_mode(self.node_id,
-                                              self.device_type)
+            return self.session.hotwater.get_mode(self.node_id)
 
     def set_operation_mode(self, operation_mode):
         """Set new Heating mode."""
         if self.device_type == "Heating":
-            self.h_o.set_heating_mode(self.node_id, self.device_type,
-                                      operation_mode)
+            self.session.heating.set_mode(self.node_id, operation_mode)
         elif self.device_type == "HotWater":
-            self.h_o.set_hotwater_mode(self.node_id, self.device_type,
-                                       operation_mode)
+            self.session.hotwater.set_mode(self.node_id, operation_mode)
+
+        eventsource = self.device_type + "." + self.node_id
+        self.hass.bus.fire('Event_Hive_NewNodeData',
+                           {"EventSource": eventsource})
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             new_temperature = kwargs.get(ATTR_TEMPERATURE)
             if self.device_type == "Heating":
-                self.h_o.set_target_temperature(self.node_id,
-                                                self.device_type,
-                                                new_temperature)
+                self.session.heating.set_target_temperature(self.node_id,
+                                                            new_temperature)
+            eventsource = self.device_type + "." + self.node_id
+            self.hass.bus.fire('Event_Hive_NewNodeData',
+                               {"EventSource": eventsource})
 
     def update(self):
         """Update all Node data frome Hive."""
-        self.h_o.update_data(self.node_id, self.device_type)
+        self.session.core.hive_api_get_nodes_rl(self.node_id)

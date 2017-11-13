@@ -1,48 +1,47 @@
-"""Hive Integration - light."""
+"""
+Support for the Hive devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hive/
+"""
 import logging
-from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
-                                            ATTR_COLOR_TEMP,
+
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
                                             SUPPORT_BRIGHTNESS,
                                             SUPPORT_COLOR_TEMP,
-                                            SUPPORT_RGB_COLOR)
-from homeassistant.loader import get_component
+                                            SUPPORT_RGB_COLOR, Light)
 
 DEPENDENCIES = ['hive']
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices,
-                   device_list, discovery_info=None):
-    """Setup Hive light devices."""
-    hive_comp = get_component('hive')
+def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
+    """Set up Hive light devices."""
+    session = hass.data.get('DATA_HIVE')
 
-    for a_device in device_list:
-        add_devices([HiveDeviceLight(hass,
-                                     hive_comp.HGO,
-                                     a_device["Hive_NodeID"],
-                                     a_device["Hive_NodeName"],
-                                     a_device["HA_DeviceType"],
-                                     a_device["Hive_Light_DeviceType"])])
+    add_devices([HiveDeviceLight(hass, session, hivedevice)])
 
 
 class HiveDeviceLight(Light):
     """Hive Active Light Device."""
 
-    def __init__(self, hass, hivecomponent_hiveobjects, node_id, node_name,
-                 device_type, node_device_type):
+    def __init__(self, hass, Session, HiveDevice):
         """Initialize the Light device."""
-        self.h_o = hivecomponent_hiveobjects
-        self.node_id = node_id
-        self.node_name = node_name
-        self.device_type = device_type
-        self.node_device_type = node_device_type
+        self.node_id = HiveDevice["Hive_NodeID"]
+        self.node_name = HiveDevice["Hive_NodeName"]
+        self.device_type = HiveDevice["HA_DeviceType"]
+        self.node_device_type = HiveDevice["Hive_DeviceType"]
+        self.hass = hass
+        self.session = Session
+        self.session.switch = self.session.core.Switch()
 
-        def handle_event(event):
-            """Handle the new event."""
+        self.hass.bus.listen('Event_Hive_NewNodeData', self.handle_event)
+
+    def handle_event(self, event):
+        """Handle the new event."""
+        if self.device_type + "." + self.node_id not in str(event):
             self.schedule_update_ha_state()
-
-        hass.bus.listen('Event_Hive_NewNodeData', handle_event)
 
     @property
     def name(self):
@@ -52,47 +51,33 @@ class HiveDeviceLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        min_color_temp = None
         if self.node_device_type == "tuneablelight" \
                 or self.node_device_type == "colourtuneablelight":
-            min_color_temp = self.h_o.get_light_min_color_temp(
-                self.node_id, self.node_name)
-
-        return min_color_temp
+            return self.session.light.get_min_colour_temp(self.node_id)
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        max_color_temp = None
         if self.node_device_type == "tuneablelight" \
                 or self.node_device_type == "colourtuneablelight":
-            max_color_temp = self.h_o.get_light_max_color_temp(
-                self.node_id, self.node_name)
-
-        return max_color_temp
+            return self.session.light.get_max_colour_temp(self.node_id)
 
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        color_temp = None
         if self.node_device_type == "tuneablelight" \
                 or self.node_device_type == "colourtuneablelight":
-            color_temp = self.h_o.get_light_color_temp(
-                self.node_id, self.node_name)
-
-        return color_temp
+            return self.session.light.get_color_temp(self.node_id)
 
     @property
     def brightness(self):
         """Brightness of the light (an integer in the range 1-255)."""
-        return self.h_o.get_light_brightness(self.node_id,
-                                             self.node_name)
+        return self.session.light.get_brightness(self.node_id)
 
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self.h_o.get_light_state(self.node_id,
-                                        self.node_name)
+        return self.session.light.get_state(self.node_id)
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
@@ -108,17 +93,23 @@ class HiveDeviceLight(Light):
             tmp_new_color_temp = kwargs.get(ATTR_COLOR_TEMP)
             new_color_temp = round(1000000 / tmp_new_color_temp)
 
-        self.h_o.set_light_turn_on(self.node_id,
-                                   self.device_type,
-                                   self.node_name,
-                                   new_brightness,
-                                   new_color_temp)
+        if new_brightness is not None:
+            self.session.light.set_brightness(self.node_id, new_brightness)
+        elif new_color_temp is not None:
+            self.session.light.set_colour_temp(self.node_id, new_color_temp)
+        else:
+            self.session.light.turn_on(self.node_id)
+
+        eventsource = self.device_type + "." + self.node_id
+        self.hass.bus.fire('Event_Hive_NewNodeData',
+                           {"EventSource": eventsource})
 
     def turn_off(self):
         """Instruct the light to turn off."""
-        self.h_o.set_light_turn_off(self.node_id,
-                                    self.device_type,
-                                    self.node_name)
+        self.session.light.turn_off(self.node_id)
+        eventsource = self.device_type + "." + self.node_id
+        self.hass.bus.fire('Event_Hive_NewNodeData',
+                           {"EventSource": eventsource})
 
     @property
     def supported_features(self):

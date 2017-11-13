@@ -1,43 +1,43 @@
-"""Hive Integration - switch."""
+"""
+Support for the Hive devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hive/
+"""
 import logging
+
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['hive']
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices,
-                   device_list, discovery_info=None):
-    """Setup Hive switches."""
-    hive_comp = get_component('hive')
+def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
+    """Set up Hive switches."""
+    session = hass.data.get('DATA_HIVE')
 
-    for a_device in device_list:
-        add_devices([HiveDevicePlug(hass, hive_comp.HGO,
-                                    a_device["Hive_NodeID"],
-                                    a_device["Hive_NodeName"],
-                                    a_device["HA_DeviceType"],
-                                    a_device["Hive_Plug_DeviceType"])])
+    add_devices([HiveDevicePlug(hass, session, hivedevice)])
 
 
 class HiveDevicePlug(SwitchDevice):
     """Hive Active Plug."""
 
-    def __init__(self, hass, hivecomponent_hiveobjects, node_id, node_name,
-                 device_type, node_device_type):
+    def __init__(self, hass, Session, HiveDevice):
         """Initialize the Switch device."""
-        self.h_o = hivecomponent_hiveobjects
-        self.node_id = node_id
-        self.node_name = node_name
-        self.device_type = device_type
-        self.node_device_type = node_device_type
+        self.node_id = HiveDevice["Hive_NodeID"]
+        self.node_name = HiveDevice["Hive_NodeName"]
+        self.device_type = HiveDevice["HA_DeviceType"]
+        self.hass = hass
+        self.session = Session
+        self.session.switch = self.session.core.Switch()
 
-        def handle_event(event):
-            """Handle the new event."""
+        self.hass.bus.listen('Event_Hive_NewNodeData', self.handle_event)
+
+    def handle_event(self, event):
+        """Handle the new event."""
+        if self.device_type + "." + self.node_id not in str(event):
             self.schedule_update_ha_state()
-
-        hass.bus.listen('Event_Hive_NewNodeData', handle_event)
 
     @property
     def name(self):
@@ -47,8 +47,7 @@ class HiveDevicePlug(SwitchDevice):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self.h_o.get_smartplug_power_consumption(self.node_id,
-                                                        self.node_name)
+        return self.session.switch.get_power_usage(self.node_id)
 
     @property
     def today_energy_kwh(self):
@@ -58,17 +57,18 @@ class HiveDevicePlug(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.h_o.get_smartplug_state(self.node_id,
-                                            self.node_name)
+        return self.session.switch.get_state(self.node_id)
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        return self.h_o.set_smartplug_turn_on(self.node_id,
-                                              self.device_type,
-                                              self.node_name)
+        eventsource = self.device_type + "." + self.node_id
+        self.hass.bus.fire('Event_Hive_NewNodeData',
+                           {"EventSource": eventsource})
+        return self.session.switch.turn_on(self.node_id)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        return self.h_o.set_smartplug_turn_off(self.node_id,
-                                               self.device_type,
-                                               self.node_name)
+        eventsource = self.device_type + "." + self.node_id
+        self.hass.bus.fire('Event_Hive_NewNodeData',
+                           {"EventSource": eventsource})
+        return self.session.switch.turn_off(self.node_id)

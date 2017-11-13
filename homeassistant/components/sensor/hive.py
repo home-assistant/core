@@ -1,42 +1,40 @@
-"""Hive Integration - sensor."""
+"""
+Support for the Hive devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hive/
+"""
 import logging
-from homeassistant.const import TEMP_CELSIUS
+from datetime import datetime
+
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['hive']
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices,
-                   device_list, discovery_info=None):
-    """Setup Hive sensor devices."""
-    hive_comp = get_component('hive')
+def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
+    """Set up Hive sensor devices."""
+    session = hass.data.get('DATA_HIVE')
 
-    for device in device_list:
-        if ("HA_DeviceType" in device and "Hive_NodeID" in device and
-                "Hive_NodeName" in device):
-            add_devices([HiveSensorEntity(hass,
-                                          hive_comp.HGO,
-                                          device["Hive_NodeID"],
-                                          device["Hive_NodeName"],
-                                          device["HA_DeviceType"],
-                                          device["Hive_DeviceType"])])
+    add_devices([HiveSensorEntity(hass, session, hivedevice)])
 
 
 class HiveSensorEntity(Entity):
     """Hive Sensor Entity."""
 
-    def __init__(self, hass, HiveComponent_HiveObjects,
-                 NodeID, NodeName, DeviceType, NodeDeviceType):
+    def __init__(self, hass, Session, HiveDevice):
         """Initialize the sensor."""
-        self.h_o = HiveComponent_HiveObjects
-        self.node_id = NodeID
-        self.node_name = NodeName
-        self.device_type = DeviceType
-        self.node_device_type = NodeDeviceType
+        self.node_id = HiveDevice["Hive_NodeID"]
+        self.node_name = HiveDevice["Hive_NodeName"]
+        self.device_type = HiveDevice["HA_DeviceType"]
+        self.node_device_type = HiveDevice["Hive_DeviceType"]
+        self.hass = hass
+        self.session = Session
+        self.session.sensor = self.session.core.Sensor()
 
         set_entity_id = "Sensor"
 
@@ -73,11 +71,12 @@ class HiveSensorEntity(Entity):
                                 + self.node_name.replace(" ", "_")
             self.entity_id = ENTITY_ID_FORMAT.format(set_entity_id.lower())
 
-        def handle_event(event):
-            """Handle the new event."""
-            self.schedule_update_ha_state()
+        self.hass.bus.listen('Event_Hive_NewNodeData', self.handle_event)
 
-        hass.bus.listen('Event_Hive_NewNodeData', handle_event)
+    def handle_event(self, event):
+        """Handle the new event."""
+        if self.device_type + "." + self.node_id not in str(event):
+            self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -149,78 +148,105 @@ class HiveSensorEntity(Entity):
     def state(self):
         """Return the state of the sensor."""
         if self.device_type == "Heating_CurrentTemperature":
-            return self.h_o.get_current_temperature(self.node_id,
-                                                    self.device_type)
+            nodeid = self.node_id
+            curtempret = self.session.heating.current_temperature(nodeid)
+
+            if curtempret != -1000:
+                if nodeid in self.session.data.minmax:
+                    if (self.session.data.minmax[nodeid]['TodayDate'] !=
+                            datetime.date(datetime.now())):
+                        self.session.data.minmax[nodeid]['TodayMin'] = 1000
+                        self.session.data.minmax[nodeid]['TodayMax'] = -1000
+                        self.session.data.minmax[nodeid]['TodayDate'] = \
+                            datetime.date(datetime.now())
+
+                    if (curtempret < self.session.data.minmax[nodeid]
+                            ['TodayMin']):
+                        self.session.data.minmax[nodeid]['TodayMin'] = \
+                            curtempret
+
+                    if (curtempret > self.session.data.minmax[nodeid]
+                            ['TodayMax']):
+                        self.session.data.minmax[nodeid]['TodayMax'] = \
+                            curtempret
+
+                    if (curtempret < self.session.data.minmax[nodeid]
+                            ['RestartMin']):
+                        self.session.data.minmax[nodeid]['RestartMin'] = \
+                            curtempret
+
+                    if (curtempret >
+                            self.session.data.minmax[nodeid]
+                            ['RestartMax']):
+                        self.session.data.minmax[nodeid]['RestartMax'] = \
+                            curtempret
+                else:
+                    current_node_max_min_data = {}
+                    current_node_max_min_data['TodayMin'] = curtempret
+                    current_node_max_min_data['TodayMax'] = curtempret
+                    current_node_max_min_data['TodayDate'] = \
+                        datetime.date(datetime.now())
+                    current_node_max_min_data['RestartMin'] = curtempret
+                    current_node_max_min_data['RestartMax'] = curtempret
+                    self.session.data.minmax[nodeid] = \
+                        current_node_max_min_data
+            else:
+                curtempret = 0
+            return curtempret
         elif self.device_type == "Heating_TargetTemperature":
-            return self.h_o.get_target_temperature(self.node_id,
-                                                   self.device_type)
+            return self.session.heating.get_target_temperature(self.node_id)
         elif self.device_type == "Heating_State":
-            return self.h_o.get_heating_state(self.node_id,
-                                              self.device_type)
+            return self.session.heating.get_state(self.node_id)
         elif self.device_type == "Heating_Mode":
-            return self.h_o.get_heating_mode(self.node_id,
-                                             self.device_type)
+            return self.session.heating.get_mode(self.node_id)
         elif self.device_type == "Heating_Boost":
-            return self.h_o.get_heating_boost(self.node_id,
-                                              self.device_type)
+            return self.session.heating.get_boost(self.node_id)
         elif self.device_type == "HotWater_State":
-            return self.h_o.get_hotwater_state(self.node_id,
-                                               self.device_type)
+            return self.session.hotwater.get_state(self.node_id)
         elif self.device_type == "HotWater_Mode":
-            return self.h_o.get_hotwater_mode(self.node_id,
-                                              self.device_type)
+            return self.session.hotwater.get_mode(self.node_id)
         elif self.device_type == "HotWater_Boost":
-            return self.h_o.get_hotwater_boost(self.node_id,
-                                               self.device_type)
+            return self.session.hotwater.get_boost(self.node_id)
         elif self.device_type == "Hive_Device_BatteryLevel":
-            self.batt_lvl = self.h_o.get_battery_level(self.node_id,
-                                                       self.node_name,
-                                                       self.device_type,
-                                                       self.node_device_type)
+            self.batt_lvl = self.session.sensor.battery_level(self.node_id)
             return self.batt_lvl
         elif self.device_type == "Hive_Device_Sensor":
-            return self.h_o.get_sensor_state(self.node_id,
-                                             self.node_name,
-                                             self.device_type,
-                                             self.node_device_type)
+            return self.session.sensor.get_state(self.node_id,
+                                                 self.node_device_type)
         elif self.device_type == "Hive_Device_Light_Mode":
-            return self.h_o.get_device_mode(self.node_id,
-                                            self.node_name,
-                                            self.device_type,
-                                            self.node_device_type)
+            return self.session.sensor.get_mode(self.node_id)
         elif self.device_type == "Hive_Device_Plug_Mode":
-            return self.h_o.get_device_mode(self.node_id,
-                                            self.node_name,
-                                            self.device_type,
-                                            self.node_device_type)
+            return self.session.sensor.get_mode(self.node_id)
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
         if self.device_type == "Heating_CurrentTemperature":
-            return self.h_o.get_current_temp_sa(self.node_id,
-                                                self.device_type)
+            return self.get_current_temp_sa()
         elif self.device_type == "Heating_TargetTemperature":
-            return self.h_o.get_target_temp_sa(self.node_id,
-                                               self.device_type)
+            return None
         elif self.device_type == "Heating_State":
-            return self.h_o.get_heating_state_sa(self.node_id,
-                                                 self.device_type)
+            return self.get_heating_state_sa()
         elif self.device_type == "Heating_Mode":
-            return self.h_o.get_heating_mode_sa(self.node_id,
-                                                self.device_type)
+            return self.get_heating_state_sa()
         elif self.device_type == "Heating_Boost":
-            return self.h_o.get_heating_boost_sa(self.node_id,
-                                                 self.device_type)
+            s_a = {}
+            if self.session.heating.get_boost(self.node_id) == "ON":
+                minsend = self.session.heating.get_boost_time(self.node_id)
+                s_a.update({"Boost ends in":
+                            (str(minsend) + " minutes")})
+            return s_a
         elif self.device_type == "HotWater_State":
-            return self.h_o.get_hotwater_state_sa(self.node_id,
-                                                  self.device_type)
+            return self.get_hotwater_state_sa()
         elif self.device_type == "HotWater_Mode":
-            return self.h_o.get_hotwater_mode_sa(self.node_id,
-                                                 self.device_type)
+            return self.get_hotwater_state_sa()
         elif self.device_type == "HotWater_Boost":
-            return self.h_o.get_hotwater_boost_sa(self.node_id,
-                                                  self.device_type)
+            s_a = {}
+            if self.session.hotwater.get_boost(self.node_id) == "ON":
+                endsin = self.session.hotwater.get_boost_time(self.node_id)
+                s_a.update({"Boost ends in":
+                            (str(endsin) + " minutes")})
+            return s_a
         elif self.device_type == "Hive_Device_BatteryLevel":
             return None
         elif self.device_type == "Hive_Device_Sensor":
@@ -229,6 +255,165 @@ class HiveSensorEntity(Entity):
             return None
         elif self.device_type == "Hive_Device_Plug_Mode":
             return None
+
+    def get_current_temp_sa(self):
+        """Public get current heating temperature state attributes."""
+        s_a = {}
+        temp_current = 0
+        temperature_target = 0
+        temperature_difference = 0
+
+        if self.node_id in self.session.data.minmax:
+            s_a.update({"Today Min / Max":
+                        str(self.session.data.minmax[self.node_id]
+                            ['TodayMin']) + " °C" + " / "
+                        + str(self.session.data.minmax[self.node_id]
+                              ['TodayMax']) + " °C"})
+
+            s_a.update({"Restart Min / Max":
+                        str(self.session.data.minmax[self.node_id]
+                            ['RestartMin']) + " °C" + " / "
+                        + str(self.session.data.minmax[self.node_id]
+                              ['RestartMax']) + " °C"})
+
+        temp_current = self.session.heating.current_temperature(self.node_id)
+        temperature_target = self.session.heating.\
+            get_target_temperature(self.node_id)
+
+        if temperature_target > temp_current:
+            temperature_difference = temperature_target - temp_current
+            temperature_difference = round(temperature_difference, 2)
+
+            s_a.update({"Current Temperature":
+                        temp_current})
+            s_a.update({"Target Temperature":
+                        temperature_target})
+            s_a.update({"Temperature Difference":
+                        temperature_difference})
+
+        return s_a
+
+    def get_heating_state_sa(self):
+        """Public get current heating state, state attributes."""
+        s_a = {}
+
+        snan = self.session.heating.get_schedule_now_next_later(self.node_id)
+        if snan is not None:
+            if 'now' in snan:
+                if ('value' in snan["now"] and
+                        'start' in snan["now"] and
+                        'Start_DateTime' in snan["now"] and
+                        'End_DateTime' in snan["now"] and
+                        'target' in snan["now"]["value"]):
+                    now_target = str(snan["now"]["value"]["target"]) + " °C"
+                    nstrt = snan["now"]["Start_DateTime"].strftime("%H:%M")
+                    now_end = snan["now"]["End_DateTime"].strftime("%H:%M")
+
+                    sa_string = (now_target
+                                 + " : "
+                                 + nstrt
+                                 + " - "
+                                 + now_end)
+                    s_a.update({"Now": sa_string})
+
+            if 'next' in snan:
+                if ('value' in snan["next"] and
+                        'start' in snan["next"] and
+                        'Start_DateTime' in snan["next"] and
+                        'End_DateTime' in snan["next"] and
+                        'target' in snan["next"]["value"]):
+                    next_target = str(snan["next"]["value"]["target"]) + " °C"
+                    nxtstrt = snan["next"]["Start_DateTime"].strftime("%H:%M")
+                    next_end = snan["next"]["End_DateTime"].strftime("%H:%M")
+
+                    sa_string = (next_target
+                                 + " : "
+                                 + nxtstrt
+                                 + " - "
+                                 + next_end)
+                    s_a.update({"Next": sa_string})
+
+            if 'later' in snan:
+                if ('value' in snan["later"] and
+                        'start' in snan["later"] and
+                        'Start_DateTime' in snan["later"] and
+                        'End_DateTime' in snan["later"] and
+                        'target' in snan["later"]["value"]):
+                    ltarg = str(snan["later"]["value"]["target"]) + " °C"
+                    lstrt = snan["later"]["Start_DateTime"].strftime("%H:%M")
+                    lend = snan["later"]["End_DateTime"].strftime("%H:%M")
+
+                    sa_string = (ltarg
+                                 + " : "
+                                 + lstrt
+                                 + " - "
+                                 + lend)
+                    s_a.update({"Later": sa_string})
+        else:
+            s_a.update({"Schedule not active": ""})
+
+        return s_a
+
+    def get_hotwater_state_sa(self):
+        """Public get current hotwater state, state attributes."""
+        s_a = {}
+
+        snan = self.session.hotwater.get_schedule_now_next_later(self.node_id)
+        if snan is not None:
+            if 'now' in snan:
+                if ('value' in snan["now"] and
+                        'start' in snan["now"] and
+                        'Start_DateTime' in snan["now"] and
+                        'End_DateTime' in snan["now"] and
+                        'status' in snan["now"]["value"]):
+                    now_status = snan["now"]["value"]["status"]
+                    now_start = snan["now"]["Start_DateTime"].strftime("%H:%M")
+                    now_end = snan["now"]["End_DateTime"].strftime("%H:%M")
+
+                    sa_string = (now_status
+                                 + " : "
+                                 + now_start
+                                 + " - "
+                                 + now_end)
+                    s_a.update({"Now": sa_string})
+
+            if 'next' in snan:
+                if ('value' in snan["next"] and
+                        'start' in snan["next"] and
+                        'Start_DateTime' in snan["next"] and
+                        'End_DateTime' in snan["next"] and
+                        'status' in snan["next"]["value"]):
+                    next_status = snan["next"]["value"]["status"]
+                    nxtstrt = snan["next"]["Start_DateTime"].strftime("%H:%M")
+                    next_end = snan["next"]["End_DateTime"].strftime("%H:%M")
+
+                    sa_string = (next_status
+                                 + " : "
+                                 + nxtstrt
+                                 + " - "
+                                 + next_end)
+                    s_a.update({"Next": sa_string})
+            if 'later' in snan:
+                if ('value' in snan["later"] and
+                        'start' in snan["later"] and
+                        'Start_DateTime' in snan["later"] and
+                        'End_DateTime' in snan["later"] and
+                        'status' in snan["later"]["value"]):
+                    later_status = snan["later"]["value"]["status"]
+                    later_start = (snan["later"]
+                                   ["Start_DateTime"].strftime("%H:%M"))
+                    later_end = snan["later"]["End_DateTime"].strftime("%H:%M")
+
+                    sa_string = (later_status
+                                 + " : "
+                                 + later_start
+                                 + " - "
+                                 + later_end)
+                    s_a.update({"Later": sa_string})
+        else:
+            s_a.update({"Schedule not active": ""})
+
+        return s_a
 
     @property
     def unit_of_measurement(self):
@@ -313,4 +498,4 @@ class HiveSensorEntity(Entity):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        self.h_o.update_data(self.node_id, self.device_type)
+        self.session.core.hive_api_get_nodes_rl(self.node_id)
