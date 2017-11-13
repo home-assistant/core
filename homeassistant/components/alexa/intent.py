@@ -155,9 +155,7 @@ class AlexaResponse(object):
                 if 'value' not in resolved:
                     continue
 
-                if 'id' in resolved['value']:
-                    self.variables[underscored_key] = resolved['value']['id']
-                elif 'name' in resolved['value']:
+                if 'name' in resolved['value']:
                     self.variables[underscored_key] = resolved['value']['name']
 
     def add_card(self, card_type, title, content):
