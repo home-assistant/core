@@ -21,7 +21,7 @@ CONF_ITEMS = 'items'
 CONF_CURRENCY = 'currency'
 
 ICON = 'mdi:coin'
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2*60*60) #2h * 60min * 60sec
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2*60*60)  #2h * 60min * 60sec
 
 _ITEM_SCHEMA = vol.Schema({
     vol.Optional("url"): cv.string,
@@ -42,9 +42,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Gearbest sensor."""
 
-    del discovery_info #unused
+    del discovery_info  #unused
 
-    hass.loop.run_in_executor(None, _add_items, hass, config, async_add_devices)
+    hass.loop.run_in_executor(None, _add_items, hass, config,
+                              async_add_devices)
+
 
 def _add_items(hass, config, async_add_devices):
     currency = config.get(CONF_CURRENCY)
@@ -115,5 +117,6 @@ class GearbestSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest price from gearbest and updates the state."""
-        self._hass.loop.run_in_executor(None, self._parser.update_conversion_list)
+        self._hass.loop.run_in_executor(None,
+                                        self._parser.update_conversion_list)
         self._hass.loop.run_in_executor(None, self._item.update)
