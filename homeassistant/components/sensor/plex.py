@@ -6,11 +6,13 @@ https://home-assistant.io/components/sensor.plex/
 """
 from datetime import timedelta
 import logging
+
+import requests
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN)
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -32,6 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
@@ -48,34 +52,52 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
     plex_token = config.get(CONF_TOKEN)
-    plex_url = 'http://{}:{}'.format(plex_host, plex_port)
+    plex_ssl = config.get(CONF_SSL)
+    plex_verify_ssl = config.get(CONF_VERIFY_SSL)
+
+    http_prefix = 'https' if plex_ssl else 'http'
+    plex_url = '{}://{}:{}'.format(http_prefix, plex_host, plex_port)
 
     add_devices([PlexSensor(
         name, plex_url, plex_user, plex_password, plex_server,
-        plex_token)], True)
+        plex_token, plex_ssl, plex_verify_ssl)], True)
 
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
     def __init__(self, name, plex_url, plex_user, plex_password,
-                 plex_server, plex_token):
+                 plex_server, plex_token, plex_ssl, plex_verify_ssl):
         """Initialize the sensor."""
         from plexapi.myplex import MyPlexAccount
         from plexapi.server import PlexServer
+        import plexapi.exceptions
+
+        cert_session = None
+        if plex_ssl and (plex_verify_ssl is False):
+            _LOGGER.info("Ignoring SSL verification")
+            cert_session = requests.Session()
+            cert_session.verify = False
 
         self._name = name
         self._state = 0
         self._now_playing = []
 
-        if plex_token:
-            self._server = PlexServer(plex_url, plex_token)
-        elif plex_user and plex_password:
-            user = MyPlexAccount(plex_user, plex_password)
-            server = plex_server if plex_server else user.resources()[0].name
-            self._server = user.resource(server).connect()
-        else:
-            self._server = PlexServer(plex_url)
+        try:
+            if plex_token:
+                self._server = PlexServer(plex_url, plex_token, cert_session)
+            elif plex_user and plex_password:
+                user = MyPlexAccount(plex_user, plex_password)
+                server = plex_server if plex_server else user.resources()[0].name
+                self._server = user.resource(server).connect()
+            else:
+                self._server = PlexServer(plex_url)
+
+            _LOGGER.info("Plex Sensor Configuration done")
+        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
+                plexapi.exceptions.NotFound) as error:
+            _LOGGER.info(error)
+            return
 
     @property
     def name(self):
