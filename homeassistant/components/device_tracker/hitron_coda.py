@@ -63,7 +63,7 @@ class HitronCODADeviceScanner(DeviceScanner):
     def get_device_name(self, mac):
         """Return the name of the device with the given MAC address."""
         name = next((
-            device.name for device in self.last_result
+            device.name for device in self.last_results
             if device.mac == mac), None)
         return name
 
