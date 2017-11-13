@@ -196,8 +196,10 @@ class Plant(Entity):
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
-        if new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT, None) is not None:
-            self._unit_of_measurement[reading] = new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT)
+        if new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT, None) \
+                is not None:
+            self._unit_of_measurement[reading] = \
+                new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT)
         self._update_state()
 
     def _update_state(self):
