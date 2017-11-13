@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     py_touchline = PyTouchline()
     number_of_devices = int(py_touchline.get_number_of_devices(host))
     devices = []
-    for device_id in range(0, numberOfDevices):
+    for device_id in range(0, number_of_devices):
         devices.append(Touchline(PyTouchline(device_id)))
     add_devices(devices)
 
