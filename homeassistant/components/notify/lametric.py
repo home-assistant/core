@@ -78,12 +78,7 @@ class LaMetricNotificationService(BaseNotificationService):
 
         frames = [text_frame]
 
-        if sound is not None:
-            frames.append(sound)
-
-        _LOGGER.debug(frames)
-
-        model = Model(frames=frames)
+        model = Model(frames=frames, sound=sound)
         lmn = self.hasslametricmanager.manager
         try:
             devices = lmn.get_devices()
