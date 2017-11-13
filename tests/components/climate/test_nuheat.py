@@ -18,6 +18,7 @@ class TestNuHeat(unittest.TestCase):
     def setUp(self):
 
         serial_number = "12345"
+        min_away_temp = None
         temperature_unit = "F"
 
         thermostat = Mock(
@@ -42,13 +43,13 @@ class TestNuHeat(unittest.TestCase):
         api.get_thermostat.return_value = thermostat
 
         self.thermostat = nuheat.NuHeatThermostat(
-            api, serial_number, temperature_unit)
+            api, serial_number, min_away_temp, temperature_unit)
 
     @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
     def test_setup_platform(self, mocked_thermostat):
         """Test setup_platform."""
         api = Mock()
-        data = {"nuheat": (api, ["12345"])}
+        data = {"nuheat": (api, ["12345"], 50)}
 
         hass = Mock()
         hass.config.units.temperature_unit.return_value = "F"
@@ -60,7 +61,7 @@ class TestNuHeat(unittest.TestCase):
         discovery_info = {}
 
         nuheat.setup_platform(hass, config, add_devices, discovery_info)
-        thermostats = [mocked_thermostat(api, "12345", "F")]
+        thermostats = [mocked_thermostat(api, "12345", 50, "F")]
         add_devices.assert_called_once_with(thermostats, True)
 
     def test_name(self):
@@ -84,6 +85,12 @@ class TestNuHeat(unittest.TestCase):
         self.assertEqual(self.thermostat.current_operation, STATE_HEAT)
         self.thermostat._thermostat.heating = False
         self.assertEqual(self.thermostat.current_operation, STATE_IDLE)
+
+    def test_min_away_temp(self):
+        """Test the minimum target temperature to be used in away mode."""
+        self.assertEqual(self.thermostat.min_away_temp, 41)
+        self.thermostat._min_away_temp = 60
+        self.assertEqual(self.thermostat.min_away_temp, 60)
 
     def test_min_temp(self):
         """Test min temp."""
