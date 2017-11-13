@@ -73,7 +73,7 @@ def request_configuration(hass, config, host):
         try:
             key = yield from api_factory.generate_psk(security_code)
         except RequestError:
-            configurator.async_notify_errors(instance,
+            configurator.async_notify_errors(hass, instance,
                                              "Security Code not accepted.")
             return
 
@@ -81,7 +81,8 @@ def request_configuration(hass, config, host):
                                         DEFAULT_ALLOW_TRADFRI_GROUPS)
 
         if not res:
-            configurator.async_notify_errors(instance, "Unable to connect.")
+            configurator.async_notify_errors(hass, instance,
+                                             "Unable to connect.")
             return
 
         def success():
@@ -90,7 +91,7 @@ def request_configuration(hass, config, host):
             conf[host] = {'identity': identity,
                           'key': key}
             save_json(hass.config.path(CONFIG_FILE), conf)
-            configurator.async_request_done(instance)
+            configurator.async_request_done(hass, instance)
 
         hass.async_add_job(success)
 
