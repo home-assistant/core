@@ -49,10 +49,6 @@ def populate_data():
             if component not in COMPONENT_CLUSTERS:
                 COMPONENT_CLUSTERS[component] = (set(), set())
 
-            # TODO: Remove the following line when this is merged
-            # https://github.com/rcloran/bellows/pull/71
-            profile.CLUSTERS[device_type] = ([0x0004, 0x0201], [])
-
             clusters = profile.CLUSTERS[device_type]
             COMPONENT_CLUSTERS[component][0].update(clusters[0])
             COMPONENT_CLUSTERS[component][1].update(clusters[1])
