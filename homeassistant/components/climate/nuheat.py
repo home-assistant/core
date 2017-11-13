@@ -43,9 +43,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.info("Loading NuHeat thermostat climate component")
     temperature_unit = hass.config.units.temperature_unit
-    api, serial_numbers = hass.data[DATA_NUHEAT]
+    api, serial_numbers, min_away_temp = hass.data[DATA_NUHEAT]
     thermostats = [
-        NuHeatThermostat(api, serial_number, temperature_unit)
+        NuHeatThermostat(api, serial_number, min_away_temp, temperature_unit)
         for serial_number in serial_numbers
     ]
     add_devices(thermostats, True)
@@ -53,9 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class NuHeatThermostat(ClimateDevice):
     """Representation of a NuHeat Thermostat."""
-    def __init__(self, api, serial_number, temperature_unit):
+    def __init__(self, api, serial_number, min_away_temp, temperature_unit):
         self._thermostat = api.get_thermostat(serial_number)
         self._temperature_unit = temperature_unit
+        self._min_away_temp = min_away_temp
         self._force_update = False
 
     @property
@@ -86,6 +87,14 @@ class NuHeatThermostat(ClimateDevice):
             return STATE_HEAT
 
         return STATE_IDLE
+
+    @property
+    def min_away_temp(self):
+        """Return the minimum target temperature to be used in away mode."""
+        if self._min_away_temp:
+            return self._min_away_temp
+
+        return self.min_temp
 
     @property
     def min_temp(self):
@@ -156,7 +165,7 @@ class NuHeatThermostat(ClimateDevice):
             return
 
         kwargs = {}
-        kwargs[ATTR_TEMPERATURE] = self.min_temp
+        kwargs[ATTR_TEMPERATURE] = self.min_away_temp
 
         self.set_temperature(**kwargs)
         self._force_update = True
