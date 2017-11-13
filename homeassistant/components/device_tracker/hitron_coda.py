@@ -2,7 +2,7 @@
 Support for the Hitron CODA-4582U, provided by Rogers.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.keenetic_ndms2/
+https://home-assistant.io/components/device_tracker.hitron_coda/
 """
 import logging
 from collections import namedtuple
