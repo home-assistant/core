@@ -7,15 +7,12 @@ https://home-assistant.io/components/maxcube/
 import socket
 import logging
 
-from homeassistant.components.climate import ClimateDevice, STATE_AUTO
+from homeassistant.components.climate import (
+    ClimateDevice, STATE_AUTO, STATE_MANUAL, STATE_BOOST, STATE_VACATION)
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 _LOGGER = logging.getLogger(__name__)
-
-STATE_MANUAL = 'manual'
-STATE_BOOST = 'boost'
-STATE_VACATION = 'vacation'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

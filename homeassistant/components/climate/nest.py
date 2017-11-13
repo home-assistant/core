@@ -12,7 +12,7 @@ from homeassistant.components.nest import DATA_NEST
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE)
+    ATTR_TEMPERATURE, STATE_ECO, STATE_HEAT_COOL)
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
@@ -24,9 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
-
-STATE_ECO = 'eco'
-STATE_HEAT_COOL = 'heat-cool'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

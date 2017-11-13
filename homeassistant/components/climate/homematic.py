@@ -5,18 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.homematic/
 """
 import logging
-from homeassistant.components.climate import ClimateDevice, STATE_AUTO
+from homeassistant.components.climate import (
+    ClimateDevice, STATE_AUTO, STATE_MANUAL, STATE_BOOST, STATE_COMFORT,
+    STATE_LOWERING)
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['homematic']
 
 _LOGGER = logging.getLogger(__name__)
-
-STATE_MANUAL = 'manual'
-STATE_BOOST = 'boost'
-STATE_COMFORT = 'comfort'
-STATE_LOWERING = 'lowering'
 
 HM_STATE_MAP = {
     'AUTO_MODE': STATE_AUTO,
