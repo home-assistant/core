@@ -91,7 +91,7 @@ def request_configuration(hass, config, host):
             conf[host] = {'identity': identity,
                           'key': key}
             save_json(hass.config.path(CONFIG_FILE), conf)
-            configurator.async_request_done(hass, instance)
+            hass.async_add_job(configurator.request_done, instance)
 
         hass.async_add_job(success)
 
