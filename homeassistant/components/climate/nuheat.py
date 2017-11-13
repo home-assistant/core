@@ -151,9 +151,21 @@ class NuHeatThermostat(ClimateDevice):
         Return true if away mode is on.
 
         Away mode is determined by setting and HOLDing the target temperature
-        to the minimum temperature supported.
+        to the user-defined minimum away temperature or the minimum
+        temperature supported by the thermostat.
         """
-        if self._thermostat.target_celsius > self._thermostat.min_celsius:
+        if self._min_away_temp:
+            if self._temperature_unit == "C":
+                min_target = self._min_away_temp
+                target = self._thermostat.target_celsius
+            else:
+                min_target = self._min_away_temp
+                target = self._thermostat.target_fahrenheit
+
+            if target > min_target:
+                return False
+
+        elif self._thermostat.target_celsius > self._thermostat.min_celsius:
             return False
 
         if self._thermostat.schedule_mode != SCHEDULE_HOLD:
