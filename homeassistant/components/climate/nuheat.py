@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.nuheat import DATA_NUHEAT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    STATE_HOME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 from homeassistant.util import Throttle
@@ -24,7 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-MODE_AUTO = "auto"  # Run device schedule
+# Hold modes
+MODE_AUTO = STATE_HOME  # Run device schedule
 MODE_AWAY = "away"
 MODE_HOLD_TEMPERATURE = "temperature"
 MODE_TEMPORARY_HOLD = "temporary_temperature"
