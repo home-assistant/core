@@ -3,27 +3,32 @@ Support for French FAI Free routers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.freebox/
 """
-import logging
-import voluptuous as vol
-import json
-import hmac
-import hashlib
-
-import urllib.request
-import urllib.parse
-
 from collections import namedtuple
 from datetime import timedelta
+import hashlib
+import hmac
+import json
+import logging
+import urllib.parse
+import urllib.request
+import ssl
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.util import Throttle
+import voluptuous as vol
+
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
+
+from homeassistant.components.device_tracker import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = 'http://mafreebox.freebox.fr/api/v4/'
+DEFAULT_HOST = 'http://mafreebox.freebox.fr'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
@@ -44,15 +49,16 @@ Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
 
 class FreeboxDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to the bbox."""
+    """This class scans for devices connected to the Freebox."""
 
     def __init__(self, config):
         """Initialize the scanner."""
-        self.host = config[CONF_HOST]
+        self.host = config[CONF_HOST]+"/api/v4/"
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        _LOGGER.info("Freebox - Credentials : " + self.username +
-                     " & "+self.password)
+        self.token = "0"
+        _LOGGER.debug("Freebox - Credentials : " + self.username +
+                      " & " + self.password)
 
         self.last_results = []  # type: List[Device]
         self.success_init = self._update_info()
@@ -75,44 +81,76 @@ class FreeboxDeviceScanner(DeviceScanner):
     def _update_info(self):
         username = self.username
         password = self.password
+        host = self.host
+        session_token = self.token
         token = bytes(password, 'latin-1')
 
-        with urllib.request.urlopen(self.host+"login/") as url:
-            content = url.read().decode('UTF-8')
-            challenge = json.loads(content)["result"]["challenge"]
-            _LOGGER.info("Freebox - Challenge : "+challenge)
-            challenge = challenge.encode('utf-8')
+        ctx = ssl.create_default_context()
 
-        data = {"app_id": username,
-                "password": hmac.new(token, challenge, hashlib.sha1).hexdigest()}
-        json_data = json.dumps(data)
-        post_data = json_data.encode('utf-8')
-        with urllib.request.urlopen(self.host+"login/session/",
-                                    post_data) as url:
-            content = url.read().decode('UTF-8')
-            session_token = json.loads(content)["result"]["session_token"]
-            _LOGGER.info("Freebox - Token : "+session_token)
-
+        """Get connected devices"""
         now = dt_util.now()
         last_results = []
 
+        if session_token != "0":
+            # J'ai déjà une session, toujours active ?
+            headers = {}
+            headers['X-Fbx-App-Auth'] = session_token
+            req = urllib.request.Request(host+"lan/browser/pub/",
+                                         None,
+                                         headers)
+            try:
+                res = urllib.request.urlopen(req,
+                                             context=ctx
+                                             ).read().decode('UTF-8')
+                resultat = json.loads(res)
+            except urllib.error.HTTPError as err:
+                _LOGGER.info("Freebox - Session expired")
+                session_token = "0"
+
+        if session_token == "0" or resultat["success"] is False:
+            # Je n'ai pas de session active alors je me connecte
+            """Login"""
+            with urllib.request.urlopen(host+"login/", context=ctx) as url:
+                content = url.read().decode('UTF-8')
+                challenge = json.loads(content)["result"]["challenge"]
+                _LOGGER.info("Freebox - Challenge : "+challenge)
+
+            """Open Session"""
+            data = {"app_id": username,
+                    "password": hmac.new(token,
+                                         challenge.encode('utf-8'),
+                                         hashlib.sha1).hexdigest()}
+            json_data = json.dumps(data)
+            with urllib.request.urlopen(host+"login/session/",
+                                        json_data.encode('utf-8'),
+                                        context=ctx) as url:
+                content = url.read().decode('UTF-8')
+                new_session_token = json.loads(content
+                                               )["result"]["session_token"]
+                _LOGGER.info("Freebox - Token : "+new_session_token)
+                self.token = new_session_token
+
+        # Je fais ma requête avec la session enregistrée
         headers = {}
-        headers['X-Fbx-App-Auth'] = session_token
-        req = urllib.request.Request(self.host+"lan/browser/pub/",
+        headers['X-Fbx-App-Auth'] = self.token
+        req = urllib.request.Request(host+"lan/browser/pub/",
                                      None,
                                      headers)
-        res = urllib.request.urlopen(req).read().decode('UTF-8')
+        res = urllib.request.urlopen(req, context=ctx).read().decode('UTF-8')
         resultat = json.loads(res)
 
-        for device in resultat["result"]:
-            if device['active'] is True:
-                last_results.append(Device(
-                    device['l2ident']['id'],
-                    device['names'][0]['name'],
-                    device['l3connectivities'][0]['addr'],
-                    now))
-                _LOGGER.info("Freebox - Device at Home : " +
-                             device['names'][0]['name'])
-        self.last_results = last_results
-        _LOGGER.info("Freebox - Devices : Scan successful")
-        return True
+        if resultat['success'] is True:
+            for device in resultat["result"]:
+                if device['active'] is True:
+                    last_results.append(Device(
+                        device['l2ident']['id'],
+                        device['names'][0]['name'],
+                        device['l3connectivities'][0]['addr'],
+                        now))
+                    _LOGGER.info("Freebox - Device at Home : " +
+                                 device['names'][0]['name'])
+            self.last_results = last_results
+            _LOGGER.debug("Freebox - Devices : Scan successful")
+            return True
+
+        return False
