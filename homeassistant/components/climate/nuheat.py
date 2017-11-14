@@ -94,7 +94,7 @@ class NuHeatThermostat(ClimateDevice):
     def min_away_temp(self):
         """Return the minimum target temperature to be used in away mode."""
         if self._min_away_temp and self._min_away_temp > self.min_temp:
-            return int(self._min_away_temp)
+            return self._min_away_temp
 
         return self.min_temp
 
