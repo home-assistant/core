@@ -12,7 +12,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 CONFIG_PATH = 'zwave_device_config.yaml'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
-URL_API_OZW_LOG = '/api/zwave/ozwlog'
 
 
 @asyncio.coroutine
@@ -26,11 +25,34 @@ def async_setup(hass):
     hass.http.register_view(ZWaveNodeGroupView)
     hass.http.register_view(ZWaveNodeConfigView)
     hass.http.register_view(ZWaveUserCodeView)
-    hass.http.register_static_path(
-        URL_API_OZW_LOG, hass.config.path(OZW_LOG_FILENAME), False)
+    hass.http.register_view(ZWaveLogView)
     hass.http.register_view(ZWaveConfigWriteView)
 
     return True
+
+
+
+class ZWaveLogView(HomeAssistantView):
+    """View to read the ZWave log file."""
+
+    url = r"/api/zwave/ozwlog/{lines:\d+}"
+    name = "api:zwave:ozwlog"
+
+    @ha.callback
+    def get(self, request, lines):
+        """Retrieve the lines from ZWave log."""
+        lines = int(lines)
+        hass = request.app['hass']
+        logfilepath = hass.config.path(OZW_LOG_FILENAME)
+
+        with open(logfilepath, 'r') as logfile:
+            data = logfile.read()
+
+        loglines = data.splitlines()
+        if lines == 0:
+            return self.json(loglines)
+
+        return self.json(loglines[-lines:])
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
