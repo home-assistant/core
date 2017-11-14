@@ -111,6 +111,7 @@ class VerisureHub(object):
         self.session = verisure.Session(
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
+
         try:
             self.giid = domain_config[CONF_GIID]
         except KeyError:
