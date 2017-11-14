@@ -112,10 +112,7 @@ class VerisureHub(object):
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
 
-        try:
-            self.giid = domain_config[CONF_GIID]
-        except KeyError:
-            self.giid = None
+        self.giid = domain_config.get(CONF_GIID)
 
         import jsonpath
         self.jsonpath = jsonpath.jsonpath
