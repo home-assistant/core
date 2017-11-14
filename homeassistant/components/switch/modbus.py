@@ -8,8 +8,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
-from homeassistant.const import (CONF_NAME, CONF_SLAVE,
-    CONF_COMMAND_ON, CONF_COMMAND_OFF)
+from homeassistant.const import (
+    CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -45,7 +45,7 @@ REGISTERS_SCHEMA = vol.Schema({
     vol.Optional(CONF_STATE_OFF, default=None): cv.positive_int,
 })
 
-COILS_SCHEMA = vol.Schema ({
+COILS_SCHEMA = vol.Schema({
     vol.Required(CONF_COIL): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
@@ -128,8 +128,8 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
     """Representation of a Modbus register switch."""
 
     def __init__(self, name, slave, register, command_on,
-        command_off, verify_state, verify_register, register_type,
-        state_on, state_off):
+                 command_off, verify_state, verify_register,
+                 register_type, state_on, state_off):
         """Initialize the switch."""
         self._name = name
         self._slave = int(slave) if slave else None
