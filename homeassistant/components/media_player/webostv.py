@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
+    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int,
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
 })
 
