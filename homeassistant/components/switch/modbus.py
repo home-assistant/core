@@ -127,6 +127,7 @@ class ModbusCoilSwitch(ToggleEntity):
 class ModbusRegisterSwitch(ModbusCoilSwitch):
     """Representation of a Modbus register switch."""
 
+    # pylint: disable=super-init-not-called
     def __init__(self, name, slave, register, command_on,
                  command_off, verify_state, verify_register,
                  register_type, state_on, state_off):
