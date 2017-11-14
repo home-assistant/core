@@ -152,7 +152,8 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._slave,
             self._register,
             self._command_on)
-        if not self._verify_state: self._is_on = True
+        if not self._verify_state:
+            self._is_on = True
 
     def turn_off(self, **kwargs):
         """Set switch off."""
@@ -160,11 +161,13 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._slave,
             self._register,
             self._command_off)
-        if not self._verify_state: self._is_on = False
+        if not self._verify_state:
+            self._is_on = False
 
     def update(self):
         """Update the state of the switch."""
-        if not self._verify_state: return
+        if not self._verify_state:
+            return
 
         value = 0
         if self._register_type == REGISTER_TYPE_INPUT:
