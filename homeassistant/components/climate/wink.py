@@ -4,22 +4,29 @@ Support for Wink thermostats, Air Conditioners, and Water Heaters.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
-import logging
 import asyncio
+import logging
 
-from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, STATE_FAN_ONLY,
-    ATTR_CURRENT_HUMIDITY, STATE_ECO, STATE_ELECTRIC,
-    STATE_PERFORMANCE, STATE_HIGH_DEMAND,
-    STATE_HEAT_PUMP, STATE_GAS)
+    STATE_ECO, STATE_GAS, STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ELECTRIC,
+    STATE_FAN_ONLY, STATE_HEAT_PUMP, ATTR_TEMPERATURE, STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE, ATTR_TARGET_TEMP_LOW, ATTR_CURRENT_HUMIDITY,
+    ATTR_TARGET_TEMP_HIGH, ClimateDevice)
+from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
-    TEMP_CELSIUS, STATE_ON,
-    STATE_OFF, STATE_UNKNOWN)
+    STATE_ON, STATE_OFF, TEMP_CELSIUS, STATE_UNKNOWN, PRECISION_TENTHS)
+from homeassistant.helpers.temperature import display_temp as show_temp
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_ECO_TARGET = 'eco_target'
+ATTR_EXTERNAL_TEMPERATURE = 'external_temperature'
+ATTR_OCCUPIED = 'occupied'
+ATTR_RHEEM_TYPE = 'rheem_type'
+ATTR_SCHEDULE_ENABLED = 'schedule_enabled'
+ATTR_SMART_TEMPERATURE = 'smart_temperature'
+ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_VACATION_MODE = 'vacation_mode'
 
 DEPENDENCIES = ['wink']
 
@@ -27,23 +34,21 @@ SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
 
-HA_STATE_TO_WINK = {STATE_AUTO: 'auto',
-                    STATE_ECO: 'eco',
-                    STATE_FAN_ONLY: 'fan_only',
-                    STATE_HEAT: 'heat_only',
-                    STATE_COOL: 'cool_only',
-                    STATE_PERFORMANCE: 'performance',
-                    STATE_HIGH_DEMAND: 'high_demand',
-                    STATE_HEAT_PUMP: 'heat_pump',
-                    STATE_ELECTRIC: 'electric_only',
-                    STATE_GAS: 'gas',
-                    STATE_OFF: 'off'}
-WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
+HA_STATE_TO_WINK = {
+    STATE_AUTO: 'auto',
+    STATE_COOL: 'cool_only',
+    STATE_ECO: 'eco',
+    STATE_ELECTRIC: 'electric_only',
+    STATE_FAN_ONLY: 'fan_only',
+    STATE_GAS: 'gas',
+    STATE_HEAT: 'heat_only',
+    STATE_HEAT_PUMP: 'heat_pump',
+    STATE_HIGH_DEMAND: 'high_demand',
+    STATE_OFF: 'off',
+    STATE_PERFORMANCE: 'performance',
+}
 
-ATTR_EXTERNAL_TEMPERATURE = "external_temperature"
-ATTR_SMART_TEMPERATURE = "smart_temperature"
-ATTR_ECO_TARGET = "eco_target"
-ATTR_OCCUPIED = "occupied"
+WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -85,15 +90,18 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
         if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
-                self.target_temperature_high)
+            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                PRECISION_TENTHS)
         if target_temp_low is not None:
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
-                self.target_temperature_low)
+            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                PRECISION_TENTHS)
 
         if self.external_temperature:
-            data[ATTR_EXTERNAL_TEMPERATURE] = self._convert_for_display(
-                self.external_temperature)
+            data[ATTR_EXTERNAL_TEMPERATURE] = show_temp(
+                self.hass, self.external_temperature, self.temperature_unit,
+                PRECISION_TENTHS)
 
         if self.smart_temperature:
             data[ATTR_SMART_TEMPERATURE] = self.smart_temperature
@@ -358,13 +366,15 @@ class WinkAC(WinkDevice, ClimateDevice):
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
         if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
-                self.target_temperature_high)
+            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                PRECISION_TENTHS)
         if target_temp_low is not None:
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
-                self.target_temperature_low)
-        data["total_consumption"] = self.wink.total_consumption()
-        data["schedule_enabled"] = self.wink.schedule_enabled()
+            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                PRECISION_TENTHS)
+        data[ATTR_TOTAL_CONSUMPTION] = self.wink.total_consumption()
+        data[ATTR_SCHEDULE_ENABLED] = self.wink.schedule_enabled()
 
         return data
 
@@ -471,8 +481,8 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
     def device_state_attributes(self):
         """Return the optional state attributes."""
         data = {}
-        data["vacation_mode"] = self.wink.vacation_mode_enabled()
-        data["rheem_type"] = self.wink.rheem_type()
+        data[ATTR_VACATION_MODE] = self.wink.vacation_mode_enabled()
+        data[ATTR_RHEEM_TYPE] = self.wink.rheem_type()
 
         return data
 
