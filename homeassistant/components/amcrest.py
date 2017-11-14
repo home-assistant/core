@@ -126,22 +126,47 @@ def setup(hass, config):
             else:
                 authentication = None
 
+        amcrest_hub = AmcrestHub(camera,
+                                 name,
+                                 authentication,
+                                 ffmpeg_arguments,
+                                 stream_source,
+                                 resolution)
+
         discovery.load_platform(
             hass, 'camera', DOMAIN, {
-                'device': camera,
-                CONF_AUTHENTICATION: authentication,
-                CONF_FFMPEG_ARGUMENTS: ffmpeg_arguments,
-                CONF_NAME: name,
-                CONF_RESOLUTION: resolution,
-                CONF_STREAM_SOURCE: stream_source,
+                'amcrest_hub': amcrest_hub,
             }, config)
 
         if sensors:
             discovery.load_platform(
                 hass, 'sensor', DOMAIN, {
-                    'device': camera,
-                    CONF_NAME: name,
+                    'amcrest_hub': amcrest_hub,
                     CONF_SENSORS: sensors,
                 }, config)
 
     return True
+
+
+class AmcrestHub(object):
+    """Representation of a base AmcrestHub discovery device."""
+
+    def __init__(self, camera, name, authentication, ffmpeg_arguments,
+                 stream_source, resolution):
+        """Initialize the entity."""
+        self.device = camera
+        self.name = name
+        self.authentication = authentication
+        self.ffmpeg_arguments = ffmpeg_arguments
+        self.stream_source = stream_source
+        self.resolution = resolution
+
+    def as_dict(self):
+        """Convert entry to a dict to be used within JSON."""
+        return {
+            'device': self.device,
+            'name': self.name,
+            'ffmpeg_arguments': self.ffmpeg_arguments,
+            'stream_source': self.stream_source,
+            'resolution': self.resolution,
+        }

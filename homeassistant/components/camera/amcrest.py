@@ -26,21 +26,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    device = discovery_info['device']
-    authentication = discovery_info['authentication']
-    ffmpeg_arguments = discovery_info['ffmpeg_arguments']
-    name = discovery_info['name']
-    resolution = discovery_info['resolution']
-    stream_source = discovery_info['stream_source']
+    amcrest = discovery_info['amcrest_hub']
 
     async_add_devices([
         AmcrestCam(hass,
-                   name,
-                   device,
-                   authentication,
-                   ffmpeg_arguments,
-                   stream_source,
-                   resolution)], True)
+                   amcrest.name,
+                   amcrest.device,
+                   amcrest.authentication,
+                   amcrest.ffmpeg_arguments,
+                   amcrest.stream_source,
+                   amcrest.resolution)], True)
 
     return True
 
