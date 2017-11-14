@@ -281,9 +281,7 @@ class RadioThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""
-        if operation_mode == STATE_OFF:
-            self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
-        elif operation_mode == STATE_AUTO:
+        if operation_mode == STATE_OFF or operation_mode == STATE_AUTO:
             self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
 
         # Setting t_cool or t_heat automatically changes tmode.
