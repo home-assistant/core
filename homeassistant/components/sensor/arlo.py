@@ -101,10 +101,10 @@ class ArloSensor(Entity):
         try:
             base_station = self._data.base_station
         except (AttributeError, IndexError):
-            return None
+            return
 
         if not base_station:
-            return None
+            return
 
         base_station.refresh_rate = SCAN_INTERVAL.total_seconds()
 
