@@ -93,8 +93,8 @@ class NuHeatThermostat(ClimateDevice):
     @property
     def min_away_temp(self):
         """Return the minimum target temperature to be used in away mode."""
-        if self._min_away_temp:
-            return self._min_away_temp
+        if self._min_away_temp and self._min_away_temp > self.min_temp:
+            return int(self._min_away_temp)
 
         return self.min_temp
 
@@ -154,18 +154,13 @@ class NuHeatThermostat(ClimateDevice):
         to the user-defined minimum away temperature or the minimum
         temperature supported by the thermostat.
         """
-        if self._min_away_temp:
-            if self._temperature_unit == "C":
-                min_target = self._min_away_temp
-                target = self._thermostat.target_celsius
-            else:
-                min_target = self._min_away_temp
-                target = self._thermostat.target_fahrenheit
+        min_target = self.min_away_temp
+        if self._temperature_unit == "C":
+            target = self._thermostat.target_celsius
+        else:
+            target = self._thermostat.target_fahrenheit
 
-            if target > min_target:
-                return False
-
-        elif self._thermostat.target_celsius > self._thermostat.min_celsius:
+        if target > min_target:
             return False
 
         if self._thermostat.schedule_mode != SCHEDULE_HOLD:

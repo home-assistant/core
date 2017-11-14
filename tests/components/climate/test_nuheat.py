@@ -89,8 +89,14 @@ class TestNuHeat(unittest.TestCase):
     def test_min_away_temp(self):
         """Test the minimum target temperature to be used in away mode."""
         self.assertEqual(self.thermostat.min_away_temp, 41)
+
+        # User defined minimum
         self.thermostat._min_away_temp = 60
         self.assertEqual(self.thermostat.min_away_temp, 60)
+
+        # User defined minimum below the thermostat's supported minimum
+        self.thermostat._min_away_temp = 0
+        self.assertEqual(self.thermostat.min_away_temp, 41)
 
     def test_min_temp(self):
         """Test min temp."""
