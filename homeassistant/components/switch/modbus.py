@@ -88,7 +88,7 @@ class ModbusCoilSwitch(ToggleEntity):
     """Representation of a Modbus coil switch."""
 
     def __init__(self, name, slave, coil):
-        """Initialize the switch."""
+        """Initialize the coil switch."""
         self._name = name
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
@@ -130,7 +130,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
     def __init__(self, name, slave, register, command_on,
                  command_off, verify_state, verify_register,
                  register_type, state_on, state_off):
-        """Initialize the switch."""
+        """Initialize the register switch."""
         self._name = name
         self._slave = int(slave) if slave else None
         self._register = int(register)
