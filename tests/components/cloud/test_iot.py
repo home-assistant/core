@@ -96,7 +96,8 @@ def test_connection_msg_for_unknown_handler(mock_client, mock_cloud):
 
 
 @asyncio.coroutine
-def test_connection_msg_for_handler_raising(mock_client, mock_handle_message, mock_cloud):
+def test_connection_msg_for_handler_raising(mock_client, mock_handle_message,
+                                            mock_cloud):
     """Test we sent error when handler raises exception."""
     conn = iot.CloudIoT(mock_cloud)
     mock_client.receive.return_value = mock_coro(MagicMock(

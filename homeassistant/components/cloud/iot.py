@@ -19,6 +19,7 @@ STATE_CONNECTING = 'connecting'
 STATE_CONNECTED = 'connected'
 STATE_DISCONNECTED = 'disconnected'
 
+
 class UnknownHandler(Exception):
     """Exception raised when trying to handle unknown handler."""
 
