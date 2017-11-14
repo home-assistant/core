@@ -14,22 +14,32 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['gearbest_parser==1.0.4']
+REQUIREMENTS = ['gearbest_parser==1.0.5']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ITEMS = 'items'
 CONF_CURRENCY = 'currency'
 
 ICON = 'mdi:coin'
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2*60*60)  # 2h * 60min * 60sec
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2*60*60)  # 2h
+MIN_TIME_BETWEEN_CURRENCY_UPDATES = timedelta(seconds=12*60*60)  # 12h
 
-_ITEM_SCHEMA = vol.Schema({
-    vol.Optional("url"): cv.string,
-    vol.Optional("id"): cv.string,
-    vol.Optional("name"): cv.string,
-    vol.Optional("currency"): cv.string
-})
+DOMAIN = 'gearbest'
+
+_ITEM_SCHEMA = vol.All(
+    vol.Any(
+        vol.Schema({vol.Required('url'): cv.string}, extra=vol.ALLOW_EXTRA),
+        vol.Schema({vol.Required('id'): cv.string}, extra=vol.ALLOW_EXTRA)
+    ),
+    vol.Schema({
+        vol.Exclusive('url', 'XOR'): cv.string,
+        vol.Exclusive('id', 'XOR'): cv.string,
+        vol.Optional("name"): cv.string,
+        vol.Optional("currency"): cv.string
+    })
+)
 
 _ITEMS_SCHEMA = vol.Schema([_ITEM_SCHEMA])
 
@@ -38,30 +48,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CURRENCY): cv.string,
 })
 
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Gearbest sensor."""
-    del discovery_info  # unused
 
-    hass.loop.run_in_executor(None, _add_items, hass, config,
-                              async_add_devices)
-
-
-def _add_items(hass, config, async_add_devices):
+    from gearbest_parser import CurrencyConverter
     currency = config.get(CONF_CURRENCY)
 
     sensors = []
     items = config.get(CONF_ITEMS)
+
+    hass.data[DOMAIN] = CurrencyConverter()
+    hass.data[DOMAIN].update()
+
     for item in items:
         try:
             sensor = GearbestSensor(hass, item, currency)
             if sensor is not None:
                 sensors.append(sensor)
-        except AttributeError as exc:
+        except ValueError as exc:
             _LOGGER.error(exc)
 
-    async_add_devices(sensors)
+    def currency_update(event_time):
+        """Refresh"""
+        hass.data[DOMAIN].update()
+
+    track_time_interval(hass,
+                        currency_update,
+                        MIN_TIME_BETWEEN_CURRENCY_UPDATES)
+
+    add_devices(sensors)
 
 
 class GearbestSensor(Entity):
@@ -74,12 +89,12 @@ class GearbestSensor(Entity):
         self._hass = hass
         self._name = item.get("name", None)
         self._parser = GearbestParser()
-        self._parser.update_conversion_list()
+        self._parser.set_currency_converter(hass.data[DOMAIN])
         self._item = self._parser.load(item.get("id", None),
                                        item.get("url", None),
                                        item.get("currency", currency))
         if self._item is None:
-            raise AttributeError("id and url could not be resolved")
+            raise ValueError("id and url could not be resolved")
         self._item.update()
 
     @property
@@ -103,11 +118,15 @@ class GearbestSensor(Entity):
         return self._item.currency
 
     @property
+    def entity_picture(self):
+        """Return the image."""
+        return self._item.image
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {'name': self._item.name,
                  'description': self._item.description,
-                 'image': self._item.image,
                  'price': self._item.price,
                  'currency': self._item.currency,
                  'url': self._item.url}
@@ -116,6 +135,4 @@ class GearbestSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest price from gearbest and updates the state."""
-        self._hass.loop.run_in_executor(None,
-                                        self._parser.update_conversion_list)
-        self._hass.loop.run_in_executor(None, self._item.update)
+        self._item.update()
