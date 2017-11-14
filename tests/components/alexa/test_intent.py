@@ -209,69 +209,6 @@ def test_intent_request_with_slots(alexa_client):
 
 
 @asyncio.coroutine
-def test_intent_request_with_slots_and_id_resolution(alexa_client):
-    """Test a request with slots and an id synonym."""
-    data = {
-        "version": "1.0",
-        "session": {
-            "new": False,
-            "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
-            "attributes": {
-                "supportedHoroscopePeriods": {
-                    "daily": True,
-                    "weekly": False,
-                    "monthly": False
-                }
-            },
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
-        },
-        "request": {
-            "type": "IntentRequest",
-            "requestId": REQUEST_ID,
-            "timestamp": "2015-05-13T12:34:56Z",
-            "intent": {
-                "name": "GetZodiacHoroscopeIntent",
-                "slots": {
-                    "ZodiacSign": {
-                        "name": "ZodiacSign",
-                        "value": "virgo",
-                        "resolutions": {
-                            "resolutionsPerAuthority": [
-                                {
-                                    "authority": AUTHORITY_ID,
-                                    "status": {
-                                        "code": "ER_SUCCESS_MATCH"
-                                    },
-                                    "values": [
-                                        {
-                                            "value": {
-                                                "name": "Virgo",
-                                                "id": "VIRGO"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        }
-    }
-    req = yield from _intent_req(alexa_client, data)
-    assert req.status == 200
-    data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
-    assert text == "You told us your sign is VIRGO."
-
-
-@asyncio.coroutine
 def test_intent_request_with_slots_and_name_resolution(alexa_client):
     """Test a request with slots and a name synonym."""
     data = {
