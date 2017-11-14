@@ -212,12 +212,12 @@ class TestNuHeat(unittest.TestCase):
         is_away_mode_on.return_value = True
         self.thermostat.turn_away_mode_off()
         self.assertTrue(self.thermostat._force_update)
-        resume.assert_called_once()
+        resume.assert_called_once_with()
 
     def test_resume_program(self):
         """Test resume schedule."""
         self.thermostat.resume_program()
-        self.thermostat._thermostat.resume_schedule.assert_called_once()
+        self.thermostat._thermostat.resume_schedule.assert_called_once_with()
         self.assertTrue(self.thermostat._force_update)
 
     def test_set_temperature(self):
