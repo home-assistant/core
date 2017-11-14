@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.gearbest/
 """
 import logging
-import asyncio
 from datetime import timedelta
 
 import voluptuous as vol
@@ -47,6 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ITEMS): _ITEMS_SCHEMA,
     vol.Required(CONF_CURRENCY): cv.string,
 })
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Gearbest sensor."""
