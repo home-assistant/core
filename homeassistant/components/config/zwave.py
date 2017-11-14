@@ -31,7 +31,6 @@ def async_setup(hass):
     return True
 
 
-
 class ZWaveLogView(HomeAssistantView):
     """View to read the ZWave log file."""
 
