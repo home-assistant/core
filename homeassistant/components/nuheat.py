@@ -50,7 +50,8 @@ def setup(hass, config):
         except ValueError:
             _LOGGER.error(
                 "Configuration error. %s.%s=%s is invalid. Please provide a "
-                "numeric value.", DATA_NUHEAT, CONF_MIN_AWAY_TEMP, _min_away_temp)
+                "numeric value.", DATA_NUHEAT, CONF_MIN_AWAY_TEMP,
+                _min_away_temp)
 
     api = nuheat.NuHeat(username, password)
     api.authenticate()
