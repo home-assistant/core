@@ -57,6 +57,8 @@ class GoogleCalendar(Calendar):
         self._name = data.get('name', DOMAIN)
         self._next_event = None
 
+        self.refresh_events()
+
     @property
     def name(self):
         """Return the name of the calendar."""
@@ -97,13 +99,19 @@ class GoogleCalendar(Calendar):
 
         items = result.get('items', [])
 
-        for item in items:
-            event = CalendarEvent(self.convertDatetime(item['start']),
-                                  self.convertDatetime(item['end']),
-                                  item['summary'])
-            self._events.append(event)
+        self._events = [GoogleCalendarEvent(item) for item in items]
 
         self._events.sort(key=lambda event: event.start)
+
+
+class GoogleCalendarEvent(CalendarEvent):
+    """class for creating google events."""
+
+    def __init__(self, event):
+        """Initialize google event."""
+        self._start = self.convertDatetime(event['start'])
+        self._end = self.convertDatetime(event['end'])
+        self._text = event['summary']
 
     def convertDatetime(self, dateObject):
         """Convert dateTime returned from Google."""

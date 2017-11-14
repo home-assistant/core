@@ -88,12 +88,3 @@ class DemoCalendar(Calendar):
     def async_update(self):
         """Update calendar events."""
         _LOGGER.debug('Updating demo calendar')
-
-class DemoCalendarEvent(CalendarEvent):
-    """class for creating demo events."""
-
-    def __init(self, event):
-        """Initialize demo event."""
-        self._start = event.start
-        self._end = event.end
-        self._title = event.title
