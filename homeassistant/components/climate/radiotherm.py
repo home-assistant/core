@@ -29,18 +29,26 @@ CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
 DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
-# Mappings from radiotherm json data to HASS state flags.  Note that
-# the inverse mappings are also in the code below so they have to be
-# updated in two places if they ever change.
+# Mappings from radiotherm json data codes to and from HASS state
+# flags.  CODE is the thermostat integer code and these map to and
+# from HASS state flags.
 
-# Temperature mode of the thermostat.
-NAME_TEMP_MODE = {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL, 3: STATE_AUTO}
-# Active state (is it heating or cooling?)
-NAME_TEMP_STATE = {0: STATE_IDLE, 1: STATE_HEAT, 2: STATE_COOL}
-# Fan mode
-NAME_FAN_MODE = {0: STATE_AUTO, 1: "circulate", 2: STATE_ON}
-# Active fan state
-NAME_FAN_STATE = {0: STATE_OFF, 1: STATE_ON}
+# Programmed temperature mode of the thermostat.
+CODE_TO_TEMP_MODE = {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL, 3: STATE_AUTO}
+TEMP_MODE_TO_CODE = {v: k for k, v in CODE_TO_TEMP_MODE.items()}
+
+# Programmed fan mode (circulate is supported by some thermostats but
+# not by HASS).
+CODE_TO_FAN_MODE = {0: STATE_AUTO, 1: "circulate", 2: STATE_ON}
+FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
+
+# Active thermostat state (is it heating or cooling?).  In the future
+# this should probably made into heat and cool binary sensors.
+CODE_TO_TEMP_STATE = {0: STATE_IDLE, 1: STATE_HEAT, 2: STATE_COOL}
+
+# Active fan state.  This is if the fan is actually on or not.  In the
+# future this should probably made into a binary sensor for the fan.
+CODE_TO_FAN_STATE = {0: STATE_OFF, 1: STATE_ON}
 
 
 def round_temp(temperature):
@@ -57,10 +65,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
     vol.Optional(CONF_AWAY_TEMPERATURE_HEAT,
                  default=DEFAULT_AWAY_TEMPERATURE_HEAT):
-                    vol.All(vol.Coerce(float), round_temp),
+    vol.All(vol.Coerce(float), round_temp),
     vol.Optional(CONF_AWAY_TEMPERATURE_COOL,
                  default=DEFAULT_AWAY_TEMPERATURE_COOL):
-                    vol.All(vol.Coerce(float), round_temp),
+    vol.All(vol.Coerce(float), round_temp),
 })
 
 
@@ -111,6 +119,7 @@ class RadioThermostat(ClimateDevice):
         self._current_operation = STATE_IDLE
         self._name = None
         self._fmode = None
+        self._fstate = None
         self._tmode = None
         self._tstate = None
         self._hold_temp = hold_temp
@@ -156,10 +165,9 @@ class RadioThermostat(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Turn fan on/off."""
-        if fan == STATE_AUTO or fan == STATE_OFF:
-            self.device.fmode = 0
-        elif fan == STATE_ON:
-            self.device.fmode = 2
+        code = FAN_MODE_TO_CODE.get(fan, None)
+        if code is not None:
+            self.device.fmode = code
 
     @property
     def current_temperature(self):
@@ -212,9 +220,10 @@ class RadioThermostat(ClimateDevice):
 
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp
-        self._fmode = NAME_FAN_MODE[data['fmode']]
-        self._tmode = NAME_TEMP_MODE[data['tmode']]
-        self._tstate = NAME_TEMP_STATE[data['tstate']]
+        self._fmode = CODE_TO_FAN_MODE[data['fmode']]
+        self._fstate = CODE_TO_FAN_STATE[data['fstate']]
+        self._tmode = CODE_TO_TEMP_MODE[data['tmode']]
+        self._tstate = CODE_TO_TEMP_STATE[data['tstate']]
 
         self._current_operation = self._tmode
         if self._tmode == STATE_COOL:
@@ -273,9 +282,9 @@ class RadioThermostat(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""
         if operation_mode == STATE_OFF:
-            self.device.tmode = 0
+            self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
         elif operation_mode == STATE_AUTO:
-            self.device.tmode = 3
+            self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
 
         # Setting t_cool or t_heat automatically changes tmode.
         elif operation_mode == STATE_COOL:
