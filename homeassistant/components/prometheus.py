@@ -234,6 +234,14 @@ class Metrics(object):
     def _handle_zwave(self, state):
         self._battery(state)
 
+    def _handle_automation(self, state):
+        metric = self._metric(
+            'automation_triggered_count',
+            self.prometheus_client.Counter,
+            'Count of times an automation has been triggered',
+        )
+
+        metric.labels(**self._labels(state)).inc()
 
 class PrometheusView(HomeAssistantView):
     """Handle Prometheus requests."""
