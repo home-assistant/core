@@ -133,18 +133,18 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
                  register_type, state_on, state_off):
         """Initialize the register switch."""
         self._name = name
-        self._slave = int(slave) if slave else None
-        self._register = int(register)
-        self._command_on = int(command_on)
-        self._command_off = int(command_off)
-        self._verify_state = bool(verify_state)
+        self._slave = slave
+        self._register = register
+        self._command_on = command_on
+        self._command_off = command_off
+        self._verify_state = verify_state
         self._verify_register = (
-            int(verify_register) if verify_register else self._register)
+            verify_register if verify_register else self._register)
         self._register_type = register_type
         self._state_on = (
-            int(state_on) if state_on else self._command_on)
+            state_on if state_on else self._command_on)
         self._state_off = (
-            int(state_off) if state_off else self._command_off)
+            state_off if state_off else self._command_off)
         self._is_on = None
 
     def turn_on(self, **kwargs):
