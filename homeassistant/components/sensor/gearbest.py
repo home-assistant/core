@@ -19,6 +19,9 @@ REQUIREMENTS = ['gearbest_parser==1.0.5']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ITEMS = 'items'
+CONF_URL = 'url'
+CONF_ID = 'id'
+CONF_NAME = 'name'
 CONF_CURRENCY = 'currency'
 
 ICON = 'mdi:coin'
@@ -27,17 +30,14 @@ MIN_TIME_BETWEEN_CURRENCY_UPDATES = timedelta(seconds=12*60*60)  # 12h
 
 DOMAIN = 'gearbest'
 
+
 _ITEM_SCHEMA = vol.All(
-    vol.Any(
-        vol.Schema({vol.Required('url'): cv.string}, extra=vol.ALLOW_EXTRA),
-        vol.Schema({vol.Required('id'): cv.string}, extra=vol.ALLOW_EXTRA)
-    ),
     vol.Schema({
-        vol.Exclusive('url', 'XOR'): cv.string,
-        vol.Exclusive('id', 'XOR'): cv.string,
-        vol.Optional("name"): cv.string,
-        vol.Optional("currency"): cv.string
-    })
+        vol.Exclusive(CONF_URL, 'XOR'): cv.string,
+        vol.Exclusive(CONF_ID, 'XOR'): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_CURRENCY): cv.string
+    }), cv.has_at_least_one_key(CONF_URL, CONF_ID)
 )
 
 _ITEMS_SCHEMA = vol.Schema([_ITEM_SCHEMA])
@@ -86,12 +86,12 @@ class GearbestSensor(Entity):
         from gearbest_parser import GearbestParser
 
         self._hass = hass
-        self._name = item.get("name", None)
+        self._name = item.get(CONF_NAME, None)
         self._parser = GearbestParser()
         self._parser.set_currency_converter(hass.data[DOMAIN])
-        self._item = self._parser.load(item.get("id", None),
-                                       item.get("url", None),
-                                       item.get("currency", currency))
+        self._item = self._parser.load(item.get(CONF_ID, None),
+                                       item.get(CONF_URL, None),
+                                       item.get(CONF_CURRENCY, currency))
         if self._item is None:
             raise ValueError("id and url could not be resolved")
         self._item.update()
