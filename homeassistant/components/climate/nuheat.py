@@ -23,6 +23,8 @@ DEPENDENCIES = ["nuheat"]
 
 _LOGGER = logging.getLogger(__name__)
 
+ICON = "mdi:thermometer"
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Hold modes
@@ -55,7 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class NuHeatThermostat(ClimateDevice):
     """Representation of a NuHeat Thermostat."""
+
     def __init__(self, api, serial_number, min_away_temp, temperature_unit):
+        """Initialize the thermostat."""
         self._thermostat = api.get_thermostat(serial_number)
         self._temperature_unit = temperature_unit
         self._min_away_temp = min_away_temp
@@ -65,6 +69,11 @@ class NuHeatThermostat(ClimateDevice):
     def name(self):
         """Return the name of the thermostat."""
         return self._thermostat.room
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return ICON
 
     @property
     def temperature_unit(self):
@@ -216,5 +225,5 @@ class NuHeatThermostat(ClimateDevice):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _throttled_update(self, **kwargs):
-        """Get the latest state from the thermostat... but throttled!"""
+        """Get the latest state from the thermostat with a throttle."""
         self._thermostat.get_data()
