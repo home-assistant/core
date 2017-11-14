@@ -4,10 +4,10 @@ Support for information about the Italian train system using ViaggiaTreno API.
 For more details about this platform please refer to the documentation at
 https://home-assistant.io/components/sensor.viaggiatreno
 """
-import logging
-import asyncio
 import aiohttp
 import async_timeout
+import asyncio
+import logging
 
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = 'Powered by ViaggiaTreno Data'
+CONF_ATTRIBUTION = "Powered by ViaggiaTreno Data"
 VIAGGIATRENO_ENDPOINT = ("http://www.viaggiatreno.it/viaggiatrenonew/"
                          "resteasy/viaggiatreno/andamentoTreno/"
                          "{station_id}/{train_id}")
@@ -26,45 +26,46 @@ VIAGGIATRENO_ENDPOINT = ("http://www.viaggiatreno.it/viaggiatrenonew/"
 REQUEST_TIMEOUT = 5  # seconds
 ICON = 'mdi:train'
 MONITORED_INFO = [
-    'numeroTreno',
-    'origine',
-    'destinazione',
     'categoria',
-    'orarioPartenza',
-    'orarioArrivo',
-    'subTitle',
+    'compOrarioArrivoZeroEffettivo',
     'compOrarioPartenzaZeroEffettivo',
-    'compOrarioArrivoZeroEffettivo'
+    'destinazione',
+    'numeroTreno',
+    'orarioArrivo',
+    'orarioPartenza',
+    'origine',
+    'subTitle',
     ]
 
-DEFAULT_NAME = 'Train {}'
+DEFAULT_NAME = "Train {}"
 
-CONF_TRAIN_ID = 'train_id'
+CONF_NAME = 'train_name'
 CONF_STATION_ID = 'station_id'
 CONF_STATION_NAME = 'station_name'
-CONF_NAME = 'train_name'
+CONF_TRAIN_ID = 'train_id'
 
-CANCELLED_STRING = 'Cancelled'
 ARRIVED_STRING = 'Arrived'
-NO_INFORMATION_STRING = 'No information for this train now'
-NOT_DEPARTED_STRING = 'Not departed yet'
+CANCELLED_STRING = 'Cancelled'
+NOT_DEPARTED_STRING = "Not departed yet"
+NO_INFORMATION_STRING = "No information for this train now"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TRAIN_ID): cv.string,
     vol.Required(CONF_STATION_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_STATION_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config,
-                         add_devices, discovery_info=None):
+                         async_add_devices, discovery_info=None):
     """Setup the ViaggiaTreno platform."""
     train_id = config.get(CONF_TRAIN_ID)
     station_id = config.get(CONF_STATION_ID)
-    name = config.get(CONF_NAME)
-    add_devices([ViaggiaTrenoSensor(hass, train_id, station_id, name)])
+    name = config.get(CONF_NAME, None)
+    if not name:
+        name = DEFAULT_NAME.format(train_id)
+    async_add_devices([ViaggiaTrenoSensor(train_id, station_id, name)])
 
 
 @asyncio.coroutine
@@ -88,23 +89,18 @@ def async_http_request(hass, uri):
 class ViaggiaTrenoSensor(Entity):
     """Implementation of a ViaggiaTreno sensor."""
 
-    def __init__(self, hass, train_id, station_id, name):
+    def __init__(self, train_id, station_id, name):
         """Initialize the sensor."""
-        self.hass = hass
         self._state = None
         self._attributes = {}
         self._unit = ''
         self._icon = ICON
         self._station_id = station_id
+        self._name = name
 
         self.uri = VIAGGIATRENO_ENDPOINT.format(
             station_id=station_id,
             train_id=train_id)
-
-        if not name:
-            self._name = "Train {} from {}".format(train_id, station_id)
-        else:
-            self._name = name.format(train_id)
 
     @property
     def name(self):
@@ -140,14 +136,14 @@ class ViaggiaTrenoSensor(Entity):
             if data['oraUltimoRilevamento'] or first_station['effettiva']:
                 return True
         except ValueError:
-            _LOGGER.error('Cannot fetch first station: %s', data)
+            _LOGGER.error("Cannot fetch first station: %s", data)
         return False
 
     @staticmethod
     def has_arrived(data):
         """Check if the train has already arrived."""
-        last_station = data["fermate"][-1]
-        if not last_station["effettiva"]:
+        last_station = data['fermate'][-1]
+        if not last_station['effettiva']:
             return False
         return True
 
@@ -168,7 +164,7 @@ class ViaggiaTrenoSensor(Entity):
                 self._state = NO_INFORMATION_STRING
                 self._unit = ''
             else:
-                self._state = 'Error: {}'.format(res['error'])
+                self._state = "Error: {}".format(res['error'])
                 self._unit = ''
         else:
             for i in MONITORED_INFO:
@@ -185,6 +181,6 @@ class ViaggiaTrenoSensor(Entity):
                 self._state = ARRIVED_STRING
                 self._unit = ''
             else:
-                self._state = res.get('ritardo', '0')
+                self._state = res.get('ritardo', None)
                 self._unit = 'min'
                 self._icon = ICON
