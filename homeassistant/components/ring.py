@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['ring_doorbell==0.1.6']
+REQUIREMENTS = ['ring_doorbell==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 
