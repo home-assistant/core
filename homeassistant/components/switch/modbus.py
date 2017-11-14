@@ -137,13 +137,13 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         self._command_on = int(command_on)
         self._command_off = int(command_off)
         self._verify_state = bool(verify_state)
-        self._verify_register = (int(verify_register) if
-            verify_register else self._register)
+        self._verify_register = (
+            int(verify_register) if verify_register else self._register)
         self._register_type = register_type
-        self._state_on = (int(state_on) if
-            state_on else self._command_on)
-        self._state_off = (int(state_off) if
-            state_off else self._command_off)
+        self._state_on = (
+            int(state_on) if state_on else self._command_on)
+        self._state_off = (
+            int(state_off) if state_off else self._command_off)
         self._is_on = None
 
     def turn_on(self, **kwargs):
@@ -185,7 +185,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
                 'No response from modbus slave %s register %s',
                 self._slave,
                 self._verify_register)
-                
+
         if value == self._state_on:
             self._is_on = True
         elif value == self._state_off:
