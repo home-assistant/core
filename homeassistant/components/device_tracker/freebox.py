@@ -79,65 +79,60 @@ class FreeboxDeviceScanner(DeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        username = self.username
-        password = self.password
+        """Get connected devices"""
         host = self.host
+        username = self.username
+        password = bytes(self.password, 'latin-1')
         session_token = self.token
-        token = bytes(password, 'latin-1')
 
         ctx = ssl.create_default_context()
-
-        """Get connected devices"""
-        now = dt_util.now()
-        last_results = []
 
         if session_token != "0":
             # J'ai déjà une session, toujours active ?
             headers = {}
             headers['X-Fbx-App-Auth'] = session_token
-            req = urllib.request.Request(host+"lan/browser/pub/",
-                                         None,
-                                         headers)
+            full_host = host+"lan/browser/pub/"
+            req = urllib.request.Request(full_host, None, headers)
             try:
-                res = urllib.request.urlopen(req,
-                                             context=ctx
-                                             ).read().decode('UTF-8')
-                resultat = json.loads(res)
+                res = urllib.request.urlopen(req, context=ctx)
+                resultat = json.loads(res.read().decode('UTF-8'))
             except urllib.error.HTTPError as err:
-                _LOGGER.info("Freebox - Session expired")
+                _LOGGER.info("Freebox - HTTPError : "+err)
                 session_token = "0"
 
         if session_token == "0" or resultat["success"] is False:
             # Je n'ai pas de session active alors je me connecte
-            """Login"""
-            with urllib.request.urlopen(host+"login/", context=ctx) as url:
+            full_host = host+"login/"
+            with urllib.request.urlopen(full_host, context=ctx) as url:
                 content = url.read().decode('UTF-8')
                 challenge = json.loads(content)["result"]["challenge"]
                 _LOGGER.info("Freebox - Challenge : "+challenge)
 
-            """Open Session"""
             data = {"app_id": username,
-                    "password": hmac.new(token,
+                    "password": hmac.new(password,
                                          challenge.encode('utf-8'),
                                          hashlib.sha1).hexdigest()}
             json_data = json.dumps(data)
-            with urllib.request.urlopen(host+"login/session/",
+            full_host = host+"login/session/"
+            with urllib.request.urlopen(full_host,
                                         json_data.encode('utf-8'),
                                         context=ctx) as url:
                 content = url.read().decode('UTF-8')
-                new_session_token = json.loads(content
-                                               )["result"]["session_token"]
-                _LOGGER.info("Freebox - Token : "+new_session_token)
-                self.token = new_session_token
+                json_session = json.loads(content)
+                new_token = json_session["result"]["session_token"]
+                _LOGGER.info("Freebox - Token : "+new_token)
+                self.token = new_token
 
         # Je fais ma requête avec la session enregistrée
         headers = {}
         headers['X-Fbx-App-Auth'] = self.token
-        req = urllib.request.Request(host+"lan/browser/pub/",
-                                     None,
-                                     headers)
+        full_host = host+"lan/browser/pub/"
+        req = urllib.request.Request(full_host, None, headers)
         res = urllib.request.urlopen(req, context=ctx).read().decode('UTF-8')
         resultat = json.loads(res)
+
+        last_results = []
+        now = dt_util.now()
 
         if resultat['success'] is True:
             for device in resultat["result"]:
