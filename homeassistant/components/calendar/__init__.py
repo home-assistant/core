@@ -114,6 +114,16 @@ class CalendarEvent(object):
 
         return False
 
+    def as_dict(self):
+        """Return response in a dict."""
+        response = {
+            'start': self._start,
+            'end': self._end,
+            'text': self._text
+        }
+
+        return response
+
 
 class CalendarView(HomeAssistantView):
     """Base Calendar view."""

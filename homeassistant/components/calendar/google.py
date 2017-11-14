@@ -105,8 +105,6 @@ class GoogleCalendar(Calendar):
 
         self._events.sort(key=lambda event: event.start)
 
-        _LOGGER.info('Events: %s', self._events)
-
     def convertDatetime(self, dateObject):
         """Convert dateTime returned from Google."""
         dateString = dateObject['dateTime']

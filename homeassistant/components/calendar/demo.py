@@ -82,10 +82,18 @@ class DemoCalendar(Calendar):
     @asyncio.coroutine
     def async_get_events(self):
         """Calendar events."""
-        # TODO: reenable, serializing currently failing
-        return []  # self._events
+        return self._events
 
     @asyncio.coroutine
     def async_update(self):
         """Update calendar events."""
-        self._next_event = self.update_next_event()
+        _LOGGER.debug('Updating demo calendar')
+
+class DemoCalendarEvent(CalendarEvent):
+    """class for creating demo events."""
+
+    def __init(self, event):
+        """Initialize demo event."""
+        self._start = event.start
+        self._end = event.end
+        self._title = event.title
