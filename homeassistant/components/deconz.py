@@ -11,12 +11,12 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
+from homeassistant.core import callback, EventOrigin
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==8']
+REQUIREMENTS = ['pydeconz==9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,3 +113,20 @@ def _setup_deconz(hass, config, deconz_config):
                                                      deconz_config,
                                                      config))
     deconz.start()
+
+
+class DeconzEvent(object):
+    """When you want signals instead of entities."""
+
+    def __init__(self, hass, device):
+        """Register callback that will be used for signals."""
+        self._hass = hass
+        self._device = device
+        self._device.register_callback(self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Fire the event."""
+        event = 'deconz_event'
+        data = {'id': self._device.name, 'event': self._device.state}
+        self._hass.bus.async_fire(event, data, EventOrigin.remote)

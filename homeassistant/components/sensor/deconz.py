@@ -8,10 +8,8 @@ import asyncio
 import logging
 
 from homeassistant.components.deconz import (
-    DECONZ_DATA, DOMAIN, TYPE_AS_EVENT)
-from homeassistant.core import (callback, EventOrigin)
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, async_dispatcher_connect)
+    DECONZ_DATA, DOMAIN, TYPE_AS_EVENT, DeconzEvent)
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = [DOMAIN]
@@ -34,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if sensor.type in type_as_event:
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
-                    async_add_devices([DeconzBattery(hass, sensor)], True)
+                    async_add_devices([DeconzBattery(sensor)], True)
             else:
                 async_add_devices([DeconzSensor(sensor)], True)
 
@@ -81,35 +79,17 @@ class DeconzSensor(Entity):
         return attr
 
 
-class DeconzEvent(object):
-    """When you want signals instead of entities."""
-
-    def __init__(self, hass, device):
-        """Register callback that will be used for signals."""
-        self._hass = hass
-        self._device = device
-        self._device.register_callback(self._update_callback)
-        self._signal = DOMAIN + '_' + self._device.name
-
-    @callback
-    def _update_callback(self):
-        """Fire the event."""
-        event = 'deconz_event'
-        data = {'id': self._device.name, 'event': self._device.state}
-        self._hass.bus.async_fire(event, data, EventOrigin.remote)
-        async_dispatcher_send(self._hass, self._signal)
-
-
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Register dispatcher callback for update of battery state."""
         self._device = device
         self._battery = device.battery
         self._name = self._device.name + ' battery'
-        signal = DOMAIN + '_' + self._device.name
-        async_dispatcher_connect(hass, signal, self._update_callback)
+        self._icon = 'mdi:battery'
+        self._unit_of_measurement = "%"
+        self._device.register_callback(self._update_callback)
 
     @callback
     def _update_callback(self):
@@ -127,6 +107,16 @@ class DeconzBattery(Entity):
     def name(self):
         """Return the name of the battery."""
         return self._name
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return self._icon
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return self._unit_of_measurement
 
     @property
     def should_poll(self):
