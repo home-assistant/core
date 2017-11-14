@@ -417,3 +417,8 @@ SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+# The degree of precision for platforms
+PRECISION_WHOLE = 1
+PRECISION_HALVES = 0.5
+PRECISION_TENTHS = 0.1
