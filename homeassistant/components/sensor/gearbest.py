@@ -50,7 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Gearbest sensor."""
-
     from gearbest_parser import CurrencyConverter
     currency = config.get(CONF_CURRENCY)
 
@@ -69,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(exc)
 
     def currency_update(event_time):
-        """Refresh"""
+        """Update currency list."""
         hass.data[DOMAIN].update()
 
     track_time_interval(hass,
