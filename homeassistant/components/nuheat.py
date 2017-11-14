@@ -41,7 +41,16 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
     devices = conf.get(CONF_DEVICES)
-    min_away_temp = conf.get(CONF_MIN_AWAY_TEMP)
+
+    min_away_temp = None
+    _min_away_temp = conf.get(CONF_MIN_AWAY_TEMP)
+    if _min_away_temp:
+        try:
+            min_away_temp = int(_min_away_temp)
+        except ValueError:
+            _LOGGER.error(
+                "Configuration error. %s.%s=%s is invalid. Please provide a "
+                "numeric value.", DATA_NUHEAT, CONF_MIN_AWAY_TEMP, _min_away_temp)
 
     api = nuheat.NuHeat(username, password)
     api.authenticate()
