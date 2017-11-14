@@ -4,10 +4,11 @@ Support for information about the Italian train system using ViaggiaTreno API.
 For more details about this platform please refer to the documentation at
 https://home-assistant.io/components/sensor.viaggiatreno
 """
+import logging
+
 import aiohttp
 import async_timeout
 import asyncio
-import logging
 
 import voluptuous as vol
 
