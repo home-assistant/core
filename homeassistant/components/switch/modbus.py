@@ -122,10 +122,11 @@ class ModbusCoilSwitch(ToggleEntity):
                 'No response from modbus slave %s coil %s',
                 self._slave,
                 self._coil)
-                
+
+
 class ModbusRegisterSwitch(ModbusCoilSwitch):
     """Representation of a Modbus register switch."""
-    
+
     def __init__(self, name, slave, register, command_on,
         command_off, verify_state, verify_register, register_type,
         state_on, state_off):
@@ -144,7 +145,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         self._state_off = (int(state_off) if
             state_off else self._command_off)
         self._is_on = None
-    
+
     def turn_on(self, **kwargs):
         """Set switch on."""
         modbus.HUB.write_register(
@@ -152,7 +153,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._register,
             self._command_on)
         if not self._verify_state: self._is_on = True
-    
+
     def turn_off(self, **kwargs):
         """Set switch off."""
         modbus.HUB.write_register(
@@ -160,11 +161,11 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._register,
             self._command_off)
         if not self._verify_state: self._is_on = False
-    
+
     def update(self):
         """Update the state of the switch."""
         if not self._verify_state: return
-    
+
         value = 0
         if self._register_type == REGISTER_TYPE_INPUT:
             result = modbus.HUB.read_input_registers(
@@ -176,7 +177,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
                 self._slave,
                 self._register,
                 1)
-                
+
         try:
             value = int(result.registers[0])
         except AttributeError:
