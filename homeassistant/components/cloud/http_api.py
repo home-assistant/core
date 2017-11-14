@@ -80,7 +80,7 @@ class CloudLoginView(HomeAssistantView):
             yield from hass.async_add_job(auth_api.login, cloud, data['email'],
                                           data['password'])
 
-        hass.async_add_job(cloud.iot.connect())
+        hass.async_add_job(cloud.iot.connect)
         # Allow cloud to start connecting.
         yield from asyncio.sleep(0, loop=hass.loop)
         return self.json(_account_data(cloud))
@@ -228,6 +228,6 @@ def _account_data(cloud):
 
     return {
         'email': claims['email'],
-        'sub_exp': claims['custom:sub-exp'],
+        'sub_exp': claims.get('custom:sub-exp'),
         'cloud': cloud.iot.state,
     }

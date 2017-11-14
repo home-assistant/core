@@ -43,19 +43,23 @@ class CloudIoT:
     @asyncio.coroutine
     def connect(self):
         """Connect to the IoT broker."""
+        hass = self.cloud.hass
         if self.cloud.subscription_expired:
-            self.cloud.hass.components.persistent_notification.async_create(
-                MESSAGE_EXPIRATION, 'Subscription expired',
-                'cloud_subscription_expired')
-            self.state = STATE_DISCONNECTED
-            return
+            # Try refreshing the token to see if it is still expired.
+            yield from hass.async_add_job(auth_api.check_token, self.cloud)
+
+            if self.cloud.subscription_expired:
+                hass.components.persistent_notification.async_create(
+                    MESSAGE_EXPIRATION, 'Subscription expired',
+                    'cloud_subscription_expired')
+                self.state = STATE_DISCONNECTED
+                return
 
         if self.state == STATE_CONNECTED:
             raise RuntimeError('Already connected')
 
         self.state = STATE_CONNECTING
         self.close_requested = False
-        hass = self.cloud.hass
         remove_hass_stop_listener = None
         session = async_get_clientsession(self.cloud.hass)
         client = None
@@ -89,7 +93,7 @@ class CloudIoT:
 
                 if msg.type in (WSMsgType.ERROR, WSMsgType.CLOSED,
                                 WSMsgType.CLOSING):
-                    disconnect_warn = 'Connection closed'
+                    disconnect_warn = 'Connection cancelled.'
                     break
 
                 elif msg.type != WSMsgType.TEXT:
@@ -166,9 +170,9 @@ class CloudIoT:
 
                 try:
                     # Sleep 0, 5, 10, 15 … up to 30 seconds between retries
-                    task = self.retry_task = hass.async_add_job(asyncio.sleep(
+                    self.retry_task = hass.async_add_job(asyncio.sleep(
                         min(30, (self.tries - 1) * 5), loop=hass.loop))
-                    yield from task
+                    yield from self.retry_task
                     self.retry_task = None
                     hass.async_add_job(self.connect())
                 except asyncio.CancelledError:

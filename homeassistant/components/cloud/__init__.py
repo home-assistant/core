@@ -95,6 +95,10 @@ class Cloud:
     @property
     def subscription_expired(self):
         """Return a boolen if the subscription has expired."""
+        # For now, don't enforce subscriptions to exist
+        if 'custom:sub-exp' not in self.claims:
+            return False
+
         return dt_util.utcnow() > self.expiration_date
 
     @property
@@ -102,7 +106,7 @@ class Cloud:
         """Return the subscription expiration as a UTC datetime object."""
         return datetime.combine(
             dt_util.parse_date(self.claims['custom:sub-exp']),
-            datetime.min.time(), tzinfo=dt_util.UTC)
+            datetime.min.time()).replace(tzinfo=dt_util.UTC)
 
     @property
     def claims(self):
@@ -139,7 +143,10 @@ class Cloud:
             yield from self.iot.connect()
 
     def path(self, *parts):
-        """Get config path inside cloud dir."""
+        """Get config path inside cloud dir.
+
+        Async friendly.
+        """
         return self.hass.config.path(CONFIG_DIR, *parts)
 
     @asyncio.coroutine
