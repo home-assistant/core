@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.core import DOMAIN as ha_DOMAIN
-from homeassistant import components as comps
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
     STATE_AUTO)
@@ -117,6 +116,8 @@ class GenericThermostat(ClimateDevice):
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
             self._async_update_temp(sensor_state)
+
+        _LOGGER.debug('init sensor_state: %s', sensor_state)
 
     @property
     def should_poll(self):
@@ -283,9 +284,11 @@ class GenericThermostat(ClimateDevice):
         else:
             is_heating = self._is_device_active
             _LOGGER.debug('Heating: %s, Cur temp: %s, Target temp: %s',
-                           is_heating, self._cur_temp, self._target_temp)
-            _LOGGER.debug('Diff: %s (target - cur), Tolerance Hot / Cold: %s / %s',
-                           self._target_temp - self._cur_temp, self._hot_tolerance, self._cold_tolerance)
+                          is_heating, self._cur_temp, self._target_temp)
+            _LOGGER.debug('Diff: %s (target - cur), Tolerance Hot / Cold:'
+                          ' %s / %s',
+                          self._target_temp - self._cur_temp,
+                          self._hot_tolerance, self._cold_tolerance)
             if is_heating:
                 too_hot = self._cur_temp - self._target_temp >= \
                     self._hot_tolerance
@@ -308,10 +311,11 @@ class GenericThermostat(ClimateDevice):
     def _heater_on(self):
         """Turn toggable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
-        self.hass.async_add_job(self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_ON, data)) 
+        self.hass.async_add_job(
+            self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_ON, data))
 
     def _heater_off(self):
         """Turn toggable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
-        self.hass.async_add_job(self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_OFF, data)) 
-
+        self.hass.async_add_job(
+            self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_OFF, data))
