@@ -6,9 +6,9 @@ https://home-assistant.io/components/sensor.viaggiatreno
 """
 import logging
 
-import aiohttp
-import async_timeout
 import asyncio
+import async_timeout
+import aiohttp
 
 import voluptuous as vol
 
@@ -63,7 +63,7 @@ def async_setup_platform(hass, config,
     """Setup the ViaggiaTreno platform."""
     train_id = config.get(CONF_TRAIN_ID)
     station_id = config.get(CONF_STATION_ID)
-    name = config.get(CONF_NAME, None)
+    name = config.get(CONF_NAME)
     if not name:
         name = DEFAULT_NAME.format(train_id)
     async_add_devices([ViaggiaTrenoSensor(train_id, station_id, name)])
@@ -182,6 +182,6 @@ class ViaggiaTrenoSensor(Entity):
                 self._state = ARRIVED_STRING
                 self._unit = ''
             else:
-                self._state = res.get('ritardo', None)
+                self._state = res.get('ritardo')
                 self._unit = 'min'
                 self._icon = ICON
