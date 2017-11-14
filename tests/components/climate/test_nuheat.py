@@ -13,10 +13,11 @@ SCHEDULE_TEMPORARY_HOLD = 2
 
 class TestNuHeat(unittest.TestCase):
     """Tests for NuHeat climate."""
+
     # pylint: disable=protected-access, no-self-use
 
     def setUp(self):
-
+        """Set up test variables."""
         serial_number = "12345"
         min_away_temp = None
         temperature_unit = "F"
@@ -67,6 +68,10 @@ class TestNuHeat(unittest.TestCase):
     def test_name(self):
         """Test name property."""
         self.assertEqual(self.thermostat.name, "Master bathroom")
+
+    def test_icon(self):
+        """Test name property."""
+        self.assertEqual(self.thermostat.icon, "mdi:thermometer")
 
     def test_temperature_unit(self):
         """Test temperature unit."""
