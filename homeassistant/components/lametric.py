@@ -51,13 +51,7 @@ def setup(hass, config):
 
 
 class HassLaMetricManager():
-    """
-    A class that encapsulated requests to the LaMetric manager.
-
-    As the original class does not have a re-connect feature that is needed
-    for applications running for a long time as the OAuth tokens expire. This
-    class implements this reconnect() feature.
-    """
+    """A class that encapsulated requests to the LaMetric manager."""
 
     def __init__(self, client_id, client_secret):
         """Initialize HassLaMetricManager and connect to LaMetric."""
@@ -67,13 +61,3 @@ class HassLaMetricManager():
         self.manager = LaMetricManager(client_id, client_secret)
         self._client_id = client_id
         self._client_secret = client_secret
-
-    def reconnect(self):
-        """
-        Reconnect to LaMetric.
-
-        This is usually necessary when the OAuth token is expired.
-        """
-        from lmnotify import LaMetricManager
-        _LOGGER.debug("Reconnecting to LaMetric")
-        self.manager = LaMetricManager(self._client_id, self._client_secret)
