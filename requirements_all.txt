@@ -384,7 +384,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 influxdb==4.1.1
 
 # homeassistant.components.insteon_local
-insteonlocal==0.52
+insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
 insteonplm==0.7.5
