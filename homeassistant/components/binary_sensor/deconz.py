@@ -76,10 +76,10 @@ class DeconzBinarySensor(BinarySensorDevice):
         """Return the state attributes of the sensor."""
         attr = {
             'battery_level': self._sensor.battery,
+            'firmware_version': self._sensor.swversion,
             'manufacturer': self._sensor.manufacturer,
             'model_number': self._sensor.modelid,
             'reachable': self._sensor.reachable,
-            'firmware_version': self._sensor.swversion,
             'uniqueid': self._sensor.uniqueid,
         }
         if self._sensor.type == 'ZHAPresence':
