@@ -7,6 +7,7 @@ https://home-assistant.io/components/media_player/
 import asyncio
 from datetime import timedelta
 import functools as ft
+import collections
 import hashlib
 import logging
 import os
@@ -44,13 +45,14 @@ SCAN_INTERVAL = timedelta(seconds=10)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}&cache={2}'
-ATTR_CACHE_IMAGES = 'images'
-ATTR_CACHE_URLS = 'urls'
-ATTR_CACHE_MAXSIZE = 'maxsize'
+CACHE_IMAGES = 'images'
+CACHE_MAXSIZE = 'maxsize'
+CACHE_LOCK = 'lock'
+CACHE_URL = 'url'
+CACHE_CONTENT = 'content'
 ENTITY_IMAGE_CACHE = {
-    ATTR_CACHE_IMAGES: {},
-    ATTR_CACHE_URLS: [],
-    ATTR_CACHE_MAXSIZE: 16
+    CACHE_IMAGES: collections.OrderedDict(),
+    CACHE_MAXSIZE: 16
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
@@ -894,43 +896,36 @@ def _async_fetch_image(hass, url):
 
     Images are cached in memory (the images are typically 10-100kB in size).
     """
-    cache_images = ENTITY_IMAGE_CACHE[ATTR_CACHE_IMAGES]
-    cache_urls = ENTITY_IMAGE_CACHE[ATTR_CACHE_URLS]
-    cache_maxsize = ENTITY_IMAGE_CACHE[ATTR_CACHE_MAXSIZE]
+    cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+    cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
-    if url in cache_images:
-        return cache_images[url]
+    if url not in cache_images:
+        cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
 
-    content, content_type = (None, None)
-    websession = async_get_clientsession(hass)
-    try:
-        with async_timeout.timeout(10, loop=hass.loop):
-            response = yield from websession.get(url)
+    with (yield from cache_images[url][CACHE_LOCK]):
+        if CACHE_CONTENT in cache_images[url]:
+            return cache_images[url][CACHE_CONTENT]
 
-            if response.status == 200:
-                content = yield from response.read()
-                content_type = response.headers.get(CONTENT_TYPE)
-                if content_type:
-                    content_type = content_type.split(';')[0]
+        content, content_type = (None, None)
+        websession = async_get_clientsession(hass)
+        try:
+            with async_timeout.timeout(10, loop=hass.loop):
+                response = yield from websession.get(url)
 
-    except asyncio.TimeoutError:
-        pass
+                if response.status == 200:
+                    content = yield from response.read()
+                    content_type = response.headers.get(CONTENT_TYPE)
+                    if content_type:
+                        content_type = content_type.split(';')[0]
+                    cache_images[url][CACHE_CONTENT] = content, content_type
 
-    if not content:
-        return (None, None)
+        except asyncio.TimeoutError:
+            pass
 
-    cache_images[url] = (content, content_type)
-    cache_urls.append(url)
+        while len(cache_images) > cache_maxsize:
+            cache_images.popitem(last=False)
 
-    while len(cache_urls) > cache_maxsize:
-        # remove oldest item from cache
-        oldest_url = cache_urls[0]
-        if oldest_url in cache_images:
-            del cache_images[oldest_url]
-
-        cache_urls = cache_urls[1:]
-
-    return content, content_type
+        return content, content_type
 
 
 class MediaPlayerImageView(HomeAssistantView):

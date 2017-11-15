@@ -309,6 +309,7 @@ omit =
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/gpslogger.py
+    homeassistant/components/device_tracker/hitron_coda.py
     homeassistant/components/device_tracker/huawei_router.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/keenetic_ndms2.py
@@ -325,6 +326,7 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tado.py
+    homeassistant/components/device_tracker/tile.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py

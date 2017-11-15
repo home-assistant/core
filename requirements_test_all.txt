@@ -34,7 +34,7 @@ aioautomatic==0.6.4
 aiohttp_cors==0.5.3
 
 # homeassistant.components.notify.apns
-apns2==0.1.1
+apns2==0.3.0
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==4.1.1
@@ -74,7 +74,7 @@ hbmqtt==0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171106.0
+home-assistant-frontend==20171115.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -143,7 +143,7 @@ restrictedpython==4.0b2
 rflink==0.0.34
 
 # homeassistant.components.ring
-ring_doorbell==0.1.6
+ring_doorbell==0.1.7
 
 # homeassistant.components.media_player.yamaha
 rxv==0.5.1

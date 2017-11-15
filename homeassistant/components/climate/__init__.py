@@ -9,12 +9,12 @@ from datetime import timedelta
 import logging
 import os
 import functools as ft
-from numbers import Number
 
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import bind_hass
+from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
@@ -22,7 +22,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, PRECISION_WHOLE, PRECISION_TENTHS)
 
 DOMAIN = 'climate'
 
@@ -70,11 +70,6 @@ ATTR_OPERATION_MODE = 'operation_mode'
 ATTR_OPERATION_LIST = 'operation_list'
 ATTR_SWING_MODE = 'swing_mode'
 ATTR_SWING_LIST = 'swing_list'
-
-# The degree of precision for each platform
-PRECISION_WHOLE = 1
-PRECISION_HALVES = 0.5
-PRECISION_TENTHS = 0.1
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
@@ -456,12 +451,18 @@ class ClimateDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
-            ATTR_CURRENT_TEMPERATURE:
-            self._convert_for_display(self.current_temperature),
-            ATTR_MIN_TEMP: self._convert_for_display(self.min_temp),
-            ATTR_MAX_TEMP: self._convert_for_display(self.max_temp),
-            ATTR_TEMPERATURE:
-            self._convert_for_display(self.target_temperature),
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass, self.current_temperature, self.temperature_unit,
+                self.precision),
+            ATTR_MIN_TEMP: show_temp(
+                self.hass, self.min_temp, self.temperature_unit,
+                self.precision),
+            ATTR_MAX_TEMP: show_temp(
+                self.hass, self.max_temp, self.temperature_unit,
+                self.precision),
+            ATTR_TEMPERATURE: show_temp(
+                self.hass, self.target_temperature, self.temperature_unit,
+                self.precision),
         }
 
         if self.target_temperature_step is not None:
@@ -469,10 +470,12 @@ class ClimateDevice(Entity):
 
         target_temp_high = self.target_temperature_high
         if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
-                self.target_temperature_high)
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
-                self.target_temperature_low)
+            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                self.precision)
+            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                self.precision)
 
         humidity = self.target_humidity
         if humidity is not None:
@@ -733,24 +736,3 @@ class ClimateDevice(Entity):
     def max_humidity(self):
         """Return the maximum humidity."""
         return 99
-
-    def _convert_for_display(self, temp):
-        """Convert temperature into preferred units for display purposes."""
-        if temp is None:
-            return temp
-
-        # if the temperature is not a number this can cause issues
-        # with polymer components, so bail early there.
-        if not isinstance(temp, Number):
-            raise TypeError("Temperature is not a number: %s" % temp)
-
-        if self.temperature_unit != self.unit_of_measurement:
-            temp = convert_temperature(
-                temp, self.temperature_unit, self.unit_of_measurement)
-        # Round in the units appropriate
-        if self.precision == PRECISION_HALVES:
-            return round(temp * 2) / 2.0
-        elif self.precision == PRECISION_TENTHS:
-            return round(temp, 1)
-        # PRECISION_WHOLE as a fall back
-        return round(temp)

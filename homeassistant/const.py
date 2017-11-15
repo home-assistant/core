@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 57
+MINOR_VERSION = 58
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -126,6 +126,7 @@ CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
+CONF_STATE_TEMPLATE = 'state_template'
 CONF_STRUCTURE = 'structure'
 CONF_SWITCHES = 'switches'
 CONF_TEMPERATURE_UNIT = 'temperature_unit'
@@ -417,3 +418,8 @@ SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+# The degree of precision for platforms
+PRECISION_WHOLE = 1
+PRECISION_HALVES = 0.5
+PRECISION_TENTHS = 0.1
