@@ -26,14 +26,14 @@ DOMAIN = 'deconz'
 DECONZ_DATA = 'deconz_data'
 CONFIG_FILE = 'deconz.conf'
 
-TYPE_AS_EVENT = 'type_as_event'
+CONF_TYPE_AS_EVENT = 'type_as_event'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(TYPE_AS_EVENT, default=['ZHASwitch']):
+        vol.Optional(CONF_TYPE_AS_EVENT, default=['ZHASwitch']):
             vol.All(cv.ensure_list, [cv.string]),
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -87,8 +87,9 @@ def _setup_deconz(hass, config, deconz_config):
     """Setup Deconz session.
 
     Load config data for server information.
-    Load light data to know which lights are available.
-    Load sensor data to know which sensors are available.
+    Load group data containing which light groups are available.
+    Load light data containing which lights are available.
+    Load sensor data containing which sensors are available.
     Start websocket for push notification of state changes from Deconz.
     """
     from pydeconz import DeconzSession
@@ -117,8 +118,11 @@ def _setup_deconz(hass, config, deconz_config):
 
 
 class DeconzEvent(object):
-    """When you want signals instead of entities."""
+    """When you want signals instead of entities.
 
+    Stateless sensors such as remotes are expected to generate an event
+    instead of a sensor entity in hass.
+    """
     def __init__(self, hass, device):
         """Register callback that will be used for signals."""
         self._hass = hass
