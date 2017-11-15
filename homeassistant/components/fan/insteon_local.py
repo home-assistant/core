@@ -32,7 +32,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     linked = discovery_info['linked']
 
     for device_id in linked:
-        if (linked[device_id]['cat_type'] == 'dimmer' and linked[device_id]['sku'] == '2475F'):
+        if (linked[device_id]['cat_type'] == 'dimmer' and
+                linked[device_id]['sku'] == '2475F'):
             _LOGGER.info("Adding fan device " + device_id)
             device = insteonhub.fan(device_id)
             add_devices([InsteonLocalFanDevice(device, device_id)])
