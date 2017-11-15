@@ -77,6 +77,11 @@ class DeconzSensor(Entity):
         return self._sensor.sensor_unit
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._sensor.reachable
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False

@@ -95,6 +95,11 @@ class DeconzLight(Light):
         return self._features
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._light.reachable
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
