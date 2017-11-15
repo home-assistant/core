@@ -10,7 +10,7 @@ import logging
 
 from homeassistant.components.amcrest import DATA_AMCREST, SENSORS
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_SENSORS, STATE_UNKNOWN
 
 DEPENDENCIES = ['amcrest']
 
@@ -25,8 +25,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    device_name = discovery_info['name']
-    sensors = discovery_info['sensors']
+    device_name = discovery_info[CONF_NAME]
+    sensors = discovery_info[CONF_SENSORS]
     amcrest = hass.data[DATA_AMCREST][device_name]
 
     amcrest_sensors = []

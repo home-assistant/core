@@ -11,6 +11,7 @@ from homeassistant.components.amcrest import (
     DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT)
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_web,
     async_aiohttp_proxy_stream)
@@ -26,7 +27,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    device_name = discovery_info['name']
+    device_name = discovery_info[CONF_NAME]
     amcrest = hass.data[DATA_AMCREST][device_name]
 
     async_add_devices([
