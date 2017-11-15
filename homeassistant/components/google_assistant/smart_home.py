@@ -5,18 +5,21 @@ import logging
 # pylint: disable=using-constant-test,unused-import,ungrouped-imports
 # if False:
 from aiohttp.web import Request, Response  # NOQA
-from typing import Dict, Tuple, Any  # NOQA
+from typing import Dict, Tuple, Any, Optional  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA
 from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.util.unit_system import UnitSystem  # NOQA
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
     CONF_FRIENDLY_NAME, STATE_OFF,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON
+    SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    TEMP_FAHRENHEIT, TEMP_CELSIUS,
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate
 )
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     ATTR_GOOGLE_ASSISTANT_NAME, ATTR_GOOGLE_ASSISTANT_TYPE,
@@ -65,7 +68,7 @@ def make_actions_response(request_id: str, payload: dict) -> dict:
     return {'requestId': request_id, 'payload': payload}
 
 
-def entity_to_device(entity: Entity):
+def entity_to_device(entity: Entity, units: UnitSystem):
     """Convert a hass entity into an google actions device."""
     class_data = MAPPING_COMPONENT.get(
         entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) or entity.domain)
@@ -105,14 +108,39 @@ def entity_to_device(entity: Entity):
             if m in CLIMATE_SUPPORTED_MODES)
         device['attributes'] = {
             'availableThermostatModes': modes,
-            'thermostatTemperatureUnit': 'C',
+            'thermostatTemperatureUnit':
+            'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
 
     return device
 
 
-def query_device(entity: Entity) -> dict:
+def query_device(entity: Entity, units: UnitSystem) -> dict:
     """Take an entity and return a properly formatted device object."""
+    def celsius(deg: Optional[float]) -> Optional[float]:
+        """Convert a float to Celsius and rounds to one decimal place."""
+        if deg is None:
+            return None
+        return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+    if entity.domain == climate.DOMAIN:
+        mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
+        if mode not in CLIMATE_SUPPORTED_MODES:
+            mode = 'on'
+        response = {
+            'thermostatMode': mode,
+            'thermostatTemperatureSetpoint':
+            celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
+            'thermostatTemperatureAmbient':
+            celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
+            'thermostatTemperatureSetpointHigh':
+            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
+            'thermostatTemperatureSetpointLow':
+            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
+            'thermostatHumidityAmbient':
+            entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
+        }
+        return {k: v for k, v in response.items() if v is not None}
+
     final_state = entity.state != STATE_OFF
     final_brightness = entity.attributes.get(light.ATTR_BRIGHTNESS, 255
                                              if final_state else 0)
@@ -138,8 +166,9 @@ def query_device(entity: Entity) -> dict:
 # erroneous bug on old pythons and pylint
 # https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
-def determine_service(entity_id: str, command: str,
-                      params: dict) -> Tuple[str, dict]:
+def determine_service(
+        entity_id: str, command: str, params: dict,
+        units: UnitSystem) -> Tuple[str, dict]:
     """
     Determine service and service_data.
 
@@ -166,14 +195,17 @@ def determine_service(entity_id: str, command: str,
     # special climate handling
     if domain == climate.DOMAIN:
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            service_data['temperature'] = params.get(
-                'thermostatTemperatureSetpoint', 25)
+            service_data['temperature'] = units.temperature(
+                params.get('thermostatTemperatureSetpoint', 25),
+                TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
-            service_data['target_temp_high'] = params.get(
-                'thermostatTemperatureSetpointHigh', 25)
-            service_data['target_temp_low'] = params.get(
-                'thermostatTemperatureSetpointLow', 18)
+            service_data['target_temp_high'] = units.temperature(
+                params.get('thermostatTemperatureSetpointHigh', 25),
+                TEMP_CELSIUS)
+            service_data['target_temp_low'] = units.temperature(
+                params.get('thermostatTemperatureSetpointLow', 18),
+                TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_SET_MODE:
             service_data['operation_mode'] = params.get(
