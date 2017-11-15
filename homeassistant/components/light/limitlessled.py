@@ -4,6 +4,7 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -164,6 +165,12 @@ class LimitlessLEDGroup(Light):
         self._is_on = False
         self._brightness = None
         self.config = config
+
+    @asyncio.coroutine
+    def async_restore_state(self, is_on, **kwargs):
+        """Restore the state."""
+        if is_on:
+            yield from self.turn_on(**kwargs)
 
     @staticmethod
     def factory(group, config):
