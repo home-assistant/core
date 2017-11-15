@@ -14,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback, EventOrigin
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
+from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pydeconz==9']
@@ -123,10 +124,11 @@ class DeconzEvent(object):
         self._hass = hass
         self._device = device
         self._device.register_callback(self._update_callback)
+        self._event = 'deconz_event'
+        self._id = slugify(self._device.name)
 
     @callback
     def _update_callback(self):
         """Fire the event."""
-        event = 'deconz_event'
-        data = {'id': self._device.name, 'event': self._device.state}
-        self._hass.bus.async_fire(event, data, EventOrigin.remote)
+        data = {'id': self._id, 'event': self._device.state}
+        self._hass.bus.async_fire(self._event, data, EventOrigin.remote)

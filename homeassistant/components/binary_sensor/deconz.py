@@ -52,6 +52,21 @@ class DeconzBinarySensor(BinarySensorDevice):
         return self._sensor.name
 
     @property
+    def device_class(self):
+        """Class of the event."""
+        return self._sensor.sensor_class
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return self._sensor.sensor_icon
+
+    @property
+    def unit_of_measurement(self):
+        """Unit of measurement of this entity."""
+        return self._sensor.sensor_unit
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -60,11 +75,11 @@ class DeconzBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {
-            'battery': self._sensor.battery,
+            'battery_level': self._sensor.battery,
             'manufacturer': self._sensor.manufacturer,
-            'modelid': self._sensor.modelid,
+            'model_number': self._sensor.modelid,
             'reachable': self._sensor.reachable,
-            'swversion': self._sensor.swversion,
+            'firmware_version': self._sensor.swversion,
             'uniqueid': self._sensor.uniqueid,
         }
         if self._sensor.type == 'ZHAPresence':

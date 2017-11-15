@@ -11,6 +11,7 @@ from homeassistant.components.deconz import (
     DECONZ_DATA, DOMAIN, TYPE_AS_EVENT, DeconzEvent)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = [DOMAIN]
 
@@ -61,6 +62,21 @@ class DeconzSensor(Entity):
         return self._sensor.name
 
     @property
+    def device_class(self):
+        """Class of the event."""
+        return self._sensor.sensor_class
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return self._sensor.sensor_icon
+
+    @property
+    def unit_of_measurement(self):
+        """Unit of measurement of this entity."""
+        return self._sensor.sensor_unit
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -69,11 +85,11 @@ class DeconzSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {
-            'battery': self._sensor.battery,
+            'battery_level': self._sensor.battery,
             'manufacturer': self._sensor.manufacturer,
-            'modelid': self._sensor.modelid,
+            'model_number': self._sensor.modelid,
             'reachable': self._sensor.reachable,
-            'swversion': self._sensor.swversion,
+            'firmware_version': self._sensor.swversion,
             'uniqueid': self._sensor.uniqueid,
         }
         return attr
@@ -87,6 +103,7 @@ class DeconzBattery(Entity):
         self._device = device
         self._battery = device.battery
         self._name = self._device.name + ' battery'
+        self._device_class = 'battery'
         self._icon = 'mdi:battery'
         self._unit_of_measurement = "%"
         self._device.register_callback(self._update_callback)
@@ -109,9 +126,14 @@ class DeconzBattery(Entity):
         return self._name
 
     @property
+    def device_class(self):
+        """Class of the event."""
+        return self._device_class
+
+    @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return self._icon
+        return icon_for_battery_level(int(self.state))
 
     @property
     def unit_of_measurement(self):
