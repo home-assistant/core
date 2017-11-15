@@ -1,5 +1,6 @@
 """Component to integrate the Home Assistant cloud."""
 import asyncio
+from datetime import datetime
 import json
 import logging
 import os
@@ -8,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
+from homeassistant.util import dt as dt_util
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -66,7 +68,6 @@ class Cloud:
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
-        self.email = None
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
@@ -89,7 +90,29 @@ class Cloud:
     @property
     def is_logged_in(self):
         """Get if cloud is logged in."""
-        return self.email is not None
+        return self.id_token is not None
+
+    @property
+    def subscription_expired(self):
+        """Return a boolen if the subscription has expired."""
+        # For now, don't enforce subscriptions to exist
+        if 'custom:sub-exp' not in self.claims:
+            return False
+
+        return dt_util.utcnow() > self.expiration_date
+
+    @property
+    def expiration_date(self):
+        """Return the subscription expiration as a UTC datetime object."""
+        return datetime.combine(
+            dt_util.parse_date(self.claims['custom:sub-exp']),
+            datetime.min.time()).replace(tzinfo=dt_util.UTC)
+
+    @property
+    def claims(self):
+        """Get the claims from the id token."""
+        from jose import jwt
+        return jwt.get_unverified_claims(self.id_token)
 
     @property
     def user_info_path(self):
@@ -110,18 +133,20 @@ class Cloud:
             if os.path.isfile(user_info):
                 with open(user_info, 'rt') as file:
                     info = json.loads(file.read())
-                self.email = info['email']
                 self.id_token = info['id_token']
                 self.access_token = info['access_token']
                 self.refresh_token = info['refresh_token']
 
         yield from self.hass.async_add_job(load_config)
 
-        if self.email is not None:
+        if self.id_token is not None:
             yield from self.iot.connect()
 
     def path(self, *parts):
-        """Get config path inside cloud dir."""
+        """Get config path inside cloud dir.
+
+        Async friendly.
+        """
         return self.hass.config.path(CONFIG_DIR, *parts)
 
     @asyncio.coroutine
@@ -129,7 +154,6 @@ class Cloud:
         """Close connection and remove all credentials."""
         yield from self.iot.disconnect()
 
-        self.email = None
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
@@ -141,7 +165,6 @@ class Cloud:
         """Write user info to a file."""
         with open(self.user_info_path, 'wt') as file:
             file.write(json.dumps({
-                'email': self.email,
                 'id_token': self.id_token,
                 'access_token': self.access_token,
                 'refresh_token': self.refresh_token,
