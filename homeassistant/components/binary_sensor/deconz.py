@@ -62,11 +62,6 @@ class DeconzBinarySensor(BinarySensorDevice):
         return self._sensor.sensor_icon
 
     @property
-    def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
-        return self._sensor.sensor_unit
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return self._sensor.reachable
