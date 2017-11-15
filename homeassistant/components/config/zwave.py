@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from collections import deque
 import homeassistant.core as ha
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.components.http import HomeAssistantView
@@ -45,13 +46,13 @@ class ZWaveLogView(HomeAssistantView):
         logfilepath = hass.config.path(OZW_LOG_FILENAME)
 
         with open(logfilepath, 'r') as logfile:
-            data = logfile.read()
+            data = (line.rstrip() for line in logfile)
+            if lines == 0:
+                loglines = list(data)
+            else:
+                loglines = list(deque(data, lines))
 
-        loglines = data.splitlines(True)
-        if lines == 0:
-            return self.json(''.join(loglines))
-
-        return self.json(''.join(loglines[-lines:]))
+        return self.json(loglines)
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
