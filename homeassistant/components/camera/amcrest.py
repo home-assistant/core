@@ -8,7 +8,7 @@ import asyncio
 import logging
 
 from homeassistant.components.amcrest import (
-    STREAM_SOURCE_LIST, TIMEOUT)
+    DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT)
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers.aiohttp_client import (
@@ -26,7 +26,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    amcrest = discovery_info['amcrest_hub']
+    device_name = discovery_info['name']
+    amcrest = hass.data[DATA_AMCREST][device_name]
 
     async_add_devices([
         AmcrestCam(hass,

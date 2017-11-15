@@ -89,6 +89,7 @@ def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera
 
+    hass.data[DATA_AMCREST] = {}
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
@@ -133,15 +134,17 @@ def setup(hass, config):
                                  stream_source,
                                  resolution)
 
+        hass.data[DATA_AMCREST][name] = amcrest_hub
+
         discovery.load_platform(
             hass, 'camera', DOMAIN, {
-                'amcrest_hub': amcrest_hub,
+                CONF_NAME: name,
             }, config)
 
         if sensors:
             discovery.load_platform(
                 hass, 'sensor', DOMAIN, {
-                    'amcrest_hub': amcrest_hub,
+                    CONF_NAME: name,
                     CONF_SENSORS: sensors,
                 }, config)
 

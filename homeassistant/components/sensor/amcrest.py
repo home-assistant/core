@@ -8,7 +8,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from homeassistant.components.amcrest import SENSORS
+from homeassistant.components.amcrest import DATA_AMCREST, SENSORS
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_UNKNOWN
 
@@ -25,8 +25,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    amcrest = discovery_info['amcrest_hub']
+    device_name = discovery_info['name']
     sensors = discovery_info['sensors']
+    amcrest = hass.data[DATA_AMCREST][device_name]
 
     amcrest_sensors = []
     for sensor_type in sensors:
