@@ -76,7 +76,6 @@ def setup(hass, yaml_config):
 
     server = HomeAssistantWSGI(
         hass,
-        development=False,
         server_host=config.host_ip_addr,
         server_port=config.listen_port,
         api_password=None,

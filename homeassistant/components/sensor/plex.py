@@ -10,12 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT)
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plexapi==2.0.2']
+REQUIREMENTS = ['plexapi==3.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_TOKEN): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
@@ -46,28 +47,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_server = config.get(CONF_SERVER)
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
+    plex_token = config.get(CONF_TOKEN)
     plex_url = 'http://{}:{}'.format(plex_host, plex_port)
 
     add_devices([PlexSensor(
-        name, plex_url, plex_user, plex_password, plex_server)], True)
+        name, plex_url, plex_user, plex_password, plex_server,
+        plex_token)], True)
 
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(self, name, plex_url, plex_user, plex_password, plex_server):
+    def __init__(self, name, plex_url, plex_user, plex_password,
+                 plex_server, plex_token):
         """Initialize the sensor."""
-        from plexapi.utils import NA
         from plexapi.myplex import MyPlexAccount
         from plexapi.server import PlexServer
 
-        self._na_type = NA
         self._name = name
         self._state = 0
         self._now_playing = []
 
-        if plex_user and plex_password:
-            user = MyPlexAccount.signin(plex_user, plex_password)
+        if plex_token:
+            self._server = PlexServer(plex_url, plex_token)
+        elif plex_user and plex_password:
+            user = MyPlexAccount(plex_user, plex_password)
             server = plex_server if plex_server else user.resources()[0].name
             self._server = user.resource(server).connect()
         else:
@@ -99,9 +103,9 @@ class PlexSensor(Entity):
         sessions = self._server.sessions()
         now_playing = []
         for sess in sessions:
-            user = sess.username if sess.username is not self._na_type else ""
-            title = sess.title if sess.title is not self._na_type else ""
-            year = sess.year if sess.year is not self._na_type else ""
+            user = sess.usernames[0] if sess.usernames is not None else ""
+            title = sess.title if sess.title is not None else ""
+            year = sess.year if sess.year is not None else ""
             now_playing.append((user, "{0} ({1})".format(title, year)))
         self._state = len(sessions)
         self._now_playing = now_playing

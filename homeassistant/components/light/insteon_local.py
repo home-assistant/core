@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     linked = discovery_info['linked']
 
     for device_id in linked:
-        if (linked[device_id]['cat_type'] == 'dimmer'):
+        if linked[device_id]['cat_type'] == 'dimmer':
             _LOGGER.info("Adding light device " + device_id)
             device = insteonhub.dimmer(device_id)
             add_devices([InsteonLocalDimmerDevice(device, device_id)])

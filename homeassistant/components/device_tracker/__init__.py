@@ -18,7 +18,6 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
-from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -88,10 +87,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
                  default=DEFAULT_CONSIDER_HOME): vol.All(
                      cv.time_period, cv.positive_timedelta)
 })
-
-DISCOVERY_PLATFORMS = {
-    SERVICE_NETGEAR: 'netgear',
-}
 
 
 @bind_hass
@@ -179,15 +174,6 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
 
     tracker.async_setup_group()
-
-    @callback
-    def async_device_tracker_discovered(service, info):
-        """Handle the discovery of device tracker platforms."""
-        hass.async_add_job(
-            async_setup_platform(DISCOVERY_PLATFORMS[service], {}, info))
-
-    discovery.async_listen(
-        hass, DISCOVERY_PLATFORMS.keys(), async_device_tracker_discovered)
 
     @asyncio.coroutine
     def async_platform_discovered(platform, info):

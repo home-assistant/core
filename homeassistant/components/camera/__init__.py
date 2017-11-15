@@ -29,17 +29,21 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
-from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
+
+DOMAIN = 'camera'
+DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_EN_MOTION = 'enable_motion_detection'
-SERVICE_DISEN_MOTION = 'disable_motion_detection'
-DOMAIN = 'camera'
-DEPENDENCIES = ['http']
+SERVICE_ENABLE_MOTION = 'enable_motion_detection'
+SERVICE_DISABLE_MOTION = 'disable_motion_detection'
+SERVICE_SNAPSHOT = 'snapshot'
+
 SCAN_INTERVAL = timedelta(seconds=30)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+ATTR_FILENAME = 'filename'
 
 STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
@@ -55,13 +59,17 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
+CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_FILENAME): cv.template
+})
+
 
 @bind_hass
 def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_EN_MOTION, data))
+        DOMAIN, SERVICE_ENABLE_MOTION, data))
 
 
 @bind_hass
@@ -69,9 +77,20 @@ def disable_motion_detection(hass, entity_id=None):
     """Disable Motion Detection."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DISEN_MOTION, data))
+        DOMAIN, SERVICE_DISABLE_MOTION, data))
 
 
+@bind_hass
+def async_snapshot(hass, filename, entity_id=None):
+    """Make a snapshot from a camera."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_FILENAME] = filename
+
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_SNAPSHOT, data))
+
+
+@bind_hass
 @asyncio.coroutine
 def async_get_image(hass, entity_id, timeout=10):
     """Fetch a image from a camera entity."""
@@ -119,44 +138,72 @@ def async_setup(hass, config):
             entity.async_update_token()
             hass.async_add_job(entity.async_update_ha_state())
 
-    async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+    hass.helpers.event.async_track_time_interval(
+        update_tokens, TOKEN_CHANGE_INTERVAL)
 
     @asyncio.coroutine
     def async_handle_camera_service(service):
         """Handle calls to the camera services."""
         target_cameras = component.async_extract_from_service(service)
 
-        for camera in target_cameras:
-            if service.service == SERVICE_EN_MOTION:
-                yield from camera.async_enable_motion_detection()
-            elif service.service == SERVICE_DISEN_MOTION:
-                yield from camera.async_disable_motion_detection()
-
         update_tasks = []
         for camera in target_cameras:
+            if service.service == SERVICE_ENABLE_MOTION:
+                yield from camera.async_enable_motion_detection()
+            elif service.service == SERVICE_DISABLE_MOTION:
+                yield from camera.async_disable_motion_detection()
+
             if not camera.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                camera.async_update_ha_state(True))
-            if hasattr(camera, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(camera.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    @asyncio.coroutine
+    def async_handle_snapshot_service(service):
+        """Handle snapshot services calls."""
+        target_cameras = component.async_extract_from_service(service)
+        filename = service.data[ATTR_FILENAME]
+        filename.hass = hass
+
+        for camera in target_cameras:
+            snapshot_file = filename.async_render(
+                variables={ATTR_ENTITY_ID: camera})
+
+            # check if we allow to access to that file
+            if not hass.config.is_allowed_path(snapshot_file):
+                _LOGGER.error(
+                    "Can't write %s, no access to path!", snapshot_file)
+                continue
+
+            image = yield from camera.async_camera_image()
+
+            def _write_image(to_file, image_data):
+                """Executor helper to write image."""
+                with open(to_file, 'wb') as img_file:
+                    img_file.write(image_data)
+
+            try:
+                yield from hass.async_add_job(
+                    _write_image, snapshot_file, image)
+            except OSError as err:
+                _LOGGER.error("Can't write image to file: %s", err)
 
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_EN_MOTION, async_handle_camera_service,
-        descriptions.get(SERVICE_EN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+        DOMAIN, SERVICE_ENABLE_MOTION, async_handle_camera_service,
+        descriptions.get(SERVICE_ENABLE_MOTION), schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_DISEN_MOTION, async_handle_camera_service,
-        descriptions.get(SERVICE_DISEN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+        DOMAIN, SERVICE_DISABLE_MOTION, async_handle_camera_service,
+        descriptions.get(SERVICE_DISABLE_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SNAPSHOT, async_handle_snapshot_service,
+        descriptions.get(SERVICE_SNAPSHOT),
+        schema=CAMERA_SERVICE_SNAPSHOT)
 
     return True
 

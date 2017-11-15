@@ -14,18 +14,17 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
-    ATTR_LONGITUDE)
+    ATTR_LONGITUDE, CONF_MODE)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['googlemaps==2.4.6']
+REQUIREMENTS = ['googlemaps==2.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = 'destination'
-CONF_MODE = 'mode'
 CONF_OPTIONS = 'options'
 CONF_ORIGIN = 'origin'
 CONF_TRAVEL_MODE = 'travel_mode'

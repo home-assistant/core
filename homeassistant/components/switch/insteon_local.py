@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     linked = discovery_info['linked']
 
     for device_id in linked:
-        if (linked[device_id]['cat_type'] == 'switch'):
+        if linked[device_id]['cat_type'] == 'switch':
             _LOGGER.info("Adding switch device " + device_id)
             device = insteonhub.switch(device_id)
             add_devices([InsteonLocalSwitchDevice(device, device_id)])
