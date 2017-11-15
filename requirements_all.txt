@@ -1131,6 +1131,9 @@ websockets==3.2
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
 
+# homeassistant.components.binary_sensor.xboxlive
+xbox==0.1.3
+
 # homeassistant.components.sensor.xbox_live
 xboxapi==0.1.1
 
