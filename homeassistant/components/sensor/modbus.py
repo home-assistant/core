@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         structure = '>i'
         if register.get(CONF_DATA_TYPE) != DATA_TYPE_CUSTOM:
             try:
-                structure = '>{:c}'.format(data_types[
+                structure = '>{}'.format(data_types[
                     register.get(CONF_DATA_TYPE)][register.get(CONF_COUNT)])
             except KeyError:
                 _LOGGER.error("Unable to detect data type for %s sensor, "
