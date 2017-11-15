@@ -69,8 +69,6 @@ def async_setup(hass, config):
     logging.getLogger().addHandler(handler)
 
     hass.http.register_view(AllErrorsView(handler))
-    yield from hass.components.frontend.async_register_built_in_panel(
-        'system-log', 'system_log', 'mdi:monitor')
 
     @asyncio.coroutine
     def async_service_handler(service):
