@@ -5,6 +5,7 @@ import asyncio
 from homeassistant import const
 from homeassistant.components import climate
 from homeassistant.components import google_assistant as ga
+from homeassistant.util.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
 
 DETERMINE_SERVICE_TESTS = [{  # Test light brightness
     'entity_id': 'light.test',
@@ -82,6 +83,15 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         climate.SERVICE_SET_TEMPERATURE,
         {'entity_id': 'climate.living_room', 'temperature': 24.5}
     ),
+}, {  # Test climate temperature Fahrenheit
+    'entity_id': 'climate.living_room',
+    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
+    'params': {'thermostatTemperatureSetpoint': 24.5},
+    'units': IMPERIAL_SYSTEM,
+    'expected': (
+        climate.SERVICE_SET_TEMPERATURE,
+        {'entity_id': 'climate.living_room', 'temperature': 76.1}
+    ),
 }, {  # Test climate temperature range
     'entity_id': 'climate.living_room',
     'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
@@ -93,6 +103,19 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         climate.SERVICE_SET_TEMPERATURE,
         {'entity_id': 'climate.living_room',
          'target_temp_high': 24.5, 'target_temp_low': 20.5}
+    ),
+}, {  # Test climate temperature range Fahrenheit
+    'entity_id': 'climate.living_room',
+    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
+    'params': {
+        'thermostatTemperatureSetpointHigh': 24.5,
+        'thermostatTemperatureSetpointLow': 20.5,
+    },
+    'units': IMPERIAL_SYSTEM,
+    'expected': (
+        climate.SERVICE_SET_TEMPERATURE,
+        {'entity_id': 'climate.living_room',
+         'target_temp_high': 76.1, 'target_temp_low': 68.9}
     ),
 }, {  # Test climate operation mode
     'entity_id': 'climate.living_room',
@@ -122,5 +145,6 @@ def test_determine_service():
         result = ga.smart_home.determine_service(
             test['entity_id'],
             test['command'],
-            test['params'])
+            test['params'],
+            test.get('units', METRIC_SYSTEM))
         assert result == test['expected']
