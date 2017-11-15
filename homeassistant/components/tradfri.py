@@ -6,6 +6,7 @@ https://home-assistant.io/components/ikea_tradfri/
 """
 import asyncio
 import logging
+from uuid import uuid4
 
 import voluptuous as vol
 
@@ -58,7 +59,6 @@ def request_configuration(hass, config, host):
         try:
             from pytradfri.api.aiocoap_api import APIFactory
             from pytradfri import RequestError
-            from uuid import uuid4
         except ImportError:
             _LOGGER.exception("Looks like something isn't installed!")
             return
@@ -91,7 +91,7 @@ def request_configuration(hass, config, host):
             conf[host] = {'identity': identity,
                           'key': key}
             save_json(hass.config.path(CONFIG_FILE), conf)
-            hass.add_job(configurator.request_done, instance)
+            configurator.request_done(instance)
 
         hass.async_add_job(success)
 
