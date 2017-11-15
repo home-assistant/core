@@ -100,7 +100,6 @@ class GoogleCalendar(Calendar):
         items = result.get('items', [])
 
         self._events = [GoogleCalendarEvent(item) for item in items]
-
         self._events.sort(key=lambda event: event.start)
 
 
@@ -111,7 +110,14 @@ class GoogleCalendarEvent(CalendarEvent):
         """Initialize google event."""
         self._start = self.convertDatetime(event['start'])
         self._end = self.convertDatetime(event['end'])
-        self._text = event['summary']
+        self._message = event['summary']
+
+        self._location = event.get('location', None)
+
+    @property
+    def location(self):
+        """Return location of the event."""
+        return self._location
 
     def convertDatetime(self, dateObject):
         """Convert dateTime returned from Google."""

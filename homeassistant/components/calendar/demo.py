@@ -57,14 +57,14 @@ class DemoCalendar(Calendar):
                                           hours=randint(1, 6),
                                           minutes=randrange(0, 60, 15))
 
-            event = CalendarEvent(start, end, choice(events))
+            event = DemoCalendarEvent(start, end, choice(events))
             self._events.append(event)
 
         # Ensure always 1 event is active during creation of calendar 1
         if name == 'DemoCalendar1':
-            event = CalendarEvent(dt.now() - dt.dt.timedelta(hours=1),
-                                  dt.now() + dt.dt.timedelta(hours=2),
-                                  'Programming')
+            event = DemoCalendarEvent(dt.now() - dt.dt.timedelta(hours=1),
+                                      dt.now() + dt.dt.timedelta(hours=2),
+                                      'Programming')
             self._events.append(event)
 
         self._events.sort(key=lambda event: event.start)
@@ -88,3 +88,13 @@ class DemoCalendar(Calendar):
     def async_update(self):
         """Update calendar events."""
         _LOGGER.debug('Updating demo calendar')
+
+
+class DemoCalendarEvent(CalendarEvent):
+    """class for creating demo events."""
+
+    def __init__(self, start, end, message):
+        """Initialize google event."""
+        self._start = start
+        self._end = end
+        self._message = message

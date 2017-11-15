@@ -11,6 +11,7 @@ from datetime import timedelta
 from aiohttp.web_exceptions import HTTPNotFound
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import dt
@@ -78,12 +79,6 @@ class Calendar(Entity):
 class CalendarEvent(object):
     """Representation of an event."""
 
-    def __init__(self, start, end, text):
-        """Initialize the event."""
-        self._start = start
-        self._end = end
-        self._text = text
-
     @property
     def start(self):
         """Return start time set on the event."""
@@ -95,9 +90,14 @@ class CalendarEvent(object):
         return self._end
 
     @property
-    def text(self):
+    def message(self):
         """Return text set on the event."""
-        return self._text
+        return self._message
+
+    @property
+    def location(self):
+        """Return location of the event."""
+        return None
 
     def is_active(self):
         """Check whether event is currently active."""
@@ -116,13 +116,16 @@ class CalendarEvent(object):
 
     def as_dict(self):
         """Return response in a dict."""
-        response = {
-            'start': self._start,
-            'end': self._end,
-            'text': self._text
+        event = {
+            'start': self.start,
+            'end': self.end,
+            'message': self.message
         }
 
-        return response
+        if self.location is not None:
+            event.location = self.location
+
+        return event
 
 
 class CalendarView(HomeAssistantView):
