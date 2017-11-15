@@ -20,10 +20,12 @@ TOPIC_MATCHER = re.compile(
     r'(?P<prefix_topic>\w+)/(?P<component>\w+)/'
     r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
 
-SUPPORTED_COMPONENTS = ['binary_sensor', 'fan', 'light', 'sensor', 'switch']
+SUPPORTED_COMPONENTS = [
+    'binary_sensor', 'cover', 'fan', 'light', 'sensor', 'switch']
 
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
+    'cover': ['mqtt'],
     'fan': ['mqtt'],
     'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
     'sensor': ['mqtt'],
