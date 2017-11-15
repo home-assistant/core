@@ -41,7 +41,9 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup(hass, config):
+    """Setup insteon hub"""
     from insteonlocal.Hub import Hub
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
@@ -56,15 +58,20 @@ def setup(hass, config):
         if not os.path.exists(hass.config.path(INSTEON_CACHE)):
             os.makedirs(hass.config.path(INSTEON_CACHE))
 
-        insteonhub = Hub(host, username, password, port, timeout, _LOGGER, hass.config.path(INSTEON_CACHE))
+        insteonhub = Hub(host, username, password, port, timeout, _LOGGER,
+                         hass.config.path(INSTEON_CACHE))
 
         # Check for successful connection
         insteonhub.get_buffer_status()
     except requests.exceptions.ConnectTimeout:
-        _LOGGER.error("Error on insteon_local. Could not connect. Check config", exc_info=True)
+        _LOGGER.error(
+            "Error on insteon_local. Could not connect. Check config",
+            exc_info=True)
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("Error on insteon_local. Could not connect. Check config", exc_info=True)
+        _LOGGER.error(
+            "Error on insteon_local. Could not connect. Check config",
+            exc_info=True)
         return False
     except requests.exceptions.RequestException:
         if insteonhub.http_code == 401:
@@ -82,4 +89,3 @@ def setup(hass, config):
         load_platform(hass, insteon_platform, DOMAIN, {'linked': linked})
 
     return True
-
