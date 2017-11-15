@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup insteon hub"""
+    """Setup insteon hub."""
     from insteonlocal.Hub import Hub
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
