@@ -231,10 +231,21 @@ class ISYDevice(Entity):
         self._change_handler = self._node.status.subscribe(
             'changed', self.on_update)
 
+        if hasattr(self._node, 'controlEvents'):
+            self._control_handler = self._node.controlEvents.subscribe(
+                self.on_control)
+
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
         self.schedule_update_ha_state()
+
+    def on_control(self, event: object) -> None:
+        """Handle a control event from the ISY994 Node."""
+        self.hass.bus.fire('isy994_control', {
+            'entity_id': self.entity_id,
+            'control': event
+        })
 
     @property
     def domain(self) -> str:
