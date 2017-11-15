@@ -44,10 +44,7 @@ class KylinMock():
 
     def readframe(self):
         """Return sample values."""
-        print("======> %s" % self.sample_data)
-        data = self.sample_data.decode('ascii')
-        print("JSON ::::::::::: %s" % data)
-        return json.loads(data)
+        return json.loads(self.sample_data.decode('ascii'))
 
 
 class TestTeleinfoSensor(unittest.TestCase):
@@ -79,7 +76,6 @@ class TestTeleinfoSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.teleinfo')
         self.assertEqual("Teleinfo", state.name)
         self._check_teleinfo_values(state)
-
 
     @patch('kylin.Kylin', new=KylinMock)
     def test_teleinfo_one_device(self):
