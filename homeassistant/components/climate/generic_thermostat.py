@@ -117,8 +117,6 @@ class GenericThermostat(ClimateDevice):
         if sensor_state:
             self._async_update_temp(sensor_state)
 
-        _LOGGER.debug('init sensor_state: %s', sensor_state)
-
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -168,7 +166,7 @@ class GenericThermostat(ClimateDevice):
         elif operation_mode == STATE_OFF:
             self._enabled = False
             if self._is_device_active:
-                self._heater_off()
+                self._heater_turn_off()
         else:
             _LOGGER.error('Unrecognized operation mode: %s', operation_mode)
             return
@@ -226,9 +224,9 @@ class GenericThermostat(ClimateDevice):
     def _async_keep_alive(self, time):
         """Call at constant intervals for keep-alive purposes."""
         if self.current_operation in [STATE_COOL, STATE_HEAT]:
-            self._heater_on()
+            self._heater_turn_on()
         else:
-            self._heater_off()
+            self._heater_turn_off()
 
     @callback
     def _async_update_temp(self, state):
@@ -274,48 +272,42 @@ class GenericThermostat(ClimateDevice):
                     self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning off AC %s', self.heater_entity_id)
-                    self._heater_off()
+                    self._heater_turn_off()
             else:
                 too_hot = self._cur_temp - self._target_temp >= \
                     self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning on AC %s', self.heater_entity_id)
-                    self._heater_on()
+                    self._heater_turn_on()
         else:
             is_heating = self._is_device_active
-            _LOGGER.debug('Heating: %s, Cur temp: %s, Target temp: %s',
-                          is_heating, self._cur_temp, self._target_temp)
-            _LOGGER.debug('Diff: %s (target - cur), Tolerance Hot / Cold:'
-                          ' %s / %s',
-                          self._target_temp - self._cur_temp,
-                          self._hot_tolerance, self._cold_tolerance)
             if is_heating:
                 too_hot = self._cur_temp - self._target_temp >= \
                     self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning off heater %s',
                                  self.heater_entity_id)
-                    self._heater_off()
+                    self._heater_turn_off()
             else:
                 too_cold = self._target_temp - self._cur_temp >= \
                     self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning on heater %s', self.heater_entity_id)
-                    self._heater_on()
+                    self._heater_turn_on()
 
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
 
-    def _heater_on(self):
-        """Turn toggable device on."""
+    def _heater_turn_on(self):
+        """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         self.hass.async_add_job(
             self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_ON, data))
 
-    def _heater_off(self):
-        """Turn toggable device off."""
+    def _heater_turn_off(self):
+        """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         self.hass.async_add_job(
             self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_OFF, data))
