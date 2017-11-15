@@ -81,7 +81,7 @@ class GoogleAssistantView(HomeAssistantView):
             if not self.is_entity_exposed(entity):
                 continue
 
-            device = entity_to_device(entity)
+            device = entity_to_device(entity, hass.config.units)
             if device is None:
                 _LOGGER.warning("No mapping for %s domain", entity.domain)
                 continue
@@ -89,9 +89,9 @@ class GoogleAssistantView(HomeAssistantView):
             devices.append(device)
 
         return self.json(
-            make_actions_response(request_id,
-                                  {'agentUserId': self.agent_user_id,
-                                   'devices': devices}))
+            _make_actions_response(request_id,
+                                   {'agentUserId': self.agent_user_id,
+                                    'devices': devices}))
 
     @asyncio.coroutine
     def handle_query(self,
@@ -112,10 +112,10 @@ class GoogleAssistantView(HomeAssistantView):
                 # If we can't find a state, the device is offline
                 devices[devid] = {'online': False}
 
-            devices[devid] = query_device(state)
+            devices[devid] = query_device(state, hass.config.units)
 
         return self.json(
-            make_actions_response(request_id, {'devices': devices}))
+            _make_actions_response(request_id, {'devices': devices}))
 
     @asyncio.coroutine
     def handle_execute(self,
@@ -130,7 +130,8 @@ class GoogleAssistantView(HomeAssistantView):
             for eid in ent_ids:
                 domain = eid.split('.')[0]
                 (service, service_data) = determine_service(
-                    eid, execution.get('command'), execution.get('params'))
+                    eid, execution.get('command'), execution.get('params'),
+                    hass.config.units)
                 success = yield from hass.services.async_call(
                     domain, service, service_data, blocking=True)
                 result = {"ids": [eid], "states": {}}
@@ -141,7 +142,7 @@ class GoogleAssistantView(HomeAssistantView):
                 commands.append(result)
 
         return self.json(
-            make_actions_response(request_id, {'commands': commands}))
+            _make_actions_response(request_id, {'commands': commands}))
 
     @asyncio.coroutine
     def post(self, request: Request) -> Response:
@@ -181,6 +182,5 @@ class GoogleAssistantView(HomeAssistantView):
             "invalid intent", status_code=HTTP_BAD_REQUEST)
 
 
-def make_actions_response(request_id: str, payload: dict) -> dict:
-    """Helper to simplify format for response."""
+def _make_actions_response(request_id: str, payload: dict) -> dict:
     return {'requestId': request_id, 'payload': payload}
