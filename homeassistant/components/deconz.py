@@ -123,6 +123,7 @@ class DeconzEvent(object):
     Stateless sensors such as remotes are expected to generate an event
     instead of a sensor entity in hass.
     """
+
     def __init__(self, hass, device):
         """Register callback that will be used for signals."""
         self._hass = hass
