@@ -47,11 +47,11 @@ class ZWaveLogView(HomeAssistantView):
         with open(logfilepath, 'r') as logfile:
             data = logfile.read()
 
-        loglines = data.splitlines()
+        loglines = data.splitlines(True)
         if lines == 0:
-            return self.json(loglines)
+            return self.json(''.join(loglines))
 
-        return self.json(loglines[-lines:])
+        return self.json(''.join(loglines[-lines:]))
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
