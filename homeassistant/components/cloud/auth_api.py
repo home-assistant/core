@@ -113,7 +113,6 @@ def login(cloud, email, password):
     cloud.id_token = cognito.id_token
     cloud.access_token = cognito.access_token
     cloud.refresh_token = cognito.refresh_token
-    cloud.email = email
     cloud.write_user_info()
 
 
