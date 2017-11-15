@@ -82,8 +82,6 @@ def async_setup(hass, config):
         # pylint: disable=not-an-iterable
         yield from dominos.show_menu(hass)
         hass.http.register_view(DominosProductListView)
-        yield from hass.components.frontend.async_register_built_in_panel(
-            'dominos', 'dominos', 'mdi:pizza')
 
     for order_info in config[DOMAIN].get(ATTR_ORDERS):
         order = DominosOrder(order_info, dominos)
