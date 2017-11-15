@@ -48,6 +48,8 @@ class SoCoMock():
         """Initialize soco object."""
         self.ip_address = ip
         self.is_visible = True
+        self.volume = 50
+        self.mute = False
         self.avTransport = AvTransportMock()
 
     def get_sonos_favorites(self):
@@ -62,6 +64,7 @@ class SoCoMock():
                 'zone_icon': 'x-rincon-roomicon:kitchen',
                 'mac_address': 'B8:E9:37:BO:OC:BA',
                 'zone_name': 'Kitchen',
+                'model_name': 'Sonos PLAY:1',
                 'hardware_version': '1.8.1.2-1'}
 
     def get_current_transport_info(self):
