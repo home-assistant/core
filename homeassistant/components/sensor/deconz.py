@@ -102,9 +102,8 @@ class DeconzBattery(Entity):
         """Register dispatcher callback for update of battery state."""
         self._device = device
         self._battery = device.battery
-        self._name = self._device.name + ' battery'
+        self._name = self._device.name + ' battery level'
         self._device_class = 'battery'
-        self._icon = 'mdi:battery'
         self._unit_of_measurement = "%"
         self._device.register_callback(self._update_callback)
 
