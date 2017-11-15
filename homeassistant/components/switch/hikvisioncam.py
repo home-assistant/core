@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hikvision==1.2']
+REQUIREMENTS = ['hikvision==0.4']
 
 _LOGGING = logging.getLogger(__name__)
 
