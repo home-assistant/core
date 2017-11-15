@@ -80,6 +80,9 @@ home-assistant-frontend==20171115.0
 # homeassistant.components.sensor.influxdb
 influxdb==4.1.1
 
+# homeassistant.sensor.teleinfo
+kylin==0.3.0
+
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
 
