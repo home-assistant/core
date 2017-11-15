@@ -23,7 +23,6 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
 
 DOMAIN = "light"
@@ -431,9 +430,3 @@ class Light(ToggleEntity):
     def supported_features(self):
         """Flag supported features."""
         return 0
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Component added, restore_state using platforms."""
-        if hasattr(self, 'async_restore_state'):
-            yield from async_restore_state(self, extract_info)
