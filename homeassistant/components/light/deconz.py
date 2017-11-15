@@ -104,9 +104,6 @@ class DeconzLight(Light):
         """Turn on light."""
         data = {'on': True}
 
-        if ATTR_BRIGHTNESS in kwargs:
-            data['bri'] = kwargs[ATTR_BRIGHTNESS]
-
         if ATTR_COLOR_TEMP in kwargs:
             data['ct'] = kwargs[ATTR_COLOR_TEMP]
 
@@ -115,6 +112,9 @@ class DeconzLight(Light):
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
             data['xy'] = xyb[0], xyb[1]
             data['bri'] = xyb[2]
+
+        if ATTR_BRIGHTNESS in kwargs:
+            data['bri'] = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_TRANSITION in kwargs:
             data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
