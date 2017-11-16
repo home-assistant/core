@@ -231,7 +231,8 @@ def test_auth_required_forward_request(hassio_client):
 
 
 @asyncio.coroutine
-def test_forward_request_no_auth_for_panel(hassio_client):
+@pytest.mark.parametrize('build_type', ['es5', 'latest'])
+def test_forward_request_no_auth_for_panel(hassio_client, build_type):
     """Test no auth needed for ."""
     response = MagicMock()
     response.read.return_value = mock_coro('data')
@@ -240,7 +241,8 @@ def test_forward_request_no_auth_for_panel(hassio_client):
                Mock(return_value=mock_coro(response))), \
             patch('homeassistant.components.hassio._create_response') as mresp:
         mresp.return_value = 'response'
-        resp = yield from hassio_client.get('/api/hassio/panel')
+        resp = yield from hassio_client.get(
+            '/api/hassio/panel_{}'.format(build_type))
 
     # Check we got right response
     assert resp.status == 200

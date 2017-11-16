@@ -3,9 +3,10 @@ import asyncio
 from unittest.mock import patch, MagicMock
 
 import pytest
+from jose import jwt
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.cloud import DOMAIN, auth_api
+from homeassistant.components.cloud import DOMAIN, auth_api, iot
 
 from tests.common import mock_coro
 
@@ -23,7 +24,8 @@ def cloud_client(hass, test_client):
                 'relayer': 'relayer',
             }
         }))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    with patch('homeassistant.components.cloud.Cloud.write_user_info'):
+        yield hass.loop.run_until_complete(test_client(hass.http.app))
 
 
 @pytest.fixture
@@ -43,21 +45,35 @@ def test_account_view_no_account(cloud_client):
 @asyncio.coroutine
 def test_account_view(hass, cloud_client):
     """Test fetching account if no account available."""
-    hass.data[DOMAIN].email = 'hello@home-assistant.io'
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    hass.data[DOMAIN].iot.state = iot.STATE_CONNECTED
     req = yield from cloud_client.get('/api/cloud/account')
     assert req.status == 200
     result = yield from req.json()
-    assert result == {'email': 'hello@home-assistant.io'}
+    assert result == {
+        'email': 'hello@home-assistant.io',
+        'sub_exp': '2018-01-03',
+        'cloud': iot.STATE_CONNECTED,
+    }
 
 
 @asyncio.coroutine
-def test_login_view(hass, cloud_client):
+def test_login_view(hass, cloud_client, mock_cognito):
     """Test logging in."""
-    hass.data[DOMAIN].email = 'hello@home-assistant.io'
+    mock_cognito.id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    mock_cognito.access_token = 'access_token'
+    mock_cognito.refresh_token = 'refresh_token'
 
-    with patch('homeassistant.components.cloud.iot.CloudIoT.connect'), \
-            patch('homeassistant.components.cloud.'
-                  'auth_api.login') as mock_login:
+    with patch('homeassistant.components.cloud.iot.CloudIoT.'
+               'connect') as mock_connect, \
+            patch('homeassistant.components.cloud.auth_api._authenticate',
+                  return_value=mock_cognito) as mock_auth:
         req = yield from cloud_client.post('/api/cloud/login', json={
             'email': 'my_username',
             'password': 'my_password'
@@ -65,9 +81,13 @@ def test_login_view(hass, cloud_client):
 
     assert req.status == 200
     result = yield from req.json()
-    assert result == {'email': 'hello@home-assistant.io'}
-    assert len(mock_login.mock_calls) == 1
-    cloud, result_user, result_pass = mock_login.mock_calls[0][1]
+    assert result['email'] == 'hello@home-assistant.io'
+    assert result['sub_exp'] == '2018-01-03'
+
+    assert len(mock_connect.mock_calls) == 1
+
+    assert len(mock_auth.mock_calls) == 1
+    cloud, result_user, result_pass = mock_auth.mock_calls[0][1]
     assert result_user == 'my_username'
     assert result_pass == 'my_password'
 

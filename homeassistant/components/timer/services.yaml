@@ -1,3 +1,5 @@
+# Describes the format for available timer services
+
 start:
   description: Start a timer.
 

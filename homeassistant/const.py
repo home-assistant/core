@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 57
+MINOR_VERSION = 58
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -126,6 +126,7 @@ CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
+CONF_STATE_TEMPLATE = 'state_template'
 CONF_STRUCTURE = 'structure'
 CONF_SWITCHES = 'switches'
 CONF_TEMPERATURE_UNIT = 'temperature_unit'
@@ -398,24 +399,7 @@ HTTP_BASIC_AUTHENTICATION = 'basic'
 HTTP_DIGEST_AUTHENTICATION = 'digest'
 
 HTTP_HEADER_HA_AUTH = 'X-HA-access'
-HTTP_HEADER_ACCEPT_ENCODING = 'Accept-Encoding'
-HTTP_HEADER_AUTH = 'Authorization'
-HTTP_HEADER_USER_AGENT = 'User-Agent'
-HTTP_HEADER_CONTENT_TYPE = 'Content-type'
-HTTP_HEADER_CONTENT_ENCODING = 'Content-Encoding'
-HTTP_HEADER_VARY = 'Vary'
-HTTP_HEADER_CONTENT_LENGTH = 'Content-Length'
-HTTP_HEADER_CACHE_CONTROL = 'Cache-Control'
-HTTP_HEADER_EXPIRES = 'Expires'
-HTTP_HEADER_ORIGIN = 'Origin'
 HTTP_HEADER_X_REQUESTED_WITH = 'X-Requested-With'
-HTTP_HEADER_ACCEPT = 'Accept'
-HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = 'Access-Control-Allow-Origin'
-HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS = 'Access-Control-Allow-Headers'
-
-ALLOWED_CORS_HEADERS = [HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT,
-                        HTTP_HEADER_X_REQUESTED_WITH, HTTP_HEADER_CONTENT_TYPE,
-                        HTTP_HEADER_HA_AUTH]
 
 CONTENT_TYPE_JSON = 'application/json'
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
@@ -434,3 +418,8 @@ SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+# The degree of precision for platforms
+PRECISION_WHOLE = 1
+PRECISION_HALVES = 0.5
+PRECISION_TENTHS = 0.1

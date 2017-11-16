@@ -8,6 +8,7 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
@@ -108,6 +109,9 @@ class TradfriGroup(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
+                kwargs[ATTR_BRIGHTNESS] = 254
+
             self.hass.async_add_job(self._api(
                 self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys)))
         else:
@@ -178,14 +182,12 @@ class TradfriLight(Light):
     def device_state_attributes(self):
         """Return the devices' state attributes."""
         info = self._light.device_info
-        attrs = {
-            'manufacturer': info.manufacturer,
-            'model_number': info.model_number,
-            'serial': info.serial,
-            'firmware_version': info.firmware_version,
-            'power_source': info.power_source_str,
-            'battery_level': info.battery_level
-        }
+
+        attrs = {}
+
+        if info.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = info.battery_level
+
         return attrs
 
     @asyncio.coroutine
@@ -264,6 +266,9 @@ class TradfriLight(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
+                kwargs[ATTR_BRIGHTNESS] = 254
+
             self.hass.async_add_job(self._api(
                 self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
                                                **keys)))

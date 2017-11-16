@@ -79,8 +79,10 @@ class CloudLoginView(HomeAssistantView):
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             yield from hass.async_add_job(auth_api.login, cloud, data['email'],
                                           data['password'])
-            hass.async_add_job(cloud.iot.connect)
 
+        hass.async_add_job(cloud.iot.connect)
+        # Allow cloud to start connecting.
+        yield from asyncio.sleep(0, loop=hass.loop)
         return self.json(_account_data(cloud))
 
 
@@ -222,6 +224,10 @@ class CloudConfirmForgotPasswordView(HomeAssistantView):
 
 def _account_data(cloud):
     """Generate the auth data JSON response."""
+    claims = cloud.claims
+
     return {
-        'email': cloud.email
+        'email': claims['email'],
+        'sub_exp': claims.get('custom:sub-exp'),
+        'cloud': cloud.iot.state,
     }

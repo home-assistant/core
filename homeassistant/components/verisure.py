@@ -27,6 +27,7 @@ ATTR_DEVICE_SERIAL = 'device_serial'
 CONF_ALARM = 'alarm'
 CONF_CODE_DIGITS = 'code_digits'
 CONF_DOOR_WINDOW = 'door_window'
+CONF_GIID = 'giid'
 CONF_HYDROMETERS = 'hygrometers'
 CONF_LOCKS = 'locks'
 CONF_MOUSE = 'mouse'
@@ -47,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ALARM, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
         vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
+        vol.Optional(CONF_GIID): cv.string,
         vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
         vol.Optional(CONF_LOCKS, default=True): cv.boolean,
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
@@ -110,6 +112,8 @@ class VerisureHub(object):
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
 
+        self.giid = domain_config.get(CONF_GIID)
+
         import jsonpath
         self.jsonpath = jsonpath.jsonpath
 
@@ -120,6 +124,8 @@ class VerisureHub(object):
         except self._verisure.Error as ex:
             _LOGGER.error('Could not log in to verisure, %s', ex)
             return False
+        if self.giid:
+            return self.set_giid()
         return True
 
     def logout(self):
@@ -128,6 +134,15 @@ class VerisureHub(object):
             self.session.logout()
         except self._verisure.Error as ex:
             _LOGGER.error('Could not log out from verisure, %s', ex)
+            return False
+        return True
+
+    def set_giid(self):
+        """Set installation GIID."""
+        try:
+            self.session.set_giid(self.giid)
+        except self._verisure.Error as ex:
+            _LOGGER.error('Could not set installation GIID, %s', ex)
             return False
         return True
 

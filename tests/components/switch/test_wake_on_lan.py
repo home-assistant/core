@@ -6,7 +6,7 @@ from homeassistant.setup import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_service
 
 
 TEST_STATE = None
@@ -141,6 +141,7 @@ class TestWOLSwitch(unittest.TestCase):
                 },
             }
         }))
+        calls = mock_service(self.hass, 'shell_command', 'turn_off_TARGET')
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_OFF, state.state)
@@ -152,6 +153,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_ON, state.state)
+        assert len(calls) == 0
 
         TEST_STATE = False
 
@@ -160,6 +162,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_OFF, state.state)
+        assert len(calls) == 1
 
     @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
