@@ -759,13 +759,16 @@ def get_gravatar_for_email(email: str):
 
 
 def get_googlepluspthumb_from_email(email: str):
-    """Return a thumbnail image of a user's google plus profile image"""
+    """Return a thumbnail image of a user's google plus profile image."""
     import urllib.request
     import urllib.parse
     from re import search
 
+    string_email = ''
+    if email is not None:
+        string_email = email
     url = r'https://picasaweb.google.com/data/entry/api/user/'
-    url += urllib.parse.quote(email) + '?alt=json'
+    url += urllib.parse.quote(string_email) + r'?alt=json'
 
     print(url)
     try:
