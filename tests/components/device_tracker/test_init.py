@@ -203,7 +203,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         googleplus_url_pattern = (r'https?\:\/\/[^\.\"]*?'
                                   r'\.googleusercontent\.com\/[^\.\"]*?\.jpg')
         self.assertIsNotNone(match(googleplus_url_pattern,
-                                      device.config_picture))
+                                   device.config_picture))
 
         """Test that googleplus returns empty
         when a non-google or invalid account is used.
@@ -225,7 +225,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         googleplus_url_pattern = (r'https?\:\/\/[^\.\"]*?'
                                   r'\.googleusercontent\.com\/[^\.\"]*?\.jpg')
         self.assertIsNotNone(match(googleplus_url_pattern,
-                                      device.config_picture))
+                                   device.config_picture))
 
         """Test the that picture overrides googleplus when a
         non-google or invalid account is used."""
