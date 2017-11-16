@@ -9,18 +9,22 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.rainbird import (
-    DATA_RAINBIRD)
-#from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['rainbird']
-
+DATA_RAINBIRD = 'rainbird'
 _LOGGER = logging.getLogger(__name__)
 
+# sensor_type [ description, unit, icon ]
+SENSOR_TYPES = {
+    'rainsensor': ['Rainsensor', None, 'water']
+}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -45,6 +49,9 @@ class RainBirdSensor(Entity):
         """Initialize rain bird sensor."""
         self._sensor_type = sensor_type
         self._controller = controller
+        self._name = SENSOR_TYPES.get(self._sensor_type)[0]
+        self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[2])
+        self._state = None
 
     @property
     def state(self):
@@ -56,6 +63,16 @@ class RainBirdSensor(Entity):
         _LOGGER.debug("Updating RainBird sensor: %s", self._name)
         if self._sensor_type == 'rainsensor':
             self._state = self._controller.currentRainSensorState()
+
+    @property
+    def name(self):
+        """Return the name of this camera."""
+        return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the units of measurement."""
+        return SENSOR_TYPES.get(self._sensor_type)[1]
 
     @property
     def icon(self):
