@@ -208,6 +208,19 @@ hass.states.set('hello.ab_list', '{}'.format(ab_list))
     # No errors logged = good
     assert caplog.text == ''
 
+@asyncio.coroutine
+def test_execute_sorted(hass, caplog):
+    """Test sorted() function."""
+    caplog.set_level(logging.ERROR)
+    source = """
+a  = sorted([3,1,2])
+assert(a == [1,2,3])
+"""
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    # No errors logged = good
+    assert caplog.text == ''
 
 @asyncio.coroutine
 def test_exposed_modules(hass, caplog):
