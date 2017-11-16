@@ -4,10 +4,7 @@ Support for Alexa skill service end point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 
-Notes:
-[1] - https://developer.amazon.com/docs/custom-skills/define-synonyms-and-ids-for-slot-type-values-entity-resolution.html#intentrequest-changes
-
-""" # noqa
+"""
 import asyncio
 import enum
 import logging
@@ -131,7 +128,8 @@ class AlexaIntentsView(http.HomeAssistantView):
 def resolve_slot_synonyms(key, request):
     """Check slot request for synonym resolutions."""
     # Default to the spoken slot value if more than one or none are found. For
-    # reference to the request object structure, see the Alexa docs [1]
+    # reference to the request object structure, see the Alexa docs:
+    # https://tinyurl.com/ybvm7jhs
     resolved_value = request['value']
 
     if ('resolutions' in request and
@@ -250,5 +248,5 @@ class AlexaResponse(object):
         return {
             'version': '1.0',
             'sessionAttributes': self.session_attributes,
-            'response': response,
+            'response': response
         }
