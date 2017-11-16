@@ -286,10 +286,11 @@ class SpeechManager(object):
         options = options or provider.default_options
         if options is not None:
             invalid_opts = [opt_name for opt_name in options.keys()
-                            if opt_name not in provider.supported_options]
+                            if opt_name not in (provider.supported_options or
+                                                [])]
             if invalid_opts:
                 raise HomeAssistantError(
-                    "Invalid options found: %s", invalid_opts)
+                    "Invalid options found: {}".format(invalid_opts))
             options_key = ctypes.c_size_t(hash(frozenset(options))).value
         else:
             options_key = '-'
