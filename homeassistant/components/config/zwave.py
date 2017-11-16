@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from collections import deque
+from aiohttp.web import Response
 import homeassistant.core as ha
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.components.http import HomeAssistantView
@@ -50,9 +51,9 @@ class ZWaveLogView(HomeAssistantView):
             if lines == 0:
                 loglines = list(data)
             else:
-                loglines = list(deque(data, lines))
+                loglines = deque(data, lines)
 
-        return self.json('\n'.join(loglines))
+        return Response(text='\n'.join(loglines))
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
