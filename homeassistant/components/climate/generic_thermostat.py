@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.core import DOMAIN as ha_DOMAIN
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
     STATE_AUTO)
@@ -300,14 +300,16 @@ class GenericThermostat(ClimateDevice):
         """If the toggleable device is currently active."""
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
 
+    @callback
     def _heater_turn_on(self):
         """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         self.hass.async_add_job(
-            self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_ON, data))
+            self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_ON, data))
 
+    @callback
     def _heater_turn_off(self):
         """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         self.hass.async_add_job(
-            self.hass.services.async_call(ha_DOMAIN, SERVICE_TURN_OFF, data))
+            self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data))
