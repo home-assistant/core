@@ -1,9 +1,9 @@
 """The tests for the generic_thermostat."""
 import asyncio
 import datetime
-import pytz
 import unittest
 from unittest import mock
+import pytz
 
 import homeassistant.core as ha
 from homeassistant.core import callback
@@ -54,13 +54,16 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
                 'climate': config})
 
     def test_valid_conf(self):
-        """Test set up genreic_thermostat with valid config values."""
-        self.assertTrue(setup_component(self.hass, 'climate',
-                        {'climate': {
-                            'platform': 'generic_thermostat',
-                            'name': 'test',
-                            'heater': ENT_SWITCH,
-                            'target_sensor': ENT_SENSOR}}))
+        """Test set up generic_thermostat with valid config values."""
+        self.assertTrue(
+            setup_component(self.hass, 'climate',
+                            {'climate': {
+                                'platform': 'generic_thermostat',
+                                'name': 'test',
+                                'heater': ENT_SWITCH,
+                                'target_sensor': ENT_SENSOR
+                                }})
+        )
 
     def test_setup_with_sensor(self):
         """Test set up heat_control with sensor to trigger update at init."""
@@ -242,6 +245,31 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self._setup_sensor(25)
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
+
+    @mock.patch('logging.Logger.error')
+    def test_invalid_operating_mode(self, log_mock):
+        """Test error handling for invalid operation mode."""
+        climate.set_operation_mode(self.hass, 'invalid mode')
+        self.hass.block_till_done()
+        self.assertEqual(log_mock.call_count, 1)
+
+    def test_operating_mode_auto(self):
+        """Test change mode from OFF to AUTO.
+
+        Switch turns on when temp below setpoint and mode changes.
+        """
+        climate.set_operation_mode(self.hass, STATE_OFF)
+        climate.set_temperature(self.hass, 30)
+        self._setup_sensor(25)
+        self.hass.block_till_done()
+        self._setup_switch(False)
+        climate.set_operation_mode(self.hass, climate.STATE_AUTO)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
         """Setup the test sensor."""
