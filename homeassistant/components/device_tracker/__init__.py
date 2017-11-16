@@ -76,6 +76,7 @@ ATTR_LOCATION_NAME = 'location_name'
 ATTR_MAC = 'mac'
 ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
+ATTR_VENDOR = 'vendor'
 
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
@@ -285,11 +286,6 @@ class DeviceTracker(object):
         if device.track:
             yield from device.async_update_ha_state()
 
-        self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
-            ATTR_ENTITY_ID: device.entity_id,
-            ATTR_HOST_NAME: device.host_name,
-        })
-
         # During init, we ignore the group
         if self.group and self.track_new:
             self.group.async_set_group(
@@ -298,6 +294,13 @@ class DeviceTracker(object):
 
         # lookup mac vendor string to be stored in config
         yield from device.set_vendor_for_mac()
+
+        self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
+            ATTR_ENTITY_ID: device.entity_id,
+            ATTR_HOST_NAME: device.host_name,
+            ATTR_MAC: device.mac,
+            ATTR_VENDOR: device.vendor,
+        })
 
         # update known_devices.yaml
         self.hass.async_add_job(
