@@ -760,7 +760,7 @@ def get_googlepluspthumb_from_email(email: str):
     """Return a thumbnail image of a user's google plus profile image"""
     import urllib.request
     import urllib.parse
-    import re
+    from re import search
 
     url = r'https://picasaweb.google.com/data/entry/api/user/'
     url += urllib.parse.quote(email) + '?alt=json'
@@ -773,7 +773,7 @@ def get_googlepluspthumb_from_email(email: str):
         return None
 
     thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
-    thumbnail_url = re.search(thumbnail_pattern, jsontext).group(1)
+    thumbnail_url = search(thumbnail_pattern, jsontext).group(1)
     if thumbnail_url == '':
         return None
     return thumbnail_url

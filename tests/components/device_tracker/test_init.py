@@ -195,14 +195,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_googleplus(self):
         """Test the googleplus thumbnail generation."""
-        import re
+        from re import match
         dev_id = 'test'
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
             'AB:CD:EF:GH:IJ', 'Test name', googleplus='john@gmail.com')
         googleplus_url_pattern = (r'https?\:\/\/[^\.\"]*?'
                                   r'\.googleusercontent\.com\/[^\.\"]*?\.jpg')
-        self.assertIsNotNone(re.match(googleplus_url_pattern,
+        self.assertIsNotNone(match(googleplus_url_pattern,
                                       device.config_picture))
 
         """Test that googleplus returns empty
@@ -215,7 +215,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_googleplus_and_picture(self):
         """Test the that GooglePlus overrides picture."""
-        import re
+        from re import match
 
         dev_id = 'test'
         device = device_tracker.Device(
@@ -224,7 +224,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             googleplus='john@gmail.com')
         googleplus_url_pattern = (r'https?\:\/\/[^\.\"]*?'
                                   r'\.googleusercontent\.com\/[^\.\"]*?\.jpg')
-        self.assertIsNotNone(re.match(googleplus_url_pattern,
+        self.assertIsNotNone(match(googleplus_url_pattern,
                                       device.config_picture))
 
         """Test the that picture overrides googleplus when a
