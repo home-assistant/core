@@ -11,7 +11,7 @@ from datetime import timedelta
 from aiohttp.web_exceptions import HTTPNotFound
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import dt
@@ -82,17 +82,17 @@ class CalendarEvent(object):
     @property
     def start(self):
         """Return start time set on the event."""
-        return self._start
+        return None
 
     @property
     def end(self):
         """Return end time set on the event."""
-        return self._end
+        return None
 
     @property
     def message(self):
         """Return text set on the event."""
-        return self._message
+        return None
 
     @property
     def location(self):
@@ -101,15 +101,15 @@ class CalendarEvent(object):
 
     def is_active(self):
         """Check whether event is currently active."""
-        if self._start is None:
+        if self.start is None:
             return False
 
-        if self._end is None:
+        if self.end is None:
             return False
 
         now = dt.now()
 
-        if self._start <= now and self._end > now:
+        if self.start <= now and self.end > now:
             return True
 
         return False
@@ -137,7 +137,7 @@ class CalendarView(HomeAssistantView):
 
     def get_calendar(self, platform):
         """Get calendar by name."""
-        for key, calendar in self._component.entities.items():
+        for calendar in self._component.entities.values():
             if calendar.name == platform:
                 return calendar
         return None
@@ -152,10 +152,11 @@ class CalendarPlatformsView(CalendarView):
     @asyncio.coroutine
     def get(self, request):
         """Get all calendars."""
-        for key, value in self._component.entities.items():
-            _LOGGER.info('Entity: %s', value.name)
+        for calendar in self._component.entities.values():
+            _LOGGER.debug('Entity: %s', calendar.name)
 
-        return self.json([v.name for k, v in self._component.entities.items()])
+        return self.json([calendar.name for calendar in
+                          self._component.entities.values()])
 
 
 class CalendarEventView(CalendarView):

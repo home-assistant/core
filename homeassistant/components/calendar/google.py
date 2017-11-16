@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
 
-    add_devices([GoogleCalendar(hass, calendar_service,
+    add_devices([GoogleCalendar(calendar_service,
                                 data, disc_info[CONF_CAL_ID])
                  for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
 class GoogleCalendar(Calendar):
     """Entity for Google Calendar events."""
 
-    def __init__(self, hass, calendar_service, data, calendar_id):
+    def __init__(self, calendar_service, data, calendar_id):
         """Initialze Google Calendar entity."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
@@ -112,7 +112,7 @@ class GoogleCalendarEvent(CalendarEvent):
         self._end = self.convertDatetime(event['end'])
         self._message = event['summary']
 
-        self._location = event.get('location', None)
+        self._location = event.get('location')
 
     @property
     def location(self):
@@ -125,3 +125,18 @@ class GoogleCalendarEvent(CalendarEvent):
         if ":" == dateString[-3:-2]:
             dateString = dateString[:-3]+dateString[-2:]
         return datetime.strptime(dateString, '%Y-%m-%dT%H:%M:%S%z')
+
+    @property
+    def start(self):
+        """Return start time set on the event."""
+        return self._start
+
+    @property
+    def end(self):
+        """Return end time set on the event."""
+        return self._end
+
+    @property
+    def message(self):
+        """Return text set on the event."""
+        return self._message

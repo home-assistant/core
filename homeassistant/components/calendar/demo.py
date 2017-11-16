@@ -24,15 +24,15 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo Calendar platform."""
     add_devices([
-        DemoCalendar(hass, 'DemoCalendar1'),
-        DemoCalendar(hass, 'DemoCalendar2')
+        DemoCalendar('DemoCalendar1'),
+        DemoCalendar('DemoCalendar2')
     ])
 
 
 class DemoCalendar(Calendar):
     """Demo Calendar entity."""
 
-    def __init__(self, hass, name):
+    def __init__(self, name):
         """Initialize Demo Calender entity."""
         self._events = []
         self._name = name
@@ -98,3 +98,18 @@ class DemoCalendarEvent(CalendarEvent):
         self._start = start
         self._end = end
         self._message = message
+
+    @property
+    def start(self):
+        """Return start time set on the event."""
+        return self._start
+
+    @property
+    def end(self):
+        """Return end time set on the event."""
+        return self._end
+
+    @property
+    def message(self):
+        """Return text set on the event."""
+        return self._message
