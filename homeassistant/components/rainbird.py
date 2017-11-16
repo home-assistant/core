@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
-REQUIREMENTS = ['pyrainbird==0.1.1']
+REQUIREMENTS = ['pyrainbird==0.1.2']
 
 DATA_RAINBIRD = 'rainbird'
 DOMAIN = 'rainbird'
