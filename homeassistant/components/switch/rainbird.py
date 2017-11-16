@@ -14,7 +14,6 @@ from homeassistant.const import (CONF_SWITCHES, CONF_ZONE,
                                  CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME,
                                  CONF_SCAN_INTERVAL)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 
 DEPENDENCIES = ['rainbird']
 
