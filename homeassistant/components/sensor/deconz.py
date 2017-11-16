@@ -8,7 +8,9 @@ import asyncio
 import logging
 
 from homeassistant.components.deconz import (
+    ATTR_FW_VERSION, ATTR_MANUFACTURER, ATTR_MODEL_ID, ATTR_UNIQUE_ID,
     CONF_TYPE_AS_EVENT, DECONZ_DATA, DOMAIN, DeconzEvent)
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -90,12 +92,11 @@ class DeconzSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {
-            'battery_level': self._sensor.battery,
-            'firmware_version': self._sensor.swversion,
-            'manufacturer': self._sensor.manufacturer,
-            'model_number': self._sensor.modelid,
-            'reachable': self._sensor.reachable,
-            'uniqueid': self._sensor.uniqueid,
+            ATTR_BATTERY_LEVEL: self._sensor.battery,
+            ATTR_FW_VERSION: self._sensor.swversion,
+            ATTR_MANUFACTURER: self._sensor.manufacturer,
+            ATTR_MODEL_ID: self._sensor.modelid,
+            ATTR_UNIQUE_ID: self._sensor.uniqueid,
         }
         return attr
 
@@ -148,3 +149,14 @@ class DeconzBattery(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        attr = {
+            ATTR_FW_VERSION: self._device.swversion,
+            ATTR_MANUFACTURER: self._device.manufacturer,
+            ATTR_MODEL_ID: self._device.modelid,
+            ATTR_UNIQUE_ID: self._device.uniqueid,
+        }
+        return attr

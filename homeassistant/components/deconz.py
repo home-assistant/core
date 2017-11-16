@@ -40,6 +40,11 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+ATTR_FW_VERSION = 'firmware_version'
+ATTR_MANUFACTURER = 'manufacturer'
+ATTR_MODEL_ID = 'model_number'
+ATTR_UNIQUE_ID = 'uniqueid'
+
 
 @asyncio.coroutine
 def async_setup(hass, config):

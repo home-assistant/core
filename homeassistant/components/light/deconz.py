@@ -7,7 +7,9 @@ https://home-assistant.io/components/light/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import (DECONZ_DATA, DOMAIN)
+from homeassistant.components.deconz import (
+    ATTR_FW_VERSION, ATTR_MANUFACTURER, ATTR_MODEL_ID, ATTR_UNIQUE_ID,
+    DECONZ_DATA, DOMAIN)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
     ATTR_RGB_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -164,10 +166,9 @@ class DeconzLight(Light):
         """Return the state attributes of the sensor."""
         if self._light.type != 'LightGroup':
             attr = {
-                'manufacturer': self._light.manufacturer,
-                'modelid': self._light.modelid,
-                'reachable': self._light.reachable,
-                'swversion': self._light.swversion,
-                'uniqueid': self._light.uniqueid,
+                ATTR_FW_VERSION: self._light.swversion,
+                ATTR_MANUFACTURER: self._light.manufacturer,
+                ATTR_MODEL_ID: self._light.modelid,
+                ATTR_UNIQUE_ID: self._light.uniqueid,
             }
             return attr
