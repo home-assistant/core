@@ -39,21 +39,27 @@ class ZWaveLogView(HomeAssistantView):
     url = r"/api/zwave/ozwlog/{lines:\d+}"
     name = "api:zwave:ozwlog"
 
-    @ha.callback
+# pylint: disable=no-self-use
+    @asyncio.coroutine
     def get(self, request, lines):
         """Retrieve the lines from ZWave log."""
         lines = int(lines)
         hass = request.app['hass']
-        logfilepath = hass.config.path(OZW_LOG_FILENAME)
 
+        response = yield from hass.async_add_job(self._get_log, hass, lines)
+
+        return Response(text='\n'.join(response))
+
+    def _get_log(self, hass, lines):
+        """Retrieve the logfile content."""
+        logfilepath = hass.config.path(OZW_LOG_FILENAME)
         with open(logfilepath, 'r') as logfile:
             data = (line.rstrip() for line in logfile)
             if lines == 0:
                 loglines = list(data)
             else:
                 loglines = deque(data, lines)
-
-        return Response(text='\n'.join(loglines))
+        return loglines
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
