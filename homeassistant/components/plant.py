@@ -252,10 +252,15 @@ class Plant(Entity):
         This only needs to be done once during startup.
         """
         from homeassistant.components.recorder.models import States
+        start_date = datetime.now() - timedelta(days=self._conf_check_days)
+        entity_id = self._readingmap.get(READING_BRIGHTNESS)
+        if entity_id is None:
+            _LOGGER.debug("not reading the history from the database as "
+                          "there is no brightness sensor configured.")
+            return
+
         _LOGGER.debug("initializing values for %s from the database",
                       self._name)
-        start_date = datetime.now() - timedelta(days=self._conf_check_days)
-        entity_id = self._readingmap[READING_BRIGHTNESS]
         with session_scope(hass=self._hass) as session:
             query = session.query(States).filter(
                 (States.entity_id == entity_id.lower()) and
