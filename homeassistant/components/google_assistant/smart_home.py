@@ -8,6 +8,7 @@ from aiohttp.web import Request, Response  # NOQA
 from typing import Dict, Tuple, Any, Optional  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA
 from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.util import color
 from homeassistant.util.unit_system import UnitSystem  # NOQA
 
 from homeassistant.const import (
@@ -22,7 +23,8 @@ from homeassistant.components import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
-    ATTR_GOOGLE_ASSISTANT_NAME, ATTR_GOOGLE_ASSISTANT_TYPE,
+    ATTR_GOOGLE_ASSISTANT_NAME, COMMAND_COLOR,
+    ATTR_GOOGLE_ASSISTANT_TYPE,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
     COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, COMMAND_THERMOSTAT_SET_MODE,
@@ -78,6 +80,7 @@ def entity_to_device(entity: Entity, units: UnitSystem):
     device = {
         'id': entity.entity_id,
         'name': {},
+        'attributes': {},
         'traits': [],
         'willReportState': False,
     }
@@ -102,6 +105,23 @@ def entity_to_device(entity: Entity, units: UnitSystem):
         for feature, trait in class_data[2].items():
             if feature & supported > 0:
                 device['traits'].append(trait)
+
+                # Actions require this attributes for a device
+                # supporting temperature
+                # For IKEA trådfri, these attributes only seem to
+                # be set only if the device is on?
+                if trait == TRAIT_COLOR_TEMP:
+                    if entity.attributes.get(
+                            light.ATTR_MAX_MIREDS) is not None:
+                        device['attributes']['temperatureMinK'] =  \
+                            int(round(color.color_temperature_mired_to_kelvin(
+                                entity.attributes.get(light.ATTR_MAX_MIREDS))))
+                    if entity.attributes.get(
+                            light.ATTR_MIN_MIREDS) is not None:
+                        device['attributes']['temperatureMaxK'] =  \
+                            int(round(color.color_temperature_mired_to_kelvin(
+                                entity.attributes.get(light.ATTR_MIN_MIREDS))))
+
     if entity.domain == climate.DOMAIN:
         modes = ','.join(
             m for m in entity.attributes.get(climate.ATTR_OPERATION_LIST, [])
@@ -156,11 +176,34 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
 
     final_brightness = 100 * (final_brightness / 255)
 
-    return {
+    query_response = {
         "on": final_state,
         "online": True,
         "brightness": int(final_brightness)
     }
+
+    supported_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    if supported_features & \
+       (light.SUPPORT_COLOR_TEMP | light.SUPPORT_RGB_COLOR):
+        query_response["color"] = {}
+
+        if entity.attributes.get(light.ATTR_COLOR_TEMP) is not None:
+            query_response["color"]["temperature"] = \
+                int(round(color.color_temperature_mired_to_kelvin(
+                    entity.attributes.get(light.ATTR_COLOR_TEMP))))
+
+        if entity.attributes.get(light.ATTR_COLOR_NAME) is not None:
+            query_response["color"]["name"] = \
+                entity.attributes.get(light.ATTR_COLOR_NAME)
+
+        if entity.attributes.get(light.ATTR_RGB_COLOR) is not None:
+            color_rgb = entity.attributes.get(light.ATTR_RGB_COLOR)
+            if color_rgb is not None:
+                query_response["color"]["spectrumRGB"] = \
+                    int(color.color_rgb_to_hex(
+                        color_rgb[0], color_rgb[1], color_rgb[2]), 16)
+
+    return query_response
 
 
 # erroneous bug on old pythons and pylint
@@ -217,7 +260,27 @@ def determine_service(
         service_data['brightness'] = int(brightness / 100 * 255)
         return (SERVICE_TURN_ON, service_data)
 
-    if command == COMMAND_ACTIVATESCENE or (COMMAND_ONOFF == command and
-                                            params.get('on') is True):
+    _LOGGER.debug("Handling command %s with data %s", command, params)
+    if command == COMMAND_COLOR:
+        color_data = params.get('color')
+        if color_data is not None:
+            if color_data.get('temperature', 0) > 0:
+                service_data[light.ATTR_KELVIN] = color_data.get('temperature')
+                return (SERVICE_TURN_ON, service_data)
+            if color_data.get('spectrumRGB', 0) > 0:
+                # blue is 255 so pad up to 6 chars
+                hex_value = \
+                    ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
+                service_data[light.ATTR_RGB_COLOR] = \
+                    color.rgb_hex_to_rgb_list(hex_value)
+                return (SERVICE_TURN_ON, service_data)
+
+    if command == COMMAND_ACTIVATESCENE:
         return (SERVICE_TURN_ON, service_data)
-    return (SERVICE_TURN_OFF, service_data)
+
+    if COMMAND_ONOFF == command:
+        if params.get('on') is True:
+            return (SERVICE_TURN_ON, service_data)
+        return (SERVICE_TURN_OFF, service_data)
+
+    return (None, service_data)

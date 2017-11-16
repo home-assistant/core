@@ -17,6 +17,57 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         const.SERVICE_TURN_ON,
         {'entity_id': 'light.test', 'brightness': 242}
     )
+}, {  # Test light color temperature
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'temperature': 2300,
+            'name': 'warm white'
+        }
+    },
+    'expected': (
+        const.SERVICE_TURN_ON,
+        {'entity_id': 'light.test', 'kelvin': 2300}
+    )
+}, {  # Test light color blue
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'spectrumRGB': 255,
+            'name': 'blue'
+        }
+    },
+    'expected': (
+        const.SERVICE_TURN_ON,
+        {'entity_id': 'light.test', 'rgb_color': [0, 0, 255]}
+    )
+}, {  # Test light color yellow
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'spectrumRGB': 16776960,
+            'name': 'yellow'
+        }
+    },
+    'expected': (
+        const.SERVICE_TURN_ON,
+        {'entity_id': 'light.test', 'rgb_color': [255, 255, 0]}
+    )
+}, {  # Test unhandled action/service
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'unhandled': 2300
+        }
+    },
+    'expected': (
+        None,
+        {'entity_id': 'light.test'}
+    )
 }, {  # Test switch to light custom type
     'entity_id': 'switch.decorative_lights',
     'command': ga.const.COMMAND_ONOFF,

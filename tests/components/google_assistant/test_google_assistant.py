@@ -181,6 +181,8 @@ def test_query_request(hass_fixture, assistant_client):
                     'id': "light.ceiling_lights",
                 }, {
                     'id': "light.bed_light",
+                }, {
+                    'id': "light.kitchen_lights",
                 }]
             }
         }]
@@ -193,10 +195,12 @@ def test_query_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     devices = body['payload']['devices']
-    assert len(devices) == 2
+    assert len(devices) == 3
     assert devices['light.bed_light']['on'] is False
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
+    assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
+    assert devices['light.kitchen_lights']['color']['temperature'] == 4166
 
 
 @asyncio.coroutine
@@ -321,6 +325,31 @@ def test_execute_request(hass_fixture, assistant_client):
                             "on": False
                         }
                     }]
+                }, {
+                    "devices": [{
+                        "id": "light.kitchen_lights",
+                    }],
+                    "execution": [{
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "spectrumRGB": 16711680,
+                                "temperature": 2100
+                            }
+                        }
+                    }]
+                }, {
+                    "devices": [{
+                        "id": "light.kitchen_lights",
+                    }],
+                    "execution": [{
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "spectrumRGB": 16711680
+                            }
+                        }
+                    }]
                 }]
             }
         }]
@@ -333,7 +362,10 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 3
+    assert len(commands) == 5
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
+    kitchen = hass_fixture.states.get('light.kitchen_lights')
+    assert kitchen.attributes.get(light.ATTR_COLOR_TEMP) == 476
+    assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
     assert hass_fixture.states.get('switch.decorative_lights').state == 'off'
