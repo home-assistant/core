@@ -54,7 +54,7 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
                 'climate': config})
 
     def test_valid_conf(self):
-        """Test set up genric_thermostat with valid config values."""
+        """Test set up generic_thermostat with valid config values."""
         self.assertTrue(
             setup_component(self.hass, 'climate',
                             {'climate': {
