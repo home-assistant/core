@@ -215,6 +215,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_googleplus_and_picture(self):
         """Test the that GooglePlus overrides picture."""
+        import re
+
         dev_id = 'test'
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
@@ -225,7 +227,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertNotEqual(re.search(googleplus_url_pattern,
                                       device.config_picture), None)
 
-        """Test the that picture overrides googleplus when a 
+        """Test the that picture overrides googleplus when a
         non-google or invalid account is used."""
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
@@ -245,7 +247,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
         self.assertEqual(device.config_picture, gravatar_url)
 
-        """Test the that gravatar overrides googleplus even when a 
+        """Test the that gravatar overrides googleplus even when a
         non-google or invalid account is used."""
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
