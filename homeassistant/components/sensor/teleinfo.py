@@ -105,18 +105,18 @@ class TeleinfoSensor(Entity):
         """Get the latest data from Teleinfo device and updates the state."""
         self._data.update()
         if not self._data.frame:
-            _LOGGER.warn("Don't receive energy data from Teleinfo!")
+            _LOGGER.warning("Don't receive energy data from Teleinfo!")
             return
         # self._attributes = self._data.frame
-        _LOGGER.info("Frame read: %s" % self._data.frame)
+        _LOGGER.info("Frame read: %s", self._data.frame)
         for info in self._data.frame:
             if info['name'] in TELEINFO_AVAILABLE_VALUES:
                 self._attributes[info['name']] = int(info['value'])
             else:
                 self._attributes[info['name']] = info['value']
         self._state = self._attributes['ADCO']
-        _LOGGER.debug("Sensor: state=%s attributes=%s" % (
-            self._state, self._attributes))
+        _LOGGER.debug(
+            "Sensor: state=%s attributes=%s", self._state, self._attributes)
 
 
 class TeleinfoData(object):
