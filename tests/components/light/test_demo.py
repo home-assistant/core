@@ -1,14 +1,11 @@
 """The tests for the demo light component."""
 # pylint: disable=protected-access
-import asyncio
 import unittest
 
-from homeassistant.core import State, CoreState
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.light as light
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
-from tests.common import get_test_home_assistant, mock_component
+from tests.common import get_test_home_assistant
 
 ENTITY_LIGHT = 'light.bed_light'
 

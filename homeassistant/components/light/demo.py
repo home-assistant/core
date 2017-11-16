@@ -4,7 +4,6 @@ Demo light platform that implements lights.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-import asyncio
 import random
 
 from homeassistant.components.light import (
