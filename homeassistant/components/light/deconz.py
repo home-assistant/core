@@ -23,6 +23,8 @@ DEPENDENCIES = [DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LIGHT_GROUP = 'LightGroup'
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -164,7 +166,7 @@ class DeconzLight(Light):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self._light.type != 'LightGroup':
+        if self._light.type != ATTR_LIGHT_GROUP:
             attr = {
                 ATTR_FW_VERSION: self._light.swversion,
                 ATTR_MANUFACTURER: self._light.manufacturer,
