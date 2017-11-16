@@ -128,6 +128,7 @@ class GoogleAssistantView(HomeAssistantView):
             ent_ids = [ent.get('id') for ent in command.get('devices', [])]
             execution = command.get('execution')[0]
             for eid in ent_ids:
+                success = False
                 domain = eid.split('.')[0]
                 (service, service_data) = determine_service(
                     eid, execution.get('command'), execution.get('params'),
