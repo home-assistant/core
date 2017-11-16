@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
 REQUIREMENTS = ['pyrainbird==0.1.1']
@@ -24,6 +24,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):
     """Set up Rain Bird componenent."""
