@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
-    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, CONF_UNIT_OF_MEASUREMENT)
+    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.components import group
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -33,7 +33,11 @@ READING_BRIGHTNESS = 'brightness'
 ATTR_PROBLEM = 'problem'
 ATTR_SENSORS = 'sensors'
 PROBLEM_NONE = 'none'
-ATTR_MAX_BRIGHTNESS_HISTORY = 'max. brightness in history'
+ATTR_MAX_BRIGHTNESS_HISTORY = 'max_brightness'
+
+# we're not returning only one value, we're returning a dict here. So we need
+# to have a separate literal for it to avoid confusion.
+ATTR_DICT_OF_UNITS_OF_MEASUREMENT = 'unit_of_measurement_dict'
 
 CONF_MIN_BATTERY_LEVEL = 'min_' + READING_BATTERY
 CONF_MIN_TEMPERATURE = 'min_' + READING_TEMPERATURE
@@ -196,10 +200,9 @@ class Plant(Entity):
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
-        if new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT, None) \
-                is not None:
+        if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = \
-                new_state.attributes.get(CONF_UNIT_OF_MEASUREMENT)
+                new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._update_state()
 
     def _update_state(self):
@@ -216,7 +219,7 @@ class Plant(Entity):
                     result.append(self._check_min(sensor_name, value, params))
                 result.append(self._check_max(sensor_name, value, params))
 
-        result = filter(lambda x: x is not None, result)
+        result = [r for r in result if r is not None]
 
         if result:
             self._state = STATE_PROBLEM
@@ -295,7 +298,7 @@ class Plant(Entity):
         attrib = {
             ATTR_PROBLEM: self._problems,
             ATTR_SENSORS: self._readingmap,
-            CONF_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
+            ATTR_DICT_OF_UNITS_OF_MEASUREMENT: self._unit_of_measurement,
         }
 
         for reading in self._sensormap.values():
