@@ -51,6 +51,7 @@ ATTR_DO_NOT_DISTURB = 'do_not_disturb'
 ATTR_MAIN_BRUSH_LEFT = 'main_brush_left'
 ATTR_SIDE_BRUSH_LEFT = 'side_brush_left'
 ATTR_FILTER_LEFT = 'filter_left'
+ATTR_SENSOR_USED = 'sensor_used'
 ATTR_CLEANING_COUNT = 'cleaning_count'
 ATTR_CLEANED_TOTAL_AREA = 'total_cleaned_area'
 ATTR_CLEANING_TOTAL_TIME = 'total_cleaning_time'
@@ -220,6 +221,9 @@ class MiroboVacuum(VacuumDevice):
                     / 3600),
                 ATTR_FILTER_LEFT: int(
                     self.consumable_state.filter_left.total_seconds()
+                    / 3600),
+                ATTR_SENSOR_USED: int(
+                    self.consumable_state.sensor_used.total_seconds()
                     / 3600)})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
