@@ -21,10 +21,11 @@ GOOD_DATA = {
 }
 
 BRIGHTNESS_ENTITIY = 'sensor.mqtt_plant_brightness'
+MOISTURE_ENTITIY = 'sensor.mqtt_plant_moisture'
 
 GOOD_CONFIG = {
     'sensors': {
-        'moisture': 'sensor.mqtt_plant_moisture',
+        'moisture': MOISTURE_ENTITIY,
         'battery': 'sensor.mqtt_plant_battery',
         'temperature': 'sensor.mqtt_plant_temperature',
         'conductivity': 'sensor.mqtt_plant_conductivity',
@@ -94,12 +95,12 @@ class TestPlant(unittest.TestCase):
                 plant_name: GOOD_CONFIG
             }
         })
-        self.hass.states.set(BRIGHTNESS_ENTITIY, 1000,
-                             {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
+        self.hass.states.set(MOISTURE_ENTITIY, 5,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
         self.assertEquals(STATE_PROBLEM, state.state)
-        self.assertEquals(1000, state.attributes[plant.READING_BRIGHTNESS])
+        self.assertEquals(5, state.attributes[plant.READING_MOISTURE])
 
     def test_load_from_db(self):
         """Test bootstrapping the brightness history from the database."""
