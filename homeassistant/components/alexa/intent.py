@@ -243,5 +243,5 @@ class AlexaResponse(object):
         return {
             'version': '1.0',
             'sessionAttributes': self.session_attributes,
-            'response': response
+            'response': response,
         }
