@@ -121,10 +121,10 @@ class Dominos():
     @Throttle(MIN_TIME_BETWEEN_STORE_UPDATES)
     def update_closest_store(self):
         """Update the shared closest store (if open)."""
-        self.closest_store = self.address.closest_store()
+        from pizzapi.address import StoreException
         try:
             self.closest_store = self.address.closest_store()
-        except pizzapi.address.StoreException:
+        except StoreException:
             self.closest_store = False
 
     def show_menu(self, hass):
@@ -195,9 +195,10 @@ class DominosOrder(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the order state and refreshes the store."""
+        from pizzapi.address import StoreException
         try:
             self.dominos.update_closest_store()
-        except pizzapi.address.StoreException:
+        except StoreException:
             self._orderable = False
             return
         
@@ -205,7 +206,7 @@ class DominosOrder(Entity):
             order = self.order()
             order.pay_with()
             self._orderable = True
-        except pizzapi.address.StoreException:
+        except StoreException:
             self._orderable = False
 
     def order(self):
@@ -224,10 +225,11 @@ class DominosOrder(Entity):
 
     def place(self):
         """Place the order."""
+        from pizzapi.address import StoreException
         try:
             order = self.order()
             order.place()
-        except pizzapi.address.StoreException:
+        except StoreException:
             self._orderable = False
             _LOGGER.warning(
                 'Attempted to order Dominos - Order invalid or store closed')
