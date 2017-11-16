@@ -52,7 +52,7 @@ class ZWaveLogView(HomeAssistantView):
             else:
                 loglines = list(deque(data, lines))
 
-        return self.json(loglines)
+        return self.json('\n'.join(loglines))
 
 
 class ZWaveConfigWriteView(HomeAssistantView):
