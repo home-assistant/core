@@ -10,21 +10,19 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_PLATFORM, CONF_SWITCHES, CONF_ZONE,
+from homeassistant.const import (CONF_SWITCHES, CONF_ZONE,
                                  CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME,
-                                 CONF_SCAN_INTERVAL, CONF_HOST, CONF_PASSWORD)
+                                 CONF_SCAN_INTERVAL)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['pyrainbird==0.1.0']
+DEPENDENCIES = ['rainbird']
 
+DATA_RAINBIRD = 'rainbird'
 DOMAIN = 'rainbird'
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SWITCHES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_FRIENDLY_NAME): cv.string,
@@ -38,21 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Rain Bird switches over a Rain Bird controller."""
-    server = config.get(CONF_HOST)
-    password = config.get(CONF_PASSWORD)
-
-    from pyrainbird import RainbirdController
-    controller = RainbirdController(_LOGGER)
-    controller.setConfig(server, password)
-
-    _LOGGER.debug("Rain Bird Controller set to " + str(server))
-
-    initialstatus = controller.currentIrrigation()
-    if initialstatus == -1:
-        _LOGGER.error("Error getting state. Possible configuration issues")
-        raise PlatformNotReady
-    else:
-        _LOGGER.debug("Initialized Rain Bird Controller")
+    controller = hass.data[DATA_RAINBIRD]
 
     devices = []
     for dev_id, switch in config.get(CONF_SWITCHES).items():
