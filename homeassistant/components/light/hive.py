@@ -36,11 +36,11 @@ class HiveDeviceLight(Light):
         self.session = Session
         self.session.light = self.session.core.Light()
 
-        self.hass.bus.listen('Event_Hive_NewNodeData', self.handle_event)
+        self.session.entities.append(self)
 
-    def handle_event(self, event):
-        """Handle the new event."""
-        if self.device_type + "." + self.node_id not in str(event):
+    def handle_update(self, updatesource):
+        """Handle the new update request."""
+        if self.device_type + "." + self.node_id not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -100,16 +100,16 @@ class HiveDeviceLight(Light):
         else:
             self.session.light.turn_on(self.node_id)
 
-        eventsource = self.device_type + "." + self.node_id
-        self.hass.bus.fire('Event_Hive_NewNodeData',
-                           {"EventSource": eventsource})
+        updatesource = self.device_type + "." + self.node_id
+        for entity in self.session.entities:
+            entity.handle_update(updatesource)
 
     def turn_off(self):
         """Instruct the light to turn off."""
         self.session.light.turn_off(self.node_id)
-        eventsource = self.device_type + "." + self.node_id
-        self.hass.bus.fire('Event_Hive_NewNodeData',
-                           {"EventSource": eventsource})
+        updatesource = self.device_type + "." + self.node_id
+        for entity in self.session.entities:
+            entity.handle_update(updatesource)
 
     @property
     def supported_features(self):

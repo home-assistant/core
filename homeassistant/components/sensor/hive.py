@@ -73,11 +73,11 @@ class HiveSensorEntity(Entity):
                                 + self.node_name.replace(" ", "_")
             self.entity_id = ENTITY_ID_FORMAT.format(set_entity_id.lower())
 
-        self.hass.bus.listen('Event_Hive_NewNodeData', self.handle_event)
+        self.session.entities.append(self)
 
-    def handle_event(self, event):
-        """Handle the new event."""
-        if self.device_type + "." + self.node_id not in str(event):
+    def handle_update(self, updatesource):
+        """Handle the new update request."""
+        if self.device_type + "." + self.node_id not in updatesource:
             self.schedule_update_ha_state()
 
     @property

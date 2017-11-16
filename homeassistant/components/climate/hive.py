@@ -48,11 +48,11 @@ class HiveClimateEntity(ClimateDevice):
                             + self.node_name.replace(" ", "_")
         self.entity_id = ENTITY_ID_FORMAT.format(set_entity_id.lower())
 
-        self.hass.bus.listen('Event_Hive_NewNodeData', self.handle_event)
+        self.session.entities.append(self)
 
-    def handle_event(self, event):
-        """Handle the new event."""
-        if self.device_type + "." + self.node_id not in str(event):
+    def handle_update(self, updatesource):
+        """Handle the new update request."""
+        if self.device_type + "." + self.node_id not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -209,9 +209,9 @@ class HiveClimateEntity(ClimateDevice):
                 new_mode = "OFF"
             self.session.hotwater.set_mode(self.node_id, new_mode)
 
-        eventsource = self.device_type + "." + self.node_id
-        self.hass.bus.fire('Event_Hive_NewNodeData',
-                           {"EventSource": eventsource})
+        updatesource = self.device_type + "." + self.node_id
+        for entity in self.session.entities:
+            entity.handle_update(updatesource)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -220,9 +220,9 @@ class HiveClimateEntity(ClimateDevice):
             if self.device_type == "Heating":
                 self.session.heating.set_target_temperature(self.node_id,
                                                             new_temperature)
-            eventsource = self.device_type + "." + self.node_id
-            self.hass.bus.fire('Event_Hive_NewNodeData',
-                               {"EventSource": eventsource})
+            updatesource = self.device_type + "." + self.node_id
+            for entity in self.session.entities:
+                entity.handle_update(updatesource)
 
     def update(self):
         """Update all Node data frome Hive."""

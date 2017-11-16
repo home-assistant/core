@@ -36,6 +36,7 @@ class HiveSession:
     """Initiate Hive Session Class."""
 
     data = HivePlatformData()
+    entities = []
     core = None
     heating = None
     hotwater = None
