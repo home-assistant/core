@@ -7,7 +7,9 @@ https://home-assistant.io/components/hive/
 import logging
 from datetime import datetime
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import (ENTITY_ID_FORMAT, ClimateDevice,
+                                              STATE_AUTO, STATE_HEAT,
+                                              STATE_OFF, STATE_ON)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 DEPENDENCIES = ['hive']
@@ -36,9 +38,11 @@ class HiveClimateEntity(ClimateDevice):
         if self.device_type == "Heating":
             set_entity_id = "Hive_Heating"
             self.session.heating = self.session.core.Heating()
+            self.modes = [STATE_AUTO, STATE_HEAT, STATE_OFF]
         elif self.device_type == "HotWater":
             set_entity_id = "Hive_HotWater"
             self.session.hotwater = self.session.core.Hotwater()
+            self.modes = [STATE_AUTO, STATE_ON, STATE_OFF]
         if self.node_name is not None:
             set_entity_id = set_entity_id + "_" \
                             + self.node_name.replace(" ", "_")
@@ -164,25 +168,46 @@ class HiveClimateEntity(ClimateDevice):
     @property
     def operation_list(self):
         """List of the operation modes."""
-        if self.device_type == "Heating":
-            return self.session.heating.get_operation_modes(self.node_id)
-        elif self.device_type == "HotWater":
-            return self.session.hotwater.get_operation_modes(self.node_id)
+        return self.modes
 
     @property
     def current_operation(self):
         """Return current mode."""
         if self.device_type == "Heating":
-            return self.session.heating.get_mode(self.node_id)
+            currentmode = self.session.heating.get_mode(self.node_id)
+            if currentmode == "SCHEDULE":
+                return STATE_AUTO
+            elif currentmode == "MANUAL":
+                return STATE_HEAT
+            elif currentmode == "OFF":
+                return STATE_OFF
         elif self.device_type == "HotWater":
-            return self.session.hotwater.get_mode(self.node_id)
+            currentmode =  self.session.hotwater.get_mode(self.node_id)
+            if currentmode == "SCHEDULE":
+                return STATE_AUTO
+            elif currentmode == "ON":
+                return STATE_ON
+            elif currentmode == "OFF":
+                return STATE_OFF
 
     def set_operation_mode(self, operation_mode):
         """Set new Heating mode."""
         if self.device_type == "Heating":
-            self.session.heating.set_mode(self.node_id, operation_mode)
+            if operation_mode == STATE_AUTO:
+                new_mode = "SCHEDULE"
+            elif operation_mode == STATE_HEAT:
+                new_mode = "MANUAL"
+            elif operation_mode == STATE_OFF:
+                new_mode = "OFF"
+            self.session.heating.set_mode(self.node_id, new_mode)
         elif self.device_type == "HotWater":
-            self.session.hotwater.set_mode(self.node_id, operation_mode)
+            if operation_mode == STATE_AUTO:
+                new_mode = "SCHEDULE"
+            elif operation_mode == STATE_ON:
+                new_mode = "ON"
+            elif operation_mode == STATE_OFF:
+                new_mode = "OFF"
+            self.session.hotwater.set_mode(self.node_id, new_mode)
 
         eventsource = self.device_type + "." + self.node_id
         self.hass.bus.fire('Event_Hive_NewNodeData',
