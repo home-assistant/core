@@ -174,11 +174,11 @@ def test_discovery_request(hass):
             continue
 
         if appliance['endpointId'] == 'script#test':
-            assert appliance['displayCategories'][0] == "ACTIVITY_TRIGGER"
+            assert appliance['displayCategories'][0] == "SWITCH"
             assert appliance['friendlyName'] == "Test script"
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
-                'Alexa.SceneController'
+                'Alexa.PowerController'
             continue
 
         raise AssertionError("Unknown appliance!")
@@ -217,7 +217,7 @@ def test_api_function_not_implemented(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['light', 'switch'])
+@pytest.mark.parametrize("domain", ['light', 'switch', 'script'])
 def test_api_turn_on(hass, domain):
     """Test api turn on process."""
     request = get_new_request(
@@ -242,7 +242,7 @@ def test_api_turn_on(hass, domain):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['light', 'switch'])
+@pytest.mark.parametrize("domain", ['light', 'switch', 'script'])
 def test_api_turn_off(hass, domain):
     """Test api turn on process."""
     request = get_new_request(
@@ -469,28 +469,4 @@ def test_api_increase_color_temp(hass, result, initial):
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
     assert call_light[0].data['color_temp'] == result
-    assert msg['header']['name'] == 'Response'
-
-
-@asyncio.coroutine
-@pytest.mark.parametrize("domain", ['script'])
-def test_api_activate(hass, domain):
-    """Test api activate process."""
-    request = get_new_request(
-        'Alexa.SceneController', 'Activate', '{}#test'.format(domain))
-
-    # settup test devices
-    hass.states.async_set(
-        'script.test', 'off', {'friendly_name': "Test script"})
-
-    call = async_mock_service(hass, domain, 'test')
-
-    msg = yield from smart_home.async_handle_message(hass, request)
-
-    assert 'event' in msg
-    msg = msg['event']
-
-    assert len(call) == 1
-    assert call[0].domain == domain
-    assert call[0].service == 'test'
     assert msg['header']['name'] == 'Response'
