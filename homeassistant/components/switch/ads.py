@@ -56,13 +56,11 @@ class AdsSwitch(ToggleEntity):
         """Turn the switch on."""
         self._ads_hub.write_by_name(self.ads_var, True,
                                     self._ads_hub.PLCTYPE_BOOL)
-        self._on_state = True
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._ads_hub.write_by_name(self.ads_var, False,
                                     self._ads_hub.PLCTYPE_BOOL)
-        self._on_state = False
 
     def value_changed(self, val):
         """Handle changed state."""
