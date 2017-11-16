@@ -316,7 +316,7 @@ ha-philipsjs==0.0.1
 haversine==0.4.5
 
 # homeassistant.components.mqtt.server
-hbmqtt==0.8
+hbmqtt==0.9.1
 
 # homeassistant.components.climate.heatmiser
 heatmiserV3==0.9.1

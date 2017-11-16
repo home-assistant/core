@@ -68,7 +68,7 @@ ha-ffmpeg==1.9
 haversine==0.4.5
 
 # homeassistant.components.mqtt.server
-hbmqtt==0.8
+hbmqtt==0.9.1
 
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
