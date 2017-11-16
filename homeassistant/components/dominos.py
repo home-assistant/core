@@ -8,7 +8,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/dominos/.
 """
 import logging
-import time
 from datetime import timedelta
 
 import voluptuous as vol
@@ -201,7 +200,7 @@ class DominosOrder(Entity):
         except StoreException:
             self._orderable = False
             return
-        
+
         try:
             order = self.order()
             order.pay_with()
