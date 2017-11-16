@@ -25,7 +25,7 @@ APPLICATION_NAME = 'Home Assistant'
 
 DOMAIN = 'tellduslive'
 
-REQUIREMENTS = ['tellduslive==0.10.0']
+REQUIREMENTS = ['tellduslive==0.10.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +51,12 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 ATTR_LAST_UPDATED = 'time_last_updated'
+
+CONFIG_INSTRUCTIONS = """
+To link your TelldusLive account,
+click the link, login, and authorize {app_name}.
+Then click the Confirm button.
+"""
 
 
 def setup(hass, config, session=None):
@@ -115,13 +121,12 @@ def setup(hass, config, session=None):
 
         hass.data[KEY_CONFIG][data_key] = \
             configurator.request_config(
-                'TelldusLive ({})'.format('LocalAPI' if host
-                                          else 'Cloud service'),
+                'TelldusLive ({})'.format(
+                    'LocalAPI' if host
+                    else 'Cloud service'),
                 configuration_callback,
-                description=('To link your TelldusLive account, '
-                             'click the link, login, and authorize {}. '
-                             'Then click the Confirm button.'
-                             .format(APPLICATION_NAME)),
+                description=CONFIG_INSTRUCTIONS.format(
+                    app_name=APPLICATION_NAME),
                 submit_caption='Confirm',
                 link_name='Link TelldusLive account',
                 link_url=auth_url,
@@ -172,13 +177,13 @@ def setup(hass, config, session=None):
         _LOGGER.info('Found entry in configuration.yaml. '
                      'Requesting TelldusLive cloud service configuration')
         hass.async_add_job(request_configuration)
-        
+
         if CONF_HOST in config.get(DOMAIN, {}):
             _LOGGER.info('Found TelldusLive host entry in configuration.yaml. '
                          'Requesting Telldus Local API configuration')
             hass.async_add_job(request_configuration,
                                config.get(DOMAIN).get(CONF_HOST))
-        
+
         return True
     else:
         _LOGGER.info('Tellstick discovered, awaiting discovery callback')
