@@ -35,6 +35,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_TYPE_AS_EVENT, default=['ZHASwitch']):
             vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_USERNAME, default='delight'): cv.string,
+        vol.Optional(CONF_PASSWORD, default='delight'): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -53,31 +55,18 @@ def async_setup(hass, config):
             hass.data[DECONZ_DATA].close()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
-    @asyncio.coroutine
-    def generate_api_key(call):
-        """Generate API key needed to communicate with Deconz.
-
-        Store API key in deconz.conf.
-        """
+    if CONF_API_KEY in deconz_config:
+        pass
+    elif CONF_API_KEY in config_file:
+        deconz_config[CONF_API_KEY] = config_file[CONF_API_KEY]
+    else:
         from pydeconz.utils import get_api_key
-        deconz_config[CONF_USERNAME] = call.data.get(CONF_USERNAME, 'delight')
-        deconz_config[CONF_PASSWORD] = call.data.get(CONF_PASSWORD, 'delight')
         api_key = yield from get_api_key(hass.loop, **deconz_config)
+        deconz_config[CONF_API_KEY] = api_key
         if not save_json(
                 hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key}):
             _LOGGER.error("Failed to save API key to %s", CONFIG_FILE)
-        deconz_config[CONF_API_KEY] = api_key
-        yield from _setup_deconz(hass, config, deconz_config)
-
-    if CONF_API_KEY in deconz_config:
-        yield from _setup_deconz(hass, config, deconz_config)
-    elif CONF_API_KEY in config_file:
-        deconz_config[CONF_API_KEY] = config_file[CONF_API_KEY]
-        yield from _setup_deconz(hass, config, deconz_config)
-    else:
-        hass.services.async_register(
-            DOMAIN, 'generate_api_key', generate_api_key)
-        _LOGGER.warning("Deconz needs API key to set up session. See docs.")
+    yield from _setup_deconz(hass, config, deconz_config)
 
     return True
 
