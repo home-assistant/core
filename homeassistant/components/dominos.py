@@ -7,7 +7,6 @@ from their menu
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/dominos/.
 """
-import asyncio
 import logging
 import time
 from datetime import timedelta
@@ -17,7 +16,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import http
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import Throttle
 
@@ -64,11 +63,8 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-# pylint: disable=broad-except
 
-
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
     dominos = Dominos(hass, config)
 
@@ -76,18 +72,17 @@ def async_setup(hass, config):
     hass.data[DOMAIN] = {}
     entities = []
 
-    hass.services.async_register(DOMAIN, 'order', dominos.handle_order)
+    hass.services.register(DOMAIN, 'order', dominos.handle_order)
 
     if config[DOMAIN].get(ATTR_SHOW_MENU):
-        # pylint: disable=not-an-iterable
-        yield from dominos.show_menu(hass)
+        dominos.show_menu(hass)
         hass.http.register_view(DominosProductListView)
 
     for order_info in config[DOMAIN].get(ATTR_ORDERS):
         order = DominosOrder(order_info, dominos)
         entities.append(order)
 
-    yield from component.async_add_entities(entities)
+    component.add_entities(entities)
 
     # Return boolean to indicate that initialization was successfully.
     return True
@@ -110,11 +105,11 @@ class Dominos():
             *self.customer.address.split(','),
             country=config[DOMAIN].get(ATTR_COUNTRY))
         self.country = config[DOMAIN].get(ATTR_COUNTRY)
-        self._closest_store = Store()
+        self.closest_store = Store()
         self._last_store_check = 0
         self.update_closest_store()
 
-    def handle_order(self, call=None):
+    def handle_order(self, call):
         """Handle ordering pizza."""
         entity_ids = call.data.get(ATTR_ORDER_ENTITY, None)
 
@@ -130,23 +125,17 @@ class Dominos():
         if self._last_store_check + MIN_TIME_BETWEEN_STORE_UPDATES < cur_time:
             self._last_store_check = cur_time
             try:
-                self._closest_store = self.address.closest_store()
+                self.closest_store = self.address.closest_store()
             except Exception:
-                self._closest_store = False
+                self.closest_store = False
 
-    @property
-    def closest_store(self):
-        """Return the shared closest store (or False if all closed)."""
-        return self._closest_store
-
-    @asyncio.coroutine
     def show_menu(self, hass):
         """Dump the closest stores menu into the logs."""
-        if self._closest_store is False:
+        if self.closest_store is False:
             _LOGGER.warning('Cannot get menu. Store may be closed')
             return
 
-        menu = self._closest_store.get_menu()
+        menu = self.closest_store.get_menu()
         hass.data[DOMAIN]['products'] = []
 
         for product in menu.products:
@@ -178,9 +167,6 @@ class DominosOrder(Entity):
     def __init__(self, order_info, dominos):
         """Set up the entity."""
         self._name = order_info['name']
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, self._name, hass=dominos.hass)
-
         self._product_codes = order_info['codes']
         self._orderable = False
         self.dominos = dominos
