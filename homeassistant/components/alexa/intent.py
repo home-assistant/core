@@ -3,7 +3,11 @@ Support for Alexa skill service end point.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
-"""
+
+Notes:
+[1] - https://developer.amazon.com/docs/custom-skills/define-synonyms-and-ids-for-slot-type-values-entity-resolution.html#intentrequest-changes
+
+""" # noqa
 import asyncio
 import enum
 import logging
@@ -248,11 +252,3 @@ class AlexaResponse(object):
             'sessionAttributes': self.session_attributes,
             'response': response,
         }
-
-
-"""
-Footnotes:
-
-[1] - https://developer.amazon.com/docs/custom-skills/define-synonyms-and-ids-for-slot-type-values-entity-resolution.html#intentrequest-changes
-
-""" # noqa
