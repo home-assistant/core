@@ -36,16 +36,19 @@ def async_setup(hass):
 class ZWaveLogView(HomeAssistantView):
     """View to read the ZWave log file."""
 
-    url = r"/api/zwave/ozwlog/{lines:\d+}"
+    url = r"/api/zwave/ozwlog"
     name = "api:zwave:ozwlog"
 
 # pylint: disable=no-self-use
     @asyncio.coroutine
-    def get(self, request, lines):
+    def get(self, request):
         """Retrieve the lines from ZWave log."""
-        lines = int(lines)
-        hass = request.app['hass']
+        try:
+            lines = int(request.query.get('lines', 0))
+        except ValueError:
+            return Response('Invalid datetime', status=400)
 
+        hass = request.app['hass']
         response = yield from hass.async_add_job(self._get_log, hass, lines)
 
         return Response(text='\n'.join(response))
