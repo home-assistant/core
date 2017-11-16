@@ -182,7 +182,7 @@ class HiveClimateEntity(ClimateDevice):
             elif currentmode == "OFF":
                 return STATE_OFF
         elif self.device_type == "HotWater":
-            currentmode =  self.session.hotwater.get_mode(self.node_id)
+            currentmode = self.session.hotwater.get_mode(self.node_id)
             if currentmode == "SCHEDULE":
                 return STATE_AUTO
             elif currentmode == "ON":
