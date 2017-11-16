@@ -41,7 +41,7 @@ ATTR_ORDER_CODES = 'codes'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_STORE_UPDATES = timedelta(minutes=3330)
 
-REQUIREMENTS = ['pizzapi==0.0.2']
+REQUIREMENTS = ['pizzapi==0.0.3']
 
 DEPENDENCIES = ['http']
 
@@ -106,7 +106,6 @@ class Dominos():
             country=config[DOMAIN].get(ATTR_COUNTRY))
         self.country = config[DOMAIN].get(ATTR_COUNTRY)
         self.closest_store = Store()
-        self._last_store_check = 0
         self.update_closest_store()
 
     def handle_order(self, call):
@@ -122,13 +121,11 @@ class Dominos():
     @Throttle(MIN_TIME_BETWEEN_STORE_UPDATES)
     def update_closest_store(self):
         """Update the shared closest store (if open)."""
-        cur_time = time.time()
-        if self._last_store_check + MIN_TIME_BETWEEN_STORE_UPDATES < cur_time:
-            self._last_store_check = cur_time
-            try:
-                self.closest_store = self.address.closest_store()
-            except Exception:
-                self.closest_store = False
+        self.closest_store = self.address.closest_store()
+        try:
+            self.closest_store = self.address.closest_store()
+        except pizzapi.address.StoreException:
+            self.closest_store = False
 
     def show_menu(self, hass):
         """Dump the closest stores menu into the logs."""
@@ -200,15 +197,15 @@ class DominosOrder(Entity):
         """Update the order state and refreshes the store."""
         try:
             self.dominos.update_closest_store()
-        except Exception:
+        except pizzapi.address.StoreException:
             self._orderable = False
             return
-
+        
         try:
             order = self.order()
             order.pay_with()
             self._orderable = True
-        except Exception:
+        except pizzapi.address.StoreException:
             self._orderable = False
 
     def order(self):
@@ -230,7 +227,7 @@ class DominosOrder(Entity):
         try:
             order = self.order()
             order.place()
-        except Exception:
+        except pizzapi.address.StoreException:
             self._orderable = False
             _LOGGER.warning(
                 'Attempted to order Dominos - Order invalid or store closed')
