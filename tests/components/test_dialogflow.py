@@ -4,6 +4,7 @@ import json
 import unittest
 
 import requests
+from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.core import callback
 from homeassistant import setup, const
@@ -18,7 +19,7 @@ INTENTS_API_URL = "{}{}".format(BASE_API_URL, dialogflow.INTENTS_API_ENDPOINT)
 
 HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
+    CONTENT_TYPE: const.CONTENT_TYPE_JSON,
 }
 
 SESSION_ID = "a9b84cec-46b6-484e-8f31-f65dba03ae6d"

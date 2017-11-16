@@ -3,7 +3,7 @@
 # new version
 flake8==3.3
 pylint==1.6.5
-mypy==0.540
+mypy==0.550
 pydocstyle==1.1.1
 coveralls>=1.1
 pytest>=2.9.2

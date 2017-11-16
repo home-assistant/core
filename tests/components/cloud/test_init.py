@@ -3,9 +3,11 @@ import asyncio
 import json
 from unittest.mock import patch, MagicMock, mock_open
 
+from jose import jwt
 import pytest
 
 from homeassistant.components import cloud
+from homeassistant.util.dt import utcnow
 
 from tests.common import mock_coro
 
@@ -72,7 +74,6 @@ def test_initialize_loads_info(mock_os, hass):
     """Test initialize will load info from config file."""
     mock_os.path.isfile.return_value = True
     mopen = mock_open(read_data=json.dumps({
-        'email': 'test-email',
         'id_token': 'test-id-token',
         'access_token': 'test-access-token',
         'refresh_token': 'test-refresh-token',
@@ -85,7 +86,6 @@ def test_initialize_loads_info(mock_os, hass):
     with patch('homeassistant.components.cloud.open', mopen, create=True):
         yield from cl.initialize()
 
-    assert cl.email == 'test-email'
     assert cl.id_token == 'test-id-token'
     assert cl.access_token == 'test-access-token'
     assert cl.refresh_token == 'test-refresh-token'
@@ -102,7 +102,6 @@ def test_logout_clears_info(mock_os, hass):
     yield from cl.logout()
 
     assert len(cl.iot.disconnect.mock_calls) == 1
-    assert cl.email is None
     assert cl.id_token is None
     assert cl.access_token is None
     assert cl.refresh_token is None
@@ -115,7 +114,6 @@ def test_write_user_info():
     mopen = mock_open()
 
     cl = cloud.Cloud(MagicMock(), cloud.MODE_DEV)
-    cl.email = 'test-email'
     cl.id_token = 'test-id-token'
     cl.access_token = 'test-access-token'
     cl.refresh_token = 'test-refresh-token'
@@ -129,7 +127,41 @@ def test_write_user_info():
     data = json.loads(handle.write.mock_calls[0][1][0])
     assert data == {
         'access_token': 'test-access-token',
-        'email': 'test-email',
         'id_token': 'test-id-token',
         'refresh_token': 'test-refresh-token',
     }
+
+
+@asyncio.coroutine
+def test_subscription_not_expired_without_sub_in_claim():
+    """Test that we do not enforce subscriptions yet."""
+    cl = cloud.Cloud(None, cloud.MODE_DEV)
+    cl.id_token = jwt.encode({}, 'test')
+
+    assert not cl.subscription_expired
+
+
+@asyncio.coroutine
+def test_subscription_expired():
+    """Test subscription being expired."""
+    cl = cloud.Cloud(None, cloud.MODE_DEV)
+    cl.id_token = jwt.encode({
+        'custom:sub-exp': '2017-11-13'
+    }, 'test')
+
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=utcnow().replace(year=2018)):
+        assert cl.subscription_expired
+
+
+@asyncio.coroutine
+def test_subscription_not_expired():
+    """Test subscription not being expired."""
+    cl = cloud.Cloud(None, cloud.MODE_DEV)
+    cl.id_token = jwt.encode({
+        'custom:sub-exp': '2017-11-13'
+    }, 'test')
+
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=utcnow().replace(year=2017, month=11, day=9)):
+        assert not cl.subscription_expired

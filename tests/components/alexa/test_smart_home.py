@@ -114,12 +114,15 @@ def test_discovery_request(hass):
             'friendly_name': "Test light 3", 'supported_features': 19
         })
 
+    hass.states.async_set(
+        'script.test', 'off', {'friendly_name': "Test script"})
+
     msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 4
+    assert len(msg['payload']['endpoints']) == 5
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
 
@@ -170,6 +173,14 @@ def test_discovery_request(hass):
 
             continue
 
+        if appliance['endpointId'] == 'script#test':
+            assert appliance['displayCategories'][0] == "SWITCH"
+            assert appliance['friendlyName'] == "Test script"
+            assert len(appliance['capabilities']) == 1
+            assert appliance['capabilities'][-1]['interface'] == \
+                'Alexa.PowerController'
+            continue
+
         raise AssertionError("Unknown appliance!")
 
 
@@ -206,7 +217,7 @@ def test_api_function_not_implemented(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['light', 'switch'])
+@pytest.mark.parametrize("domain", ['light', 'switch', 'script'])
 def test_api_turn_on(hass, domain):
     """Test api turn on process."""
     request = get_new_request(
@@ -231,7 +242,7 @@ def test_api_turn_on(hass, domain):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['light', 'switch'])
+@pytest.mark.parametrize("domain", ['light', 'switch', 'script'])
 def test_api_turn_off(hass, domain):
     """Test api turn on process."""
     request = get_new_request(

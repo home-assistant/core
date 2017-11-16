@@ -37,7 +37,7 @@ class TestWeather(unittest.TestCase):
         assert state.state == 'sunny'
 
         data = state.attributes
-        assert data.get(ATTR_WEATHER_TEMPERATURE) == 21
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == 21.6
         assert data.get(ATTR_WEATHER_HUMIDITY) == 92
         assert data.get(ATTR_WEATHER_PRESSURE) == 1099
         assert data.get(ATTR_WEATHER_WIND_SPEED) == 0.5
@@ -57,4 +57,4 @@ class TestWeather(unittest.TestCase):
         assert state.state == 'rainy'
 
         data = state.attributes
-        assert data.get(ATTR_WEATHER_TEMPERATURE) == -24.4
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == -24

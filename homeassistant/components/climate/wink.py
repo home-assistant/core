@@ -4,22 +4,29 @@ Support for Wink thermostats, Air Conditioners, and Water Heaters.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
-import logging
 import asyncio
+import logging
 
-from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, STATE_FAN_ONLY,
-    ATTR_CURRENT_HUMIDITY, STATE_ECO, STATE_ELECTRIC,
-    STATE_PERFORMANCE, STATE_HIGH_DEMAND,
-    STATE_HEAT_PUMP, STATE_GAS)
+    STATE_ECO, STATE_GAS, STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ELECTRIC,
+    STATE_FAN_ONLY, STATE_HEAT_PUMP, ATTR_TEMPERATURE, STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE, ATTR_TARGET_TEMP_LOW, ATTR_CURRENT_HUMIDITY,
+    ATTR_TARGET_TEMP_HIGH, ClimateDevice)
+from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
-    TEMP_CELSIUS, STATE_ON,
-    STATE_OFF, STATE_UNKNOWN)
+    STATE_ON, STATE_OFF, TEMP_CELSIUS, STATE_UNKNOWN, PRECISION_TENTHS)
+from homeassistant.helpers.temperature import display_temp as show_temp
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_ECO_TARGET = 'eco_target'
+ATTR_EXTERNAL_TEMPERATURE = 'external_temperature'
+ATTR_OCCUPIED = 'occupied'
+ATTR_RHEEM_TYPE = 'rheem_type'
+ATTR_SCHEDULE_ENABLED = 'schedule_enabled'
+ATTR_SMART_TEMPERATURE = 'smart_temperature'
+ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_VACATION_MODE = 'vacation_mode'
 
 DEPENDENCIES = ['wink']
 
@@ -27,23 +34,21 @@ SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
 
-HA_STATE_TO_WINK = {STATE_AUTO: 'auto',
-                    STATE_ECO: 'eco',
-                    STATE_FAN_ONLY: 'fan_only',
-                    STATE_HEAT: 'heat_only',
-                    STATE_COOL: 'cool_only',
-                    STATE_PERFORMANCE: 'performance',
-                    STATE_HIGH_DEMAND: 'high_demand',
-                    STATE_HEAT_PUMP: 'heat_pump',
-                    STATE_ELECTRIC: 'electric_only',
-                    STATE_GAS: 'gas',
-                    STATE_OFF: 'off'}
-WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
+HA_STATE_TO_WINK = {
+    STATE_AUTO: 'auto',
+    STATE_COOL: 'cool_only',
+    STATE_ECO: 'eco',
+    STATE_ELECTRIC: 'electric_only',
+    STATE_FAN_ONLY: 'fan_only',
+    STATE_GAS: 'gas',
+    STATE_HEAT: 'heat_only',
+    STATE_HEAT_PUMP: 'heat_pump',
+    STATE_HIGH_DEMAND: 'high_demand',
+    STATE_OFF: 'off',
+    STATE_PERFORMANCE: 'performance',
+}
 
-ATTR_EXTERNAL_TEMPERATURE = "external_temperature"
-ATTR_SMART_TEMPERATURE = "smart_temperature"
-ATTR_ECO_TARGET = "eco_target"
-ATTR_OCCUPIED = "occupied"
+WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -85,15 +90,18 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
         if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
-                self.target_temperature_high)
+            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                PRECISION_TENTHS)
         if target_temp_low is not None:
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
-                self.target_temperature_low)
+            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                PRECISION_TENTHS)
 
         if self.external_temperature:
-            data[ATTR_EXTERNAL_TEMPERATURE] = self._convert_for_display(
-                self.external_temperature)
+            data[ATTR_EXTERNAL_TEMPERATURE] = show_temp(
+                self.hass, self.external_temperature, self.temperature_unit,
+                PRECISION_TENTHS)
 
         if self.smart_temperature:
             data[ATTR_SMART_TEMPERATURE] = self.smart_temperature
@@ -139,7 +147,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
 
     @property
     def eco_target(self):
-        """Return status of eco target (Is the termostat in eco mode)."""
+        """Return status of eco target (Is the thermostat in eco mode)."""
         return self.wink.eco_target()
 
     @property
@@ -249,7 +257,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             if ha_mode is not None:
                 op_list.append(ha_mode)
             else:
-                error = "Invaid operation mode mapping. " + mode + \
+                error = "Invalid operation mode mapping. " + mode + \
                     " doesn't map. Please report this."
                 _LOGGER.error(error)
         return op_list
@@ -297,7 +305,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         minimum = 7  # Default minimum
         min_min = self.wink.min_min_set_point()
         min_max = self.wink.min_max_set_point()
-        return_value = minimum
         if self.current_operation == STATE_HEAT:
             if min_min:
                 return_value = min_min
@@ -323,7 +330,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         maximum = 35  # Default maximum
         max_min = self.wink.max_min_set_point()
         max_max = self.wink.max_max_set_point()
-        return_value = maximum
         if self.current_operation == STATE_HEAT:
             if max_min:
                 return_value = max_min
@@ -360,13 +366,15 @@ class WinkAC(WinkDevice, ClimateDevice):
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
         if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
-                self.target_temperature_high)
+            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                PRECISION_TENTHS)
         if target_temp_low is not None:
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
-                self.target_temperature_low)
-        data["total_consumption"] = self.wink.total_consumption()
-        data["schedule_enabled"] = self.wink.schedule_enabled()
+            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                PRECISION_TENTHS)
+        data[ATTR_TOTAL_CONSUMPTION] = self.wink.total_consumption()
+        data[ATTR_SCHEDULE_ENABLED] = self.wink.schedule_enabled()
 
         return data
 
@@ -377,11 +385,14 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
+        """Return current operation ie. auto_eco, cool_only, fan_only."""
         if not self.wink.is_on():
             current_op = STATE_OFF
         else:
-            current_op = WINK_STATE_TO_HA.get(self.wink.current_hvac_mode())
+            wink_mode = self.wink.current_mode()
+            if wink_mode == "auto_eco":
+                wink_mode = "eco"
+            current_op = WINK_STATE_TO_HA.get(wink_mode)
             if current_op is None:
                 current_op = STATE_UNKNOWN
         return current_op
@@ -392,11 +403,13 @@ class WinkAC(WinkDevice, ClimateDevice):
         op_list = ['off']
         modes = self.wink.modes()
         for mode in modes:
+            if mode == "auto_eco":
+                mode = "eco"
             ha_mode = WINK_STATE_TO_HA.get(mode)
             if ha_mode is not None:
                 op_list.append(ha_mode)
             else:
-                error = "Invaid operation mode mapping. " + mode + \
+                error = "Invalid operation mode mapping. " + mode + \
                     " doesn't map. Please report this."
                 _LOGGER.error(error)
         return op_list
@@ -420,15 +433,19 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def current_fan_mode(self):
-        """Return the current fan mode."""
+        """
+        Return the current fan mode.
+
+        The official Wink app only supports 3 modes [low, medium, high]
+        which are equal to [0.33, 0.66, 1.0] respectively.
+        """
         speed = self.wink.current_fan_speed()
-        if speed <= 0.4 and speed > 0.3:
+        if speed <= 0.33:
             return SPEED_LOW
-        elif speed <= 0.8 and speed > 0.5:
+        elif speed <= 0.66:
             return SPEED_MEDIUM
-        elif speed <= 1.0 and speed > 0.8:
+        else:
             return SPEED_HIGH
-        return STATE_UNKNOWN
 
     @property
     def fan_list(self):
@@ -436,11 +453,16 @@ class WinkAC(WinkDevice, ClimateDevice):
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def set_fan_mode(self, fan):
-        """Set fan speed."""
+        """
+        Set fan speed.
+
+        The official Wink app only supports 3 modes [low, medium, high]
+        which are equal to [0.33, 0.66, 1.0] respectively.
+        """
         if fan == SPEED_LOW:
-            speed = 0.4
+            speed = 0.33
         elif fan == SPEED_MEDIUM:
-            speed = 0.8
+            speed = 0.66
         elif fan == SPEED_HIGH:
             speed = 1.0
         self.wink.set_ac_fan_speed(speed)
@@ -459,8 +481,8 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
     def device_state_attributes(self):
         """Return the optional state attributes."""
         data = {}
-        data["vacation_mode"] = self.wink.vacation_mode_enabled()
-        data["rheem_type"] = self.wink.rheem_type()
+        data[ATTR_VACATION_MODE] = self.wink.vacation_mode_enabled()
+        data[ATTR_RHEEM_TYPE] = self.wink.rheem_type()
 
         return data
 
@@ -492,7 +514,7 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
             if ha_mode is not None:
                 op_list.append(ha_mode)
             else:
-                error = "Invaid operation mode mapping. " + mode + \
+                error = "Invalid operation mode mapping. " + mode + \
                     " doesn't map. Please report this."
                 _LOGGER.error(error)
         return op_list

@@ -1,18 +1,19 @@
-"""The tests for the Google Actions component."""
+"""The tests for the Google Assistant component."""
 # pylint: disable=protected-access
-import json
 import asyncio
-import pytest
+import json
 
-from homeassistant import setup, const, core
-from homeassistant.components import (
-    http, async_setup, light, cover, media_player, fan, switch, climate
-)
-from homeassistant.components import google_assistant as ga
+from aiohttp.hdrs import CONTENT_TYPE, AUTHORIZATION
+import pytest
 from tests.common import get_test_instance_port
 
-from . import DEMO_DEVICES
+from homeassistant import core, const, setup
+from homeassistant.components import (
+    fan, http, cover, light, switch, climate, async_setup, media_player)
+from homeassistant.components import google_assistant as ga
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
+from . import DEMO_DEVICES
 
 API_PASSWORD = "test1234"
 SERVER_PORT = get_test_instance_port()
@@ -20,7 +21,7 @@ BASE_API_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
 HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
+    CONTENT_TYPE: const.CONTENT_TYPE_JSON,
 }
 
 AUTHCFG = {
@@ -28,12 +29,12 @@ AUTHCFG = {
     'client_id': 'helloworld',
     'access_token': 'superdoublesecret'
 }
-AUTH_HEADER = {'Authorization': 'Bearer {}'.format(AUTHCFG['access_token'])}
+AUTH_HEADER = {AUTHORIZATION: 'Bearer {}'.format(AUTHCFG['access_token'])}
 
 
 @pytest.fixture
 def assistant_client(loop, hass_fixture, test_client):
-    """Create web client for emulated hue api."""
+    """Create web client for the Google Assistant API."""
     hass = hass_fixture
     web_app = hass.http.app
 
@@ -45,7 +46,7 @@ def assistant_client(loop, hass_fixture, test_client):
 
 @pytest.fixture
 def hass_fixture(loop, hass):
-    """Set up a hass instance for these tests."""
+    """Set up a HOme Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(async_setup(hass, {core.DOMAIN: {}}))
 
@@ -180,6 +181,8 @@ def test_query_request(hass_fixture, assistant_client):
                     'id': "light.ceiling_lights",
                 }, {
                     'id': "light.bed_light",
+                }, {
+                    'id': "light.kitchen_lights",
                 }]
             }
         }]
@@ -192,10 +195,107 @@ def test_query_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     devices = body['payload']['devices']
-    assert len(devices) == 2
+    assert len(devices) == 3
     assert devices['light.bed_light']['on'] is False
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
+    assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
+    assert devices['light.kitchen_lights']['color']['temperature'] == 4166
+
+
+@asyncio.coroutine
+def test_query_climate_request(hass_fixture, assistant_client):
+    """Test a query request."""
+    reqid = '5711642932632160984'
+    data = {
+        'requestId':
+        reqid,
+        'inputs': [{
+            'intent': 'action.devices.QUERY',
+            'payload': {
+                'devices': [
+                    {'id': 'climate.hvac'},
+                    {'id': 'climate.heatpump'},
+                    {'id': 'climate.ecobee'},
+                ]
+            }
+        }]
+    }
+    result = yield from assistant_client.post(
+        ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
+        data=json.dumps(data),
+        headers=AUTH_HEADER)
+    assert result.status == 200
+    body = yield from result.json()
+    assert body.get('requestId') == reqid
+    devices = body['payload']['devices']
+    assert devices == {
+        'climate.heatpump': {
+            'thermostatTemperatureSetpoint': 20.0,
+            'thermostatTemperatureAmbient': 25.0,
+            'thermostatMode': 'heat',
+        },
+        'climate.ecobee': {
+            'thermostatTemperatureSetpointHigh': 24,
+            'thermostatTemperatureAmbient': 23,
+            'thermostatMode': 'on',
+            'thermostatTemperatureSetpointLow': 21
+        },
+        'climate.hvac': {
+            'thermostatTemperatureSetpoint': 21,
+            'thermostatTemperatureAmbient': 22,
+            'thermostatMode': 'cool',
+            'thermostatHumidityAmbient': 54,
+        }
+    }
+
+
+@asyncio.coroutine
+def test_query_climate_request_f(hass_fixture, assistant_client):
+    """Test a query request."""
+    hass_fixture.config.units = IMPERIAL_SYSTEM
+    reqid = '5711642932632160984'
+    data = {
+        'requestId':
+        reqid,
+        'inputs': [{
+            'intent': 'action.devices.QUERY',
+            'payload': {
+                'devices': [
+                    {'id': 'climate.hvac'},
+                    {'id': 'climate.heatpump'},
+                    {'id': 'climate.ecobee'},
+                ]
+            }
+        }]
+    }
+    result = yield from assistant_client.post(
+        ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
+        data=json.dumps(data),
+        headers=AUTH_HEADER)
+    assert result.status == 200
+    body = yield from result.json()
+    assert body.get('requestId') == reqid
+    devices = body['payload']['devices']
+    assert devices == {
+        'climate.heatpump': {
+            'thermostatTemperatureSetpoint': -6.7,
+            'thermostatTemperatureAmbient': -3.9,
+            'thermostatMode': 'heat',
+        },
+        'climate.ecobee': {
+            'thermostatTemperatureSetpointHigh': -4.4,
+            'thermostatTemperatureAmbient': -5,
+            'thermostatMode': 'on',
+            'thermostatTemperatureSetpointLow': -6.1,
+        },
+        'climate.hvac': {
+            'thermostatTemperatureSetpoint': -6.1,
+            'thermostatTemperatureAmbient': -5.6,
+            'thermostatMode': 'cool',
+            'thermostatHumidityAmbient': 54,
+        }
+    }
 
 
 @asyncio.coroutine
@@ -225,6 +325,31 @@ def test_execute_request(hass_fixture, assistant_client):
                             "on": False
                         }
                     }]
+                }, {
+                    "devices": [{
+                        "id": "light.kitchen_lights",
+                    }],
+                    "execution": [{
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "spectrumRGB": 16711680,
+                                "temperature": 2100
+                            }
+                        }
+                    }]
+                }, {
+                    "devices": [{
+                        "id": "light.kitchen_lights",
+                    }],
+                    "execution": [{
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "spectrumRGB": 16711680
+                            }
+                        }
+                    }]
                 }]
             }
         }]
@@ -237,7 +362,10 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 3
+    assert len(commands) == 5
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
+    kitchen = hass_fixture.states.get('light.kitchen_lights')
+    assert kitchen.attributes.get(light.ATTR_COLOR_TEMP) == 476
+    assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
     assert hass_fixture.states.get('switch.decorative_lights').state == 'off'

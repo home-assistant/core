@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.components import switch, light
+from homeassistant.components import switch, light, script
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -21,6 +21,7 @@ API_ENDPOINT = 'endpoint'
 
 
 MAPPING_COMPONENT = {
+    script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
