@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HAS_DATE): cv.boolean,
             vol.Required(CONF_HAS_TIME): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL): cv.datetime,
+            vol.Optional(CONF_INITIAL): cv.string,
         }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
                                          (CONF_HAS_TIME, True)))})
 }, extra=vol.ALLOW_EXTRA)
@@ -137,15 +137,15 @@ class InputDatetime(Entity):
             old_state = yield from async_get_last_state(self.hass,
                                                         self.entity_id)
             if old_state is not None:
-                restore_val = dt_util.parse_datetime(old_state.state)
+                restore_val = old_state.state
 
         if restore_val is not None:
             if not self._has_date:
-                self._current_datetime = restore_val.time()
+                self._current_datetime = dt_util.parse_time(restore_val)
             elif not self._has_time:
-                self._current_datetime = restore_val.date()
+                self._current_datetime = dt_util.parse_date(restore_val)
             else:
-                self._current_datetime = restore_val
+                self._current_datetime = dt_util.parse_datetime(restore_val)
 
     def has_date(self):
         """Return whether the input datetime carries a date."""
