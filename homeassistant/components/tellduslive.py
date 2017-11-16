@@ -43,6 +43,7 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
     }),
@@ -171,6 +172,13 @@ def setup(hass, config, session=None):
         _LOGGER.info('Found entry in configuration.yaml. '
                      'Requesting TelldusLive cloud service configuration')
         hass.async_add_job(request_configuration)
+        
+        if CONF_HOST in config.get(DOMAIN, {}):
+            _LOGGER.info('Found TelldusLive host entry in configuration.yaml. '
+                         'Requesting Telldus Local API configuration')
+            hass.async_add_job(request_configuration,
+                               config.get(DOMAIN).get(CONF_HOST))
+        
         return True
     else:
         _LOGGER.info('Tellstick discovered, awaiting discovery callback')
