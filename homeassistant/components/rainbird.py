@@ -10,25 +10,26 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import (CONF_PLATFORM, CONF_HOST, CONF_PASSWORD)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
 REQUIREMENTS = ['pyrainbird==0.1.1']
 
 DATA_RAINBIRD = 'rainbird'
-
+DOMAIN = 'rainbird'
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
-
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
-     """Set up Rain Bird componenent."""
-    server = config.get(CONF_HOST)
-    password = config.get(CONF_PASSWORD)
+    """Set up Rain Bird componenent."""
+    conf = config[DOMAIN]
+    server = conf.get(CONF_HOST)
+    password = conf.get(CONF_PASSWORD)
 
     from pyrainbird import RainbirdController
     controller = RainbirdController(_LOGGER)
@@ -44,9 +45,4 @@ def setup(hass, config):
         _LOGGER.debug("Initialized Rain Bird Controller")
 
     hass.data[DATA_RAINBIRD] = controller
-
-    def hub_refresh(event_time):
-        """Call Raincloud hub to refresh information."""
-        _LOGGER.debug("Updating RainCloud Hub component.")
-        hass.data[DATA_RAINCLOUD].data.update()
-        dispatcher_send(hass, SIGNAL_UPDATE_RAINCLOUD)
+    return True
