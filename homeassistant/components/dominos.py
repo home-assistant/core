@@ -16,7 +16,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import http
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import Throttle
 
@@ -39,7 +39,7 @@ ATTR_ORDER_NAME = 'name'
 ATTR_ORDER_CODES = 'codes'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-MIN_TIME_BETWEEN_STORE_UPDATES = 1800
+MIN_TIME_BETWEEN_STORE_UPDATES = timedelta(minutes=3330)
 
 REQUIREMENTS = ['pizzapi==0.0.2']
 
@@ -119,6 +119,7 @@ class Dominos():
         for order in target_orders:
             order.place()
 
+    @Throttle(MIN_TIME_BETWEEN_STORE_UPDATES)
     def update_closest_store(self):
         """Update the shared closest store (if open)."""
         cur_time = time.time()
