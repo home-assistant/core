@@ -93,11 +93,6 @@ class HddTempSensor(Entity):
                 ATTR_DEVICE: self._details[0],
                 ATTR_MODEL: self._details[1],
                 }
-        # else:
-        #     return {
-        #         ATTR_DEVICE: '-',
-        #         ATTR_MODEL: '-',
-        #         }
 
     def update(self):
         """Get the latest data from HDDTemp daemon and updates the state."""
