@@ -57,9 +57,10 @@ class DeconzLight(Light):
         self._features |= SUPPORT_TRANSITION
         if self._light.ct:
             self._features |= SUPPORT_COLOR_TEMP
-        if self._light.xy:
             self._features |= SUPPORT_XY_COLOR
+        if self._light.xy:
             self._features |= SUPPORT_RGB_COLOR
+            self._features |= SUPPORT_XY_COLOR
         if self._light.effect:
             self._features |= SUPPORT_EFFECT
 
