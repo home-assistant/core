@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_API_KEY, CONF_EVENT, CONF_HOST, CONF_ID, CONF_PASSWORD, CONF_PORT,
+    CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback, EventOrigin
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -123,11 +123,11 @@ class DeconzEvent(object):
         self._hass = hass
         self._device = device
         self._device.register_callback(self._update_callback)
-        self._event = 'deconz_event'
+        self._event = DOMAIN + '_' + CONF_EVENT
         self._id = slugify(self._device.name)
 
     @callback
     def _update_callback(self):
         """Fire the event."""
-        data = {'id': self._id, 'event': self._device.state}
+        data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
         self._hass.bus.async_fire(self._event, data, EventOrigin.remote)
