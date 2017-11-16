@@ -8,7 +8,6 @@ https://home-assistant.io/components/alexa/
 import asyncio
 import enum
 import logging
-import itertools
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_BAD_REQUEST
@@ -136,21 +135,17 @@ def resolve_slot_synonyms(key, request):
             'resolutionsPerAuthority' in request['resolutions'] and
             len(request['resolutions']['resolutionsPerAuthority']) >= 1):
 
-        # Only consider the authorities with a successful match
-        matches = filter(
-            lambda x: x['status']['code'] == SYN_RESOLUTION_MATCH,
-            request['resolutions']['resolutionsPerAuthority']
-        )
+        # Extract all of the possible values from each authority with a
+        # successful match
+        possible_values = []
 
-        # Extract all of the possible values from the object.
-        possible_values = list(
-            itertools.chain.from_iterable([
-                map(
-                    lambda val: val['value']['name'],
-                    x['values']
-                ) for x in matches
-            ])
-        )
+        for entry in request['resolutions']['resolutionsPerAuthority']:
+            if entry['status']['code'] != SYN_RESOLUTION_MATCH:
+                continue
+
+            possible_values.extend([item['value']['name']
+                                    for item
+                                    in entry['values']])
 
         # If there is only one match use the resolved value, otherwise the
         # resolution cannot be determined, so use the spoken slot value
