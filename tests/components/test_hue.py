@@ -55,15 +55,20 @@ class TestSetup(unittest.TestCase):
         mock_bridge = mock_phue.Bridge
 
         with assert_setup_component(2):
-            self.assertTrue(setup_component(
-                self.hass, hue.DOMAIN,
-                {hue.DOMAIN: {CONF_HOST: 'localhost'}}))
+            with patch('homeassistant.helpers.discovery.load_platform') \
+                    as mock_load:
+                self.assertTrue(setup_component(
+                    self.hass, hue.DOMAIN,
+                    {hue.DOMAIN: {CONF_HOST: 'localhost'}}))
 
-            mock_bridge.assert_called_once_with(
-                'localhost',
-                config_file_path=get_test_config_dir(hue.PHUE_CONFIG_FILE))
+                mock_bridge.assert_called_once_with(
+                    'localhost',
+                    config_file_path=get_test_config_dir(hue.PHUE_CONFIG_FILE))
+                mock_load.assert_called_once_with(
+                    self.hass, 'light', hue.DOMAIN, {},
+                    {'host': 'localhost', 'allow_hue_groups': True})
 
-            self.assertTrue(hue.DOMAIN in self.hass.data)
+                self.assertTrue(hue.DOMAIN in self.hass.data)
 
     @MockDependency('phue')
     def test_setup_with_phue_conf(self, mock_phue):
@@ -74,22 +79,24 @@ class TestSetup(unittest.TestCase):
             with patch(
                     'homeassistant.components.hue._find_host_from_config',
                     return_value='localhost'):
-                self.assertTrue(setup_component(
-                    self.hass, hue.DOMAIN, {hue.DOMAIN: {}}))
+                with patch('homeassistant.helpers.discovery.load_platform') \
+                        as mock_load:
+                    self.assertTrue(setup_component(
+                        self.hass, hue.DOMAIN, {hue.DOMAIN: {}}))
 
-                mock_bridge.assert_called_once_with(
-                    'localhost',
-                    config_file_path=get_test_config_dir(
-                        hue.PHUE_CONFIG_FILE))
-                mock_load.assert_called_once_with(
-                    self.hass, 'light', hue.DOMAIN, {},
-                    {'allow_hue_groups': True})
+                    mock_bridge.assert_called_once_with(
+                        'localhost',
+                        config_file_path=get_test_config_dir(
+                            hue.PHUE_CONFIG_FILE))
+                    mock_load.assert_called_once_with(
+                        self.hass, 'light', hue.DOMAIN, {},
+                        {'allow_hue_groups': True})
 
-                self.assertTrue(hue.DOMAIN in self.hass.data)
+                    self.assertTrue(hue.DOMAIN in self.hass.data)
 
 
-class TestHue(unittest.TestCase):
-    """Test the Hue class."""
+class TestHueBridge(unittest.TestCase):
+    """Test the HueBridge class."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""

@@ -107,6 +107,7 @@ def setup(hass, config):
     hass.data[DOMAIN][socket.gethostbyname(host)] = bridge
     bridge.setup()
 
+    discovery.load_platform(hass, 'light', DOMAIN, {}, config)
 
     return True
 
@@ -189,3 +190,15 @@ class HueBridge(object):
             entity_picture="/static/images/logo_philips_hue.png",
             submit_caption="I have pressed the button"
         )
+
+    def get_api(self):
+        """Returns the full api dictionary from phue."""
+        return self.bridge.get_api()
+
+    def set_light(self, light_id, command):
+        """Adjust properties of one or more lights. See phue for details."""
+        return self.bridge.set_light(light_id, command)
+
+    def set_group(self, light_id, command):
+        """Change light settings for a group. See phue for detail."""
+        return self.bridge.set_group(light_id, command)

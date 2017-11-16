@@ -58,6 +58,7 @@ TEST_REQUIREMENTS = (
     'numpy',
     'paho-mqtt',
     'pexpect',
+    'phue',
     'pilight',
     'pmsensor',
     'prometheus_client',
