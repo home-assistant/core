@@ -345,7 +345,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
-        self.assertEqual('switch', call.domain)
+        self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
