@@ -27,8 +27,7 @@ API_ENDPOINT = 'endpoint'
 ATTR_ALEXA_HIDDEN = 'alexa_hidden'
 ATTR_ALEXA_NAME = 'alexa_name'
 ATTR_ALEXA_DESCRIPTION = 'alexa_description'
-ATTR_ALEXA_MEDIA_CATEGORY = 'alexa_media_category'
-ATTR_ALEXA_SCENE_CATEGORY = 'alexa_scene_category'
+ATTR_ALEXA_DISPLAY_CATEGORIES = 'alexa_display_categories'
 
 
 MAPPING_COMPONENT = {
@@ -157,16 +156,8 @@ def async_api_discovery(hass, request):
             scene_fmt = '%s (Scene connected via Home Assistant)'
             description = scene_fmt.format(description)
 
-        display_categories = class_data[0]
-
-        if entity.domain == media_player.DOMAIN:
-            cat_key = ATTR_ALEXA_MEDIA_CATEGORY
-            display_categories = entity.attributes.get(cat_key, 'TV')
-
-        if entity.domain == scene.DOMAIN:
-            cat_key = ATTR_ALEXA_SCENE_CATEGORY
-            display_categories = entity.attributes.get(cat_key,
-                                                       'ACTIVITY_TRIGGER')
+        cat_key = ATTR_ALEXA_DISPLAY_CATEGORIES
+        display_categories = entity.attributes.get(cat_key, class_data[0])
 
         endpoint = {
             'displayCategories': [display_categories],
