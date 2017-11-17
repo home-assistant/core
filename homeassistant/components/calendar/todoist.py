@@ -15,7 +15,7 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.components.calendar import Calendar, CalendarEvent
+from homeassistant.components.calendar import Calendar, CalendarEvent, PLATFORM_SCHEMA
 from homeassistant.components.google import (
     CONF_DEVICE_ID)
 from homeassistant.config import load_yaml_config_file
@@ -125,20 +125,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     projects = api.state[PROJECTS]
 
-    # TODO: Custom 'project' calendars
-    add_devices([TodoistCalendar(hass, api, project)
-                 for project in projects])
+    project_devices = []
+    for project in projects:
+        project_data = {
+            CONF_NAME: project[NAME],
+            CONF_ID: project[ID]
+        }
+
+        project_devices.append(TodoistCalendar(api, project_data))
+
+    # TODO: Custom attributes (due date, labels ,...)
+    extra_projects = config.get(CONF_EXTRA_PROJECTS)
+    for project in extra_projects:
+        project_devices.append(TodoistCalendar(api, project))
+
+    add_devices(project_devices)
 
 
 class TodoistCalendar(Calendar):
     """Entity for Todoist Calendars."""
 
-    def __init__(self, hass, api, project):
+    def __init__(self, api, project):
         """Initialze Todoist Calendar entity."""
         self._api = api
         self._events = []
-        self._name = project[NAME]
-        self._id = project[ID]
+        self._name = project.get(CONF_NAME)
+        self._id = project.get(CONF_ID)
         self._next_event = None
 
         self.refresh_events()
@@ -169,7 +181,11 @@ class TodoistCalendar(Calendar):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def refresh_events(self):
         """Update list of event."""
-        tasks = self._api.projects.get_data(self._id)[TASKS]
+        tasks = []
+        if self._id is None:
+            tasks = self._api.state[TASKS]
+        else:
+            tasks = self._api.projects.get_data(self._id)[TASKS]
 
         self._events = [TodoistCalendarEvent(task) for task in tasks]
 
@@ -178,13 +194,11 @@ class TodoistCalendarEvent(CalendarEvent):
 
     def __init__(self, task):
         """Initialize google event."""
-        _LOGGER.info(task)
-
-        self._message = task.get('content')
+        self._message = task[CONTENT]
         self._start = dt.utcnow()
 
         # TODO: Handle tasks without due date
-        self._end = self.convertDatetime(task.get('due_date_utc'))
+        self._end = self.convertDatetime(task[DUE_DATE_UTC])
 
         # TODO: Add additional properties: labels, overdue, all_day, ...
 
