@@ -9,20 +9,16 @@ https://home-assistant.io/components/calendar.todoist/
 from datetime import datetime
 from datetime import timedelta
 import logging
-import os
 
 import asyncio
 
 import voluptuous as vol
 
-from homeassistant.components.calendar import Calendar, CalendarEvent, PLATFORM_SCHEMA
-from homeassistant.components.google import (
-    CONF_DEVICE_ID)
-from homeassistant.config import load_yaml_config_file
+from homeassistant.components.calendar import (
+    Calendar, CalendarEvent, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
 from homeassistant.util import Throttle
 
@@ -123,21 +119,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api = TodoistAPI(token)
     api.sync()
 
+    # Setup devices:
+    # Grab all projects
     projects = api.state[PROJECTS]
 
+    # Grab all labels
+    labels = api.state[LABELS]
+
+    # Add all Todoist-defined projects.
     project_devices = []
     for project in projects:
+        # Project is an object, not a dict!
+        # Because of that, we convert what we need to a dict.
         project_data = {
             CONF_NAME: project[NAME],
             CONF_ID: project[ID]
         }
 
-        project_devices.append(TodoistCalendar(api, project_data))
+        project_devices.append(TodoistCalendar(api, project_data, labels))
 
     # TODO: Custom attributes (due date, labels ,...)
     extra_projects = config.get(CONF_EXTRA_PROJECTS)
     for project in extra_projects:
-        project_devices.append(TodoistCalendar(api, project))
+        # Special filter: By date
+        project_due_date = project.get(CONF_PROJECT_DUE_DATE)
+
+        # Special filter: By label
+        project_label_filter = project.get(CONF_PROJECT_LABEL_WHITELIST)
+
+        project_devices.append(TodoistCalendar(api,
+                               project, labels, project_due_date,
+                               project_label_filter))
 
     add_devices(project_devices)
 
@@ -145,13 +157,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TodoistCalendar(Calendar):
     """Entity for Todoist Calendars."""
 
-    def __init__(self, api, project):
+    def __init__(self, api, project, labels, due_date=None,
+                 whitelisted_labels=None):
         """Initialze Todoist Calendar entity."""
         self._api = api
         self._events = []
         self._name = project.get(CONF_NAME)
         self._id = project.get(CONF_ID)
         self._next_event = None
+        self._labels = labels
+
+        if due_date is not None:
+            self._due_date = dt.utcnow() + timedelta(days=due_date)
+        else:
+            self._due_date = None
+
+        if whitelisted_labels is not None:
+            self._label_whitelist = whitelisted_labels
+        else:
+            self._label_whitelist = []
 
         self.refresh_events()
 
@@ -176,7 +200,7 @@ class TodoistCalendar(Calendar):
         self.refresh_events()
 
         # TODO: find next event
-        #self._next_event = self.update_next_event()
+        # self._next_event = self.update_next_event()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def refresh_events(self):
@@ -187,15 +211,46 @@ class TodoistCalendar(Calendar):
         else:
             tasks = self._api.projects.get_data(self._id)[TASKS]
 
-        self._events = [TodoistCalendarEvent(task) for task in tasks]
+        for task in tasks:
+            task_labels = [label[NAME].lower() for label in self._labels
+                           if label[ID] in task[LABELS]]
+
+            if self._due_date is not None:
+                due_date = task[DUE_DATE_UTC]
+
+                if due_date is None:
+                    continue
+
+                # Due dates are represented in RFC3339 format, in UTC.
+                # Home Assistant exclusively uses UTC, so it'll
+                # handle the conversion.
+                time_format = '%a %d %b %Y %H:%M:%S %z'
+                # HASS' built-in parse time function doesn't like
+                # Todoist's time format; strptime has to be used.
+                task_end = datetime.strptime(due_date, time_format)
+
+                if task_end > self._due_date:
+                    # This task is out of range of our due date
+                    # it shouldn't be included
+                    continue
+
+            if self._label_whitelist and (
+                not any(label in task[LABELS]
+                        for label in self._label_whitelist)):
+                # We're not on the whitelist, return invalid task.
+                continue
+
+            self._events.append(TodoistCalendarEvent(task, task_labels))
+
 
 class TodoistCalendarEvent(CalendarEvent):
     """class for creating google events."""
 
-    def __init__(self, task):
+    def __init__(self, task, task_labels):
         """Initialize google event."""
         self._message = task[CONTENT]
         self._start = dt.utcnow()
+        self._labels = task_labels
 
         # TODO: Handle tasks without due date
         self._end = self.convertDatetime(task[DUE_DATE_UTC])
