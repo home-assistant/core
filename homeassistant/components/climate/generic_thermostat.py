@@ -126,17 +126,6 @@ class GenericThermostat(ClimateDevice):
         if sensor_state:
             self._async_update_temp(sensor_state)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        # If we have an old state and no target temp, restore
-        if self._target_temp is None:
-            old_state = yield from async_get_last_state(self.hass,
-                                                        self.entity_id)
-            if old_state is not None:
-                self._target_temp = float(
-                    old_state.attributes[ATTR_TEMPERATURE])
-
     @property
     def should_poll(self):
         """Return the polling state."""
