@@ -120,12 +120,15 @@ def test_discovery_request(hass):
     hass.states.async_set(
         'input_boolean.test', 'off', {'friendly_name': "Test input boolean"})
 
+    hass.states.async_set(
+        'scene.test', 'off', {'friendly_name': "Test scene"})
+
     msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 6
+    assert len(msg['payload']['endpoints']) == 7
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
 
@@ -190,6 +193,14 @@ def test_discovery_request(hass):
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
                 'Alexa.PowerController'
+            continue
+
+        if appliance['endpointId'] == 'scene#test':
+            assert appliance['displayCategories'][0] == "ACTIVITY_TRIGGER"
+            assert appliance['friendlyName'] == "Test scene"
+            assert len(appliance['capabilities']) == 1
+            assert appliance['capabilities'][-1]['interface'] == \
+                'Alexa.SceneController'
             continue
 
         raise AssertionError("Unknown appliance!")
@@ -482,4 +493,29 @@ def test_api_increase_color_temp(hass, result, initial):
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
     assert call_light[0].data['color_temp'] == result
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("domain", ['scene'])
+def test_api_activate(hass, domain):
+    """Test api activate process."""
+    request = get_new_request(
+        'Alexa.SceneController', 'Activate', '{}#test'.format(domain))
+
+    # settup test devices
+    hass.states.async_set(
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
+
+    call = async_mock_service(hass, domain, 'turn_on')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
     assert msg['header']['name'] == 'Response'
