@@ -236,7 +236,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.config_picture, 'http://test.picture')
 
     def test_gravatar_googleplus_and_picture(self):
-        """Test the that googleplus overrides picture and gravatar"""
+        """Test the that googleplus overrides picture and gravatar."""
         dev_id = 'test'
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
