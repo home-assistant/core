@@ -22,6 +22,7 @@ from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
 from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,6 +125,17 @@ class GenericThermostat(ClimateDevice):
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
             self._async_update_temp(sensor_state)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        # If we have an old state and no target temp, restore
+        if self._target_temp is None:
+            old_state = yield from async_get_last_state(self.hass,
+                                                        self.entity_id)
+            if old_state is not None:
+                self._target_temp = float(
+                    old_state.attributes[ATTR_TEMPERATURE])
 
     @property
     def should_poll(self):
