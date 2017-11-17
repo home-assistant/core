@@ -5,11 +5,11 @@ import math
 from uuid import uuid4
 
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON,
-    SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_VOLUME_SET,
-    SERVICE_MEDIA_STOP, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_SET_COVER_POSITION)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_LOCK,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_UNLOCK, SERVICE_VOLUME_SET)
 from homeassistant.components import (
     alert, automation, cover, fan, group, input_boolean, light, lock,
     media_player, scene, script, switch)
@@ -20,15 +20,15 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 API_DIRECTIVE = 'directive'
+API_ENDPOINT = 'endpoint'
 API_EVENT = 'event'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
-API_ENDPOINT = 'endpoint'
 
-ATTR_ALEXA_HIDDEN = 'alexa_hidden'
-ATTR_ALEXA_NAME = 'alexa_name'
 ATTR_ALEXA_DESCRIPTION = 'alexa_description'
 ATTR_ALEXA_DISPLAY_CATEGORIES = 'alexa_display_categories'
+ATTR_ALEXA_HIDDEN = 'alexa_hidden'
+ATTR_ALEXA_NAME = 'alexa_name'
 
 
 MAPPING_COMPONENT = {
