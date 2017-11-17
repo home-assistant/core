@@ -158,7 +158,7 @@ def async_api_discovery(hass, request):
             'endpointId': entity.entity_id.replace('.', '#'),
             'friendlyName': friendly_name,
             'description': description,
-            'manufacturerName': 'Unknown',
+            'manufacturerName': 'Home Assistant',
         }
         actions = set()
 
