@@ -894,7 +894,7 @@ pytile==1.0.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==4.0.4
+# pytradfri[async]==4.1.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
