@@ -40,7 +40,7 @@ class Host(object):
         if sys.platform == 'win32':
             self._ping_cmd = ['ping', '-n 1', '-w', '1000', self.ip_address]
         else:
-            self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
+            self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1' '-w5',
                               self.ip_address]
 
     def ping(self):
