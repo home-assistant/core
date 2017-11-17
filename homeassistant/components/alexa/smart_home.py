@@ -473,8 +473,6 @@ def async_api_adjust_volume(hass, request, entity):
 
     current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
 
-    multiply = int(current_level * 100)
-
     # read current state
     try:
         current = math.floor(int(current_level * 100))
