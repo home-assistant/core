@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.components import switch, light, script, scene
+from homeassistant.components import switch, light, script, scene, fan
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -23,6 +23,11 @@ API_ENDPOINT = 'endpoint'
 MAPPING_COMPONENT = {
     scene.DOMAIN: ['SCENE', ('Alexa.SceneController',), None],
     script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
+    fan.DOMAIN: [
+        'SWITCH', ('Alexa.PowerController',), {
+            fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
+        }
+    ],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
@@ -332,6 +337,64 @@ def async_api_deactivate(hass, request, entity):
     """Process a deactivate request."""
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_percentage(hass, request, entity):
+    """Process a set percentage request."""
+    percentage = int(request[API_PAYLOAD]['percentage'])
+    speed = "off"
+
+    if percentage <= 33:
+        speed = "low"
+    elif percentage <= 66:
+        speed = "medium"
+    elif percentage <= 100:
+        speed = "high"
+
+    yield from hass.services.async_call(entity.domain, fan.SERVICE_SET_SPEED, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_SPEED: speed,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PercentageController', 'AdjustPercentage'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_percentage(hass, request, entity):
+    """Process a adjust percentage request."""
+    percentage_delta = int(request[API_PAYLOAD]['percentageDelta'])
+    speed = entity.attributes.get(fan.ATTR_SPEED)
+
+    if speed == "off":
+        current = 0
+    elif speed == "low":
+        current = 33
+    elif speed == "medium":
+        current = 66
+    elif speed == "high":
+        current = 100
+
+    # set percentage
+    percentage = max(0, percentage_delta + current)
+    speed = "off"
+
+    if percentage <= 33:
+        speed = "low"
+    elif percentage <= 66:
+        speed = "medium"
+    elif percentage <= 100:
+        speed = "high"
+    yield from hass.services.async_call(entity.domain, fan.SERVICE_SET_SPEED, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_SPEED: speed,
     }, blocking=True)
 
     return api_message(request)
