@@ -99,6 +99,11 @@ class CalendarEvent(object):
         """Return location of the event."""
         return None
 
+    @property
+    def labels(self):
+        """Return labels of the event."""
+        return None
+
     def is_active(self):
         """Check whether event is currently active."""
         if self.start is None:
@@ -124,6 +129,9 @@ class CalendarEvent(object):
 
         if self.location is not None:
             event.location = self.location
+
+        if self.labels is not None:
+            event.labels = self.labels
 
         return event
 

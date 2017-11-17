@@ -168,6 +168,7 @@ class TodoistCalendar(Calendar):
         self._labels = labels
 
         if due_date is not None:
+            # TODO: Set to end of day?
             self._due_date = dt.utcnow() + timedelta(days=due_date)
         else:
             self._due_date = None
@@ -244,10 +245,10 @@ class TodoistCalendar(Calendar):
 
 
 class TodoistCalendarEvent(CalendarEvent):
-    """class for creating google events."""
+    """class for creating todoist events."""
 
     def __init__(self, task, task_labels):
-        """Initialize google event."""
+        """Initialize todoist event."""
         self._message = task[CONTENT]
         self._start = dt.utcnow()
         self._labels = task_labels
@@ -275,3 +276,8 @@ class TodoistCalendarEvent(CalendarEvent):
     def message(self):
         """Return text set on the event."""
         return self._message
+
+    @property
+    def labels(self):
+        """Return labels set on the event."""
+        return self._labels
