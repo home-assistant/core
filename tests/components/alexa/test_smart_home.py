@@ -142,12 +142,21 @@ def test_discovery_request(hass):
             'volume_level': 1
         })
 
+    hass.states.async_set(
+        'alert.test', 'off', {'friendly_name': "Test alert"})
+
+    hass.states.async_set(
+        'automation.test', 'off', {'friendly_name': "Test automation"})
+
+    hass.states.async_set(
+        'group.test', 'off', {'friendly_name': "Test group"})
+
     msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 11
+    assert len(msg['payload']['endpoints']) == 14
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
 
@@ -264,6 +273,30 @@ def test_discovery_request(hass):
             assert 'Alexa.PlaybackController' in caps
             continue
 
+        if appliance['endpointId'] == 'alert#test':
+            assert appliance['displayCategories'][0] == "OTHER"
+            assert appliance['friendlyName'] == "Test alert"
+            assert len(appliance['capabilities']) == 1
+            assert appliance['capabilities'][-1]['interface'] == \
+                'Alexa.PowerController'
+            continue
+
+        if appliance['endpointId'] == 'automation#test':
+            assert appliance['displayCategories'][0] == "OTHER"
+            assert appliance['friendlyName'] == "Test automation"
+            assert len(appliance['capabilities']) == 1
+            assert appliance['capabilities'][-1]['interface'] == \
+                'Alexa.PowerController'
+            continue
+
+        if appliance['endpointId'] == 'group#test':
+            assert appliance['displayCategories'][0] == "OTHER"
+            assert appliance['friendlyName'] == "Test group"
+            assert len(appliance['capabilities']) == 1
+            assert appliance['capabilities'][-1]['interface'] == \
+                'Alexa.PowerController'
+            continue
+
         raise AssertionError("Unknown appliance!")
 
 
@@ -300,8 +333,9 @@ def test_api_function_not_implemented(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['light', 'switch',
-                                    'script', 'input_boolean'])
+@pytest.mark.parametrize("domain", ['alert', 'automation', 'group',
+                                    'input_boolean', 'light', 'script',
+                                    'switch'])
 def test_api_turn_on(hass, domain):
     """Test api turn on process."""
     request = get_new_request(
@@ -326,8 +360,9 @@ def test_api_turn_on(hass, domain):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['light', 'switch',
-                                    'script', 'input_boolean'])
+@pytest.mark.parametrize("domain", ['alert', 'automation', 'group',
+                                    'input_boolean', 'light', 'script',
+                                    'switch'])
 def test_api_turn_off(hass, domain):
     """Test api turn on process."""
     request = get_new_request(

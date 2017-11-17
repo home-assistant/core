@@ -10,7 +10,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_STOP, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK)
 from homeassistant.components import (
-    fan, input_boolean, light, lock, media_player, scene, script, switch)
+    alert, automation, fan, group, input_boolean, light, lock,
+    media_player, scene, script, switch)
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -31,11 +32,14 @@ ATTR_ALEXA_SCENE_CATEGORY = 'alexa_scene_category'
 
 
 MAPPING_COMPONENT = {
+    alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
+    automation.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     fan.DOMAIN: [
         'SWITCH', ('Alexa.PowerController',), {
             fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
         }
     ],
+    group.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     input_boolean.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
