@@ -487,6 +487,14 @@ def forgiving_float(value):
         return value
 
 
+def as_json(value):
+    """Try to convert the value to a JSON object."""
+    try:
+        return json.loads(value)
+    except ValueError:
+        return value
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -515,6 +523,7 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['as_json'] = as_json
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow
