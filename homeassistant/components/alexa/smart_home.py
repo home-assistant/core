@@ -6,9 +6,9 @@ from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON,
-    SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK)
+    SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_VOLUME_SET)
 from homeassistant.components import (
-    fan, input_boolean, light, lock, scene, script, switch)
+    fan, input_boolean, light, lock, media_player, scene, script, switch)
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -24,6 +24,7 @@ API_ENDPOINT = 'endpoint'
 ATTR_ALEXA_HIDDEN = 'alexa_hidden'
 ATTR_ALEXA_NAME = 'alexa_name'
 ATTR_ALEXA_DESCRIPTION = 'alexa_description'
+ATTR_ALEXA_MEDIA_CATEGORY = 'alexa_media_category'
 
 
 MAPPING_COMPONENT = {
@@ -42,6 +43,11 @@ MAPPING_COMPONENT = {
         }
     ],
     lock.DOMAIN: ['SMARTLOCK', ('Alexa.LockController',), None],
+    media_player.DOMAIN: [
+        'TV', ('Alexa.PowerController',), {
+            media_player.SUPPORT_VOLUME_SET: 'Alexa.Speaker',
+        }
+    ],
     scene.DOMAIN: ['ACTIVITY_TRIGGER', ('Alexa.SceneController',), None],
     script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
@@ -134,8 +140,13 @@ def async_api_discovery(hass, request):
         description = entity.attributes.get(ATTR_ALEXA_DESCRIPTION,
                                             entity.entity_id)
 
+        display_categories = class_data[0]
+        if entity.domain == media_player.DOMAIN:
+            cat_key = ATTR_ALEXA_MEDIA_CATEGORY
+            display_categories = entity.attributes.get(cat_key, 'TV')
+
         endpoint = {
-            'displayCategories': [class_data[0]],
+            'displayCategories': [display_categories],
             'additionalApplianceDetails': {},
             'endpointId': entity.entity_id.replace('.', '#'),
             'friendlyName': friendly_name,
@@ -424,5 +435,72 @@ def async_api_unlock(hass, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.Speaker', 'SetVolume'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_volume(hass, request, entity):
+    """Process a set volume request."""
+    volume = float(request[API_PAYLOAD]['volume'] * 100)
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_VOLUME_SET,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.Speaker', 'AdjustVolume'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_volume(hass, request, entity):
+    """Process a adjust volume request."""
+    volume_delta = float(request[API_PAYLOAD]['volume'])
+
+    current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+
+    # read current state
+    try:
+        current = math.floor(float(current_level) * 100)
+    except ZeroDivisionError:
+        current = 0
+
+    volume = max(0, volume_delta + current)
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_VOLUME_SET,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.Speaker', 'SetMute'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_mute(hass, request, entity):
+    """Process a set mute request."""
+    mute = bool(request[API_PAYLOAD]['mute'])
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_VOLUME_MUTE,
+                                        data, blocking=True)
 
     return api_message(request)
