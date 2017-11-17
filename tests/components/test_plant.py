@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timedelta
 
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-                                 STATE_PROBLEM)
+                                 STATE_PROBLEM, STATE_OK)
 from homeassistant.components import recorder
 import homeassistant.components.plant as plant
 from homeassistant.setup import setup_component
@@ -125,6 +125,31 @@ class TestPlant(unittest.TestCase):
         max_brightness = state.attributes.get(
             plant.ATTR_MAX_BRIGHTNESS_HISTORY)
         self.assertEquals(30, max_brightness)
+
+    def test_brightness_history(self):
+        plant_name = 'some_plant'
+        assert setup_component(self.hass, plant.DOMAIN, {
+            plant.DOMAIN: {
+                plant_name: GOOD_CONFIG
+            }
+        })
+        self.hass.states.set(BRIGHTNESS_ENTITIY, 100,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        self.assertEquals(STATE_PROBLEM, state.state)
+
+        self.hass.states.set(BRIGHTNESS_ENTITIY, 600,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        self.assertEquals(STATE_OK, state.state)
+
+        self.hass.states.set(BRIGHTNESS_ENTITIY, 100,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        self.assertEquals(STATE_OK, state.state)
 
 
 class TestDailyHistory(unittest.TestCase):

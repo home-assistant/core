@@ -139,7 +139,7 @@ class Plant(Entity):
         },
         READING_BRIGHTNESS: {
             ATTR_UNIT_OF_MEASUREMENT: 'lux',
-            # minimum brightness is checked separately
+            'min': CONF_MIN_BRIGHTNESS,
             'max': CONF_MAX_BRIGHTNESS,
         }
     }
@@ -194,9 +194,9 @@ class Plant(Entity):
         elif reading == READING_CONDUCTIVITY:
             self._conductivity = int(float(value))
         elif reading == READING_BRIGHTNESS:
+            self._brightness = int(float(value))
             self._brightness_history.add_measurement(self._brightness,
                                                      new_state.last_updated)
-            self._brightness = int(float(value))
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
