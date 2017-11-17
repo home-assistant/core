@@ -6,7 +6,9 @@ from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON,
-    SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_VOLUME_SET)
+    SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_VOLUME_SET,
+    SERVICE_MEDIA_STOP, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK)
 from homeassistant.components import (
     fan, input_boolean, light, lock, media_player, scene, script, switch)
 import homeassistant.util.color as color_util
@@ -46,6 +48,11 @@ MAPPING_COMPONENT = {
     media_player.DOMAIN: [
         'TV', ('Alexa.PowerController',), {
             media_player.SUPPORT_VOLUME_SET: 'Alexa.Speaker',
+            media_player.SUPPORT_PLAY: 'Alexa.PlaybackController',
+            media_player.SUPPORT_PAUSE: 'Alexa.PlaybackController',
+            media_player.SUPPORT_STOP: 'Alexa.PlaybackController',
+            media_player.SUPPORT_NEXT_TRACK: 'Alexa.PlaybackController',
+            media_player.SUPPORT_PREVIOUS_TRACK: 'Alexa.PlaybackController',
         }
     ],
     scene.DOMAIN: ['ACTIVITY_TRIGGER', ('Alexa.SceneController',), None],
@@ -501,6 +508,53 @@ def async_api_set_mute(hass, request, entity):
 
     yield from hass.services.async_call(entity.domain,
                                         media_player.SERVICE_VOLUME_MUTE,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Play'))
+@extract_entity
+@asyncio.coroutine
+def async_api_play(hass, request, entity):
+    """Process a play request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_PLAY_MEDIA,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Pause'))
+@extract_entity
+@asyncio.coroutine
+def async_api_pause(hass, request, entity):
+    """Process a pause request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_PAUSE_MEDIA,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Stop'))
+@extract_entity
+@asyncio.coroutine
+def async_api_stop(hass, request, entity):
+    """Process a stop request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_STOP,
                                         data, blocking=True)
 
     return api_message(request)
