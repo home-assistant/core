@@ -6,7 +6,7 @@ from unittest import mock
 import pytz
 
 import homeassistant.core as ha
-from homeassistant.core import callback
+from homeassistant.core import callback, CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -15,14 +15,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OFF,
     TEMP_CELSIUS,
+    ATTR_TEMPERATURE
 )
 from homeassistant import loader
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.components import climate, input_boolean, switch
 import homeassistant.components as comps
-from tests.common import assert_setup_component, get_test_home_assistant
-
+from tests.common import (assert_setup_component, get_test_home_assistant,
+                          mock_restore_cache)
 
 ENTITY = 'climate.test'
 ENT_SENSOR = 'sensor.test'
