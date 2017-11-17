@@ -451,7 +451,7 @@ def async_api_unlock(hass, request, entity):
 @asyncio.coroutine
 def async_api_set_volume(hass, request, entity):
     """Process a set volume request."""
-    volume = float(request[API_PAYLOAD]['volume'] * 100)
+    volume = round(float(request[API_PAYLOAD]['volume'] / 100), 2)
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
@@ -469,17 +469,19 @@ def async_api_set_volume(hass, request, entity):
 @asyncio.coroutine
 def async_api_adjust_volume(hass, request, entity):
     """Process a adjust volume request."""
-    volume_delta = float(request[API_PAYLOAD]['volume'])
+    volume_delta = int(request[API_PAYLOAD]['volume'])
 
     current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
 
+    multiply = int(current_level * 100)
+
     # read current state
     try:
-        current = math.floor(float(current_level) * 100)
+        current = math.floor(int(current_level * 100))
     except ZeroDivisionError:
         current = 0
 
-    volume = max(0, volume_delta + current)
+    volume = float(max(0, volume_delta + current) / 100)
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
