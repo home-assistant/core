@@ -7,7 +7,8 @@ from uuid import uuid4
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON,
     SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK)
-from homeassistant.components import fan, light, lock, scene, script, switch
+from homeassistant.components import (
+    fan, input_boolean, light, lock, scene, script, switch)
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -27,6 +28,7 @@ MAPPING_COMPONENT = {
             fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
         }
     ],
+    input_boolean.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
