@@ -235,9 +235,9 @@ class Entity(object):
 
         if not self._slow_reported and end - start > 0.4:
             self._slow_reported = True
-            _LOGGER.warning("Updating state for %s took %.3f seconds. "
+            _LOGGER.warning("Updating state for %s (%s) took %.3f seconds. "
                             "Please report platform to the developers at "
-                            "https://goo.gl/Nvioub", self.entity_id,
+                            "https://goo.gl/Nvioub", self.entity_id, type(self),
                             end - start)
 
         # Overwrite properties that have been set in the config file.
