@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.components import switch, light, script, scene, fan
+from homeassistant.components import fan, light, scene, script, switch
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -21,14 +21,11 @@ API_ENDPOINT = 'endpoint'
 
 
 MAPPING_COMPONENT = {
-    scene.DOMAIN: ['SCENE', ('Alexa.SceneController',), None],
-    script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     fan.DOMAIN: [
         'SWITCH', ('Alexa.PowerController',), {
             fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
         }
     ],
-    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
@@ -37,6 +34,9 @@ MAPPING_COMPONENT = {
             light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
         }
     ],
+    scene.DOMAIN: ['SCENE', ('Alexa.SceneController',), None],
+    script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
+    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
 }
 
 
@@ -398,3 +398,4 @@ def async_api_adjust_percentage(hass, request, entity):
     }, blocking=True)
 
     return api_message(request)
+
