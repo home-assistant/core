@@ -388,9 +388,12 @@ class TestMQTTCallbacks(unittest.TestCase):
     @mock.patch('homeassistant.components.mqtt.time.sleep')
     def test_mqtt_disconnect_tries_reconnect(self, mock_sleep):
         """Test the re-connect tries."""
-        self.hass.data['mqtt'].topics = {
+        self.hass.data['mqtt'].subscribed_topics = {
             'test/topic': 1,
-            'test/progress': None
+        }
+        self.hass.data['mqtt'].wanted_topics = {
+            'test/progress': 0,
+            'test/topic': 2,
         }
         self.hass.data['mqtt'].progress = {
             1: 'test/progress'
@@ -403,7 +406,9 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.assertEqual([1, 2, 4],
                          [call[1][0] for call in mock_sleep.mock_calls])
 
-        self.assertEqual({'test/topic': 1}, self.hass.data['mqtt'].topics)
+        self.assertEqual({'test/topic': 2, 'test/progress': 0},
+                         self.hass.data['mqtt'].wanted_topics)
+        self.assertEqual({}, self.hass.data['mqtt'].subscribed_topics)
         self.assertEqual({}, self.hass.data['mqtt'].progress)
 
     def test_invalid_mqtt_topics(self):
@@ -556,12 +561,15 @@ def test_mqtt_subscribes_topics_on_connect(hass):
     """Test subscription to topic on connect."""
     mqtt_client = yield from mock_mqtt_client(hass)
 
-    prev_topics = OrderedDict()
-    prev_topics['topic/test'] = 1,
-    prev_topics['home/sensor'] = 2,
-    prev_topics['still/pending'] = None
+    subscribed_topics = OrderedDict()
+    subscribed_topics['topic/test'] = 1
+    subscribed_topics['home/sensor'] = 2
 
-    hass.data['mqtt'].topics = prev_topics
+    wanted_topics = subscribed_topics.copy()
+    wanted_topics['still/pending'] = 0
+
+    hass.data['mqtt'].wanted_topics = wanted_topics
+    hass.data['mqtt'].subscribed_topics = subscribed_topics
     hass.data['mqtt'].progress = {1: 'still/pending'}
 
     # Return values for subscribe calls (rc, mid)
@@ -574,7 +582,7 @@ def test_mqtt_subscribes_topics_on_connect(hass):
 
     assert not mqtt_client.disconnect.called
 
-    expected = [(topic, qos) for topic, qos in prev_topics.items()
-                if qos is not None]
+    expected = [(topic, qos) for topic, qos in wanted_topics.items()]
 
     assert [call[1][1:] for call in hass.add_job.mock_calls] == expected
+    assert hass.data['mqtt'].progress == {}
