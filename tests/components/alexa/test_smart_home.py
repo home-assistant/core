@@ -99,7 +99,7 @@ def test_discovery_request(hass):
     """Test alexa discovery request."""
     request = get_new_request('Alexa.Discovery', 'Discover')
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'switch.test', 'on', {'friendly_name': "Test switch"})
 
@@ -307,7 +307,7 @@ def test_api_turn_on(hass, domain):
     request = get_new_request(
         'Alexa.PowerController', 'TurnOn', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -333,7 +333,7 @@ def test_api_turn_off(hass, domain):
     request = get_new_request(
         'Alexa.PowerController', 'TurnOff', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'on', {
             'friendly_name': "Test {}".format(domain)
@@ -360,7 +360,7 @@ def test_api_set_brightness(hass):
     # add payload
     request['directive']['payload']['brightness'] = '50'
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'light.test', 'off', {'friendly_name': "Test light"})
 
@@ -388,7 +388,7 @@ def test_api_adjust_brightness(hass, result, adjust):
     # add payload
     request['directive']['payload']['brightnessDelta'] = adjust
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'light.test', 'off', {
             'friendly_name': "Test light", 'brightness': '77'
@@ -420,7 +420,7 @@ def test_api_set_color_rgb(hass):
         'brightness': '0.342',
     }
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'light.test', 'off', {
             'friendly_name': "Test light",
@@ -453,7 +453,7 @@ def test_api_set_color_xy(hass):
         'brightness': '0.342',
     }
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'light.test', 'off', {
             'friendly_name': "Test light",
@@ -484,7 +484,7 @@ def test_api_set_color_temperature(hass):
     # add payload
     request['directive']['payload']['colorTemperatureInKelvin'] = '7500'
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'light.test', 'off', {'friendly_name': "Test light"})
 
@@ -509,7 +509,7 @@ def test_api_decrease_color_temp(hass, result, initial):
         'Alexa.ColorTemperatureController', 'DecreaseColorTemperature',
         'light#test')
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'light.test', 'off', {
             'friendly_name': "Test light", 'color_temp': initial,
@@ -537,7 +537,7 @@ def test_api_increase_color_temp(hass, result, initial):
         'Alexa.ColorTemperatureController', 'IncreaseColorTemperature',
         'light#test')
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'light.test', 'off', {
             'friendly_name': "Test light", 'color_temp': initial,
@@ -564,7 +564,7 @@ def test_api_activate(hass, domain):
     request = get_new_request(
         'Alexa.SceneController', 'Activate', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -591,7 +591,7 @@ def test_api_set_percentage(hass):
     # add payload
     request['directive']['payload']['percentage'] = '50'
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'fan.test_2', 'off', {'friendly_name': "Test fan"})
 
@@ -619,7 +619,7 @@ def test_api_adjust_percentage(hass, result, adjust):
     # add payload
     request['directive']['payload']['percentageDelta'] = adjust
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'fan.test_2', 'on', {
             'friendly_name': "Test fan 2", 'speed': 'high'
@@ -645,7 +645,7 @@ def test_api_lock(hass, domain):
     request = get_new_request(
         'Alexa.LockController', 'Lock', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -670,7 +670,7 @@ def test_api_play(hass, domain):
     request = get_new_request(
         'Alexa.PlaybackController', 'Play', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -695,7 +695,7 @@ def test_api_pause(hass, domain):
     request = get_new_request(
         'Alexa.PlaybackController', 'Pause', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -720,7 +720,7 @@ def test_api_stop(hass, domain):
     request = get_new_request(
         'Alexa.PlaybackController', 'Stop', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -745,7 +745,7 @@ def test_api_next(hass, domain):
     request = get_new_request(
         'Alexa.PlaybackController', 'Next', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -770,7 +770,7 @@ def test_api_previous(hass, domain):
     request = get_new_request(
         'Alexa.PlaybackController', 'Previous', '{}#test'.format(domain))
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
@@ -797,7 +797,7 @@ def test_api_set_volume(hass):
     # add payload
     request['directive']['payload']['volume'] = 50
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'media_player.test', 'off', {
             'friendly_name': "Test media player", 'volume_level': 0
@@ -827,7 +827,7 @@ def test_api_adjust_volume(hass, result, adjust):
     # add payload
     request['directive']['payload']['volume'] = adjust
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         'media_player.test', 'off', {
             'friendly_name': "Test media player", 'volume_level': 0.75
@@ -855,7 +855,7 @@ def test_api_mute(hass, domain):
 
     request['directive']['payload']['mute'] = True
 
-    # settup test devices
+    # setup test devices
     hass.states.async_set(
         '{}.test'.format(domain), 'off', {
             'friendly_name': "Test {}".format(domain)
