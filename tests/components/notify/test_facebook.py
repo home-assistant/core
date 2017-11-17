@@ -120,7 +120,6 @@ class TestFacebook(unittest.TestCase):
             expected_params
         )
 
-
     @requests_mock.Mocker()
     def test_send_targetless_message(self, mock):
         """Test sending a message without a target."""
