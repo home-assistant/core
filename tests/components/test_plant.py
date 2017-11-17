@@ -127,6 +127,7 @@ class TestPlant(unittest.TestCase):
         self.assertEquals(30, max_brightness)
 
     def test_brightness_history(self):
+        """Test the min_brightness check."""
         plant_name = 'some_plant'
         assert setup_component(self.hass, plant.DOMAIN, {
             plant.DOMAIN: {
