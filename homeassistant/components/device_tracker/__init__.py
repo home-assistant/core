@@ -770,14 +770,12 @@ def get_googlepluspthumb_from_email(email: str):
         url += urllib.parse.quote(email) + r'?alt=json'
         jsontext = urllib.request.urlopen(url).read().decode('utf-8')
     except TypeError:
-        print(email)
-        print(url)
-        print('http timeout or invalid email')
+        _LOGGER.error('http timeout or invalid email\r\n  '
+                     + email + '\r\n  ' + url)
         return None
     except urllib.error.HTTPError:
-        print(email)
-        print(url)
-        print('http timeout or invalid email')
+        _LOGGER.error('http timeout or invalid email\r\n  '
+                     + email + '\r\n  ' + url)
         return None
 
     thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
