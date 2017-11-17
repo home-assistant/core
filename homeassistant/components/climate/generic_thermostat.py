@@ -222,7 +222,7 @@ class GenericThermostat(ClimateDevice):
         self._async_update_temp(new_state)
         self._async_control_heating()
         yield from self.async_update_ha_state()
-        
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle all entity which are about to be added."""
@@ -230,9 +230,9 @@ class GenericThermostat(ClimateDevice):
         if not state:
             return
         if self._persistence in [ATTR_BOTH, CONF_TARGET_TEMP]:
-            self._target_temp=state.attributes[ATTR_TEMPERATURE]
+            self._target_temp = state.attributes[ATTR_TEMPERATURE]
         if (self._persistence in [ATTR_BOTH, ATTR_OPERATION_MODE] and
-            state.attributes[ATTR_OPERATION_MODE] == STATE_OFF):
+                state.attributes[ATTR_OPERATION_MODE] == STATE_OFF):
                 self.set_operation_mode(STATE_OFF)
         return
 
