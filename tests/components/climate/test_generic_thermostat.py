@@ -25,6 +25,7 @@ import homeassistant.components as comps
 from tests.common import (assert_setup_component, get_test_home_assistant,
                           mock_restore_cache)
 
+
 ENTITY = 'climate.test'
 ENT_SENSOR = 'sensor.test'
 ENT_SWITCH = 'switch.test'
@@ -87,7 +88,6 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
 
 class TestGenericThermostatHeaterSwitching(unittest.TestCase):
     """Test the Generic thermostat heater switching.
-
     Different toggle type devices are tested.
     """
 
@@ -334,7 +334,6 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_operating_mode_auto(self):
         """Test change mode from OFF to AUTO.
-
         Switch turns on when temp below setpoint and mode changes.
         """
         climate.set_operation_mode(self.hass, STATE_OFF)
