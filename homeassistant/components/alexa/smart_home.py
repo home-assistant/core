@@ -147,6 +147,11 @@ def async_api_discovery(hass, request):
         description = entity.attributes.get(ATTR_ALEXA_DESCRIPTION,
                                             entity.entity_id)
 
+        # Required description as per Amazon Scene docs
+        if entity.domain == scene.DOMAIN:
+            scene_fmt = '%s (Scene connected via Home Assistant)'
+            description = scene_fmt.format(description)
+
         display_categories = class_data[0]
         if entity.domain == media_player.DOMAIN:
             cat_key = ATTR_ALEXA_MEDIA_CATEGORY
