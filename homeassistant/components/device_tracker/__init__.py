@@ -762,14 +762,22 @@ def get_googlepluspthumb_from_email(email: str):
     """Return a thumbnail image of a user's google plus profile image."""
     import urllib.request
     import urllib.parse
+    import urllib.error
     from re import search
 
     url = r'https://picasaweb.google.com/data/entry/api/user/'
     try:
         url += urllib.parse.quote(email) + r'?alt=json'
         jsontext = urllib.request.urlopen(url).read().decode('utf-8')
-    except:
-        print('"' + url + '" timeout or invalid email')
+    except TypeError:
+        print(email)
+        print(url)
+        print('http timeout or invalid email')
+        return None
+    except urllib.error.HTTPError:
+        print(email)
+        print(url)
+        print('http timeout or invalid email')
         return None
 
     thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
