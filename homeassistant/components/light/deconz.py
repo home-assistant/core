@@ -75,6 +75,11 @@ class DeconzLight(Light):
         return self._light.brightness
 
     @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return [EFFECT_COLORLOOP]
+
+    @property
     def color_temp(self):
         """Return the CT color value."""
         return self._light.ct
