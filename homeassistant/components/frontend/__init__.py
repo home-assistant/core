@@ -23,10 +23,10 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171111.0']
+REQUIREMENTS = ['home-assistant-frontend==20171117.1']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api', 'http']
+DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
 
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 

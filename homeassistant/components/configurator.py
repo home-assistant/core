@@ -207,7 +207,7 @@ class Configurator(object):
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
-    @async_callback
+    @asyncio.coroutine
     def async_handle_service_call(self, call):
         """Handle a configure service call."""
         request_id = call.data.get(ATTR_CONFIGURE_ID)
@@ -220,7 +220,8 @@ class Configurator(object):
 
         # field validation goes here?
         if callback:
-            self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
+            yield from self.hass.async_add_job(callback,
+                                               call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""

@@ -2,6 +2,8 @@
 from copy import copy
 import unittest
 
+from voluptuous.error import MultipleInvalid
+
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.switch as switch
@@ -12,6 +14,13 @@ import homeassistant.components.media_player.universal as universal
 from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import mock_service, get_test_home_assistant
+
+
+def validate_config(config):
+    """Use the platform schema to validate configuration."""
+    validated_config = universal.PLATFORM_SCHEMA(config)
+    validated_config.pop('platform')
+    return validated_config
 
 
 class MockMediaPlayer(media_player.MediaPlayerDevice):
@@ -116,9 +125,9 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         """Mock turn_off function."""
         self._state = STATE_OFF
 
-    def mute_volume(self):
+    def mute_volume(self, mute):
         """Mock mute function."""
-        self._is_volume_muted = ~self._is_volume_muted
+        self._is_volume_muted = mute
 
     def set_volume_level(self, volume):
         """Mock set volume level."""
@@ -210,10 +219,8 @@ class TestMediaPlayer(unittest.TestCase):
         config_start['commands'] = {}
         config_start['attributes'] = {}
 
-        response = universal.validate_config(self.config_children_only)
-
-        self.assertTrue(response)
-        self.assertEqual(config_start, self.config_children_only)
+        config = validate_config(self.config_children_only)
+        self.assertEqual(config_start, config)
 
     def test_config_children_and_attr(self):
         """Check config with children and attributes."""
@@ -221,15 +228,16 @@ class TestMediaPlayer(unittest.TestCase):
         del config_start['platform']
         config_start['commands'] = {}
 
-        response = universal.validate_config(self.config_children_and_attr)
-
-        self.assertTrue(response)
-        self.assertEqual(config_start, self.config_children_and_attr)
+        config = validate_config(self.config_children_and_attr)
+        self.assertEqual(config_start, config)
 
     def test_config_no_name(self):
         """Check config with no Name entry."""
-        response = universal.validate_config({'platform': 'universal'})
-
+        response = True
+        try:
+            validate_config({'platform': 'universal'})
+        except MultipleInvalid:
+            response = False
         self.assertFalse(response)
 
     def test_config_bad_children(self):
@@ -238,36 +246,31 @@ class TestMediaPlayer(unittest.TestCase):
         config_bad_children = {'name': 'test', 'children': {},
                                'platform': 'universal'}
 
-        response = universal.validate_config(config_no_children)
-        self.assertTrue(response)
+        config_no_children = validate_config(config_no_children)
         self.assertEqual([], config_no_children['children'])
 
-        response = universal.validate_config(config_bad_children)
-        self.assertTrue(response)
+        config_bad_children = validate_config(config_bad_children)
         self.assertEqual([], config_bad_children['children'])
 
     def test_config_bad_commands(self):
         """Check config with bad commands entry."""
-        config = {'name': 'test', 'commands': [], 'platform': 'universal'}
+        config = {'name': 'test', 'platform': 'universal'}
 
-        response = universal.validate_config(config)
-        self.assertTrue(response)
+        config = validate_config(config)
         self.assertEqual({}, config['commands'])
 
     def test_config_bad_attributes(self):
         """Check config with bad attributes."""
-        config = {'name': 'test', 'attributes': [], 'platform': 'universal'}
+        config = {'name': 'test', 'platform': 'universal'}
 
-        response = universal.validate_config(config)
-        self.assertTrue(response)
+        config = validate_config(config)
         self.assertEqual({}, config['attributes'])
 
     def test_config_bad_key(self):
         """Check config with bad key."""
         config = {'name': 'test', 'asdf': 5, 'platform': 'universal'}
 
-        response = universal.validate_config(config)
-        self.assertTrue(response)
+        config = validate_config(config)
         self.assertFalse('asdf' in config)
 
     def test_platform_setup(self):
@@ -281,21 +284,27 @@ class TestMediaPlayer(unittest.TestCase):
             for dev in new_entities:
                 entities.append(dev)
 
-        run_coroutine_threadsafe(
-            universal.async_setup_platform(self.hass, bad_config, add_devices),
-            self.hass.loop).result()
+        setup_ok = True
+        try:
+            run_coroutine_threadsafe(
+                universal.async_setup_platform(
+                    self.hass, validate_config(bad_config), add_devices),
+                self.hass.loop).result()
+        except MultipleInvalid:
+            setup_ok = False
+        self.assertFalse(setup_ok)
         self.assertEqual(0, len(entities))
 
         run_coroutine_threadsafe(
-            universal.async_setup_platform(self.hass, config, add_devices),
+            universal.async_setup_platform(
+                self.hass, validate_config(config), add_devices),
             self.hass.loop).result()
         self.assertEqual(1, len(entities))
         self.assertEqual('test', entities[0].name)
 
     def test_master_state(self):
         """Test master state property."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -303,8 +312,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_master_state_with_attrs(self):
         """Test master state property."""
-        config = self.config_children_and_attr
-        universal.validate_config(config)
+        config = validate_config(self.config_children_and_attr)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -312,11 +320,26 @@ class TestMediaPlayer(unittest.TestCase):
         self.hass.states.set(self.mock_state_switch_id, STATE_ON)
         self.assertEqual(STATE_ON, ump.master_state)
 
+    def test_master_state_with_template(self):
+        """Test the state_template option."""
+        config = copy(self.config_children_and_attr)
+        self.hass.states.set('input_boolean.test', STATE_OFF)
+        templ = '{% if states.input_boolean.test.state == "off" %}on' \
+                '{% else %}{{ states.media_player.mock1.state }}{% endif %}'
+        config['state_template'] = templ
+        config = validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+
+        self.assertEqual(STATE_ON, ump.master_state)
+        self.hass.states.set('input_boolean.test', STATE_ON)
+        self.assertEqual(STATE_OFF, ump.master_state)
+
     def test_master_state_with_bad_attrs(self):
         """Test master state property."""
-        config = self.config_children_and_attr
+        config = copy(self.config_children_and_attr)
         config['attributes']['state'] = 'bad.entity_id'
-        universal.validate_config(config)
+        config = validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -324,8 +347,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_active_child_state(self):
         """Test active child state property."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -356,8 +378,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_name(self):
         """Test name property."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -365,8 +386,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_polling(self):
         """Test should_poll property."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -374,8 +394,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_state_children_only(self):
         """Test media player state with only children."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -391,8 +410,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_state_with_children_and_attrs(self):
         """Test media player with children and master state."""
-        config = self.config_children_and_attr
-        universal.validate_config(config)
+        config = validate_config(self.config_children_and_attr)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -416,8 +434,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_volume_level(self):
         """Test volume level property."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -439,9 +456,8 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_media_image_url(self):
         """Test media_image_url property."""
-        TEST_URL = "test_url"
-        config = self.config_children_only
-        universal.validate_config(config)
+        test_url = "test_url"
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -450,7 +466,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertEqual(None, ump.media_image_url)
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1._media_image_url = TEST_URL
+        self.mock_mp_1._media_image_url = test_url
         self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
@@ -460,8 +476,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_is_volume_muted_children_only(self):
         """Test is volume muted property w/ children only."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -483,8 +498,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_source_list_children_and_attr(self):
         """Test source list property w/ children and attrs."""
-        config = self.config_children_and_attr
-        universal.validate_config(config)
+        config = validate_config(self.config_children_and_attr)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -495,8 +509,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_source_children_and_attr(self):
         """Test source property w/ children and attrs."""
-        config = self.config_children_and_attr
-        universal.validate_config(config)
+        config = validate_config(self.config_children_and_attr)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -507,8 +520,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_volume_level_children_and_attr(self):
         """Test volume level property w/ children and attrs."""
-        config = self.config_children_and_attr
-        universal.validate_config(config)
+        config = validate_config(self.config_children_and_attr)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -519,8 +531,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_is_volume_muted_children_and_attr(self):
         """Test is volume muted property w/ children and attrs."""
-        config = self.config_children_and_attr
-        universal.validate_config(config)
+        config = validate_config(self.config_children_and_attr)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
@@ -531,8 +542,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_supported_features_children_only(self):
         """Test supported media commands with only children."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -549,16 +559,19 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_supported_features_children_and_cmds(self):
         """Test supported media commands with children and attrs."""
-        config = self.config_children_and_attr
-        universal.validate_config(config)
-        config['commands']['turn_on'] = 'test'
-        config['commands']['turn_off'] = 'test'
-        config['commands']['volume_up'] = 'test'
-        config['commands']['volume_down'] = 'test'
-        config['commands']['volume_mute'] = 'test'
-        config['commands']['volume_set'] = 'test'
-        config['commands']['select_source'] = 'test'
-        config['commands']['shuffle_set'] = 'test'
+        config = copy(self.config_children_and_attr)
+        excmd = {'service': 'media_player.test', 'data': {'entity_id': 'test'}}
+        config['commands'] = {
+            'turn_on': excmd,
+            'turn_off': excmd,
+            'volume_up': excmd,
+            'volume_down': excmd,
+            'volume_mute': excmd,
+            'volume_set': excmd,
+            'select_source': excmd,
+            'shuffle_set': excmd
+        }
+        config = validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -577,8 +590,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_service_call_no_active_child(self):
         """Test a service call to children with no active child."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_and_attr)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -599,8 +611,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_service_call_to_child(self):
         """Test service calls that should be routed to a child."""
-        config = self.config_children_only
-        universal.validate_config(config)
+        config = validate_config(self.config_children_only)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -699,10 +710,10 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_service_call_to_command(self):
         """Test service call to command."""
-        config = self.config_children_only
+        config = copy(self.config_children_only)
         config['commands'] = {'turn_off': {
             'service': 'test.turn_off', 'data': {}}}
-        universal.validate_config(config)
+        config = validate_config(config)
 
         service = mock_service(self.hass, 'test', 'turn_off')
 

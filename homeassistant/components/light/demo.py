@@ -4,7 +4,6 @@ Demo light platform that implements lights.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-import asyncio
 import random
 
 from homeassistant.components.light import (
@@ -150,26 +149,3 @@ class DemoLight(Light):
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.
         self.schedule_update_ha_state()
-
-    @asyncio.coroutine
-    def async_restore_state(self, is_on, **kwargs):
-        """Restore the demo state."""
-        self._state = is_on
-
-        if 'brightness' in kwargs:
-            self._brightness = kwargs['brightness']
-
-        if 'color_temp' in kwargs:
-            self._ct = kwargs['color_temp']
-
-        if 'rgb_color' in kwargs:
-            self._rgb = kwargs['rgb_color']
-
-        if 'xy_color' in kwargs:
-            self._xy_color = kwargs['xy_color']
-
-        if 'white_value' in kwargs:
-            self._white = kwargs['white_value']
-
-        if 'effect' in kwargs:
-            self._effect = kwargs['effect']
