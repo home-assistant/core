@@ -39,6 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_KODI_CALL_METHOD_RESULT = 'kodi_call_method_result'
 
+CONF_USE_OFF = 'use_off_mode'
 CONF_TCP_PORT = 'tcp_port'
 CONF_TURN_ON_ACTION = 'turn_on_action'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
@@ -89,6 +90,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TURN_ON_ACTION, default=None): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_TURN_OFF_ACTION):
         vol.Any(cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)),
+    vol.Optional(CONF_USE_OFF, default=False): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
@@ -171,6 +173,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         password=config.get(CONF_PASSWORD),
         turn_on_action=config.get(CONF_TURN_ON_ACTION),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
+        use_off_mode=config.get(CONF_USE_OFF),
         timeout=config.get(CONF_TIMEOUT), websocket=websocket)
 
     hass.data[DATA_KODI].append(entity)
@@ -243,7 +246,7 @@ class KodiDevice(MediaPlayerDevice):
 
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
                  username=None, password=None,
-                 turn_on_action=None, turn_off_action=None,
+                 turn_on_action=None, turn_off_action=None, use_off_mode=False,
                  timeout=DEFAULT_TIMEOUT, websocket=True):
         """Initialize the Kodi device."""
         import jsonrpc_async
@@ -307,6 +310,8 @@ class KodiDevice(MediaPlayerDevice):
                 "{} turn OFF script".format(self.name))
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
+        self._use_off_mode = use_off_mode
+        self._flag_switch_off = False
         self._enable_websocket = websocket
         self._players = list()
         self._properties = {}
@@ -349,6 +354,7 @@ class KodiDevice(MediaPlayerDevice):
     @callback
     def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
+        self._flag_switch_off = True
         self._players = None
         self._properties = {}
         self._item = {}
@@ -373,8 +379,12 @@ class KodiDevice(MediaPlayerDevice):
         if self._players is None:
             return STATE_OFF
 
-        if not self._players:
+        if not self._players and self._flag_switch_off and self._use_off_mode:
+            return STATE_OFF
+        elif not self._players:
             return STATE_IDLE
+
+        self._flag_switch_off = False
 
         if self._properties['speed'] == 0 and not self._properties['live']:
             return STATE_PAUSED
@@ -583,6 +593,10 @@ class KodiDevice(MediaPlayerDevice):
                 variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_on requested but turn_on_action is none")
+        if self._use_off_mode:
+            self._flag_switch_off = False
+            # Update HA state to reflect the new state
+            self.async_schedule_update_ha_state()
 
     @cmd
     @asyncio.coroutine
@@ -593,6 +607,10 @@ class KodiDevice(MediaPlayerDevice):
                 variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
+        if self._use_off_mode:
+            self._flag_switch_off = True
+            # Update HA state to reflect the OFF state
+            self.async_schedule_update_ha_state()
 
     @cmd
     @asyncio.coroutine
