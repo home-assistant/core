@@ -140,6 +140,7 @@ def execute(hass, filename, source, data=None):
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
     builtins['datetime'] = datetime
+    builtins['sorted'] = sorted
     builtins['time'] = TimeWrapper()
     builtins['dt_util'] = dt_util
     restricted_globals = {
