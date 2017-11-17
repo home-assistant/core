@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.components import switch, light, script
+from homeassistant.components import switch, light, script, scene
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -21,6 +21,7 @@ API_ENDPOINT = 'endpoint'
 
 
 MAPPING_COMPONENT = {
+    scene.DOMAIN: ['SCENE', ('Alexa.SceneController',), None],
     script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
@@ -307,6 +308,30 @@ def async_api_increase_color_temp(hass, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_COLOR_TEMP: value,
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.SceneController', 'Activate'))
+@extract_entity
+@asyncio.coroutine
+def async_api_activate(hass, request, entity):
+    """Process a activate request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.SceneController', 'Deactivate'))
+@extract_entity
+@asyncio.coroutine
+def async_api_deactivate(hass, request, entity):
+    """Process a deactivate request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_OFF, {
+        ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
     return api_message(request)
