@@ -765,11 +765,8 @@ def get_googlepluspthumb_from_email(email: str):
     from re import search
 
     url = r'https://picasaweb.google.com/data/entry/api/user/'
-    url += urllib.parse.quote_from_bytes(str(email).encode('utf-8'))
-    url += r'?alt=json'
-
-    print(url)
     try:
+        url += urllib.parse.quote(email) + r'?alt=json'
         jsontext = urllib.request.urlopen(url).read().decode('utf-8')
     except:
         print('"' + url + '" timeout or invalid email')
