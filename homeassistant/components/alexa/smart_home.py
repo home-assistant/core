@@ -21,6 +21,10 @@ API_HEADER = 'header'
 API_PAYLOAD = 'payload'
 API_ENDPOINT = 'endpoint'
 
+ATTR_ALEXA_HIDDEN = 'alexa_hidden'
+ATTR_ALEXA_NAME = 'alexa_name'
+ATTR_ALEXA_DESCRIPTION = 'alexa_description'
+
 
 MAPPING_COMPONENT = {
     fan.DOMAIN: [
@@ -118,17 +122,24 @@ def async_api_discovery(hass, request):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
+        if entity.attributes.get(ATTR_ALEXA_HIDDEN, False):
+            continue
+
         class_data = MAPPING_COMPONENT.get(entity.domain)
 
         if not class_data:
             continue
 
+        friendly_name = entity.attributes.get(ATTR_ALEXA_NAME, entity.name)
+        description = entity.attributes.get(ATTR_ALEXA_DESCRIPTION,
+                                            entity.entity_id)
+
         endpoint = {
             'displayCategories': [class_data[0]],
             'additionalApplianceDetails': {},
             'endpointId': entity.entity_id.replace('.', '#'),
-            'friendlyName': entity.name,
-            'description': '',
+            'friendlyName': friendly_name,
+            'description': description,
             'manufacturerName': 'Unknown',
         }
         actions = set()
