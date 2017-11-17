@@ -765,7 +765,8 @@ def get_googlepluspthumb_from_email(email: str):
     from re import search
 
     url = r'https://picasaweb.google.com/data/entry/api/user/'
-    url += urllib.parse.quote_from_bytes(str(email).encode('utf-8')) + r'?alt=json'
+    url += urllib.parse.quote_from_bytes(str(email).encode('utf-8'))
+    url += r'?alt=json'
 
     print(url)
     try:
