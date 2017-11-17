@@ -6,7 +6,7 @@ from unittest import mock
 import pytz
 
 import homeassistant.core as ha
-from homeassistant.core import callback
+from homeassistant.core import callback, CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -15,13 +15,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OFF,
     TEMP_CELSIUS,
+    ATTR_TEMPERATURE
 )
 from homeassistant import loader
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.components import climate, input_boolean, switch
 import homeassistant.components as comps
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import (assert_setup_component, get_test_home_assistant,
+                          mock_restore_cache)
 
 
 ENTITY = 'climate.test'
@@ -892,3 +894,24 @@ def test_custom_setup_params(hass):
     assert state.attributes.get('min_temp') == MIN_TEMP
     assert state.attributes.get('max_temp') == MAX_TEMP
     assert state.attributes.get('temperature') == TARGET_TEMP
+
+
+@asyncio.coroutine
+def test_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20"}),
+    ))
+
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(
+        hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test_thermostat',
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+        }})
+
+    state = hass.states.get('climate.test_thermostat')
+    assert(state.attributes[ATTR_TEMPERATURE] == 20)
