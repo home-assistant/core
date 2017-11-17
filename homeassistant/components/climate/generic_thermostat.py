@@ -233,7 +233,7 @@ class GenericThermostat(ClimateDevice):
             self._target_temp = state.attributes[ATTR_TEMPERATURE]
         if (self._persistence in [ATTR_BOTH, ATTR_OPERATION_MODE] and
                 state.attributes[ATTR_OPERATION_MODE] == STATE_OFF):
-                self.set_operation_mode(STATE_OFF)
+            self.set_operation_mode(STATE_OFF)
         return
 
     @callback
