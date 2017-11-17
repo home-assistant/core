@@ -208,7 +208,7 @@ def test_discovery_request(hass):
             continue
 
         if appliance['endpointId'] == 'script#test':
-            assert appliance['displayCategories'][0] == "SWITCH"
+            assert appliance['displayCategories'][0] == "OTHER"
             assert appliance['friendlyName'] == "Test script"
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
@@ -216,7 +216,7 @@ def test_discovery_request(hass):
             continue
 
         if appliance['endpointId'] == 'input_boolean#test':
-            assert appliance['displayCategories'][0] == "SWITCH"
+            assert appliance['displayCategories'][0] == "OTHER"
             assert appliance['friendlyName'] == "Test input boolean"
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
@@ -232,7 +232,7 @@ def test_discovery_request(hass):
             continue
 
         if appliance['endpointId'] == 'fan#test_1':
-            assert appliance['displayCategories'][0] == "SWITCH"
+            assert appliance['displayCategories'][0] == "OTHER"
             assert appliance['friendlyName'] == "Test fan 1"
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
@@ -240,7 +240,7 @@ def test_discovery_request(hass):
             continue
 
         if appliance['endpointId'] == 'fan#test_2':
-            assert appliance['displayCategories'][0] == "SWITCH"
+            assert appliance['displayCategories'][0] == "OTHER"
             assert appliance['friendlyName'] == "Test fan 2"
             assert len(appliance['capabilities']) == 2
 
