@@ -151,12 +151,18 @@ def test_discovery_request(hass):
     hass.states.async_set(
         'group.test', 'off', {'friendly_name': "Test group"})
 
+    hass.states.async_set(
+        'cover.test', 'off', {
+            'friendly_name': "Test cover", 'supported_features': 255,
+            'position': 85
+        })
+
     msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 14
+    assert len(msg['payload']['endpoints']) == 15
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
 
@@ -295,6 +301,19 @@ def test_discovery_request(hass):
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
                 'Alexa.PowerController'
+            continue
+
+        if appliance['endpointId'] == 'cover#test':
+            assert appliance['displayCategories'][0] == "DOOR"
+            assert appliance['friendlyName'] == "Test cover"
+            assert len(appliance['capabilities']) == 2
+
+            caps = set()
+            for feature in appliance['capabilities']:
+                caps.add(feature['interface'])
+
+            assert 'Alexa.PercentageController' in caps
+            assert 'Alexa.PowerController' in caps
             continue
 
         raise AssertionError("Unknown appliance!")
@@ -618,8 +637,8 @@ def test_api_activate(hass, domain):
 
 
 @asyncio.coroutine
-def test_api_set_percentage(hass):
-    """Test api set percentage process."""
+def test_api_set_percentage_fan(hass):
+    """Test api set percentage for fan process."""
     request = get_new_request(
         'Alexa.PercentageController', 'SetPercentage', 'fan#test_2')
 
@@ -644,10 +663,38 @@ def test_api_set_percentage(hass):
 
 
 @asyncio.coroutine
+def test_api_set_percentage_cover(hass):
+    """Test api set percentage for cover process."""
+    request = get_new_request(
+        'Alexa.PercentageController', 'SetPercentage', 'cover#test')
+
+    # add payload
+    request['directive']['payload']['percentage'] = '50'
+
+    # setup test devices
+    hass.states.async_set(
+        'cover.test', 'closed', {
+            'friendly_name': "Test cover"
+        })
+
+    call_cover = async_mock_service(hass, 'cover', 'set_cover_position')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_cover) == 1
+    assert call_cover[0].data['entity_id'] == 'cover.test'
+    assert call_cover[0].data['position'] == 50
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
 @pytest.mark.parametrize(
     "result,adjust", [('high', '-5'), ('off', '5'), ('low', '-80')])
-def test_api_adjust_percentage(hass, result, adjust):
-    """Test api adjust percentage process."""
+def test_api_adjust_percentage_fan(hass, result, adjust):
+    """Test api adjust percentage for fan process."""
     request = get_new_request(
         'Alexa.PercentageController', 'AdjustPercentage', 'fan#test_2')
 
@@ -670,6 +717,37 @@ def test_api_adjust_percentage(hass, result, adjust):
     assert len(call_fan) == 1
     assert call_fan[0].data['entity_id'] == 'fan.test_2'
     assert call_fan[0].data['speed'] == result
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize(
+    "result,adjust", [(25, '-5'), (35, '5'), (0, '-80')])
+def test_api_adjust_percentage_cover(hass, result, adjust):
+    """Test api adjust percentage for cover process."""
+    request = get_new_request(
+        'Alexa.PercentageController', 'AdjustPercentage', 'cover#test')
+
+    # add payload
+    request['directive']['payload']['percentageDelta'] = adjust
+
+    # setup test devices
+    hass.states.async_set(
+        'cover.test', 'closed', {
+            'friendly_name': "Test cover",
+            'position': 30
+        })
+
+    call_cover = async_mock_service(hass, 'cover', 'set_cover_position')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_cover) == 1
+    assert call_cover[0].data['entity_id'] == 'cover.test'
+    assert call_cover[0].data['position'] == result
     assert msg['header']['name'] == 'Response'
 
 

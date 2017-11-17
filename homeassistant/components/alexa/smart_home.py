@@ -8,9 +8,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON,
     SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_VOLUME_SET,
     SERVICE_MEDIA_STOP, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_SET_COVER_POSITION)
 from homeassistant.components import (
-    alert, automation, fan, group, input_boolean, light, lock,
+    alert, automation, cover, fan, group, input_boolean, light, lock,
     media_player, scene, script, switch)
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
@@ -33,6 +34,11 @@ ATTR_ALEXA_DISPLAY_CATEGORIES = 'alexa_display_categories'
 MAPPING_COMPONENT = {
     alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     automation.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
+    cover.DOMAIN: [
+        'DOOR', ('Alexa.PowerController',), {
+            cover.SUPPORT_SET_POSITION: 'Alexa.PercentageController',
+        }
+    ],
     fan.DOMAIN: [
         'OTHER', ('Alexa.PowerController',), {
             fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
@@ -376,19 +382,27 @@ def async_api_activate(hass, request, entity):
 def async_api_set_percentage(hass, request, entity):
     """Process a set percentage request."""
     percentage = int(request[API_PAYLOAD]['percentage'])
-    speed = "off"
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if percentage <= 33:
-        speed = "low"
-    elif percentage <= 66:
-        speed = "medium"
-    elif percentage <= 100:
-        speed = "high"
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = "off"
 
-    yield from hass.services.async_call(entity.domain, fan.SERVICE_SET_SPEED, {
-        ATTR_ENTITY_ID: entity.entity_id,
-        fan.ATTR_SPEED: speed,
-    }, blocking=True)
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        elif percentage <= 100:
+            speed = "high"
+        data[fan.ATTR_SPEED] = speed
+
+    elif entity.domain == cover.DOMAIN:
+        service = SERVICE_SET_COVER_POSITION
+        data[cover.ATTR_POSITION] = percentage
+
+    yield from hass.services.async_call(entity.domain, service,
+                                        data, blocking=True)
 
     return api_message(request)
 
@@ -399,31 +413,44 @@ def async_api_set_percentage(hass, request, entity):
 def async_api_adjust_percentage(hass, request, entity):
     """Process a adjust percentage request."""
     percentage_delta = int(request[API_PAYLOAD]['percentageDelta'])
-    speed = entity.attributes.get(fan.ATTR_SPEED)
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if speed == "off":
-        current = 0
-    elif speed == "low":
-        current = 33
-    elif speed == "medium":
-        current = 66
-    elif speed == "high":
-        current = 100
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = entity.attributes.get(fan.ATTR_SPEED)
 
-    # set percentage
-    percentage = max(0, percentage_delta + current)
-    speed = "off"
+        if speed == "off":
+            current = 0
+        elif speed == "low":
+            current = 33
+        elif speed == "medium":
+            current = 66
+        elif speed == "high":
+            current = 100
 
-    if percentage <= 33:
-        speed = "low"
-    elif percentage <= 66:
-        speed = "medium"
-    elif percentage <= 100:
-        speed = "high"
-    yield from hass.services.async_call(entity.domain, fan.SERVICE_SET_SPEED, {
-        ATTR_ENTITY_ID: entity.entity_id,
-        fan.ATTR_SPEED: speed,
-    }, blocking=True)
+        # set percentage
+        percentage = max(0, percentage_delta + current)
+        speed = "off"
+
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        elif percentage <= 100:
+            speed = "high"
+
+        data[fan.ATTR_SPEED] = speed
+
+    elif entity.domain == cover.DOMAIN:
+        service = SERVICE_SET_COVER_POSITION
+
+        current = entity.attributes.get(cover.ATTR_POSITION)
+
+        data[cover.ATTR_POSITION] = max(0, percentage_delta + current)
+
+    yield from hass.services.async_call(entity.domain, service,
+                                        data, blocking=True)
 
     return api_message(request)
 
