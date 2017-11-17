@@ -6,6 +6,7 @@ https://home-assistant.io/components/hive/
 """
 import logging
 
+from homeassistant.components.hive import DATA_HIVE
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
                                             SUPPORT_BRIGHTNESS,
                                             SUPPORT_COLOR_TEMP,
@@ -18,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
     """Set up Hive light devices."""
-    session = hass.data.get('DATA_HIVE')
+    session = hass.data.get(DATA_HIVE)
 
     add_devices([HiveDeviceLight(hass, session, hivedevice)])
 

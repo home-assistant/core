@@ -11,6 +11,7 @@ from homeassistant.components.climate import (ENTITY_ID_FORMAT, ClimateDevice,
                                               STATE_AUTO, STATE_HEAT,
                                               STATE_OFF, STATE_ON)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.components.hive import DATA_HIVE
 
 DEPENDENCIES = ['hive']
 
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
     """Set up Hive climate devices."""
-    session = hass.data.get('DATA_HIVE')
+    session = hass.data.get(DATA_HIVE)
 
     add_devices([HiveClimateEntity(hass, session, hivedevice)])
 

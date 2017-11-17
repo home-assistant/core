@@ -16,6 +16,13 @@ REQUIREMENTS = ['pyhiveapi==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hive'
+DATA_HIVE = 'data_hive'
+DEVICETYPES = {
+    'climate': 'device_list_climate',
+    'light': 'device_list_light',
+    'switch': 'device_list_plug',
+    'sensor': 'device_list_sensor',
+    }
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -60,28 +67,20 @@ def setup(hass, config):
                                              password,
                                              update_interval)
 
-    if devicelist is not None:
-        session.sensor = Pyhiveapi.Sensor()
-        session.heating = Pyhiveapi.Heating()
-        session.hotwater = Pyhiveapi.Hotwater()
-        session.light = Pyhiveapi.Light()
-        session.switch = Pyhiveapi.Switch()
-        hass.data['DATA_HIVE'] = session
-
-        devicetypes = {
-            'climate': 'device_list_climate',
-            'light': 'device_list_light',
-            'switch': 'device_list_plug',
-            'sensor': 'device_list_sensor',
-            }
-
-        for ha_type, hive_type in devicetypes.items():
-            for key, devices in devicelist.items():
-                if key == hive_type:
-                    for hivedevice in devices:
-                        load_platform(hass, ha_type, DOMAIN, hivedevice)
-    else:
+    if DEVICETYPES is None:
         _LOGGER.error("Hive API initialization failed")
         return False
 
+    session.sensor = Pyhiveapi.Sensor()
+    session.heating = Pyhiveapi.Heating()
+    session.hotwater = Pyhiveapi.Hotwater()
+    session.light = Pyhiveapi.Light()
+    session.switch = Pyhiveapi.Switch()
+    hass.data[DATA_HIVE] = session
+
+    for ha_type, hive_type in DEVICETYPES.items():
+        for key, devices in devicelist.items():
+            if key == hive_type:
+                for hivedevice in devices:
+                    load_platform(hass, ha_type, DOMAIN, hivedevice)
     return True

@@ -9,6 +9,7 @@ from datetime import datetime
 
 from homeassistant.components.climate import (STATE_AUTO, STATE_HEAT,
                                               STATE_OFF, STATE_ON)
+from homeassistant.components.hive import DATA_HIVE
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
     """Set up Hive sensor devices."""
-    session = hass.data.get('DATA_HIVE')
+    session = hass.data.get(DATA_HIVE)
 
     add_devices([HiveSensorEntity(hass, session, hivedevice)])
 
@@ -198,29 +199,33 @@ class HiveSensorEntity(Entity):
         elif self.device_type == "Heating_TargetTemperature":
             return self.session.heating.get_target_temperature(self.node_id)
         elif self.device_type == "Heating_State":
-            return self.session.heating.get_state(self.node_id)
+            returnvalue = self.session.heating.get_state(self.node_id)
+            return str(returnvalue).capitalize()
         elif self.device_type == "Heating_Mode":
             currentmode = self.session.heating.get_mode(self.node_id)
             if currentmode == "SCHEDULE":
-                return STATE_AUTO
+                return str(STATE_AUTO).capitalize()
             elif currentmode == "MANUAL":
-                return STATE_HEAT
+                return str(STATE_HEAT).capitalize()
             elif currentmode == "OFF":
-                return STATE_OFF
+                return str(STATE_OFF).capitalize()
         elif self.device_type == "Heating_Boost":
-            return self.session.heating.get_boost(self.node_id)
+            returnvalue = self.session.heating.get_boost(self.node_id)
+            return str(returnvalue).capitalize()
         elif self.device_type == "HotWater_State":
-            return self.session.hotwater.get_state(self.node_id)
+            returnvalue = self.session.hotwater.get_state(self.node_id)
+            return str(returnvalue).capitalize()
         elif self.device_type == "HotWater_Mode":
             currentmode = self.session.hotwater.get_mode(self.node_id)
             if currentmode == "SCHEDULE":
-                return STATE_AUTO
+                return str(STATE_AUTO).capitalize()
             elif currentmode == "ON":
-                return STATE_ON
+                return str(STATE_ON).capitalize()
             elif currentmode == "OFF":
-                return STATE_OFF
+                return str(STATE_OFF).capitalize()
         elif self.device_type == "HotWater_Boost":
-            return self.session.hotwater.get_boost(self.node_id)
+            returnvalue = self.session.hotwater.get_boost(self.node_id)
+            return str(returnvalue).capitalize()
         elif self.device_type == "Hive_Device_BatteryLevel":
             self.batt_lvl = self.session.sensor.battery_level(self.node_id)
             return self.batt_lvl
