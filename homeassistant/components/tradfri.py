@@ -139,7 +139,7 @@ def async_setup(hass, config):
 def _setup_gateway(hass, hass_config, host, identity, key,
                    allow_tradfri_groups):
     """Create a gateway."""
-    from pytradfri import Gateway, RequestError
+    from pytradfri import Gateway, RequestError  # pylint: disable=import-error
     try:
         from pytradfri.api.aiocoap_api import APIFactory
     except ImportError:

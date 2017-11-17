@@ -90,7 +90,7 @@ class TradfriDevice(Entity):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
-        from pytradfri.error import PyTradFriError
+        from pytradfri.error import PyTradFriError  # pylint: disable=import-error
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
