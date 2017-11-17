@@ -366,7 +366,7 @@ def test_api_turn_on(hass, domain):
             'friendly_name': "Test {}".format(domain)
         })
 
-    call = async_mock_service(hass, domain, 'turn_on')
+    call = async_mock_service(hass, 'homeassistant', 'turn_on')
 
     msg = yield from smart_home.async_handle_message(hass, request)
 
@@ -393,7 +393,7 @@ def test_api_turn_off(hass, domain):
             'friendly_name': "Test {}".format(domain)
         })
 
-    call = async_mock_service(hass, domain, 'turn_off')
+    call = async_mock_service(hass, 'homeassistant', 'turn_off')
 
     msg = yield from smart_home.async_handle_message(hass, request)
 

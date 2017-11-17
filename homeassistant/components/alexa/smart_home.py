@@ -4,6 +4,7 @@ import logging
 import math
 from uuid import uuid4
 
+import homeassistant.core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
@@ -227,7 +228,7 @@ def extract_entity(funct):
 @asyncio.coroutine
 def async_api_turn_on(hass, request, entity):
     """Process a turn on request."""
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
@@ -239,7 +240,7 @@ def async_api_turn_on(hass, request, entity):
 @asyncio.coroutine
 def async_api_turn_off(hass, request, entity):
     """Process a turn off request."""
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_OFF, {
+    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
