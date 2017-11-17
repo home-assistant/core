@@ -4,9 +4,16 @@ import logging
 import math
 from uuid import uuid4
 
+import homeassistant.core as ha
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.components import switch, light, script
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_LOCK,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_UNLOCK, SERVICE_VOLUME_SET)
+from homeassistant.components import (
+    alert, automation, cover, fan, group, input_boolean, light, lock,
+    media_player, scene, script, switch)
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -14,15 +21,32 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 API_DIRECTIVE = 'directive'
+API_ENDPOINT = 'endpoint'
 API_EVENT = 'event'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
-API_ENDPOINT = 'endpoint'
+
+ATTR_ALEXA_DESCRIPTION = 'alexa_description'
+ATTR_ALEXA_DISPLAY_CATEGORIES = 'alexa_display_categories'
+ATTR_ALEXA_HIDDEN = 'alexa_hidden'
+ATTR_ALEXA_NAME = 'alexa_name'
 
 
 MAPPING_COMPONENT = {
-    script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
-    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
+    alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
+    automation.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
+    cover.DOMAIN: [
+        'DOOR', ('Alexa.PowerController',), {
+            cover.SUPPORT_SET_POSITION: 'Alexa.PercentageController',
+        }
+    ],
+    fan.DOMAIN: [
+        'OTHER', ('Alexa.PowerController',), {
+            fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
+        }
+    ],
+    group.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
+    input_boolean.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
@@ -31,6 +55,20 @@ MAPPING_COMPONENT = {
             light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
         }
     ],
+    lock.DOMAIN: ['SMARTLOCK', ('Alexa.LockController',), None],
+    media_player.DOMAIN: [
+        'TV', ('Alexa.PowerController',), {
+            media_player.SUPPORT_VOLUME_SET: 'Alexa.Speaker',
+            media_player.SUPPORT_PLAY: 'Alexa.PlaybackController',
+            media_player.SUPPORT_PAUSE: 'Alexa.PlaybackController',
+            media_player.SUPPORT_STOP: 'Alexa.PlaybackController',
+            media_player.SUPPORT_NEXT_TRACK: 'Alexa.PlaybackController',
+            media_player.SUPPORT_PREVIOUS_TRACK: 'Alexa.PlaybackController',
+        }
+    ],
+    scene.DOMAIN: ['ACTIVITY_TRIGGER', ('Alexa.SceneController',), None],
+    script.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
+    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
 }
 
 
@@ -108,18 +146,33 @@ def async_api_discovery(hass, request):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
+        if entity.attributes.get(ATTR_ALEXA_HIDDEN, False):
+            continue
+
         class_data = MAPPING_COMPONENT.get(entity.domain)
 
         if not class_data:
             continue
 
+        friendly_name = entity.attributes.get(ATTR_ALEXA_NAME, entity.name)
+        description = entity.attributes.get(ATTR_ALEXA_DESCRIPTION,
+                                            entity.entity_id)
+
+        # Required description as per Amazon Scene docs
+        if entity.domain == scene.DOMAIN:
+            scene_fmt = '%s (Scene connected via Home Assistant)'
+            description = scene_fmt.format(description)
+
+        cat_key = ATTR_ALEXA_DISPLAY_CATEGORIES
+        display_categories = entity.attributes.get(cat_key, class_data[0])
+
         endpoint = {
-            'displayCategories': [class_data[0]],
+            'displayCategories': [display_categories],
             'additionalApplianceDetails': {},
             'endpointId': entity.entity_id.replace('.', '#'),
-            'friendlyName': entity.name,
-            'description': '',
-            'manufacturerName': 'Unknown',
+            'friendlyName': friendly_name,
+            'description': description,
+            'manufacturerName': 'Home Assistant',
         }
         actions = set()
 
@@ -175,7 +228,7 @@ def extract_entity(funct):
 @asyncio.coroutine
 def async_api_turn_on(hass, request, entity):
     """Process a turn on request."""
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
@@ -187,7 +240,7 @@ def async_api_turn_on(hass, request, entity):
 @asyncio.coroutine
 def async_api_turn_off(hass, request, entity):
     """Process a turn off request."""
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_OFF, {
+    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
@@ -308,5 +361,264 @@ def async_api_increase_color_temp(hass, request, entity):
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_COLOR_TEMP: value,
     }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.SceneController', 'Activate'))
+@extract_entity
+@asyncio.coroutine
+def async_api_activate(hass, request, entity):
+    """Process a activate request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_percentage(hass, request, entity):
+    """Process a set percentage request."""
+    percentage = int(request[API_PAYLOAD]['percentage'])
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = "off"
+
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        elif percentage <= 100:
+            speed = "high"
+        data[fan.ATTR_SPEED] = speed
+
+    elif entity.domain == cover.DOMAIN:
+        service = SERVICE_SET_COVER_POSITION
+        data[cover.ATTR_POSITION] = percentage
+
+    yield from hass.services.async_call(entity.domain, service,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PercentageController', 'AdjustPercentage'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_percentage(hass, request, entity):
+    """Process a adjust percentage request."""
+    percentage_delta = int(request[API_PAYLOAD]['percentageDelta'])
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = entity.attributes.get(fan.ATTR_SPEED)
+
+        if speed == "off":
+            current = 0
+        elif speed == "low":
+            current = 33
+        elif speed == "medium":
+            current = 66
+        elif speed == "high":
+            current = 100
+
+        # set percentage
+        percentage = max(0, percentage_delta + current)
+        speed = "off"
+
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        elif percentage <= 100:
+            speed = "high"
+
+        data[fan.ATTR_SPEED] = speed
+
+    elif entity.domain == cover.DOMAIN:
+        service = SERVICE_SET_COVER_POSITION
+
+        current = entity.attributes.get(cover.ATTR_POSITION)
+
+        data[cover.ATTR_POSITION] = max(0, percentage_delta + current)
+
+    yield from hass.services.async_call(entity.domain, service,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.LockController', 'Lock'))
+@extract_entity
+@asyncio.coroutine
+def async_api_lock(hass, request, entity):
+    """Process a lock request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_LOCK, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message(request)
+
+
+# Not supported by Alexa yet
+@HANDLERS.register(('Alexa.LockController', 'Unlock'))
+@extract_entity
+@asyncio.coroutine
+def async_api_unlock(hass, request, entity):
+    """Process a unlock request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.Speaker', 'SetVolume'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_volume(hass, request, entity):
+    """Process a set volume request."""
+    volume = round(float(request[API_PAYLOAD]['volume'] / 100), 2)
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
+    }
+
+    yield from hass.services.async_call(entity.domain, SERVICE_VOLUME_SET,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.Speaker', 'AdjustVolume'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_volume(hass, request, entity):
+    """Process a adjust volume request."""
+    volume_delta = int(request[API_PAYLOAD]['volume'])
+
+    current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+
+    # read current state
+    try:
+        current = math.floor(int(current_level * 100))
+    except ZeroDivisionError:
+        current = 0
+
+    volume = float(max(0, volume_delta + current) / 100)
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_VOLUME_SET,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.Speaker', 'SetMute'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_mute(hass, request, entity):
+    """Process a set mute request."""
+    mute = bool(request[API_PAYLOAD]['mute'])
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        media_player.SERVICE_VOLUME_MUTE,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Play'))
+@extract_entity
+@asyncio.coroutine
+def async_api_play(hass, request, entity):
+    """Process a play request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PLAY,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Pause'))
+@extract_entity
+@asyncio.coroutine
+def async_api_pause(hass, request, entity):
+    """Process a pause request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PAUSE,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Stop'))
+@extract_entity
+@asyncio.coroutine
+def async_api_stop(hass, request, entity):
+    """Process a stop request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_STOP,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Next'))
+@extract_entity
+@asyncio.coroutine
+def async_api_next(hass, request, entity):
+    """Process a next request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        SERVICE_MEDIA_NEXT_TRACK,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Previous'))
+@extract_entity
+@asyncio.coroutine
+def async_api_previous(hass, request, entity):
+    """Process a previous request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        SERVICE_MEDIA_PREVIOUS_TRACK,
+                                        data, blocking=True)
 
     return api_message(request)
