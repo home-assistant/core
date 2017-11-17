@@ -12,7 +12,6 @@ class TestFacebook(unittest.TestCase):
 
     def setUp(self):
         """Set up test variables."""
-
         access_token = "page-access-token"
         self.facebook = facebook.FacebookNotificationService(access_token)
 
@@ -36,17 +35,11 @@ class TestFacebook(unittest.TestCase):
             "recipient": {"phone_number": target[0]},
             "message": {"text": message}
         }
-        self.assertEqual(
-            mock.last_request.json(),
-            expected_body
-        )
+        self.assertEqual(mock.last_request.json(), expected_body)
 
         params = urlparse.parse_qs(mock.last_request.query)
         expected_params = {"access_token": ["page-access-token"]}
-        self.assertEqual(
-            params,
-            expected_params
-        )
+        self.assertEqual(params, expected_params)
 
     @requests_mock.Mocker()
     def test_sending_multiple_messages(self, mock):
@@ -70,17 +63,11 @@ class TestFacebook(unittest.TestCase):
                 "recipient": {"phone_number": target},
                 "message": {"text": message}
             }
-            self.assertEqual(
-                request.json(),
-                expected_body
-            )
+            self.assertEqual(request.json(), expected_body)
 
             params = urlparse.parse_qs(request.query)
             expected_params = {"access_token": ["page-access-token"]}
-            self.assertEqual(
-                params,
-                expected_params
-            )
+            self.assertEqual(params, expected_params)
 
     @requests_mock.Mocker()
     def test_send_message_attachment(self, mock):
@@ -108,17 +95,11 @@ class TestFacebook(unittest.TestCase):
             "recipient": {"phone_number": target[0]},
             "message": data
         }
-        self.assertEqual(
-            mock.last_request.json(),
-            expected_body
-        )
+        self.assertEqual(mock.last_request.json(), expected_body)
 
         params = urlparse.parse_qs(mock.last_request.query)
         expected_params = {"access_token": ["page-access-token"]}
-        self.assertEqual(
-            params,
-            expected_params
-        )
+        self.assertEqual(params, expected_params)
 
     @requests_mock.Mocker()
     def test_send_targetless_message(self, mock):
