@@ -766,18 +766,18 @@ def get_googlepluspthumb_from_email(email: str):
     from re import search
 
     url = r'https://picasaweb.google.com/data/entry/api/user/'
-    if email is None or email is False or email is True
+    if email is None or email is False or email is True:
         email = ''
     try:
         url += urllib.parse.quote(email) + r'?alt=json'
         jsontext = urllib.request.urlopen(url).read().decode('utf-8')
     except TypeError:
-        _LOGGER.error('http timeout or invalid email\r\n  '
-                      + email + '\r\n  ' + url)
+        _LOGGER.error('http timeout or invalid email\r\n  email: '
+                      + email + '\r\n  url: ' + url)
         return None
     except urllib.error.HTTPError:
-        _LOGGER.error('http timeout or invalid email\r\n  '
-                      + email + '\r\n  ' + url)
+        _LOGGER.error('http timeout or invalid email\r\n  email: '
+                      + email + '\r\n  url: ' + url)
         return None
 
     thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
