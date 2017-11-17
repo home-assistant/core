@@ -5,8 +5,9 @@ import math
 from uuid import uuid4
 
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.components import fan, light, scene, script, switch
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON,
+    SERVICE_TURN_OFF, SERVICE_LOCK, SERVICE_UNLOCK)
+from homeassistant.components import fan, light, lock, scene, script, switch
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -34,6 +35,7 @@ MAPPING_COMPONENT = {
             light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
         }
     ],
+    lock.DOMAIN: ['SMARTLOCK', ('Alexa.LockController',), None],
     scene.DOMAIN: ['SCENE', ('Alexa.SceneController',), None],
     script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
@@ -399,3 +401,27 @@ def async_api_adjust_percentage(hass, request, entity):
 
     return api_message(request)
 
+
+@HANDLERS.register(('Alexa.LockController', 'Lock'))
+@extract_entity
+@asyncio.coroutine
+def async_api_lock(hass, request, entity):
+    """Process a lock request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_LOCK, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message(request)
+
+
+# Not supported by Alexa yet
+@HANDLERS.register(('Alexa.LockController', 'Unlock'))
+@extract_entity
+@asyncio.coroutine
+def async_api_unlock(hass, request, entity):
+    """Process a unlock request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message(request)
