@@ -67,6 +67,7 @@ class HddTempSensor(Entity):
         self._name = '{} {}'.format(name, disk)
         self._state = None
         self._details = None
+        self._unit = None
 
     @property
     def name(self):
@@ -81,9 +82,7 @@ class HddTempSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if self._details is not None and self._details[3] == 'F':
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+        return self._unit
 
     @property
     def device_state_attributes(self):
@@ -101,6 +100,10 @@ class HddTempSensor(Entity):
         if self.hddtemp.data and self.disk in self.hddtemp.data:
             self._details = self.hddtemp.data[self.disk].split('|')
             self._state = self._details[2]
+            if self._details is not None and self._details[3] == 'F':
+                self._unit = TEMP_FAHRENHEIT
+            else:
+                self._unit = TEMP_CELSIUS
         else:
             self._state = None
 
