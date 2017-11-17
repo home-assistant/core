@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
-    STATE_AUTO)
+    STATE_AUTO, ATTR_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -44,7 +44,6 @@ CONF_PERSISTENCE = 'persistence'
 
 ATTR_NONE = 'none'
 ATTR_BOTH = 'both'
-ATTR_OPERATION_MODE = 'operation_mode'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
