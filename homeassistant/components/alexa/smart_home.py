@@ -35,12 +35,12 @@ MAPPING_COMPONENT = {
     alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     automation.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     fan.DOMAIN: [
-        'SWITCH', ('Alexa.PowerController',), {
+        'OTHER', ('Alexa.PowerController',), {
             fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
         }
     ],
     group.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
-    input_boolean.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
+    input_boolean.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
@@ -61,7 +61,7 @@ MAPPING_COMPONENT = {
         }
     ],
     scene.DOMAIN: ['ACTIVITY_TRIGGER', ('Alexa.SceneController',), None],
-    script.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
+    script.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
 }
 
