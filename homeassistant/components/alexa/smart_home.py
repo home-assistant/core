@@ -458,8 +458,7 @@ def async_api_set_volume(hass, request, entity):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_VOLUME_SET,
+    yield from hass.services.async_call(entity.domain, SERVICE_VOLUME_SET,
                                         data, blocking=True)
 
     return api_message(request)
@@ -512,6 +511,7 @@ def async_api_set_mute(hass, request, entity):
 
     return api_message(request)
 
+
 @HANDLERS.register(('Alexa.PlaybackController', 'Play'))
 @extract_entity
 @asyncio.coroutine
@@ -521,8 +521,7 @@ def async_api_play(hass, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_PLAY_MEDIA,
+    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PLAY,
                                         data, blocking=True)
 
     return api_message(request)
@@ -537,8 +536,7 @@ def async_api_pause(hass, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_PAUSE_MEDIA,
+    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PAUSE,
                                         data, blocking=True)
 
     return api_message(request)
@@ -553,8 +551,39 @@ def async_api_stop(hass, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
+    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_STOP,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Next'))
+@extract_entity
+@asyncio.coroutine
+def async_api_next(hass, request, entity):
+    """Process a next request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
     yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_STOP,
+                                        SERVICE_MEDIA_NEXT_TRACK,
+                                        data, blocking=True)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Previous'))
+@extract_entity
+@asyncio.coroutine
+def async_api_previous(hass, request, entity):
+    """Process a previous request."""
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    yield from hass.services.async_call(entity.domain,
+                                        SERVICE_MEDIA_PREVIOUS_TRACK,
                                         data, blocking=True)
 
     return api_message(request)
