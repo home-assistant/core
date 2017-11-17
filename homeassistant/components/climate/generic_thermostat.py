@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
+from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +40,11 @@ CONF_MIN_DUR = 'min_cycle_duration'
 CONF_COLD_TOLERANCE = 'cold_tolerance'
 CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
+CONF_PERSISTENCE = 'persistence'
 
+ATTR_NONE = 'none'
+ATTR_BOTH = 'both'
+ATTR_OPERATION_MODE = 'operation_mode'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
@@ -56,6 +61,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_PERSISTENCE, default=ATTR_NONE): vol.In(
+        [ATTR_NONE, ATTR_BOTH, CONF_TARGET_TEMP, ATTR_OPERATION_MODE]),
 })
 
 
@@ -73,11 +80,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     cold_tolerance = config.get(CONF_COLD_TOLERANCE)
     hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
+    persistence = config.get(CONF_PERSISTENCE)
 
     async_add_devices([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
         target_temp, ac_mode, min_cycle_duration, cold_tolerance,
-        hot_tolerance, keep_alive)])
+        hot_tolerance, keep_alive, persistence)])
 
 
 class GenericThermostat(ClimateDevice):
@@ -85,7 +93,7 @@ class GenericThermostat(ClimateDevice):
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
-                 cold_tolerance, hot_tolerance, keep_alive):
+                 cold_tolerance, hot_tolerance, keep_alive, persistence):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
@@ -102,6 +110,7 @@ class GenericThermostat(ClimateDevice):
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._target_temp = target_temp
+        self._persistence = persistence
         self._unit = hass.config.units.temperature_unit
 
         async_track_state_change(
@@ -213,6 +222,19 @@ class GenericThermostat(ClimateDevice):
         self._async_update_temp(new_state)
         self._async_control_heating()
         yield from self.async_update_ha_state()
+        
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Handle all entity which are about to be added."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        if self._persistence in [ATTR_BOTH, CONF_TARGET_TEMP]:
+            self._target_temp=state.attributes[ATTR_TEMPERATURE]
+        if (self._persistence in [ATTR_BOTH, ATTR_OPERATION_MODE] and
+            state.attributes[ATTR_OPERATION_MODE] == STATE_OFF):
+                self.set_operation_mode(STATE_OFF)
+        return
 
     @callback
     def _async_switch_changed(self, entity_id, old_state, new_state):
