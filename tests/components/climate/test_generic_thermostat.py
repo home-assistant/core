@@ -892,3 +892,27 @@ def test_custom_setup_params(hass):
     assert state.attributes.get('min_temp') == MIN_TEMP
     assert state.attributes.get('max_temp') == MAX_TEMP
     assert state.attributes.get('temperature') == TARGET_TEMP
+
+
+@asyncio.coroutine
+def test_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20"}),
+        State('climate.test_thermostat', '0', {'operation_mode': STATE_OFF}),
+    ))
+
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(
+        hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test_thermostat',
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'persistence': 'both',
+        }})
+
+    state = hass.states.get('climate.test_thermostat')
+    assert(state.attributes[ATTR_TEMPERATURE] == 20)
+    assert(state.attributes['operation_mode'] == STATE_OFF)
