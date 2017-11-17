@@ -7,7 +7,7 @@ https://home-assistant.io/components/hive/
 import logging
 from datetime import datetime
 
-from homeassistant.components.climate import (ENTITY_ID_FORMAT, ClimateDevice,
+from homeassistant.components.climate import (ClimateDevice,
                                               STATE_AUTO, STATE_HEAT,
                                               STATE_OFF, STATE_ON)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -37,17 +37,11 @@ class HiveClimateEntity(ClimateDevice):
         self.session = Session
 
         if self.device_type == "Heating":
-            set_entity_id = "Hive_Heating"
             self.session.heating = self.session.core.Heating()
             self.modes = [STATE_AUTO, STATE_HEAT, STATE_OFF]
         elif self.device_type == "HotWater":
-            set_entity_id = "Hive_HotWater"
             self.session.hotwater = self.session.core.Hotwater()
             self.modes = [STATE_AUTO, STATE_ON, STATE_OFF]
-        if self.node_name is not None:
-            set_entity_id = set_entity_id + "_" \
-                            + self.node_name.replace(" ", "_")
-        self.entity_id = ENTITY_ID_FORMAT.format(set_entity_id.lower())
 
         self.session.entities.append(self)
 

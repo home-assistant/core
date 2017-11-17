@@ -10,7 +10,6 @@ from datetime import datetime
 from homeassistant.components.climate import (STATE_AUTO, STATE_HEAT,
                                               STATE_OFF, STATE_ON)
 from homeassistant.components.hive import DATA_HIVE
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
@@ -38,41 +37,8 @@ class HiveSensorEntity(Entity):
         self.hass = hass
         self.session = Session
         self.session.sensor = self.session.core.Sensor()
-
-        set_entity_id = "Sensor"
-
-        if self.device_type == "Heating_CurrentTemperature":
-            set_entity_id = "Hive_Current_Temperature"
-        elif self.device_type == "Heating_TargetTemperature":
-            set_entity_id = "Hive_Target_Temperature"
-        elif self.device_type == "Heating_State":
-            set_entity_id = "Hive_Heating_State"
-        elif self.device_type == "Heating_Mode":
-            set_entity_id = "Hive_Heating_Mode"
-        elif self.device_type == "Heating_Boost":
-            set_entity_id = "Hive_Heating_Boost"
-        elif self.device_type == "HotWater_State":
-            set_entity_id = "Hive_Hot_Water_State"
-        elif self.device_type == "HotWater_Mode":
-            set_entity_id = "Hive_Hot_Water_Mode"
-        elif self.device_type == "HotWater_Boost":
-            set_entity_id = "Hive_Hot_Water_Boost"
-        elif self.device_type == "Hive_Device_BatteryLevel":
+        if self.device_type == "Hive_Device_BatteryLevel":
             self.batt_lvl = None
-            if self.node_device_type == "thermostatui":
-                set_entity_id = "Hive_Thermostat_Battery_Level"
-        elif self.device_type == "Hive_Device_Sensor":
-            set_entity_id = None
-        elif self.device_type == "Hive_Device_Light_Mode":
-            set_entity_id = None
-        elif self.device_type == "Hive_Device_Plug_Mode":
-            set_entity_id = None
-
-        if set_entity_id is not None:
-            if self.node_name is not None:
-                set_entity_id = set_entity_id + "_" \
-                                + self.node_name.replace(" ", "_")
-            self.entity_id = ENTITY_ID_FORMAT.format(set_entity_id.lower())
 
         self.session.entities.append(self)
 
