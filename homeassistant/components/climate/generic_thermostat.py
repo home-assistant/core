@@ -121,7 +121,6 @@ class GenericThermostat(ClimateDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Run when entity about to be added."""
-
         # If we have an old state and no target temp, restore
         if self._target_temp is None:
             old_state = yield from async_get_last_state(self.hass,
