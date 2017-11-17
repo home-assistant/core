@@ -2,8 +2,6 @@
 import unittest
 import requests_mock
 
-from six.moves.urllib import parse as urlparse
-
 import homeassistant.components.notify.facebook as facebook
 
 
@@ -37,9 +35,8 @@ class TestFacebook(unittest.TestCase):
         }
         self.assertEqual(mock.last_request.json(), expected_body)
 
-        params = urlparse.parse_qs(mock.last_request.query)
         expected_params = {"access_token": ["page-access-token"]}
-        self.assertEqual(params, expected_params)
+        self.assertEqual(mock.last_request.qs, expected_params)
 
     @requests_mock.Mocker()
     def test_sending_multiple_messages(self, mock):
@@ -65,9 +62,8 @@ class TestFacebook(unittest.TestCase):
             }
             self.assertEqual(request.json(), expected_body)
 
-            params = urlparse.parse_qs(request.query)
             expected_params = {"access_token": ["page-access-token"]}
-            self.assertEqual(params, expected_params)
+            self.assertEqual(request.qs, expected_params)
 
     @requests_mock.Mocker()
     def test_send_message_attachment(self, mock):
@@ -97,9 +93,8 @@ class TestFacebook(unittest.TestCase):
         }
         self.assertEqual(mock.last_request.json(), expected_body)
 
-        params = urlparse.parse_qs(mock.last_request.query)
         expected_params = {"access_token": ["page-access-token"]}
-        self.assertEqual(params, expected_params)
+        self.assertEqual(mock.last_request.qs, expected_params)
 
     @requests_mock.Mocker()
     def test_send_targetless_message(self, mock):
