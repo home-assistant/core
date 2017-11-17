@@ -67,17 +67,16 @@ class CurrencylayerSensor(Entity):
         self._quote = quote
         self._base = base
         self._state = None
-        self._unit_of_measurement = quote
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return self._quote
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._base, self._quote)
+        return self._base
 
     @property
     def icon(self):
