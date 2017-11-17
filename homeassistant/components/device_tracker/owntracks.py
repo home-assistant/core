@@ -124,6 +124,8 @@ def _parse_see_args(message):
         kwargs['attributes']['tid'] = message['tid']
     if 'addr' in message:
         kwargs['attributes']['address'] = message['addr']
+    if 'tst' in message:
+        kwargs['attributes']['timestamp'] = message['tst']
 
     return dev_id, kwargs
 
