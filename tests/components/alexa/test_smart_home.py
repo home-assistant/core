@@ -135,12 +135,19 @@ def test_discovery_request(hass):
     hass.states.async_set(
         'lock.test', 'off', {'friendly_name': "Test lock"})
 
+    hass.states.async_set(
+        'media_player.test', 'off', {
+            'friendly_name': "Test media player",
+            'supported_features': 20925,
+            'volume_level': 1
+        })
+
     msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 10
+    assert len(msg['payload']['endpoints']) == 11
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
 
@@ -242,6 +249,19 @@ def test_discovery_request(hass):
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
                 'Alexa.LockController'
+            continue
+
+        if appliance['endpointId'] == 'media_player#test':
+            assert appliance['displayCategories'][0] == "TV"
+            assert appliance['friendlyName'] == "Test media player"
+            assert len(appliance['capabilities']) == 3
+            caps = set()
+            for feature in appliance['capabilities']:
+                caps.add(feature['interface'])
+
+            assert 'Alexa.PowerController' in caps
+            assert 'Alexa.Speaker' in caps
+            assert 'Alexa.PlaybackController' in caps
             continue
 
         raise AssertionError("Unknown appliance!")
@@ -632,6 +652,216 @@ def test_api_lock(hass, domain):
         })
 
     call = async_mock_service(hass, domain, 'lock')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("domain", ['media_player'])
+def test_api_play(hass, domain):
+    """Test api play process."""
+    request = get_new_request(
+        'Alexa.PlaybackController', 'Play', '{}#test'.format(domain))
+
+    # settup test devices
+    hass.states.async_set(
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
+
+    call = async_mock_service(hass, domain, 'media_play')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("domain", ['media_player'])
+def test_api_pause(hass, domain):
+    """Test api pause process."""
+    request = get_new_request(
+        'Alexa.PlaybackController', 'Pause', '{}#test'.format(domain))
+
+    # settup test devices
+    hass.states.async_set(
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
+
+    call = async_mock_service(hass, domain, 'media_pause')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("domain", ['media_player'])
+def test_api_stop(hass, domain):
+    """Test api stop process."""
+    request = get_new_request(
+        'Alexa.PlaybackController', 'Stop', '{}#test'.format(domain))
+
+    # settup test devices
+    hass.states.async_set(
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
+
+    call = async_mock_service(hass, domain, 'media_stop')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("domain", ['media_player'])
+def test_api_next(hass, domain):
+    """Test api next process."""
+    request = get_new_request(
+        'Alexa.PlaybackController', 'Next', '{}#test'.format(domain))
+
+    # settup test devices
+    hass.states.async_set(
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
+
+    call = async_mock_service(hass, domain, 'media_next_track')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("domain", ['media_player'])
+def test_api_previous(hass, domain):
+    """Test api previous process."""
+    request = get_new_request(
+        'Alexa.PlaybackController', 'Previous', '{}#test'.format(domain))
+
+    # settup test devices
+    hass.states.async_set(
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
+
+    call = async_mock_service(hass, domain, 'media_previous_track')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+def test_api_set_volume(hass):
+    """Test api set volume process."""
+    request = get_new_request(
+        'Alexa.Speaker', 'SetVolume', 'media_player#test')
+
+    # add payload
+    request['directive']['payload']['volume'] = 50
+
+    # settup test devices
+    hass.states.async_set(
+        'media_player.test', 'off', {
+            'friendly_name': "Test media player", 'volume_level': 0
+        })
+
+    call_media_player = async_mock_service(hass, 'media_player', 'volume_set')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_media_player) == 1
+    assert call_media_player[0].data['entity_id'] == 'media_player.test'
+    assert call_media_player[0].data['volume_level'] == 0.5
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize(
+    "result,adjust", [(0.7, '-5'), (0.8, '5'), (0, '-80')])
+def test_api_adjust_volume(hass, result, adjust):
+    """Test api adjust volume process."""
+    request = get_new_request(
+        'Alexa.Speaker', 'AdjustVolume', 'media_player#test')
+
+    # add payload
+    request['directive']['payload']['volume'] = adjust
+
+    # settup test devices
+    hass.states.async_set(
+        'media_player.test', 'off', {
+            'friendly_name': "Test media player", 'volume_level': 0.75
+        })
+
+    call_media_player = async_mock_service(hass, 'media_player', 'volume_set')
+
+    msg = yield from smart_home.async_handle_message(hass, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(call_media_player) == 1
+    assert call_media_player[0].data['entity_id'] == 'media_player.test'
+    assert call_media_player[0].data['volume_level'] == result
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize("domain", ['media_player'])
+def test_api_mute(hass, domain):
+    """Test api mute process."""
+    request = get_new_request(
+        'Alexa.Speaker', 'SetMute', '{}#test'.format(domain))
+
+    request['directive']['payload']['mute'] = True
+
+    # settup test devices
+    hass.states.async_set(
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
+
+    call = async_mock_service(hass, domain, 'volume_mute')
 
     msg = yield from smart_home.async_handle_message(hass, request)
 
