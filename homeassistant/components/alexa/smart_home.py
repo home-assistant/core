@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.components import (
     alert, automation, cover, fan, group, input_boolean, light, lock,
     media_player, scene, script, switch)
+from homeassistant.helpers.entityfilter import generate_filter
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -150,31 +151,15 @@ def async_api_discovery(hass, config, request):
     for entity in hass.states.async_all():
         filters = config.get(CONF_ALEXA_FILTERS, {})
 
-        include_domains = filters.get(CONF_INCLUDE_DOMAINS)
-        include_entities = filters.get(CONF_INCLUDE_ENTITIES)
+        include_domains = filters.get(CONF_INCLUDE_DOMAINS, [])
+        include_entities = filters.get(CONF_INCLUDE_ENTITIES, [])
+        exclude_domains = filters.get(CONF_EXCLUDE_DOMAINS, [])
+        exclude_entities = filters.get(CONF_EXCLUDE_ENTITIES, [])
 
-        if (include_domains is not None and
-                entity.domain not in include_domains and
-                entity.entity_id not in include_entities):
-            _LOGGER.debug("Not exposing %s because not in included domains",
-                          entity.entity_id)
-            continue
+        entity_filter = generate_filter(include_domains, include_entities,
+                                        exclude_domains, exclude_entities)
 
-        if (include_entities is not None and
-                entity.entity_id not in include_entities and
-                entity.domain not in include_domains):
-            _LOGGER.debug("Not exposing %s because not in included entities",
-                          entity.entity_id)
-            continue
-
-        if entity.domain in filters.get(CONF_EXCLUDE_DOMAINS, []):
-            _LOGGER.debug("Not exposing %s because in excluded domains",
-                          entity.entity_id)
-            continue
-
-        if entity.entity_id in filters.get(CONF_EXCLUDE_ENTITIES, []):
-            _LOGGER.debug("Not exposing %s because in excluded entities",
-                          entity.entity_id)
+        if not entity_filter(entity.entity_id):
             continue
 
         if entity.attributes.get(ATTR_ALEXA_HIDDEN, False):
