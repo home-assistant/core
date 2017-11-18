@@ -5,7 +5,7 @@ import math
 from uuid import uuid4
 
 import homeassistant.core as ha
-from homeassistant.components.cloud import (CONF_ALEXA_FILTERS)
+from homeassistant.components.cloud import CONF_ALEXA_FILTERS
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_DOMAINS, CONF_INCLUDE_ENTITIES,

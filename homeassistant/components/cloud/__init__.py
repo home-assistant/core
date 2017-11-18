@@ -81,14 +81,14 @@ class Cloud:
     """Store the configuration of the cloud connection."""
 
     def __init__(self, hass, mode, cognito_client_id=None, user_pool_id=None,
-                 region=None, relayer=None, alexa={}):
+                 region=None, relayer=None, alexa=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
+        self.alexa_config = alexa
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
-        self.alexa_config = alexa
         self.iot = iot.CloudIoT(self)
 
         if mode == MODE_DEV:
