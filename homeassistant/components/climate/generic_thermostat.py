@@ -13,7 +13,9 @@ from homeassistant.core import callback
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
-    STATE_AUTO)
+    STATE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_CURRENT_TEMPERATURE, SUPPORT_MAX_TEMPERATURE,
+    SUPPORT_MIN_TEMPERATURE)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -312,6 +314,13 @@ class GenericThermostat(ClimateDevice):
     def _is_device_active(self):
         """If the toggleable device is currently active."""
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_CURRENT_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE |
+                SUPPORT_OPERATION_MODE | SUPPORT_MAX_TEMPERATURE |
+                SUPPORT_MIN_TEMPERATURE)
 
     @callback
     def _heater_turn_on(self):
