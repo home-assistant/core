@@ -36,7 +36,7 @@ class HiveDevicePlug(SwitchDevice):
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if self.device_type + "." + self.node_id not in updatesource:
+        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -61,14 +61,16 @@ class HiveDevicePlug(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        updatesource = self.device_type + "." + self.node_id
+        result = self.session.switch.turn_on(self.node_id)
+        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
             entity.handle_update(updatesource)
-        return self.session.switch.turn_on(self.node_id)
+        return result
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        updatesource = self.device_type + "." + self.node_id
+        result = self.session.switch.turn_off(self.node_id)
+        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
             entity.handle_update(updatesource)
-        return self.session.switch.turn_off(self.node_id)
+        return result

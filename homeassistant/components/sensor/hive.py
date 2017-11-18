@@ -12,6 +12,7 @@ from homeassistant.components.climate import (STATE_AUTO, STATE_HEAT,
 from homeassistant.components.hive import DATA_HIVE
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['hive']
 
@@ -43,7 +44,7 @@ class HiveSensorEntity(Entity):
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if self.device_type + "." + self.node_id not in updatesource:
+        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -398,6 +399,8 @@ class HiveSensorEntity(Entity):
             return TEMP_CELSIUS
         elif self.device_type == "Heating_TargetTemperature":
             return TEMP_CELSIUS
+        elif self.device_type == "Hive_Device_BatteryLevel":
+            return "%"
         else:
             return None
 
@@ -423,28 +426,7 @@ class HiveSensorEntity(Entity):
         elif self.device_type == "HotWater_Boost":
             device_icon = 'mdi:water-pump'
         elif self.device_type == "Hive_Device_BatteryLevel":
-            if self.batt_lvl >= 95 and self.batt_lvl <= 100:
-                device_icon = 'mdi:battery'
-            elif self.batt_lvl >= 85 and self.batt_lvl < 95:
-                device_icon = 'mdi:battery-90'
-            elif self.batt_lvl >= 75 and self.batt_lvl < 85:
-                device_icon = 'mdi:battery-80'
-            elif self.batt_lvl >= 65 and self.batt_lvl < 75:
-                device_icon = 'mdi:battery-70'
-            elif self.batt_lvl >= 55 and self.batt_lvl < 65:
-                device_icon = 'mdi:battery-60'
-            elif self.batt_lvl >= 45 and self.batt_lvl < 55:
-                device_icon = 'mdi:battery-50'
-            elif self.batt_lvl >= 35 and self.batt_lvl < 45:
-                device_icon = 'mdi:battery-40'
-            elif self.batt_lvl >= 25 and self.batt_lvl < 35:
-                device_icon = 'mdi:battery-30'
-            elif self.batt_lvl >= 15 and self.batt_lvl < 25:
-                device_icon = 'mdi:battery-20'
-            elif self.batt_lvl > 5 and self.batt_lvl < 15:
-                device_icon = 'mdi:battery-10'
-            elif self.batt_lvl <= 5:
-                device_icon = 'mdi:battery-outline'
+            return icon_for_battery_level(battery_level=self.batt_lvl)
         elif self.device_type == "Hive_Device_Sensor":
             device_icon = 'mdi:eye'
         elif self.device_type == "Hive_Device_Light_Mode":

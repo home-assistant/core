@@ -40,7 +40,7 @@ class HiveDeviceLight(Light):
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if self.device_type + "." + self.node_id not in updatesource:
+        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -100,14 +100,14 @@ class HiveDeviceLight(Light):
         else:
             self.session.light.turn_on(self.node_id)
 
-        updatesource = self.device_type + "." + self.node_id
+        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
             entity.handle_update(updatesource)
 
     def turn_off(self):
         """Instruct the light to turn off."""
         self.session.light.turn_off(self.node_id)
-        updatesource = self.device_type + "." + self.node_id
+        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
             entity.handle_update(updatesource)
 

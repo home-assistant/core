@@ -16,6 +16,10 @@ from homeassistant.components.hive import DATA_HIVE
 DEPENDENCIES = ['hive']
 
 _LOGGER = logging.getLogger(__name__)
+HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
+                      'ON': STATE_ON, 'OFF': STATE_OFF}
+HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
+                      STATE_ON: 'ON', STATE_OFF: 'OFF'}
 
 
 def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
@@ -169,41 +173,20 @@ class HiveClimateEntity(ClimateDevice):
         """Return current mode."""
         if self.device_type == "Heating":
             currentmode = self.session.heating.get_mode(self.node_id)
-            if currentmode == "SCHEDULE":
-                return STATE_AUTO
-            elif currentmode == "MANUAL":
-                return STATE_HEAT
-            elif currentmode == "OFF":
-                return STATE_OFF
         elif self.device_type == "HotWater":
             currentmode = self.session.hotwater.get_mode(self.node_id)
-            if currentmode == "SCHEDULE":
-                return STATE_AUTO
-            elif currentmode == "ON":
-                return STATE_ON
-            elif currentmode == "OFF":
-                return STATE_OFF
+        return HIVE_TO_HASS_STATE.get(currentmode)
 
     def set_operation_mode(self, operation_mode):
         """Set new Heating mode."""
+        _LOGGER.error("operation_mode = %s :: HIVE_STATE = %s", operation_mode, HASS_TO_HIVE_STATE.get(operation_mode))
+        new_mode = HASS_TO_HIVE_STATE.get(operation_mode)
         if self.device_type == "Heating":
-            if operation_mode == STATE_AUTO:
-                new_mode = "SCHEDULE"
-            elif operation_mode == STATE_HEAT:
-                new_mode = "MANUAL"
-            elif operation_mode == STATE_OFF:
-                new_mode = "OFF"
             self.session.heating.set_mode(self.node_id, new_mode)
         elif self.device_type == "HotWater":
-            if operation_mode == STATE_AUTO:
-                new_mode = "SCHEDULE"
-            elif operation_mode == STATE_ON:
-                new_mode = "ON"
-            elif operation_mode == STATE_OFF:
-                new_mode = "OFF"
             self.session.hotwater.set_mode(self.node_id, new_mode)
 
-        updatesource = self.device_type + "." + self.node_id
+        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
             entity.handle_update(updatesource)
 
@@ -214,7 +197,8 @@ class HiveClimateEntity(ClimateDevice):
             if self.device_type == "Heating":
                 self.session.heating.set_target_temperature(self.node_id,
                                                             new_temperature)
-            updatesource = self.device_type + "." + self.node_id
+
+            updatesource = '{}.{}'.format(self.device_type, self.node_id)
             for entity in self.session.entities:
                 entity.handle_update(updatesource)
 
