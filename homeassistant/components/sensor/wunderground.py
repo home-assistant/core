@@ -616,14 +616,13 @@ LANG_CODES = [
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PWS_ID): cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-    vol.All(vol.In(LANG_CODES)),
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.All(vol.In(LANG_CODES)),
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
 })
 
 

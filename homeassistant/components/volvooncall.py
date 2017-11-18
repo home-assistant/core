@@ -22,13 +22,14 @@ DOMAIN = 'volvooncall'
 
 DATA_KEY = DOMAIN
 
-REQUIREMENTS = ['volvooncall==0.3.3']
+REQUIREMENTS = ['volvooncall==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+CONF_REGION = 'region'
 CONF_SERVICE_URL = 'service_url'
 
 SIGNAL_VEHICLE_SEEN = '{}.vehicle_seen'.format(DOMAIN)
@@ -58,6 +59,7 @@ CONFIG_SCHEMA = vol.Schema({
             {cv.slug: cv.string}),
         vol.Optional(CONF_RESOURCES): vol.All(
             cv.ensure_list, [vol.In(RESOURCES)]),
+        vol.Optional(CONF_REGION): cv.string,
         vol.Optional(CONF_SERVICE_URL): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -65,11 +67,12 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Volvo On Call component."""
-    from volvooncall import Connection, DEFAULT_SERVICE_URL
+    from volvooncall import Connection
     connection = Connection(
         config[DOMAIN].get(CONF_USERNAME),
         config[DOMAIN].get(CONF_PASSWORD),
-        config[DOMAIN].get(CONF_SERVICE_URL, DEFAULT_SERVICE_URL))
+        config[DOMAIN].get(CONF_SERVICE_URL),
+        config[DOMAIN].get(CONF_REGION))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 

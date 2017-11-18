@@ -21,7 +21,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['abodepy==0.12.1']
+REQUIREMENTS = ['abodepy==0.12.2']
 
 _LOGGER = logging.getLogger(__name__)
 

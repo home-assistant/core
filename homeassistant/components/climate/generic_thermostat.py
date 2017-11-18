@@ -163,6 +163,7 @@ class GenericThermostat(ClimateDevice):
         """Set operation mode."""
         if operation_mode == STATE_AUTO:
             self._enabled = True
+            self._async_control_heating()
         elif operation_mode == STATE_OFF:
             self._enabled = False
             if self._is_device_active:

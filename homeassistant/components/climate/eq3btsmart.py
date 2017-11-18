@@ -9,12 +9,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, PRECISION_HALVES,
-    STATE_AUTO, STATE_ON, STATE_OFF,
-)
+    STATE_ON, STATE_OFF, STATE_AUTO, PLATFORM_SCHEMA, ClimateDevice)
 from homeassistant.const import (
-    CONF_MAC, TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE)
-
+    CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-eq3bt==0.1.6']
@@ -58,15 +55,17 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
-        # we want to avoid name clash with this module..
+        # We want to avoid name clash with this module.
         import eq3bt as eq3
 
-        self.modes = {eq3.Mode.Open: STATE_ON,
-                      eq3.Mode.Closed: STATE_OFF,
-                      eq3.Mode.Auto: STATE_AUTO,
-                      eq3.Mode.Manual: STATE_MANUAL,
-                      eq3.Mode.Boost: STATE_BOOST,
-                      eq3.Mode.Away: STATE_AWAY}
+        self.modes = {
+            eq3.Mode.Open: STATE_ON,
+            eq3.Mode.Closed: STATE_OFF,
+            eq3.Mode.Auto: STATE_AUTO,
+            eq3.Mode.Manual: STATE_MANUAL,
+            eq3.Mode.Boost: STATE_BOOST,
+            eq3.Mode.Away: STATE_AWAY,
+        }
 
         self.reverse_modes = {v: k for k, v in self.modes.items()}
 
@@ -153,11 +152,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         dev_specific = {
+            ATTR_STATE_AWAY_END: self._thermostat.away_end,
             ATTR_STATE_LOCKED: self._thermostat.locked,
             ATTR_STATE_LOW_BAT: self._thermostat.low_battery,
             ATTR_STATE_VALVE: self._thermostat.valve_state,
             ATTR_STATE_WINDOW_OPEN: self._thermostat.window_open,
-            ATTR_STATE_AWAY_END: self._thermostat.away_end,
         }
 
         return dev_specific
