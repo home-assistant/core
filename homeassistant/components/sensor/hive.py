@@ -22,20 +22,19 @@ def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
     """Set up Hive sensor devices."""
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveSensorEntity(hass, session, hivedevice)])
+    add_devices([HiveSensorEntity(session, hivedevice)])
 
 
 class HiveSensorEntity(Entity):
     """Hive Sensor Entity."""
 
-    def __init__(self, hass, Session, HiveDevice):
+    def __init__(self, hivesession, hivedevice):
         """Initialize the sensor."""
-        self.node_id = HiveDevice["Hive_NodeID"]
-        self.node_name = HiveDevice["Hive_NodeName"]
-        self.device_type = HiveDevice["HA_DeviceType"]
-        self.node_device_type = HiveDevice["Hive_DeviceType"]
-        self.hass = hass
-        self.session = Session
+        self.node_id = hivedevice["Hive_NodeID"]
+        self.node_name = hivedevice["Hive_NodeName"]
+        self.device_type = hivedevice["HA_DeviceType"]
+        self.node_device_type = hivedevice["Hive_DeviceType"]
+        self.session = hivesession
         self.session.sensor = self.session.core.Sensor()
         if self.device_type == "Hive_Device_BatteryLevel":
             self.batt_lvl = None
@@ -208,8 +207,6 @@ class HiveSensorEntity(Entity):
         """Return the state attributes."""
         if self.device_type == "Heating_CurrentTemperature":
             return self.get_current_temp_sa()
-        elif self.device_type == "Heating_TargetTemperature":
-            return None
         elif self.device_type == "Heating_State":
             return self.get_heating_state_sa()
         elif self.device_type == "Heating_Mode":
@@ -232,17 +229,11 @@ class HiveSensorEntity(Entity):
                 s_a.update({"Boost ends in":
                             (str(endsin) + " minutes")})
             return s_a
-        elif self.device_type == "Hive_Device_BatteryLevel":
-            return None
-        elif self.device_type == "Hive_Device_Sensor":
-            return None
-        elif self.device_type == "Hive_Device_Light_Mode":
-            return None
-        elif self.device_type == "Hive_Device_Plug_Mode":
+        else:
             return None
 
     def get_current_temp_sa(self):
-        """Public get current heating temperature state attributes."""
+        """Get current heating temperature state attributes."""
         s_a = {}
         temp_current = 0
         temperature_target = 0
@@ -279,7 +270,7 @@ class HiveSensorEntity(Entity):
         return s_a
 
     def get_heating_state_sa(self):
-        """Public get current heating state, state attributes."""
+        """Get current heating state, state attributes."""
         s_a = {}
 
         snan = self.session.heating.get_schedule_now_next_later(self.node_id)
@@ -340,7 +331,7 @@ class HiveSensorEntity(Entity):
         return s_a
 
     def get_hotwater_state_sa(self):
-        """Public get current hotwater state, state attributes."""
+        """Get current hotwater state, state attributes."""
         s_a = {}
 
         snan = self.session.hotwater.get_schedule_now_next_later(self.node_id)
@@ -407,25 +398,7 @@ class HiveSensorEntity(Entity):
             return TEMP_CELSIUS
         elif self.device_type == "Heating_TargetTemperature":
             return TEMP_CELSIUS
-        elif self.device_type == "Heating_State":
-            return None
-        elif self.device_type == "Heating_Mode":
-            return None
-        elif self.device_type == "Heating_Boost":
-            return None
-        elif self.device_type == "HotWater_State":
-            return None
-        elif self.device_type == "HotWater_Mode":
-            return None
-        elif self.device_type == "HotWater_Boost":
-            return None
-        elif self.device_type == "Hive_Device_BatteryLevel":
-            return "%"
-        elif self.device_type == "Hive_Device_Sensor":
-            return None
-        elif self.device_type == "Hive_Device_Light_Mode":
-            return None
-        elif self.device_type == "Hive_Device_Plug_Mode":
+        else:
             return None
 
     @property

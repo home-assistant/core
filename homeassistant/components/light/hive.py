@@ -21,20 +21,19 @@ def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
     """Set up Hive light devices."""
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveDeviceLight(hass, session, hivedevice)])
+    add_devices([HiveDeviceLight(session, hivedevice)])
 
 
 class HiveDeviceLight(Light):
     """Hive Active Light Device."""
 
-    def __init__(self, hass, Session, HiveDevice):
+    def __init__(self, hivesession, hivedevice):
         """Initialize the Light device."""
-        self.node_id = HiveDevice["Hive_NodeID"]
-        self.node_name = HiveDevice["Hive_NodeName"]
-        self.device_type = HiveDevice["HA_DeviceType"]
-        self.light_device_type = HiveDevice["Hive_Light_DeviceType"]
-        self.hass = hass
-        self.session = Session
+        self.node_id = hivedevice["Hive_NodeID"]
+        self.node_name = hivedevice["Hive_NodeName"]
+        self.device_type = hivedevice["HA_DeviceType"]
+        self.light_device_type = hivedevice["Hive_Light_DeviceType"]
+        self.session = hivesession
         self.session.light = self.session.core.Light()
 
         self.session.entities.append(self)

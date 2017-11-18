@@ -22,19 +22,18 @@ def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
     """Set up Hive climate devices."""
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveClimateEntity(hass, session, hivedevice)])
+    add_devices([HiveClimateEntity(session, hivedevice)])
 
 
 class HiveClimateEntity(ClimateDevice):
     """Hive Climate Device."""
 
-    def __init__(self, hass, Session, HiveDevice):
+    def __init__(self, hivesession, hivedevice):
         """Initialize the Climate device."""
-        self.node_id = HiveDevice["Hive_NodeID"]
-        self.node_name = HiveDevice["Hive_NodeName"]
-        self.device_type = HiveDevice["HA_DeviceType"]
-        self.hass = hass
-        self.session = Session
+        self.node_id = hivedevice["Hive_NodeID"]
+        self.node_name = hivedevice["Hive_NodeName"]
+        self.device_type = hivedevice["HA_DeviceType"]
+        self.session = hivesession
 
         if self.device_type == "Heating":
             self.session.heating = self.session.core.Heating()
@@ -47,7 +46,7 @@ class HiveClimateEntity(ClimateDevice):
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if self.device_type + "." + self.node_id not in updatesource:
+        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property

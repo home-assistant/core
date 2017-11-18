@@ -18,19 +18,18 @@ def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
     """Set up Hive switches."""
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveDevicePlug(hass, session, hivedevice)])
+    add_devices([HiveDevicePlug(session, hivedevice)])
 
 
 class HiveDevicePlug(SwitchDevice):
     """Hive Active Plug."""
 
-    def __init__(self, hass, Session, HiveDevice):
+    def __init__(self, hivesession, hivedevice):
         """Initialize the Switch device."""
-        self.node_id = HiveDevice["Hive_NodeID"]
-        self.node_name = HiveDevice["Hive_NodeName"]
-        self.device_type = HiveDevice["HA_DeviceType"]
-        self.hass = hass
-        self.session = Session
+        self.node_id = hivedevice["Hive_NodeID"]
+        self.node_name = hivedevice["Hive_NodeName"]
+        self.device_type = hivedevice["HA_DeviceType"]
+        self.session = hivesession
         self.session.switch = self.session.core.Switch()
 
         self.session.entities.append(self)
