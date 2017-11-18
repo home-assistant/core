@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Tahoma controller devices."""
+    """Set up Tahoma controller devices."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]['devices']['sensor']:
