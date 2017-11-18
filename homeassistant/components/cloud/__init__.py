@@ -8,7 +8,9 @@ import os
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
+    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_DOMAINS, CONF_INCLUDE_ENTITIES)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from . import http_api, iot
@@ -18,6 +20,8 @@ REQUIREMENTS = ['warrant==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ALEXA = 'alexa'
+CONF_ALEXA_FILTERS = 'filters'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
@@ -25,6 +29,18 @@ CONF_USER_POOL_ID = 'user_pool_id'
 MODE_DEV = 'development'
 DEFAULT_MODE = MODE_DEV
 DEPENDENCIES = ['http']
+
+ALEXA_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALEXA_FILTERS): vol.Schema({
+        vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_INCLUDE_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
+    })
+})
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -35,6 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USER_POOL_ID): str,
         vol.Required(CONF_REGION): str,
         vol.Required(CONF_RELAYER): str,
+        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -64,13 +81,14 @@ class Cloud:
     """Store the configuration of the cloud connection."""
 
     def __init__(self, hass, mode, cognito_client_id=None, user_pool_id=None,
-                 region=None, relayer=None):
+                 region=None, relayer=None, alexa={}):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
+        self.alexa_config = alexa
         self.iot = iot.CloudIoT(self)
 
         if mode == MODE_DEV:
