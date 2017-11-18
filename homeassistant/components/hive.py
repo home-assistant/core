@@ -82,5 +82,5 @@ def setup(hass, config):
         for key, devices in devicelist.items():
             if key == hive_type:
                 for hivedevice in devices:
-                    load_platform(hass, ha_type, DOMAIN, hivedevice)
+                    load_platform(hass, ha_type, DOMAIN, hivedevice, config)
     return True
