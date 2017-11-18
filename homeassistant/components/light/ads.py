@@ -91,8 +91,6 @@ class AdsLight(Light):
             self._ads_hub.write_by_name(self.varname_brightness, bval,
                                         self._ads_hub.PLCTYPE_UINT)
 
-        self._on_state = True
-
     def turn_off(self, **kwargs):
         """Turn the light off."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -104,7 +102,6 @@ class AdsLight(Light):
         if self.varname_brightness is not None:
             self._ads_hub.write_by_name(self.varname_brightness, bval,
                                         self._ads_hub.PLCTYPE_UINT)
-        self._on_state = False
 
     def value_changed(self, val):
         """Handle value change."""
