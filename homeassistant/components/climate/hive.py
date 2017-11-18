@@ -22,11 +22,11 @@ HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
                       STATE_ON: 'ON', STATE_OFF: 'OFF'}
 
 
-def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive climate devices."""
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveClimateEntity(session, hivedevice)])
+    add_devices([HiveClimateEntity(session, discovery_info)])
 
 
 class HiveClimateEntity(ClimateDevice):

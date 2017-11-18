@@ -17,11 +17,11 @@ DEPENDENCIES = ['hive']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, hivedevice, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive light devices."""
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveDeviceLight(session, hivedevice)])
+    add_devices([HiveDeviceLight(session, discovery_info)])
 
 
 class HiveDeviceLight(Light):
