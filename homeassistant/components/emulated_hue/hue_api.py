@@ -287,6 +287,11 @@ def parse_hue_api_put_light_body(request_json, entity):
                 report_brightness = True
                 result = (brightness > 0)
 
+        elif entity.domain == "scene":
+            brightness = None
+            report_brightness = False
+            result = True
+
         elif (entity.domain == "script" or
               entity.domain == "media_player" or
               entity.domain == "fan"):

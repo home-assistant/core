@@ -301,7 +301,7 @@ class CoverTemplate(CoverDevice):
     def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         if self._stop_script:
-            self.hass.async_add_job(self._stop_script.async_run())
+            yield from self._stop_script.async_run()
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):

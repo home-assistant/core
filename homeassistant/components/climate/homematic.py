@@ -7,7 +7,6 @@ https://home-assistant.io/components/climate.homematic/
 import logging
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
-from homeassistant.util.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['homematic']
@@ -121,12 +120,12 @@ class HMThermostat(HMDevice, ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature - 4.5 means off."""
-        return convert(4.5, TEMP_CELSIUS, self.unit_of_measurement)
+        return 4.5
 
     @property
     def max_temp(self):
         """Return the maximum temperature - 30.5 means on."""
-        return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
+        return 30.5
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""

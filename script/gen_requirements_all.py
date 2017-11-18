@@ -81,7 +81,9 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'warrant',
     'yahoo-finance',
-    'pythonwhois'
+    'pythonwhois',
+    'wakeonlan',
+    'vultr'
 )
 
 IGNORE_PACKAGES = (
