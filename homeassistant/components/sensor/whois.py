@@ -72,9 +72,7 @@ class WhoisSensor(Entity):
 
         self._state = None
         self._data = None
-        self._updated_date = None
-        self._expiration_date = None
-        self._name_servers = []
+        self._attributes = {}
 
     @property
     def name(self):
@@ -99,16 +97,7 @@ class WhoisSensor(Entity):
     @property
     def device_state_attributes(self):
         """Get the more info attributes."""
-        if self._data:
-            updated_formatted = self._updated_date.isoformat()
-            expires_formatted = self._expiration_date.isoformat()
-
-            return {
-                ATTR_NAME_SERVERS: ' '.join(self._name_servers),
-                ATTR_REGISTRAR: self._data['registrar'][0],
-                ATTR_UPDATED: updated_formatted,
-                ATTR_EXPIRES: expires_formatted,
-            }
+        return self._attributes
 
     def update(self):
         """Get the current WHOIS data for hostname."""
@@ -121,16 +110,32 @@ class WhoisSensor(Entity):
             return
 
         if response:
+            if 'expiration_date' not in response:
+                _LOGGER.error(
+                    "Failed to find expiration_date in whois lookup response. "
+                    "Did find: %s", ', '.join(response.keys()))
+                return
+
+            if not response['expiration_date']:
+                _LOGGER.error("Whois response expiration_date empty.")
+                return
+
             self._data = response
 
-            if self._data['nameservers']:
-                self._name_servers = self._data['nameservers']
+            expiration_date = self._data['expiration_date'][0]
+            self._attributes[ATTR_EXPIRES] = expiration_date.isoformat()
 
-            if 'expiration_date' in self._data:
-                self._expiration_date = self._data['expiration_date'][0]
+            if 'nameservers' in self._data:
+                self._attributes[ATTR_NAME_SERVERS] = \
+                    ' '.join(self._data['nameservers'])
+
             if 'updated_date' in self._data:
-                self._updated_date = self._data['updated_date'][0]
+                self._attributes[ATTR_UPDATED] = \
+                    self._data['updated_date'][0].isoformat()
 
-            time_delta = (self._expiration_date - self._expiration_date.now())
+            if 'registrar' in self._data:
+                self._attributes[ATTR_REGISTRAR] = self._data['registrar'][0]
+
+            time_delta = (expiration_date - expiration_date.now())
 
             self._state = time_delta.days
