@@ -3,7 +3,7 @@ import asyncio
 import re
 
 from aiohttp import hdrs
-from aiohttp.web import FileResponse
+from aiohttp.web import FileResponse, middleware
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 from yarl import unquote
@@ -61,21 +61,18 @@ class CachingFileResponse(FileResponse):
         self._sendfile = sendfile
 
 
+@middleware
 @asyncio.coroutine
-def staticresource_middleware(app, handler):
+def staticresource_middleware(request, handler):
     """Middleware to strip out fingerprint from fingerprinted assets."""
-    @asyncio.coroutine
-    def static_middleware_handler(request):
-        """Strip out fingerprints from resource names."""
-        if not request.path.startswith('/static/'):
-            return handler(request)
-
-        fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
-
-        if fingerprinted:
-            request.match_info['filename'] = \
-                '{}.{}'.format(*fingerprinted.groups())
-
+    path = request.path
+    if not path.startswith('/static/') and not path.startswith('/frontend'):
         return handler(request)
 
-    return static_middleware_handler
+    fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
+
+    if fingerprinted:
+        request.match_info['filename'] = \
+            '{}.{}'.format(*fingerprinted.groups())
+
+    return handler(request)
