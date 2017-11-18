@@ -115,18 +115,12 @@ class CanaryData(object):
 
     def get_motion_entries(self, location_id):
         """Return a list of motion entries based on location_id."""
-        if location_id not in self._entries_by_location_id:
-            return []
-
-        return self._entries_by_location_id[location_id]
+        return self._entries_by_location_id.get(location_id, [])
 
     def get_location(self, location_id):
         """Return a location based on location_id."""
-        if location_id not in self._locations_by_id:
-            return []
-
-        return self._locations_by_id[location_id]
+        return self._locations_by_id.get(location_id, [])
 
     def get_readings(self, device_id):
         """Return a list of readings based on device_id."""
-        return self._readings_by_device_id[device_id]
+        return self._readings_by_device_id.get(device_id, [])

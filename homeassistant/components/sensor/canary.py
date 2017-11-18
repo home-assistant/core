@@ -78,9 +78,8 @@ class CanarySensor(Entity):
         self._temperature_scale = self._data.temperature_scale
 
         readings = self._data.get_readings(self._device_id)
-        for reading in readings:
-            if reading.sensor_type == self._sensor_type \
-                    and reading.value is not None:
-                self._sensor_value = round(float(reading.value),
-                                           SENSOR_VALUE_PRECISION)
-                break
+        value = next((
+            reading.value for reading in readings
+            if reading.sensor_type == self._sensor_type), None)
+        if value is not None:
+            self._sensor_value = round(float(value), SENSOR_VALUE_PRECISION)

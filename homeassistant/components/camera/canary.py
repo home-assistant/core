@@ -46,8 +46,6 @@ class CanaryCamera(Camera):
         self._image_content = None
         self._force_update = False
 
-        self.update()
-
     def camera_image(self):
         """Return bytes of camera image."""
         return self._image_content
