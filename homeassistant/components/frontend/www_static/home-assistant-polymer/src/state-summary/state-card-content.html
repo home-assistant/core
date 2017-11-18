@@ -1,0 +1,68 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="state-card-binary_sensor.html">
+<link rel="import" href="state-card-climate.html">
+<link rel="import" href="state-card-configurator.html">
+<link rel="import" href="state-card-cover.html">
+<link rel="import" href="state-card-display.html">
+<link rel="import" href="state-card-input_select.html">
+<link rel="import" href="state-card-input_slider.html">
+<link rel="import" href="state-card-media_player.html">
+<link rel="import" href="state-card-scene.html">
+<link rel="import" href="state-card-script.html">
+<link rel="import" href="state-card-toggle.html">
+<link rel="import" href="state-card-weblink.html">
+
+<script>
+Polymer({
+  is: 'state-card-content',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  observers: [
+    'inputChanged(hass, inDialog, stateObj)',
+  ],
+
+  _ensureCustomUILoaded: function (stateType) {
+    this.importHref(
+        '/local/custom_ui/state-card-' + stateType + '.html',
+        function () {},
+        /* eslint-disable no-console */
+        function () { console.error('Error loading %s from /local/custom_ui/state-card-%s.html', stateType, stateType); },
+        /* eslint-enable no-console */
+        true);
+  },
+
+  inputChanged: function (hass, inDialog, stateObj) {
+    var stateCardType;
+    if (!stateObj || !hass) return;
+    if (stateObj.state !== 'unavailable' && 'custom_ui_state_card' in stateObj.attributes) {
+      stateCardType = stateObj.attributes.custom_ui_state_card;
+      this._ensureCustomUILoaded(stateCardType);
+    } else {
+      stateCardType = window.hassUtil.stateCardType(hass, stateObj);
+    }
+    window.hassUtil.dynamicContentUpdater(
+      this,
+      ('STATE-CARD-' + stateCardType.toUpperCase()),
+      {
+        hass: hass,
+        stateObj: stateObj,
+        inDialog: inDialog,
+      });
+  },
+});
+</script>

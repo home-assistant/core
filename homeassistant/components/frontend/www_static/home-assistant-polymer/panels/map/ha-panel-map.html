@@ -1,0 +1,197 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel='import' href='../../bower_components/iron-icon/iron-icon.html'>
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<script src="../../bower_components/leaflet/dist/leaflet.js"></script>
+<!-- otherwise the shadow dom polyfill breaks the CSS when vulcanized -->
+<link rel="stylesheet" href="../../bower_components/leaflet/dist/leaflet.css" />
+
+<link rel="import" href="../../src/components/ha-menu-button.html">
+<link rel="import" href="./ha-entity-marker.html">
+
+<dom-module id="ha-panel-map">
+  <template>
+    <link rel="stylesheet" href="../../bower_components/leaflet/dist/leaflet.css" />
+
+    <style include="ha-style">
+      #map {
+        height: calc(100% - 64px);
+        width: 100%;
+        z-index: 0;
+      }
+    </style>
+
+    <app-toolbar>
+      <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+      <div main-title>Map</div>
+    </app-toolbar>
+
+    <div id='map'></div>
+  </template>
+</dom-module>
+
+<script>
+window.L.Icon.Default.imagePath = '/static/images/leaflet';
+
+Polymer({
+  is: 'ha-panel-map',
+
+  properties: {
+    hass: {
+      type: Object,
+      observer: 'drawEntities',
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  attached: function () {
+    var map = this._map = window.L.map(this.$.map);
+    map.setView([51.505, -0.09], 13);
+    window.L.tileLayer(
+      'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+      {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://cartodb.com/attributions">CartoDB</a>',
+        maxZoom: 18,
+      }
+    ).addTo(map);
+
+    this.drawEntities(this.hass);
+
+    this.async(function () {
+      map.invalidateSize();
+      this.fitMap();
+    }.bind(this), 1);
+  },
+
+  fitMap: function () {
+    var bounds;
+
+    if (this._mapItems.length === 0) {
+      this._map.setView(
+        new window.L.LatLng(this.hass.config.core.latitude, this.hass.config.core.longitude),
+        14);
+    } else {
+      bounds = new window.L.latLngBounds(
+        this._mapItems.map(function (item) { return item.getLatLng(); }));
+      this._map.fitBounds(bounds.pad(0.5));
+    }
+  },
+
+  drawEntities: function (hass) {
+    /* eslint-disable vars-on-top */
+    var map = this._map;
+    if (!map) return;
+
+    if (this._mapItems) {
+      this._mapItems.forEach(function (marker) { marker.remove(); });
+    }
+    var mapItems = this._mapItems = [];
+
+    Object.keys(hass.states).forEach(function (entityId) {
+      var entity = hass.states[entityId];
+      var title = window.hassUtil.computeStateName(entity);
+
+      if ((entity.attributes.hidden &&
+           window.hassUtil.computeDomain(entity) !== 'zone') ||
+          entity.state === 'home' ||
+          !('latitude' in entity.attributes) ||
+          !('longitude' in entity.attributes)) {
+        return;
+      }
+
+      var icon;
+
+      if (window.hassUtil.computeDomain(entity) === 'zone') {
+        // DRAW ZONE
+        if (entity.attributes.passive) return;
+
+        // create icon
+        var iconHTML = '';
+        if (entity.attributes.icon) {
+          iconHTML = (
+            "<iron-icon icon='" + entity.attributes.icon + "'></iron-icon>");
+        } else {
+          iconHTML = title;
+        }
+
+        icon = window.L.divIcon({
+          html: iconHTML,
+          iconSize: [24, 24],
+          className: '',
+        });
+
+        // create market with the icon
+        mapItems.push(window.L.marker(
+          [entity.attributes.latitude, entity.attributes.longitude],
+          {
+            icon,
+            interactive: false,
+            title: title,
+          }
+        ).addTo(map));
+
+        // create circle around it
+        mapItems.push(window.L.circle(
+          [entity.attributes.latitude, entity.attributes.longitude],
+          {
+            interactive: false,
+            color: '#FF9800',
+            radius: entity.attributes.radius,
+          }
+        ).addTo(map));
+
+        return;
+      }
+
+      // DRAW ENTITY
+      // create icon
+      var entityPicture = entity.attributes.entity_picture || '';
+      var entityName = title.split(' ').map(function (part) { return part.substr(0, 1); }).join('');
+      /* Leaflet clones this element before adding it to the map. This messes up
+         our Poylmer object and we can't pass data through. Thus we hack like this. */
+      icon = window.L.divIcon({
+        html: "<ha-entity-marker entity-id='" + entity.entity_id + "' entity-name='" + entityName + "' entity-picture='" + entityPicture + "'></ha-entity-marker>",
+        iconSize: [45, 45],
+        className: '',
+      });
+
+      // create market with the icon
+      mapItems.push(window.L.marker(
+        [entity.attributes.latitude, entity.attributes.longitude],
+        {
+          icon,
+          title: window.hassUtil.computeStateName(entity),
+        }
+      ).addTo(map));
+
+      // create circle around if entity has accuracy
+      if (entity.attributes.gps_accuracy) {
+        mapItems.push(window.L.circle(
+          [entity.attributes.latitude, entity.attributes.longitude],
+          {
+            interactive: false,
+            color: '#0288D1',
+            radius: entity.attributes.gps_accuracy,
+          }
+        ).addTo(map));
+      }
+    });
+  },
+
+  computeMenuButtonClass: function (narrow, showMenu) {
+    return !narrow && showMenu ? 'menu-icon invisible' : 'menu-icon';
+  },
+
+  toggleMenu: function () {
+    this.fire('hass-open-menu');
+  },
+});
+</script>

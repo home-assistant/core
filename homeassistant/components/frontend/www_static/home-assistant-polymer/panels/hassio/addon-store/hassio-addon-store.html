@@ -1,0 +1,134 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../../../src/components/ha-menu-button.html">
+
+<link rel="import" href="./hassio-repositories-editor.html">
+<link rel="import" href="./hassio-addon-repository.html">
+
+<dom-module id="hassio-addon-store">
+  <template>
+    <style include="iron-flex ha-style">
+      paper-card {
+        display: block;
+      }
+      .content {
+        padding: 24px 0 32px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      hassio-addon-repository {
+        margin-top: 24px;
+      }
+    </style>
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <paper-icon-button
+            icon='mdi:arrow-left'
+            on-tap='backTapped'
+          ></paper-icon-button>
+          <div main-title>Hass.io Add-Ons</div>
+          <paper-icon-button
+            icon="mdi:refresh"
+            on-tap="refreshTapped"
+          ></paper-icon-button>
+        </app-toolbar>
+      </app-header>
+
+      <div class='content'>
+        <hassio-repositories-editor
+          hass='[[hass]]'
+          repos='[[supervisorInfo.addons_repositories]]'
+        ></hassio-repositories-editor>
+        <template is='dom-repeat' items='[[repos]]' as='repo'>
+          <hassio-addon-repository
+            repo='[[repo]]'
+            addons='[[computeAddOns(repo.slug)]]'
+          ></hassio-addon-repository>
+        </template>
+      </div>
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addon-store',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    addons: {
+      type: Array,
+      value: [],
+    },
+
+    repos: {
+      type: Array,
+      value: []
+    },
+
+    supervisorInfo: {
+      type: Object,
+    }
+  },
+
+  listeners: {
+    'hass-api-called': 'apiCalled',
+  },
+
+  apiCalled: function (ev) {
+    if (ev.detail.success) {
+      this.loadData();
+    }
+  },
+
+  attached: function () {
+    this.loadData();
+  },
+
+  loadData: function () {
+    this.hass.callApi('get', 'hassio/supervisor/addons')
+      .then(function (info) {
+        this.addons = info.data.addons;
+        this.repos = info.data.repositories;
+      }.bind(this), function () {
+        this.addons = [];
+        this.repos = [];
+      }.bind(this));
+  },
+
+  computeAddOns: function (repo) {
+    return this.addons.filter(function (addon) {
+      return addon.repository === repo;
+    });
+  },
+
+  refreshTapped: function () {
+    this.hass.callApi('post', 'hassio/supervisor/reload')
+      .then(function () {
+        this.loadData();
+      }.bind(this));
+  },
+
+  backTapped: function () {
+    this.fire('hassio-select-addon', { addon: null });
+  },
+});
+</script>

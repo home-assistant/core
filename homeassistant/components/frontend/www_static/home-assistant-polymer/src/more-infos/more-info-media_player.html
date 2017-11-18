@@ -1,0 +1,423 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel='import' href='../../bower_components/iron-icon/iron-icon.html'>
+
+<link rel='import' href='../../bower_components/paper-icon-button/paper-icon-button.html'>
+<link rel='import' href='../../bower_components/paper-slider/paper-slider.html'>
+<link rel='import' href='../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
+<link rel='import' href='../../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+
+<dom-module id='more-info-media_player'>
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      .media-state {
+        text-transform: capitalize;
+      }
+
+      paper-icon-button[highlight] {
+        color: var(--accent-color);
+      }
+
+      .volume {
+        margin-bottom: 8px;
+
+        max-height: 0px;
+        overflow: hidden;
+        transition: max-height .5s ease-in;
+      }
+
+      .has-volume_level .volume {
+        max-height: 40px;
+      }
+
+      iron-icon.source-input {
+        padding: 7px;
+        margin-top: 15px;
+      }
+
+      paper-dropdown-menu.source-input {
+        margin-left: 10px;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+    </style>
+
+    <div class$='[[computeClassNames(stateObj)]]'>
+      <div class='layout horizontal'>
+        <div class='flex'>
+          <paper-icon-button icon='mdi:power' highlight$='[[isOff]]'
+            on-tap='handleTogglePower'
+            hidden$='[[computeHidePowerButton(isOff, supportsTurnOn, supportsTurnOff)]]'></paper-icon-button>
+        </div>
+        <div>
+          <template is='dom-if' if='[[computeShowPlaybackControls(isOff, hasMediaControl)]]'>
+            <paper-icon-button icon='mdi:skip-previous' on-tap='handlePrevious'
+              hidden$='[[!supportsPreviousTrack]]'></paper-icon-button>
+            <paper-icon-button icon='[[computePlaybackControlIcon(stateObj)]]'
+              on-tap='handlePlaybackControl'
+              hidden$='[[!computePlaybackControlIcon(stateObj)]]' highlight></paper-icon-button>
+            <paper-icon-button icon='mdi:skip-next' on-tap='handleNext'
+              hidden$='[[!supportsNextTrack]]'></paper-icon-button>
+          </template>
+        </div>
+      </div>
+      <!-- VOLUME -->
+      <div class='volume_buttons center horizontal layout'
+          hidden$='[[computeHideVolumeButtons(isOff, supportsVolumeButtons)]]'>
+        <paper-icon-button on-tap="handleVolumeTap"
+          icon="mdi:volume-off"></paper-icon-button>
+        <paper-icon-button id="volumeDown" disabled$='[[isMuted]]'
+          on-mousedown="handleVolumeDown" on-touchstart="handleVolumeDown"
+          icon="mdi:volume-medium"></paper-icon-button>
+        <paper-icon-button id="volumeUp" disabled$='[[isMuted]]'
+          on-mousedown="handleVolumeUp" on-touchstart="handleVolumeUp"
+          icon="mdi:volume-high"></paper-icon-button>
+      </div>
+      <div class='volume center horizontal layout' hidden$='[[!supportsVolumeSet]]'>
+        <paper-icon-button on-tap="handleVolumeTap"
+          hidden$="[[supportsVolumeButtons]]"
+          icon="[[computeMuteVolumeIcon(isMuted)]]"></paper-icon-button>
+        <paper-slider disabled$='[[isMuted]]'
+          min='0' max='100' value='[[volumeSliderValue]]'
+          on-change='volumeSliderChanged' class='flex'>
+        </paper-slider>
+      </div>
+      <!-- SOURCE PICKER -->
+      <div class='controls layout horizontal justified'
+           hidden$='[[computeHideSelectSource(isOff, supportsSelectSource)]]'>
+        <iron-icon class="source-input" icon="mdi:login-variant"></iron-icon>
+        <paper-dropdown-menu class="flex source-input" label-float label='Source'>
+          <paper-listbox slot="dropdown-content" selected="{{sourceIndex}}">
+            <template is='dom-repeat' items='[[stateObj.attributes.source_list]]'>
+              <paper-item>[[item]]</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
+      <!-- TTS -->
+      <div hidden$='[[computeHideTTS(ttsLoaded, supportsPlayMedia)]]' class='layout horizontal end'>
+        <paper-input
+          id='ttsInput'
+          label='Text to speak'
+          class='flex'
+          value='{{ttsMessage}}'
+          on-keydown="ttsCheckForEnter"
+        ></paper-input>
+        <paper-icon-button icon='mdi:send' on-tap='sendTTS'></paper-icon-button>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-media_player',
+
+  properties: {
+    ttsLoaded: {
+      type: Boolean,
+      computed: 'computeTTSLoaded(hass)',
+    },
+
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjChanged',
+    },
+
+    isOff: {
+      type: Boolean,
+      value: false,
+    },
+
+    isPlaying: {
+      type: Boolean,
+      value: false,
+    },
+
+    isMuted: {
+      type: Boolean,
+      value: false,
+    },
+
+    source: {
+      type: String,
+      value: '',
+    },
+
+    sourceIndex: {
+      type: Number,
+      value: 0,
+      observer: 'handleSourceChanged',
+    },
+
+    volumeSliderValue: {
+      type: Number,
+      value: 0,
+    },
+
+    ttsMessage: {
+      type: String,
+      value: '',
+    },
+
+    supportsPause: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsVolumeSet: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsVolumeMute: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsPreviousTrack: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsNextTrack: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsTurnOn: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsTurnOff: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsPlayMedia: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsVolumeButtons: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsSelectSource: {
+      type: Boolean,
+      value: false,
+    },
+
+    supportsPlay: {
+      type: Boolean,
+      value: false,
+    },
+
+    hasMediaControl: {
+      type: Boolean,
+      value: false,
+    },
+
+  },
+
+  HAS_MEDIA_STATES: ['playing', 'paused', 'unknown'],
+
+  stateObjChanged: function (newVal, oldVal) {
+    if (newVal) {
+      this.isOff = newVal.state === 'off';
+      this.isPlaying = newVal.state === 'playing';
+      this.hasMediaControl = this.HAS_MEDIA_STATES.indexOf(newVal.state) !== -1;
+      this.volumeSliderValue = newVal.attributes.volume_level * 100;
+      this.isMuted = newVal.attributes.is_volume_muted;
+      this.source = newVal.attributes.source;
+      this.supportsPause = (newVal.attributes.supported_features & 1) !== 0;
+      this.supportsVolumeSet = (newVal.attributes.supported_features & 4) !== 0;
+      this.supportsVolumeMute = (newVal.attributes.supported_features & 8) !== 0;
+      this.supportsPreviousTrack = (newVal.attributes.supported_features & 16) !== 0;
+      this.supportsNextTrack = (newVal.attributes.supported_features & 32) !== 0;
+      this.supportsTurnOn = (newVal.attributes.supported_features & 128) !== 0;
+      this.supportsTurnOff = (newVal.attributes.supported_features & 256) !== 0;
+      this.supportsPlayMedia = (newVal.attributes.supported_features & 512) !== 0;
+      this.supportsVolumeButtons = (newVal.attributes.supported_features & 1024) !== 0;
+      this.supportsSelectSource = (newVal.attributes.supported_features & 2048) !== 0;
+      this.supportsPlay = (newVal.attributes.supported_features & 16384) !== 0;
+
+      if (newVal.attributes.source_list !== undefined) {
+        this.sourceIndex = newVal.attributes.source_list.indexOf(this.source);
+      }
+    }
+
+    if (oldVal) {
+      this.async(function () {
+        this.fire('iron-resize');
+      }.bind(this), 500);
+    }
+  },
+
+  computeClassNames: function (stateObj) {
+    return window.hassUtil.attributeClassNames(stateObj, ['volume_level']);
+  },
+
+  computeIsOff: function (stateObj) {
+    return stateObj.state === 'off';
+  },
+
+  computeMuteVolumeIcon: function (isMuted) {
+    return isMuted ? 'mdi:volume-off' : 'mdi:volume-high';
+  },
+
+  computeHideVolumeButtons: function (isOff, supportsVolumeButtons) {
+    return !supportsVolumeButtons || isOff;
+  },
+
+  computeShowPlaybackControls: function (isOff, hasMedia) {
+    return !isOff && hasMedia;
+  },
+
+  computePlaybackControlIcon: function () {
+    if (this.isPlaying) {
+      return this.supportsPause ? 'mdi:pause' : 'mdi:stop';
+    }
+    return this.supportsPlay ? 'mdi:play' : null;
+  },
+
+  computeHidePowerButton: function (isOff, supportsTurnOn, supportsTurnOff) {
+    return isOff ? !supportsTurnOn : !supportsTurnOff;
+  },
+
+  computeHideSelectSource: function (isOff, supportsSelectSource) {
+    return isOff || !supportsSelectSource;
+  },
+
+  computeSelectedSource: function (stateObj) {
+    return stateObj.attributes.source_list.indexOf(stateObj.attributes.source);
+  },
+
+  computeHideTTS: function (ttsLoaded, supportsPlayMedia) {
+    return !ttsLoaded || !supportsPlayMedia;
+  },
+
+  computeTTSLoaded: function (hass) {
+    return window.hassUtil.isComponentLoaded(hass, 'tts');
+  },
+
+  handleTogglePower: function () {
+    this.callService(this.isOff ? 'turn_on' : 'turn_off');
+  },
+
+  handlePrevious: function () {
+    this.callService('media_previous_track');
+  },
+
+  handlePlaybackControl: function () {
+    this.callService('media_play_pause');
+  },
+
+  handleNext: function () {
+    this.callService('media_next_track');
+  },
+
+  handleSourceChanged: function (sourceIndex) {
+    var sourceInput;
+    // Selected Option will transition to '' before transitioning to new value
+    if (!this.stateObj
+        || this.stateObj.attributes.source_list === undefined
+        || sourceIndex < 0
+        || sourceIndex >= this.stateObj.attributes.source_list.length
+    ) {
+      return;
+    }
+
+    sourceInput = this.stateObj.attributes.source_list[sourceIndex];
+
+    if (sourceInput === this.stateObj.attributes.source) {
+      return;
+    }
+
+    this.callService('select_source', { source: sourceInput });
+  },
+
+  handleVolumeTap: function () {
+    if (!this.supportsVolumeMute) {
+      return;
+    }
+    this.callService('volume_mute', { is_volume_muted: !this.isMuted });
+  },
+
+  handleVolumeUp: function () {
+    var obj = this.$.volumeUp;
+    this.handleVolumeWorker('volume_up', obj, true);
+  },
+
+  handleVolumeDown: function () {
+    var obj = this.$.volumeDown;
+    this.handleVolumeWorker('volume_down', obj, true);
+  },
+
+  handleVolumeWorker: function (service, obj, force) {
+    if (force || (obj !== undefined && obj.pointerDown)) {
+      this.callService(service);
+      this.async(function () {
+        this.handleVolumeWorker(service, obj, false);
+      }.bind(this), 500);
+    }
+  },
+
+  volumeSliderChanged: function (ev) {
+    var volPercentage = parseFloat(ev.target.value);
+    var vol = volPercentage > 0 ? volPercentage / 100 : 0;
+    this.callService('volume_set', { volume_level: vol });
+  },
+
+  ttsCheckForEnter: function (ev) {
+    if (ev.keyCode === 13) this.sendTTS();
+  },
+
+  sendTTS: function () {
+    var services = this.hass.config.services.tts;
+    var serviceKeys = Object.keys(services).sort();
+    var service;
+    var i;
+
+    for (i = 0; i < serviceKeys.length; i++) {
+      if (serviceKeys[i].indexOf('_say') !== -1) {
+        service = serviceKeys[i];
+        break;
+      }
+    }
+
+    if (!service) {
+      return;
+    }
+
+    this.hass.callService('tts', service, {
+      entity_id: this.stateObj.entity_id,
+      message: this.ttsMessage,
+    });
+    this.ttsMessage = '';
+    this.$.ttsInput.focus();
+  },
+
+  callService: function (service, data) {
+    var serviceData = data || {};
+    serviceData.entity_id = this.stateObj.entity_id;
+    this.hass.callService('media_player', service, serviceData);
+  },
+});
+</script>

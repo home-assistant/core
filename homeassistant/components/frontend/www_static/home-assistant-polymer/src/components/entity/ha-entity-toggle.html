@@ -1,0 +1,144 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<dom-module id="ha-entity-toggle">
+  <template>
+    <style>
+      :host {
+        white-space: nowrap;
+      }
+      paper-icon-button {
+        color: var(--primary-text-color);
+        transition: color .5s;
+      }
+      paper-icon-button[state-active] {
+        color: var(--primary-color);
+      }
+      paper-toggle-button {
+        cursor: pointer;
+        --paper-toggle-button-label-spacing: 0;
+        padding: 13px 5px;
+        margin: -4px -5px;
+      }
+    </style>
+
+    <template is='dom-if' if='[[stateObj.attributes.assumed_state]]'>
+      <paper-icon-button icon="mdi:flash-off" on-tap="turnOff" state-active$='[[!isOn]]'></paper-icon-button>
+      <paper-icon-button icon="mdi:flash" on-tap="turnOn" state-active$='[[isOn]]'></paper-icon-button>
+    </template>
+    <template is='dom-if' if='[[!stateObj.attributes.assumed_state]]'>
+      <paper-toggle-button class='self-center'
+        checked="[[toggleChecked]]"
+        on-change="toggleChanged"></paper-toggle-button>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-entity-toggle',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    toggleChecked: {
+      type: Boolean,
+      value: false,
+    },
+
+    isOn: {
+      type: Boolean,
+      computed: 'computeIsOn(stateObj)',
+      observer: 'isOnChanged',
+    },
+  },
+
+  listeners: {
+    tap: 'onTap',
+  },
+
+  onTap: function (ev) {
+    ev.stopPropagation();
+  },
+
+  ready: function () {
+    this.forceStateChange();
+  },
+
+  toggleChanged: function (ev) {
+    var newVal = ev.target.checked;
+
+    if (newVal && !this.isOn) {
+      this.callService(true);
+    } else if (!newVal && this.isOn) {
+      this.callService(false);
+    }
+  },
+
+  isOnChanged: function (newVal) {
+    this.toggleChecked = newVal;
+  },
+
+  forceStateChange: function () {
+    if (this.toggleChecked === this.isOn) {
+      this.toggleChecked = !this.toggleChecked;
+    }
+    this.toggleChecked = this.isOn;
+  },
+
+  turnOn: function () {
+    this.callService(true);
+  },
+
+  turnOff: function () {
+    this.callService(false);
+  },
+
+  computeIsOn: function (stateObj) {
+    return stateObj && window.hassUtil.OFF_STATES.indexOf(stateObj.state) === -1;
+  },
+
+  // We call updateToggle after a successful call to re-sync the toggle
+  // with the state. It will be out of sync if our service call did not
+  // result in the entity to be turned on. Since the state is not changing,
+  // the resync is not called automatic.
+  callService: function (turnOn) {
+    var stateDomain = window.hassUtil.computeDomain(this.stateObj);
+    var serviceDomain;
+    var service;
+    var currentState;
+
+    if (stateDomain === 'lock') {
+      serviceDomain = 'lock';
+      service = turnOn ? 'lock' : 'unlock';
+    } else if (stateDomain === 'cover') {
+      serviceDomain = 'cover';
+      service = turnOn ? 'open' : 'close';
+    } else {
+      serviceDomain = 'homeassistant';
+      service = turnOn ? 'turn_on' : 'turn_off';
+    }
+
+    currentState = this.stateObj;
+    this.hass.callService(
+      serviceDomain, service,
+      { entity_id: this.stateObj.entity_id })
+      .then(function () {
+        setTimeout(function () {
+          // If after 2 seconds we have not received a state update
+          // reset the switch to it's original state.
+          if (this.stateObj === currentState) {
+            this.forceStateChange();
+          }
+        }.bind(this), 2000);
+      }.bind(this));
+  },
+});
+</script>

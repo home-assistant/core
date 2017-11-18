@@ -1,0 +1,32 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="more-info-updater">
+  <template>
+    <style>
+      .link {
+        color: #03A9F4;
+      }
+    </style>
+
+    <div>
+      <a class='link' href='https://home-assistant.io/getting-started/updating/' target='_blank'>Update Instructions</a>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-updater',
+
+  properties: {
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  computeReleaseNotes: function (stateObj) {
+    return (stateObj.attributes.release_notes ||
+            'https://home-assistant.io/getting-started/updating/');
+  },
+});
+</script>

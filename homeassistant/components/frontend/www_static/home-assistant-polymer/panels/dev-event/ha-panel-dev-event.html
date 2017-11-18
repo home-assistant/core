@@ -1,0 +1,132 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-input/paper-textarea.html">
+
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../src/components/ha-menu-button.html">
+<link rel="import" href="../../src/resources/ha-style.html">
+
+<link rel="import" href="./events-list.html">
+
+<dom-module id="ha-panel-dev-event">
+  <template>
+    <style is="custom-style" include="ha-style iron-flex iron-positioning"></style>
+    <style>
+      :host {
+        -ms-user-select: initial;
+        -webkit-user-select: initial;
+        -moz-user-select: initial;
+      }
+
+      .content {
+        @apply(--paper-font-body1);
+        padding: 16px;
+      }
+
+      .ha-form {
+        margin-right: 16px;
+      }
+
+      .header {
+        @apply(--paper-font-title);
+      }
+    </style>
+
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>Events</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class$='[[computeFormClasses(narrow)]]'>
+        <div class='flex'>
+          <p>
+            Fire an event on the event bus.
+          </p>
+
+          <div class='ha-form'>
+            <paper-input label="Event Type" autofocus required value='{{eventType}}'></paper-input>
+            <paper-textarea label="Event Data (JSON, optional)" value='{{eventData}}'></paper-textarea>
+            <paper-button on-tap='fireEvent' raised>Fire Event</paper-button>
+          </div>
+        </div>
+
+        <div>
+          <div class='header'>Available Events</div>
+          <events-list on-event-selected='eventSelected' hass='[[hass]]'></event-list>
+        </div>
+      </div>
+    </events-list>
+
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-dev-event',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+      value: false,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    eventType: {
+      type: String,
+      value: '',
+    },
+
+    eventData: {
+      type: String,
+      value: '',
+    },
+  },
+
+  eventSelected: function (ev) {
+    this.eventType = ev.detail.eventType;
+  },
+
+  fireEvent: function () {
+    var eventData;
+
+    try {
+      eventData = this.eventData ? JSON.parse(this.eventData) : {};
+    } catch (err) {
+      /* eslint-disable no-alert */
+      alert('Error parsing JSON: ' + err);
+      /* eslint-enable no-alert */
+      return;
+    }
+
+    this.hass.callApi('POST', 'events/' + this.eventType, eventData)
+      .then(function () {
+        this.fire('hass-notification', {
+          message: 'Event ' + this.eventType + ' successful fired!',
+        });
+      }.bind(this));
+  },
+
+  computeFormClasses: function (narrow) {
+    return narrow ?
+      'content fit' : 'content fit layout horizontal';
+  },
+});
+</script>

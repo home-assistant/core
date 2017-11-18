@@ -1,0 +1,82 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel='import' href='../../../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../../../bower_components/paper-item/paper-item.html'>
+
+<link rel="import" href="../../../src/resources/ha-style.html">
+
+<link rel="import" href="../ha-config-section.html">
+<link rel="import" href="../ha-entity-config.html">
+<link rel="import" href="./ha-form-zwave-device.html">
+
+<dom-module id="ha-config-section-zwave">
+  <template>
+    <ha-config-section is-wide='[[isWide]]'>
+      <span slot='header'>Z-Wave</span>
+      <span slot='introduction'>
+        Z-Wave devices contain a lot of options. These controls will allow you to get into the nitty gritty details.
+      </span>
+
+      <ha-entity-config
+        hass='[[hass]]'
+        entities='[[entities]]'
+        config='[[entityConfig]]'>
+      </ha-entity-config>
+    </ha-config-section>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-config-section-zwave',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    isWide: {
+      type: Boolean,
+      value: false,
+    },
+
+    entities: {
+      type: Array,
+      computed: 'computeEntities(hass)',
+    },
+
+    entityConfig: {
+      type: Object,
+      value: {
+        component: 'ha-form-zwave-device',
+        computeSelectCaption: function (stateObj) {
+          return window.hassUtil.computeStateName(stateObj) +
+            ' (' + window.hassUtil.computeDomain(stateObj) + ')';
+        },
+      }
+    }
+  },
+
+  computeEntities: function (hass) {
+    return Object.keys(hass.states)
+      .map(function (key) { return hass.states[key]; })
+      .filter(function (ent) {
+        return (!ent.attributes.hidden &&
+                'node_id' in ent.attributes);
+      })
+      .sort(function (entityA, entityB) {
+        if (entityA.entity_id < entityB.entity_id) {
+          return -1;
+        }
+        if (entityA.entity_id > entityB.entity_id) {
+          return 1;
+        }
+        return 0;
+      });
+  },
+});
+</script>

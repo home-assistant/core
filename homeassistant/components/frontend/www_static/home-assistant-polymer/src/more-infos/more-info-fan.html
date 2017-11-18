@@ -1,0 +1,166 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../../bower_components/iron-flex-layout/iron-flex-layout-classes.html'>
+<link rel='import' href='../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
+<link rel='import' href='../../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+<link rel='import' href='../../bower_components/paper-toggle-button/paper-toggle-button.html'>
+<link rel='import' href='../../bower_components/paper-icon-button/paper-icon-button.html'>
+
+<dom-module id='more-info-fan'>
+  <template>
+    <style is='custom-style' include='iron-flex'></style>
+    <style>
+      .container-speed_list,
+      .container-direction,
+      .container-oscillating {
+        display: none;
+      }
+
+      .has-speed_list .container-speed_list,
+      .has-direction .container-direction,
+      .has-oscillating .container-oscillating {
+        display: block;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+    </style>
+
+    <div class$='[[computeClassNames(stateObj)]]'>
+
+      <div class="container-speed_list">
+        <paper-dropdown-menu label-float label='Speed'>
+          <paper-listbox slot="dropdown-content" selected='{{speedIndex}}'>
+            <template is='dom-repeat'
+                      items='[[stateObj.attributes.speed_list]]'>
+              <paper-item>[[item]]</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
+
+      <div class='container-oscillating'>
+        <div class='center horizontal layout single-row'>
+          <div class='flex'>Oscillate</div>
+          <paper-toggle-button
+            checked='[[oscillationToggleChecked]]'
+            on-change='oscillationToggleChanged'>
+          </paper-toggle-button>
+        </div>
+      </div>
+
+      <div class='container-direction'>
+        <div class='direction'>
+          <div>Direction</div>
+          <paper-icon-button icon='mdi:rotate-left'
+            on-tap='onDirectionLeft' title='Left'
+            disabled='[[computeIsRotatingLeft(stateObj)]]'></paper-icon-button>
+          <paper-icon-button icon='mdi:rotate-right'
+            on-tap='onDirectionRight' title='Right'
+            disabled='[[computeIsRotatingRight(stateObj)]]'></paper-icon-button>
+        </div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-fan',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjChanged',
+    },
+
+    speedIndex: {
+      type: Number,
+      value: -1,
+      observer: 'speedChanged',
+    },
+
+    oscillationToggleChecked: {
+      type: Boolean,
+    },
+  },
+
+  stateObjChanged: function (newVal, oldVal) {
+    this.oscillationToggleChecked = newVal.attributes.oscillating;
+
+    if (newVal.attributes.speed_list) {
+      this.speedIndex = newVal.attributes.speed_list.indexOf(
+        newVal.attributes.speed);
+    } else {
+      this.speedIndex = -1;
+    }
+
+    if (oldVal) {
+      this.async(function () {
+        this.fire('iron-resize');
+      }.bind(this), 500);
+    }
+  },
+
+  computeClassNames: function (stateObj) {
+    return 'more-info-fan ' + window.hassUtil.attributeClassNames(
+      stateObj, ['oscillating', 'speed_list', 'direction']
+    );
+  },
+
+  speedChanged: function (speedIndex) {
+    var speedInput;
+    // Selected Option will transition to '' before transitioning to new value
+    if (speedIndex === '' || speedIndex === -1) return;
+
+    speedInput = this.stateObj.attributes.speed_list[speedIndex];
+    if (speedInput === this.stateObj.attributes.speed) return;
+
+    this.hass.callService('fan', 'turn_on', {
+      entity_id: this.stateObj.entity_id,
+      speed: speedInput,
+    });
+  },
+
+  oscillationToggleChanged: function (ev) {
+    var oldVal = this.stateObj.attributes.oscillating;
+    var newVal = ev.target.checked;
+
+    if (oldVal === newVal) return;
+
+    this.hass.callService('fan', 'oscillate', {
+      entity_id: this.stateObj.entity_id,
+      oscillating: newVal,
+    });
+  },
+
+  onDirectionLeft: function () {
+    this.hass.callService('fan', 'set_direction', {
+      entity_id: this.stateObj.entity_id,
+      direction: 'left'
+    });
+  },
+
+  onDirectionRight: function () {
+    this.hass.callService('fan', 'set_direction', {
+      entity_id: this.stateObj.entity_id,
+      direction: 'right'
+    });
+  },
+
+  computeIsRotatingLeft: function (stateObj) {
+    return stateObj.attributes.direction === 'left';
+  },
+
+  computeIsRotatingRight: function (stateObj) {
+    return stateObj.attributes.direction === 'right';
+  },
+
+});
+</script>

@@ -1,0 +1,151 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+
+<dom-module id="ha-automation-picker">
+  <template>
+    <style include="ha-style">
+      :host {
+        display: block;
+      }
+
+      paper-card {
+        display: block;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .content > paper-card:first-child {
+        margin-bottom: 16px;
+        color: var(--google-red-500);
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+
+      paper-fab {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 1;
+      }
+
+      paper-fab[is-wide] {
+        bottom: 24px;
+        right: 24px;
+      }
+
+      a {
+        color: var(--primary-color);
+      }
+    </style>
+
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>Automations Editor</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class='content'>
+        <paper-card>
+          <div class='card-content'>
+            Currently Chrome is the only supported browser.
+          </div>
+        </paper-card>
+
+        <paper-card heading='Pick automation to edit'>
+            <div class='card-content'>
+              The automation editor allows you to create and edit automations.
+              Please read <a href='https://home-assistant.io/docs/automation/editor/' target='_blank'>the instructions</a>
+              to make sure that you have configured Home Assistant correctly.
+              <template is='dom-if' if='[[!automations.length]]'>
+                <p>We couldn't find any editable automations.</p>
+              </template>
+            </div>
+          <template is='dom-repeat' items='[[automations]]' as='automation'>
+            <paper-item>
+              <paper-item-body two-line on-tap='automationTapped'>
+                <div>[[computeName(automation)]]</div>
+                <div secondary>[[computeDescription(automation)]]</div>
+              </paper-item-body>
+              [[computeStatus(automation)]]
+            </paper-item>
+          </template>
+        </paper-card>
+
+        <paper-fab
+          is-wide$='[[isWide]]'
+          icon='mdi:plus'
+          title='Add Automation'
+          on-tap='addAutomation'
+        ></paper-fab>
+      </div>
+    </app-header-layout>
+
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-automation-picker',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    automations: {
+      type: Array,
+    },
+
+    isWide: {
+      type: Boolean,
+    },
+  },
+
+  automationTapped: function (ev) {
+    this.fire('hass-automation-picked', {
+      id: this.automations[ev.model.index].attributes.id,
+    });
+  },
+
+  addAutomation: function () {
+    this.fire('hass-create-automation');
+  },
+
+  computeName: function (automation) {
+    return window.hassUtil.computeStateName(automation);
+  },
+
+  // Still thinking of something to add here.
+  // eslint-disable-next-line
+  computeDescription: function (automation) {
+    return '';
+  },
+
+  computeStatus: function (automation) {
+    return automation.state;
+  },
+});
+</script>

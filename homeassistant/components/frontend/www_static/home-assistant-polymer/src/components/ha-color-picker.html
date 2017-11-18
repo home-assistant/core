@@ -1,0 +1,148 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<dom-module id='ha-color-picker'>
+  <template>
+    <style>
+      canvas {
+        cursor: crosshair;
+      }
+    </style>
+
+    <canvas width='[[width]]' height='[[height]]' id='canvas'></canvas>
+  </template>
+</dom-module>
+
+<script>
+/**
+ * Color-picker custom element
+ * Originally created by bbrewer97202 (Ben Brewer). MIT Licensed.
+ * https://github.com/bbrewer97202/color-picker-element
+ *
+ * Adapted to work with Polymer.
+ */
+Polymer({
+  is: 'ha-color-picker',
+
+  properties: {
+    color: {
+      type: Object,
+    },
+
+    width: {
+      type: Number,
+    },
+
+    height: {
+      type: Number,
+    },
+  },
+
+  listeners: {
+    mousedown: 'onMouseDown',
+    mouseup: 'onMouseUp',
+    touchstart: 'onTouchStart',
+    touchend: 'onTouchEnd',
+  },
+
+  onMouseDown: function (ev) {
+    this.onMouseMove(ev);
+    this.addEventListener('mousemove', this.onMouseMove);
+  },
+
+  onMouseUp: function () {
+    this.removeEventListener('mousemove', this.onMouseMove);
+  },
+
+  onTouchStart: function (ev) {
+    this.onTouchMove(ev);
+    this.addEventListener('touchmove', this.onTouchMove);
+  },
+
+  onTouchEnd: function () {
+    this.removeEventListener('touchmove', this.onTouchMove);
+  },
+
+  onTouchMove: function (ev) {
+    if (!this.mouseMoveIsThrottled) {
+      return;
+    }
+    this.mouseMoveIsThrottled = false;
+    this.processColorSelect(ev.touches[0]);
+    this.async(function () { this.mouseMoveIsThrottled = true; }.bind(this), 100);
+  },
+
+  onMouseMove: function (ev) {
+    if (!this.mouseMoveIsThrottled) {
+      return;
+    }
+    this.mouseMoveIsThrottled = false;
+    this.processColorSelect(ev);
+    this.async(function () { this.mouseMoveIsThrottled = true; }.bind(this), 100);
+  },
+
+  processColorSelect: function (ev) {
+    var rect = this.canvas.getBoundingClientRect();
+
+    // boundary check because people can move off-canvas.
+    if (ev.clientX < rect.left || ev.clientX >= rect.left + rect.width ||
+        ev.clientY < rect.top || ev.clientY >= rect.top + rect.height) {
+      return;
+    }
+
+    this.onColorSelect(ev.clientX - rect.left, ev.clientY - rect.top);
+  },
+
+  onColorSelect: function (x, y) {
+    var data = this.context.getImageData(x, y, 1, 1).data;
+
+    this.setColor({ r: data[0], g: data[1], b: data[2] });
+  },
+
+  setColor: function (rgb) {
+    this.color = rgb;
+
+    this.fire('colorselected', { rgb: this.color });
+  },
+
+  ready: function () {
+    this.setColor = this.setColor.bind(this);
+    this.mouseMoveIsThrottled = true;
+    this.canvas = this.$.canvas;
+    this.context = this.canvas.getContext('2d');
+    this.drawGradient();
+  },
+
+  drawGradient: function () {
+    var style;
+    var width;
+    var height;
+    var colorGradient;
+    var bwGradient;
+    if (!this.width || !this.height) {
+      style = getComputedStyle(this);
+    }
+    width = this.width || parseInt(style.width, 10);
+    height = this.height || parseInt(style.height, 10);
+
+    colorGradient = this.context.createLinearGradient(0, 0, width, 0);
+    colorGradient.addColorStop(0, 'rgb(255,0,0)');
+    colorGradient.addColorStop(0.16, 'rgb(255,0,255)');
+    colorGradient.addColorStop(0.32, 'rgb(0,0,255)');
+    colorGradient.addColorStop(0.48, 'rgb(0,255,255)');
+    colorGradient.addColorStop(0.64, 'rgb(0,255,0)');
+    colorGradient.addColorStop(0.80, 'rgb(255,255,0)');
+    colorGradient.addColorStop(1, 'rgb(255,0,0)');
+    this.context.fillStyle = colorGradient;
+    this.context.fillRect(0, 0, width, height);
+
+    bwGradient = this.context.createLinearGradient(0, 0, 0, height);
+    bwGradient.addColorStop(0, 'rgba(255,255,255,1)');
+    bwGradient.addColorStop(0.5, 'rgba(255,255,255,0)');
+    bwGradient.addColorStop(0.5, 'rgba(0,0,0,0)');
+    bwGradient.addColorStop(1, 'rgba(0,0,0,1)');
+
+    this.context.fillStyle = bwGradient;
+    this.context.fillRect(0, 0, width, height);
+  },
+});
+</script>

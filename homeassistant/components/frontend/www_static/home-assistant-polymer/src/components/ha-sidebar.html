@@ -1,0 +1,279 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel='import' href='../../bower_components/iron-icon/iron-icon.html'>
+<link rel='import' href='../../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+<link rel='import' href='../../bower_components/paper-item/paper-icon-item.html'>
+<link rel='import' href='../../bower_components/paper-icon-button/paper-icon-button.html'>
+
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel='import' href='./ha-push-notifications-toggle.html'>
+
+<dom-module id='ha-sidebar'>
+  <template>
+    <style include="iron-flex iron-flex-alignment iron-positioning">
+      :host {
+        --sidebar-text: {
+          color: var(--primary-text-color);
+          font-weight: 500;
+          font-size: 14px;
+        };
+        display: block;
+        overflow: auto;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        border-right: 1px solid var(--divider-color);
+      }
+
+      app-toolbar {
+        font-weight: 400;
+        color: var(--primary-text-color);
+        border-bottom: 1px solid var(--divider-color);
+        background-color: var(--primary-background-color);
+      }
+
+      paper-listbox {
+        padding-bottom: 0;
+      }
+
+      paper-icon-item {
+        --paper-icon-item: {
+          cursor: pointer;
+        };
+
+        --paper-item-icon: {
+          color: #000;
+          opacity: var(--dark-secondary-opacity);
+        };
+
+        --paper-item-selected: {
+          color: var(--primary-color);
+          background-color: var(--paper-grey-200);
+          opacity: 1;
+        };
+      }
+      paper-icon-item.iron-selected {
+        --paper-item-icon: {
+          color: var(--primary-color);
+          opacity: 1;
+        };
+      }
+
+      paper-icon-item .item-text {
+        @apply(--sidebar-text);
+      }
+      paper-icon-item.iron-selected .item-text {
+        opacity: 1;
+      }
+
+      paper-icon-item.logout {
+        margin-top: 16px;
+      }
+
+      .divider {
+        height: 1px;
+        background-color: #000;
+        margin: 4px 0;
+        opacity: var(--dark-divider-opacity)
+      }
+
+      .setting {
+        @apply(--sidebar-text);
+      }
+
+      .subheader {
+        @apply(--sidebar-text);
+        padding: 16px;
+      }
+
+      .dev-tools {
+        padding: 0 8px;
+        opacity: var(--dark-secondary-opacity);
+      }
+    </style>
+
+    <app-toolbar>
+      <div main-title>Home Assistant</div>
+      <paper-icon-button icon='mdi:chevron-left' hidden$='[[narrow]]' on-tap='toggleMenu'></paper-icon-button>
+    </app-toolbar>
+
+    <paper-listbox attr-for-selected='data-panel' selected='[[hass.currentPanel]]' on-iron-select='menuSelect'>
+      <paper-icon-item on-tap='menuClicked' data-panel='states'>
+        <iron-icon slot="item-icon" icon='mdi:apps'></iron-icon>
+        <span class='item-text'>States</span>
+      </paper-icon-item>
+
+      <template is='dom-repeat' items='[[panels]]'>
+        <paper-icon-item on-tap='menuClicked' data-panel$='[[item.url_path]]'>
+          <iron-icon slot="item-icon" icon='[[item.icon]]'></iron-icon>
+          <span class='item-text'>[[item.title]]</span>
+        </paper-icon-item>
+      </template>
+
+      <paper-icon-item on-tap='menuClicked' data-panel='logout' class='logout'>
+        <iron-icon slot="item-icon" icon='mdi:exit-to-app'></iron-icon>
+        <span class='item-text'>Log Out</span>
+      </paper-icon-item>
+    </paper-listbox>
+
+    <div>
+      <template is='dom-if' if='[[pushSupported]]'>
+        <div class='divider'></div>
+
+        <paper-item class='horizontal layout justified'>
+          <div class='setting'>Push Notifications</div>
+          <ha-push-notifications-toggle
+            hass='[[hass]]'
+            push-supported='{{pushSupported}}'
+          ></ha-push-notifications-toggle>
+        </paper-item>
+      </template>
+
+      <div class='divider'></div>
+
+      <div class='subheader'>Developer Tools</div>
+
+      <div class='dev-tools layout horizontal justified'>
+        <paper-icon-button
+          icon='mdi:remote' data-panel='dev-service'
+          alt="Services" title="Services"
+          on-tap='menuClicked'></paper-icon-button>
+        <paper-icon-button
+          icon='mdi:code-tags' data-panel='dev-state'
+          alt="States" title="States"
+          on-tap='menuClicked'></paper-icon-button>
+        <paper-icon-button
+          icon='mdi:radio-tower' data-panel='dev-event'
+          alt="Events" title="Events"
+          on-tap='menuClicked'></paper-icon-button>
+        <paper-icon-button
+          icon='mdi:file-xml' data-panel='dev-template'
+          alt="Templates" title="Templates"
+          on-tap='menuClicked'></paper-icon-button>
+        <paper-icon-button
+          icon='mdi:information-outline' data-panel='dev-info'
+          alt="Info" title="Info"
+          on-tap='menuClicked'></paper-icon-button>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-sidebar',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    menuShown: {
+      type: Boolean,
+    },
+
+    menuSelected: {
+      type: String,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    panels: {
+      type: Array,
+      computed: 'computePanels(hass)',
+    },
+
+    pushSupported: {
+      type: Boolean,
+      value: true,
+    },
+  },
+
+  created: function () {
+    this._boundUpdateStyles = this.updateStyles.bind(this);
+  },
+
+  computePanels: function (hass) {
+    var panels = hass.config.panels;
+    var sortValue = {
+      map: 1,
+      logbook: 2,
+      history: 3,
+    };
+    var result = [];
+
+    Object.keys(panels).forEach(function (key) {
+      if (panels[key].title) {
+        result.push(panels[key]);
+      }
+    });
+
+    result.sort(function (a, b) {
+      var aBuiltIn = (a.component_name in sortValue);
+      var bBuiltIn = (b.component_name in sortValue);
+
+      if (aBuiltIn && bBuiltIn) {
+        return sortValue[a.component_name] - sortValue[b.component_name];
+      } else if (aBuiltIn) {
+        return -1;
+      } else if (bBuiltIn) {
+        return 1;
+      }
+      // both not built in, sort by title
+      if (a.title < b.title) {
+        return -1;
+      }
+      if (a.title > b.title) {
+        return 1;
+      }
+      return 0;
+    });
+
+    return result;
+  },
+
+  menuSelect: function () {
+    this.debounce('updateStyles', this._boundUpdateStyles, 1);
+  },
+
+  menuClicked: function (ev) {
+    var target = ev.target;
+    var checks = 5;
+    var attr = target.getAttribute('data-panel');
+
+    // find panel to select
+    while (checks && !attr) {
+      target = target.parentElement;
+      attr = target.getAttribute('data-panel');
+      checks--;
+    }
+
+    if (checks) {
+      this.selectPanel(attr);
+    }
+  },
+
+  toggleMenu: function () {
+    this.fire('hass-close-menu');
+  },
+
+  selectPanel: function (newChoice) {
+    if (newChoice === this.hass.currentPanel) {
+      return;
+    } else if (newChoice === 'logout') {
+      this.handleLogOut();
+      return;
+    }
+    this.fire('hass-navigate', { panel: newChoice });
+    this.debounce('updateStyles', this._boundUpdateStyles, 1);
+  },
+
+  handleLogOut: function () {
+    this.fire('hass-logout');
+  },
+});
+</script>

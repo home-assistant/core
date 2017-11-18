@@ -1,0 +1,167 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel='import' href='../../../bower_components/iron-media-query/iron-media-query.html'>
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../../src/components/ha-menu-button.html">
+<link rel="import" href="../../../src/resources/ha-style.html">
+
+<link rel="import" href="../ha-config-section.html">
+
+<dom-module id="ha-config-section-hassbian">
+  <template>
+    <style include="iron-flex ha-style">
+      .header {
+        font-size: 16px;
+        margin-bottom: 1em;
+      }
+
+      .header .status {
+        font-size: 14px;
+        float: right;
+      }
+
+      .card-actions paper-button {
+        color: var(--default-primary-color);
+        font-weight: 500;
+      }
+    </style>
+    <ha-config-section is-wide='[[isWide]]'>
+      <span slot='header'>Bring Hassbian to the next level</span>
+      <span slot='introduction'>
+        Discover exciting add-ons to enhance your Home Assistant installation. Add an MQTT server or control a connected TV via HDMI-CEC.
+      </span>
+
+      <template is='dom-if' if='[[suiteStatus]]'>
+        <template is='dom-repeat' items='[[computeSuiteKeys(suiteStatus)]]' as='suiteKey'>
+          <paper-card>
+            <div class='card-content'>
+              <div class='header'>
+                [[computeTitle(suiteKey)]]
+                <span class='status'>
+                  [[computeSuiteStatus(suiteStatus, suiteKey)]]
+                </span>
+              </div>
+              [[computeSuiteDescription(suiteStatus, suiteKey)]]
+            </div>
+            <div class='card-actions'>
+              <paper-button on-tap='suiteMoreInfoTapped'>LEARN MORE</paper-button>
+
+              <template is='dom-if' if='[[computeShowInstall(suiteStatus, suiteKey)]]'>
+                <paper-button on-tap='suiteActionTapped'>INSTALL</paper-button>
+              </template>
+            </div>
+          </paper-card>
+        </template>
+      </template>
+    </ha-config-section>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-config-section-hassbian',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    isWide: {
+      type: Boolean,
+    },
+
+    suiteStatus: {
+      type: Object,
+      value: null,
+    },
+  },
+
+  updateStatus: function () {
+    // TODO tapping install while something is installing triggers a second
+    //      update loop to start.
+    this.hass.callApi('GET', 'config/hassbian/suites').then(function (suites) {
+      this.suiteStatus = suites;
+
+      var isInstalling = false;
+      var keys = Object.keys(suites);
+      for (var i = 0; i < keys.length; i++) {
+        if (suites[keys[i]].state === 'installing') {
+          isInstalling = true;
+          break;
+        }
+      }
+
+      if (isInstalling) {
+        this.async(this.updateStatus, 5000);
+      }
+    }.bind(this));
+  },
+
+  attached: function () {
+    this.updateStatus = this.updateStatus.bind(this);
+    this.updateStatus();
+  },
+
+  computeSuiteKeys: function (suiteStatus) {
+    // Prioritize installing packages
+    return Object.keys(suiteStatus).sort(function (keyA, keyB) {
+      var installingA = suiteStatus[keyA].state === 'installing';
+      var installingB = suiteStatus[keyB].state === 'installing';
+
+      if (installingA && installingB) {
+        // do nothing
+      } else if (installingA) {
+        return -1;
+      } else if (installingB) {
+        return 1;
+      }
+
+      if (keyA < keyB) {
+        return -1;
+      }
+      if (keyA > keyB) {
+        return 1;
+      }
+      return 0;
+    });
+  },
+
+  computeSuiteDescription: function (suiteStatus, suiteKey) {
+    return suiteStatus[suiteKey].description;
+  },
+
+  computeTitle: function (suiteKey) {
+    return suiteKey.substr(0, 1).toUpperCase() + suiteKey.substr(1);
+  },
+
+  computeSuiteStatus: function (suiteStatus, suiteKey) {
+    const state = suiteStatus[suiteKey].state.replace(/_/, ' ');
+    return state.substr(0, 1).toUpperCase() + state.substr(1);
+  },
+
+  computeShowStatus: function (suiteStatus, suiteKey) {
+    var state = suiteStatus[suiteKey].state;
+    return state !== 'installing' && state !== 'not_installed';
+  },
+
+  computeShowInstall: function (suiteStatus, suiteKey) {
+    return suiteStatus[suiteKey].state === 'not_installed';
+  },
+
+  suiteMoreInfoTapped: function () {
+    // console.log('learn more', ev.model.item);
+  },
+
+  suiteActionTapped: function () {
+    // TODO install tapped suite
+    this.hass.callApi('POST', 'config/hassbian/suites/openzwave/install').then(this.updateStatus);
+  },
+});
+</script>

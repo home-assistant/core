@@ -1,0 +1,96 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel='import' href='../../bower_components/paper-button/paper-button.html'>
+
+<link rel='import' href='../components/ha-card.html'>
+
+<dom-module id='ha-persistent_notification-card'>
+  <template>
+    <style>
+      :host {
+        @apply(--paper-font-body1);
+      }
+      .content {
+        padding: 0 16px 16px;
+        -ms-user-select: initial;
+        -webkit-user-select: initial;
+        -moz-user-select: initial;
+      }
+      paper-button {
+        margin: 8px;
+        font-weight: 500;
+      }
+    </style>
+
+    <ha-card header='[[computeTitle(stateObj)]]'>
+      <div id='pnContent' class='content'></div>
+      <paper-button on-tap='dismissTap'>DISMISS</paper-button>
+    </ha-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-persistent_notification-card',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    scriptLoaded: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  observers: [
+    'computeContent(stateObj, scriptLoaded)',
+  ],
+
+  computeTitle: function (stateObj) {
+    return (stateObj.attributes.title ||
+            window.hassUtil.computeStateName(stateObj));
+  },
+
+  loadScript: function () {
+    var success = function () {
+      this.scriptLoaded = true;
+    }.bind(this);
+
+    var error = function () {
+      /* eslint-disable no-console */
+      console.error('Micromarkdown was not loaded.');
+      /* eslint-enable no-console */
+    };
+
+    this.importHref(
+      '/static/micromarkdown-js.html',
+      success, error
+    );
+  },
+
+  computeContent: function (stateObj, scriptLoaded) {
+    var el = '';
+    var message = '';
+    if (scriptLoaded) {
+      el = this.$.pnContent;
+      message = window.micromarkdown.parse(stateObj.state);
+      el.innerHTML = message;
+    }
+  },
+
+  ready: function () {
+    this.loadScript();
+  },
+
+  dismissTap: function (ev) {
+    ev.preventDefault();
+
+    this.hass.callApi('DELETE', 'states/' + this.stateObj.entity_id);
+  },
+});
+</script>

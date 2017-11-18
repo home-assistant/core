@@ -6,8 +6,8 @@ https://home-assistant.io/components/scene.lutron_caseta/
 """
 import logging
 
-from homeassistant.components.scene import Scene
 from homeassistant.components.lutron_caseta import LUTRON_CASETA_SMARTBRIDGE
+from homeassistant.components.scene import Scene
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,0 +1,117 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel='import' href='../../bower_components/paper-slider/paper-slider.html'>
+
+<link rel='import' href='../util/cover-model.html'>
+
+<dom-module id='more-info-cover'>
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      .current_position, .tilt {
+        max-height: 0px;
+        overflow: hidden;
+      }
+      .has-current_position .current_position,
+      .has-set_tilt_position .tilt,
+      .has-current_tilt_position .tilt
+      {
+        max-height: 90px;
+      }
+
+      [invisible] {
+        visibility: hidden !important;
+      }
+    </style>
+    <div class$='[[computeClassNames(stateObj)]]'>
+
+      <div class='current_position'>
+        <div>Position</div>
+        <paper-slider
+          min='0' max='100'
+          value='{{coverPositionSliderValue}}'
+          step='1' pin
+          disabled='[[!entityObj.supportsSetPosition]]'
+          on-change='coverPositionSliderChanged'></paper-slider>
+      </div>
+
+      <div class='tilt'>
+        <div>Tilt position</div>
+        <div>
+          <ha-cover-tilt-controls hidden$="[[entityObj.isTiltOnly]]" hass="[[hass]]" state-obj="[[stateObj]]">
+          </ha-cover-tilt-controls>
+        </div>
+        <paper-slider
+          min='0' max='100'
+          value='{{coverTiltPositionSliderValue}}'
+          step='1' pin
+          disabled='[[!entityObj.supportsSetTiltPosition]]'
+          on-change='coverTiltPositionSliderChanged'></paper-slider>
+      </div>
+
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-cover',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjChanged',
+    },
+
+    entityObj: {
+      type: Object,
+      computed: 'computeEntityObj(hass, stateObj)',
+    },
+
+    coverPositionSliderValue: {
+      type: Number,
+    },
+
+    coverTiltPositionSliderValue: {
+      type: Number,
+    },
+
+  },
+
+  computeEntityObj: function (hass, stateObj) {
+    return new window.CoverEntity(hass, stateObj);
+  },
+
+  stateObjChanged: function (newVal) {
+    this.coverPositionSliderValue = newVal.attributes.current_position;
+    this.coverTiltPositionSliderValue = newVal.attributes.current_tilt_position;
+  },
+
+  featureClassNames: {
+    128: 'has-set_tilt_position',
+  },
+
+  computeClassNames: function (stateObj) {
+    var classes = [
+      window.hassUtil.attributeClassNames(stateObj, ['current_position', 'current_tilt_position']),
+      window.hassUtil.featureClassNames(stateObj, this.featureClassNames),
+    ];
+    return classes.join(' ');
+  },
+
+  coverPositionSliderChanged: function (ev) {
+    this.entityObj.setCoverPosition(ev.target.value);
+  },
+
+  coverTiltPositionSliderChanged: function (ev) {
+    this.entityObj.setCoverTiltPosition(ev.target.value);
+  },
+
+});
+</script>

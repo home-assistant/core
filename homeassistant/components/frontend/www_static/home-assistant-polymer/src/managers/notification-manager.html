@@ -1,0 +1,85 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+
+<dom-module id="notification-manager">
+  <template>
+    <style>
+      paper-toast {
+        z-index: 1;
+      }
+    </style>
+
+    <paper-toast
+      id="toast"
+      text='[[_text]]'
+      no-cancel-on-outside-click='[[_cancelOnOutsideClick]]'
+    ></paper-toast>
+    <paper-toast
+      id='connToast'
+      duration='0'
+      text='Connection lost. Reconnecting…'
+      opened='[[!isStreaming]]'
+    ></paper-toast>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'notification-manager',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    isStreaming: {
+      type: Boolean,
+      computed: 'computeIsStreaming(hass)',
+    },
+
+    _cancelOnOutsideClick: {
+      type: Boolean,
+      value: false,
+    },
+
+    _text: {
+      type: String,
+      readOnly: true,
+    },
+
+    toastClass: {
+      type: String,
+      value: '',
+    },
+  },
+
+  computeIsStreaming: function (hass) {
+    return !hass || hass.connected;
+  },
+
+  created: function () {
+    this.handleWindowChange = this.handleWindowChange.bind(this);
+    this._mediaq = window.matchMedia('(max-width: 599px)');
+    this._mediaq.addListener(this.handleWindowChange);
+  },
+
+  attached: function () {
+    this.handleWindowChange(this._mediaq);
+  },
+
+  detached: function () {
+    this._mediaq.removeListener(this.handleWindowChange);
+  },
+
+  handleWindowChange: function (ev) {
+    this.$.toast.classList.toggle('fit-bottom', ev.matches);
+    this.$.connToast.classList.toggle('fit-bottom', ev.matches);
+  },
+
+  showNotification: function (message) {
+    this._set_text(message);
+    this.$.toast.show();
+  },
+});
+</script>

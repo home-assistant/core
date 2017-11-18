@@ -78,9 +78,9 @@ class ONVIFCamera(Camera):
         ffmpeg = ImageFrame(
             self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
-        image = yield from ffmpeg.get_image(
+        image = yield from asyncio.shield(ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments)
+            extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
         return image
 
     @asyncio.coroutine

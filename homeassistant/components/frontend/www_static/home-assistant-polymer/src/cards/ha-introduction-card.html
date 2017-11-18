@@ -1,0 +1,84 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../components/ha-card.html'>
+
+<dom-module id='ha-introduction-card'>
+  <template>
+    <style>
+      :host {
+        @apply(--paper-font-body1)
+      }
+      a {
+        color: var(--dark-primary-color);
+      }
+      ul {
+        margin: 8px;
+        padding-left: 16px;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .content {
+        padding: 0 16px 16px;
+      }
+      .install {
+        display: block;
+        line-height: 1.5em;
+        margin-top: 8px;
+        margin-bottom: 16px;
+      }
+    </style>
+
+    <ha-card header="Welcome Home!">
+      <div class='content'>
+        <template is='dom-if' if='[[hass.demo]]'>
+          To install Home Assistant, run:<br />
+          <code class='install'>
+            pip3 install homeassistant<br />
+            hass --open-ui
+          </code>
+        </template>
+        Here are some resources to get started.
+        <ul>
+          <template is='dom-if' if='[[hass.demo]]'>
+            <li><a href='https://home-assistant.io/getting-started/'>Home Assistant website</a></li>
+            <li><a href='https://home-assistant.io/getting-started/'>Installation instructions</a></li>
+            <li><a href='https://home-assistant.io/getting-started/troubleshooting/'>Troubleshooting your installation</a></li>
+          </template>
+          <li><a href='https://home-assistant.io/getting-started/configuration/' target='_blank'>
+            Configuring Home Assistant
+          </a></li>
+          <li><a href='https://home-assistant.io/components/' target='_blank'>
+            Available components
+          </a></li>
+          <li><a href='https://home-assistant.io/getting-started/troubleshooting-configuration/' target='_blank'>Troubleshooting your configuration</a></li>
+          <li><a href='https://home-assistant.io/help/' target='_blank'>
+            Ask community for help
+          </a></li>
+        </ul>
+        <template is='dom-if' if='[[showHideInstruction]]'>
+          To remove this card, edit your config in
+          <code>configuration.yaml</code> and disable the
+          <code>introduction</code> component.
+        </template>
+      </div>
+    </ha-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-introduction-card',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    showHideInstruction: {
+      type: Boolean,
+      value: true,
+    },
+  },
+});
+</script>

@@ -1,0 +1,60 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+
+<link rel="import" href="../components/ha-cover-controls.html">
+<link rel="import" href="../components/ha-cover-tilt-controls.html">
+
+<dom-module id="state-card-cover">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      :host {
+        line-height: 1.5;
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <div class='horizontal layout'>
+        <ha-cover-controls hidden$="[[entityObj.isTiltOnly]]" hass="[[hass]]" state-obj="[[stateObj]]"></ha-cover-controls>
+        <ha-cover-tilt-controls hidden$="[[!entityObj.isTiltOnly]]" hass="[[hass]]" state-obj="[[stateObj]]"></ha-cover-tilt-controls>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-cover',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    entityObj: {
+      type: Object,
+      computed: 'computeEntityObj(hass, stateObj)',
+    },
+
+  },
+
+  computeEntityObj: function (hass, stateObj) {
+    var entity = new window.CoverEntity(hass, stateObj);
+    return entity;
+  },
+
+});
+</script>

@@ -1,0 +1,129 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../../bower_components/iron-flex-layout/iron-flex-layout-classes.html'>
+
+<link rel='import' href='../../bower_components/google-apis/google-legacy-loader.html'>
+
+<link rel='import' href='../components/ha-card.html'>
+<link rel='import' href='../components/ha-attributes.html'>
+<dom-module id='ha-weather-card'>
+  <template>
+    <style>
+        .content {
+          padding: 0 16px 16px;
+        }
+
+        .attribution {
+          color: var(--secondary-text-color);
+          text-align: right;
+        }
+    </style>
+    <google-legacy-loader on-api-load='googleApiLoaded'></google-legacy-loader>
+    <ha-card header='[[computeTitle(stateObj)]]'>
+      <div class='content'>
+        <div id='chart_id' hidden$="[[!stateObj.attributes.forecast]]"></div>
+        <ha-attributes state-obj='[[stateObj]]' extra-filters='forecast'></ha-attributes>
+      </div>
+    </ha-card>
+  </template>
+</dom-module>
+
+<script>
+(function () {
+  'use strict';
+
+  Polymer({
+    is: 'ha-weather-card',
+
+    properties: {
+      hass: {
+        type: Object,
+      },
+
+      stateObj: {
+        type: Object,
+        observer: 'checkRequirements'
+      },
+    },
+
+    computeTitle: function (stateObj) {
+      return stateObj.attributes.friendly_name;
+    },
+
+    getDataArray: function () {
+      var dataArray = [];
+      var data = this.stateObj.attributes.forecast;
+      var i;
+
+      if (!this.stateObj.attributes.forecast) {
+        return [];
+      }
+
+      // Current values
+      dataArray.push([new Date(), this.stateObj.attributes.temperature]);
+
+      for (i = 0; i < data.length; i++) {
+        dataArray.push([new Date(data[i].datetime), data[i].temperature]);
+      }
+
+      return dataArray;
+    },
+
+    checkRequirements: function () {
+      if (!this.stateObj) {
+        return;
+      }
+
+      if (!window.google) {
+        return;
+      }
+
+      if (!this.chartEngine) {
+        this.chartEngine = new window.google.visualization.LineChart(
+          this.$.chart_id);
+      }
+
+      if (!this.stateObj.attributes || !this.stateObj.attributes.forecast) {
+        return;
+      }
+
+      this.drawChart();
+    },
+
+    drawChart: function () {
+      var dataGrid = new window.google.visualization.DataTable();
+      var options = {
+        legend: {
+          position: 'top'
+        },
+        interpolateNulls: true,
+        titlePosition: 'none',
+        chartArea: {
+          left: 25,
+          top: 5,
+          height: '100%',
+          width: '90%',
+          bottom: 25,
+        },
+        curveType: 'function',
+      };
+
+      dataGrid.addColumn('datetime', 'Time');
+      dataGrid.addColumn('number', 'Temperature');
+
+      dataGrid.addRows(this.getDataArray());
+
+      this.chartEngine.draw(dataGrid, options);
+    },
+
+    googleApiLoaded: function () {
+      window.google.load('visualization', '1', {
+        packages: ['corechart'],
+        callback: function () {
+          this.checkRequirements();
+        }.bind(this),
+      });
+    },
+  });
+}());
+</script>

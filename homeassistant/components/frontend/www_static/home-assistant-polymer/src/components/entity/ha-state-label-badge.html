@@ -1,0 +1,151 @@
+<link rel='import' href='../../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../ha-label-badge.html'>
+
+<dom-module id='ha-state-label-badge'>
+  <template>
+    <style>
+      :host {
+        cursor: pointer;
+      }
+
+      ha-label-badge {
+        --ha-label-badge-color: rgb(223, 76, 30);
+      }
+
+      .blue {
+        --ha-label-badge-color: #039be5;
+      }
+
+      .green {
+        --ha-label-badge-color: #0DA035;
+      }
+
+      .grey {
+        --ha-label-badge-color: var(--paper-grey-500);
+      }
+    </style>
+
+    <ha-label-badge class$='[[computeClasses(state)]]'
+      value='[[computeValue(state)]]'
+      icon='[[computeIcon(state)]]'
+      image='[[computeImage(state)]]'
+      label='[[computeLabel(state)]]'
+      description='[[computeDescription(state)]]'
+    ></ha-label-badge>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-state-label-badge',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    state: {
+      type: Object,
+      observer: 'stateChanged',
+    },
+  },
+
+  listeners: {
+    tap: 'badgeTap',
+  },
+
+  badgeTap: function (ev) {
+    ev.stopPropagation();
+    this.fire('hass-more-info', { entityId: this.state.entity_id });
+  },
+
+  computeClasses: function (state) {
+    switch (window.hassUtil.computeDomain(state)) {
+      case 'binary_sensor':
+      case 'updater':
+        return 'blue';
+      default:
+        return '';
+    }
+  },
+
+  computeValue: function (state) {
+    switch (window.hassUtil.computeDomain(state)) {
+      case 'binary_sensor':
+      case 'device_tracker':
+      case 'updater':
+      case 'sun':
+      case 'alarm_control_panel':
+        return null;
+      case 'sensor':
+      default:
+        return state.state === 'unknown' ? '-' : state.state;
+    }
+  },
+
+  computeIcon: function (state) {
+    if (state.state === 'unavailable') {
+      return null;
+    }
+    var domain = window.hassUtil.computeDomain(state);
+    switch (domain) {
+      case 'alarm_control_panel':
+        if (state.state === 'pending') {
+          return 'mdi:clock-fast';
+        } else if (state.state === 'armed_away') {
+          return 'mdi:nature';
+        } else if (state.state === 'armed_home') {
+          return 'mdi:home-variant';
+        } else if (state.state === 'triggered') {
+          return 'mdi:alert-circle';
+        }
+        // state == 'disarmed'
+        return window.hassUtil.domainIcon(domain, state.state);
+      case 'binary_sensor':
+      case 'device_tracker':
+      case 'updater':
+        return window.hassUtil.stateIcon(state);
+      case 'sun':
+        return state.state === 'above_horizon' ?
+        window.hassUtil.domainIcon(domain) : 'mdi:brightness-3';
+      default:
+        return null;
+    }
+  },
+
+  computeImage: function (state) {
+    return state.attributes.entity_picture || null;
+  },
+
+  computeLabel: function (state) {
+    if (state.state === 'unavailable') {
+      return 'unavai';
+    }
+    switch (window.hassUtil.computeDomain(state)) {
+      case 'device_tracker':
+        return state.state === 'not_home' ? 'Away' : state.state;
+      case 'alarm_control_panel':
+        if (state.state === 'pending') {
+          return 'pend';
+        } else if (state.state === 'armed_away' || state.state === 'armed_home') {
+          return 'armed';
+        } else if (state.state === 'triggered') {
+          return 'trig';
+        }
+        // state == 'disarmed'
+        return 'disarm';
+      default:
+        return state.attributes.unit_of_measurement || null;
+    }
+  },
+
+  computeDescription: function (state) {
+    return window.hassUtil.computeStateName(state);
+  },
+
+  stateChanged: function () {
+    this.updateStyles();
+  },
+});
+</script>

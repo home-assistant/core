@@ -1,0 +1,134 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<dom-module id='ha-push-notifications-toggle'>
+  <template>
+    <paper-toggle-button
+      hidden$='[[!pushSupported]]'
+      disabled='[[loading]]'
+      on-change='handlePushChange'
+      checked='[[pushActive]]'
+    ></paper-toggle-button>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-push-notifications-toggle',
+  properties: {
+    hass: { type: Object, value: null },
+    pushSupported: {
+      type: Boolean,
+      readOnly: true,
+      notify: true,
+      value: (
+        'PushManager' in window &&
+          (document.location.protocol === 'https:' ||
+            document.location.hostname === 'localhost' ||
+            document.location.hostname === '127.0.0.1')
+      )
+    },
+    pushActive: {
+      type: Boolean,
+      value: 'Notification' in window && Notification.permission === 'granted'
+    },
+    loading: {
+      type: Boolean,
+      value: true,
+    }
+  },
+  attached: function () {
+    if (!this.pushSupported) return;
+
+    var el = this;
+
+    navigator.serviceWorker.ready.then(
+      function (reg) {
+        reg.pushManager.getSubscription().then(function (subscription) {
+          el.loading = false;
+          el.pushActive = !!subscription;
+        });
+      },
+      function () {
+        // no service worker.
+        el._setPushSupported(false);
+      });
+  },
+  handlePushChange: function (ev) {
+    if (ev.target.checked) {
+      this.subscribePushNotifications();
+    } else {
+      this.unsubscribePushNotifications();
+    }
+  },
+  subscribePushNotifications: function () {
+    var el = this;
+
+    navigator.serviceWorker.ready
+      .then(function (reg) {
+        return reg.pushManager.subscribe({ userVisibleOnly: true });
+      })
+      .then(
+        function (sub) {
+          var browserName;
+          if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+            browserName = 'firefox';
+          } else {
+            browserName = 'chrome';
+          }
+
+          return el.hass.callApi('POST', 'notify.html5', {
+            subscription: sub,
+            browser: browserName
+          }).then(function () {
+            el.pushActive = true;
+          });
+        },
+        function (err) {
+          var message;
+          if (err.message && err.message.indexOf('gcm_sender_id') !== -1) {
+            message = 'Please setup the notify.html5 platform.';
+          } else {
+            message = 'Notification registration failed.';
+          }
+
+          /* eslint-disable no-console */
+          console.error(err);
+          /* eslint-enable no-console */
+
+          el.fire('hass-notification', { message: message });
+          el.pushActive = false;
+        }
+      );
+  },
+  unsubscribePushNotifications: function () {
+    var el = this;
+
+    navigator.serviceWorker.ready
+      .then(function (reg) {
+        return reg.pushManager.getSubscription();
+      })
+      .then(function (sub) {
+        if (!sub) return Promise.resolve();
+
+        return el.hass
+          .callApi('DELETE', 'notify.html5', { subscription: sub })
+          .then(function () {
+            sub.unsubscribe();
+          });
+      })
+      .then(function () {
+        el.pushActive = false;
+      })
+      .catch(function (err) {
+        /* eslint-disable no-console */
+        console.error('Error in unsub push', err);
+        /* eslint-enable no-console */
+
+        el.fire('hass-notification', {
+          message: 'Failed unsubscribing for push notifications.'
+        });
+      });
+  }
+});
+</script>

@@ -1,0 +1,163 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../../src/components/ha-menu-button.html">
+
+<link rel="import" href="./hassio-addon-info.html">
+<link rel="import" href="./hassio-addon-state.html">
+<link rel="import" href="./hassio-addon-options.html">
+<link rel="import" href="./hassio-addon-logs.html">
+
+<dom-module id="hassio-addon-view">
+  <template>
+    <style include="iron-flex ha-style">
+      paper-card {
+        display: block;
+      }
+      .controls paper-card,
+      hassio-addon-options {
+        margin-bottom: 24px;
+      }
+      .content {
+        padding: 24px 0 32px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .status {
+        @apply(--layout-horizontal);
+        margin-bottom: 24px;
+      }
+      .status > * {
+        @apply(--layout-flex);
+      }
+      .status > *:first-child {
+        margin-right: 24px;
+      }
+    </style>
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <paper-icon-button
+            icon='mdi:arrow-left'
+            on-tap='backTapped'
+          ></paper-icon-button>
+          <div main-title>[[addonInfo.name]]</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class='content'>
+        <div class='status'>
+          <hassio-addon-info
+            hass='[[hass]]'
+            addon-info='[[addonInfo]]'
+          ></hassio-addon-info>
+
+          <hassio-addon-state
+            hass='[[hass]]'
+            addon='[[addon]]'
+            addon-info='[[addonInfo]]'
+            addon-state='[[addonState]]'
+          ></hassio-addon-state>
+        </div>
+
+        <template is='dom-if' if='[[addonState]]'>
+          <div class='controls'>
+            <hassio-addon-options
+              hass='[[hass]]'
+              addon='[[addon]]'
+              addon-state='[[addonState]]'
+            ></hassio-addon-options>
+
+            <hassio-addon-logs
+              hass='[[hass]]'
+              addon='[[addon]]'
+            ></hassio-addon-logs>
+          </div>
+        </template>
+      </div>
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addon-view',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    addon: {
+      type: String,
+      observer: 'addonChanged',
+    },
+
+    supervisorInfo: {
+      type: Object,
+    },
+
+    addonInfo: {
+      type: Object,
+      computed: 'computeAddonInfo(supervisorInfo, addon)',
+    },
+
+    addonState: {
+      type: Object,
+      value: null,
+    },
+
+    addonLogs: {
+      type: String,
+      value: '',
+    },
+  },
+
+  listeners: {
+    'hass-api-called': 'apiCalled',
+  },
+
+  apiCalled: function () {
+    this.addonChanged(this.addon);
+  },
+
+  addonChanged: function (addon) {
+    if (!this.hass) {
+      setTimeout(function () { this.addonChanged(addon); }.bind(this), 0);
+      return;
+    }
+
+    this.hass.callApi('get', 'hassio/addons/' + addon + '/info')
+      .then(function (info) {
+        this.addonState = info.data;
+      }.bind(this), function () {
+        this.addonState = null;
+      }.bind(this));
+  },
+
+  computeAddonInfo: function (supervisorInfo, addon) {
+    if (!supervisorInfo) return null;
+
+    for (var i = 0; i < supervisorInfo.addons.length; i++) {
+      var addonInfo = supervisorInfo.addons[i];
+      if (addonInfo.slug === addon) return addonInfo;
+    }
+    return null;
+  },
+
+  backTapped: function () {
+    this.fire('hassio-select-addon', { addon: null });
+  },
+});
+</script>

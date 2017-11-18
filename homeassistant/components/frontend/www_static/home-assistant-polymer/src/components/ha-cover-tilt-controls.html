@@ -1,0 +1,74 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel='import' href='../../bower_components/paper-slider/paper-slider.html'>
+
+<link rel='import' href='../util/cover-model.html'>
+
+<dom-module id='ha-cover-tilt-controls'>
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      :host {
+        white-space: nowrap;
+      }
+
+      [invisible] {
+        visibility: hidden !important;
+      }
+    </style>
+    <paper-icon-button icon="mdi:arrow-top-right" 
+      on-tap='onOpenTiltTap' title='Open tilt'
+      invisible$='[[!entityObj.supportsOpenTilt]]'
+      disabled='[[entityObj.isFullyOpenTilt]]'></paper-icon-button>
+    <paper-icon-button icon="mdi:stop" on-tap='onStopTiltTap'
+      invisible$='[[!entityObj.supportsStopTilt]]'
+      title='Stop tilt'></paper-icon-button>
+    <paper-icon-button icon="mdi:arrow-bottom-left"
+      on-tap='onCloseTiltTap' title='Close tilt'
+      invisible$='[[!entityObj.supportsCloseTilt]]'
+      disabled='[[entityObj.isFullyClosedTilt]]'></paper-icon-button>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-cover-tilt-controls',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    entityObj: {
+      type: Object,
+      computed: 'computeEntityObj(hass, stateObj)',
+    },
+  },
+
+  computeEntityObj: function (hass, stateObj) {
+    var entity = new window.CoverEntity(hass, stateObj);
+    return entity;
+  },
+
+  onOpenTiltTap: function (ev) {
+    ev.stopPropagation();
+    this.entityObj.openCoverTilt();
+  },
+
+  onCloseTiltTap: function (ev) {
+    ev.stopPropagation();
+    this.entityObj.closeCoverTilt();
+  },
+
+  onStopTiltTap: function (ev) {
+    ev.stopPropagation();
+    this.entityObj.stopCoverTilt();
+  },
+});
+</script>

@@ -1,0 +1,62 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../../bower_components/paper-input/paper-input.html'>
+<link rel='import' href='../components/ha-attributes.html'>
+
+<dom-module id='more-info-lock'>
+  <template>
+    <style>
+      paper-input {
+        display: inline-block;
+      }
+    </style>
+
+    <div hidden$='[[!stateObj.attributes.code_format]]'>
+      <paper-input label='code' value='{{enteredCode}}' pattern='[[stateObj.attributes.code_format]]' type='password'></paper-input>
+      <paper-button on-tap='handleUnlockTap' hidden$='[[!isLocked]]'>Unlock</paper-button>
+      <paper-button on-tap='handleLockTap' hidden$=[[isLocked]]>Lock</paper-button>
+    </div>
+    <ha-attributes state-obj='[[stateObj]]' extra-filters='code_format'></ha-attributes>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-lock',
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjChanged',
+    },
+    enteredCode: {
+      type: String,
+      value: '',
+    },
+  },
+
+  handleUnlockTap: function () {
+    this.callService('unlock', { code: this.enteredCode });
+  },
+
+  handleLockTap: function () {
+    this.callService('lock', { code: this.enteredCode });
+  },
+
+  stateObjChanged: function (newVal) {
+    if (newVal) {
+      this.isLocked = newVal.state === 'locked';
+    }
+  },
+
+  callService: function (service, data) {
+    var serviceData = data || {};
+    serviceData.entity_id = this.stateObj.entity_id;
+    this.hass.callService('lock', service, serviceData);
+  },
+});
+</script>

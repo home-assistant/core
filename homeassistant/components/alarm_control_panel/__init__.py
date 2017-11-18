@@ -124,20 +124,13 @@ def async_setup(hass, config):
 
         method = "async_{}".format(SERVICE_TO_METHOD[service.service])
 
+        update_tasks = []
         for alarm in target_alarms:
             yield from getattr(alarm, method)(code)
 
-        update_tasks = []
-        for alarm in target_alarms:
             if not alarm.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                alarm.async_update_ha_state(True))
-            if hasattr(alarm, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(alarm.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
