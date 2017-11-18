@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/hive/
 """
 import logging
-from datetime import datetime
 
 from homeassistant.components.climate import (STATE_AUTO, STATE_HEAT,
                                               STATE_OFF, STATE_ON)
@@ -205,20 +204,6 @@ class HiveSensorEntity(Entity):
             s_a.update({"Restart Min / Max":
                         str(minmax_temps['RestartMin']) + " °C" + " / "
                         + str(minmax_temps['RestartMax']) + " °C"})
-
-
-#        if self.node_id in self.session.data.minmax:
-#            s_a.update({"Today Min / Max":
-#                        str(self.session.data.minmax[self.node_id]
-#                            ['TodayMin']) + " °C" + " / "
-#                        + str(self.session.data.minmax[self.node_id]
-#                              ['TodayMax']) + " °C"})
-
-#            s_a.update({"Restart Min / Max":
-#                        str(self.session.data.minmax[self.node_id]
-#                            ['RestartMin']) + " °C" + " / "
-#                        + str(self.session.data.minmax[self.node_id]
-#                              ['RestartMax']) + " °C"})
 
         temp_current = self.session.heating.current_temperature(self.node_id)
         temperature_target = self.session.heating.\
