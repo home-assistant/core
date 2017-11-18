@@ -1,0 +1,264 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu-light.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/iron-autogrow-textarea/iron-autogrow-textarea.html">
+
+<link rel="import" href="../config/ha-config-section.html">
+
+<script src='../../build-temp/editor.js'></script>
+
+<dom-module id="ha-automation-editor">
+  <template>
+    <style include="ha-style">
+      .errors {
+        padding: 20px;
+        font-weight: bold;
+        color: var(--google-red-500);
+      }
+      .content {
+        padding-bottom: 20px;
+      }
+      paper-card {
+        display: block;
+      }
+      .triggers,
+      .script {
+        margin-top: -16px;
+      }
+      .triggers paper-card,
+      .script paper-card {
+        margin-top: 16px;
+      }
+      .add-card paper-button {
+        display: block;
+        text-align: center;
+      }
+      .card-menu {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 1;
+        color: var(--primary-text-color);
+      }
+      .card-menu paper-item {
+        cursor: pointer;
+      }
+      span[slot=introduction] a {
+        color: var(--primary-color);
+      }
+      paper-fab {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 1;
+        margin-bottom: -80px;
+        transition: margin-bottom .3s;
+      }
+
+      paper-fab[is-wide] {
+        bottom: 24px;
+        right: 24px;
+      }
+
+      paper-fab[dirty] {
+        margin-bottom: 0;
+      }
+    </style>
+
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <paper-icon-button
+            icon='mdi:arrow-left'
+            on-tap='backTapped'
+          ></paper-icon-button>
+          <div main-title>Automation [[name]]</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class='content'>
+        <template is='dom-if' if='[[errors]]'>
+          <div class='errors'>[[errors]]</div>
+        </template>
+        <div id='root'></div>
+        <paper-fab
+          is-wide$='[[isWide]]'
+          dirty$='[[dirty]]'
+          icon='mdi:content-save'
+          title='Save'
+          on-tap='saveAutomation'
+        ></paper-fab>
+      </div>
+    </app-header-layout>
+
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-automation-editor',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    errors: {
+      type: Object,
+      value: null,
+    },
+
+    dirty: {
+      type: Boolean,
+      value: false,
+    },
+
+    config: {
+      type: Object,
+      value: null,
+    },
+
+    automation: {
+      type: Object,
+      observer: 'automationChanged',
+    },
+
+    creatingNew: {
+      type: Boolean,
+      observer: 'creatingNewChanged',
+    },
+
+    name: {
+      type: String,
+      computed: 'computeName(automation)'
+    },
+
+    isWide: {
+      type: Boolean,
+      observer: 'isWideChanged',
+    },
+  },
+
+  created: function () {
+    this.configChanged = this.configChanged.bind(this);
+  },
+
+  detached: function () {
+    if (this._rendered) {
+      window.unmountPreact(this._rendered);
+    }
+  },
+
+  configChanged: function (config) {
+    this.config = config;
+    this.errors = null;
+    this.dirty = true;
+    this._updateComponent(config);
+  },
+
+  automationChanged: function (newVal, oldVal) {
+    if (!newVal) return;
+    if (!this.hass) {
+      setTimeout(this.automationChanged.bind(this, newVal, oldVal), 0);
+      return;
+    }
+    if (oldVal && oldVal.attributes.id === newVal.attributes.id) {
+      return;
+    }
+    this.hass.callApi('get', 'config/automation/config/' + newVal.attributes.id)
+      .then(function (config) {
+        // Normalize data: ensure trigger, action and condition are lists
+        // Happens when people copy paste their automations into the config
+        ['trigger', 'condition', 'action'].forEach(function (key) {
+          var value = config[key];
+          if (value && !Array.isArray(value)) {
+            config[key] = [value];
+          }
+        });
+        this.dirty = false;
+        this.config = config;
+        this._updateComponent();
+      }.bind(this));
+  },
+
+  creatingNewChanged: function (newVal) {
+    if (!newVal) {
+      return;
+    }
+    this.dirty = false;
+    this.config = {
+      alias: 'New Automation',
+      trigger: [
+        { platform: 'state' },
+      ],
+      action: [
+        { service: '' },
+      ],
+    };
+    this._updateComponent();
+  },
+
+  isWideChanged: function () {
+    if (this.config === null) return;
+    this._updateComponent();
+  },
+
+  backTapped: function () {
+    if (this.dirty &&
+        // eslint-disable-next-line
+        !confirm('You have unsaved changes. Are you sure you want to leave?')) {
+      return;
+    }
+    this.fire('hass-automation-picked', { id: null });
+  },
+
+  _updateComponent: function () {
+    this._rendered = window.AutomationEditor(
+      this.$.root, {
+        automation: this.config,
+        onChange: this.configChanged,
+        isWide: this.isWide,
+      }, this._rendered);
+  },
+
+  saveAutomation: function () {
+    var id = this.creatingNew ? '' + Date.now() : this.automation.attributes.id;
+    this.hass.callApi(
+      'post', 'config/automation/config/' + id, this.config).then(function () {
+        this.dirty = false;
+
+        if (this.creatingNew) {
+          this.fire('hass-automation-picked', {
+            id: id,
+          });
+        }
+      }.bind(this), function (errors) {
+        this.errors = errors.body.message;
+        throw errors;
+      }.bind(this));
+  },
+
+  computeName: function (automation) {
+    return automation && window.hassUtil.computeStateName(automation);
+  },
+});
+</script>

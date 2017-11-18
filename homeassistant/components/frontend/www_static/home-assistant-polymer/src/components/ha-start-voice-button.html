@@ -1,0 +1,39 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<dom-module id='ha-start-voice-button'>
+  <template>
+    <paper-icon-button
+      icon="mdi:microphone" hidden$='[[!canListen]]'
+      on-tap="handleListenClick"
+    ></paper-icon-button>
+
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-start-voice-button',
+
+  properties: {
+    hass: {
+      type: Object,
+      value: null,
+    },
+
+    canListen: {
+      type: Boolean,
+      computed: 'computeCanListen(hass)',
+    },
+  },
+
+  computeCanListen: function (hass) {
+    return ('webkitSpeechRecognition' in window &&
+            window.hassUtil.isComponentLoaded(hass, 'conversation'));
+  },
+
+  handleListenClick: function () {
+    this.fire('hass-start-voice');
+  },
+});
+</script>

@@ -1,0 +1,382 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel='import' href='../../bower_components/paper-slider/paper-slider.html'>
+<link rel='import' href='../../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+<link rel='import' href='../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
+<link rel='import' href='../../bower_components/paper-toggle-button/paper-toggle-button.html'>
+
+<link rel="import" href='../components/ha-climate-control.html'>
+
+<dom-module id='more-info-climate'>
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      :host {
+        color: var(--primary-text-color);
+        --paper-input-container-input: {
+          text-transform: capitalize;
+        }
+      }
+
+      .container-away_mode,
+      .container-aux_heat,
+      .container-temperature,
+      .container-humidity,
+      .container-operation_list,
+      .container-fan_list,
+      .container-swing_list {
+        display: none;
+      }
+
+      .has-away_mode .container-away_mode,
+      .has-aux_heat .container-aux_heat,
+      .has-temperature .container-temperature,
+      .has-humidity .container-humidity,
+      .has-operation_list .container-operation_list,
+      .has-fan_list .container-fan_list,
+      .has-swing_list .container-swing_list {
+        display: block;
+      }
+
+      .container-operation_list iron-icon,
+      .container-fan_list iron-icon,
+      .container-swing_list iron-icon {
+        margin: 22px 16px 0 0;
+      }
+
+      paper-dropdown-menu {
+        width: 100%;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+
+      paper-slider {
+        width: 100%;
+      }
+
+      .auto paper-slider {
+        --paper-slider-active-color: var(--paper-orange-400);
+        --paper-slider-secondary-color: var(--paper-blue-400);
+      }
+
+      .heat paper-slider {
+        --paper-slider-active-color: var(--paper-orange-400);
+        --paper-slider-secondary-color: var(--paper-green-400);
+      }
+
+      .cool paper-slider {
+        --paper-slider-active-color: var(--paper-green-400);
+        --paper-slider-secondary-color: var(--paper-blue-400);
+      }
+
+      .humidity {
+        --paper-slider-active-color: var(--paper-blue-400);
+        --paper-slider-secondary-color: var(--paper-blue-400);
+      }
+
+      .single-row {
+        padding: 8px 0;
+      }
+
+      .capitalize {
+        text-transform: capitalize;
+      }
+    </style>
+
+    <div class$='[[computeClassNames(stateObj)]]'>
+      <div class='container-temperature'>
+        <div class$='single-row, [[stateObj.attributes.operation_mode]]'>
+          <div hidden$='[[computeTargetTempHidden(stateObj)]]'>Target
+            Temperature</div>
+          <ha-climate-control
+             value='[[stateObj.attributes.temperature]]'
+             units='[[stateObj.attributes.unit_of_measurement]]'
+             step='[[computeTemperatureStepSize(stateObj)]]'
+             min='[[stateObj.attributes.min_temp]]'
+             max='[[stateObj.attributes.max_temp]]'
+             on-change='targetTemperatureChanged'
+             >
+          </ha-climate-control>
+        </div>
+      </div>
+
+      <div class='container-humidity'>
+        <div class='single-row'>
+          <div>Target Humidity</div>
+          <paper-slider
+            class='humidity'
+            min='[[stateObj.attributes.min_humidity]]'
+            max='[[stateObj.attributes.max_humidity]]'
+            secondary-progress='[[stateObj.attributes.max_humidity]]'
+            step='1' pin
+            value='[[stateObj.attributes.humidity]]'
+            on-change='targetHumiditySliderChanged'>
+          </paper-slider>
+        </div>
+      </div>
+
+      <div class='container-operation_list'>
+        <div class='controls'>
+          <paper-dropdown-menu label-float label='Operation'>
+            <paper-listbox slot="dropdown-content" selected="{{operationIndex}}">
+              <template is='dom-repeat'
+                        items='[[stateObj.attributes.operation_list]]'>
+                <paper-item class="capitalize">[[item]]</paper-item>
+              </template>
+            </paper-listbox>
+          </paper-dropdown-menu>
+        </div>
+      </div>
+
+      <div class='container-fan_list'>
+        <paper-dropdown-menu label-float label='Fan Mode'>
+          <paper-listbox slot="dropdown-content" selected="{{fanIndex}}">
+            <template is='dom-repeat'
+                      items='[[stateObj.attributes.fan_list]]'>
+              <paper-item>[[item]]</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
+
+      <div class='container-swing_list'>
+        <paper-dropdown-menu label-float label='Swing Mode'>
+          <paper-listbox slot="dropdown-content" selected="{{swingIndex}}">
+            <template is='dom-repeat'
+                      items='[[stateObj.attributes.swing_list]]'>
+              <paper-item>[[item]]</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
+
+      <div class='container-away_mode'>
+        <div class='center horizontal layout single-row'>
+          <div class='flex'>Away Mode</div>
+          <paper-toggle-button
+            checked='[[awayToggleChecked]]'
+            on-change='awayToggleChanged'>
+          </paper-toggle-button>
+        </div>
+      </div>
+
+      <div class='container-aux_heat'>
+        <div class='center horizontal layout single-row'>
+          <div class='flex'>Aux Heat</div>
+          <paper-toggle-button
+            checked='[[auxToggleChecked]]'
+            on-change='auxToggleChanged'>
+          </paper-toggle-button>
+        </div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-climate',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjChanged',
+    },
+
+    operationIndex: {
+      type: Number,
+      value: -1,
+      observer: 'handleOperationmodeChanged',
+    },
+
+    fanIndex: {
+      type: Number,
+      value: -1,
+      observer: 'handleFanmodeChanged',
+    },
+
+    swingIndex: {
+      type: Number,
+      value: -1,
+      observer: 'handleSwingmodeChanged',
+    },
+
+    awayToggleChecked: {
+      type: Boolean,
+    },
+
+    auxToggleChecked: {
+      type: Boolean,
+    },
+  },
+
+  stateObjChanged: function (newVal, oldVal) {
+    this.awayToggleChecked = newVal.attributes.away_mode === 'on';
+    this.auxToggleChecked = newVal.attributes.aux_heat === 'on';
+
+    if (newVal.attributes.fan_list) {
+      this.fanIndex = newVal.attributes.fan_list.indexOf(
+        newVal.attributes.fan_mode);
+    } else {
+      this.fanIndex = -1;
+    }
+
+    if (newVal.attributes.operation_list) {
+      this.operationIndex = newVal.attributes.operation_list.indexOf(
+        newVal.attributes.operation_mode);
+    } else {
+      this.operationIndex = -1;
+    }
+
+    if (newVal.attributes.swing_list) {
+      this.swingIndex = newVal.attributes.swing_list.indexOf(
+        newVal.attributes.swing_mode);
+    } else {
+      this.swingIndex = -1;
+    }
+
+    if (oldVal) {
+      this.async(function () {
+        this.fire('iron-resize');
+      }.bind(this), 500);
+    }
+  },
+
+  computeTemperatureStepSize: function (stateObj) {
+    if (stateObj.attributes.target_temp_step) {
+      return stateObj.attributes.target_temp_step;
+    } else if (stateObj.attributes.unit_of_measurement.indexOf('F') !== -1) {
+      return 1;
+    }
+    return 0.5;
+  },
+
+  computeTargetTempHidden: function (stateObj) {
+    return !stateObj.attributes.temperature &&
+        !stateObj.attributes.target_temp_low &&
+        !stateObj.attributes.target_temp_high;
+  },
+
+  computeHideTempRangeSlider: function (stateObj) {
+    return !stateObj.attributes.target_temp_low &&
+        !stateObj.attributes.target_temp_high;
+  },
+
+  computeHideTempSlider: function (stateObj) {
+    return !stateObj.attributes.temperature;
+  },
+
+  computeClassNames: function (stateObj) {
+    return 'more-info-climate ' + window.hassUtil.attributeClassNames(
+      stateObj, [
+        'away_mode', 'aux_heat', 'temperature', 'humidity', 'operation_list',
+        'fan_list', 'swing_list',
+      ]
+    );
+  },
+
+  targetTemperatureChanged: function (ev) {
+    var temperature = ev.target.value;
+
+    if (temperature === this.stateObj.attributes.temperature) return;
+
+    this.callServiceHelper('set_temperature', { temperature: temperature });
+  },
+
+  targetTemperatureRangeSliderChanged: function (ev) {
+    var targetTempLow = ev.currentTarget.valueMin;
+    var targetTempHigh = ev.currentTarget.valueMax;
+
+    if (targetTempLow === this.stateObj.attributes.target_temp_low &&
+        targetTempHigh === this.stateObj.attributes.target_temp_high) return;
+    this.callServiceHelper(
+      'set_temperature', {
+        target_temp_low: targetTempLow,
+        target_temp_high: targetTempHigh,
+      }
+    );
+  },
+
+  targetHumiditySliderChanged: function (ev) {
+    var humidity = ev.target.value;
+
+    if (humidity === this.stateObj.attributes.humidity) return;
+
+    this.callServiceHelper('set_humidity', { humidity: humidity });
+  },
+
+  awayToggleChanged: function (ev) {
+    var oldVal = this.stateObj.attributes.away_mode === 'on';
+    var newVal = ev.target.checked;
+
+    if (oldVal === newVal) return;
+
+    this.callServiceHelper('set_away_mode', { away_mode: newVal });
+  },
+
+  auxToggleChanged: function (ev) {
+    var oldVal = this.stateObj.attributes.aux_heat === 'on';
+    var newVal = ev.target.checked;
+
+    if (oldVal === newVal) return;
+
+    this.callServiceHelper('set_aux_heat', { aux_heat: newVal });
+  },
+
+  handleFanmodeChanged: function (fanIndex) {
+    var fanInput;
+    // Selected Option will transition to '' before transitioning to new value
+    if (fanIndex === '' || fanIndex === -1) return;
+
+    fanInput = this.stateObj.attributes.fan_list[fanIndex];
+    if (fanInput === this.stateObj.attributes.fan_mode) return;
+
+    this.callServiceHelper('set_fan_mode', { fan_mode: fanInput });
+  },
+
+  handleOperationmodeChanged: function (operationIndex) {
+    var operationInput;
+    // Selected Option will transition to '' before transitioning to new value
+    if (operationIndex === '' || operationIndex === -1) return;
+
+    operationInput = this.stateObj.attributes.operation_list[operationIndex];
+    if (operationInput === this.stateObj.attributes.operation_mode) return;
+
+    this.callServiceHelper('set_operation_mode', { operation_mode: operationInput });
+  },
+
+  handleSwingmodeChanged: function (swingIndex) {
+    var swingInput;
+    // Selected Option will transition to '' before transitioning to new value
+    if (swingIndex === '' || swingIndex === -1) return;
+
+    swingInput = this.stateObj.attributes.swing_list[swingIndex];
+    if (swingInput === this.stateObj.attributes.swing_mode) return;
+
+    this.callServiceHelper('set_swing_mode', { swing_mode: swingInput });
+  },
+
+  callServiceHelper: function (service, data) {
+    // We call stateChanged after a successful call to re-sync the inputs
+    // with the state. It will be out of sync if our service call did not
+    // result in the entity to be turned on. Since the state is not changing,
+    // the resync is not called automatic.
+    /* eslint-disable no-param-reassign */
+    data.entity_id = this.stateObj.entity_id;
+    /* eslint-enable no-param-reassign */
+    this.hass.callService('climate', service, data)
+      .then(function () {
+        this.stateObjChanged(this.stateObj);
+      }.bind(this));
+  },
+});
+</script>

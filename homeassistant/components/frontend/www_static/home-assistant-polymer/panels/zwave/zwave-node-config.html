@@ -1,0 +1,312 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+<link rel='import' href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel='import' href="../../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="../../src/components/buttons/ha-call-service-button.html">
+
+<dom-module id='zwave-node-config'>
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        margin-top: 24px;
+      }
+
+      paper-card {
+        display: block;
+        margin: 0 auto;
+        max-width: 600px;
+      }
+
+      .device-picker {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-center);
+        padding-left: 24px;
+        padding-right: 24px;
+        padding-bottom: 24px;
+        }
+
+      .help-text {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+    </style>
+    <div class='content'>
+      <paper-card heading='Node config options'>
+        <template is='dom-if' if='[[wakeupNode]]'>
+          <div class='card-actions'>
+            <paper-input
+              float-label="Wakeup Interval"
+              type=number
+              value={{wakeupInput}}
+              placeholder=[[computeGetWakeupValue(selectedNode)]]>
+               <div suffix>seconds</div>
+            </paper-input>
+            <ha-call-service-button
+              hass='[[hass]]'
+              domain='zwave'
+              service='set_wakeup'
+              service-data='[[computeWakeupServiceData(wakeupInput)]]'
+            >Set Wakeup</ha-call-service-button>
+          </div>
+        </template>
+        <div class='device-picker'>
+        <paper-dropdown-menu label="Config parameter" class='flex'>
+          <paper-listbox
+            slot="dropdown-content"
+            selected='{{selectedConfigParameter}}'>
+            <template is='dom-repeat' items='[[config]]' as='state'>
+              <paper-item>[[computeSelectCaptionConfigParameter(state)]]</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+        </div>
+        <template is='dom-if' if="[[isConfigParameterSelected(selectedConfigParameter, 'List')]]">
+          <div class='device-picker'>
+            <paper-dropdown-menu label="Config value" class='flex' placeholder='{{loadedConfigValue}}'>
+              <paper-listbox
+                slot="dropdown-content"
+                selected='{{selectedConfigValue}}'>
+                <template is='dom-repeat' items='[[selectedConfigParameterValues]]' as='state'>
+                  <paper-item>[[state]]</paper-item>
+                </template>
+              </paper-listbox>
+            </paper-dropdown-menu>
+          </div>
+        </template>
+
+        <template is='dom-if' if="[[isConfigParameterSelected(selectedConfigParameter, 'Byte Short Int')]]">
+          <div class='card-actions'>
+            <paper-input
+              label='{{selectedConfigParameterNumValues}}'
+              type=number
+              value='{{selectedConfigValue}}'
+              max='{{configParameterMax}}'
+              min='{{configParameterMin}}'>
+            </paper-input>
+          </div>
+        </template>
+        <template is='dom-if' if="[[isConfigParameterSelected(selectedConfigParameter, 'Bool Button')]]">
+          <div class='device-picker'>
+            <paper-dropdown-menu label="Config value" class='flex' placeholder='{{loadedConfigValue}}'>
+              <paper-listbox
+                slot="dropdown-content"
+                selected='{{selectedConfigValue}}'>
+                <template is='dom-repeat' items='[[selectedConfigParameterValues]]' as='state'>
+                  <paper-item>[[state]]</paper-item>
+                </template>
+              </paper-listbox>
+            </paper-dropdown-menu>
+          </div>
+        </template>
+        <div class='help-text'>
+          <span>[[configValueHelpText]]</span>
+        </div>
+        <template is='dom-if' if="[[isConfigParameterSelected(selectedConfigParameter, 'Bool Button Byte Short Int List')]]">
+          <div class='card-actions'>
+            <ha-call-service-button
+              hass='[[hass]]'
+              domain='zwave'
+              service='set_config_parameter'
+              service-data=[[computeSetConfigParameterServiceData(selectedConfigValue)]]
+            >Set Config Parameter</ha-call-service-button>
+          </div>
+        </template>
+      </paper-card>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'zwave-node-config',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+      observer: 'nodesChanged'
+    },
+
+    selectedNode: {
+      type: Number,
+      value: -1,
+      observer: 'nodesChanged'
+    },
+
+    config: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedConfigParameter: {
+      type: Number,
+      value: -1,
+      observer: 'selectedConfigParameterChanged'
+    },
+
+    configParameterMax: {
+      type: Number,
+      value: -1
+    },
+
+    configParameterMin: {
+      type: Number,
+      value: -1
+    },
+
+    configValueHelpText: {
+      type: String,
+      value: '',
+      computed: 'computeConfigValueHelp(selectedConfigParameter)'
+    },
+
+    selectedConfigParameterType: {
+      type: String,
+      value: ''
+    },
+
+    selectedConfigValue: {
+      type: Number,
+      value: -1,
+      observer: 'computeSetConfigParameterServiceData'
+    },
+
+    selectedConfigParameterValues: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedConfigParameterNumValues: {
+      type: String,
+      value: ''
+    },
+
+    loadedConfigValue: {
+      type: Number,
+      value: -1
+    },
+
+    wakeupInput: {
+      type: Number,
+    },
+
+    wakeupNode: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshConfig(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  nodesChanged: function () {
+    if (!this.nodes) return;
+    this.wakeupNode = (this.nodes[this.selectedNode].attributes.wake_up_interval === 0 ||
+      this.nodes[this.selectedNode].attributes.wake_up_interval);
+    if (this.wakeupNode) {
+      if (this.nodes[this.selectedNode].attributes.wake_up_interval === 0) this.wakeupInput = '';
+      else this.wakeupInput = this.nodes[this.selectedNode].attributes.wake_up_interval;
+    }
+  },
+
+  computeGetWakeupValue: function (selectedNode) {
+    if (this.selectedNode === -1 ||
+      !this.nodes[selectedNode].attributes.wake_up_interval) return 'unknown';
+    return (this.nodes[selectedNode].attributes.wake_up_interval);
+  },
+
+  computeWakeupServiceData: function (wakeupInput) {
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      value: wakeupInput };
+  },
+
+  computeConfigValueHelp: function (selectedConfigParameter) {
+    if (selectedConfigParameter === -1) return '';
+    var helpText = this.config[selectedConfigParameter].value.help;
+    if (!helpText) return ['No helptext available'];
+    return helpText;
+  },
+
+  computeSetConfigParameterServiceData: function (selectedConfigValue) {
+    if (this.selectedNode === -1 || this.selectedConfigParameter === -1) return -1;
+    var valueData = null;
+    if (('Short Byte Int').includes(this.selectedConfigParameterType)) {
+      valueData = parseInt(selectedConfigValue, 10);
+    } if (('Bool Button').includes(this.selectedConfigParameterType)) {
+      valueData = this.selectedConfigParameterValues[selectedConfigValue];
+    } if (this.selectedConfigParameterType === 'List') {
+      valueData = this.selectedConfigParameterValues[selectedConfigValue];
+    }
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      parameter: this.config[this.selectedConfigParameter].key,
+      value: valueData };
+  },
+
+  selectedConfigParameterChanged: function (selectedConfigParameter) {
+    if (selectedConfigParameter === -1) return;
+    this.selectedConfigValue = -1;
+    this.loadedConfigValue = -1;
+    this.selectedConfigParameterValues = [];
+    this.selectedConfigParameterType = this.config[selectedConfigParameter].value.type;
+    this.configParameterMax = this.config[selectedConfigParameter].value.max;
+    this.configParameterMin = this.config[selectedConfigParameter].value.min;
+    this.loadedConfigValue = this.config[selectedConfigParameter].value.data;
+    this.configValueHelpText = this.config[selectedConfigParameter].value.help;
+    if (('Short Byte Int').includes(this.selectedConfigParameterType)) {
+      this.selectedConfigParameterNumValues = this.config[selectedConfigParameter].value.data_items;
+      this.selectedConfigValue = this.loadedConfigValue;
+    }
+    if (('Bool Button').includes(this.selectedConfigParameterType)) {
+      this.selectedConfigParameterValues = ['True', 'False'];
+      if (this.config[selectedConfigParameter].value.data) {
+        this.loadedConfigValue = 'True';
+      } else this.loadedConfigValue = 'False';
+    }
+    if (('List').includes(this.selectedConfigParameterType)) {
+      this.selectedConfigParameterValues = this.config[selectedConfigParameter].value.data_items;
+    }
+  },
+
+  isConfigParameterSelected: function (selectedConfigParameter, type) {
+    if (selectedConfigParameter === -1) return false;
+    if (this.config[selectedConfigParameter].value.type === type) return true;
+    if (type.includes(this.config[selectedConfigParameter].value.type)) return true;
+    return false;
+  },
+
+  computeSelectCaptionConfigParameter: function (stateObj) {
+    return (stateObj.key + ': ' + stateObj.value.label);
+  },
+
+  refreshConfig: function (selectedNode) {
+    var configData = [];
+    this.hass.callApi('GET', 'zwave/config/' + this.nodes[selectedNode].attributes.node_id).then(function (config) {
+      Object.entries(config).forEach(([key, value]) => {
+        configData.push({ key, value });
+      });
+      this.config = configData;
+      this.selectedConfigParameterChanged(this.selectedConfigParameter);
+    }.bind(this));
+  },
+});
+</script>

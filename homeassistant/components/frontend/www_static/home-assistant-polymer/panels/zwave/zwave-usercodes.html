@@ -1,0 +1,171 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+<link rel='import' href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel='import' href="../../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="../../src/components/buttons/ha-call-service-button.html">
+
+<dom-module id='zwave-usercodes'>
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        margin-top: 24px;
+      }
+
+      paper-card {
+        display: block;
+        margin: 0 auto;
+        max-width: 600px;
+      }
+
+      .device-picker {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-center);
+        padding-left: 24px;
+        padding-right: 24px;
+        padding-bottom: 24px;
+        }
+    </style>
+      <div class='content'>
+        <paper-card heading='Node user codes'>
+          <div class='device-picker'>
+          <paper-dropdown-menu label="Code slot" class='flex'>
+            <paper-listbox
+              slot="dropdown-content"
+              selected='{{selectedUserCode}}'>
+              <template is='dom-repeat' items='[[userCodes]]' as='state'>
+                <paper-item>[[computeSelectCaptionUserCodes(state)]]</paper-item>
+              </template>
+            </paper-listbox>
+          </paper-dropdown-menu>
+          </div>
+
+          <template is='dom-if' if="[[isUserCodeSelected(selectedUserCode)]]">
+            <div class='card-actions'>
+              <paper-input
+                label='User code'
+                type=number
+                value='{{selectedUserCodeValue}}'
+                maxlength='{{userCodeMaxLen}}'
+                min='0'>
+              </paper-input>
+            </div>
+            <div class='card-actions'>
+              <ha-call-service-button
+                hass='[[hass]]'
+                domain='lock'
+                service='set_usercode'
+                service-data='[[computeUserCodeServiceData(selectedUserCodeValue, "Add")]]'
+              >Set Usercode</ha-call-service-button>
+              <ha-call-service-button
+                hass='[[hass]]'
+                domain='lock'
+                service='clear_usercode'
+                service-data='[[computeUserCodeServiceData(selectedUserCode, "Delete")]]'
+              >Delete Usercode</ha-call-service-button>
+            </div>
+          </template>
+        </paper-card>
+      </div>
+    </template>
+</dom-module>
+<script>
+
+Polymer({
+  is: 'zwave-usercodes',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+    },
+
+    selectedNode: {
+      type: Number,
+    },
+
+    userCodes: {
+      type: Object,
+    },
+
+    userCodeMaxLen: {
+      type: Number,
+      value: 4
+    },
+
+    selectedUserCode: {
+      type: Number,
+      value: -1,
+      observer: 'selectedUserCodeChanged'
+    },
+
+    selectedUserCodeValue: {
+      type: Number,
+      value: -1
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshUserCodes(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  isUserCodeSelected: function (selectedUserCode) {
+    if (selectedUserCode === -1) return false;
+    return true;
+  },
+
+  computeSelectCaptionUserCodes: function (stateObj) {
+    return (stateObj.key + ': ' + stateObj.value.label);
+  },
+
+  selectedUserCodeChanged: function (selectedUserCode) {
+    if (this.selectedUserCode === -1 || selectedUserCode === -1) return;
+    var value = (parseInt((this.userCodes[selectedUserCode].value.code).trim()));
+    this.userCodeMaxLen = (this.userCodes[selectedUserCode].value.length);
+    if (isNaN(value)) this.selectedUserCodeValue = '';
+    else this.selectedUserCodeValue = value;
+  },
+
+  computeUserCodeServiceData: function (selectedUserCodeValue, type) {
+    if (this.selectedNode === -1 || !selectedUserCodeValue) return -1;
+    var serviceData = null;
+    var valueData = null;
+    if (type === 'Add') {
+      valueData = selectedUserCodeValue;
+      serviceData = { node_id: this.nodes[this.selectedNode].attributes.node_id,
+        code_slot: this.selectedUserCode,
+        usercode: valueData };
+    }
+    if (type === 'Delete') {
+      serviceData = { node_id: this.nodes[this.selectedNode].attributes.node_id,
+        code_slot: this.selectedUserCode };
+    }
+    return serviceData;
+  },
+
+  refreshUserCodes: function (selectedNode) {
+    this.selectedUserCodeValue = '';
+    var userCodes = [];
+    this.hass.callApi('GET', 'zwave/usercodes/' + this.nodes[selectedNode].attributes.node_id).then(function (usercodes) {
+      Object.entries(usercodes).forEach(([key, value]) => {
+        userCodes.push({ key, value });
+      });
+      this.userCodes = userCodes;
+      this.selectedUserCodeChanged(this.selectedUserCode);
+    }.bind(this));
+  },
+});
+</script>

@@ -1,0 +1,195 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../../bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../../../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../../../bower_components/paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../../../bower_components/polymer-sortablejs/polymer-sortablejs.html">
+
+<link rel="import" href="../../../src/components/entity/state-info.html">
+
+<link rel="import" href="../ha-form-style.html">
+
+<dom-module id="ha-form-group">
+  <template>
+    <style include="iron-flex ha-style ha-form-style">
+      .entities-header {
+        @apply(--layout-horizontal);
+        @apply(--layout-justified);
+        @apply(--layout-center);
+        width: 100%;
+      }
+
+      .drag-handle {
+        cursor: -webkit-grab;
+        cursor: -moz-grab;
+        cursor: grab;
+      }
+
+      .sortable-chosen .drag-handle, .sortable-ghost {
+        cursor: -webkit-grabbing;
+        cursor: -moz-grabbing;
+        cursor: grabbing;
+      }
+
+      sortable-js {
+        width: 100%;
+      }
+
+      .entity-row {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        padding: 4px 0;
+        border-top: 1px solid rgba(0, 0, 0, .12);
+      }
+
+      .entity-row:first-child {
+        border-top: 1px solid rgba(0, 0, 0, 0);
+      }
+
+      .entity-row.sortable-chosen {
+        background-color: var(--paper-grey-200);
+        /* invisible border so we don't change height. */
+        border-top: 1px solid rgba(0, 0, 0, 0);
+      }
+
+      .entity-row .unknown {
+        padding-left: 56px;
+      }
+
+      .entity-row paper-icon-button {
+        visibility: hidden;
+      }
+
+      .entity-row:not(.sortable-chosen):hover paper-icon-button {
+        visibility: visible;
+      }
+    </style>
+    <div class='form-group'>
+      <paper-input
+        class='form-control flex'
+        label='Name'
+        value='{{entityName}}'>
+      </paper-input>
+    </div>
+
+    <div class='form-group'>
+      <label>Type</label>
+      <paper-radio-group
+        selected='{{entityType}}'
+        class='form-control'
+      >
+        <paper-radio-button name='group'>Group</paper-radio-button>
+        <paper-radio-button name='view'>View</paper-radio-button>
+      </paper-radio-group>
+    </div>
+
+    <div class='form-group vertical entities'>
+      <div class='entities-header'>
+        <label>Entities (drag to reorder):</label>
+        <!-- To be done
+        <paper-menu-button
+          dynamic-align
+          class='form-control'
+        >
+          <paper-icon-button
+            icon='mdi:plus'
+            slot="dropdown-trigger"
+          ></paper-icon-button>
+          <paper-listbox
+            slot="dropdown-content"
+            selected='{{entityPollingIntensity}}'
+          >
+            <paper-item>Do not poll (0)</paper-item>
+            <paper-item>Poll every time (1)</paper-item>
+            <paper-item>Poll every other time (2)</paper-item>
+          </paper-listbox>
+        </paper-menu-button>
+        -->
+      </div>
+
+      <sortable-js
+        class='form-control'
+        on-choose='handleRowChosen'
+        handle='.drag-handle'
+      >
+        <template is="dom-repeat" items='{{entityChildren}}'>
+          <div class='entity-row'>
+            <iron-icon icon='mdi:drag-vertical' class='drag-handle'></iron-icon>
+            <template is='dom-if' if='[[!item.state]]'>
+              <div class='unknown flex'>Unknown entity [[item.entity_id]]</div>
+            </template>
+            <template is='dom-if' if='[[item.state]]' restamp>
+              <state-info state-obj='[[item]]' class='flex'></state-info>
+            </template>
+            <!-- <paper-icon-button icon='mdi:delete'></paper-icon-button> -->
+          </div>
+        </template>
+      </sortable-js>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-form-group',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    entity: {
+      type: Object,
+    },
+
+    entityName: {
+      type: String,
+      value: '',
+    },
+
+    entityType: {
+      type: String,
+    },
+
+    entityChildren: {
+      type: Object,
+    },
+  },
+
+  handleRowChosen: function (ev) {
+    // Polymer element and sortablejs both fire the same events, filter one out
+    if (!ev.detail || !window.navigator.vibrate) return;
+
+    // Tell the user that moving his finger now will start dragging.
+    window.navigator.vibrate(50);
+  },
+
+  loadEntity: function (entity) {
+    var states = this.hass.states;
+    this.entity = entity;
+    this.entityName = entity.attributes.friendly_name || '';
+    this.entityType = entity.attributes.view ? 'view' : 'group';
+    this.entityChildren = entity.attributes.entity_id
+      .map(function (ent) {
+        return states[ent] || { state: false, entity_id: ent, attributes: {} };
+      });
+    return Promise.resolve();
+  },
+
+  saveEntity: function () {
+    var data = {
+      name: this.entityName,
+      view: this.entityType === 'view',
+      entities: this.entityChildren.map(function (ent) { return ent.entity_id; }),
+    };
+
+    var objectId = this.entity.entity_id.split('.')[1];
+    return this.hass.callApi('POST', 'config/group/config/' + objectId, data);
+  },
+
+  // deleteEntity: function () {
+  //   return new Promise.resolve();
+  // }
+});
+</script>

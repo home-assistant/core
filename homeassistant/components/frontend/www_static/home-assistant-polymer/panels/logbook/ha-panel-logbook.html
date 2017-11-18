@@ -1,0 +1,142 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../bower_components/vaadin-date-picker/vaadin-date-picker.html">
+
+<link rel="import" href="../../src/components/ha-menu-button.html">
+<link rel="import" href="../../src/resources/ha-style.html">
+
+<link rel="import" href="./ha-logbook.html">
+<link rel="import" href="./ha-logbook-data.html">
+
+<dom-module id="ha-panel-logbook">
+  <template>
+    <style include="ha-style">
+    .content {
+      padding: 0 16px 16px;
+    }
+
+    paper-spinner {
+      position: absolute;
+      top: 15px;
+      left: 186px;
+    }
+
+    vaadin-date-picker {
+      --vaadin-date-picker-clear-icon: {
+        display: none;
+      }
+      margin-bottom: 24px;
+      max-width: 200px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+    </style>
+
+    <ha-logbook-data
+      hass='[[hass]]'
+      is-loading='{{isLoading}}'
+      entries='{{entries}}'
+      filter-date='[[_computeFilterDate(_currentDate)]]'
+    ></ha-logbook-data>
+
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>Logbook</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class="content">
+        <paper-spinner
+          active='[[isLoading]]'
+          hidden$='[[!isLoading]]'
+          alt='Loading logbook entries'
+        ></paper-spinner>
+
+        <vaadin-date-picker
+          id='picker'
+          value='{{_currentDate}}'
+          label='Showing entries for'
+          disabled='[[isLoading]]'
+        ></vaadin-date-picker>
+
+        <ha-logbook hass='[[hass]]' entries="[[entries]]" hidden$='[[isLoading]]'></ha-logbook>
+      </div>
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-logbook',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+      value: false,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    // ISO8601 formatted date string
+    _currentDate: {
+      type: String,
+      value: function () {
+        var value = new Date();
+        var today = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+        return today.toISOString().split('T')[0];
+      },
+    },
+
+    isLoading: {
+      type: Boolean,
+    },
+
+    entries: {
+      type: Array,
+    },
+
+    datePicker: {
+      type: Object,
+    },
+  },
+
+  attached: function () {
+    // We are unable to parse date because we use intl api to render date
+    // So we just return last known date.
+    var lastFormatDate = new Date();
+    this.$.picker.set('i18n.parseDate', function () {
+      return lastFormatDate;
+    });
+    this.$.picker.set('i18n.formatDate', function (date) {
+      lastFormatDate = date;
+      return window.hassUtil.formatDate(date);
+    });
+  },
+
+  _computeFilterDate: function (_currentDate) {
+    if (!_currentDate) return undefined;
+    var parts = _currentDate.split('-');
+    parts[1] = parseInt(parts[1]) - 1;
+    return new Date(parts[0], parts[1], parts[2]).toISOString();
+  },
+});
+</script>

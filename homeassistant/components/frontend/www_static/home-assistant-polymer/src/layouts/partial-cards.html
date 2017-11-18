@@ -1,0 +1,343 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tab.html">
+
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-scroll-effects/effects/waterfall.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../components/ha-menu-button.html">
+<link rel="import" href="../components/ha-start-voice-button.html">
+<link rel="import" href="../components/ha-cards.html">
+
+<dom-module id="partial-cards">
+  <template>
+    <style include="iron-flex iron-positioning ha-style">
+      :host {
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+      }
+
+      app-header-layout {
+        background-color: #E5E5E5;
+      }
+
+      paper-tabs {
+        margin-left: 12px;
+        --paper-tabs-selection-bar-color: #FFF;
+        text-transform: uppercase;
+      }
+    </style>
+
+    <app-header-layout has-scrolling-region id='layout'>
+      <app-header effects="waterfall" condenses fixed slot="header">
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>[[computeTitle(views, locationName)]]</div>
+          <ha-start-voice-button hass='[[hass]]'></ha-start-voice-button>
+        </app-toolbar>
+
+        <div sticky hidden$='[[!views.length]]'>
+          <paper-tabs
+            scrollable
+            selected='[[currentView]]'
+            attr-for-selected='data-entity'
+            on-iron-select='handleViewSelected'
+          >
+            <paper-tab
+              data-entity=''
+              on-tap='scrollToTop'
+            >
+	      <template is='dom-if' if='[[!defaultView]]'>
+	        [[locationName]]
+	      </template>
+	      <template is='dom-if' if='[[defaultView]]'>
+	        <template is='dom-if' if='[[defaultView.attributes.icon]]'>
+		  <iron-icon title$='[[computeStateName(defaultView)]]' icon='[[defaultView.attributes.icon]]'></iron-icon>
+		</template>
+		<template is='dom-if' if='[[!defaultView.attributes.icon]]'>
+		  [[computeStateName(defaultView)]]
+		</template>
+              </template>
+	    </paper-tab>
+            <template is='dom-repeat' items='[[views]]'>
+              <paper-tab
+                data-entity$='[[item.entity_id]]'
+                on-tap='scrollToTop'
+              >
+                <template is='dom-if' if='[[item.attributes.icon]]'>
+                  <iron-icon title$='[[computeStateName(item)]]' icon='[[item.attributes.icon]]'></iron-icon>
+                </template>
+                <template is='dom-if' if='[[!item.attributes.icon]]'>
+                  [[computeStateName(item)]]
+                </template>
+              </paper-tab>
+            </template>
+          </paper-tabs>
+        </div>
+      </app-header>
+
+      <iron-pages
+        attr-for-selected='data-view'
+        selected='[[currentView]]'
+        selected-attribute='view-visible'
+      >
+        <ha-cards
+          data-view=''
+          show-introduction='[[computeShowIntroduction(currentView, introductionLoaded, viewStates)]]'
+          states='[[viewStates]]'
+          columns='[[_columns]]'
+          hass='[[hass]]'
+          panel-visible='[[panelVisible]]'
+        ></ha-cards>
+
+        <template is='dom-repeat' items='[[views]]'>
+          <ha-cards
+            data-view$='[[item.entity_id]]'
+            show-introduction='[[computeShowIntroduction(currentView, introductionLoaded, viewStates)]]'
+            states='[[viewStates]]'
+            columns='[[_columns]]'
+            hass='[[hass]]'
+            panel-visible='[[panelVisible]]'
+          ></ha-cards>
+        </template>
+
+      </iron-pages>
+    </app-header-layout>
+  </template>
+
+</dom-module>
+
+<script>
+Polymer({
+  DEFAULT_VIEW_ENTITY_ID: 'group.default_view',
+  ALWAYS_SHOW_DOMAIN: ['persistent_notification', 'configurator'],
+
+  is: 'partial-cards',
+
+  properties: {
+    hass: {
+      type: Object,
+      value: null,
+      observer: 'hassChanged'
+    },
+
+    narrow: {
+      type: Boolean,
+      value: false,
+    },
+
+    showMenu: {
+      type: Boolean,
+      observer: 'handleWindowChange',
+    },
+
+    panelVisible: {
+      type: Boolean,
+      value: false,
+    },
+
+    _columns: {
+      type: Number,
+      value: 1,
+    },
+
+    introductionLoaded: {
+      type: Boolean,
+      computed: 'computeIntroductionLoaded(hass)',
+    },
+
+    locationName: {
+      type: String,
+      value: '',
+      computed: 'computeLocationName(hass)',
+    },
+
+    currentView: {
+      type: String,
+    },
+
+    views: {
+      type: Array,
+    },
+
+    defaultView: {
+      type: Object,
+    },
+
+    viewStates: {
+      type: Object,
+      computed: 'computeViewStates(currentView, hass, defaultView)',
+    },
+  },
+
+  created: function () {
+    this.handleWindowChange = this.handleWindowChange.bind(this);
+    this.mqls = [300, 600, 900, 1200].map(function (width) {
+      var mql = window.matchMedia('(min-width: ' + width + 'px)');
+      mql.addListener(this.handleWindowChange);
+      return mql;
+    }.bind(this));
+  },
+
+  detached: function () {
+    this.mqls.forEach(function (mql) {
+      mql.removeListener(this.handleWindowChange);
+    });
+  },
+
+  handleWindowChange: function () {
+    var matchColumns = this.mqls.reduce(function (cols, mql) {
+      return cols + mql.matches;
+    }, 0);
+    // Do -1 column if the menu is docked and open
+    this._columns = Math.max(1, matchColumns - (!this.narrow && this.showMenu));
+  },
+
+  /**
+   * Scroll to a specific y coordinate.
+   *
+   * Copied from paper-scroll-header-panel.
+   *
+   * @method scroll
+   * @param {number} top The coordinate to scroll to, along the y-axis.
+   * @param {boolean} smooth true if the scroll position should be smoothly adjusted.
+   */
+  scrollToTop: function () {
+    // the scroll event will trigger _updateScrollState directly,
+    // However, _updateScrollState relies on the previous `scrollTop` to update the states.
+    // Calling _updateScrollState will ensure that the states are synced correctly.
+    var top = 0;
+    var scroller = this.$.layout.header.scrollTarget;
+    var easingFn = function easeOutQuad(t, b, c, d) {
+      /* eslint-disable no-param-reassign, space-infix-ops, no-mixed-operators */
+      t /= d;
+      return -c * t*(t-2) + b;
+      /* eslint-enable no-param-reassign, space-infix-ops, no-mixed-operators */
+    };
+    var animationId = Math.random();
+    var duration = 200;
+    var startTime = Date.now();
+    var currentScrollTop = scroller.scrollTop;
+    var deltaScrollTop = top - currentScrollTop;
+    this._currentAnimationId = animationId;
+    (function updateFrame() {
+      var now = Date.now();
+      var elapsedTime = now - startTime;
+      if (elapsedTime > duration) {
+        scroller.scrollTop = top;
+      } else if (this._currentAnimationId === animationId) {
+        scroller.scrollTop = easingFn(elapsedTime, currentScrollTop, deltaScrollTop, duration);
+        requestAnimationFrame(updateFrame.bind(this));
+      }
+    }).call(this);
+  },
+
+  handleViewSelected: function (ev) {
+    var view = ev.detail.item.getAttribute('data-entity') || null;
+    var current = this.currentView || null;
+    if (view !== current) {
+      this.fire('hass-navigate', { view: view });
+    }
+  },
+
+  computeTitle: function (views, locationName) {
+    return views && views.length > 0 ? 'Home Assistant' : locationName;
+  },
+
+  computeShowIntroduction: function (currentView, introductionLoaded, states) {
+    return currentView === '' && (introductionLoaded || states.size === 0);
+  },
+
+  computeStateName: function (stateObj) {
+    if (stateObj.entity_id === this.DEFAULT_VIEW_ENTITY_ID) {
+      if (stateObj.attributes.friendly_name &&
+          stateObj.attributes.friendly_name !== 'default_view') {
+        return stateObj.attributes.friendly_name;
+      }
+      return this.computeLocationName(this.hass);
+    }
+    return window.hassUtil.computeStateName(stateObj);
+  },
+
+  computeLocationName: function (hass) {
+    return window.hassUtil.computeLocationName(hass);
+  },
+
+  computeIntroductionLoaded: function (hass) {
+    return window.hassUtil.isComponentLoaded(hass, 'introduction');
+  },
+
+  hassChanged: function (hass) {
+    var newView = hass.currentView || '';
+
+    if (newView !== this.currentView) {
+      this.currentView = newView;
+    }
+
+    var views = window.HAWS.extractViews(hass.states);
+    // If default view present, it's in first index.
+    if (views.length > 0 && views[0].entity_id === this.DEFAULT_VIEW_ENTITY_ID) {
+      this.defaultView = views.shift();
+    } else {
+      this.defaultView = null;
+    }
+
+    this.views = views;
+  },
+
+  /*
+    Compute the states to show for current view.
+
+    Will make sure we always show entities from ALWAYS_SHOW_DOMAINS domains.
+  */
+  computeViewStates: function (currentView, hass, defaultView) {
+    var i;
+    var entityId;
+    var state;
+    var states;
+    var entityIds = Object.keys(hass.states);
+
+    // If we base off all entities, only have to filter out hidden
+    if (!currentView && !defaultView) {
+      states = {};
+      for (i = 0; i < entityIds.length; i++) {
+        entityId = entityIds[i];
+        state = hass.states[entityId];
+
+        // We can filter out hidden and domain at the same time.
+        if (!state.attributes.hidden) {
+          states[entityId] = state;
+        }
+      }
+      return states;
+    }
+
+    if (currentView) {
+      states = window.HAWS.getViewEntities(hass.states, hass.states[currentView]);
+    } else {
+      states = window.HAWS.getViewEntities(
+        hass.states, hass.states[this.DEFAULT_VIEW_ENTITY_ID]);
+    }
+
+    // Make sure certain domains are always shown.
+    for (i = 0; i < entityIds.length; i++) {
+      entityId = entityIds[i];
+      state = hass.states[entityId];
+
+      if (this.ALWAYS_SHOW_DOMAIN.indexOf(window.hassUtil.computeDomain(state)) !== -1) {
+        states[entityId] = state;
+      }
+    }
+
+    return states;
+  },
+});
+</script>

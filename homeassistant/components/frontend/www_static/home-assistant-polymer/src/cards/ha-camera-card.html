@@ -1,0 +1,123 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+
+<dom-module id='ha-camera-card'>
+  <template>
+    <style include="paper-material">
+      :host {
+        display: block;
+        position: relative;
+        font-size: 0px;
+        border-radius: 2px;
+        cursor: pointer;
+        min-height: 48px;
+        line-height: 0;
+      }
+      .camera-feed {
+        width: 100%;
+        height: auto;
+        border-radius: 2px;
+      }
+      .caption {
+        @apply(--paper-font-common-nowrap);
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+        border-bottom-left-radius: 2px;
+        border-bottom-right-radius: 2px;
+
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 16px;
+
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 16px;
+        color: white;
+      }
+    </style>
+
+    <img src='[[cameraFeedSrc]]' class='camera-feed' hidden$='[[!imageLoaded]]'
+      on-load='imageLoadSuccess' on-error='imageLoadFail' alt='[[computeStateName(stateObj)]]'>
+    <div class='caption'>
+      [[computeStateName(stateObj)]]
+      <template is='dom-if' if='[[!imageLoaded]]'>
+        (Error loading image)
+      </template>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-camera-card',
+  UPDATE_INTERVAL: 10000, // ms
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'updateCameraFeedSrc',
+    },
+
+    cameraFeedSrc: {
+      type: String,
+    },
+
+    imageLoaded: {
+      type: Boolean,
+      value: true,
+    },
+
+    /**
+     * The z-depth of the card, from 0-5.
+     */
+    elevation: {
+      type: Number,
+      value: 1,
+      reflectToAttribute: true,
+    },
+  },
+
+  listeners: {
+    tap: 'cardTapped',
+  },
+
+  attached: function () {
+    this.timer = setInterval(
+      function () {
+        this.updateCameraFeedSrc(this.stateObj);
+      }.bind(this),
+      this.UPDATE_INTERVAL);
+  },
+
+  detached: function () {
+    clearInterval(this.timer);
+  },
+
+  cardTapped: function () {
+    this.fire('hass-more-info', { entityId: this.stateObj.entity_id });
+  },
+
+  updateCameraFeedSrc: function (stateObj) {
+    const attr = stateObj.attributes;
+    const time = (new Date()).getTime();
+    this.cameraFeedSrc = attr.entity_picture + '&time=' + time;
+  },
+
+  imageLoadSuccess: function () {
+    this.imageLoaded = true;
+  },
+
+  imageLoadFail: function () {
+    this.imageLoaded = false;
+  },
+
+  computeStateName: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj);
+  },
+});
+</script>

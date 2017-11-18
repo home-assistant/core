@@ -1,0 +1,71 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../components/ha-relative-time.html">
+
+<dom-module id="more-info-sun">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+
+    <template is='dom-repeat' items='[[computeOrder(risingDate, settingDate)]]'>
+      <div class='data-entry layout justified horizontal'>
+        <div class='key'>
+          <span>[[itemCaption(item)]]</span>
+          <ha-relative-time datetime-obj="[[itemDate(item)]]"></ha-relative-time>
+        </div>
+        <div class='value'>[[itemValue(item)]]</div>
+      </div>
+    </template>
+      <div class='data-entry layout justified horizontal'>
+        <div class='key'>Elevation</div>
+        <div class='value'>[[stateObj.attributes.elevation]]</div>
+     </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-sun',
+
+  properties: {
+    stateObj: {
+      type: Object,
+    },
+
+    risingDate: {
+      type: Object,
+      computed: 'computeRising(stateObj)',
+    },
+
+    settingDate: {
+      type: Object,
+      computed: 'computeSetting(stateObj)',
+    },
+  },
+
+  computeRising: function (stateObj) {
+    return new Date(stateObj.attributes.next_rising);
+  },
+
+  computeSetting: function (stateObj) {
+    return new Date(stateObj.attributes.next_setting);
+  },
+
+  computeOrder: function (risingDate, settingDate) {
+    return risingDate > settingDate ? ['set', 'ris'] : ['ris', 'set'];
+  },
+
+  itemCaption: function (type) {
+    return type === 'ris' ? 'Rising ' : 'Setting ';
+  },
+
+  itemDate: function (type) {
+    return type === 'ris' ? this.risingDate : this.settingDate;
+  },
+
+  itemValue: function (type) {
+    return window.hassUtil.formatTime(this.itemDate(type));
+  },
+});
+</script>

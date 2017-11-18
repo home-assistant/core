@@ -1,0 +1,107 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="./hass-loading-screen.html">
+
+<dom-module id='partial-panel-resolver'>
+  <template>
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+
+    <template is='dom-if' if='[[!resolved]]'>
+      <hass-loading-screen
+        narrow='[[narrow]]'
+        show-menu='[[showMenu]]'
+      ></hass-loading-screen>
+    </template>
+
+    <span id='panel' hidden$='[[!resolved]]'></span>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'partial-panel-resolver',
+
+  properties: {
+    hass: {
+      type: Object,
+      observer: 'updateAttributes',
+    },
+
+    narrow: {
+      type: Boolean,
+      value: false,
+      observer: 'updateAttributes',
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+      observer: 'updateAttributes',
+    },
+
+    resolved: {
+      type: Boolean,
+      value: false,
+    },
+
+    errorLoading: {
+      type: Boolean,
+      value: false,
+    },
+
+    panel: {
+      type: Object,
+      computed: 'computeCurrentPanel(hass)',
+      observer: 'panelChanged',
+    },
+  },
+
+  computeCurrentPanel: function (hass) {
+    return hass.config.panels[hass.currentPanel];
+  },
+
+  panelChanged: function (panel) {
+    if (!panel) {
+      if (this.$.panel.lastChild) {
+        this.$.panel.removeChild(this.$.panel.lastChild);
+      }
+      return;
+    }
+
+    this.resolved = false;
+    this.errorLoading = false;
+
+    this.importHref(
+      panel.url,
+
+      function success() {
+        window.hassUtil.dynamicContentUpdater(
+          this.$.panel, 'ha-panel-' + panel.component_name, {
+            hass: this.hass,
+            narrow: this.narrow,
+            showMenu: this.showMenu,
+            panel: panel,
+          });
+        this.resolved = true;
+      }.bind(this),
+
+      function error() {
+        this.errorLoading = true;
+      }.bind(this),
+
+      true /* async */);
+  },
+
+  updateAttributes: function () {
+    var customEl = Polymer.dom(this.$.panel).lastChild;
+    if (!customEl) return;
+    customEl.hass = this.hass;
+    customEl.narrow = this.narrow;
+    customEl.showMenu = this.showMenu;
+  },
+});
+</script>

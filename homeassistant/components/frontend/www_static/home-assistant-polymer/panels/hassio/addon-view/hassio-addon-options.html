@@ -1,0 +1,108 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/iron-autogrow-textarea/iron-autogrow-textarea.html">
+
+<link rel="import" href="../../../src/components/buttons/ha-call-api-button.html">
+
+<dom-module id="hassio-addon-options">
+  <template>
+    <style include="ha-style">
+      :host {
+        display: block;
+      }
+      paper-card {
+        display: block;
+      }
+      .errors {
+        color: var(--google-red-500);
+        margin-bottom: 16px;
+      }
+      iron-autogrow-textarea {
+        width: 100%;
+      }
+    </style>
+    <paper-card heading='Options'>
+      <div class="card-content">
+        <template is='dom-if' if='[[errors]]'>
+          <div class='errors'>[[errors]]</div>
+        </template>
+        <iron-autogrow-textarea value="{{options}}"></iron-autogrow-textarea>
+      </div>
+      <div class="card-actions">
+        <paper-button
+          on-tap='saveTapped'
+          disabled='[[!optionsParsed]]'
+        >Save</paper-button>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addon-options',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    addon: {
+      type: String,
+    },
+
+    options: {
+      type: String,
+      value: '',
+    },
+
+    optionsParsed: {
+      type: Object,
+      computed: 'parseOptions(options)',
+    },
+
+    errors: {
+      type: String,
+      value: null,
+    },
+
+    addonState: {
+      type: Object,
+      value: null,
+      observer: 'addonStateChanged',
+    },
+  },
+
+  addonStateChanged: function (addonState) {
+    this.options = addonState ? JSON.stringify(addonState.options, null, 2) : '';
+  },
+
+  parseOptions: function (options) {
+    try {
+      return JSON.parse(options);
+    } catch (err) {
+      return null;
+    }
+  },
+
+  saveTapped: function () {
+    this.errors = null;
+
+    this.hass.callApi('post', 'hassio/addons/' + this.addon + '/options', {
+      options: this.optionsParsed
+    }).catch(function (resp) {
+      this.errors = resp.body.message;
+    }.bind(this));
+  },
+
+  computeOptionsData: function (optionsParsed) {
+    return {
+      options: optionsParsed,
+    };
+  },
+
+  pathOptions: function (addon) {
+    return 'hassio/addons/' + addon + '/options';
+  },
+});
+</script>

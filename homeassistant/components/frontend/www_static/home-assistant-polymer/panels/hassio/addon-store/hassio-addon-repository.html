@@ -1,0 +1,70 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item-body.html">
+
+<dom-module id="hassio-addon-repository">
+  <template>
+    <style include="iron-flex ha-style">
+      :host,
+      paper-card {
+        display: block;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+    </style>
+    <paper-card heading='[[repo.name]]'>
+      <template is='dom-if' if='[[computeShowIntro(repo)]]'>
+        <div class='card-content'>
+          <template is='dom-if' if='[[repo.maintainer]]'>
+            Maintained by [[repo.maintainer]].
+          </template>
+          <template is='dom-if' if='[[repo.url]]'>
+            <a href='[[repo.url]]' target='_blank'>Visit repository website.</a>
+          </template>
+        </div>
+      </template>
+
+      <template is='dom-repeat' items='[[addons]]' as='addon'>
+        <paper-item>
+          <paper-item-body two-line on-tap='addonTapped'>
+            <div>[[addon.name]]</div>
+            <div secondary>[[addon.description]]</div>
+          </paper-item-body>
+          [[computeInstallStatus(addon)]]
+        </paper-item>
+      </template>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addon-repository',
+
+  properties: {
+    repo: {
+      type: Object,
+    },
+
+    addons: {
+      type: Array,
+    }
+  },
+
+  computeShowIntro: function (repo) {
+    return repo.url || repo.maintainer;
+  },
+
+  computeInstallStatus: function (addon) {
+    return addon.installed || 'Not installed';
+  },
+
+  addonTapped: function (ev) {
+    this.fire('hassio-select-addon', { addon: this.addons[ev.model.index].slug });
+    ev.target.blur();
+  },
+});
+</script>

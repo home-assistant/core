@@ -1,0 +1,87 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../../../src/components/ha-menu-button.html">
+
+<dom-module id="hassio-supervisor">
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        padding: 16px;
+        margin: 0;
+        white-space: pre-wrap;
+      }
+    </style>
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <paper-icon-button
+            icon='mdi:arrow-left'
+            on-tap='backTapped'
+          ></paper-icon-button>
+          <div main-title>Supervisor Logs</div>
+          <paper-icon-button
+            icon="mdi:refresh"
+            on-tap="refreshTapped"
+          ></paper-icon-button>
+        </app-toolbar>
+      </app-header>
+
+      <pre class='content'>[[logs]]</pre>
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-supervisor',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    supervisorInfo: {
+      type: Object,
+    },
+
+    logs: {
+      type: String,
+      value: '',
+    },
+  },
+
+  attached: function () {
+    this.loadData();
+  },
+
+  loadData: function () {
+    this.hass.callApi('get', 'hassio/supervisor/logs')
+      .then(function (info) {
+        this.logs = info;
+      }.bind(this), function () {
+        this.logs = 'Error fetching logs';
+      }.bind(this));
+  },
+
+  refreshTapped: function () {
+    this.loadData();
+  },
+
+  backTapped: function () {
+    this.fire('hassio-select-addon', { addon: null });
+  },
+});
+</script>

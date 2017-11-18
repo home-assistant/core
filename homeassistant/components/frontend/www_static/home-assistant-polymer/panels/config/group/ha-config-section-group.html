@@ -1,0 +1,85 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel='import' href='../../../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../../../bower_components/paper-item/paper-item.html'>
+
+<link rel="import" href="../../../src/resources/ha-style.html">
+
+<link rel="import" href="../ha-config-section.html">
+<link rel="import" href="../ha-entity-config.html">
+<link rel="import" href="./ha-form-group.html">
+
+<dom-module id="ha-config-section-group">
+  <template>
+    <ha-config-section is-wide='[[isWide]]'>
+      <span slot='header'>Groups & Views</span>
+      <span slot='introduction'>
+        Use groups to organize your entities and make Home Assistant really your own.
+        <br><br>
+        Got more groups than you can handle? Create views to manage your groups.
+      </span>
+
+      <ha-entity-config
+        hass='[[hass]]'
+        label='Group'
+        entities='[[entities]]'
+        config='[[entityConfig]]'>
+      </ha-entity-config>
+    </ha-config-section>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-config-section-group',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    isWide: {
+      type: Boolean,
+      value: false,
+    },
+
+    entities: {
+      type: Array,
+      computed: 'computeEntities(hass)',
+    },
+
+    entityConfig: {
+      type: Object,
+      value: {
+        component: 'ha-form-group',
+        computeSelectCaption: function (stateObj) {
+          return window.hassUtil.computeStateName(stateObj) +
+            (stateObj.attributes.view ? ' (view)' : '');
+        },
+      }
+    }
+  },
+
+  computeEntities: function (hass) {
+    return Object.keys(hass.states)
+      .map(function (key) { return hass.states[key]; })
+      .filter(function (entity) {
+        return (window.hassUtil.computeDomain(entity) === 'group' &&
+                !entity.attributes.auto);
+      })
+      .sort(function (entityA, entityB) {
+        if (entityA.entity_id < entityB.entity_id) {
+          return -1;
+        }
+        if (entityA.entity_id > entityB.entity_id) {
+          return 1;
+        }
+        return 0;
+      });
+  },
+});
+</script>

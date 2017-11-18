@@ -1,0 +1,89 @@
+<link rel='import' href='../../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='./ha-state-icon.html'>
+
+<dom-module id='state-badge'>
+  <template>
+    <style>
+    :host {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      color: #44739E;
+      border-radius: 50%;
+      height: 40px;
+      text-align: center;
+      background-size: cover;
+      line-height: 40px;
+    }
+
+    ha-state-icon {
+      transition: color .3s ease-in-out;
+    }
+
+    /* Color the icon if light or sun is on */
+    ha-state-icon[data-domain=light][data-state=on],
+    ha-state-icon[data-domain=switch][data-state=on],
+    ha-state-icon[data-domain=binary_sensor][data-state=on],
+    ha-state-icon[data-domain=sun][data-state=above_horizon] {
+      color: #FDD835;
+    }
+
+    /* Color the icon if unavailable */
+    ha-state-icon[data-state=unavailable] {
+      color: var(--disabled-text-color);
+    }
+    </style>
+
+    <ha-state-icon
+      id='icon'
+      state-obj='[[stateObj]]'
+      data-domain$='[[computeDomain(stateObj)]]'
+      data-state$='[[stateObj.state]]'
+    ></ha-state-icon>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-badge',
+
+  properties: {
+    stateObj: {
+      type: Object,
+      observer: 'updateIconColor',
+    },
+  },
+
+  computeDomain: function (stateObj) {
+    return window.hassUtil.computeDomain(stateObj);
+  },
+
+  /**
+   * Called when an attribute changes that influences the color of the icon.
+   */
+  updateIconColor: function (newVal) {
+    // hide icon if we have entity picture
+    if (newVal.attributes.entity_picture) {
+      this.style.backgroundImage = 'url(' + newVal.attributes.entity_picture + ')';
+      this.$.icon.style.display = 'none';
+      return;
+    }
+
+    this.style.backgroundImage = '';
+    this.$.icon.style.display = 'inline';
+
+    // for domain light, set color of icon to light color if available and it is
+    // not very white (sum rgb colors < 730)
+    if (window.hassUtil.computeDomain(newVal) === 'light' &&
+        newVal.state === 'on' &&
+        newVal.attributes.rgb_color &&
+        newVal.attributes.rgb_color.reduce(function (cur, tot) { return cur + tot; }, 0) < 730) {
+      this.$.icon.style.color = 'rgb(' + newVal.attributes.rgb_color.join(',') + ')';
+    } else {
+      this.$.icon.style.color = null;
+    }
+  },
+
+});
+</script>

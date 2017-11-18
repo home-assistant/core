@@ -1,0 +1,89 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+
+<dom-module id="state-card-climate">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      :host {
+        @apply(--paper-font-body1);
+        line-height: 1.5;
+      }
+
+      .state {
+        margin-left: 16px;
+        text-align: right;
+      }
+
+      .target {
+        color: var(--primary-text-color);
+      }
+
+      .current {
+        color: var(--secondary-text-color);
+      }
+
+      .operation-mode {
+        font-weight: bold;
+        text-transform: capitalize;
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <div class='state'>
+        <div class='target'>
+          <span class="operation-mode">
+            [[stateObj.attributes.operation_mode]]
+          </span>
+          <span>
+            [[computeTargetTemperature(stateObj)]]
+          </span>
+        </div>
+
+        <div class='current'>
+          <span>Currently: </span>
+          <span>[[stateObj.attributes.current_temperature]]</span>
+          <span> </span>
+          <span>[[stateObj.attributes.unit_of_measurement]]</span>
+        </div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-climate',
+
+  properties: {
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  computeTargetTemperature: function (stateObj) {
+    var stateTemp = '';
+
+    if (stateObj.attributes.target_temp_low &&
+        stateObj.attributes.target_temp_high) {
+      stateTemp = stateObj.attributes.target_temp_low + ' - ' +
+        stateObj.attributes.target_temp_high + ' ' +
+        stateObj.attributes.unit_of_measurement;
+    } else if (stateObj.attributes.temperature) {
+      stateTemp = stateObj.attributes.temperature + ' ' +
+      stateObj.attributes.unit_of_measurement;
+    }
+
+    return stateTemp;
+  },
+
+});
+</script>

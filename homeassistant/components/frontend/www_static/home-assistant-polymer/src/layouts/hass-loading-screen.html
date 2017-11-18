@@ -1,0 +1,56 @@
+<link rel='import' href='../../bower_components/paper-spinner/paper-spinner.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<dom-module id='hass-loading-screen'>
+  <template>
+    <style include='iron-flex ha-style'>
+      [hidden] {
+        display: none !important;
+      }
+
+      .placeholder {
+        height: 100%;
+      }
+
+      .layout {
+        height: calc(100% - 64px);
+      }
+    </style>
+
+    <div class='placeholder'>
+      <app-toolbar>
+        <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+        <div main-title>[[title]]</div>
+      </app-toolbar>
+      <div class='layout horizontal center-center'>
+        <paper-spinner active></paper-spinner>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hass-loading-screen',
+
+  properties: {
+    narrow: {
+      type: Boolean,
+      value: false,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    title: {
+      type: String,
+      value: '',
+    },
+  },
+});
+</script>

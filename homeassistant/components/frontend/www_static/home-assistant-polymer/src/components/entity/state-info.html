@@ -1,0 +1,82 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="./state-badge.html">
+<link rel="import" href="../ha-relative-time.html">
+<link rel="import" href="../../util/hass-util.html">
+
+<dom-module id="state-info">
+  <template>
+    <style>
+    :host {
+      @apply(--paper-font-body1);
+      min-width: 150px;
+      white-space: nowrap;
+    }
+
+    state-badge {
+      float: left;
+    }
+
+    .info {
+      margin-left: 56px;
+    }
+
+    .name {
+      @apply(--paper-font-common-nowrap);
+      color: var(--primary-text-color);
+      line-height: 40px;
+    }
+
+    .name[in-dialog], :host([secondary-line]) .name {
+      line-height: 20px;
+    }
+
+    .time-ago, ::slotted(*) {
+      @apply(--paper-font-common-nowrap);
+      color: var(--secondary-text-color);
+    }
+    </style>
+
+    <div>
+      <state-badge state-obj='[[stateObj]]'></state-badge>
+
+      <div class='info'>
+        <div class='name' in-dialog$='[[inDialog]]'>[[computeStateName(stateObj)]]</div>
+
+        <template is='dom-if' if='[[inDialog]]'>
+          <div class='time-ago'>
+            <ha-relative-time datetime='[[stateObj.last_changed]]'></ha-relative-time>
+          </div>
+        </template>
+        <template is='dom-if' if='[[!inDialog]]'>
+          <slot>
+        </template>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-info',
+
+  properties: {
+    detailed: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+    },
+  },
+
+  computeStateName: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj);
+  }
+});
+</script>

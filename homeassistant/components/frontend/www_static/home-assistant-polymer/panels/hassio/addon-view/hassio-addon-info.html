@@ -1,0 +1,65 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/iron-autogrow-textarea/iron-autogrow-textarea.html">
+
+<link rel="import" href="../../../src/components/ha-menu-button.html">
+
+<dom-module id="hassio-addon-info">
+  <template>
+    <style include="ha-style">
+      :host {
+        display: block;
+      }
+      paper-card {
+        display: block;
+      }
+    </style>
+    <paper-card heading='Info'>
+      <div class="card-content">
+        <p>[[addonInfo.description]]</p>
+        <table class='info'>
+          <tr>
+            <td>Installed</td>
+            <td>[[computeInstallStatus(addonInfo)]]</td>
+          </tr>
+          <tr>
+            <td>Version</td>
+            <td>[[addonInfo.version]]</td>
+          </tr>
+          <tr>
+            <td>Detached</td>
+            <td>[[addonInfo.detached]]</td>
+          </tr>
+        </table>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addon-info',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    addonInfo: {
+      type: Object,
+    },
+  },
+
+  computeInstallStatus(addon) {
+    return (addon && addon.installed) || 'Not installed';
+  },
+});
+</script>

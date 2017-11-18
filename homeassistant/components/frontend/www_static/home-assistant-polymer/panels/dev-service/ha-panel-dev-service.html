@@ -1,0 +1,241 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../../bower_components/paper-input/paper-textarea.html'>
+
+<link rel='import' href='../../bower_components/app-layout/app-header-layout/app-header-layout.html'>
+<link rel='import' href='../../bower_components/app-layout/app-header/app-header.html'>
+<link rel='import' href='../../bower_components/app-layout/app-toolbar/app-toolbar.html'>
+<link rel="import" href="../../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+
+<link rel="import" href="../../bower_components/vaadin-combo-box/vaadin-combo-box.html">
+
+<link rel='import' href='../../src/components/ha-menu-button.html'>
+<link rel='import' href='../../src/resources/ha-style.html'>
+
+<dom-module id='ha-panel-dev-service'>
+  <template>
+    <style include='ha-style'>
+      :host {
+        -ms-user-select: initial;
+        -webkit-user-select: initial;
+        -moz-user-select: initial;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .ha-form {
+        margin-right: 16px;
+        max-width: 500px;
+      }
+
+      .description {
+        margin-top: 24px;
+        white-space: pre-wrap;
+      }
+
+      .header {
+        @apply(--paper-font-title);
+      }
+
+      .attributes th {
+        text-align: left;
+      }
+
+      .attributes tr {
+        vertical-align: top;
+      }
+
+      .attributes tr:nth-child(even) {
+        background-color: #eee;
+      }
+
+      .attributes td:nth-child(3) {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      pre {
+        margin: 0;
+      }
+    </style>
+
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>Services</div>
+        </app-toolbar>
+      </app-header>
+
+      <app-localstorage-document
+        key='panel-dev-service-state-domain'
+        data='{{domain}}'>
+      </app-localstorage-document>
+      <app-localstorage-document
+        key='panel-dev-service-state-service'
+        data='{{service}}'>
+      </app-localstorage-document>
+      <app-localstorage-document
+        key='[[computeServicedataKey(domain, service)]]'
+        data='{{serviceData}}'>
+      </app-localstorage-document>
+
+      <div class='content'>
+        <p>
+          Call a service from a component.
+
+        </p>
+
+        <div class='ha-form'>
+          <vaadin-combo-box label='Domain' items='[[computeDomains(serviceDomains)]]' value='{{domain}}'></vaadin-combo-box>
+          <vaadin-combo-box label='Service' items='[[computeServices(serviceDomains, domain)]]' value='{{service}}'></vaadin-combo-box>
+          <paper-textarea label='Service Data (JSON, optional)' value='{{serviceData}}'></paper-textarea>
+          <paper-button on-tap='callService' raised>Call Service</paper-button>
+        </div>
+
+        <template is='dom-if' if='[[!domain]]'>
+          <h1>Select a domain and service to see the description</h1>
+        </template>
+
+        <template is='dom-if' if='[[domain]]'>
+          <template is='dom-if' if='[[!service]]'>
+            <h1>Select a service to see the description</h1>
+          </template>
+        </template>
+
+        <template is='dom-if' if='[[domain]]'>
+          <template is='dom-if' if='[[service]]'>
+            <template is='dom-if' if='[[!_attributes.length]]'>
+              <h1>No description is available</h1>
+            </template>
+            <template is='dom-if' if='[[_attributes.length]]'>
+              <h1>Valid Parameters</h1>
+              <table class='attributes'>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Description</th>
+                  <th>Example</th>
+                </tr>
+                <template is='dom-repeat' items='[[_attributes]]' as='attribute'>
+                  <tr>
+                    <td><pre>[[attribute.key]]</pre></td>
+                    <td>[[attribute.description]]</td>
+                    <td>[[attribute.example]]</td>
+                  </tr>
+                </template>
+              </table>
+            </template>
+          </template>
+        </template>
+      </div>
+
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-dev-service',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+      value: false,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    domain: {
+      type: String,
+      value: '',
+      observer: 'domainChanged',
+    },
+
+    service: {
+      type: String,
+      value: '',
+      observer: 'serviceChanged',
+    },
+
+    serviceData: {
+      type: String,
+      value: '',
+    },
+
+    _attributes: {
+      type: Array,
+      computed: 'computeAttributesArray(serviceDomains, domain, service)',
+    },
+
+    serviceDomains: {
+      type: Object,
+      computed: 'computeServiceDomains(hass)',
+    },
+  },
+
+  computeServiceDomains: function (hass) {
+    return hass.config.services;
+  },
+
+  computeAttributesArray: function (serviceDomains, domain, service) {
+    if (!serviceDomains) return [];
+    if (!(domain in serviceDomains)) return [];
+    if (!(service in serviceDomains[domain])) return [];
+
+    var fields = serviceDomains[domain][service].fields;
+    return Object.keys(fields).map(function (field) {
+      return Object.assign({}, fields[field], { key: field });
+    });
+  },
+
+  computeDomains: function (serviceDomains) {
+    return Object.keys(serviceDomains).sort();
+  },
+
+  computeServices: function (serviceDomains, domain) {
+    if (!(domain in serviceDomains)) return [];
+
+    return Object.keys(serviceDomains[domain]).sort();
+  },
+
+  computeServicedataKey: function (domain, service) {
+    if (!domain || !service) {
+      return 'panel-dev-service-state-servicedata';
+    }
+    return 'panel-dev-service-state-servicedata.' + domain + '.' + service;
+  },
+
+  domainChanged: function () {
+    this.service = '';
+    this.serviceData = '';
+  },
+
+  serviceChanged: function () {
+    this.serviceData = '';
+  },
+
+  callService: function () {
+    var serviceData;
+    try {
+      serviceData = this.serviceData ? JSON.parse(this.serviceData) : {};
+    } catch (err) {
+      /* eslint-disable no-alert */
+      alert('Error parsing JSON: ' + err);
+      /* eslint-enable no-alert */
+      return;
+    }
+
+    this.hass.callService(this.domain, this.service, serviceData);
+  },
+});
+</script>

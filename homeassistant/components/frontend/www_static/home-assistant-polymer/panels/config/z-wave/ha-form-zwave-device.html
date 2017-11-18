@@ -1,0 +1,78 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../ha-form-style.html">
+
+<dom-module id="ha-form-zwave-device">
+  <template>
+    <style include="iron-flex ha-style ha-form-style">
+    </style>
+    <div class='form-group'>
+      <paper-checkbox
+        checked='{{entityIgnored}}'
+        class='form-control'
+      >
+        Exclude from Home Assistant
+      </paper-checkbox>
+    </div>
+
+    <div class='form-group'>
+      <paper-dropdown-menu
+        class='form-control flex'
+        label='Polling intensity'
+        disabled='[[entityIgnored]]'
+      >
+        <paper-listbox
+          slot="dropdown-content"
+          selected='{{entityPollingIntensity}}'
+        >
+          <paper-item>Do not poll (0)</paper-item>
+          <paper-item>Poll every time (1)</paper-item>
+          <paper-item>Poll every other time (2)</paper-item>
+        </paper-listbox>
+      </paper-dropdown-menu>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-form-zwave-device',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    entity: {
+      type: Object,
+    },
+
+    entityIgnored: {
+      type: Boolean,
+    },
+
+    entityPollingIntensity: {
+      type: Number,
+    },
+  },
+
+  loadEntity: function (entity) {
+    this.entity = entity;
+    var el = this;
+    return this.hass.callApi('GET', 'config/zwave/device_config/' + entity.entity_id)
+      .then(function (data) {
+        el.entityIgnored = data.ignored || false;
+        el.entityPollingIntensity = data.polling_intensity || 0;
+      });
+  },
+
+  saveEntity: function () {
+    var data = {
+      ignored: this.entityIgnored,
+      polling_intensity: this.entityPollingIntensity,
+    };
+    return this.hass.callApi(
+      'POST', 'config/zwave/device_config/' + this.entity.entity_id, data);
+  },
+});
+</script>

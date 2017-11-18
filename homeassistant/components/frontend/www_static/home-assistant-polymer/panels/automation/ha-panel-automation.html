@@ -1,0 +1,160 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel='import' href='../../bower_components/iron-media-query/iron-media-query.html'>
+
+<link rel="import" href="./ha-automation-picker.html">
+<link rel="import" href="./ha-automation-editor.html">
+
+<dom-module id="ha-panel-automation">
+  <template>
+    <style>
+      ha-automation-picker,
+      ha-automation-editor {
+        height: 100%;
+      }
+    </style>
+
+    <iron-media-query query="(min-width: 1040px)" query-matches="{{wide}}">
+    </iron-media-query>
+    <iron-media-query query="(min-width: 1296px)" query-matches="{{wideSidebar}}">
+    </iron-media-query>
+
+    <template is='dom-if' if='[[!showEditor]]'>
+      <ha-automation-picker
+        automations='[[automations]]'
+        is-wide='[[isWide]]'
+      ></ha-automation-picker>
+    </template>
+
+    <template is='dom-if' if='[[showEditor]]' restamp>
+      <ha-automation-editor
+        hass='[[hass]]'
+        automation='[[automation]]'
+        is-wide='[[isWide]]'
+        creating-new='[[creatingNew]]'
+      ></ha-automation-editor>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-automation',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    automations: {
+      type: Array,
+      computed: 'computeAutomations(hass)',
+    },
+
+    automationId: {
+      type: String,
+      value: null,
+    },
+
+    automation: {
+      type: Object,
+      computed: 'computeAutomation(automations, automationId, creatingNew)',
+    },
+
+    wide: {
+      type: Boolean,
+    },
+
+    wideSidebar: {
+      type: Boolean,
+    },
+
+    isWide: {
+      type: Boolean,
+      computed: 'computeIsWide(showMenu, wideSidebar, wide)'
+    },
+
+    creatingNew: {
+      type: Boolean,
+      value: false,
+    },
+
+    showEditor: {
+      type: Boolean,
+      computed: 'computeShowEditor(automation, creatingNew)',
+    }
+  },
+
+  listeners: {
+    'hass-automation-picked': 'automationPicked',
+    'hass-create-automation': 'createAutomation',
+  },
+
+  computeIsWide: function (showMenu, wideSidebar, wide) {
+    return showMenu ? wideSidebar : wide;
+  },
+
+  computeAutomation: function (automations, automationId, creatingNew) {
+    if (creatingNew || !automations) {
+      return null;
+    }
+    for (var i = 0; i < automations.length; i++) {
+      if (automations[i].attributes.id === automationId) {
+        return automations[i];
+      }
+    }
+    return null;
+  },
+
+  computeAutomations: function (hass) {
+    var automations = [];
+
+    Object.keys(hass.states).forEach(function (key) {
+      var entity = hass.states[key];
+
+      if (window.hassUtil.computeDomain(entity) === 'automation' &&
+          'id' in entity.attributes) {
+        automations.push(entity);
+      }
+    });
+
+    return automations.sort(function entitySortBy(entityA, entityB) {
+      var nameA = (entityA.attributes.alias ||
+                   entityA.entity_id).toLowerCase();
+      var nameB = (entityB.attributes.alias ||
+                   entityB.entity_id).toLowerCase();
+
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    });
+  },
+
+  computeShowEditor: function (automation, creatingNew) {
+    return creatingNew || automation;
+  },
+
+  automationPicked: function (ev) {
+    this.automationId = ev.detail.id;
+    if (this.creatingNew) {
+      this.creatingNew = false;
+    }
+  },
+
+  createAutomation: function () {
+    this.creatingNew = true;
+  },
+});
+</script>
