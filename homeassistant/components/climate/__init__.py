@@ -51,6 +51,25 @@ STATE_HIGH_DEMAND = 'high_demand'
 STATE_HEAT_PUMP = 'heat_pump'
 STATE_GAS = 'gas'
 
+SUPPORT_CURRENT_TEMPERATURE = 1 << 0
+SUPPORT_MIN_TEMPERATURE = 1 << 1
+SUPPORT_MAX_TEMPERATURE = 1 << 2
+SUPPORT_CURRENT_HUMIDITY = 1 << 3
+SUPPORT_MIN_HUMIDITY = 1 << 4
+SUPPORT_MAX_HUMIDITY = 1 << 5
+SUPPORT_TARGET_TEMPERATURE = 1 << 6
+SUPPORT_TARGET_TEMPERATURE_HIGH = 1 << 7
+SUPPORT_TARGET_TEMPERATURE_LOW = 1 << 8
+SUPPORT_TARGET_HUMIDITY = 1 << 9
+SUPPORT_TARGET_HUMIDITY_HIGH = 1 << 10
+SUPPORT_TARGET_HUMIDITY_LOW = 1 << 11
+SUPPORT_FAN_MODE = 1 << 12
+SUPPORT_OPERATION_MODE = 1 << 13
+SUPPORT_HOLD_MODE = 1 << 14
+SUPPORT_SWING_MODE = 1 << 15
+SUPPORT_AWAY_MODE = 1 << 16
+SUPPORT_AUX_HEAT = 1 << 17
+
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
@@ -716,6 +735,38 @@ class ClimateDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.turn_aux_heat_off)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        # For now, we convert from the legacy technique to the new
+        # supported_features. This follows exactly the way of determining
+        # whether an attribute is included in state_attributes()
+
+        support = (SUPPORT_CURRENT_TEMPERATURE | SUPPORT_MIN_TEMPERATURE |
+                   SUPPORT_MAX_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE)
+        if self.target_temperature_high is not None:
+            support |= SUPPORT_TARGET_TEMPERATURE_HIGH
+            support |= SUPPORT_TARGET_TEMPERATURE_LOW
+        if self.target_humidity:
+            support |= SUPPORT_CURRENT_HUMIDITY
+            support |= SUPPORT_TARGET_HUMIDITY
+            support |= SUPPORT_MIN_HUMIDITY
+            support |= SUPPORT_MAX_HUMIDITY
+        if self.current_fan_mode is not None:
+            support |= SUPPORT_FAN_MODE
+        if self.current_operation is not None:
+            support |= SUPPORT_OPERATION_MODE
+        if self.current_hold_mode is not None:
+            support |= SUPPORT_HOLD_MODE
+        if self.current_swing_mode is not None:
+            support |= SUPPORT_SWING_MODE
+        if self.is_away_mode_on is not None:
+            support |= SUPPORT_AWAY_MODE
+        if self.is_aux_heat_on is not None:
+            support |= SUPPORT_AUX_HEAT
+
+        return support
 
     @property
     def min_temp(self):
