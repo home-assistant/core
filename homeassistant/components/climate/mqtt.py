@@ -152,13 +152,7 @@ class MqttClimate(ClimateDevice):
         self._retain = retain
         self._target_temperature = target_temperature
         self._unit_of_measurement = hass.config.units.temperature_unit
-        self._away = away
-        self._hold = hold
         self._current_temperature = None
-        self._current_fan_mode = current_fan_mode
-        self._current_operation = current_operation
-        self._aux = aux
-        self._current_swing_mode = current_swing_mode
         self._fan_list = fan_mode_list
         self._operation_list = mode_list
         self._swing_list = swing_mode_list
@@ -166,6 +160,40 @@ class MqttClimate(ClimateDevice):
         self._send_if_off = send_if_off
         self._payload_on = payload_on
         self._payload_off = payload_off
+
+        self._has_away, self._away = self.set_if_has_topics(
+            away, (CONF_AWAY_MODE_STATE_TOPIC, CONF_AWAY_MODE_COMMAND_TOPIC)
+        )
+
+        self._has_hold, self._hold = self.set_if_has_topics(
+            hold, (CONF_HOLD_STATE_TOPIC, CONF_HOLD_COMMAND_TOPIC)
+        )
+
+        self._has_aux, self._aux = self.set_if_has_topics(
+            aux, (CONF_AUX_STATE_TOPIC, CONF_AUX_COMMAND_TOPIC)
+        )
+
+        self._has_fan_mode, self._current_fan_mode = self.set_if_has_topics(
+            current_fan_mode, (CONF_FAN_MODE_STATE_TOPIC,
+                               CONF_FAN_MODE_COMMAND_TOPIC)
+        )
+
+        self._has_operation_mode, self._current_operation = \
+            self.set_if_has_topics(current_operation,
+                                   (CONF_MODE_STATE_TOPIC,
+                                    CONF_MODE_COMMAND_TOPIC))
+
+        self._has_swing_mode, self._current_swing_mode = \
+            self.set_if_has_topics(current_swing_mode,
+                                   (CONF_SWING_MODE_STATE_TOPIC,
+                                    CONF_SWING_MODE_COMMAND_TOPIC))
+
+    def set_if_has_topics(self, val, topic_list):
+        """Return true and val if any of the topics in topic_list is set."""
+        if any((self._topic[topic] is not None for topic in topic_list)):
+            return (True, val)
+        else:
+            return (False, None)
 
     def async_added_to_hass(self):
         """Handle being added to home assistant."""
@@ -336,7 +364,7 @@ class MqttClimate(ClimateDevice):
 
     @property
     def is_aux_heat_on(self):
-        """Return true if away mode is on."""
+        """Return true if aux heat is on."""
         return self._aux
 
     @property
@@ -371,29 +399,33 @@ class MqttClimate(ClimateDevice):
     @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
-        if self._send_if_off or self._current_operation != STATE_OFF:
+        if (self._send_if_off or self._current_operation != STATE_OFF) and \
+                self._topic[CONF_SWING_MODE_COMMAND_TOPIC] is not None:
             mqtt.async_publish(
                 self.hass, self._topic[CONF_SWING_MODE_COMMAND_TOPIC],
                 swing_mode, self._qos, self._retain)
 
-        if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None and \
+           self._has_swing_mode:
             self._current_swing_mode = swing_mode
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_fan_mode(self, fan):
         """Set new target temperature."""
-        if self._send_if_off or self._current_operation != STATE_OFF:
+        if (self._send_if_off or self._current_operation != STATE_OFF) and \
+                self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None:
             mqtt.async_publish(
                 self.hass, self._topic[CONF_FAN_MODE_COMMAND_TOPIC],
                 fan, self._qos, self._retain)
 
-        if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None and \
+           self._has_fan_mode:
             self._current_fan_mode = fan
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
-    def async_set_operation_mode(self, operation_mode) -> None:
+    def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         if self._topic[CONF_POWER_COMMAND_TOPIC] is not None:
             if (self._current_operation == STATE_OFF and
@@ -412,7 +444,8 @@ class MqttClimate(ClimateDevice):
                 self.hass, self._topic[CONF_MODE_COMMAND_TOPIC],
                 operation_mode, self._qos, self._retain)
 
-        if self._topic[CONF_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_MODE_STATE_TOPIC] is None and \
+           self._has_operation_mode:
             self._current_operation = operation_mode
             self.async_schedule_update_ha_state()
 
@@ -434,7 +467,8 @@ class MqttClimate(ClimateDevice):
                                self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
                                self._payload_on, self._qos, self._retain)
 
-        if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None and \
+           self._has_away:
             self._away = True
             self.async_schedule_update_ha_state()
 
@@ -446,7 +480,8 @@ class MqttClimate(ClimateDevice):
                                self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
                                self._payload_off, self._qos, self._retain)
 
-        if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None and \
+           self._has_away:
             self._away = False
             self.async_schedule_update_ha_state()
 
@@ -458,7 +493,8 @@ class MqttClimate(ClimateDevice):
                                self._topic[CONF_HOLD_COMMAND_TOPIC],
                                hold, self._qos, self._retain)
 
-        if self._topic[CONF_HOLD_STATE_TOPIC] is None:
+        if self._topic[CONF_HOLD_STATE_TOPIC] is None and \
+           self._has_hold:
             self._hold = hold
             self.async_schedule_update_ha_state()
 
@@ -469,7 +505,8 @@ class MqttClimate(ClimateDevice):
             mqtt.async_publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
                                self._payload_on, self._qos, self._retain)
 
-        if self._topic[CONF_AUX_STATE_TOPIC] is None:
+        if self._topic[CONF_AUX_STATE_TOPIC] is None and \
+           self._has_aux:
             self._aux = True
             self.async_schedule_update_ha_state()
 
@@ -480,6 +517,7 @@ class MqttClimate(ClimateDevice):
             mqtt.async_publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
                                self._payload_off, self._qos, self._retain)
 
-        if self._topic[CONF_AUX_STATE_TOPIC] is None:
+        if self._topic[CONF_AUX_STATE_TOPIC] is None and \
+           self._has_aux:
             self._aux = False
             self.async_schedule_update_ha_state()
