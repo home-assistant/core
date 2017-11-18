@@ -119,8 +119,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 active_entity_ids.append(entity_name)
 
             # Remove the default device from the group
-            active_entity_ids.remove\
-                ("media_player.emby__homeassistant__homeassistant")
+            active_entity_ids.remove(
+                "media_player.emby__homeassistant__homeassistant")
 
             # Create the group
             hass.states.async_set('group.emby', 'off', {
