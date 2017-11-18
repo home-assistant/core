@@ -13,8 +13,7 @@ from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_TEMPERATURE_TEMPLATE,
-    CONF_HUMIDITY_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
-    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START)
+    CONF_HUMIDITY_TEMPLATE, ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -26,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
     vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
@@ -40,8 +37,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the sensor."""
     temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
     humidity_template = config[CONF_HUMIDITY_TEMPLATE]
-    icon_template = config.get(CONF_ICON_TEMPLATE)
-    entity_picture_template = config.get(CONF_ENTITY_PICTURE_TEMPLATE)
     entity_ids = (config.get(ATTR_ENTITY_ID) or
                   temperature_template.extract_entities() +
                   humidity_template.extract_entities())
@@ -52,12 +47,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     temperature_template.hass = hass
     humidity_template.hass = hass
 
-    if icon_template is not None:
-        icon_template.hass = hass
-
-    if entity_picture_template is not None:
-        entity_picture_template.hass = hass
-
     async_add_devices([
         DewpointSensorTemplate(
             hass,
@@ -65,8 +54,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             unit_of_measurement,
             temperature_template,
             humidity_template,
-            icon_template,
-            entity_picture_template,
             entity_ids)
     ])
     return True
@@ -76,8 +63,7 @@ class DewpointSensorTemplate(Entity):
     """Representation of a Template Sensor."""
 
     def __init__(self, hass, friendly_name, unit_of_measurement,
-                 temperature_template, humidity_template, icon_template,
-                 entity_picture_template, entity_ids):
+                 temperature_template, humidity_template, entity_ids):
         """Initialize the sensor."""
         self.hass = hass
         self._name = friendly_name
@@ -85,10 +71,6 @@ class DewpointSensorTemplate(Entity):
         self._temperature_template = temperature_template
         self._humidity_template = humidity_template
         self._state = None
-        self._icon_template = icon_template
-        self._entity_picture_template = entity_picture_template
-        self._icon = None
-        self._entity_picture = None
         self._entities = entity_ids
 
     @asyncio.coroutine
@@ -122,13 +104,8 @@ class DewpointSensorTemplate(Entity):
 
     @property
     def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def entity_picture(self):
-        """Return the entity_picture to use in the frontend, if any."""
-        return self._entity_picture
+        """Return the default icon."""
+        return 'mdi:water-percent'
 
     @property
     def unit_of_measurement(self):
@@ -178,8 +155,3 @@ class DewpointSensorTemplate(Entity):
                                       float(humidity),
                                       self.unit_of_measurement)
         self._state = round(dewpoint, 1)
-
-        for property_name, template in (
-                ('_icon', self._icon_template),
-                ('_entity_picture', self._entity_picture_template)):
-            self._update_property_from_template(property_name, template)
