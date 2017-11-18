@@ -136,7 +136,7 @@ class Config(object):
         self.host_ip_addr = conf.get(CONF_HOST_IP)
         if self.host_ip_addr is None:
             self.host_ip_addr = util.get_local_ip()
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Listen IP address not specified, auto-detected address is %s",
                 self.host_ip_addr)
 
@@ -144,7 +144,7 @@ class Config(object):
         self.listen_port = conf.get(CONF_LISTEN_PORT)
         if not isinstance(self.listen_port, int):
             self.listen_port = DEFAULT_LISTEN_PORT
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Listen port not specified, defaulting to %s",
                 self.listen_port)
 
