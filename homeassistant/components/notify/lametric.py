@@ -63,7 +63,7 @@ class LaMetricNotificationService(BaseNotificationService):
         cycles = self._cycles
         sound = None
 
-        # Sound in data?
+        # Additional data?
         if data is not None:
             if "icon" in data:
                 icon = data["icon"]
