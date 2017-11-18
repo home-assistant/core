@@ -5,21 +5,26 @@ import logging
 # pylint: disable=using-constant-test,unused-import,ungrouped-imports
 # if False:
 from aiohttp.web import Request, Response  # NOQA
-from typing import Dict, Tuple, Any  # NOQA
+from typing import Dict, Tuple, Any, Optional  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA
 from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.util import color
+from homeassistant.util.unit_system import UnitSystem  # NOQA
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
     CONF_FRIENDLY_NAME, STATE_OFF,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON
+    SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    TEMP_FAHRENHEIT, TEMP_CELSIUS,
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate
 )
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
-    ATTR_GOOGLE_ASSISTANT_NAME, ATTR_GOOGLE_ASSISTANT_TYPE,
+    ATTR_GOOGLE_ASSISTANT_NAME, COMMAND_COLOR,
+    ATTR_GOOGLE_ASSISTANT_TYPE,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
     COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, COMMAND_THERMOSTAT_SET_MODE,
@@ -65,7 +70,7 @@ def make_actions_response(request_id: str, payload: dict) -> dict:
     return {'requestId': request_id, 'payload': payload}
 
 
-def entity_to_device(entity: Entity):
+def entity_to_device(entity: Entity, units: UnitSystem):
     """Convert a hass entity into an google actions device."""
     class_data = MAPPING_COMPONENT.get(
         entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) or entity.domain)
@@ -75,6 +80,7 @@ def entity_to_device(entity: Entity):
     device = {
         'id': entity.entity_id,
         'name': {},
+        'attributes': {},
         'traits': [],
         'willReportState': False,
     }
@@ -99,20 +105,62 @@ def entity_to_device(entity: Entity):
         for feature, trait in class_data[2].items():
             if feature & supported > 0:
                 device['traits'].append(trait)
+
+                # Actions require this attributes for a device
+                # supporting temperature
+                # For IKEA trådfri, these attributes only seem to
+                # be set only if the device is on?
+                if trait == TRAIT_COLOR_TEMP:
+                    if entity.attributes.get(
+                            light.ATTR_MAX_MIREDS) is not None:
+                        device['attributes']['temperatureMinK'] =  \
+                            int(round(color.color_temperature_mired_to_kelvin(
+                                entity.attributes.get(light.ATTR_MAX_MIREDS))))
+                    if entity.attributes.get(
+                            light.ATTR_MIN_MIREDS) is not None:
+                        device['attributes']['temperatureMaxK'] =  \
+                            int(round(color.color_temperature_mired_to_kelvin(
+                                entity.attributes.get(light.ATTR_MIN_MIREDS))))
+
     if entity.domain == climate.DOMAIN:
         modes = ','.join(
             m for m in entity.attributes.get(climate.ATTR_OPERATION_LIST, [])
             if m in CLIMATE_SUPPORTED_MODES)
         device['attributes'] = {
             'availableThermostatModes': modes,
-            'thermostatTemperatureUnit': 'C',
+            'thermostatTemperatureUnit':
+            'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
 
     return device
 
 
-def query_device(entity: Entity) -> dict:
+def query_device(entity: Entity, units: UnitSystem) -> dict:
     """Take an entity and return a properly formatted device object."""
+    def celsius(deg: Optional[float]) -> Optional[float]:
+        """Convert a float to Celsius and rounds to one decimal place."""
+        if deg is None:
+            return None
+        return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+    if entity.domain == climate.DOMAIN:
+        mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
+        if mode not in CLIMATE_SUPPORTED_MODES:
+            mode = 'on'
+        response = {
+            'thermostatMode': mode,
+            'thermostatTemperatureSetpoint':
+            celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
+            'thermostatTemperatureAmbient':
+            celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
+            'thermostatTemperatureSetpointHigh':
+            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
+            'thermostatTemperatureSetpointLow':
+            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
+            'thermostatHumidityAmbient':
+            entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
+        }
+        return {k: v for k, v in response.items() if v is not None}
+
     final_state = entity.state != STATE_OFF
     final_brightness = entity.attributes.get(light.ATTR_BRIGHTNESS, 255
                                              if final_state else 0)
@@ -128,18 +176,42 @@ def query_device(entity: Entity) -> dict:
 
     final_brightness = 100 * (final_brightness / 255)
 
-    return {
+    query_response = {
         "on": final_state,
         "online": True,
         "brightness": int(final_brightness)
     }
 
+    supported_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    if supported_features & \
+       (light.SUPPORT_COLOR_TEMP | light.SUPPORT_RGB_COLOR):
+        query_response["color"] = {}
+
+        if entity.attributes.get(light.ATTR_COLOR_TEMP) is not None:
+            query_response["color"]["temperature"] = \
+                int(round(color.color_temperature_mired_to_kelvin(
+                    entity.attributes.get(light.ATTR_COLOR_TEMP))))
+
+        if entity.attributes.get(light.ATTR_COLOR_NAME) is not None:
+            query_response["color"]["name"] = \
+                entity.attributes.get(light.ATTR_COLOR_NAME)
+
+        if entity.attributes.get(light.ATTR_RGB_COLOR) is not None:
+            color_rgb = entity.attributes.get(light.ATTR_RGB_COLOR)
+            if color_rgb is not None:
+                query_response["color"]["spectrumRGB"] = \
+                    int(color.color_rgb_to_hex(
+                        color_rgb[0], color_rgb[1], color_rgb[2]), 16)
+
+    return query_response
+
 
 # erroneous bug on old pythons and pylint
 # https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
-def determine_service(entity_id: str, command: str,
-                      params: dict) -> Tuple[str, dict]:
+def determine_service(
+        entity_id: str, command: str, params: dict,
+        units: UnitSystem) -> Tuple[str, dict]:
     """
     Determine service and service_data.
 
@@ -166,14 +238,17 @@ def determine_service(entity_id: str, command: str,
     # special climate handling
     if domain == climate.DOMAIN:
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            service_data['temperature'] = params.get(
-                'thermostatTemperatureSetpoint', 25)
+            service_data['temperature'] = units.temperature(
+                params.get('thermostatTemperatureSetpoint', 25),
+                TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
-            service_data['target_temp_high'] = params.get(
-                'thermostatTemperatureSetpointHigh', 25)
-            service_data['target_temp_low'] = params.get(
-                'thermostatTemperatureSetpointLow', 18)
+            service_data['target_temp_high'] = units.temperature(
+                params.get('thermostatTemperatureSetpointHigh', 25),
+                TEMP_CELSIUS)
+            service_data['target_temp_low'] = units.temperature(
+                params.get('thermostatTemperatureSetpointLow', 18),
+                TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_SET_MODE:
             service_data['operation_mode'] = params.get(
@@ -185,7 +260,27 @@ def determine_service(entity_id: str, command: str,
         service_data['brightness'] = int(brightness / 100 * 255)
         return (SERVICE_TURN_ON, service_data)
 
-    if command == COMMAND_ACTIVATESCENE or (COMMAND_ONOFF == command and
-                                            params.get('on') is True):
+    _LOGGER.debug("Handling command %s with data %s", command, params)
+    if command == COMMAND_COLOR:
+        color_data = params.get('color')
+        if color_data is not None:
+            if color_data.get('temperature', 0) > 0:
+                service_data[light.ATTR_KELVIN] = color_data.get('temperature')
+                return (SERVICE_TURN_ON, service_data)
+            if color_data.get('spectrumRGB', 0) > 0:
+                # blue is 255 so pad up to 6 chars
+                hex_value = \
+                    ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
+                service_data[light.ATTR_RGB_COLOR] = \
+                    color.rgb_hex_to_rgb_list(hex_value)
+                return (SERVICE_TURN_ON, service_data)
+
+    if command == COMMAND_ACTIVATESCENE:
         return (SERVICE_TURN_ON, service_data)
-    return (SERVICE_TURN_OFF, service_data)
+
+    if COMMAND_ONOFF == command:
+        if params.get('on') is True:
+            return (SERVICE_TURN_ON, service_data)
+        return (SERVICE_TURN_OFF, service_data)
+
+    return (None, service_data)

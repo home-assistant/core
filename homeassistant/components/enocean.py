@@ -72,6 +72,7 @@ class EnOceanDongle:
         """
         from enocean.protocol.packet import RadioPacket
         if isinstance(temp, RadioPacket):
+            _LOGGER.debug("Received radio packet: %s", temp)
             rxtype = None
             value = None
             if temp.data[6] == 0x30:
@@ -94,20 +95,20 @@ class EnOceanDongle:
                 value = temp.data[2]
             for device in self.__devices:
                 if rxtype == "wallswitch" and device.stype == "listener":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value, temp.data[1])
                 if rxtype == "power" and device.stype == "powersensor":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
                 if rxtype == "power" and device.stype == "switch":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         if value > 10:
                             device.value_changed(1)
                 if rxtype == "switch_status" and device.stype == "switch":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
                 if rxtype == "dimmerstatus" and device.stype == "dimmer":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
 
 

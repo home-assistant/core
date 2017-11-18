@@ -9,7 +9,8 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import STATE_ON, STATE_OFF
 
-from components.media_player.monoprice import MonopriceZone, PLATFORM_SCHEMA
+from homeassistant.components.media_player.monoprice import (
+    MonopriceZone, PLATFORM_SCHEMA)
 
 
 class MockState(object):

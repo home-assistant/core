@@ -64,6 +64,10 @@ homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/rfxtrx.py @danielhiversen
+homeassistant/components/velux.py @Julius2342
+homeassistant/components/*/velux.py @Julius2342
+homeassistant/components/knx.py @Julius2342
+homeassistant/components/*/knx.py @Julius2342
 homeassistant/components/tesla.py @zabuldon
 homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/*/tradfri.py @ggravlingen
