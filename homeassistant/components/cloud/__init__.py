@@ -9,7 +9,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
+from homeassistant.helpers import entityfilter
 from homeassistant.util import dt as dt_util
+from homeassistant.components.alexa import smart_home
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -18,6 +20,8 @@ REQUIREMENTS = ['warrant==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ALEXA = 'alexa'
+CONF_ALEXA_FILTER = 'filter'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
@@ -25,6 +29,13 @@ CONF_USER_POOL_ID = 'user_pool_id'
 MODE_DEV = 'development'
 DEFAULT_MODE = MODE_DEV
 DEPENDENCIES = ['http']
+
+ALEXA_SCHEMA = vol.Schema({
+    vol.Optional(
+        CONF_ALEXA_FILTER,
+        default=lambda: entityfilter.generate_filter([], [], [], [])
+    ): entityfilter.FILTER_SCHEMA,
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -35,6 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USER_POOL_ID): str,
         vol.Required(CONF_REGION): str,
         vol.Required(CONF_RELAYER): str,
+        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -47,6 +59,10 @@ def async_setup(hass, config):
     else:
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
+    if CONF_ALEXA not in kwargs:
+        kwargs[CONF_ALEXA] = ALEXA_SCHEMA({})
+
+    kwargs[CONF_ALEXA] = smart_home.Config(**kwargs[CONF_ALEXA])
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
     @asyncio.coroutine
@@ -64,10 +80,11 @@ class Cloud:
     """Store the configuration of the cloud connection."""
 
     def __init__(self, hass, mode, cognito_client_id=None, user_pool_id=None,
-                 region=None, relayer=None):
+                 region=None, relayer=None, alexa=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
+        self.alexa_config = alexa
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
