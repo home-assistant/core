@@ -26,6 +26,7 @@ REQUIREMENTS = ['pyemby==1.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AUTO_HIDE = 'auto_hide'
+CONF_AUTO_GROUP = 'auto_group'
 
 MEDIA_TYPE_TRAILER = 'trailer'
 MEDIA_TYPE_GENERIC_VIDEO = 'video'
@@ -35,6 +36,7 @@ DEFAULT_PORT = 8096
 DEFAULT_SSL_PORT = 8920
 DEFAULT_SSL = False
 DEFAULT_AUTO_HIDE = False
+DEFAULT_AUTO_GROUP = False
 
 SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
@@ -58,6 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     ssl = config.get(CONF_SSL)
     auto_hide = config.get(CONF_AUTO_HIDE)
+    auto_group = config.get(CONF_AUTO_GROUP)
 
     if port is None:
         port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
@@ -93,6 +96,34 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if new_devices:
             _LOGGER.debug("Adding new devices: %s", new_devices)
             async_add_devices(new_devices, update_before_add=True)
+
+        if auto_group:
+            # Compile a list of entity IDs for active emby instances
+            active_entity_ids = []
+
+            for id, device in active_emby_devices.items():
+
+                _LOGGER.debug("Indexing active emby device %s", device.name)
+
+                # Reformat device name into the entity ID format used by HomeAssistant
+                # if we don't do this, we won't be able to create a group of these entities
+                entity_name = device.name.replace(" - ", "__")
+                entity_name = entity_name.replace(" ", "_")
+                # Prepend media_player prefix used by HomeAssistant - this is how it would appear in the UI
+                entity_name = "media_player." + entity_name
+                # Convert to lower-case for convention purposes
+                entity_name = entity_name.lower()
+                # Add to list
+                active_entity_ids.append(entity_name)
+
+            # Remove the default device from the group
+            active_entity_ids.remove("media_player.emby__homeassistant__homeassistant")
+
+            # Create the group
+            hass.states.async_set('group.emby', 'off', {
+                'entity_id': active_entity_ids
+            })
+
 
     @callback
     def device_removal_callback(data):
