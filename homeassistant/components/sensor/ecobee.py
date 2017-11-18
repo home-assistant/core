@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.ecobee/
 """
 from homeassistant.components import ecobee
 from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.util.temperature import calculate_dewpoint
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ecobee']
@@ -14,7 +15,8 @@ ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_FAHRENHEIT],
-    'humidity': ['Humidity', '%']
+    'humidity': ['Humidity', '%'],
+    'dewpoint': ['Dewpoint', TEMP_FAHRENHEIT],
 }
 
 
@@ -31,6 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     continue
 
                 dev.append(EcobeeSensor(sensor['name'], item['type'], index))
+            dev.append(EcobeeSensor(sensor['name'], 'dewpoint', index))
 
     add_devices(dev, True)
 
@@ -72,11 +75,23 @@ class EcobeeSensor(Entity):
         data = ecobee.NETWORK
         data.update()
         for sensor in data.ecobee.get_remote_sensors(self.index):
-            for item in sensor['capability']:
-                if (item['type'] == self.type and
-                        self.sensor_name == sensor['name']):
-                    if (self.type == 'temperature' and
-                            item['value'] != 'unknown'):
-                        self._state = float(item['value']) / 10
-                    else:
-                        self._state = item['value']
+            if self.sensor_name != sensor['name']:
+                continue
+            values = {c['type']: c['value'] for c in sensor['capability']}
+            if self.type in values:
+                if self.type == 'temperature':
+                    try:
+                        self._state = float(values[self.type]) / 10
+                    except (KeyError, ValueError):
+                        continue
+                else:
+                    self._state = values[self.type]
+            elif self.type == 'dewpoint':
+                try:
+                    temperature = float(values['temperature']) / 10
+                    humidity = float(values['humidity'])
+                except (KeyError, ValueError):
+                    continue
+                self._state = round(
+                    calculate_dewpoint(temperature, humidity,
+                                       self.unit_of_measurement), 1)
