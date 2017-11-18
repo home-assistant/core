@@ -741,8 +741,7 @@ class ClimateDevice(Entity):
         # supported_features. This follows exactly the way of determining
         # whether an attribute is included in state_attributes()
 
-        support = (SUPPORT_CURRENT_TEMPERATURE | SUPPORT_MIN_TEMPERATURE |
-                   SUPPORT_MAX_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE)
+        support = (SUPPORT_CURRENT_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE)
         if self.target_temperature_high is not None:
             support |= SUPPORT_TARGET_TEMPERATURE_HIGH
             support |= SUPPORT_TARGET_TEMPERATURE_LOW
