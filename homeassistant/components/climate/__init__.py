@@ -746,8 +746,6 @@ class ClimateDevice(Entity):
         if self.target_humidity:
             support |= SUPPORT_CURRENT_HUMIDITY
             support |= SUPPORT_TARGET_HUMIDITY
-            support |= SUPPORT_MIN_HUMIDITY
-            support |= SUPPORT_MAX_HUMIDITY
         if self.current_fan_mode is not None:
             support |= SUPPORT_FAN_MODE
         if self.current_operation is not None:
