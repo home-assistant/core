@@ -65,6 +65,8 @@ class LaMetricNotificationService(BaseNotificationService):
 
         # Sound in data?
         if data is not None:
+            if "icon" in data:
+                icon = data["icon"]
             if "sound" in data:
                 try:
                     sound = Sound(category="notifications",
