@@ -1,0 +1,147 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<style>
+  div.charts-tooltip {
+    z-index: 200 !important;
+  }
+</style>
+
+<script>
+
+Polymer({
+  is: 'state-history-chart-timeline',
+
+  properties: {
+    data: {
+      type: Object,
+      observer: 'dataChanged',
+    },
+
+    isAttached: {
+      type: Boolean,
+      value: false,
+      observer: 'dataChanged',
+    },
+  },
+
+  created: function () {
+    this.style.display = 'block';
+  },
+
+  attached: function () {
+    this.isAttached = true;
+  },
+
+  dataChanged: function () {
+    this.drawChart();
+  },
+
+  drawChart: function () {
+    var root = Polymer.dom(this);
+    var stateHistory = this.data;
+    var chart;
+    var dataTable;
+    var startTime;
+    var endTime;
+    var numTimelines;
+    var format;
+    var daysDelta;
+
+    if (!this.isAttached) {
+      return;
+    }
+
+    while (root.node.lastChild) {
+      root.node.removeChild(root.node.lastChild);
+    }
+
+    if (!stateHistory || stateHistory.length === 0) {
+      return;
+    }
+
+    chart = new window.google.visualization.Timeline(this);
+    dataTable = new window.google.visualization.DataTable();
+
+    dataTable.addColumn({ type: 'string', id: 'Entity' });
+    dataTable.addColumn({ type: 'string', id: 'State' });
+    dataTable.addColumn({ type: 'date', id: 'Start' });
+    dataTable.addColumn({ type: 'date', id: 'End' });
+
+    function addRow(entityDisplay, stateStr, start, end) {
+      var stateDisplay = stateStr.replace(/_/g, ' ');
+      dataTable.addRow([entityDisplay, stateDisplay, start, end]);
+    }
+
+    startTime = new Date(
+      stateHistory.reduce(
+        function (minTime, stateInfo) {
+          return Math.min(minTime, new Date(stateInfo[0].last_changed));
+        }, new Date()));
+
+    // end time is Math.max(startTime, last_event)
+    endTime = new Date(
+      stateHistory.reduce(
+        function (maxTime, stateInfo) {
+          return Math.max(maxTime, new Date(stateInfo[stateInfo.length - 1].last_changed));
+        }, startTime));
+
+    if (endTime > new Date()) {
+      endTime = new Date();
+    }
+    format = 'H:mm';
+    daysDelta = (endTime - startTime) / (24 * 3600 * 1000);
+    // Avoid rounding up when the API returns a few extra seconds.
+    if (daysDelta > 30.1) {
+      format = 'MMM d';
+    } else if (daysDelta > 3.1) {
+      format = 'EEE, MMM d';
+    } else if (daysDelta > 1.1) {
+      format = 'EEE, MMM d, H:mm';
+    }
+
+    numTimelines = 0;
+    // stateHistory is a list of lists of sorted state objects
+    stateHistory.forEach(function (stateInfo) {
+      var entityDisplay;
+      var newLastChanged;
+      var prevState = null;
+      var prevLastChanged = null;
+
+      if (stateInfo.length === 0) return;
+
+      entityDisplay = window.hassUtil.computeStateName(stateInfo[0]);
+
+      stateInfo.forEach(function (state) {
+        if (prevState !== null && state.state !== prevState) {
+          newLastChanged = new Date(state.last_changed);
+
+          addRow(entityDisplay, prevState, prevLastChanged, newLastChanged);
+
+          prevState = state.state;
+          prevLastChanged = newLastChanged;
+        } else if (prevState === null) {
+          prevState = state.state;
+          prevLastChanged = new Date(state.last_changed);
+        }
+      });
+
+      addRow(entityDisplay, prevState, prevLastChanged, endTime);
+      numTimelines++;
+    });
+
+    chart.draw(dataTable, {
+      backgroundColor: '#fafafa',
+
+      height: 55 + (numTimelines * 42),
+
+      timeline: {
+        showRowLabels: stateHistory.length > 1,
+      },
+
+      hAxis: {
+        format: format
+      },
+    });
+  },
+});
+</script>

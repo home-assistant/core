@@ -1,0 +1,263 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+
+<link rel='import' href='../components/ha-labeled-slider.html'>
+<link rel='import' href='../components/ha-color-picker.html'>
+<link rel='import' href='../components/ha-attributes.html'>
+
+<dom-module id='more-info-light'>
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      .effect_list {
+        padding-bottom: 16px;
+      }
+
+      .effect_list, .brightness, .color_temp, .white_value {
+        max-height: 0px;
+        overflow: hidden;
+        transition: max-height .5s ease-in;
+      }
+
+      .color_temp {
+        --ha-slider-background: -webkit-linear-gradient(right, rgb(255, 160, 0) 0%, white 50%, rgb(166, 209, 255) 100%);
+      }
+
+      ha-color-picker {
+        display: block;
+        width: 250px;
+
+        max-height: 0px;
+        overflow: hidden;
+        transition: max-height .2s ease-in;
+      }
+
+      .has-effect_list .effect_list,
+      .has-brightness .brightness,
+      .has-color_temp .color_temp,
+      .has-white_value .white_value {
+        max-height: 84px;
+      }
+
+      .has-rgb_color ha-color-picker {
+        max-height: 200px;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+    </style>
+
+    <div class$='[[computeClassNames(stateObj)]]'>
+
+      <div class='effect_list'>
+        <paper-dropdown-menu label-float label='Effect'>
+          <paper-listbox slot="dropdown-content" selected="{{effectIndex}}">
+            <template is='dom-repeat'
+                      items='[[stateObj.attributes.effect_list]]'>
+              <paper-item>[[item]]</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
+
+      <div class='brightness'>
+        <ha-labeled-slider
+          caption='Brightness' icon='mdi:brightness-5' max='255'
+          value='{{brightnessSliderValue}}'
+          on-change='brightnessSliderChanged'></ha-labeled-slider>
+      </div>
+
+      <div class='color_temp'>
+        <ha-labeled-slider
+          caption='Color Temperature' icon='mdi:thermometer'
+          min='[[stateObj.attributes.min_mireds]]' max='[[stateObj.attributes.max_mireds]]'
+          value='{{ctSliderValue}}'
+          on-change='ctSliderChanged'></ha-labeled-slider>
+      </div>
+
+      <div class='white_value'>
+        <ha-labeled-slider
+          caption='White Value' icon='mdi:file-word-box' max='255'
+          value='{{wvSliderValue}}'
+          on-change='wvSliderChanged'></ha-labeled-slider>
+      </div>
+
+      <ha-color-picker on-colorselected='colorPicked' height='200' width='250'>
+      </ha-color-picker>
+
+      <ha-attributes state-obj="[[stateObj]]" extra-filters="brightness,color_temp,white_value,effect_list,effect,rgb_color,xy_color,min_mireds,max_mireds"></ha-attributes>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-light',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+      observer: 'stateObjChanged',
+    },
+
+    effectIndex: {
+      type: Number,
+      value: -1,
+      observer: 'effectChanged',
+    },
+
+    brightnessSliderValue: {
+      type: Number,
+      value: 0,
+    },
+
+    ctSliderValue: {
+      type: Number,
+      value: 0,
+    },
+
+    wvSliderValue: {
+      type: Number,
+      value: 0,
+    },
+  },
+
+  stateObjChanged: function (newVal, oldVal) {
+    if (newVal && newVal.state === 'on') {
+      this.brightnessSliderValue = newVal.attributes.brightness;
+      this.ctSliderValue = newVal.attributes.color_temp;
+      this.wvSliderValue = newVal.attributes.white_value;
+
+      if (newVal.attributes.effect_list) {
+        this.effectIndex = newVal.attributes.effect_list.indexOf(
+          newVal.attributes.effect);
+      } else {
+        this.effectIndex = -1;
+      }
+    } else {
+      this.brightnessSliderValue = 0;
+    }
+
+    if (oldVal) {
+      this.async(function () {
+        this.fire('iron-resize');
+      }.bind(this), 500);
+    }
+  },
+
+  featureClassNames: {
+    1: 'has-brightness',
+  },
+
+  computeClassNames: function (stateObj) {
+    var classes = [
+      window.hassUtil.attributeClassNames(
+        stateObj, ['color_temp', 'white_value', 'effect_list']),
+      window.hassUtil.featureClassNames(stateObj, this.featureClassNames),
+    ];
+
+    // Lights that do shades of white can still have an rgb color
+    // In that case we don't want the color picker to show.
+    if (stateObj.attributes.supported_features &&
+        (stateObj.attributes.supported_features & 16) !== 0 &&
+        stateObj.attributes.rgb_color) {
+      classes.push('has-rgb_color');
+    }
+    return classes.join(' ');
+  },
+
+  effectChanged: function (effectIndex) {
+    var effectInput;
+    // Selected Option will transition to '' before transitioning to new value
+    if (effectIndex === '' || effectIndex === -1) return;
+
+    effectInput = this.stateObj.attributes.effect_list[effectIndex];
+    if (effectInput === this.stateObj.attributes.effect) return;
+
+    this.hass.callService('light', 'turn_on', {
+      entity_id: this.stateObj.entity_id,
+      effect: effectInput,
+    });
+  },
+
+  brightnessSliderChanged: function (ev) {
+    var bri = parseInt(ev.target.value, 10);
+
+    if (isNaN(bri)) return;
+
+    if (bri === 0) {
+      this.hass.callService('light', 'turn_off', {
+        entity_id: this.stateObj.entity_id,
+      });
+    } else {
+      this.hass.callService('light', 'turn_on', {
+        entity_id: this.stateObj.entity_id,
+        brightness: bri,
+      });
+    }
+  },
+
+  ctSliderChanged: function (ev) {
+    var ct = parseInt(ev.target.value, 10);
+
+    if (isNaN(ct)) return;
+
+    this.hass.callService('light', 'turn_on', {
+      entity_id: this.stateObj.entity_id,
+      color_temp: ct,
+    });
+  },
+
+  wvSliderChanged: function (ev) {
+    var wv = parseInt(ev.target.value, 10);
+
+    if (isNaN(wv)) return;
+
+    this.hass.callService('light', 'turn_on', {
+      entity_id: this.stateObj.entity_id,
+      white_value: wv,
+    });
+  },
+
+  serviceChangeColor: function (hass, entityId, color) {
+    hass.callService('light', 'turn_on', {
+      entity_id: entityId,
+      rgb_color: [color.r, color.g, color.b],
+    });
+  },
+
+  /**
+   * Called when a new color has been picked. We will not respond to every
+   * color pick event but have a pause between requests.
+   */
+  colorPicked: function (ev) {
+    if (this.skipColorPicked) {
+      this.colorChanged = true;
+      return;
+    }
+
+    this.color = ev.detail.rgb;
+
+    this.serviceChangeColor(this.hass, this.stateObj.entity_id, this.color);
+
+    this.colorChanged = false;
+    this.skipColorPicked = true;
+
+    this.colorDebounce = setTimeout(function () {
+      if (this.colorChanged) {
+        this.serviceChangeColor(this.hass, this.stateObj.entity_id, this.color);
+      }
+      this.skipColorPicked = false;
+    }.bind(this), 500);
+  },
+});
+</script>

@@ -1,0 +1,199 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel='import' href='../../../bower_components/iron-media-query/iron-media-query.html'>
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../../src/components/ha-menu-button.html">
+<link rel="import" href="../../../src/components/buttons/ha-call-service-button.html">
+<link rel="import" href="../../../src/resources/ha-style.html">
+
+<link rel="import" href="../ha-config-section.html">
+
+<dom-module id="ha-config-section-core">
+  <template>
+    <style include="iron-flex ha-style">
+      .validate-container {
+        @apply(--layout-vertical);
+        @apply(--layout-center-center);
+        height: 140px;
+      }
+
+      .validate-result {
+        color: var(--google-green-500);
+        font-weight: 500;
+        margin-bottom: 1em;
+      }
+
+      .config-invalid {
+        margin: 1em 0;
+      }
+
+      .config-invalid .text {
+        color: var(--google-red-500);
+        font-weight: 500;
+      }
+
+      .config-invalid paper-button {
+        float: right;
+      }
+
+      .validate-log {
+        white-space: pre-wrap;
+      }
+    </style>
+    <ha-config-section
+      is-wide='[[isWide]]'
+    >
+      <span slot='header'>Server Management</span>
+      <span slot='introduction'>
+        Changing your configuration can be a tiresome process. We know. This section will try to make your life a little bit easier.
+      </span>
+
+      <paper-card heading='Configuration Validation'>
+        <div class='card-content'>
+          Validate your configuration if you recently made some changes to your configuration and want to make sure that it is all valid.
+          <template is='dom-if' if='[[!validateLog]]'>
+            <div class='validate-container'>
+              <template is='dom-if' if='[[!validating]]'>
+                <div class='validate-result' id='result'>[[validateResult]]</div>
+                <paper-button raised on-tap='validateConfig'>check config</paper-button>
+              </template>
+              <template is='dom-if' if='[[validating]]'>
+                <paper-spinner active></paper-spinner>
+              </template>
+            </div>
+          </template>
+          <template is='dom-if' if='[[validateLog]]'>
+            <div class='config-invalid'>
+              <span class='text'>Configuration invalid.</span>
+              <paper-button raised on-tap='validateConfig'>check config</paper-button>
+            </div>
+            <div id='configLog' class='validate-log'>[[validateLog]]</div>
+          </template>
+        </div>
+      </paper-card>
+
+      <paper-card heading='Configuration Reloading'>
+        <div class='card-content'>
+          Some parts of Home Assistant can reload without requiring a restart. Hitting reload will unload their current configuration and load the new one.
+        </div>
+        <div class='card-actions'>
+          <ha-call-service-button
+            hass='[[hass]]'
+            domain='homeassistant'
+            service='reload_core_config'
+          >Reload Core</ha-call-service-button>
+          <ha-call-service-button
+            hass='[[hass]]'
+            domain='group'
+            service='reload'
+            hidden$='[[!groupLoaded(hass)]]'
+          >Reload Groups</ha-call-service-button>
+          <ha-call-service-button
+            hass='[[hass]]'
+            domain='automation'
+            service='reload'
+            hidden$='[[!automationLoaded(hass)]]'
+          >Reload Automation</ha-call-service-button>
+          <ha-call-service-button
+            hass='[[hass]]'
+            domain='script'
+            service='reload'
+            hidden$='[[!scriptLoaded(hass)]]'
+          >Reload Scripts</ha-call-service-button>
+        </div>
+      </paper-card>
+
+      <paper-card heading='Server Management'>
+        <div class='card-content'>
+          Control your Home Assistant server… from Home Assistant.
+        </div>
+        <div class='card-actions warning'>
+          <ha-call-service-button
+            class='warning'
+            hass='[[hass]]'
+            domain='homeassistant'
+            service='restart'
+          >Restart</ha-call-service-button>
+          <ha-call-service-button
+            class='warning'
+            hass='[[hass]]'
+            domain='homeassistant'
+            service='stop'
+          >Stop</ha-call-service-button>
+        </div>
+      </paper-card>
+
+    </ha-config-section>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-config-section-core',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    isWide: {
+      type: Boolean,
+      value: false,
+    },
+
+    validating: {
+      type: Boolean,
+      value: false,
+    },
+
+    validateResult: {
+      type: String,
+      value: '',
+    },
+
+    validateLog: {
+      type: String,
+      value: '',
+    },
+  },
+
+  groupLoaded: function (hass) {
+    return window.hassUtil.isComponentLoaded(hass, 'group');
+  },
+
+  automationLoaded: function (hass) {
+    return window.hassUtil.isComponentLoaded(hass, 'automation');
+  },
+
+  scriptLoaded: function (hass) {
+    return window.hassUtil.isComponentLoaded(hass, 'script');
+  },
+
+  validateConfig: function () {
+    this.validating = true;
+    this.validateLog = '';
+    this.validateResult = '';
+
+    var el = this;
+
+    this.hass.callApi('POST', 'config/core/check_config')
+      .then(function (result) {
+        el.validating = false;
+        var isValid = el.configValid = result.result === 'valid';
+
+        if (isValid) {
+          el.validateResult = 'Valid!';
+        } else {
+          el.validateLog = result.errors;
+        }
+      });
+  }
+});
+</script>

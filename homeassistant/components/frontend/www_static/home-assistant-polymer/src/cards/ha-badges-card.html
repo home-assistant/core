@@ -1,0 +1,33 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../components/entity/ha-state-label-badge.html'>
+
+<dom-module id='ha-badges-card'>
+  <template>
+    <style>
+      ha-state-label-badge {
+        display: inline-block;
+        margin-bottom: var(--ha-state-label-badge-margin-bottom, 16px);
+      }
+    </style>
+    <template is='dom-repeat' items='[[states]]'>
+      <ha-state-label-badge hass='[[hass]]' state='[[item]]'></ha-state-label-badge>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-badges-card',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    states: {
+      type: Array,
+    },
+  },
+});
+</script>

@@ -1,0 +1,74 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="./ha-progress-button.html">
+
+<dom-module id='ha-call-api-button'>
+  <template>
+    <ha-progress-button
+      id='progress'
+      progress='[[progress]]'
+      on-tap='buttonTapped'
+      disabled='[[disabled]]'
+    ><slot></slot></ha-progress-button>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-call-api-button',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    progress: {
+      type: Boolean,
+      value: false,
+    },
+
+    path: {
+      type: String,
+    },
+
+    method: {
+      type: String,
+      value: 'POST',
+    },
+
+    data: {
+      type: Object,
+      value: {},
+    },
+
+    disabled: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  buttonTapped: function () {
+    this.progress = true;
+    var el = this;
+    var eventData = {
+      method: this.method,
+      path: this.path,
+      data: this.data,
+    };
+
+    this.hass.callApi(this.method, this.path, this.data)
+      .then(function (resp) {
+        el.progress = false;
+        el.$.progress.actionSuccess();
+        eventData.success = true;
+        eventData.response = resp;
+      }, function (resp) {
+        el.progress = false;
+        el.$.progress.actionError();
+        eventData.success = false;
+        eventData.response = resp;
+      }).then(function () {
+        el.fire('hass-api-called', eventData);
+      });
+  }
+});
+</script>

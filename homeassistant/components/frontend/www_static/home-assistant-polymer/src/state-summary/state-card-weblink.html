@@ -1,0 +1,59 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../components/entity/state-badge.html">
+
+<dom-module id="state-card-weblink">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      .name {
+        @apply(--paper-font-common-nowrap);
+        @apply(--paper-font-body1);
+        color: var(--primary-color);
+
+        text-transform: capitalize;
+        line-height: 40px;
+        margin-left: 16px;
+      }
+    </style>
+
+    <state-badge state-obj='[[stateObj]]' in-dialog='[[inDialog]]'></state-badge>
+    <a href$='[[stateObj.state]]' target='_blank' class='name' id='link'>[[computeStateName(stateObj)]]</a>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-weblink',
+
+  properties: {
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  listeners: {
+    tap: 'onTap',
+  },
+
+  computeStateName: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj);
+  },
+
+  onTap: function (ev) {
+    ev.stopPropagation();
+    if (ev.target === this.$.link) {
+      // Only open window if we clicked on card but not the link
+      return;
+    }
+    window.open(this.stateObj.state, '_blank');
+  },
+});
+</script>

@@ -1,0 +1,60 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+
+<dom-module id="hassio-addon-logs">
+  <template>
+    <style include="iron-flex ha-style">
+      :host,
+      paper-card {
+        display: block;
+      }
+    </style>
+    <paper-card heading='Logs'>
+      <div class="card-content">
+        <pre>[[addonLogs]]</pre>
+      </div>
+      <div class="card-actions">
+        <paper-button on-tap='refresh'>Refresh</paper-button>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-addon-logs',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    addon: {
+      type: String,
+      observer: 'addonChanged',
+    },
+
+    addonLogs: {
+      type: String,
+      value: '',
+    },
+  },
+
+  addonChanged: function (addon) {
+    if (!this.hass) {
+      setTimeout(function () { this.addonChanged(addon); }.bind(this), 0);
+      return;
+    }
+
+    this.refresh();
+  },
+
+  refresh: function () {
+    this.hass.callApi('get', 'hassio/addons/' + this.addon + '/logs')
+      .then(function (info) {
+        this.addonLogs = info;
+      }.bind(this));
+  },
+});
+</script>

@@ -1,0 +1,21 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../components/ha-attributes.html">
+
+<dom-module id="more-info-default">
+  <template>
+    <ha-attributes state-obj="[[stateObj]]"></ha-attributes>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-default',
+
+  properties: {
+    stateObj: {
+      type: Object,
+    },
+  },
+});
+</script>

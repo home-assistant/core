@@ -1,0 +1,89 @@
+<script>
+(function () {
+  var PAGE_TITLE = 'Home Assistant';
+
+  function pageState(panel, view) {
+    var state = { panel: panel };
+    if (panel === 'states') {
+      state.view = view || null;
+    }
+    return state;
+  }
+
+  function pageUrl(pane, view) {
+    return pane === 'states' && view ?
+      '/' + pane + '/' + view : '/' + pane;
+  }
+
+  Polymer({
+    is: 'ha-url-sync',
+
+    properties: {
+      hass: {
+        type: Object,
+        observer: 'hassChanged',
+      },
+    },
+
+    hassChanged: function (newHass, oldHass) {
+      if (!oldHass) {
+        return;
+      } else if (newHass.currentPanel === oldHass.currentPanel &&
+                 newHass.currentView === oldHass.currentView) {
+        // did the more info entity change?
+        if (oldHass.moreInfoEntityId !== newHass.moreInfoEntityId) {
+          if (newHass.moreInfoEntityId) {
+            // push same state so that back button works.
+            history.pushState(history.state, PAGE_TITLE, window.location.pathname);
+          } else if (this.ignoreNextDeselectEntity) {
+            this.ignoreNextDeselectEntity = false;
+          } else {
+            history.back();
+          }
+        }
+
+        return;
+      } else if (this.ignoreNextNav) {
+        this.ignoreNextNav = false;
+        return;
+      }
+
+      history.pushState(
+        pageState(newHass.currentPanel, newHass.currentView), PAGE_TITLE,
+        pageUrl(newHass.currentPanel, newHass.currentView));
+    },
+
+    popstateChangeListener: function (ev) {
+      if (this.hass.moreInfoEntityId) {
+        this.ignoreNextDeselectEntity = true;
+        this.fire('hass-more-info', { entityId: null });
+      } else if (this.hass.currentPanel !== ev.state.panel ||
+                 this.hass.currentView !== ev.state.view) {
+        this.ignoreNextNav = true;
+        this.fire('hass-navigate', ev.state);
+      }
+    },
+
+    // initial url sync
+    attached: function () {
+      this.popstateChangeListener = this.popstateChangeListener.bind(this);
+
+      // keep state in sync when url changes via forward/back buttons
+      window.addEventListener('popstate', this.popstateChangeListener);
+
+      // store current view / panel
+      if (window.location.pathname === '/') {
+        var currentPanel = this.hass.currentPanel;
+        var currentView = this.hass.currentView;
+
+        history.replaceState(
+          pageState(currentPanel, currentView), PAGE_TITLE,
+          pageUrl(currentPanel, currentView));
+      } else {
+        var parts = window.location.pathname.substr(1).split('/');
+        this.fire('hass-navigate', pageState(parts[0], parts[1]));
+      }
+    }
+  });
+}());
+</script>

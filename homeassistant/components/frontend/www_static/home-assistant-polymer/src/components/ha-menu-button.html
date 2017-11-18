@@ -1,0 +1,44 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel='import' href='../../bower_components/paper-icon-button/paper-icon-button.html'>
+
+<dom-module id='ha-menu-button'>
+  <template>
+    <style>
+      .invisible {
+        visibility: hidden;
+      }
+    </style>
+    <paper-icon-button
+      icon='mdi:menu'
+      class$='[[computeMenuButtonClass(narrow, showMenu)]]'
+      on-tap='toggleMenu'
+    ></paper-icon-button>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-menu-button',
+
+  properties: {
+    narrow: {
+      type: Boolean,
+      value: false,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  computeMenuButtonClass: function (narrow, showMenu) {
+    return !narrow && showMenu ? 'invisible' : '';
+  },
+
+  toggleMenu: function (ev) {
+    ev.stopPropagation();
+    this.fire('hass-open-menu');
+  },
+});
+</script>

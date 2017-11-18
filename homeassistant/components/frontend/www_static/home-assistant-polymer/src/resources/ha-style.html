@@ -1,0 +1,101 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<style is="custom-style">
+  html {
+    font-size: 14px;
+
+    /* for paper-toggle-button */
+    --paper-grey-50: #fafafa;
+    --paper-grey-200: #eeeeee;
+
+    --dark-primary-color: #0288D1;
+    --primary-color: #03A9F4;
+    --light-primary-color: #B3E5FC;
+    --text-primary-color: #ffffff;
+    --accent-color: #FF9800;
+    --primary-background-color: var(--paper-grey-50);
+    --primary-text-color: #212121;
+    --secondary-text-color: #727272;
+    --disabled-text-color: #bdbdbd;
+    --divider-color: rgba(0, 0, 0, .12);
+
+    --paper-toggle-button-checked-ink-color: #039be5;
+    --paper-toggle-button-checked-button-color: #039be5;
+    --paper-toggle-button-checked-bar-color: #039be5;
+
+    --paper-slider-knob-color: var(--primary-color);
+    --paper-slider-knob-start-color: var(--primary-color);
+    --paper-slider-pin-color: var(--primary-color);
+    --paper-slider-active-color: var(--primary-color);
+    --paper-slider-secondary-color: var(--light-primary-color);
+    --paper-slider-container-color: var(--divider-color);
+
+    --paper-card-background-color: #FFF;
+    --paper-listbox-background-color: #FFF;
+
+    /* Taken from paper-styles/color.html */
+    /* for paper-spinner */
+    --google-red-500: #db4437;
+    --google-blue-500: #4285f4;
+    --google-green-500: #0f9d58;
+    --google-yellow-500: #f4b400;
+
+    /* for paper-slider */
+    --paper-green-400: #66bb6a;
+    --paper-blue-400: #42a5f5;
+    --paper-orange-400: #ffa726;
+
+    /* opacity for dark text on a light background */
+    --dark-divider-opacity: 0.12;
+    --dark-disabled-opacity: 0.38; /* or hint text or icon */
+    --dark-secondary-opacity: 0.54;
+    --dark-primary-opacity: 0.87;
+
+    /* opacity for light text on a dark background */
+    --light-divider-opacity: 0.12;
+    --light-disabled-opacity: 0.3; /* or hint text or icon */
+    --light-secondary-opacity: 0.7;
+    --light-primary-opacity: 1.0;
+  }
+</style>
+
+<dom-module id='ha-style'>
+  <template>
+    <style>
+      :host {
+        @apply(--paper-font-body1);
+      }
+
+      app-header-layout {
+        background-color: var(--primary-background-color);
+      }
+
+      app-header, app-toolbar {
+        background-color: var(--primary-color);
+        font-weight: 400;
+        color: white;
+      }
+
+      app-toolbar ha-menu-button + [main-title] {
+        margin-left: 24px;
+      }
+
+      h1 {
+        @apply(--paper-font-title);
+      }
+
+      .card-actions > paper-button:not([disabled]),
+      .card-actions > ha-call-api-button:not([disabled]),
+      .card-actions > ha-call-service-button:not([disabled]) {
+        color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      .card-actions > paper-button.warning:not([disabled]),
+      .card-actions > ha-call-api-button.warning:not([disabled]),
+      .card-actions > ha-call-service-button.warning:not([disabled]) {
+        color: var(--google-red-500);
+      }
+    </style>
+  </template>
+</dom-module>

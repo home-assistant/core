@@ -1,0 +1,25 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/iron-icon/iron-icon.html">
+
+<dom-module id="ha-state-icon">
+  <template>
+    <iron-icon icon="[[computeIcon(stateObj)]]"></iron-icon>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-state-icon',
+
+  properties: {
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  computeIcon: function (stateObj) {
+    return window.hassUtil.stateIcon(stateObj);
+  },
+});
+</script>

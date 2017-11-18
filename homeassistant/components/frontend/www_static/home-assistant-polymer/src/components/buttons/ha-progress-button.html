@@ -1,0 +1,121 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-spinner/paper-spinner.html">
+
+<dom-module id='ha-progress-button'>
+  <template>
+    <style>
+      .container {
+        position: relative;
+        display: inline-block;
+      }
+
+      paper-button {
+        transition: all 1s;
+      }
+
+      .success paper-button {
+        color: white;
+        background-color: var(--google-green-500);
+        transition: none;
+      }
+
+      .error paper-button {
+        color: white;
+        background-color: var(--google-red-500);
+        transition: none;
+      }
+
+      paper-button[disabled] {
+        color: #c8c8c8;
+      }
+
+      .progress {
+        @apply(--layout);
+        @apply(--layout-center-center);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+    </style>
+    <div class='container' id='container'>
+      <paper-button
+        id='button'
+        disabled='[[computeDisabled(disabled, progress)]]'
+        on-tap='buttonTapped'
+      >
+        <slot></slot>
+      </paper-button>
+      <template is='dom-if' if='[[progress]]'>
+        <div class='progress'>
+          <paper-spinner active></paper-spinner>
+        </div>
+      </template>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-progress-button',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    progress: {
+      type: Boolean,
+      value: false,
+    },
+
+    domain: {
+      type: String,
+    },
+
+    service: {
+      type: String,
+    },
+
+    serviceData: {
+      type: Object,
+      value: {},
+    },
+
+    disabled: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  tempClass: function (className) {
+    var classList = this.$.container.classList;
+    classList.add(className);
+    this.async(function () {
+      classList.remove(className);
+    }, 1000);
+  },
+
+  listeners: {
+    tap: 'buttonTapped',
+  },
+
+  buttonTapped: function (ev) {
+    if (this.progress) ev.stopPropagation();
+  },
+
+  actionSuccess: function () {
+    this.tempClass('success');
+  },
+
+  actionError: function () {
+    this.tempClass('error');
+  },
+
+  computeDisabled: function (disabled, progress) {
+    return disabled || progress;
+  },
+});
+</script>

@@ -1,0 +1,61 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../components/entity/state-info.html">
+<link rel="import" href="../components/entity/ha-entity-toggle.html">
+
+<dom-module id="state-card-script">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      paper-button {
+        color: var(--primary-color);
+        font-weight: 500;
+        top: 3px;
+        height: 37px;
+        margin-right: -.57em;
+      }
+
+      ha-entity-toggle {
+        margin-left: 16px;
+      }
+    </style>
+
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]" in-dialog='[[inDialog]]'></state-info>
+      <template is='dom-if' if='[[stateObj.attributes.can_cancel]]'>
+        <ha-entity-toggle state-obj='[[stateObj]]' hass='[[hass]]'></ha-entity-toggle>
+      </template>
+      <template is='dom-if' if='[[!stateObj.attributes.can_cancel]]'>
+        <paper-button on-tap='fireScript'>ACTIVATE</paper-button>
+      </template>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-script',
+
+  properties: {
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+  },
+
+  fireScript: function (ev) {
+    ev.stopPropagation();
+    this.hass.callService(
+      'script', 'turn_on',
+      { entity_id: this.stateObj.entity_id });
+  },
+});
+</script>

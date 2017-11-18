@@ -1,0 +1,140 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel='import' href='../components/ha-card.html'>
+<link rel='import' href='../components/entity/ha-entity-toggle.html'>
+<link rel='import' href='../state-summary/state-card-content.html'>
+
+<dom-module id='ha-entities-card'>
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      .states {
+        padding-bottom: 16px;
+      }
+      .state {
+        padding: 4px 16px;
+        cursor: pointer;
+      }
+      .header {
+        @apply(--paper-font-headline);
+        /* overwriting line-height +8 because entity-toggle can be 40px height,
+           compensating this with reduced padding */
+        line-height: 40px;
+        color: var(--primary-text-color);
+        padding: 20px 16px 12px;
+      }
+      .header .name {
+        @apply(--paper-font-common-nowrap);
+      }
+      .header.domain .name {
+        /* Capitalize cards titles for default domain groups. */
+        text-transform: capitalize;
+      }
+      ha-entity-toggle {
+        margin-left: 16px;
+      }
+      .header-more-info {
+        cursor: pointer;
+      }
+    </style>
+
+    <ha-card>
+      <div class$='[[computeTitleClass(groupEntity)]]' on-tap='entityTapped'>
+        <div class='flex name'>[[computeTitle(states, groupEntity)]]</div>
+        <template is='dom-if' if='[[showGroupToggle(groupEntity, states)]]'>
+          <ha-entity-toggle
+            hass='[[hass]]'
+            state-obj='[[groupEntity]]'></ha-entity-toggle>
+        </template>
+      </div>
+      <div class='states'>
+        <template is='dom-repeat' items="[[states]]">
+          <div class='state' on-tap='entityTapped'>
+            <state-card-content
+              hass='[[hass]]'
+              class="state-card"
+              state-obj="[[item]]"></state-card-content>
+          </div>
+        </template>
+      </div>
+    </ha-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-entities-card',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    states: {
+      type: Array,
+    },
+
+    groupEntity: {
+      type: Object,
+    },
+  },
+
+  computeTitle: function (states, groupEntity) {
+    return groupEntity ?
+      window.hassUtil.computeStateName(groupEntity) :
+      window.hassUtil.computeDomain(states[0]).replace(/_/g, ' ');
+  },
+
+  computeTitleClass: function (groupEntity) {
+    var classes = 'header horizontal layout center ';
+    if (groupEntity) {
+      classes += 'header-more-info';
+    } else {
+      classes += 'domain';
+    }
+    return classes;
+  },
+
+  entityTapped: function (ev) {
+    var entityId;
+    if (ev.target.classList.contains('paper-toggle-button') ||
+        ev.target.classList.contains('paper-icon-button') ||
+        (!ev.model && !this.groupEntity)) {
+      return;
+    }
+    ev.stopPropagation();
+
+    if (ev.model) {
+      entityId = ev.model.item.entity_id;
+    } else {
+      entityId = this.groupEntity.entity_id;
+    }
+    this.fire('hass-more-info', { entityId: entityId });
+  },
+
+  showGroupToggle: function (groupEntity, states) {
+    if (!groupEntity || !states || groupEntity.attributes.control === 'hidden' ||
+        (groupEntity.state !== 'on' && groupEntity.state !== 'off')) {
+      return false;
+    }
+
+    // only show if we can toggle 2+ entities in group
+    var canToggleCount = 0;
+    for (var i = 0; i < states.length; i++) {
+      if (!window.hassUtil.canToggleState(this.hass, states[i])) {
+        continue;
+      }
+
+      canToggleCount++;
+
+      if (canToggleCount > 1) {
+        break;
+      }
+    }
+
+    return canToggleCount > 1;
+  },
+});
+</script>

@@ -1,0 +1,48 @@
+<script>
+(function () {
+  var STORED_STATE = [
+    'dockedSidebar',
+  ];
+
+  Polymer({
+    is: 'ha-pref-storage',
+
+    properties: {
+      hass: {
+        type: Object,
+      },
+
+      storage: {
+        type: Object,
+        value: window.localStorage || {},
+      },
+    },
+
+    storeState: function () {
+      if (!this.hass) return;
+
+      try {
+        for (var i = 0; i < STORED_STATE.length; i++) {
+          var key = STORED_STATE[i];
+          this.storage[key] = JSON.stringify(this.hass[key]);
+        }
+      } catch (err) {
+        // Safari throws exception in private mode
+      }
+    },
+
+    getStoredState: function () {
+      var state = {};
+
+      for (var i = 0; i < STORED_STATE.length; i++) {
+        var key = STORED_STATE[i];
+        if (key in this.storage) {
+          state[key] = JSON.parse(this.storage[key]);
+        }
+      }
+
+      return state;
+    }
+  });
+}());
+</script>

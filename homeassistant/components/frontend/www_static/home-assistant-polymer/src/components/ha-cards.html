@@ -1,0 +1,357 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="./ha-demo-badge.html">
+<link rel="import" href="../cards/ha-badges-card.html">
+<link rel="import" href="../cards/ha-card-chooser.html">
+
+<dom-module id="ha-cards">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-factors"></style>
+    <style>
+      :host {
+        display: block;
+        padding-top: 8px;
+        padding-right: 8px;
+      }
+
+      .badges {
+        font-size: 85%;
+        text-align: center;
+      }
+
+      .column {
+        max-width: 500px;
+        overflow-x: hidden;
+      }
+
+      .zone-card {
+        margin-left: 8px;
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 500px) {
+        :host {
+          padding-right: 0;
+        }
+
+        .zone-card {
+          margin-left: 0;
+        }
+      }
+
+      @media (max-width: 599px) {
+        .column {
+          max-width: 600px;
+        }
+      }
+
+    </style>
+
+    <div class='main'>
+      <template is='dom-if' if='[[cards.badges]]'>
+        <div class='badges'>
+          <template is='dom-if' if='[[cards.demo]]'>
+            <ha-demo-badge></ha-demo-badge>
+          </template>
+
+          <ha-badges-card states='[[cards.badges]]' hass='[[hass]]'></ha-badges-card>
+        </div>
+      </template>
+
+      <div class='horizontal layout center-justified'>
+        <template is='dom-repeat' items='[[cards.columns]]' as='column'>
+          <div class='column flex-1'>
+            <template is='dom-repeat' items='[[column]]' as='card'>
+              <div class='zone-card'>
+                <ha-card-chooser card-data='[[card]]' hass='[[hass]]'
+                ></ha-card-chooser>
+              </div>
+            </template>
+          </div>
+        </template>
+    </div>
+  </template>
+
+</dom-module>
+
+<script>
+(function () {
+  'use strict';
+
+  // mapping domain to size of the card.
+  var DOMAINS_WITH_CARD = {
+    camera: 4,
+    media_player: 3,
+    persistent_notification: 0,
+    weather: 4,
+  };
+
+  // 4 types:
+  // badges: 0 .. 10
+  // before groups < 0
+  // groups: X
+  // rest: 100
+
+  var PRIORITY = {
+    // before groups < 0
+    configurator: -20,
+    persistent_notification: -15,
+
+    // badges have priority >= 0
+    updater: 0,
+    sun: 1,
+    device_tracker: 2,
+    alarm_control_panel: 3,
+    sensor: 5,
+    binary_sensor: 6,
+  };
+
+  function getPriority(domain) {
+    return (domain in PRIORITY) ? PRIORITY[domain] : 100;
+  }
+
+  function sortPriority(domainA, domainB) {
+    return domainA.priority - domainB.priority;
+  }
+
+  function entitySortBy(entityA, entityB) {
+    var nameA = (entityA.attributes.friendly_name ||
+                 entityA.entity_id).toLowerCase();
+    var nameB = (entityB.attributes.friendly_name ||
+                 entityB.entity_id).toLowerCase();
+
+    if (nameA < nameB) {
+      return -1;
+    }
+    if (nameA > nameB) {
+      return 1;
+    }
+    return 0;
+  }
+
+  function iterateDomainSorted(collection, func) {
+    Object.keys(collection)
+      .map(function (key) { return collection[key]; })
+      .sort(sortPriority)
+      .forEach(function (domain) {
+        domain.states.sort(entitySortBy);
+        func(domain);
+      });
+  }
+
+  var computeDomain = window.hassUtil.computeDomain;
+
+  Polymer({
+    is: 'ha-cards',
+
+    properties: {
+      hass: {
+        type: Object,
+      },
+
+      showIntroduction: {
+        type: Boolean,
+        value: false,
+      },
+
+      columns: {
+        type: Number,
+        value: 2,
+      },
+
+      states: {
+        type: Object,
+      },
+
+      panelVisible: {
+        type: Boolean,
+      },
+
+      viewVisible: {
+        type: Boolean,
+        value: false,
+      },
+
+      cards: {
+        type: Object,
+      },
+    },
+
+    observers: [
+      'updateCards(columns, states, showIntroduction, panelVisible, viewVisible)',
+    ],
+
+    updateCards: function (columns, states, showIntroduction, panelVisible, viewVisible) {
+      /* eslint-disable no-console */
+      if (!panelVisible || !viewVisible) {
+        return;
+      }
+      this.debounce(
+        'updateCards', function () {
+          // Things might have changed since it got scheduled.
+          if (this.panelVisible && this.viewVisible) {
+            this.cards = this.computeCards(columns, states, showIntroduction);
+          }
+        }.bind(this), 10);
+    },
+
+    computeCards: function (columns, states, showIntroduction) {
+      var hass = this.hass;
+
+      var cards = {
+        demo: false,
+        badges: [],
+        columns: [],
+      };
+      var entityCount = [];
+      var i;
+      for (i = 0; i < columns; i++) {
+        cards.columns.push([]);
+        entityCount.push(0);
+      }
+
+      // Find column with < 5 entities, else column with lowest count
+      function getIndex(size) {
+        var minIndex = 0;
+        for (i = 0; i < entityCount.length; i++) {
+          if (entityCount[i] < 5) {
+            minIndex = i;
+            break;
+          }
+          if (entityCount[i] < entityCount[minIndex]) {
+            minIndex = i;
+          }
+        }
+
+        entityCount[minIndex] += size;
+
+        return minIndex;
+      }
+
+      if (showIntroduction) {
+        cards.columns[getIndex(5)].push({
+          hass: hass,
+          cardType: 'introduction',
+          showHideInstruction: states.size > 0 && !window.HASS_DEMO,
+        });
+      }
+
+      function addEntitiesCard(name, entities, groupEntity) {
+        var owncard;
+        var other;
+        var size;
+        var curIndex;
+        if (entities.length === 0) return;
+
+        owncard = [];
+        other = [];
+
+        size = 0;
+
+        entities.forEach(function (entity) {
+          var domain = computeDomain(entity);
+
+          if (domain in DOMAINS_WITH_CARD) {
+            owncard.push(entity);
+            size += DOMAINS_WITH_CARD[domain];
+          } else {
+            other.push(entity);
+            size++;
+          }
+        });
+
+        // Add 1 to the size if we're rendering entities card
+        size += other.length > 0;
+
+        curIndex = getIndex(size);
+
+        if (other.length > 0) {
+          cards.columns[curIndex].push({
+            hass: hass,
+            cardType: 'entities',
+            states: other,
+            groupEntity: groupEntity || false,
+          });
+        }
+
+        owncard.forEach(function (entity) {
+          cards.columns[curIndex].push({
+            hass: hass,
+            cardType: computeDomain(entity),
+            stateObj: entity,
+          });
+        });
+      }
+
+      var sorted = window.HAWS.splitByGroups(states);
+
+      var badgesColl = {};
+      var beforeGroupColl = {};
+      var afterGroupedColl = {};
+
+      Object.keys(sorted.ungrouped).forEach(function (key) {
+        var state = sorted.ungrouped[key];
+        var domain = computeDomain(state);
+
+        if (domain === 'a') {
+          cards.demo = true;
+          return;
+        }
+
+        var priority = getPriority(domain);
+        var coll;
+
+        if (priority < 0) {
+          coll = beforeGroupColl;
+        } else if (priority < 10) {
+          coll = badgesColl;
+        } else {
+          coll = afterGroupedColl;
+        }
+
+        if (!(domain in coll)) {
+          coll[domain] = {
+            domain: domain,
+            priority: priority,
+            states: [],
+          };
+        }
+
+        coll[domain].states.push(state);
+      });
+
+      iterateDomainSorted(badgesColl, function (domain) {
+        cards.badges.push.apply(cards.badges, domain.states);
+      });
+
+      iterateDomainSorted(beforeGroupColl, function (domain) {
+        addEntitiesCard(domain.domain, domain.states);
+      });
+
+      sorted.groups.forEach(function (groupState) {
+        var entities = window.HAWS.getGroupEntities(states, groupState);
+        addEntitiesCard(
+          groupState.entity_id,
+          Object.keys(entities).map(function (key) {
+            return entities[key];
+          }),
+          groupState
+        );
+      });
+
+      iterateDomainSorted(afterGroupedColl, function (domain) {
+        addEntitiesCard(domain.domain, domain.states);
+      });
+
+      // Remove empty columns
+      cards.columns = cards.columns.filter(function (val) {
+        return val.length > 0;
+      });
+
+      return cards;
+    },
+  });
+}());
+</script>

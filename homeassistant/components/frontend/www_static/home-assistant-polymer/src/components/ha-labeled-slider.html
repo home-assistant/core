@@ -1,0 +1,69 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel='import' href='../../bower_components/iron-icon/iron-icon.html'>
+<link rel='import' href='../../bower_components/paper-slider/paper-slider.html'>
+
+<dom-module id='ha-labeled-slider'>
+  <template>
+    <style>
+      :host {
+        display: block;
+        padding-bottom: 16px;
+      }
+
+      .title {
+        margin-bottom: 16px;
+        opacity: var(--dark-primary-opacity);
+      }
+
+      iron-icon {
+        float: left;
+        margin-top: 4px;
+        opacity: var(--dark-secondary-opacity);
+      }
+
+      .slider-container {
+        margin-left: 24px;
+      }
+
+      paper-slider {
+        background-image: var(--ha-slider-background);
+      }
+    </style>
+
+    <div class='title'>[[caption]]</div>
+    <iron-icon icon='[[icon]]'></iron-icon>
+    <div class='slider-container'>
+      <paper-slider min='[[min]]' max='[[max]]' value='{{value}}'>
+      </paper-slider>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-labeled-slider',
+
+  properties: {
+    caption: {
+      type: String,
+    },
+
+    icon: {
+      type: String,
+    },
+
+    min: {
+      type: Number,
+    },
+
+    max: {
+      type: Number,
+    },
+
+    value: {
+      type: Number,
+      notify: true,
+    },
+  },
+});
+</script>

@@ -1,0 +1,362 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel='import' href='../../bower_components/paper-icon-button/paper-icon-button.html'>
+<link rel='import' href='../../bower_components/paper-progress/paper-progress.html'>
+
+<link rel='import' href='../util/media-player-model.html'>
+
+<dom-module id='ha-media_player-card'>
+  <template>
+    <style include="paper-material iron-flex iron-flex-alignment iron-positioning">
+      :host {
+        display: block;
+        position: relative;
+        font-size: 0px;
+        border-radius: 2px;
+
+        overflow: hidden;
+      }
+
+      .banner {
+        position: relative;
+        background-color: white;
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+      }
+
+      .banner:before {
+        display: block;
+        content: "";
+        width: 100%;
+        /* removed .25% from 16:9 ratio to fix YT black bars */
+        padding-top: 56%;
+        transition: padding-top .8s;
+      }
+
+      .banner.no-cover {
+        background-position: center center;
+        background-image: url(/static/images/card_media_player_bg.png);
+        background-repeat: no-repeat;
+        background-color: var(--primary-color);
+      }
+
+      .banner.content-type-music:before {
+        padding-top: 100%;
+      }
+
+      .banner.no-cover:before {
+        padding-top: 88px;
+      }
+
+      .banner > .cover {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+
+        background-position: center center;
+        background-size: cover;
+        transition: opacity .8s;
+        opacity: 1;
+      }
+
+      .banner.is-off > .cover {
+        opacity: 0;
+      }
+
+      .banner > .caption {
+        @apply(--paper-font-caption);
+
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        background-color: rgba(0, 0, 0, var(--dark-secondary-opacity));
+
+        padding: 8px 16px;
+
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+
+        transition: background-color .5s;
+      }
+
+      .banner.is-off > .caption {
+        background-color: initial;
+      }
+
+      .banner > .caption .title {
+        @apply(--paper-font-common-nowrap);
+        font-size: 1.2em;
+        margin: 8px 0 4px;
+      }
+
+      .progress {
+        width: 100%;
+        --paper-progress-active-color: var(--accent-color);
+        --paper-progress-container-color: #FFF;
+      }
+
+      .controls {
+        position: relative;
+        @apply(--paper-font-body1);
+        padding: 8px;
+        border-bottom-left-radius: 2px;
+        border-bottom-right-radius: 2px;
+        background-color: white;
+      }
+
+      .controls paper-icon-button {
+        width: 44px;
+        height: 44px;
+      }
+
+      paper-icon-button {
+        opacity: var(--dark-primary-opacity);
+      }
+
+      paper-icon-button[disabled] {
+        opacity: var(--dark-disabled-opacity);
+      }
+
+      paper-icon-button.primary {
+        width: 56px !important;
+        height: 56px !important;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        padding: 8px;
+        transition: background-color .5s;
+      }
+
+      paper-icon-button.primary[disabled] {
+        background-color: rgba(0, 0, 0, var(--dark-disabled-opacity));
+      }
+
+      [invisible] {
+        visibility: hidden !important;
+      }
+    </style>
+
+    <div class$='[[computeBannerClasses(playerObj)]]'>
+      <div class='cover' id='cover'></div>
+
+      <div class='caption'>
+        [[computeStateName(stateObj)]]
+        <div class='title'>[[playerObj.primaryText]]</div>
+        [[playerObj.secondaryText]]<br />
+      </div>
+    </div>
+
+    <paper-progress
+      max='[[stateObj.attributes.media_duration]]'
+      value='[[playbackPosition]]'
+      hidden$='[[computeHideProgress(playerObj)]]'
+      class='progress'
+    ></paper-progress>
+
+    <div class='controls layout horizontal justified'>
+      <paper-icon-button
+        icon='mdi:power'
+        on-tap='handleTogglePower'
+        invisible$='[[computeHidePowerButton(playerObj)]]'
+        class='self-center secondary'
+      ></paper-icon-button>
+
+      <div>
+        <paper-icon-button
+          icon='mdi:skip-previous'
+          invisible$='[[!playerObj.supportsPreviousTrack]]'
+          disabled='[[playerObj.isOff]]'
+          on-tap='handlePrevious'
+        ></paper-icon-button>
+        <paper-icon-button
+          class='primary'
+          icon='[[computePlaybackControlIcon(playerObj)]]'
+          invisible$='[[!computePlaybackControlIcon(playerObj)]]'
+          disabled='[[playerObj.isOff]]'
+          on-tap='handlePlaybackControl'
+        ></paper-icon-button>
+        <paper-icon-button
+          icon='mdi:skip-next'
+          invisible$='[[!playerObj.supportsNextTrack]]'
+          disabled='[[playerObj.isOff]]'
+          on-tap='handleNext'
+        ></paper-icon-button>
+      </div>
+
+      <paper-icon-button
+        icon='mdi:dots-vertical'
+        on-tap='handleOpenMoreInfo'
+        class='self-center secondary'
+      ></paper-icon-button>
+
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-media_player-card',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    playerObj: {
+      type: Object,
+      computed: 'computePlayerObj(hass, stateObj)',
+      observer: 'playerObjChanged',
+    },
+
+    playbackControlIcon: {
+      type: String,
+      computed: 'computePlaybackControlIcon(playerObj)',
+    },
+
+    playbackPosition: {
+      type: Number,
+    },
+
+    /**
+     * The z-depth of the card, from 0-5.
+     */
+    elevation: {
+      type: Number,
+      value: 1,
+      reflectToAttribute: true,
+    },
+  },
+
+  created: function () {
+    this.updatePlaybackPosition = this.updatePlaybackPosition.bind(this);
+  },
+
+  playerObjChanged: function (playerObj) {
+    var picture = playerObj.stateObj.attributes.entity_picture;
+    var dummy;
+    if (picture) {
+      dummy = document.createElement('IMG');
+      dummy.onload = function () {
+        this.$.cover.style.backgroundImage = 'url(' + picture + ')';
+        dummy.onerror = dummy.onload = null;
+        dummy.src = '';
+        dummy = null;
+      }.bind(this);
+      dummy.onerror = function () {
+        this.$.cover.style.backgroundImage = '';
+        this.toggleClass('no-cover', true, this.$.cover.parentElement);
+        dummy.onerror = dummy.onload = null;
+        dummy.src = '';
+        dummy = null;
+      }.bind(this);
+      if (this._timeout_id) {
+        clearTimeout(this._timeout_id);
+      }
+      this._timeout_id = setTimeout(function () {
+        if (dummy) {
+          // Background load still inflight. Clear real image.
+          this.$.cover.style.backgroundImage = '';
+        }
+        this._timeout_id = null;
+      }, 5000);
+      dummy.src = picture;
+    } else {
+      this.$.cover.style.backgroundImage = '';
+    }
+
+    if (playerObj.isPlaying) {
+      if (!this._positionTracking) {
+        this._positionTracking = setInterval(this.updatePlaybackPosition, 1000);
+      }
+      this.updatePlaybackPosition();
+    } else if (this._positionTracking) {
+      clearInterval(this._positionTracking);
+      this._positionTracking = null;
+      this.playbackPosition = 0;
+    }
+  },
+
+  updatePlaybackPosition: function () {
+    this.playbackPosition = this.playerObj.currentProgress;
+  },
+
+  computeBannerClasses: function (playerObj) {
+    var cls = 'banner';
+
+    if (playerObj.isOff || playerObj.isIdle) {
+      cls += ' is-off no-cover';
+    } else if (!playerObj.stateObj.attributes.entity_picture) {
+      cls += ' no-cover';
+    } else if (playerObj.stateObj.attributes.media_content_type === 'music') {
+      cls += ' content-type-music';
+    }
+
+    return cls;
+  },
+
+  computeHideProgress: function (playerObj) {
+    return !playerObj.showProgress;
+  },
+
+  computeHidePowerButton: function (playerObj) {
+    return playerObj.isOff ? !playerObj.supportsTurnOn : !playerObj.supportsTurnOff;
+  },
+
+  computePlayerObj: function (hass, stateObj) {
+    return new window.MediaPlayerEntity(hass, stateObj);
+  },
+
+  computePlaybackControlIcon: function (playerObj) {
+    if (playerObj.isPlaying) {
+      return playerObj.supportsPause ? 'mdi:pause' : 'mdi:stop';
+    } else if (playerObj.isPaused || playerObj.isOff || playerObj.isIdle) {
+      return playerObj.supportsPlay ? 'mdi:play' : null;
+    }
+    return '';
+  },
+
+  computeStateName: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj);
+  },
+
+  handleNext: function (ev) {
+    ev.stopPropagation();
+    this.playerObj.nextTrack();
+  },
+
+  handleOpenMoreInfo: function (ev) {
+    ev.stopPropagation();
+    this.fire('hass-more-info', { entityId: this.stateObj.entity_id });
+  },
+
+  handlePlaybackControl: function (ev) {
+    ev.stopPropagation();
+    this.playerObj.mediaPlayPause();
+  },
+
+  handlePrevious: function (ev) {
+    ev.stopPropagation();
+    this.playerObj.previousTrack();
+  },
+
+  handleTogglePower: function (ev) {
+    ev.stopPropagation();
+    this.playerObj.togglePower();
+  },
+});
+</script>

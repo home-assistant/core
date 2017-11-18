@@ -1,0 +1,269 @@
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<!-- imported as first element so we can render the placeholder -->
+<link rel='import' href='../bower_components/paper-spinner/paper-spinner.html'>
+<link rel='import' href='./util/roboto.html'>
+<link rel='import' href='../bower_components/paper-styles/typography.html'>
+<link rel='import' href='../bower_components/iron-flex-layout/iron-flex-layout-classes.html'>
+
+<!--polyfill for paper-dropdown-->
+<link rel="import" href="../bower_components/neon-animation/web-animations.html">
+
+
+<link rel='import' href='./util/hass-util.html'>
+<link rel='import' href='./util/ha-pref-storage.html'>
+<link rel='import' href='./util/hass-call-api.html'>
+<link rel='import' href='./layouts/login-form.html'>
+<link rel='import' href='./layouts/home-assistant-main.html'>
+<link rel='import' href='./resources/ha-style.html'>
+<link rel="import" href="./resources/panel-imports.html">
+<link rel='import' href='./managers/notification-manager.html'>
+
+<dom-module id='home-assistant'>
+  <template>
+    <ha-pref-storage hass='[[hass]]' id='storage'></ha-pref-storage>
+    <notification-manager id='notifications' hass='[[hass]]'></notification-manager>
+    <template is='dom-if' if='[[showMain]]' restamp>
+      <home-assistant-main
+        on-hass-more-info='handleMoreInfo'
+        on-hass-navigate='handleNavigate'
+        on-hass-dock-sidebar='handleDockSidebar'
+        on-hass-notification='handleNotification'
+        on-hass-logout='handleLogout'
+        hass='[[hass]]'
+      ></home-assistant-main>
+    </template>
+
+    <template is='dom-if' if='[[!showMain]]' restamp>
+      <login-form
+        hass='[[hass]]'
+        connection-promise='{{connectionPromise}}'
+        show-loading='[[computeShowLoading(connectionPromise, hass, iconsLoaded)]]'>
+      </login-form>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+window.removeInitMsg = function () {
+  var initMsg = document.getElementById('ha-init-skeleton');
+  if (initMsg) {
+    initMsg.parentElement.removeChild(initMsg);
+  }
+};
+
+Polymer({
+  is: 'home-assistant',
+
+  hostAttributes: {
+    icons: null,
+  },
+
+  properties: {
+    connectionPromise: {
+      type: Object,
+      value: window.hassConnection || null,
+      observer: 'handleConnectionPromise',
+    },
+    connection: {
+      type: Object,
+      value: null,
+      observer: 'connectionChanged',
+    },
+    hass: {
+      type: Object,
+      value: null,
+    },
+    icons: {
+      type: String,
+    },
+    iconsLoaded: {
+      type: Boolean,
+      value: false,
+    },
+    showMain: {
+      type: Boolean,
+      computed: 'computeShowMain(hass, iconsLoaded)',
+    },
+  },
+
+  computeShowMain: function (hass, iconsLoaded) {
+    return hass && hass.states && hass.config && iconsLoaded;
+  },
+
+  computeShowLoading: function (connectionPromise, hass, iconsLoaded) {
+    // Show loading when connecting or when connected but not all pieces loaded yet
+    return (connectionPromise != null ||
+            (hass && (!hass.states || !hass.config || !iconsLoaded)));
+  },
+
+  loadIcons: function () {
+    // If the import fails, we'll try to import again, must be a server glitch
+    // Since HTML imports only resolve once, we import another url.
+    var success = function () {
+      this.iconsLoaded = true;
+    }.bind(this);
+
+    this.importHref('/static/mdi-' + this.icons + '.html',
+                    success,
+                    function () {
+                      this.importHref('/static/mdi.html', success, success);
+                    });
+  },
+
+  connectionChanged: function (conn, oldConn) {
+    if (oldConn) {
+      this.unsubConnection();
+      this.unsubConnection = null;
+    }
+    if (!conn) {
+      this.hass = null;
+      return;
+    }
+    var notifications = this.$.notifications;
+    var el = this;
+    this.hass = Object.assign({
+      connection: conn,
+      connected: true,
+      states: null,
+      config: null,
+      dockedSidebar: false,
+      currentPanel: 'states',
+      currentView: null,
+      moreInfoEntityId: null,
+      callService: function (domain, service, serviceData) {
+        return conn.callService(domain, service, serviceData || {})
+          .then(function () {
+            var message;
+            var name;
+            if (serviceData.entity_id && el.hass.states &&
+                el.hass.states[serviceData.entity_id]) {
+              name = window.hassUtil.computeStateName(el.hass.states[serviceData.entity_id]);
+            }
+            if (service === 'turn_on' && serviceData.entity_id) {
+              message = 'Turned on ' + (name || serviceData.entity_id) + '.';
+            } else if (service === 'turn_off' && serviceData.entity_id) {
+              message = 'Turned off ' + (name || serviceData.entity_id) + '.';
+            } else {
+              message = 'Service ' + domain + '/' + service + ' called.';
+            }
+            notifications.showNotification(message);
+          },
+          function () {
+            notifications.showNotification(
+              'Failed to call service ' + domain + '/' + service);
+            return Promise.reject();
+          });
+      },
+      callApi: function (method, path, parameters) {
+        var host = window.location.protocol + '//' + window.location.host;
+        var auth = conn.options.authToken ? conn.options : {};
+        return window.hassCallApi(host, auth, method, path, parameters);
+      },
+    }, this.$.storage.getStoredState());
+
+    var reconnected = function () {
+      this.hass = Object.assign({}, this.hass, { connected: true });
+    }.bind(this);
+
+    conn.addEventListener('ready', reconnected);
+
+    var disconnected = function () {
+      this.hass = Object.assign({}, this.hass, { connected: false });
+    }.bind(this);
+
+    conn.addEventListener('disconnected', disconnected);
+
+    var unsubEntities;
+
+    window.HAWS.subscribeEntities(conn, function (states) {
+      this.hass = Object.assign({}, this.hass, { states: states });
+    }.bind(this)).then(function (unsub) {
+      unsubEntities = unsub;
+    });
+
+    var unsubConfig;
+
+    window.HAWS.subscribeConfig(conn, function (config) {
+      this.hass = Object.assign({}, this.hass, { config: config });
+    }.bind(this)).then(function (unsub) {
+      unsubConfig = unsub;
+    });
+
+    this.unsubConnection = function () {
+      conn.removeEventListener('ready', reconnected);
+      conn.removeEventListener('disconnected', disconnected);
+      unsubEntities();
+      unsubConfig();
+    };
+  },
+
+  handleConnectionPromise: function (prom) {
+    if (!prom) return;
+
+    var el = this;
+
+    prom.then(function (conn) {
+      el.connection = conn;
+    }, function () {
+      el.connectionPromise = null;
+    });
+  },
+
+  handleMoreInfo: function (ev) {
+    ev.stopPropagation();
+
+    this.hass = Object.assign(
+      {}, this.hass,
+      { moreInfoEntityId: ev.detail.entityId });
+  },
+
+  handleNavigate: function (ev) {
+    ev.stopPropagation();
+
+    var hass = Object.assign({}, this.hass);
+
+    if ('panel' in ev.detail) {
+      hass.currentPanel = ev.detail.panel;
+    }
+
+    if ('view' in ev.detail) {
+      hass.currentView = ev.detail.view;
+    }
+
+    this.hass = hass;
+  },
+
+  handleDockSidebar: function (ev) {
+    ev.stopPropagation();
+    this.hass = Object.assign(
+      {}, this.hass,
+      { dockedSidebar: ev.detail.dock });
+    this.$.storage.storeState();
+  },
+
+  handleNotification: function (ev) {
+    this.$.notifications.showNotification(ev.detail.message);
+  },
+
+  handleLogout: function () {
+    delete localStorage.authToken;
+    var conn = this.connection;
+    this.connectionPromise = null;
+    try {
+      this.connection = null;
+    } catch (err) {
+      // home-assistant-main crashes when hass is set to null.
+      // However, after it is done, home-assistant-main is removed from the DOM by this element.
+    }
+    conn.close();
+  },
+
+  ready: function () {
+    this.loadIcons();
+
+    if (this.connectionPromise !== null) {
+      this.handleConnectionPromise(this.connectionPromise);
+    }
+  },
+});
+</script>

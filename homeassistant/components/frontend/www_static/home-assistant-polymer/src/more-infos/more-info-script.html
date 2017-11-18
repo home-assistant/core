@@ -1,0 +1,28 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<dom-module id='more-info-script'>
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+
+    <div class='layout vertical'>
+      <div class='data-entry layout justified horizontal'>
+        <div class='key'>Last Action</div>
+        <div class='value'>[[stateObj.attributes.last_action]]</div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-script',
+
+  properties: {
+    stateObj: {
+      type: Object,
+    },
+  },
+});
+</script>

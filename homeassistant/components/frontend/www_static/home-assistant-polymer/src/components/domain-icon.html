@@ -1,0 +1,31 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+
+<dom-module id="domain-icon">
+  <template>
+    <iron-icon icon="[[computeIcon(domain, state)]]"></iron-icon>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'domain-icon',
+
+  properties: {
+    domain: {
+      type: String,
+      value: '',
+    },
+
+    state: {
+      type: String,
+      value: '',
+    },
+  },
+
+  computeIcon: function (domain, state) {
+    return window.hassUtil.domainIcon(domain, state);
+  },
+});
+</script>

@@ -1,0 +1,91 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel='import' href='../../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+
+<link rel="import" href="../components/entity/state-badge.html">
+
+<dom-module id="state-card-input_select">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      state-badge {
+        float: left;
+        margin-top: 10px;
+      }
+
+      paper-dropdown-menu {
+        display: block;
+        margin-left: 53px;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+    </style>
+
+    <state-badge state-obj='[[stateObj]]'></state-badge>
+    <paper-dropdown-menu
+      on-tap='stopPropagation'
+      selected-item-label='{{selectedOption}}'
+      label='[[computeStateName(stateObj)]]'>
+      <paper-listbox slot="dropdown-content" selected="[[computeSelected(stateObj)]]">
+        <template is='dom-repeat' items='[[stateObj.attributes.options]]'>
+          <paper-item>[[item]]</paper-item>
+        </template>
+      </paper-listbox>
+    </paper-dropdown-menu>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'state-card-input_select',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    inDialog: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    selectedOption: {
+      type: String,
+      observer: 'selectedOptionChanged',
+    },
+  },
+
+  computeStateName: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj);
+  },
+
+  computeSelected: function (stateObj) {
+    return stateObj.attributes.options.indexOf(stateObj.state);
+  },
+
+  selectedOptionChanged: function (option) {
+    // Selected Option will transition to '' before transitioning to new value
+    if (option === '' || option === this.stateObj.state) {
+      return;
+    }
+    this.hass.callService('input_select', 'select_option', {
+      option: option,
+      entity_id: this.stateObj.entity_id,
+    });
+  },
+
+  stopPropagation: function (ev) {
+    ev.stopPropagation();
+  },
+});
+</script>

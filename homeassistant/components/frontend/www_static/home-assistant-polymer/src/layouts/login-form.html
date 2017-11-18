@@ -1,0 +1,187 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+
+<dom-module id="login-form">
+  <template>
+    <style is="custom-style" include="iron-flex iron-positioning"></style>
+    <style>
+      :host {
+        white-space: nowrap;
+      }
+
+      paper-input {
+        display: block;
+        margin-bottom: 16px;
+      }
+
+      paper-checkbox {
+        margin-right: 8px;
+      }
+
+      paper-button {
+        margin-left: 72px;
+      }
+
+      .interact {
+        height: 125px;
+      }
+
+      #validatebox {
+        margin-top: 16px;
+        text-align: center;
+      }
+
+      .validatemessage {
+        margin-top: 10px;
+      }
+    </style>
+
+    <div class="layout vertical center center-center fit">
+      <img src="/static/icons/favicon-192x192.png" height="192" />
+      <a href="#" id="hideKeyboardOnFocus"></a>
+      <div class='interact'>
+        <div id='loginform' hidden$="[[showSpinner]]">
+          <paper-input
+            id='passwordInput'
+            label='Password'
+            type='password'
+            invalid='[[errorMessage]]'
+            error-message='[[errorMessage]]'
+            value='{{password}}'
+          ></paper-input>
+          <div class="layout horizontal center">
+            <paper-checkbox for id='rememberLogin'>Remember</paper-checkbox>
+            <paper-button id='loginButton'>Log In</paper-button>
+          </div>
+        </div>
+        <div id="validatebox" hidden$="[[!showSpinner]]">
+          <paper-spinner active="true"></paper-spinner><br />
+          <div class="validatemessage">[[computeLoadingMsg(isValidating)]]</div>
+        </div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'login-form',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    connectionPromise: {
+      type: Object,
+      notify: true,
+      observer: 'handleConnectionPromiseChanged',
+    },
+
+    errorMessage: {
+      type: String,
+      value: '',
+    },
+
+    isValidating: {
+      type: Boolean,
+      observer: 'isValidatingChanged',
+      value: false,
+    },
+
+    showLoading: {
+      type: Boolean,
+      value: false,
+    },
+
+    showSpinner: {
+      type: Boolean,
+      computed: 'computeShowSpinner(showLoading, isValidating)',
+    },
+
+    password: {
+      type: String,
+      value: '',
+    },
+  },
+
+  listeners: {
+    keydown: 'passwordKeyDown',
+    'loginButton.tap': 'validatePassword',
+  },
+
+  attached: function () {
+    window.removeInitMsg();
+  },
+
+  computeLoadingMsg: function (isValidating) {
+    return isValidating ? 'Connecting' : 'Loading data';
+  },
+
+  computeShowSpinner: function (forceShowLoading, isValidating) {
+    return forceShowLoading || isValidating;
+  },
+
+  isValidatingChanged: function (newVal) {
+    if (!newVal) {
+      this.async(function () {
+        this.$.passwordInput.inputElement.inputElement.focus();
+      }.bind(this), 10);
+    }
+  },
+
+  passwordKeyDown: function (ev) {
+    // validate on enter
+    if (ev.keyCode === 13) {
+      this.validatePassword();
+      ev.preventDefault();
+    // clear error after we start typing again
+    } else if (this.errorMessage) {
+      this.errorMessage = '';
+    }
+  },
+
+  validatePassword: function () {
+    var auth = this.password;
+    this.$.hideKeyboardOnFocus.focus();
+    this.connectionPromise = window.createHassConnection(auth);
+
+    if (this.$.rememberLogin.checked) {
+      this.connectionPromise.then(function () {
+        localStorage.authToken = auth;
+      });
+    }
+  },
+
+  handleConnectionPromiseChanged: function (newVal) {
+    if (!newVal) return;
+
+    var el = this;
+    this.isValidating = true;
+
+    this.connectionPromise.then(
+      function () {
+        el.isValidating = false;
+        el.password = '';
+      },
+      function (errCode) {
+        el.isValidating = false;
+
+        if (errCode === window.HAWS.ERR_CANNOT_CONNECT) {
+          el.errorMessage = 'Unable to connect';
+        } else if (errCode === window.HAWS.ERR_INVALID_AUTH) {
+          el.errorMessage = 'Invalid password';
+        } else {
+          el.errorMessage = 'Unknown error: ' + errCode;
+        }
+      }
+    );
+  }
+});
+</script>

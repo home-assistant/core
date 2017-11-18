@@ -1,0 +1,31 @@
+{
+  "plugins": {
+    "sauce": {
+      "disabled": true,
+      "browsers": [{
+          "browserName": "chrome",
+          "platform": "Linux",
+          "version": "latest"
+        }, {
+          "browserName": "safari",
+          "platform": "macOS 10.12",
+          "version": "10.0"
+        }, {
+          "browserName": "firefox",
+          "platform": "Windows 10",
+          "version": "latest"
+        }, {
+          "browserName": "MicrosoftEdge",
+          "platform": "Windows 10",
+          "version": "14.14393"
+        }, {
+          "deviceName": "Android GoogleAPI Emulator",
+          "platformName": "Android",
+          "platformVersion": "7.0",
+          "browserName": "Chrome",
+          "appiumVersion": "1.6.3"
+        }
+      ]
+    }
+  }
+}

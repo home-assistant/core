@@ -1,0 +1,182 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<script>
+(function () {
+  var RECENT_THRESHOLD = 60000; // 1 minute
+  var DATE_CACHE = {};
+  var RECENT_CACHE = {};
+
+  function computeHistory(stateHistory, endTime) {
+    var lineChartDevices = {};
+    var timelineDevices = [];
+    var unitStates;
+
+    if (!stateHistory) {
+      return { line: [], timeline: [] };
+    }
+
+    stateHistory.forEach(function (stateInfo) {
+      var stateWithUnit;
+      var unit;
+
+      if (stateInfo.size === 0) {
+        return;
+      }
+
+      // Duplicate the last state to the selected endTime so the chart expands
+      // to the end of the selected time. (If no additional state changes were
+      // found, the state was still the last state as of the end time.
+      var lastState = Object.assign({}, stateInfo[stateInfo.length - 1]);
+      lastState.last_changed = endTime;
+      lastState.last_updated = endTime;
+      stateInfo.push(lastState);
+
+      stateWithUnit = stateInfo.find(
+        function (state) { return 'unit_of_measurement' in state.attributes; });
+
+      unit = stateWithUnit ?
+        stateWithUnit.attributes.unit_of_measurement : false;
+
+      if (!unit) {
+        timelineDevices.push(stateInfo);
+      } else if (unit in lineChartDevices) {
+        lineChartDevices[unit].push(stateInfo);
+      } else {
+        lineChartDevices[unit] = [stateInfo];
+      }
+    });
+
+    unitStates = Object.keys(lineChartDevices).map(
+      function (unit) {
+        return { unit: unit, data: lineChartDevices[unit] };
+      });
+
+    return { line: unitStates, timeline: timelineDevices };
+  }
+
+  Polymer({
+    is: 'ha-state-history-data',
+
+    properties: {
+      hass: {
+        type: Object,
+        observer: 'hassChanged',
+      },
+
+      filterType: {
+        type: String,
+      },
+
+      startTime: {
+        type: Date,
+        value: null,
+      },
+
+      endTime: {
+        type: Date,
+        value: null,
+      },
+
+      entityId: {
+        type: String,
+        value: null,
+      },
+
+      isLoading: {
+        type: Boolean,
+        value: true,
+        readOnly: true,
+        notify: true,
+      },
+
+      data: {
+        type: Object,
+        value: null,
+        readOnly: true,
+        notify: true,
+      },
+    },
+
+    observers: [
+      'filterChanged(filterType, entityId, startTime, endTime)',
+    ],
+
+    hassChanged: function (newHass, oldHass) {
+      if (!oldHass) {
+        this.filterChanged(this.filterType, this.entityId, this.startTime, this.endTime);
+      }
+    },
+
+    filterChanged: function (filterType, entityId, startTime, endTime) {
+      if (!this.hass) return;
+
+      var data;
+
+      if (filterType === 'date') {
+        if (startTime === null || endTime === null) return;
+        data = this.getDate(startTime, endTime);
+      } else if (filterType === 'recent-entity') {
+        if (entityId === null) return;
+        data = this.getRecent(entityId);
+      } else {
+        return;
+      }
+
+      this._setIsLoading(true);
+
+      data.then(function (stateHistory) {
+        this._setData(stateHistory);
+        this._setIsLoading(false);
+      }.bind(this));
+    },
+
+    getRecent: function (entityId) {
+      var cache = RECENT_CACHE[entityId];
+
+      if (cache && Date.now() - cache.created < RECENT_THRESHOLD) {
+        return cache.data;
+      }
+
+      var url = 'history/period';
+
+      if (entityId) {
+        url += '?filter_entity_id=' + entityId;
+      }
+
+      var prom = this.hass.callApi('GET', url).then(
+        function (stateHistory) {
+          return computeHistory(stateHistory, Date.now());
+        },
+        function () {
+          RECENT_CACHE[entityId] = false;
+          return null;
+        }
+      );
+
+      RECENT_CACHE[entityId] = {
+        created: Date.now(),
+        data: prom,
+      };
+
+      return prom;
+    },
+
+    getDate: function (startTime, endTime) {
+      var filter = startTime.toISOString() + '?end_time=' + endTime.toISOString();
+      if (!DATE_CACHE[filter]) {
+        DATE_CACHE[filter] = this.hass.callApi('GET', 'history/period/' + filter).then(
+          function (stateHistory) {
+            return computeHistory(stateHistory, endTime);
+          },
+          function () {
+            DATE_CACHE[filter] = false;
+            return null;
+          }
+        );
+      }
+
+      return DATE_CACHE[filter];
+    },
+  });
+}());
+</script>

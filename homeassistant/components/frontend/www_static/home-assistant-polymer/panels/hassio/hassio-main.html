@@ -1,0 +1,193 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../src/layouts/hass-loading-screen.html">
+
+<link rel="import" href="./dashboard/hassio-dashboard.html">
+<link rel="import" href="./addon-view/hassio-addon-view.html">
+<link rel="import" href="./addon-store/hassio-addon-store.html">
+<link rel="import" href="./supervisor/hassio-supervisor.html">
+<link rel="import" href="./hassio-data.html">
+
+<dom-module id="hassio-main">
+  <template>
+    <hassio-data
+      id='data'
+      hass='[[hass]]'
+      supervisor='{{supervisorInfo}}'
+      homeassistant='{{hassInfo}}'
+      host='{{hostInfo}}'
+    ></hassio-data>
+
+    <template is='dom-if' if='[[dashboardSelected(currentPage)]]'>
+      <template is='dom-if' if='[[!loaded]]'>
+        <hass-loading-screen
+          narrow='[[narrow]]'
+          show-menu='[[showMenu]]'
+        ></hass-loading-screen>
+      </template>
+      <template is='dom-if' if='[[loaded]]'>
+        <hassio-dashboard
+          hass='[[hass]]'
+          narrow='[[narrow]]'
+          show-menu='[[showMenu]]'
+          supervisor-info='[[supervisorInfo]]'
+          host-info='[[hostInfo]]'
+          hass-info='[[hassInfo]]'
+        ></hassio-dashboard>
+      </template>
+    </template>
+
+    <template is='dom-if' if='[[addonViewSelected(currentPage)]]' restamp>
+      <hassio-addon-view
+        hass='[[hass]]'
+        supervisor-info='[[supervisorInfo]]'
+        host-info='[[hostInfo]]'
+        addon='[[addon]]'
+      ></hassio-addon-view>
+    </template>
+
+    <template is='dom-if' if='[[addonStoreSelected(currentPage)]]'>
+      <hassio-addon-store
+        hass='[[hass]]'
+        supervisor-info='[[supervisorInfo]]'
+      ></hassio-addon-store>
+    </template>
+
+    <template is='dom-if' if='[[supervisorSelected(currentPage)]]'>
+      <hassio-supervisor
+        hass='[[hass]]'
+        supervisor-info='[[supervisorInfo]]'
+      ></hassio-supervisor>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-main',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    addon: {
+      type: String,
+      value: '',
+    },
+
+    supervisorInfo: {
+      type: Object,
+      value: null,
+    },
+
+    hostInfo: {
+      type: Object,
+      value: null,
+    },
+
+    hassInfo: {
+      type: Object,
+      value: null,
+    },
+
+    forceLoading: {
+      type: Boolean,
+      value: false,
+    },
+
+    loaded: {
+      type: Boolean,
+      computed: 'computeIsLoaded(supervisorInfo, hostInfo, hassInfo, forceLoading)',
+    },
+
+    currentPage: {
+      type: String,
+      value: 'dashboard',
+    },
+
+    lastPage: {
+      type: String,
+      value: 'dashboard',
+    },
+  },
+
+  listeners: {
+    'hassio-select-addon': 'addonSelected',
+    'hassio-show-page': 'showPage',
+    'hass-api-called': 'apiCalled',
+  },
+
+  apiCalled: function (ev) {
+    if (ev.detail.success) {
+      var tries = 1;
+
+      var tryUpdate = function () {
+        this.$.data.refresh().catch(function () {
+          tries += 1;
+          setTimeout(tryUpdate, Math.min(tries, 5) * 1000);
+        });
+      }.bind(this);
+
+      tryUpdate();
+    }
+  },
+
+  computeIsLoaded: function (supervisorInfo, hostInfo, hassInfo, forceLoading) {
+    return (supervisorInfo !== null &&
+            hostInfo !== null &&
+            hassInfo !== null &&
+            !forceLoading);
+  },
+
+  addonSelected: function (ev) {
+    var addon = ev.detail.addon;
+
+    if (this.currentPage === this.lastPage) {
+      this.lastPage = 'dashboard';
+    }
+
+    if (addon) {
+      this.lastPage = this.currentPage;
+      this.currentPage = 'addon-view';
+      this.addon = addon;
+    } else {
+      this.currentPage = this.lastPage;
+      // Give time to cleanup the addon-view panel or it crashes
+      setTimeout(function () {
+        this.addon = addon;
+      }.bind(this), 0);
+    }
+  },
+
+  showPage: function (ev) {
+    this.currentPage = ev.detail.page;
+  },
+
+  dashboardSelected: function (currentPage) {
+    return currentPage === 'dashboard';
+  },
+
+  addonStoreSelected: function (currentPage) {
+    return currentPage === 'addon-store';
+  },
+
+  addonViewSelected: function (currentPage) {
+    return currentPage === 'addon-view';
+  },
+
+  supervisorSelected: function (currentPage) {
+    return currentPage === 'supervisor';
+  },
+
+});
+</script>

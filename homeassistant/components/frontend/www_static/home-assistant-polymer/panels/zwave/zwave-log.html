@@ -1,0 +1,52 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<dom-module id='ozw-log'>
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        margin-top: 24px;
+      }
+
+      paper-card {
+        display: block;
+        margin: 0 auto;
+        max-width: 600px;
+      }
+    </style>
+    <paper-card heading='OZW Log'>
+      <div class='help-text'>
+        <pre>[[ozwLogs]]</pre>
+      </div>
+      <div class="card-actions">
+        <paper-button raised on-tap='refreshLog'>Refresh</paper-button>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+<script>
+
+Polymer({
+  is: 'ozw-log',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    ozwLogs: {
+      type: String,
+      value: ''
+    },
+  },
+
+  refreshLog: function () {
+    this.ozwLogs = 'Loading ozw log...';
+    this.hass.callApi('GET', 'zwave/ozwlog')
+      .then(function (info) {
+        this.ozwLogs = info;
+      }.bind(this));
+  },
+});
+</script>

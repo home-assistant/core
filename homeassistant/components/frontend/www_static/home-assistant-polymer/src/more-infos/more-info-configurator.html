@@ -1,0 +1,161 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel='import' href='../../bower_components/iron-input/iron-input.html'>
+<link rel='import' href='../../bower_components/paper-spinner/paper-spinner.html'>
+<link rel='import' href='../../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../../bower_components/paper-input/paper-input.html'>
+
+<dom-module id='more-info-configurator'>
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      p {
+        margin: 8px 0;
+      }
+
+      p > img {
+        max-width: 100%;
+      }
+
+      p.center {
+        text-align: center;
+      }
+
+      p.error {
+        color: #C62828;
+      }
+
+      p.submit {
+        text-align: center;
+        height: 41px;
+      }
+
+      paper-spinner {
+        width: 14px;
+        height: 14px;
+        margin-right: 20px;
+      }
+
+      [hidden] {
+        display: none;
+      }
+    </style>
+
+    <div class='layout vertical'>
+      <template is='dom-if' if='[[isConfigurable]]'>
+
+        <p hidden$='[[!stateObj.attributes.description]]'>
+          [[stateObj.attributes.description]]
+          <a
+            hidden$='[[!stateObj.attributes.link_url]]'
+            href='[[stateObj.attributes.link_url]]'
+            target='_blank'
+          >
+            [[stateObj.attributes.link_name]]
+          </a>
+        </p>
+
+        <p class='error' hidden$='[[!stateObj.attributes.errors]]'>
+          [[stateObj.attributes.errors]]
+        </p>
+
+        <p class='center' hidden$='[[!stateObj.attributes.description_image]]'>
+          <img src='[[stateObj.attributes.description_image]]' />
+        </p>
+
+        <template is='dom-repeat' items='[[stateObj.attributes.fields]]'>
+          <paper-input
+            label='[[item.name]]'
+            name='[[item.id]]'
+            type='[[item.type]]'
+            on-change='fieldChanged'
+          ></paper-input>
+        </template>
+
+        <p class='submit'>
+          <paper-button
+            raised
+            disabled='[[isConfiguring]]'
+            on-tap='submitClicked'
+          >
+            <paper-spinner
+              active='[[isConfiguring]]'
+              hidden='[[!isConfiguring]]'
+              alt='Configuring'></paper-spinner>
+            [[submitCaption]]
+          </paper-button>
+
+        </p>
+
+      </template>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-configurator',
+
+  properties: {
+    stateObj: {
+      type: Object,
+    },
+
+    action: {
+      type: String,
+      value: 'display',
+    },
+
+    isConfigurable: {
+      type: Boolean,
+      computed: 'computeIsConfigurable(stateObj)',
+    },
+
+    isConfiguring: {
+      type: Boolean,
+      value: false,
+    },
+
+    submitCaption: {
+      type: String,
+      computed: 'computeSubmitCaption(stateObj)',
+    },
+
+    fieldInput: {
+      type: Object,
+      value: function () { return {}; },
+    },
+  },
+
+  computeIsConfigurable: function (stateObj) {
+    return stateObj.state === 'configure';
+  },
+
+  computeSubmitCaption: function (stateObj) {
+    return stateObj.attributes.submit_caption || 'Set configuration';
+  },
+
+  fieldChanged: function (ev) {
+    var el = ev.target;
+    this.fieldInput[el.name] = el.value;
+  },
+
+  submitClicked: function () {
+    var data = {
+      configure_id: this.stateObj.attributes.configure_id,
+      fields: this.fieldInput,
+    };
+
+    this.isConfiguring = true;
+
+    this.hass.callService('configurator', 'configure', data).then(
+      function () {
+        this.isConfiguring = false;
+      }.bind(this),
+      function () {
+        this.isConfiguring = false;
+      }.bind(this)
+    );
+  },
+});
+</script>

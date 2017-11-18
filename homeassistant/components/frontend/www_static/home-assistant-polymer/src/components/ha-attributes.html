@@ -1,0 +1,88 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../util/hass-util.html">
+
+<dom-module id="ha-attributes">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <style>
+      .data-entry .value {
+        max-width: 200px;
+      }
+      .attribution {
+        color: var(--secondary-text-color);
+        text-align: right;
+      }
+    </style>
+
+    <div class='layout vertical'>
+      <template is='dom-repeat' items="[[computeDisplayAttributes(stateObj, filtersArray)]]" as="attribute">
+        <div class='data-entry layout justified horizontal'>
+          <div class='key'>[[formatAttribute(attribute)]]</div>
+          <div class='value'>[[formatAttributeValue(stateObj, attribute)]]</div>
+        </div>
+      </template>
+      <div class='attribution' hidden$='[[!computeAttribution(stateObj)]]'>[[computeAttribution(stateObj)]]</div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+(function () {
+  'use strict';
+
+  var FILTER_KEYS = [
+    'entity_picture', 'friendly_name', 'icon', 'unit_of_measurement',
+    'emulated_hue', 'emulated_hue_name', 'haaska_hidden', 'haaska_name',
+    'homebridge_hidden', 'homebridge_name', 'supported_features', 'attribution',
+    'custom_ui_state_card', 'device_class',
+  ];
+  Polymer({
+    is: 'ha-attributes',
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+      extraFilters: {
+        type: String,
+        value: '',
+      },
+      filtersArray: {
+        type: Array,
+        computed: 'computeFiltersArray(extraFilters)',
+      },
+    },
+
+    computeFiltersArray: function (extraFilters) {
+      return FILTER_KEYS + (extraFilters ? extraFilters.split(',') : []);
+    },
+
+    computeDisplayAttributes: function (stateObj, filtersArray) {
+      if (!stateObj) {
+        return [];
+      }
+      return Object.keys(stateObj.attributes).filter(
+        function (key) {
+          return filtersArray.indexOf(key) === -1;
+        });
+    },
+
+    formatAttribute: function (attribute) {
+      return attribute.replace(/_/g, ' ');
+    },
+
+    formatAttributeValue: function (stateObj, attribute) {
+      var value = stateObj.attributes[attribute];
+      if (Array.isArray(value)) {
+        return value.join(', ');
+      }
+      return (value instanceof Object) ? JSON.stringify(value, null, 2) : value;
+    },
+
+    computeAttribution: function (stateObj) {
+      return stateObj.attributes.attribution;
+    },
+  });
+}());
+</script>

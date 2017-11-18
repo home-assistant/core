@@ -1,0 +1,464 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../src/components/ha-menu-button.html">
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel='import' href='../../bower_components/paper-item/paper-item.html'>
+<link rel='import' href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel='import' href="../../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="../../src/components/buttons/ha-call-service-button.html">
+<link rel="import" href="../../src/resources/ha-style.html">
+<link rel="import" href="./zwave-log.html">
+<link rel="import" href="./zwave-network.html">
+<link rel="import" href="./zwave-node-information.html">
+<link rel="import" href="./zwave-values.html">
+<link rel="import" href="./zwave-groups.html">
+<link rel="import" href="./zwave-node-config.html">
+<link rel="import" href="./zwave-usercodes.html">
+
+<dom-module id="ha-panel-zwave">
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        margin-top: 24px;
+      }
+
+      .node-info {
+        margin-left: 16px;
+      }
+
+      .help-text {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      paper-card {
+        display: block;
+        margin: 0 auto;
+        max-width: 600px;
+      }
+
+      .device-picker {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-center);
+        padding-left: 24px;
+        padding-right: 24px;
+        padding-bottom: 24px;
+        }
+    </style>
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>Z-Wave Manager</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class='content'>
+        <zwave-network
+          id='zwave-network'
+          hass='[[hass]]'
+        ></zwave-network>
+      </div>
+<!--Node card-->
+      <div class='content'>
+        <paper-card heading='Z-Wave Node Management'>
+          <iron-icon on-tap='toggleHelp' style='padding: 14px 0 14px 12px' icon='mdi:help-circle'></iron-icon>
+          <div style='display:inline-block' class='card-content'>
+            Z-Wave Node controls.
+          </div>
+          <div class='device-picker'>
+            <paper-dropdown-menu label="Nodes" class="flex">
+              <paper-listbox
+                slot="dropdown-content"
+                selected='{{selectedNode}}'>
+              <template is='dom-repeat' items='[[nodes]]' as='state'>
+                <paper-item>[[computeSelectCaption(state)]]</paper-item>
+              </template>
+              </paper-listbox>
+            </paper-dropdown-menu>
+          </div>
+            <template is='dom-if' if='[[!computeIsNodeSelected(selectedNode)]]'>
+              <template is='dom-if' if='[[showHelp]]'>
+                <div style='color: grey; padding: 12px'>Select node to view per-node options</div>
+              </template>
+            </template>
+
+          <template is='dom-if' if='[[computeIsNodeSelected(selectedNode)]]'>
+          <div class='card-actions'>
+            <ha-call-service-button
+                hass='[[hass]]'
+                domain='zwave'
+                service='refresh_node'
+                service-data=[[computeNodeServiceData(selectedNode)]]
+                show-description=[[showHelp]]
+              >Refresh Node</ha-call-service-button>
+            <ha-call-service-button
+              hass='[[hass]]'
+              domain='zwave'
+              service='remove_failed_node'
+              service-data=[[computeNodeServiceData(selectedNode)]]
+              show-description=[[showHelp]]
+            >Remove Failed Node</ha-call-service-button>
+            <ha-call-service-button
+              hass='[[hass]]'
+              domain='zwave'
+              service='replace_failed_node'
+              service-data=[[computeNodeServiceData(selectedNode)]]
+              show-description=[[showHelp]]
+            >Replace Failed Node</ha-call-service-button>
+            <ha-call-service-button
+              hass='[[hass]]'
+              domain='zwave'
+              service='print_node'
+              service-data=[[computeNodeServiceData(selectedNode)]]
+              show-description=[[showHelp]]
+            >Print Node</ha-call-service-button>
+          </div>
+          <div class='card-actions'>
+            <paper-input
+              float-label="New node name"
+              type=text
+              value={{newNodeNameInput}}
+              placeholder=[[computeGetNodeName(selectedNode)]]>
+            </paper-input>
+            <ha-call-service-button
+              hass='[[hass]]'
+              domain='zwave'
+              service='rename_node'
+              service-data=[[computeNodeNameServiceData(newNodeNameInput)]]
+              show-description=[[showHelp]]
+            >Rename Node</ha-call-service-button>
+           </div>
+
+           <div class='device-picker'>
+            <paper-dropdown-menu label="Entities of this node" class="flex">
+              <paper-listbox
+                slot="dropdown-content"
+                selected='{{selectedEntity}}'>
+                <template is='dom-repeat' items='[[entities]]' as='state'>
+                  <paper-item>[[computeSelectCaptionEnt(state)]]</paper-item>
+                </template>
+              </paper-listbox>
+            </paper-dropdown-menu>
+           </div>
+           <template is='dom-if' if='[[!computeIsEntitySelected(selectedEntity)]]'>
+           <div class='card-actions'>
+            <ha-call-service-button
+              hass='[[hass]]'
+              domain='zwave'
+              service='refresh_entity'
+              service-data=[[computeRefreshEntityServiceData(selectedEntity)]]
+              show-description=[[showHelp]]
+            >Refresh Entity</ha-call-service-button>
+           </div>
+           <div class='content'>
+             <div class='card-actions'>
+               <paper-button toggles raised noink active={{entityInfoActive}}>Entity Attributes</paper-button>
+             </div>
+             <template is='dom-if' if={{entityInfoActive}}>
+               <template is='dom-repeat' items='[[selectedEntityAttrs]]' as='state'>
+                 <div class='node-info'>
+                   <span>[[state]]</span>
+                 </div>
+               </template>
+             </template>
+           </div>
+
+           </template>
+          </template>
+        </paper-card>
+        </div>
+<!--Node info card-->
+        <template is='dom-if' if='[[computeIsNodeSelected(selectedNode)]]'>
+          <zwave-node-information
+            id='zwave-node-information'
+            nodes='[[nodes]]'
+            selected-node='[[selectedNode]]'
+          ></zwave-node-information>
+        </template>
+<!--Value card-->
+        <template is='dom-if' if='[[computeIsNodeSelected(selectedNode)]]'>
+          <zwave-values
+            hass='[[hass]]'
+            nodes='[[nodes]]'
+            selected-node='[[selectedNode]]'
+            values='[[values]]'
+          ></zwave-values>
+        </template>
+<!--Group card-->
+        <template is='dom-if' if='[[computeIsNodeSelected(selectedNode)]]'>
+          <zwave-groups
+            hass='[[hass]]'
+            nodes='[[nodes]]'
+            selected-node='[[selectedNode]]'
+            groups='[[groups]]'
+          ></zwave-groups>
+        </template>
+<!--Config card-->
+        <template is='dom-if' if='[[computeIsNodeSelected(selectedNode)]]'>
+          <zwave-node-config
+            hass='[[hass]]'
+            nodes='[[nodes]]'
+            selected-node='[[selectedNode]]'
+            config='[[config]]'
+          ></zwave-node-config>
+        </template>
+<!--User Codes-->
+        <template is='dom-if' if='{{hasNodeUserCodes}}'>
+          <zwave-usercodes
+            id='zwave-usercodes'
+            hass='[[hass]]'
+            nodes='[[nodes]]'
+            user-codes='[[userCodes]]'
+            selected-node='[[selectedNode]]'
+          ></zwave-usercodes>
+        </template>
+<!--Ozw log-->
+        <div class='content'>
+          <ozw-log
+            id='ozw-log'
+            hass='[[hass]]'
+          ></ozw-log>
+        </div>
+
+     </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-zwave',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    nodes: {
+      type: Array,
+      computed: 'computeNodes(hass)'
+    },
+
+    selectedNode: {
+      type: Number,
+      value: -1,
+      observer: 'selectedNodeChanged'
+    },
+
+    config: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    entities: {
+      type: Array,
+      computed: 'computeEntities(selectedNode)',
+    },
+
+    entityInfoActive: {
+      type: Boolean,
+    },
+
+    selectedEntity: {
+      type: Number,
+      value: -1,
+      observers: ['computeIsEntitySelected',
+        'computeRefreshEntityServiceData']
+    },
+
+    selectedEntityAttrs: {
+      type: Array,
+      computed: 'computeSelectedEntityAttrs(selectedEntity)'
+    },
+
+    values: {
+      type: Array,
+    },
+
+    groups: {
+      type: Array,
+    },
+
+    newNodeNameInput: {
+      type: String,
+    },
+
+    userCodes: {
+      type: Array,
+      value: function () {
+        return [];
+      },
+    },
+
+    hasNodeUserCodes: {
+      type: Boolean,
+      value: false,
+    },
+
+    showHelp: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  computeNodes: function (hass) {
+    return Object.keys(hass.states)
+      .map(function (key) { return hass.states[key]; })
+      .filter(function (ent) {
+        return (!ent.attributes.hidden &&
+                (ent.entity_id).match('zwave[.]'));
+      })
+      .sort(function (entityA, entityB) {
+        if (entityA.entity_id < entityB.entity_id) {
+          return -1;
+        }
+        if (entityA.entity_id > entityB.entity_id) {
+          return 1;
+        }
+        return 0;
+      });
+  },
+
+  computeEntities: function (selectedNode) {
+    if (!this.nodes || selectedNode === -1) return -1;
+    var hass = this.hass;
+    var nodeid = this.nodes[this.selectedNode].attributes.node_id;
+    return Object.keys(hass.states)
+      .map(function (key) { return hass.states[key]; })
+      .filter(function (ent) {
+        if (ent.attributes.node_id === undefined) {
+          return false;
+        }
+        return (!ent.attributes.hidden &&
+                'node_id' in ent.attributes &&
+                ent.attributes.node_id === nodeid &&
+                (!(ent.entity_id).match('zwave[.]')));
+      })
+      .sort(function (entityA, entityB) {
+        var nameA = window.hassUtil.computeStateName(entityA);
+        var nameB = window.hassUtil.computeStateName(entityB);
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+        return 0;
+      });
+  },
+
+  selectedNodeChanged: function (selectedNode) {
+    this.newNodeNameInput = '';
+
+    if (selectedNode === -1) return;
+    this.selectedConfigParameter = -1;
+    this.selectedConfigParameterValue = -1;
+    this.selectedGroup = -1;
+    var configData = [];
+    this.hass.callApi('GET', 'zwave/config/' + this.nodes[selectedNode].attributes.node_id).then(function (configs) {
+      Object.entries(configs).forEach(([key, value]) => {
+        configData.push({ key, value });
+      });
+      this.config = configData;
+    }.bind(this));
+    var valueData = [];
+    this.hass.callApi('GET', 'zwave/values/' + this.nodes[selectedNode].attributes.node_id).then(function (values) {
+      Object.entries(values).forEach(([key, value]) => {
+        valueData.push({ key, value });
+      });
+      this.values = valueData;
+    }.bind(this));
+    var groupData = [];
+    this.hass.callApi('GET', 'zwave/groups/' + this.nodes[selectedNode].attributes.node_id).then(function (groups) {
+      Object.entries(groups).forEach(([key, value]) => {
+        groupData.push({ key, value });
+      });
+      this.groups = groupData;
+    }.bind(this));
+    var userCodes = [];
+    this.hasNodeUserCodes = false;
+    this.notifyPath('hasNodeUserCodes');
+    this.hass.callApi('GET', 'zwave/usercodes/' + this.nodes[selectedNode].attributes.node_id).then(function (usercodes) {
+      Object.entries(usercodes).forEach(([key, value]) => {
+        userCodes.push({ key, value });
+      });
+      this.userCodes = userCodes;
+      if (Object.keys(userCodes).length === 0) {
+        this.hasNodeUserCodes = false;
+      } else {
+        this.hasNodeUserCodes = true;
+      }
+      this.notifyPath('hasNodeUserCodes');
+    }.bind(this));
+  },
+
+  computeSelectedEntityAttrs: function (selectedEntity) {
+    if (selectedEntity === -1) return 'No entity selected';
+    var entityAttrs = this.entities[selectedEntity].attributes;
+    var att = [];
+    Object.entries(entityAttrs).forEach(([key, value]) => {
+      att.push(key + ': ' + value);
+    });
+    return att.sort();
+  },
+
+  computeSelectCaption: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj) + ' (Node:' +
+      stateObj.attributes.node_id + ' ' +
+      stateObj.attributes.query_stage + ')';
+  },
+
+  computeSelectCaptionEnt: function (stateObj) {
+    return (window.hassUtil.computeDomain(stateObj) + '.'
+            + window.hassUtil.computeStateName(stateObj));
+  },
+
+  computeIsNodeSelected: function () {
+    return (this.nodes && this.selectedNode !== -1);
+  },
+
+  computeIsEntitySelected: function (selectedEntity) {
+    return (selectedEntity === -1);
+  },
+
+  computeNodeServiceData: function (selectedNode) {
+    return { node_id: this.nodes[selectedNode].attributes.node_id };
+  },
+
+  computeGetNodeName: function (selectedNode) {
+    if (this.selectedNode === -1 ||
+      !this.nodes[selectedNode].entity_id) return -1;
+    return this.nodes[selectedNode].attributes.node_name;
+  },
+
+  computeNodeNameServiceData: function (newNodeNameInput) {
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      name: newNodeNameInput };
+  },
+
+  computeRefreshEntityServiceData: function (selectedEntity) {
+    if (selectedEntity === -1) return -1;
+    return { entity_id: this.entities[selectedEntity].entity_id };
+  },
+
+  toggleHelp: function () {
+    this.showHelp = !this.showHelp;
+  },
+});
+</script>

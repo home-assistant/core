@@ -1,0 +1,141 @@
+<link rel='import' href='../../bower_components/polymer/polymer.html'>
+<link rel='import' href='../../bower_components/iron-icon/iron-icon.html'>
+
+<dom-module id='ha-label-badge'>
+  <template>
+    <style>
+    .badge-container {
+      display: inline-block;
+      text-align: center;
+      vertical-align: top;
+    }
+    .label-badge {
+      position: relative;
+      display: block;
+      margin: 0 auto;
+      width: var(--ha-label-badge-size, 2.5em);
+      text-align: center;
+      height: var(--ha-label-badge-size, 2.5em);
+      line-height: var(--ha-label-badge-size, 2.5em);
+      font-size: var(--ha-label-badge-font-size, 1.5em);
+      border-radius: 50%;
+      border: 0.1em solid var(--ha-label-badge-color, --primary-color);
+      color: rgb(76, 76, 76);
+
+      white-space: nowrap;
+      background-color: white;
+      background-size: cover;
+      transition: border .3s ease-in-out;
+    }
+    .label-badge .value {
+      font-size: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .label-badge .value.big {
+      font-size: 70%;
+    }
+    .label-badge .label {
+      position: absolute;
+      bottom: -1em;
+      left: 0;
+      right: 0;
+      line-height: 1em;
+
+      font-size: 0.5em;
+    }
+    .label-badge .label span {
+      max-width: 80%;
+      display: inline-block;
+      background-color: var(--ha-label-badge-color, --primary-color);
+      color: white;
+      border-radius: 1em;
+      padding: 4px 8px;
+      font-weight: 500;
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background-color .3s ease-in-out;
+    }
+    .badge-container .title {
+      margin-top: 1em;
+      font-size: .9em;
+      width: 5em;
+      font-weight: 300;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: normal;
+    }
+
+    iron-image {
+      border-radius: 50%;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+    </style>
+
+    <div class='badge-container'>
+      <div class='label-badge' id='badge'>
+        <div class$='[[computeClasses(value)]]'>
+          <iron-icon icon='[[icon]]' hidden$='[[computeHideIcon(icon, value, image)]]'></iron-icon>
+          <span hidden$='[[computeHideValue(value, image)]]'>[[value]]</span>
+        </div>
+        <div class='label' hidden$='[[!label]]'><span>[[label]]</span></div>
+      </div>
+      <div class='title' hidden$='[[!description]]'>[[description]]</div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+// Beware: Polymer will not call computeHideIcon and computeHideValue if any of
+// the parameters are undefined. Set to null if not using.
+Polymer({
+  is: 'ha-label-badge',
+
+  properties: {
+    value: {
+      type: String,
+      value: null,
+    },
+
+    icon: {
+      type: String,
+      value: null,
+    },
+
+    label: {
+      type: String,
+      value: null,
+    },
+
+    description: {
+      type: String,
+    },
+
+    image: {
+      type: String,
+      value: null,
+      observer: 'imageChanged',
+    },
+  },
+
+  computeClasses: function (value) {
+    return value && value.length > 4 ? 'value big' : 'value';
+  },
+
+  computeHideIcon: function (icon, value, image) {
+    return !icon || value || image;
+  },
+
+  computeHideValue: function (value, image) {
+    return !value || image;
+  },
+
+  imageChanged: function (newVal) {
+    this.$.badge.style.backgroundImage = newVal ? 'url(' + newVal + ')' : '';
+  },
+});
+</script>

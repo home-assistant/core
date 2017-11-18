@@ -1,0 +1,103 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../state-summary/state-card-content.html">
+
+<dom-module id="more-info-group">
+  <template>
+    <style>
+      .child-card {
+        margin-bottom: 8px;
+      }
+
+      .child-card:last-child {
+        margin-bottom: 0;
+      }
+    </style>
+
+    <div id="groupedControlDetails"></div>
+    <template is='dom-repeat' items="[[states]]" as='state'>
+      <div class='child-card'>
+        <state-card-content state-obj="[[state]]" hass='[[hass]]'></state-card-content>
+      </div>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'more-info-group',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    stateObj: {
+      type: Object,
+    },
+
+    states: {
+      type: Array,
+      computed: 'computeStates(stateObj, hass)',
+    },
+  },
+
+  observers: [
+    'statesChanged(stateObj, states)',
+  ],
+
+  computeStates: function (stateObj, hass) {
+    var states = [];
+    var entIds = stateObj.attributes.entity_id;
+
+    for (var i = 0; i < entIds.length; i++) {
+      var state = hass.states[entIds[i]];
+
+      if (state) {
+        states.push(state);
+      }
+    }
+
+    return states;
+  },
+
+  statesChanged: function (stateObj, states) {
+    var groupDomainStateObj = false;
+    var baseStateObj;
+    var i;
+    var state;
+    var el;
+
+    if (states && states.length > 0) {
+      baseStateObj = states[0];
+
+      groupDomainStateObj = Object.assign({}, baseStateObj, {
+        entity_id: stateObj.entity_id,
+        attributes: Object.assign({}, baseStateObj.attributes)
+      });
+      var groupDomain = window.hassUtil.computeDomain(groupDomainStateObj);
+
+      for (i = 0; i < states.length; i++) {
+        state = states[i];
+
+        if (groupDomain !== window.hassUtil.computeDomain(state)) {
+          groupDomainStateObj = false;
+          break;
+        }
+      }
+    }
+
+    if (!groupDomainStateObj) {
+      el = Polymer.dom(this.$.groupedControlDetails);
+      if (el.lastChild) {
+        el.removeChild(el.lastChild);
+      }
+    } else {
+      window.hassUtil.dynamicContentUpdater(
+        this.$.groupedControlDetails,
+          'MORE-INFO-' + window.hassUtil.stateMoreInfoType(groupDomainStateObj).toUpperCase(),
+          { stateObj: groupDomainStateObj, hass: this.hass });
+    }
+  },
+});
+</script>

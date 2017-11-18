@@ -1,0 +1,97 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../../../src/components/buttons/ha-call-api-button.html">
+<link rel="import" href="../../../src/components/buttons/ha-call-service-button.html">
+
+<dom-module id="hassio-hass-info">
+  <template>
+    <style include="iron-flex ha-style">
+      paper-card {
+        display: block;
+        height: 100%;
+      }
+      .info {
+        width: 100%;
+      }
+      .info td:nth-child(2) {
+        text-align: right;
+      }
+      .errors {
+        color: var(--google-red-500);
+        margin-top: 16px;
+      }
+    </style>
+
+    <paper-card heading="Home Assistant">
+      <div class="card-content">
+        <table class='info'>
+          <tr>
+            <td>Current version</td>
+            <td>[[data.version]]</td>
+          </tr>
+          <tr>
+            <td>Latest version</td>
+            <td>[[data.last_version]]</td>
+          </tr>
+        </table>
+        <template is='dom-if' if='[[errors]]'>
+          <div class='errors'>Error: [[errors]]</div>
+        </template>
+      </div>
+      <div class="card-actions">
+        <template is='dom-if' if='[[computeUpdateAvailable(data)]]'>
+          <ha-call-api-button
+            hass='[[hass]]'
+            path="hassio/homeassistant/update"
+          >Update</ha-call-api-button>
+        </template>
+        <ha-call-api-button
+          class="warning"
+          hass="[[hass]]"
+          path="hassio/homeassistant/restart"
+        >Restart</ha-call-api-button>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'hassio-hass-info',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    data: {
+      type: Object,
+      value: {},
+    },
+  },
+
+  listeners: {
+    'hass-api-called': 'apiCalled',
+  },
+
+  apiCalled: function (ev) {
+    if (ev.detail.success) {
+      this.errors = null;
+      return;
+    }
+
+    var response = ev.detail.response;
+
+    if (typeof response.body === 'object') {
+      this.errors = response.body.message || 'Unknown error';
+    } else {
+      this.errors = response.body;
+    }
+  },
+
+  computeUpdateAvailable: function (data) {
+    return data.version !== data.last_version;
+  },
+});
+</script>

@@ -1,0 +1,5 @@
+{
+  "lint": {
+    "rules": ["polymer-2-hybrid"]
+  }
+}

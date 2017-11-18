@@ -1,0 +1,86 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../src/components/domain-icon.html">
+
+
+<dom-module id="ha-logbook">
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .entry {
+        @apply(--paper-font-body1);
+        line-height: 2em;
+      }
+
+      .time {
+        width: 55px;
+        font-size: .8em;
+        color: var(--secondary-text-color);
+      }
+
+      domain-icon {
+        margin: 0 8px 0 16px;
+        color: var(--primary-text-color);
+      }
+
+      .message {
+        color: var(--primary-text-color);
+      }
+
+      a {
+        color: var(--primary-color);
+      }
+    </style>
+
+    <template is='dom-if' if='[[!entries.length]]'>
+      No logbook entries found.
+    </template>
+
+    <template is='dom-repeat' items="[[entries]]">
+      <div class='horizontal layout entry'>
+        <div class='time'>[[formatTime(item.when)]]</div>
+        <domain-icon domain="[[item.domain]]" class='icon'></domain-icon>
+        <div class='message' flex>
+          <template is='dom-if' if="[[!item.entity_id]]">
+            <span class='name'>[[item.name]]</span>
+          </template>
+          <template is='dom-if' if="[[item.entity_id]]">
+            <a href='#' on-tap="entityClicked" class='name'>[[item.name]]</a>
+          </template>
+          <span> </span>
+          <span>[[item.message]]</span>
+        </div>
+      </div>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-logbook',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    entries: {
+      type: Array,
+      value: [],
+    },
+  },
+
+  formatTime: function (date) {
+    return window.hassUtil.formatTime(new Date(date));
+  },
+
+  entityClicked: function (ev) {
+    ev.preventDefault();
+    this.fire('hass-more-info', { entityId: ev.model.item.entity_id });
+  },
+});
+</script>

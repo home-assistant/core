@@ -1,0 +1,196 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../bower_components/vaadin-date-picker/vaadin-date-picker.html">
+
+<link rel="import" href="../../src/components/state-history-charts.html">
+<link rel="import" href="../../src/components/ha-menu-button.html">
+<link rel="import" href="../../src/data/ha-state-history-data.html">
+<link rel="import" href="../../src/resources/ha-style.html">
+
+<dom-module id="ha-panel-history">
+  <template>
+    <style include="iron-flex ha-style">
+      .content {
+        padding: 0 16px 16px;
+      }
+
+      vaadin-date-picker {
+        --vaadin-date-picker-clear-icon: {
+          display: none;
+        }
+        margin-bottom: 24px;
+        margin-right: 16px;
+        max-width: 200px;
+      }
+
+      paper-dropdown-menu {
+        max-width: 100px;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+    </style>
+
+    <ha-state-history-data
+      hass='[[hass]]'
+      filter-type='[[_filterType]]'
+      start-time='[[_computeStartTime(_currentDate)]]'
+      end-time='[[_computeEndTime(_currentDate, _periodIndex)]]'
+      data='{{stateHistoryInput}}'
+      is-loading='{{isLoadingData}}'
+    ></ha-state-history-data>
+    <app-header-layout has-scrolling-region>
+      <app-header slot="header" fixed>
+        <app-toolbar>
+          <ha-menu-button narrow='[[narrow]]' show-menu='[[showMenu]]'></ha-menu-button>
+          <div main-title>History</div>
+        </app-toolbar>
+      </app-header>
+
+      <div class="flex content">
+        <div class="flex layout horizontal wrap">
+          <vaadin-date-picker
+            id='picker'
+            value='{{_currentDate}}'
+            label='Showing entries for'
+            disabled='[[isLoadingData]]'
+          ></vaadin-date-picker>
+
+          <paper-dropdown-menu
+            label-float
+            label='Period'
+            disabled='[[isLoadingData]]'
+          >
+            <paper-listbox
+              slot="dropdown-content"
+              selected="{{_periodIndex}}"
+            >
+              <paper-item>1 day</paper-item>
+              <paper-item>3 days</paper-item>
+              <paper-item>1 week</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
+        </div>
+        <state-history-charts history-data="[[stateHistoryOutput]]"
+          is-loading-data="[[isLoadingData]]"></state-history-charts>
+      </div>
+    </app-header-layout>
+  </template>
+</dom-module>
+
+<script>
+Polymer({
+  is: 'ha-panel-history',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    stateHistoryInput: {
+      type: Object,
+      value: null,
+      observer: 'stateHistoryObserver'
+    },
+
+    stateHistoryOutput: {
+      type: Object,
+      value: null,
+    },
+
+    _periodIndex: {
+      type: Number,
+      value: 0,
+    },
+
+    isLoadingData: {
+      type: Boolean,
+      value: false,
+    },
+
+    // ISO8601 formatted date string
+    _currentDate: {
+      type: String,
+      value: function () {
+        var value = new Date();
+        var today = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+        return today.toISOString().split('T')[0];
+      },
+    },
+
+    _filterType: {
+      type: String,
+      value: 'date',
+    },
+  },
+
+  datepickerFocus: function () {
+    this.datePicker.adjustPosition();
+  },
+
+  attached: function () {
+    // We are unable to parse date because we use intl api to render date
+    // So we just return last known date.
+    var lastFormatDate = new Date();
+    this.$.picker.set('i18n.parseDate', function () {
+      return lastFormatDate;
+    });
+    this.$.picker.set('i18n.formatDate', function (date) {
+      lastFormatDate = date;
+      return window.hassUtil.formatDate(date);
+    });
+  },
+
+  _computeStartTime: function (_currentDate) {
+    if (!_currentDate) return undefined;
+    var parts = _currentDate.split('-');
+    parts[1] = parseInt(parts[1]) - 1;
+    return new Date(parts[0], parts[1], parts[2]);
+  },
+
+  _computeEndTime: function (_currentDate, periodIndex) {
+    var startTime = this._computeStartTime(_currentDate);
+    var endTime = new Date(startTime);
+    endTime.setDate(
+      startTime.getDate() + this._computeFilterDays(periodIndex));
+    return endTime;
+  },
+
+  _computeFilterDays: function (periodIndex) {
+    switch (periodIndex) {
+      case 1:
+        return 3;
+      case 2:
+        return 7;
+      default: return 1;
+    }
+  },
+
+  stateHistoryObserver: function (newVal) {
+    this.async(function () {
+      if (newVal === this.stateHistoryInput) {
+        // Input didn't change
+        this.stateHistoryOutput = newVal;
+      }
+    }.bind(this), 1);
+  },
+});
+</script>
