@@ -179,7 +179,6 @@ class HiveClimateEntity(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new Heating mode."""
-        _LOGGER.error("operation_mode = %s :: HIVE_STATE = %s", operation_mode, HASS_TO_HIVE_STATE.get(operation_mode))
         new_mode = HASS_TO_HIVE_STATE.get(operation_mode)
         if self.device_type == "Heating":
             self.session.heating.set_mode(self.node_id, new_mode)
