@@ -14,11 +14,13 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.util import slugify
 
 DEPENDENCIES = [DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_EVENT_ID = 'event_id'
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -154,6 +156,7 @@ class DeconzBattery(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {
+            ATTR_EVENT_ID: slugify(self._device.name),
             ATTR_FW_VERSION: self._device.swversion,
             ATTR_MANUFACTURER: self._device.manufacturer,
             ATTR_MODEL_ID: self._device.modelid,
