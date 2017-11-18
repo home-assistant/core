@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/hive/
 """
 import logging
-from datetime import datetime
 
 from homeassistant.components.climate import (ClimateDevice,
                                               STATE_AUTO, STATE_HEAT,
@@ -60,7 +59,7 @@ class HiveClimateEntity(ClimateDevice):
         if self.device_type == "Heating":
             friendly_name = "Heating"
             if self.node_name is not None:
-                friendly_name = self.node_name + " " + friendly_name
+                friendly_name = '{} {}'.format(self.node_name, friendly_name)
 
         elif self.device_type == "HotWater":
             friendly_name = "Hot Water"
@@ -68,69 +67,15 @@ class HiveClimateEntity(ClimateDevice):
         return friendly_name
 
     @property
-    def force_update(self):
-        """Return True if state updates should be forced."""
-        return False
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement which this device uses."""
         return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
         if self.device_type == "Heating":
-            nodeid = self.node_id
-            curtempret = self.session.heating.current_temperature(nodeid)
-
-            if curtempret != -1000:
-                if nodeid in self.session.data.minmax:
-                    if (self.session.data.minmax[nodeid]['TodayDate'] !=
-                            datetime.date(datetime.now())):
-                        self.session.data.minmax[nodeid]['TodayMin'] = 1000
-                        self.session.data.minmax[nodeid]['TodayMax'] = -1000
-                        self.session.data.minmax[nodeid]['TodayDate'] = \
-                            datetime.date(datetime.now())
-
-                    if (curtempret < self.session.data.minmax[nodeid]
-                            ['TodayMin']):
-                        self.session.data.minmax[nodeid]['TodayMin'] = \
-                            curtempret
-
-                    if (curtempret > self.session.data.minmax[nodeid]
-                            ['TodayMax']):
-                        self.session.data.minmax[nodeid]['TodayMax'] = \
-                            curtempret
-
-                    if (curtempret < self.session.data.minmax[nodeid]
-                            ['RestartMin']):
-                        self.session.data.minmax[nodeid]['RestartMin'] = \
-                            curtempret
-
-                    if (curtempret >
-                            self.session.data.minmax[nodeid]
-                            ['RestartMax']):
-                        self.session.data.minmax[nodeid]['RestartMax'] = \
-                            curtempret
-                else:
-                    current_node_max_min_data = {}
-                    current_node_max_min_data['TodayMin'] = curtempret
-                    current_node_max_min_data['TodayMax'] = curtempret
-                    current_node_max_min_data['TodayDate'] = \
-                        datetime.date(datetime.now())
-                    current_node_max_min_data['RestartMin'] = curtempret
-                    current_node_max_min_data['RestartMax'] = curtempret
-                    self.session.data.minmax[nodeid] = \
-                        current_node_max_min_data
-            else:
-                curtempret = 0
-            return curtempret
+            return self.session.heating.current_temperature(self.node_id)
         elif self.device_type == "HotWater":
             return None
 
@@ -191,8 +136,8 @@ class HiveClimateEntity(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            new_temperature = kwargs.get(ATTR_TEMPERATURE)
+        new_temperature = kwargs.get(ATTR_TEMPERATURE)
+        if new_temperature is not None:
             if self.device_type == "Heating":
                 self.session.heating.set_target_temperature(self.node_id,
                                                             new_temperature)

@@ -117,51 +117,7 @@ class HiveSensorEntity(Entity):
     def state(self):
         """Return the state of the sensor."""
         if self.device_type == "Heating_CurrentTemperature":
-            nodeid = self.node_id
-            curtempret = self.session.heating.current_temperature(nodeid)
-
-            if curtempret != -1000:
-                if nodeid in self.session.data.minmax:
-                    if (self.session.data.minmax[nodeid]['TodayDate'] !=
-                            datetime.date(datetime.now())):
-                        self.session.data.minmax[nodeid]['TodayMin'] = 1000
-                        self.session.data.minmax[nodeid]['TodayMax'] = -1000
-                        self.session.data.minmax[nodeid]['TodayDate'] = \
-                            datetime.date(datetime.now())
-
-                    if (curtempret < self.session.data.minmax[nodeid]
-                            ['TodayMin']):
-                        self.session.data.minmax[nodeid]['TodayMin'] = \
-                            curtempret
-
-                    if (curtempret > self.session.data.minmax[nodeid]
-                            ['TodayMax']):
-                        self.session.data.minmax[nodeid]['TodayMax'] = \
-                            curtempret
-
-                    if (curtempret < self.session.data.minmax[nodeid]
-                            ['RestartMin']):
-                        self.session.data.minmax[nodeid]['RestartMin'] = \
-                            curtempret
-
-                    if (curtempret >
-                            self.session.data.minmax[nodeid]
-                            ['RestartMax']):
-                        self.session.data.minmax[nodeid]['RestartMax'] = \
-                            curtempret
-                else:
-                    current_node_max_min_data = {}
-                    current_node_max_min_data['TodayMin'] = curtempret
-                    current_node_max_min_data['TodayMax'] = curtempret
-                    current_node_max_min_data['TodayDate'] = \
-                        datetime.date(datetime.now())
-                    current_node_max_min_data['RestartMin'] = curtempret
-                    current_node_max_min_data['RestartMax'] = curtempret
-                    self.session.data.minmax[nodeid] = \
-                        current_node_max_min_data
-            else:
-                curtempret = 0
-            return curtempret
+            return self.session.heating.current_temperature(self.node_id)
         elif self.device_type == "Heating_TargetTemperature":
             return self.session.heating.get_target_temperature(self.node_id)
         elif self.device_type == "Heating_State":
@@ -240,18 +196,29 @@ class HiveSensorEntity(Entity):
         temperature_target = 0
         temperature_difference = 0
 
-        if self.node_id in self.session.data.minmax:
+        minmax_temps = self.session.heating.minmax_temperatures(self.node_id)
+        if minmax_temps is not None:
             s_a.update({"Today Min / Max":
-                        str(self.session.data.minmax[self.node_id]
-                            ['TodayMin']) + " °C" + " / "
-                        + str(self.session.data.minmax[self.node_id]
-                              ['TodayMax']) + " °C"})
+                        str(minmax_temps['TodayMin']) + " °C" + " / "
+                        + str(minmax_temps['TodayMax']) + " °C"})
 
             s_a.update({"Restart Min / Max":
-                        str(self.session.data.minmax[self.node_id]
-                            ['RestartMin']) + " °C" + " / "
-                        + str(self.session.data.minmax[self.node_id]
-                              ['RestartMax']) + " °C"})
+                        str(minmax_temps['RestartMin']) + " °C" + " / "
+                        + str(minmax_temps['RestartMax']) + " °C"})
+
+
+#        if self.node_id in self.session.data.minmax:
+#            s_a.update({"Today Min / Max":
+#                        str(self.session.data.minmax[self.node_id]
+#                            ['TodayMin']) + " °C" + " / "
+#                        + str(self.session.data.minmax[self.node_id]
+#                              ['TodayMax']) + " °C"})
+
+#            s_a.update({"Restart Min / Max":
+#                        str(self.session.data.minmax[self.node_id]
+#                            ['RestartMin']) + " °C" + " / "
+#                        + str(self.session.data.minmax[self.node_id]
+#                              ['RestartMax']) + " °C"})
 
         temp_current = self.session.heating.current_temperature(self.node_id)
         temperature_target = self.session.heating.\

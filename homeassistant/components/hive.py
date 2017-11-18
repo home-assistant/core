@@ -12,7 +12,7 @@ from homeassistant.const import (CONF_PASSWORD, CONF_SCAN_INTERVAL,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['pyhiveapi==0.1.1']
+REQUIREMENTS = ['pyhiveapi==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hive'
@@ -33,16 +33,9 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-class HivePlatformData:
-    """Initiate Hive PlatformData Class."""
-
-    minmax = {}
-
-
 class HiveSession:
     """Initiate Hive Session Class."""
 
-    data = HivePlatformData()
     entities = []
     core = None
     heating = None
