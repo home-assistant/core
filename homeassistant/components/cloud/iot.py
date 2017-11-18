@@ -206,7 +206,9 @@ def async_handle_message(hass, cloud, handler_name, payload):
 @asyncio.coroutine
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
-    return (yield from smart_home.async_handle_message(hass, payload))
+    return (yield from smart_home.async_handle_message(hass,
+                                                       cloud.alexa_config,
+                                                       payload))
 
 
 @HANDLERS.register('cloud')
