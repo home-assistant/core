@@ -38,46 +38,26 @@ def setup(hass, config):
     conf = config[DOMAIN]
     hlmn = HassLaMetricManager(client_id=conf[CONF_CLIENT_ID],
                                client_secret=conf[CONF_CLIENT_SECRET])
-    devices = hlmn.manager().get_devices()
+    devices = hlmn.manager.get_devices()
+    if not devices:
+        _LOGGER.error("No LaMetric devices found")
+        return False
 
-    found = False
     hass.data[DOMAIN] = hlmn
     for dev in devices:
         _LOGGER.debug("Discovered LaMetric device: %s", dev)
-        found = True
 
-    return found
+    return True
 
 
 class HassLaMetricManager():
-    """
-    A class that encapsulated requests to the LaMetric manager.
-
-    As the original class does not have a re-connect feature that is needed
-    for applications running for a long time as the OAuth tokens expire. This
-    class implements this reconnect() feature.
-    """
+    """A class that encapsulated requests to the LaMetric manager."""
 
     def __init__(self, client_id, client_secret):
         """Initialize HassLaMetricManager and connect to LaMetric."""
         from lmnotify import LaMetricManager
 
         _LOGGER.debug("Connecting to LaMetric")
-        self.lmn = LaMetricManager(client_id, client_secret)
+        self.manager = LaMetricManager(client_id, client_secret)
         self._client_id = client_id
         self._client_secret = client_secret
-
-    def reconnect(self):
-        """
-        Reconnect to LaMetric.
-
-        This is usually necessary when the OAuth token is expired.
-        """
-        from lmnotify import LaMetricManager
-        _LOGGER.debug("Reconnecting to LaMetric")
-        self.lmn = LaMetricManager(self._client_id,
-                                   self._client_secret)
-
-    def manager(self):
-        """Return the global LaMetricManager instance."""
-        return self.lmn

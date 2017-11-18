@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.0']
+REQUIREMENTS = ['python-miio==0.3.1']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -68,8 +68,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         elif device_info.model in ['qmi.powerstrip.v1',
                                    'zimi.powerstrip.v2']:
-            from miio import Strip
-            plug = Strip(host, token)
+            from miio import PowerStrip
+            plug = PowerStrip(host, token)
             device = XiaomiPowerStripSwitch(name, plug, device_info)
             devices.append(device)
         elif device_info.model in ['chuangmi.plug.m1',
@@ -287,6 +287,10 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
                 self._state = state.usb_power
             else:
                 self._state = state.is_on
+
+            self._state_attrs.update({
+                ATTR_TEMPERATURE: state.temperature
+            })
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)

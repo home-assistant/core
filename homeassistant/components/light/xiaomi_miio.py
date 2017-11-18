@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.0']
+REQUIREMENTS = ['python-miio==0.3.1']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -64,14 +64,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             light = PhilipsEyecare(host, token)
             device = XiaomiPhilipsEyecareLamp(name, light, device_info)
             devices.append(device)
-        elif device_info.model == 'philips.light.ceil':
+        elif device_info.model == 'philips.light.ceiling':
             from miio import Ceil
             light = Ceil(host, token)
             device = XiaomiPhilipsCeilingLamp(name, light, device_info)
             devices.append(device)
         elif device_info.model == 'philips.light.bulb':
-            from miio import Ceil
-            light = Ceil(host, token)
+            from miio import PhilipsBulb
+            light = PhilipsBulb(host, token)
             device = XiaomiPhilipsLightBall(name, light, device_info)
             devices.append(device)
         else:

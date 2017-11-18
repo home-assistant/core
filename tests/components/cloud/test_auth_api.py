@@ -69,7 +69,6 @@ def test_login(mock_cognito):
     auth_api.login(cloud, 'user', 'pass')
 
     assert len(mock_cognito.authenticate.mock_calls) == 1
-    assert cloud.email == 'user'
     assert cloud.id_token == 'test_id_token'
     assert cloud.access_token == 'test_access_token'
     assert cloud.refresh_token == 'test_refresh_token'

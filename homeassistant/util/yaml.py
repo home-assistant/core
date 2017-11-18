@@ -78,7 +78,8 @@ def load_yaml(fname: str) -> Union[List, Dict]:
 
 def dump(_dict: dict) -> str:
     """Dump YAML to a string and remove null."""
-    return yaml.safe_dump(_dict, default_flow_style=False) \
+    return yaml.safe_dump(
+        _dict, default_flow_style=False, allow_unicode=True) \
         .replace(': null\n', ':\n')
 
 

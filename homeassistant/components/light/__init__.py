@@ -23,7 +23,6 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
 
 DOMAIN = "light"
@@ -138,14 +137,6 @@ PROFILE_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def extract_info(state):
-    """Extract light parameters from a state object."""
-    params = {key: state.attributes[key] for key in PROP_TO_ATTR
-              if key in state.attributes}
-    params['is_on'] = state.state == STATE_ON
-    return params
 
 
 @bind_hass
@@ -431,9 +422,3 @@ class Light(ToggleEntity):
     def supported_features(self):
         """Flag supported features."""
         return 0
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Component added, restore_state using platforms."""
-        if hasattr(self, 'async_restore_state'):
-            yield from async_restore_state(self, extract_info)

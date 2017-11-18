@@ -5,36 +5,42 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
 import asyncio
-import json
 from functools import wraps
-import logging
-import ssl
 from ipaddress import ip_network
-
+import json
+import logging
 import os
-import voluptuous as vol
-from aiohttp import web
-from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
+import ssl
 
+from aiohttp import web
+from aiohttp.hdrs import ACCEPT, ORIGIN, CONTENT_TYPE
+from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
+import voluptuous as vol
+
+from homeassistant.const import (
+    SERVER_PORT, CONTENT_TYPE_JSON, HTTP_HEADER_HA_AUTH,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
+    HTTP_HEADER_X_REQUESTED_WITH)
+from homeassistant.core import is_callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
 import homeassistant.util as hass_util
-from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
-from homeassistant.core import is_callback
 from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import auth_middleware
 from .ban import ban_middleware
 from .const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS, KEY_BANS_ENABLED,
-    KEY_LOGIN_THRESHOLD, KEY_AUTHENTICATED)
+    KEY_BANS_ENABLED, KEY_AUTHENTICATED, KEY_LOGIN_THRESHOLD,
+    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR)
 from .static import (
-    staticresource_middleware, CachingFileResponse, CachingStaticResource)
+    CachingFileResponse, CachingStaticResource, staticresource_middleware)
 from .util import get_real_ip
 
 REQUIREMENTS = ['aiohttp_cors==0.5.3']
+
+ALLOWED_CORS_HEADERS = [
+    ORIGIN, ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, CONTENT_TYPE,
+    HTTP_HEADER_HA_AUTH]
 
 DOMAIN = 'http'
 
@@ -176,8 +182,6 @@ class HomeAssistantWSGI(object):
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
-        import aiohttp_cors
-
         middlewares = [auth_middleware, staticresource_middleware]
 
         if is_ban_enabled:
@@ -200,6 +204,8 @@ class HomeAssistantWSGI(object):
         self.server = None
 
         if cors_origins:
+            import aiohttp_cors
+
             self.cors = aiohttp_cors.setup(self.app, defaults={
                 host: aiohttp_cors.ResourceOptions(
                     allow_headers=ALLOWED_CORS_HEADERS,
@@ -256,7 +262,6 @@ class HomeAssistantWSGI(object):
                 resource = CachingStaticResource
             else:
                 resource = web.StaticResource
-
             self.app.router.register_resource(resource(url_path, path))
             return
 
@@ -329,7 +334,9 @@ class HomeAssistantWSGI(object):
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
 
-        self.app._frozen = False  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        self.app._middlewares = tuple(self.app._prepare_middleware())
+        self.app._frozen = False
 
     @asyncio.coroutine
     def stop(self):
@@ -339,7 +346,7 @@ class HomeAssistantWSGI(object):
             yield from self.server.wait_closed()
         yield from self.app.shutdown()
         if self._handler:
-            yield from self._handler.finish_connections(60.0)
+            yield from self._handler.shutdown(10)
         yield from self.app.cleanup()
 
 
