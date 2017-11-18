@@ -127,7 +127,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 'entity_id': active_entity_ids
             })
 
-
     @callback
     def device_removal_callback(data):
         """Handle the removal of devices from Emby."""
