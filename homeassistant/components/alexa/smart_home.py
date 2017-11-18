@@ -246,7 +246,11 @@ def extract_entity(funct):
 @asyncio.coroutine
 def async_api_turn_on(hass, config, request, entity):
     """Process a turn on request."""
-    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_ON, {
+    domain = entity.domain
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
+
+    yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
@@ -258,7 +262,11 @@ def async_api_turn_on(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_turn_off(hass, config, request, entity):
     """Process a turn off request."""
-    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_OFF, {
+    domain = entity.domain
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
+
+    yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
