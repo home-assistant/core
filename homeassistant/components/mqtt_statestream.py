@@ -25,7 +25,17 @@ DEPENDENCIES = ['mqtt']
 DOMAIN = 'mqtt_statestream'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.FILTER_SCHEMA.extend({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+        }),
+        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+        }),
         vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
         vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
         vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean
