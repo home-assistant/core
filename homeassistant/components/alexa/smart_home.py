@@ -1,5 +1,6 @@
 """Support for alexa Smart Home Skill API."""
 import asyncio
+from collections import namedtuple
 import logging
 import math
 from uuid import uuid4
@@ -72,8 +73,11 @@ MAPPING_COMPONENT = {
 }
 
 
+Config = namedtuple('AlexaConfig', 'filter')
+
+
 @asyncio.coroutine
-def async_handle_message(hass, message):
+def async_handle_message(hass, config, message):
     """Handle incoming API messages."""
     assert message[API_DIRECTIVE][API_HEADER]['payloadVersion'] == '3'
 
@@ -89,7 +93,7 @@ def async_handle_message(hass, message):
             "Unsupported API request %s/%s", namespace, name)
         return api_error(message)
 
-    return (yield from funct_ref(hass, message))
+    return (yield from funct_ref(hass, config, message))
 
 
 def api_message(request, name='Response', namespace='Alexa', payload=None):
@@ -138,7 +142,7 @@ def api_error(request, error_type='INTERNAL_ERROR', error_message=""):
 
 @HANDLERS.register(('Alexa.Discovery', 'Discover'))
 @asyncio.coroutine
-def async_api_discovery(hass, request):
+def async_api_discovery(hass, config, request):
     """Create a API formatted discovery response.
 
     Async friendly.
@@ -146,7 +150,14 @@ def async_api_discovery(hass, request):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
+        if not config.filter(entity.entity_id):
+            _LOGGER.debug("Not exposing %s because filtered by config",
+                          entity.entity_id)
+            continue
+
         if entity.attributes.get(ATTR_ALEXA_HIDDEN, False):
+            _LOGGER.debug("Not exposing %s because alexa_hidden is true",
+                          entity.entity_id)
             continue
 
         class_data = MAPPING_COMPONENT.get(entity.domain)
@@ -207,7 +218,7 @@ def async_api_discovery(hass, request):
 def extract_entity(funct):
     """Decorator for extract entity object from request."""
     @asyncio.coroutine
-    def async_api_entity_wrapper(hass, request):
+    def async_api_entity_wrapper(hass, config, request):
         """Process a turn on request."""
         entity_id = request[API_ENDPOINT]['endpointId'].replace('#', '.')
 
@@ -218,7 +229,7 @@ def extract_entity(funct):
                           request[API_HEADER]['name'], entity_id)
             return api_error(request, error_type='NO_SUCH_ENDPOINT')
 
-        return (yield from funct(hass, request, entity))
+        return (yield from funct(hass, config, request, entity))
 
     return async_api_entity_wrapper
 
@@ -226,9 +237,13 @@ def extract_entity(funct):
 @HANDLERS.register(('Alexa.PowerController', 'TurnOn'))
 @extract_entity
 @asyncio.coroutine
-def async_api_turn_on(hass, request, entity):
+def async_api_turn_on(hass, config, request, entity):
     """Process a turn on request."""
-    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_ON, {
+    domain = entity.domain
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
+
+    yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
@@ -238,9 +253,13 @@ def async_api_turn_on(hass, request, entity):
 @HANDLERS.register(('Alexa.PowerController', 'TurnOff'))
 @extract_entity
 @asyncio.coroutine
-def async_api_turn_off(hass, request, entity):
+def async_api_turn_off(hass, config, request, entity):
     """Process a turn off request."""
-    yield from hass.services.async_call(ha.DOMAIN, SERVICE_TURN_OFF, {
+    domain = entity.domain
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
+
+    yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
@@ -250,7 +269,7 @@ def async_api_turn_off(hass, request, entity):
 @HANDLERS.register(('Alexa.BrightnessController', 'SetBrightness'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_brightness(hass, request, entity):
+def async_api_set_brightness(hass, config, request, entity):
     """Process a set brightness request."""
     brightness = int(request[API_PAYLOAD]['brightness'])
 
@@ -265,7 +284,7 @@ def async_api_set_brightness(hass, request, entity):
 @HANDLERS.register(('Alexa.BrightnessController', 'AdjustBrightness'))
 @extract_entity
 @asyncio.coroutine
-def async_api_adjust_brightness(hass, request, entity):
+def async_api_adjust_brightness(hass, config, request, entity):
     """Process a adjust brightness request."""
     brightness_delta = int(request[API_PAYLOAD]['brightnessDelta'])
 
@@ -289,7 +308,7 @@ def async_api_adjust_brightness(hass, request, entity):
 @HANDLERS.register(('Alexa.ColorController', 'SetColor'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_color(hass, request, entity):
+def async_api_set_color(hass, config, request, entity):
     """Process a set color request."""
     supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES)
     rgb = color_util.color_hsb_to_RGB(
@@ -317,7 +336,7 @@ def async_api_set_color(hass, request, entity):
 @HANDLERS.register(('Alexa.ColorTemperatureController', 'SetColorTemperature'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_color_temperature(hass, request, entity):
+def async_api_set_color_temperature(hass, config, request, entity):
     """Process a set color temperature request."""
     kelvin = int(request[API_PAYLOAD]['colorTemperatureInKelvin'])
 
@@ -333,7 +352,7 @@ def async_api_set_color_temperature(hass, request, entity):
     ('Alexa.ColorTemperatureController', 'DecreaseColorTemperature'))
 @extract_entity
 @asyncio.coroutine
-def async_api_decrease_color_temp(hass, request, entity):
+def async_api_decrease_color_temp(hass, config, request, entity):
     """Process a decrease color temperature request."""
     current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
     max_mireds = int(entity.attributes.get(light.ATTR_MAX_MIREDS))
@@ -351,7 +370,7 @@ def async_api_decrease_color_temp(hass, request, entity):
     ('Alexa.ColorTemperatureController', 'IncreaseColorTemperature'))
 @extract_entity
 @asyncio.coroutine
-def async_api_increase_color_temp(hass, request, entity):
+def async_api_increase_color_temp(hass, config, request, entity):
     """Process a increase color temperature request."""
     current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
     min_mireds = int(entity.attributes.get(light.ATTR_MIN_MIREDS))
@@ -368,7 +387,7 @@ def async_api_increase_color_temp(hass, request, entity):
 @HANDLERS.register(('Alexa.SceneController', 'Activate'))
 @extract_entity
 @asyncio.coroutine
-def async_api_activate(hass, request, entity):
+def async_api_activate(hass, config, request, entity):
     """Process a activate request."""
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -380,7 +399,7 @@ def async_api_activate(hass, request, entity):
 @HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_percentage(hass, request, entity):
+def async_api_set_percentage(hass, config, request, entity):
     """Process a set percentage request."""
     percentage = int(request[API_PAYLOAD]['percentage'])
     service = None
@@ -411,7 +430,7 @@ def async_api_set_percentage(hass, request, entity):
 @HANDLERS.register(('Alexa.PercentageController', 'AdjustPercentage'))
 @extract_entity
 @asyncio.coroutine
-def async_api_adjust_percentage(hass, request, entity):
+def async_api_adjust_percentage(hass, config, request, entity):
     """Process a adjust percentage request."""
     percentage_delta = int(request[API_PAYLOAD]['percentageDelta'])
     service = None
@@ -459,7 +478,7 @@ def async_api_adjust_percentage(hass, request, entity):
 @HANDLERS.register(('Alexa.LockController', 'Lock'))
 @extract_entity
 @asyncio.coroutine
-def async_api_lock(hass, request, entity):
+def async_api_lock(hass, config, request, entity):
     """Process a lock request."""
     yield from hass.services.async_call(entity.domain, SERVICE_LOCK, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -472,7 +491,7 @@ def async_api_lock(hass, request, entity):
 @HANDLERS.register(('Alexa.LockController', 'Unlock'))
 @extract_entity
 @asyncio.coroutine
-def async_api_unlock(hass, request, entity):
+def async_api_unlock(hass, config, request, entity):
     """Process a unlock request."""
     yield from hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -484,7 +503,7 @@ def async_api_unlock(hass, request, entity):
 @HANDLERS.register(('Alexa.Speaker', 'SetVolume'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_volume(hass, request, entity):
+def async_api_set_volume(hass, config, request, entity):
     """Process a set volume request."""
     volume = round(float(request[API_PAYLOAD]['volume'] / 100), 2)
 
@@ -502,7 +521,7 @@ def async_api_set_volume(hass, request, entity):
 @HANDLERS.register(('Alexa.Speaker', 'AdjustVolume'))
 @extract_entity
 @asyncio.coroutine
-def async_api_adjust_volume(hass, request, entity):
+def async_api_adjust_volume(hass, config, request, entity):
     """Process a adjust volume request."""
     volume_delta = int(request[API_PAYLOAD]['volume'])
 
@@ -531,7 +550,7 @@ def async_api_adjust_volume(hass, request, entity):
 @HANDLERS.register(('Alexa.Speaker', 'SetMute'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_mute(hass, request, entity):
+def async_api_set_mute(hass, config, request, entity):
     """Process a set mute request."""
     mute = bool(request[API_PAYLOAD]['mute'])
 
@@ -550,7 +569,7 @@ def async_api_set_mute(hass, request, entity):
 @HANDLERS.register(('Alexa.PlaybackController', 'Play'))
 @extract_entity
 @asyncio.coroutine
-def async_api_play(hass, request, entity):
+def async_api_play(hass, config, request, entity):
     """Process a play request."""
     data = {
         ATTR_ENTITY_ID: entity.entity_id
@@ -565,7 +584,7 @@ def async_api_play(hass, request, entity):
 @HANDLERS.register(('Alexa.PlaybackController', 'Pause'))
 @extract_entity
 @asyncio.coroutine
-def async_api_pause(hass, request, entity):
+def async_api_pause(hass, config, request, entity):
     """Process a pause request."""
     data = {
         ATTR_ENTITY_ID: entity.entity_id
@@ -580,7 +599,7 @@ def async_api_pause(hass, request, entity):
 @HANDLERS.register(('Alexa.PlaybackController', 'Stop'))
 @extract_entity
 @asyncio.coroutine
-def async_api_stop(hass, request, entity):
+def async_api_stop(hass, config, request, entity):
     """Process a stop request."""
     data = {
         ATTR_ENTITY_ID: entity.entity_id
@@ -595,7 +614,7 @@ def async_api_stop(hass, request, entity):
 @HANDLERS.register(('Alexa.PlaybackController', 'Next'))
 @extract_entity
 @asyncio.coroutine
-def async_api_next(hass, request, entity):
+def async_api_next(hass, config, request, entity):
     """Process a next request."""
     data = {
         ATTR_ENTITY_ID: entity.entity_id
@@ -611,7 +630,7 @@ def async_api_next(hass, request, entity):
 @HANDLERS.register(('Alexa.PlaybackController', 'Previous'))
 @extract_entity
 @asyncio.coroutine
-def async_api_previous(hass, request, entity):
+def async_api_previous(hass, config, request, entity):
     """Process a previous request."""
     data = {
         ATTR_ENTITY_ID: entity.entity_id
