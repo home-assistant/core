@@ -105,11 +105,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
                 _LOGGER.debug("Indexing active emby device %s", device.name)
 
-                # Reformat device name into the entity ID format used by HomeAssistant
-                # if we don't do this, we won't be able to create a group of these entities
+                # Reformat device name into the entity ID format used by
+                # HomeAssistant if we don't do this, we won't be able to
+                # create a group of these entities
                 entity_name = device.name.replace(" - ", "__")
                 entity_name = entity_name.replace(" ", "_")
-                # Prepend media_player prefix used by HomeAssistant - this is how it would appear in the UI
+                # Prepend media_player prefix used by HomeAssistant -
+                # this is how it would appear in the UI
                 entity_name = "media_player." + entity_name
                 # Convert to lower-case for convention purposes
                 entity_name = entity_name.lower()
@@ -117,7 +119,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 active_entity_ids.append(entity_name)
 
             # Remove the default device from the group
-            active_entity_ids.remove("media_player.emby__homeassistant__homeassistant")
+            active_entity_ids.remove\
+                ("media_player.emby__homeassistant__homeassistant")
 
             # Create the group
             hass.states.async_set('group.emby', 'off', {
