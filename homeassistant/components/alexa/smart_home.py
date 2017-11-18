@@ -1,22 +1,20 @@
 """Support for alexa Smart Home Skill API."""
 import asyncio
+from collections import namedtuple
 import logging
 import math
 from uuid import uuid4
 
 import homeassistant.core as ha
-from homeassistant.components.cloud import CONF_ALEXA_FILTERS
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_EXCLUDE_DOMAINS,
-    CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_DOMAINS, CONF_INCLUDE_ENTITIES,
-    SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_LOCK,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET)
 from homeassistant.components import (
     alert, automation, cover, fan, group, input_boolean, light, lock,
     media_player, scene, script, switch)
-from homeassistant.helpers.entityfilter import generate_filter
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
@@ -73,6 +71,9 @@ MAPPING_COMPONENT = {
     script.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
     switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
 }
+
+
+Config = namedtuple('AlexaConfig', 'filter')
 
 
 @asyncio.coroutine
@@ -149,17 +150,9 @@ def async_api_discovery(hass, config, request):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
-        filters = config.get(CONF_ALEXA_FILTERS, {})
-
-        include_domains = filters.get(CONF_INCLUDE_DOMAINS, [])
-        include_entities = filters.get(CONF_INCLUDE_ENTITIES, [])
-        exclude_domains = filters.get(CONF_EXCLUDE_DOMAINS, [])
-        exclude_entities = filters.get(CONF_EXCLUDE_ENTITIES, [])
-
-        entity_filter = generate_filter(include_domains, include_entities,
-                                        exclude_domains, exclude_entities)
-
-        if not entity_filter(entity.entity_id):
+        if not config.filter(entity.entity_id):
+            _LOGGER.debug("Not exposing %s because filtered by config",
+                          entity.entity_id)
             continue
 
         if entity.attributes.get(ATTR_ALEXA_HIDDEN, False):

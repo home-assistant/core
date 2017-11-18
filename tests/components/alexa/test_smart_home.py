@@ -5,8 +5,11 @@ from uuid import uuid4
 import pytest
 
 from homeassistant.components.alexa import smart_home
+from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
+
+DEFAULT_CONFIG = smart_home.Config(filter=lambda entity_id: True)
 
 
 def get_new_request(namespace, name, endpoint=None):
@@ -91,7 +94,7 @@ def test_wrong_version(hass):
     msg['directive']['header']['payloadVersion'] = '2'
 
     with pytest.raises(AssertionError):
-        yield from smart_home.async_handle_message(hass, {}, msg)
+        yield from smart_home.async_handle_message(hass, DEFAULT_CONFIG, msg)
 
 
 @asyncio.coroutine
@@ -157,7 +160,8 @@ def test_discovery_request(hass):
             'position': 85
         })
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -334,12 +338,12 @@ def test_exclude_filters(hass):
     hass.states.async_set(
         'cover.deny', 'off', {'friendly_name': "Blocked cover"})
 
-    config = {
-        'filters': {
-            'exclude_domains': ['script'],
-            'exclude_entities': ['cover.deny'],
-        }
-    }
+    config = smart_home.Config(filter=entityfilter.generate_filter(
+        include_domains=[],
+        include_entities=[],
+        exclude_domains=['script'],
+        exclude_entities=['cover.deny'],
+    ))
 
     msg = yield from smart_home.async_handle_message(hass, config, request)
 
@@ -366,12 +370,12 @@ def test_include_filters(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    config = {
-        'filters': {
-            'include_domains': ['automation', 'group'],
-            'include_entities': ['script.deny'],
-        }
-    }
+    config = smart_home.Config(filter=entityfilter.generate_filter(
+        include_domains=['automation', 'group'],
+        include_entities=['script.deny'],
+        exclude_domains=[],
+        exclude_entities=[],
+    ))
 
     msg = yield from smart_home.async_handle_message(hass, config, request)
 
@@ -387,7 +391,8 @@ def test_api_entity_not_exists(hass):
 
     call_switch = async_mock_service(hass, 'switch', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -402,7 +407,8 @@ def test_api_entity_not_exists(hass):
 def test_api_function_not_implemented(hass):
     """Test api call that is not implemented to us."""
     request = get_new_request('Alexa.HAHAAH', 'Sweet')
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -434,7 +440,8 @@ def test_api_turn_on(hass, domain):
 
     call = async_mock_service(hass, call_domain, 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -466,7 +473,8 @@ def test_api_turn_off(hass, domain):
 
     call = async_mock_service(hass, call_domain, 'turn_off')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -491,7 +499,8 @@ def test_api_set_brightness(hass):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -521,7 +530,8 @@ def test_api_adjust_brightness(hass, result, adjust):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -554,7 +564,8 @@ def test_api_set_color_rgb(hass):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -587,7 +598,8 @@ def test_api_set_color_xy(hass):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -615,7 +627,8 @@ def test_api_set_color_temperature(hass):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -643,7 +656,8 @@ def test_api_decrease_color_temp(hass, result, initial):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -671,7 +685,8 @@ def test_api_increase_color_temp(hass, result, initial):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -697,7 +712,8 @@ def test_api_activate(hass, domain):
 
     call = async_mock_service(hass, domain, 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -722,7 +738,8 @@ def test_api_set_percentage_fan(hass):
 
     call_fan = async_mock_service(hass, 'fan', 'set_speed')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -750,7 +767,8 @@ def test_api_set_percentage_cover(hass):
 
     call_cover = async_mock_service(hass, 'cover', 'set_cover_position')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -780,7 +798,8 @@ def test_api_adjust_percentage_fan(hass, result, adjust):
 
     call_fan = async_mock_service(hass, 'fan', 'set_speed')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -811,7 +830,8 @@ def test_api_adjust_percentage_cover(hass, result, adjust):
 
     call_cover = async_mock_service(hass, 'cover', 'set_cover_position')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -837,7 +857,8 @@ def test_api_lock(hass, domain):
 
     call = async_mock_service(hass, domain, 'lock')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -862,7 +883,8 @@ def test_api_play(hass, domain):
 
     call = async_mock_service(hass, domain, 'media_play')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -887,7 +909,8 @@ def test_api_pause(hass, domain):
 
     call = async_mock_service(hass, domain, 'media_pause')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -912,7 +935,8 @@ def test_api_stop(hass, domain):
 
     call = async_mock_service(hass, domain, 'media_stop')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -937,7 +961,8 @@ def test_api_next(hass, domain):
 
     call = async_mock_service(hass, domain, 'media_next_track')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -962,7 +987,8 @@ def test_api_previous(hass, domain):
 
     call = async_mock_service(hass, domain, 'media_previous_track')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -989,7 +1015,8 @@ def test_api_set_volume(hass):
 
     call_media_player = async_mock_service(hass, 'media_player', 'volume_set')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -1019,7 +1046,8 @@ def test_api_adjust_volume(hass, result, adjust):
 
     call_media_player = async_mock_service(hass, 'media_player', 'volume_set')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -1047,7 +1075,8 @@ def test_api_mute(hass, domain):
 
     call = async_mock_service(hass, domain, 'volume_mute')
 
-    msg = yield from smart_home.async_handle_message(hass, {}, request)
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']

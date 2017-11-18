@@ -8,10 +8,10 @@ import os
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_EXCLUDE_DOMAINS,
-    CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_DOMAINS, CONF_INCLUDE_ENTITIES)
-from homeassistant.helpers import config_validation as cv
+    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
+from homeassistant.helpers import entityfilter
 from homeassistant.util import dt as dt_util
+from homeassistant.components.alexa import smart_home
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -21,7 +21,7 @@ REQUIREMENTS = ['warrant==0.5.0']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALEXA = 'alexa'
-CONF_ALEXA_FILTERS = 'filters'
+CONF_ALEXA_FILTER = 'filter'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
@@ -31,16 +31,11 @@ DEFAULT_MODE = MODE_DEV
 DEPENDENCIES = ['http']
 
 ALEXA_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ALEXA_FILTERS): vol.Schema({
-        vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_INCLUDE_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
-    })
+    vol.Optional(
+        CONF_ALEXA_FILTER,
+        default=lambda: entityfilter.generate_filter([], [], [], [])
+    ): entityfilter.FILTER_SCHEMA,
 })
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -64,6 +59,10 @@ def async_setup(hass, config):
     else:
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
+    if CONF_ALEXA not in kwargs:
+        kwargs[CONF_ALEXA] = ALEXA_SCHEMA({})
+
+    kwargs[CONF_ALEXA] = smart_home.Config(**kwargs[CONF_ALEXA])
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
     @asyncio.coroutine

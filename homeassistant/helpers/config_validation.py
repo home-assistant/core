@@ -563,16 +563,3 @@ SCRIPT_SCHEMA = vol.All(
     [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA,
              _SCRIPT_WAIT_TEMPLATE_SCHEMA, EVENT_SCHEMA, CONDITION_SCHEMA)],
 )
-
-FILTER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(ensure_list, [string])
-    }),
-    vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(ensure_list, [string])
-    })
-})
