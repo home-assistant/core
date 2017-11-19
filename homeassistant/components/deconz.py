@@ -19,7 +19,7 @@ from homeassistant.helpers import discovery
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==14']
+REQUIREMENTS = ['pydeconz==15']
 
 _LOGGER = logging.getLogger(__name__)
 
