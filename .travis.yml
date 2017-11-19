@@ -29,7 +29,5 @@ cache:
     - $HOME/.cache/pip
 install: pip install -U tox coveralls
 language: python
-script:
-  - tox --notest --develop
-  - tox --develop
+script: travis_wait tox --develop
 after_success: coveralls
