@@ -151,6 +151,7 @@ def setup(hass, config):
             _state = state.state
             _state_key = "state"
 
+        include_uom = True
         measurement = component_config.get(state.entity_id).get(
             CONF_OVERRIDE_MEASUREMENT)
         if measurement in (None, ''):
@@ -163,6 +164,8 @@ def setup(hass, config):
                         measurement = default_measurement
                     else:
                         measurement = state.entity_id
+                else:
+                    include_uom = False
 
         json_body = [
             {
@@ -181,7 +184,7 @@ def setup(hass, config):
         for key, value in state.attributes.items():
             if key in tags_attributes:
                 json_body[0]['tags'][key] = value
-            elif key != 'unit_of_measurement':
+            elif key != 'unit_of_measurement' or include_uom:
                 # If the key is already in fields
                 if key in json_body[0]['fields']:
                     key = key + "_"
