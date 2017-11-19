@@ -5,9 +5,11 @@ https://home-assistant.io/components/deconz/
 """
 
 import asyncio
+import os
 import logging
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_API_KEY, CONF_EVENT, CONF_HOST, CONF_ID, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
@@ -50,6 +52,8 @@ def async_setup(hass, config):
     """Setup services for Deconz."""
     deconz_config = config[DOMAIN]
     config_file = load_json(hass.config.path(CONFIG_FILE))
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
 
     @callback
     def _shutdown(call):  # pylint: disable=unused-argument
@@ -58,6 +62,28 @@ def async_setup(hass, config):
             _LOGGER.info("Stopping Deconz session.")
             hass.data[DECONZ_DATA].close()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+
+    @asyncio.coroutine
+    def _configure(call):
+        """Set attribute of device in Deconz.
+
+        Field is a string representing a specific device in Deconz
+        e.g. field='/lights/1/state'.
+        Data is a json object with what data you want to alter
+        e.g. data={'on': true}.
+        {
+            "field": "/lights/1/state",
+            "data": {"on": true}
+        }
+        See Dresden Elektroniks REST API documentation for details:
+        http://dresden-elektronik.github.io/deconz-rest-doc/rest/
+        """
+        deconz = hass.data[DECONZ_DATA]
+        field = call.data.get('field')
+        data = call.data.get('data')
+        yield from deconz.put_state_async(field, data)
+    hass.services.async_register(
+        DOMAIN, 'configure', _configure, descriptions['configure'])
 
     if CONF_API_KEY in deconz_config:
         pass
