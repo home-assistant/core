@@ -35,7 +35,6 @@ class HiveSensorEntity(Entity):
         self.device_type = hivedevice["HA_DeviceType"]
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
-        self.session.sensor = self.session.core.Sensor()
         if self.device_type == "Hive_Device_BatteryLevel":
             self.batt_lvl = None
 

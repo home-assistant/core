@@ -34,8 +34,6 @@ class HiveDeviceLight(Light):
         self.device_type = hivedevice["HA_DeviceType"]
         self.light_device_type = hivedevice["Hive_Light_DeviceType"]
         self.session = hivesession
-        self.session.light = self.session.core.Light()
-
         self.session.entities.append(self)
 
     def handle_update(self, updatesource):

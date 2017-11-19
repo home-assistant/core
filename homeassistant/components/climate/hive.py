@@ -39,10 +39,8 @@ class HiveClimateEntity(ClimateDevice):
         self.session = hivesession
 
         if self.device_type == "Heating":
-            self.session.heating = self.session.core.Heating()
             self.modes = [STATE_AUTO, STATE_HEAT, STATE_OFF]
         elif self.device_type == "HotWater":
-            self.session.hotwater = self.session.core.Hotwater()
             self.modes = [STATE_AUTO, STATE_ON, STATE_OFF]
 
         self.session.entities.append(self)
@@ -60,10 +58,8 @@ class HiveClimateEntity(ClimateDevice):
             friendly_name = "Heating"
             if self.node_name is not None:
                 friendly_name = '{} {}'.format(self.node_name, friendly_name)
-
         elif self.device_type == "HotWater":
             friendly_name = "Hot Water"
-
         return friendly_name
 
     @property
@@ -76,37 +72,24 @@ class HiveClimateEntity(ClimateDevice):
         """Return the current temperature."""
         if self.device_type == "Heating":
             return self.session.heating.current_temperature(self.node_id)
-        elif self.device_type == "HotWater":
-            return None
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        set_result = None
-
         if self.device_type == "Heating":
-            set_result = self.session.heating.get_target_temperature(
-                self.node_id)
-        elif self.device_type == "HotWater":
-            set_result = None
-
-        return set_result
+            return self.session.heating.get_target_temperature(self.node_id)
 
     @property
     def min_temp(self):
         """Return minimum temperature."""
         if self.device_type == "Heating":
             return self.session.heating.min_temperature(self.node_id)
-        elif self.device_type == "HotWater":
-            return None
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         if self.device_type == "Heating":
             return self.session.heating.max_temperature(self.node_id)
-        elif self.device_type == "HotWater":
-            return None
 
     @property
     def operation_list(self):

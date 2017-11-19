@@ -30,8 +30,6 @@ class HiveDevicePlug(SwitchDevice):
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
-        self.session.switch = self.session.core.Switch()
-
         self.session.entities.append(self)
 
     def handle_update(self, updatesource):
