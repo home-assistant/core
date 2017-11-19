@@ -390,4 +390,4 @@ class HiveSensorEntity(Entity):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        update_result = self.session.core.update_data(self.node_id)
+        self.session.core.update_data(self.node_id)
