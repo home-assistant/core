@@ -351,8 +351,6 @@ class HiveSensorEntity(Entity):
     @property
     def icon(self):
         """Return the icon to use."""
-        device_icon = 'mdi:thermometer'
-
         if self.device_type == "Hive_Device_BatteryLevel":
             return icon_for_battery_level(battery_level=self.batt_lvl)
         else:
