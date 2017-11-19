@@ -1,10 +1,11 @@
 """The tests for Kira sensor platform."""
+import time
 import unittest
 
 from homeassistant.components.sensor import time_date as time_date
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant
+from common import get_test_home_assistant
 
 
 class TestTimeDateSensor(unittest.TestCase):
@@ -36,10 +37,17 @@ class TestTimeDateSensor(unittest.TestCase):
         next_time = device.get_next_interval(now)
         assert next_time == dt_util.utc_from_timestamp(60)
 
-        device = time_date.TimeDateSensor(self.hass, 'date')
-        now = dt_util.utc_from_timestamp(12345)
-        next_time = device.get_next_interval(now)
-        assert next_time == dt_util.utc_from_timestamp(86400)
+        try:
+            t = time.time
+            time.time = lambda: 0
+            device = time_date.TimeDateSensor(self.hass, 'date')
+            now = dt_util.utc_from_timestamp(12345)
+            next_time = device.get_next_interval(now)
+            assert next_time == dt_util.utc_from_timestamp(86400)
+        finally:
+            time.time = t
+
+
 
         device = time_date.TimeDateSensor(self.hass, 'beat')
         now = dt_util.utc_from_timestamp(29)
