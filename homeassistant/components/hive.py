@@ -12,7 +12,7 @@ from homeassistant.const import (CONF_PASSWORD, CONF_SCAN_INTERVAL,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['pyhiveapi==0.1.3']
+REQUIREMENTS = ['pyhiveapi==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hive'
@@ -60,7 +60,7 @@ def setup(hass, config):
                                              password,
                                              update_interval)
 
-    if DEVICETYPES is None:
+    if devicelist is None:
         _LOGGER.error("Hive API initialization failed")
         return False
 

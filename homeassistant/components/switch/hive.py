@@ -50,27 +50,20 @@ class HiveDevicePlug(SwitchDevice):
         return self.session.switch.get_power_usage(self.node_id)
 
     @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if switch is on."""
         return self.session.switch.get_state(self.node_id)
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        result = self.session.switch.turn_on(self.node_id)
+        self.session.switch.turn_on(self.node_id)
         updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
             entity.handle_update(updatesource)
-        return result
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        result = self.session.switch.turn_off(self.node_id)
+        self.session.switch.turn_off(self.node_id)
         updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
             entity.handle_update(updatesource)
-        return result

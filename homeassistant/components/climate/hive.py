@@ -148,4 +148,4 @@ class HiveClimateEntity(ClimateDevice):
 
     def update(self):
         """Update all Node data frome Hive."""
-        self.session.core.hive_api_get_nodes_rl(self.node_id)
+        update_result = self.session.core.update_data(self.node_id)
