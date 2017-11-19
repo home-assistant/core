@@ -85,9 +85,7 @@ def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
     if device_id not in conf_switch:
         conf_switch[device_id] = name
 
-    if not save_json(
-            hass.config.path(INSTEON_LOCAL_SWITCH_CONF), conf_switch):
-        _LOGGER.error("Failed to save configuration file")
+    save_json(hass.config.path(INSTEON_LOCAL_SWITCH_CONF), conf_switch)
 
     device = insteonhub.switch(device_id)
     add_devices_callback([InsteonLocalSwitchDevice(device, name)])

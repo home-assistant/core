@@ -92,10 +92,7 @@ def setup_fan(device_id, name, insteonhub, hass, add_devices_callback):
     if device_id not in conf_fans:
         conf_fans[device_id] = name
 
-    if not save_json(
-            hass.config.path(INSTEON_LOCAL_FANS_CONF),
-            conf_fans):
-        _LOGGER.error("Failed to save configuration file")
+    save_json(hass.config.path(INSTEON_LOCAL_FANS_CONF), conf_fans)
 
     device = insteonhub.fan(device_id)
     add_devices_callback([InsteonLocalFanDevice(device, name)])

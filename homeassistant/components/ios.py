@@ -17,6 +17,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (HTTP_INTERNAL_SERVER_ERROR,
                                  HTTP_BAD_REQUEST)
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.remote import JSONEncoder
@@ -271,7 +272,9 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         CONFIG_FILE[ATTR_DEVICES][name] = data
 
-        if not save_json(CONFIG_FILE_PATH, CONFIG_FILE):
+        try:
+            save_json(CONFIG_FILE_PATH, CONFIG_FILE)
+        except HomeAssistantError:
             return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 

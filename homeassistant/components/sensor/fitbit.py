@@ -361,9 +361,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
                 ATTR_CLIENT_SECRET: self.oauth.client_secret,
                 ATTR_LAST_SAVED_AT: int(time.time())
             }
-        if not save_json(hass.config.path(FITBIT_CONFIG_FILE),
-                                config_contents):
-            _LOGGER.error("Failed to save config file")
+        save_json(hass.config.path(FITBIT_CONFIG_FILE), config_contents)
 
         hass.async_add_job(setup_platform, hass, self.config, self.add_devices)
 
@@ -490,5 +488,4 @@ class FitbitSensor(Entity):
             ATTR_CLIENT_SECRET: self.client.client.client_secret,
             ATTR_LAST_SAVED_AT: int(time.time())
         }
-        if not save_json(self.config_path, config_contents):
-            _LOGGER.error("Failed to save config file")
+        save_json(self.config_path, config_contents)

@@ -91,10 +91,7 @@ def setup_light(device_id, name, insteonhub, hass, add_devices_callback):
     if device_id not in conf_lights:
         conf_lights[device_id] = name
 
-    if not save_json(
-            hass.config.path(INSTEON_LOCAL_LIGHTS_CONF),
-            conf_lights):
-        _LOGGER.error("Failed to save configuration file")
+    save_json(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF),conf_lights)
 
     device = insteonhub.dimmer(device_id)
     add_devices_callback([InsteonLocalDimmerDevice(device, name)])

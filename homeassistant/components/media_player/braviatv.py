@@ -104,10 +104,9 @@ def setup_bravia(config, pin, hass, add_devices):
             _LOGGER.info("Discovery configuration done")
 
         # Save config
-        if not save_json(
-                hass.config.path(BRAVIA_CONFIG_FILE),
-                {host: {'pin': pin, 'host': host, 'mac': mac}}):
-            _LOGGER.error("Failed to save configuration file")
+        save_json(
+            hass.config.path(BRAVIA_CONFIG_FILE),
+            {host: {'pin': pin, 'host': host, 'mac': mac}})
 
         add_devices([BraviaTVDevice(host, mac, name, pin)])
 
