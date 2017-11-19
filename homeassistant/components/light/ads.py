@@ -1,4 +1,10 @@
-"""Support for ADS light sources."""
+"""
+Support for ADS light sources.
+
+For more details about this platform, please refer to the documentation.
+https://home-assistant.io/components/light.ads/
+
+"""
 
 import logging
 import math
@@ -8,17 +14,17 @@ import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, CONF_ADSVAR
+from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS Light'
-CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
+CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
 SUPPORT_ADS = SUPPORT_BRIGHTNESS
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADSVAR): cv.string,
-    vol.Optional(CONF_ADSVAR_BRIGHTNESS): cv.string,
+    vol.Required(CONF_ADS_VAR): cv.string,
+    vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
@@ -26,11 +32,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the light platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
-    if not ads_hub:
-        return False
 
-    varname_enable = config.get(CONF_ADSVAR)
-    varname_brightness = config.get(CONF_ADSVAR_BRIGHTNESS)
+    varname_enable = config.get(CONF_ADS_VAR)
+    varname_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
     devname = config.get(CONF_NAME)
 
     add_devices([AdsLight(ads_hub, varname_enable, varname_brightness,

@@ -1,4 +1,10 @@
-"""Support for ADS binary sensors."""
+"""
+Support for ADS binary sensors.
+
+For more details about this platform, please refer to the documentation.
+https://home-assistant.io/components/binary_sensor.ads/
+
+"""
 
 import logging
 from datetime import timedelta
@@ -7,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, \
     PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
-from homeassistant.components.ads import DATA_ADS, CONF_ADSVAR, \
+from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR, \
     CONF_ADS_USE_NOTIFY, CONF_ADS_POLL_INTERVAL
 from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
 from homeassistant.helpers.event import async_track_time_interval
@@ -21,7 +27,7 @@ DEFAULT_NAME = 'ADS binary sensor'
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADSVAR): cv.string,
+    vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_ADS_USE_NOTIFY): cv.boolean,
@@ -32,10 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
-    if not ads_hub:
-        return False
 
-    adsvar = config.get(CONF_ADSVAR)
+    adsvar = config.get(CONF_ADS_VAR)
     name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
     use_notify = config.get(CONF_ADS_USE_NOTIFY, ads_hub.use_notify)
@@ -43,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     ads_sensor = AdsBinarySensor(ads_hub, name, adsvar, device_class,
                                  use_notify, poll_interval)
-    add_devices([ads_sensor], True)
+    add_devices([ads_sensor])
 
     if use_notify:
         ads_hub.add_device_notification(adsvar, ads_hub.PLCTYPE_BOOL,

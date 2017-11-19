@@ -27,16 +27,17 @@ ADSTYPE_UINT = 'uint'
 ADSTYPE_BYTE = 'byte'
 ADSTYPE_BOOL = 'bool'
 
-
-ADS_PLATFORMS = ['switch', 'binary_sensor', 'light']
 DOMAIN = 'ads'
 
 # config variable names
-CONF_ADSVAR = 'adsvar'
-CONF_ADSTYPE = 'adstype'
+CONF_ADS_VAR = 'adsvar'
+CONF_ADS_TYPE = 'adstype'
 CONF_ADS_USE_NOTIFY = 'use_notify'
 CONF_ADS_POLL_INTERVAL = 'poll_interval'
 CONF_ADS_FACTOR = 'factor'
+CONF_ADS_VALUE = 'value'
+
+SERVICE_WRITE_DATA_BY_NAME = 'write_data_by_name'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -47,6 +48,13 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ADS_USE_NOTIFY, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
+
+SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
+    vol.Required(CONF_ADS_VAR): cv.string,
+    vol.Required(CONF_ADS_TYPE): vol.In([ADSTYPE_INT, ADSTYPE_UINT,
+                                         ADSTYPE_BYTE]),
+    vol.Required(CONF_ADS_VALUE): cv.match_all
+})
 
 
 def setup(hass, config):
@@ -105,8 +113,9 @@ def setup(hass, config):
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-    hass.services.register(DOMAIN, 'write_data_by_name',
-                           handle_write_data_by_name)
+    hass.services.register(DOMAIN, SERVICE_WRITE_DATA_BY_NAME,
+                           handle_write_data_by_name,
+                           schema=SCHEMA_SERVICE_WRITE_DATA_BY_NAME)
 
     return True
 
@@ -136,7 +145,7 @@ class AdsHub:
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
         _LOGGER.debug('Shutting down ADS')
-        for _, notification_item in self._notification_items.items():
+        for notification_item in self._notification_items.values():
             self._client.del_device_notification(
                 notification_item.hnotify,
                 notification_item.huser
@@ -182,7 +191,6 @@ class AdsHub:
 
     def _device_notification_callback(self, addr, notification, huser):
         """Handle device notifications."""
-        from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_BYTE, PLCTYPE_UINT
         contents = notification.contents
 
         hnotify = int(contents.hNotification)
@@ -196,13 +204,13 @@ class AdsHub:
             return
 
         # parse data to desired datatype
-        if notification_item.plc_datatype == PLCTYPE_BOOL:
+        if notification_item.plc_datatype == self.PLCTYPE_BOOL:
             value = bool(struct.unpack('<?', bytearray(data)[:1])[0])
-        elif notification_item.plc_datatype == PLCTYPE_INT:
+        elif notification_item.plc_datatype == self.PLCTYPE_INT:
             value = struct.unpack('<h', bytearray(data)[:2])[0]
-        elif notification_item.plc_datatype == PLCTYPE_BYTE:
+        elif notification_item.plc_datatype == self.PLCTYPE_BYTE:
             value = struct.unpack('<B', bytearray(data)[:1])[0]
-        elif notification_item.plc_datatype == PLCTYPE_UINT:
+        elif notification_item.plc_datatype == self.PLCTYPE_UINT:
             value = struct.unpack('<H', bytearray(data)[:2])[0]
         else:
             value = bytearray(data)

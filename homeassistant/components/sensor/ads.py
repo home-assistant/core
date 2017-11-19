@@ -1,4 +1,10 @@
-"""Support for ADS sensors."""
+"""
+Support for ADS sensors.
+
+For more details about this platform, please refer to the documentation.
+https://home-assistant.io/components/sensor.ads/
+
+"""
 
 import logging
 from datetime import timedelta
@@ -9,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.components import ads
-from homeassistant.components.ads import CONF_ADSVAR, CONF_ADSTYPE, \
+from homeassistant.components.ads import CONF_ADS_VAR, CONF_ADS_TYPE, \
     CONF_ADS_USE_NOTIFY, CONF_ADS_POLL_INTERVAL, CONF_ADS_FACTOR
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,10 +24,10 @@ DEFAULT_NAME = 'ADS sensor'
 DEPENDENCIES = ['ads']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADSVAR): cv.string,
+    vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=''): cv.string,
-    vol.Optional(CONF_ADSTYPE, default=ads.ADSTYPE_INT): vol.In(
+    vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT): vol.In(
         [ads.ADSTYPE_INT, ads.ADSTYPE_UINT, ads.ADSTYPE_BYTE]
     ),
     vol.Optional(CONF_ADS_USE_NOTIFY): cv.boolean,
@@ -33,11 +39,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an ADS sensor device."""
     ads_hub = hass.data.get(ads.DATA_ADS)
-    if not ads_hub:
-        return False
 
-    adsvar = config.get(CONF_ADSVAR)
-    adstype = config.get(CONF_ADSTYPE)
+    adsvar = config.get(CONF_ADS_VAR)
+    adstype = config.get(CONF_ADS_TYPE)
     name = config.get(CONF_NAME)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     use_notify = config.get(CONF_ADS_USE_NOTIFY, ads_hub.use_notify)

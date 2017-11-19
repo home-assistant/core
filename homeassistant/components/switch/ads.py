@@ -1,4 +1,10 @@
-"""Support for ADS switch platform."""
+"""
+Support for ADS switch platform.
+
+For more details about this platform, please refer to the documentation.
+https://home-assistant.io/components/switch.ads/
+
+"""
 
 import logging
 
@@ -13,9 +19,9 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS Switch'
-CONF_ADSVAR = 'adsvar'
+CONF_ADS_VAR = 'adsvar'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADSVAR): cv.string,
+    vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 })
 
@@ -23,11 +29,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up switch platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
-    if not ads_hub:
-        return False
 
     dev_name = config.get(CONF_NAME)
-    ads_var = config.get(CONF_ADSVAR)
+    ads_var = config.get(CONF_ADS_VAR)
 
     add_devices([AdsSwitch(ads_hub, dev_name, ads_var)], True)
 
