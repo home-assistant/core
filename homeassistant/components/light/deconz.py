@@ -55,12 +55,12 @@ class DeconzLight(Light):
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
         self._features |= SUPPORT_TRANSITION
-        if self._light.ct:
+        if self._light.ct is not None:
             self._features |= SUPPORT_COLOR_TEMP
-        if self._light.xy:
+        if self._light.xy is not None:
             self._features |= SUPPORT_RGB_COLOR
             self._features |= SUPPORT_XY_COLOR
-        if self._light.effect:
+        if self._light.effect is not None:
             self._features |= SUPPORT_EFFECT
 
     @callback
