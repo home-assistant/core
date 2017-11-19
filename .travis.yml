@@ -9,6 +9,8 @@ matrix:
     - python: "3.4.2"
       env: TOXENV=lint
     - python: "3.4.2"
+      env: TOXENV=pylint
+    - python: "3.4.2"
       env: TOXENV=py34
     # - python: "3.5"
     #   env: TOXENV=typing
@@ -18,8 +20,6 @@ matrix:
       env: TOXENV=py36
     # - python: "3.6-dev"
     #   env: TOXENV=py36
-    - python: "3.4.2"
-      env: TOXENV=requirements
   # allow_failures:
   #   - python: "3.5"
   #     env: TOXENV=typing
