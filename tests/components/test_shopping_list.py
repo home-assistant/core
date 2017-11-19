@@ -218,7 +218,7 @@ def test_api_create(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_create(hass, test_client):
+def test_api_create_fail(hass, test_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 

@@ -199,10 +199,10 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = '/api/shopping_list/item'
     name = "api:shopping_list:item"
 
-    @callback
     @http.RequestDataValidator(vol.Schema({
         vol.Required('name'): str,
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app['hass'].data[DOMAIN].async_add(data['name'])
