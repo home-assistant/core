@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
     ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AUX_HEAT, SUPPORT_CURRENT_TEMPERATURE)
+    SUPPORT_AUX_HEAT)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.components.mqtt import (CONF_QOS, CONF_RETAIN,
@@ -518,8 +518,5 @@ class MqttClimate(ClimateDevice):
         if (self._topic[CONF_AUX_STATE_TOPIC] is not None) or \
            (self._topic[CONF_AUX_COMMAND_TOPIC] is not None):
             support |= SUPPORT_AUX_HEAT
-
-        if self._topic[CONF_CURRENT_TEMPERATURE_TOPIC] is not None:
-            support |= SUPPORT_CURRENT_TEMPERATURE
 
         return support

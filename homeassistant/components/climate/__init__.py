@@ -51,20 +51,18 @@ STATE_HIGH_DEMAND = 'high_demand'
 STATE_HEAT_PUMP = 'heat_pump'
 STATE_GAS = 'gas'
 
-SUPPORT_CURRENT_TEMPERATURE = 1 << 0
-SUPPORT_CURRENT_HUMIDITY = 1 << 1
-SUPPORT_TARGET_TEMPERATURE = 1 << 2
-SUPPORT_TARGET_TEMPERATURE_HIGH = 1 << 3
-SUPPORT_TARGET_TEMPERATURE_LOW = 1 << 4
-SUPPORT_TARGET_HUMIDITY = 1 << 5
-SUPPORT_TARGET_HUMIDITY_HIGH = 1 << 6
-SUPPORT_TARGET_HUMIDITY_LOW = 1 << 7
-SUPPORT_FAN_MODE = 1 << 8
-SUPPORT_OPERATION_MODE = 1 << 9
-SUPPORT_HOLD_MODE = 1 << 10
-SUPPORT_SWING_MODE = 1 << 11
-SUPPORT_AWAY_MODE = 1 << 12
-SUPPORT_AUX_HEAT = 1 << 13
+SUPPORT_TARGET_TEMPERATURE = 1 << 0
+SUPPORT_TARGET_TEMPERATURE_HIGH = 1 << 1
+SUPPORT_TARGET_TEMPERATURE_LOW = 1 << 2
+SUPPORT_TARGET_HUMIDITY = 1 << 3
+SUPPORT_TARGET_HUMIDITY_HIGH = 1 << 4
+SUPPORT_TARGET_HUMIDITY_LOW = 1 << 5
+SUPPORT_FAN_MODE = 1 << 6
+SUPPORT_OPERATION_MODE = 1 << 7
+SUPPORT_HOLD_MODE = 1 << 8
+SUPPORT_SWING_MODE = 1 << 9
+SUPPORT_AWAY_MODE = 1 << 10
+SUPPORT_AUX_HEAT = 1 << 11
 
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
@@ -739,12 +737,11 @@ class ClimateDevice(Entity):
         # supported_features. This follows exactly the way of determining
         # whether an attribute is included in state_attributes()
 
-        support = (SUPPORT_CURRENT_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE)
+        support = SUPPORT_TARGET_TEMPERATURE
         if self.target_temperature_high is not None:
             support |= SUPPORT_TARGET_TEMPERATURE_HIGH
             support |= SUPPORT_TARGET_TEMPERATURE_LOW
         if self.target_humidity:
-            support |= SUPPORT_CURRENT_HUMIDITY
             support |= SUPPORT_TARGET_HUMIDITY
         if self.current_fan_mode is not None:
             support |= SUPPORT_FAN_MODE
