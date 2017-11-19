@@ -16,6 +16,27 @@ from homeassistant.helpers.icon import icon_for_battery_level
 DEPENDENCIES = ['hive']
 
 _LOGGER = logging.getLogger(__name__)
+FRIENDLY_NAMES = {'Heating_CurrentTemperature': "Current Temperature",
+                  'Heating_TargetTemperature': "Target Temperature",
+                  'Heating_State': "Heating State",
+                  'Heating_Mode': "Heating Mode",
+                  'Heating_Boost': "Heating Boost",
+                  'HotWater_State': "Hot Water State",
+                  'HotWater_Mode': "Hot Water Mode",
+                  'HotWater_Boost': "Hot Water Boost"
+                  }
+DEVICETYPE_ICONS = {'Heating_CurrentTemperature': 'mdi:thermometer',
+                    'Heating_TargetTemperature': 'mdi:thermometer',
+                    'Heating_State': 'mdi:radiator',
+                    'Heating_Mode': 'mdi:radiator',
+                    'Heating_Boost': 'mdi:radiator',
+                    'HotWater_State': 'mdi:water-pump',
+                    'HotWater_Mode': 'mdi:water-pump',
+                    'HotWater_Boost': 'mdi:water-pump',
+                    'Hive_Device_Sensor': 'mdi:eye',
+                    'Hive_Device_Light_Mode': 'mdi:eye',
+                    'Hive_Device_Plug_Mode': 'mdi:eye'
+                    }
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,23 +71,7 @@ class HiveSensorEntity(Entity):
         """Return the name of the sensor."""
         friendly_name = "Sensor"
 
-        if self.device_type == "Heating_CurrentTemperature":
-            friendly_name = "Current Temperature"
-        elif self.device_type == "Heating_TargetTemperature":
-            friendly_name = "Target Temperature"
-        elif self.device_type == "Heating_State":
-            friendly_name = "Heating State"
-        elif self.device_type == "Heating_Mode":
-            friendly_name = "Heating Mode"
-        elif self.device_type == "Heating_Boost":
-            friendly_name = "Heating Boost"
-        elif self.device_type == "HotWater_State":
-            friendly_name = "Hot Water State"
-        elif self.device_type == "HotWater_Mode":
-            friendly_name = "Hot Water Mode"
-        elif self.device_type == "HotWater_Boost":
-            friendly_name = "Hot Water Boost"
-        elif self.device_type == "Hive_Device_BatteryLevel":
+        if self.device_type == "Hive_Device_BatteryLevel":
             if self.node_device_type == "thermostatui":
                 friendly_name = "Thermostat Battery Level"
             else:
@@ -77,6 +82,8 @@ class HiveSensorEntity(Entity):
             return self.node_name
         elif self.device_type == "Hive_Device_Plug_Mode":
             return self.node_name
+        else:
+            friendly_name = FRIENDLY_NAMES.get(self.device_type)
 
         if self.node_name is not None:
             friendly_name = self.node_name + " " + friendly_name
@@ -86,22 +93,8 @@ class HiveSensorEntity(Entity):
     @property
     def force_update(self):
         """Return True if state updates should be forced."""
-        if self.device_type == "Heating_CurrentTemperature":
-            return False
-        elif self.device_type == "Heating_TargetTemperature":
+        if self.device_type == "Heating_TargetTemperature":
             return True
-        elif self.device_type == "Heating_State":
-            return False
-        elif self.device_type == "Heating_Mode":
-            return False
-        elif self.device_type == "Heating_Boost":
-            return False
-        elif self.device_type == "HotWater_State":
-            return False
-        elif self.device_type == "HotWater_Mode":
-            return False
-        elif self.device_type == "HotWater_Boost":
-            return False
         elif self.device_type == "Hive_Device_BatteryLevel":
             return True
         elif self.device_type == "Hive_Device_Sensor":
@@ -360,32 +353,10 @@ class HiveSensorEntity(Entity):
         """Return the icon to use."""
         device_icon = 'mdi:thermometer'
 
-        if self.device_type == "Heating_CurrentTemperature":
-            device_icon = 'mdi:thermometer'
-        elif self.device_type == "Heating_TargetTemperature":
-            device_icon = 'mdi:thermometer'
-        elif self.device_type == "Heating_State":
-            device_icon = 'mdi:radiator'
-        elif self.device_type == "Heating_Mode":
-            device_icon = 'mdi:radiator'
-        elif self.device_type == "Heating_Boost":
-            device_icon = 'mdi:radiator'
-        elif self.device_type == "HotWater_State":
-            device_icon = 'mdi:water-pump'
-        elif self.device_type == "HotWater_Mode":
-            device_icon = 'mdi:water-pump'
-        elif self.device_type == "HotWater_Boost":
-            device_icon = 'mdi:water-pump'
-        elif self.device_type == "Hive_Device_BatteryLevel":
+        if self.device_type == "Hive_Device_BatteryLevel":
             return icon_for_battery_level(battery_level=self.batt_lvl)
-        elif self.device_type == "Hive_Device_Sensor":
-            device_icon = 'mdi:eye'
-        elif self.device_type == "Hive_Device_Light_Mode":
-            device_icon = 'mdi:eye'
-        elif self.device_type == "Hive_Device_Plug_Mode":
-            device_icon = 'mdi:eye'
-
-        return device_icon
+        else:
+            return DEVICETYPE_ICONS.get(self.device_type)
 
     def update(self):
         """Fetch new state data for the sensor."""
