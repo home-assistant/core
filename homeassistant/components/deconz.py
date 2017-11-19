@@ -117,6 +117,8 @@ def _setup_deconz(hass, config, deconz_config):
     yield from deconz.populate_config()
     yield from deconz.populate_groups()
     yield from deconz.populate_lights()
+    #yield from deconz.populate_scenes()
+    deconz.populate_scenes()
     yield from deconz.populate_sensors()
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'light',
@@ -125,6 +127,11 @@ def _setup_deconz(hass, config, deconz_config):
                                                      config))
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'binary_sensor',
+                                                     DOMAIN,
+                                                     {},
+                                                     config))
+    hass.async_add_job(discovery.async_load_platform(hass,
+                                                     'scene',
                                                      DOMAIN,
                                                      {},
                                                      config))
