@@ -128,10 +128,10 @@ class CalendarEvent(object):
         }
 
         if self.location is not None:
-            event.location = self.location
+            event['location'] = self.location
 
         if self.labels is not None:
-            event.labels = self.labels
+            event['labels'] = self.labels
 
         return event
 

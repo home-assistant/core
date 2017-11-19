@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api.sync()
 
     # Setup devices:
-    # Grab all projects
+    # Grab all projects.
     projects = api.state[PROJECTS]
 
     # Grab all labels
@@ -151,6 +151,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for label in labels:
         label_id_lookup[label[NAME].lower()] = label[ID]
 
+    # Check config for more projects.
     extra_projects = config.get(CONF_EXTRA_PROJECTS)
     for project in extra_projects:
         # Special filter: By date
@@ -159,12 +160,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Special filter: By label
         project_label_filter = project.get(CONF_PROJECT_LABEL_WHITELIST)
 
+        # Special filter: By name
+        # Names must be converted into IDs.
+        project_name_filter = project.get(CONF_PROJECT_WHITELIST)
+        project_id_filter = [
+            project_id_lookup[project_name.lower()]
+            for project_name in project_name_filter]
+
         project_devices.append(TodoistCalendar(api,
                                project, labels, project_due_date,
-                               project_label_filter))
+                               project_label_filter, project_id_filter))
 
     add_devices(project_devices)
-
 
     # Services:
     descriptions = load_yaml_config_file(
@@ -211,7 +218,7 @@ class TodoistCalendar(Calendar):
     """Entity for Todoist Calendars."""
 
     def __init__(self, api, project, labels, due_date=None,
-                 whitelisted_labels=None):
+                 whitelisted_labels=None, whitelisted_projects=None):
         """Initialze Todoist Calendar entity."""
         self._api = api
         self._events = []
@@ -230,6 +237,12 @@ class TodoistCalendar(Calendar):
             self._label_whitelist = whitelisted_labels
         else:
             self._label_whitelist = []
+
+        # This project includes only projects with these names.
+        if whitelisted_projects is not None:
+            self._project_id_whitelist = whitelisted_projects
+        else:
+            self._project_id_whitelist = []
 
         self.refresh_events()
 
@@ -262,7 +275,9 @@ class TodoistCalendar(Calendar):
         """Update list of event."""
         tasks = []
         if self._id is None:
-            tasks = self._api.state[TASKS]
+            tasks = [task for task in self._api.state[TASKS]
+                     if not self._project_id_whitelist or
+                     task[PROJECT_ID] in self._project_id_whitelist]
         else:
             tasks = self._api.projects.get_data(self._id)[TASKS]
 
@@ -308,7 +323,6 @@ class TodoistCalendar(Calendar):
             has the same priority as our current event, but is due earlier
             in the day, select it
         """
-
         event = None
         for proposed_event in self._events:
             if event is None:
@@ -341,7 +355,7 @@ class TodoistCalendar(Calendar):
                 continue
             else:
                 if (proposed_event._task_info[PRIORITY] >
-                    event._task_info[PRIORITY]):
+                   event._task_info[PRIORITY]):
                     # Proposed event has a higher priority.
                     event = proposed_event
                     continue
