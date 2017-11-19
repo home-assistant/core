@@ -179,3 +179,6 @@ warrant==0.5.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
+
+# homeassistant.components.weather.yweather
+yahooweather==0.9

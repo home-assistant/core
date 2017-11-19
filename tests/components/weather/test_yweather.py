@@ -2,15 +2,13 @@
 import json
 
 import unittest
-import requests_mock
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-#from homeassistant.components import weather
-from homeassistant.components.weather import yweather
+import requests_mock  # pylint: disable=import-error
+
 from homeassistant.components.weather import (
-    ATTR_WEATHER_ATTRIBUTION, ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED, ATTR_FORECAST, ATTR_FORECAST_TEMP)
+    ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
 
@@ -21,18 +19,21 @@ def mock_responses(mock):
     """Mock responses for Yahoo Weather."""
     base_url = 'https://query.yahooapis.com/v1/public/yql'
     mock.get(base_url +
-             '?q=SELECT+woeid+FROM+geo.places+WHERE+text+%3D+%27%2832.87336'+
+             '?q=SELECT+woeid+FROM+geo.places+WHERE+text+%3D+%27%2832.87336' +
              '%2C-117.22743%29%27&format=json',
              text=load_fixture('yahooweather.json'))
 
-def _yql_queryMock(yql):
+
+def _yql_queryMock(yql):  # pylint: disable=invalid-name
     """Mock yahoo query language query."""
     return ('{"query": {"count": 1, "created": "2017-11-17T13:40:47Z", '
             '"lang": "en-US", "results": {"place": {"woeid": "23511632"}}}}')
 
-def get_woeidMock(lat, lon):
+
+def get_woeidMock(lat, lon):  # pylint: disable=invalid-name
     """Mock get woeid Where On Earth Identifiers."""
     return '23511632'
+
 
 class YahooWeatherMock():
     """Mock class for the YahooWeather object."""
@@ -43,43 +44,41 @@ class YahooWeatherMock():
         self.temp_unit = temp_unit
         self._data = json.loads(load_fixture('yahooweather.json'))
 
-    def updateWeather(self):
+    # pylint: disable=no-self-use
+    def updateWeather(self):  # pylint: disable=invalid-name
         """Return sample values."""
         return True
 
     @property
-    def RawData(self):
+    def RawData(self):  # pylint: disable=invalid-name
         """Raw Data."""
         if self.woeid == '12345':
             return json.loads('[]')
         return self._data
 
     @property
-    def Now(self):
+    def Now(self):  # pylint: disable=invalid-name
         """Current weather data."""
         if self.woeid == '111':
             raise ValueError
-            return None
         return self._data['query']['results']['channel']['item']['condition']
 
     @property
-    def Atmosphere(self):
+    def Atmosphere(self):  # pylint: disable=invalid-name
         """Atmosphere weather data."""
         return self._data['query']['results']['channel']['atmosphere']
 
     @property
-    def Wind(self):
+    def Wind(self):  # pylint: disable=invalid-name
         """Wind weather data."""
         return self._data['query']['results']['channel']['wind']
 
     @property
-    def Forecast(self):
+    def Forecast(self):  # pylint: disable=invalid-name
         """Forecast data 0-5 Days."""
         if self.woeid == '123123':
             raise ValueError
-        else:
-            return self._data['query']['results']['channel']['item']['forecast']
-        return None
+        return self._data['query']['results']['channel']['item']['forecast']
 
 
 class TestWeather(unittest.TestCase):
