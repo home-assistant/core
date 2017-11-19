@@ -60,6 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         False)
 
         port = DEFAULT_PORT
+        delay_secs = DEFAULT_DELAY_SECS
         if override:
             activity = override.get(ATTR_ACTIVITY)
             delay_secs = override.get(ATTR_DELAY_SECS)
