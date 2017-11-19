@@ -30,15 +30,14 @@ ATTR_LIGHT_GROUP = 'LightGroup'
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup light platform for Deconz."""
-    if DECONZ_DATA in hass.data:
-        lights = hass.data[DECONZ_DATA].lights
-        groups = hass.data[DECONZ_DATA].groups
+    lights = hass.data[DECONZ_DATA].lights
+    groups = hass.data[DECONZ_DATA].groups
 
     for _, light in lights.items():
         async_add_devices([DeconzLight(light)], True)
 
     for _, group in groups.items():
-        if group.lights:
+        if group.lights:  # Don't create entity for group not containing light
             async_add_devices([DeconzLight(group)], True)
 
 

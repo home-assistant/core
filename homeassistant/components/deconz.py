@@ -20,7 +20,7 @@ from homeassistant.helpers import discovery
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==15']
+REQUIREMENTS = ['pydeconz==16']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,9 +97,8 @@ def async_setup(hass, config):
         if not save_json(
                 hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key}):
             _LOGGER.error("Failed to save API key to %s", CONFIG_FILE)
-    yield from _setup_deconz(hass, config, deconz_config)
-
-    return True
+    result = yield from _setup_deconz(hass, config, deconz_config)
+    return result is not False
 
 
 @asyncio.coroutine
@@ -115,11 +114,10 @@ def _setup_deconz(hass, config, deconz_config):
     from pydeconz import DeconzSession
     deconz = DeconzSession(hass.loop, **deconz_config)
     hass.data[DECONZ_DATA] = deconz
-    yield from deconz.populate_config()
-    yield from deconz.populate_groups()
-    yield from deconz.populate_lights()
-    deconz.populate_scenes()
-    yield from deconz.populate_sensors()
+    result = yield from deconz.load_parameters()
+    if result is False:
+        _LOGGER.error('Failed to setup deCONZ component')
+        return False
     hass.async_add_job(discovery.async_load_platform(hass,
                                                      'light',
                                                      DOMAIN,
@@ -141,6 +139,7 @@ def _setup_deconz(hass, config, deconz_config):
                                                      deconz_config,
                                                      config))
     deconz.start()
+    return True
 
 
 class DeconzEvent(object):

@@ -28,11 +28,8 @@ ATTR_EVENT_ID = 'event_id'
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup sensor platform for Deconz."""
     from pydeconz.sensor import DECONZ_SENSOR
-
     switch_as_event = discovery_info.get(CONF_SWITCH_AS_EVENT)
-
-    if DECONZ_DATA in hass.data:
-        sensors = hass.data[DECONZ_DATA].sensors
+    sensors = hass.data[DECONZ_DATA].sensors
 
     for _, sensor in sensors.items():
         if sensor.type in DECONZ_SENSOR:
