@@ -9,6 +9,7 @@ https://home-assistant.io/components/calendar.todoist/
 from datetime import datetime
 from datetime import timedelta
 import logging
+import os
 
 import asyncio
 
@@ -16,6 +17,7 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import (
     Calendar, CalendarEvent, PLATFORM_SCHEMA)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
@@ -115,6 +117,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Check token:
     token = config.get(CONF_TOKEN)
 
+    # Look up IDs based on (lowercase) names.
+    project_id_lookup = {}
+    label_id_lookup = {}
+
     from todoist.api import TodoistAPI
     api = TodoistAPI(token)
     api.sync()
@@ -138,7 +144,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         project_devices.append(TodoistCalendar(api, project_data, labels))
 
-    # TODO: Custom attributes (due date, labels ,...)
+        # Cache the names so we can easily look up name->ID.
+        project_id_lookup[project[NAME].lower()] = project[ID]
+
+    # Cache all label names
+    for label in labels:
+        label_id_lookup[label[NAME].lower()] = label[ID]
+
     extra_projects = config.get(CONF_EXTRA_PROJECTS)
     for project in extra_projects:
         # Special filter: By date
@@ -152,6 +164,47 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                project_label_filter))
 
     add_devices(project_devices)
+
+
+    # Services:
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    def handle_new_task(call):
+        """Called when a user creates a new Todoist Task from HASS."""
+        project_name = call.data[PROJECT_NAME]
+        project_id = project_id_lookup[project_name]
+
+        # Create the task
+        item = api.items.add(call.data[CONTENT], project_id)
+
+        if LABELS in call.data:
+            task_labels = call.data[LABELS]
+            label_ids = [
+                label_id_lookup[label.lower()]
+                for label in task_labels]
+            item.update(labels=label_ids)
+
+        if PRIORITY in call.data:
+            item.update(priority=call.data[PRIORITY])
+
+        if DUE_DATE in call.data:
+            due_date = dt.parse_datetime(call.data[DUE_DATE])
+            if due_date is None:
+                due = dt.parse_date(call.data[DUE_DATE])
+                due_date = datetime(due.year, due.month, due.day)
+            # Format it in the manner Todoist expects
+            due_date = dt.as_utc(due_date)
+            date_format = '%Y-%m-%dT%H:%M'
+            due_date = datetime.strftime(due_date, date_format)
+            item.update(due_date_utc=due_date)
+        # Commit changes
+        api.commit()
+        _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
+
+    hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
+                           descriptions[DOMAIN][SERVICE_NEW_TASK],
+                           schema=NEW_TASK_SERVICE_SCHEMA)
 
 
 class TodoistCalendar(Calendar):
@@ -238,22 +291,22 @@ class TodoistCalendar(Calendar):
 
     def update_next_event(self):
         """
-        Search through a list of events for the "best" next event to select.		
+        Search through a list of events for the "best" next event to select.
 
-        The "best" event is determined by the following criteria:		
-          * A proposed event must not be completed		
-          * A proposed event must have a end date (otherwise we go with		
-            the event at index 0, selected above)		
-          * A proposed event must be on the same day or earlier as our		
-            current event		
-          * If a proposed event is an earlier day than what we have so		
-            far, select it		
-          * If a proposed event is on the same day as our current event		
-            and the proposed event has a higher priority than our current		
-            event, select it		
-          * If a proposed event is on the same day as our current event,		
-            has the same priority as our current event, but is due earlier		
-            in the day, select it		
+        The "best" event is determined by the following criteria:
+          * A proposed event must not be completed
+          * A proposed event must have a end date (otherwise we go with
+            the event at index 0, selected above)
+          * A proposed event must be on the same day or earlier as our
+            current event
+          * If a proposed event is an earlier day than what we have so
+            far, select it
+          * If a proposed event is on the same day as our current event
+            and the proposed event has a higher priority than our current
+            event, select it
+          * If a proposed event is on the same day as our current event,
+            has the same priority as our current event, but is due earlier
+            in the day, select it
         """
 
         event = None
