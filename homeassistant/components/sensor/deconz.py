@@ -1,4 +1,5 @@
-"""Platform integrating Deconz sensor support.
+"""
+Support for deCONZ sensor support.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor/deconz/

@@ -1,4 +1,5 @@
-"""Platform integrating Deconz binary sensor support.
+"""
+Support for deCONZ binary sensor support.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor/deconz/

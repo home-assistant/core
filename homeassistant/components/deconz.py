@@ -1,4 +1,5 @@
-"""Platform integrating Deconz support.
+"""
+Support for deCONZ support.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/deconz/
@@ -117,7 +118,6 @@ def _setup_deconz(hass, config, deconz_config):
     yield from deconz.populate_config()
     yield from deconz.populate_groups()
     yield from deconz.populate_lights()
-    #yield from deconz.populate_scenes()
     deconz.populate_scenes()
     yield from deconz.populate_sensors()
     hass.async_add_job(discovery.async_load_platform(hass,
