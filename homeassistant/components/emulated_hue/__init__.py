@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
@@ -188,7 +189,7 @@ class Config(object):
             return entity_id
 
         if self.numbers is None:
-            self.numbers = load_json(self.hass.config.path(NUMBERS_FILE))
+            self.numbers = self._load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         for number, ent_id in self.numbers.items():
@@ -208,7 +209,7 @@ class Config(object):
             return number
 
         if self.numbers is None:
-            self.numbers = load_json(self.hass.config.path(NUMBERS_FILE))
+            self.numbers = self._load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         assert isinstance(number, str)
@@ -244,3 +245,11 @@ class Config(object):
             domain_exposed_by_default and expose is not False
 
         return is_default_exposed or expose
+
+    def _load_json(self, filename):
+        """Wrapper, because we actually want to handle invalid json."""
+        try:
+            return load_json(filename)
+        except HomeAssistantError:
+            pass
+        return {}
