@@ -35,9 +35,7 @@ class TahomaSensor(TahomaDevice, Entity):
     def __init__(self, tahoma_device, controller):
         """Initialize the sensor."""
         self.current_value = None
-        self._temperature_units = None
-        self.last_changed_time = None
-        TahomaDevice.__init__(self, tahoma_device, controller)
+        super().__init__(tahoma_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
 
     @property
@@ -49,7 +47,7 @@ class TahomaSensor(TahomaDevice, Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self.tahoma_device.type == 'Temperature Sensor':
-            return self._temperature_units
+            return None
         elif self.tahoma_device.type == 'io:LightIOSystemSensor':
             return 'lux'
         elif self.tahoma_device.type == 'Humidity Sensor':
@@ -59,7 +57,5 @@ class TahomaSensor(TahomaDevice, Entity):
         """Update the state."""
         self.controller.get_states([self.tahoma_device])
         if self.tahoma_device.type == 'io:LightIOSystemSensor':
-            _val = self.tahoma_device.active_states['core:LuminanceState']
-            self.current_value = _val
-
-        self.schedule_update_ha_state()
+            self.current_value = self.tahoma_device.active_states[
+                'core:LuminanceState']

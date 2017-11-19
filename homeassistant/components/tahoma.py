@@ -7,6 +7,7 @@ https://home-assistant.io/components/tahoma/
 from collections import defaultdict
 import logging
 import voluptuous as vol
+from requests.exceptions import RequestException
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.exceptions import HomeAssistantError
@@ -48,14 +49,14 @@ def setup(hass, config):
     exclude = conf.get(CONF_EXCLUDE)
     try:
         api = TahomaApi(username, password)
-    except HomeAssistantError:
+    except RequestException:
         _LOGGER.exception("Error communicating with Tahoma API")
         return False
 
     try:
         api.get_setup()
         devices = api.get_devices()
-    except HomeAssistantError:
+    except RequestException:
         _LOGGER.exception("Cannot fetch informations from Tahoma API")
         return False
 
@@ -66,7 +67,7 @@ def setup(hass, config):
 
     for device in devices:
         _device = api.get_device(device)
-        if any(ext not in _device.type for ext in exclude):
+        if all(ext not in _device.type for ext in exclude):
             device_type = map_tahoma_device(_device)
             if device_type is None:
                 continue
@@ -94,8 +95,6 @@ class TahomaDevice(Entity):
         """Initialize the device."""
         self.tahoma_device = tahoma_device
         self.controller = controller
-        # Append device id to prevent name clashes in HA.
-        # self.tahoma_id = tahoma_device.url
         self._unique_id = TAHOMA_ID_FORMAT.format(
             slugify(tahoma_device.label), slugify(tahoma_device.url))
         self._name = self.tahoma_device.label
@@ -113,10 +112,7 @@ class TahomaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {}
-        attr['Tahoma Device Id'] = self.tahoma_device.url
-
-        return attr
+        return {'tahoma_device_id': self.tahoma_device.url}
 
     def apply_action(self, cmd_name, *args):
         """Apply Action to Device."""

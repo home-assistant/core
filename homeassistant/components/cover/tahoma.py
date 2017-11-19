@@ -29,7 +29,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def __init__(self, tahoma_device, controller):
         """Initialize the Tahoma device."""
-        TahomaDevice.__init__(self, tahoma_device, controller)
+        super().__init__(tahoma_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
 
     def update(self):
@@ -60,10 +60,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
     def is_closed(self):
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
+            return self.current_cover_position == 0
 
     def open_cover(self, **kwargs):
         """Open the cover."""
