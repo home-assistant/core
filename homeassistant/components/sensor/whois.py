@@ -47,14 +47,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if 'expiration_date' in get_whois(domain, normalized=True):
             add_devices([WhoisSensor(name, domain)], True)
         else:
-            _LOGGER.warning(
+            _LOGGER.error(
                 "WHOIS lookup for %s didn't contain expiration_date",
                 domain)
             return
     except WhoisException as ex:
-        _LOGGER.error("Exception %s occurred during WHOIS lookup for %s",
-                      ex,
-                      domain)
+        _LOGGER.error(
+            "Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
 
 
@@ -98,26 +97,33 @@ class WhoisSensor(Entity):
         """Get the more info attributes."""
         return self._attributes
 
+    def _empty_state_and_error(self, error_message, *args):
+        """Empty the state and attributes on an error."""
+        self._state = None
+        self._attributes = None
+
+        _LOGGER.error(error_message, *args)
+
     def update(self):
-        """Get the current WHOIS data for hostname."""
+        """Get the current WHOIS data for the domain."""
         from pythonwhois.shared import WhoisException
 
         try:
             response = self.whois(self._domain, normalized=True)
         except WhoisException as ex:
-            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
+            return self._empty_state_and_error(
+                "Exception %s occurred during WHOIS lookup", ex)
             return
 
         if response:
             if 'expiration_date' not in response:
-                _LOGGER.error(
+                return self._empty_state_and_error(
                     "Failed to find expiration_date in whois lookup response. "
                     "Did find: %s", ', '.join(response.keys()))
-                return
 
             if not response['expiration_date']:
-                _LOGGER.error("Whois response expiration_date empty.")
-                return
+                return self._empty_state_and_error(
+                    "Whois response contains empty expiration_date")
 
             attrs = {}
 
