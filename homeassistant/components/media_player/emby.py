@@ -101,7 +101,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             # Compile a list of entity IDs for active emby instances
             active_entity_ids = []
 
-            for id, device in active_emby_devices.items():
+            for emby_device_id, device in active_emby_devices.items():
 
                 _LOGGER.debug("Indexing active emby device %s", device.name)
 
