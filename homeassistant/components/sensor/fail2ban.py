@@ -64,7 +64,7 @@ class BanSensor(Entity):
         self._name = '{} {}'.format(name, jail)
         self.jail = jail
         self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
-        self.last_ban = None
+        self.last_ban = ''
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
             r"\[{}\].(Ban|Unban) ([\w+\.]{{3,}})".format(re.escape(self.jail))
