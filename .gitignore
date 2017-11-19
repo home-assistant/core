@@ -96,4 +96,4 @@ docs/build
 desktop.ini
 /home-assistant.pyproj
 /home-assistant.sln
-/.vs/home-assistant/v14
+/.vs/*

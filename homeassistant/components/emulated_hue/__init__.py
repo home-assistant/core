@@ -18,6 +18,7 @@ from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView)
@@ -187,7 +188,7 @@ class Config(object):
             return entity_id
 
         if self.numbers is None:
-            self.numbers = self._load_numbers_json()
+            self.numbers = load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         for number, ent_id in self.numbers.items():
@@ -198,7 +199,7 @@ class Config(object):
         if self.numbers:
             number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
-        self._save_numbers_json()
+        save_json(self.hass.config.path(NUMBERS_FILE), self.numbers)
         return number
 
     def number_to_entity_id(self, number):
@@ -207,7 +208,7 @@ class Config(object):
             return number
 
         if self.numbers is None:
-            self.numbers = self._load_numbers_json()
+            self.numbers = load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         assert isinstance(number, str)
@@ -243,26 +244,3 @@ class Config(object):
             domain_exposed_by_default and expose is not False
 
         return is_default_exposed or expose
-
-    def _load_numbers_json(self):
-        """Set up helper method to load numbers json."""
-        try:
-            with open(self.hass.config.path(NUMBERS_FILE),
-                      encoding='utf-8') as fil:
-                return json.loads(fil.read())
-        except (OSError, ValueError) as err:
-            # OSError if file not found or unaccessible/no permissions
-            # ValueError if could not parse JSON
-            if not isinstance(err, FileNotFoundError):
-                _LOGGER.warning("Failed to open %s: %s", NUMBERS_FILE, err)
-            return {}
-
-    def _save_numbers_json(self):
-        """Set up helper method to save numbers json."""
-        try:
-            with open(self.hass.config.path(NUMBERS_FILE), 'w',
-                      encoding='utf-8') as fil:
-                fil.write(json.dumps(self.numbers))
-        except OSError as err:
-            # OSError if file write permissions
-            _LOGGER.warning("Failed to write %s: %s", NUMBERS_FILE, err)
