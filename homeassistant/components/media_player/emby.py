@@ -104,6 +104,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             for emby_device_id, device in active_emby_devices.items():
 
                 _LOGGER.debug("Indexing active emby device %s", device.name)
+                _LOGGER.debug("Indexing active emby device ID %s", emby_device_id)
 
                 # Reformat device name into the entity ID format used by
                 # HomeAssistant if we don't do this, we won't be able to
