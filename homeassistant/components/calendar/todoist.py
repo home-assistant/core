@@ -180,6 +180,8 @@ class TodoistCalendar(Calendar):
 
         self.refresh_events()
 
+        self._next_event = self.update_next_event()
+
     @property
     def name(self):
         """Return the name of the calendar."""
@@ -200,8 +202,7 @@ class TodoistCalendar(Calendar):
         """Update Calendar."""
         self.refresh_events()
 
-        # TODO: find next event
-        # self._next_event = self.update_next_event()
+        self._next_event = self.update_next_event()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def refresh_events(self):
@@ -216,32 +217,61 @@ class TodoistCalendar(Calendar):
             task_labels = [label[NAME].lower() for label in self._labels
                            if label[ID] in task[LABELS]]
 
-            if self._due_date is not None:
-                due_date = task[DUE_DATE_UTC]
+            event = TodoistCalendarEvent(task, task_labels)
 
-                if due_date is None:
+            if self._due_date is not None:
+                if event.end is None:
                     continue
 
-                # Due dates are represented in RFC3339 format, in UTC.
-                # Home Assistant exclusively uses UTC, so it'll
-                # handle the conversion.
-                time_format = '%a %d %b %Y %H:%M:%S %z'
-                # HASS' built-in parse time function doesn't like
-                # Todoist's time format; strptime has to be used.
-                task_end = datetime.strptime(due_date, time_format)
-
-                if task_end > self._due_date:
+                if event.end > self._due_date:
                     # This task is out of range of our due date
                     # it shouldn't be included
                     continue
 
             if self._label_whitelist and (
-                not any(label in task[LABELS]
+                not any(label in task_labels
                         for label in self._label_whitelist)):
                 # We're not on the whitelist, return invalid task.
                 continue
 
-            self._events.append(TodoistCalendarEvent(task, task_labels))
+            self._events.append(event)
+
+    def update_next_event(self):
+        """Find next occuring event in all events."""
+        best_event = None
+        for event in self._events:
+            if best_event is None:
+                best_event = event
+                continue
+            if event._task_info[CHECKED]:
+                continue
+            if event.end is None:
+                if best_event.end is None and (
+                        event._task_info[PRIORITY] >
+                        best_event._task_info[PRIORITY]):
+                    best_event = event
+                    continue
+                else:
+                    continue
+            elif best_event.end is None:
+                best_event = event
+                continue
+            if event.end.date() > best_event.end.date():
+                continue
+            elif event.end.date() < best_event.end.date():
+                best_event = event
+                continue
+            else:
+                if (event._task_info[PRIORITY] >
+                   best_event._task_info[PRIORITY]):
+                    best_event = event
+                    continue
+                elif (event._task_info[PRIORITY] ==
+                      best_event._task_info[PRIORITY]) and (
+                        event.end < best_event.end):
+                    best_event = event
+                    continue
+        return best_event
 
 
 class TodoistCalendarEvent(CalendarEvent):
@@ -254,7 +284,12 @@ class TodoistCalendarEvent(CalendarEvent):
         self._labels = task_labels
 
         # TODO: Handle tasks without due date
-        self._end = self.convertDatetime(task[DUE_DATE_UTC])
+        if task[DUE_DATE_UTC] is not None:
+            self._end = self.convertDatetime(task[DUE_DATE_UTC])
+        else:
+            self._end = None
+
+        self._task_info = task
 
         # TODO: Add additional properties: labels, overdue, all_day, ...
 
