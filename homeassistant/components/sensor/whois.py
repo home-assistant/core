@@ -71,7 +71,7 @@ class WhoisSensor(Entity):
         self._domain = domain
 
         self._state = None
-        self._attributes = {}
+        self._attributes = None
 
     @property
     def name(self):
@@ -119,20 +119,21 @@ class WhoisSensor(Entity):
                 _LOGGER.error("Whois response expiration_date empty.")
                 return
 
+            attrs = {}
+
             expiration_date = response['expiration_date'][0]
-            self._attributes[ATTR_EXPIRES] = expiration_date.isoformat()
+            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
             if 'nameservers' in response:
-                self._attributes[ATTR_NAME_SERVERS] = \
-                    ' '.join(response['nameservers'])
+                attrs[ATTR_NAME_SERVERS] = ' '.join(response['nameservers'])
 
             if 'updated_date' in response:
-                self._attributes[ATTR_UPDATED] = \
-                    response['updated_date'][0].isoformat()
+                attrs[ATTR_UPDATED] = response['updated_date'][0].isoformat()
 
             if 'registrar' in response:
-                self._attributes[ATTR_REGISTRAR] = response['registrar'][0]
+                attrs[ATTR_REGISTRAR] = response['registrar'][0]
 
             time_delta = (expiration_date - expiration_date.now())
 
+            self._attributes = attrs
             self._state = time_delta.days
