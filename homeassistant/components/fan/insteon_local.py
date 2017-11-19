@@ -4,7 +4,6 @@ Support for Insteon fans via local hub control.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan.insteon_local/
 """
-import json
 import logging
 from datetime import timedelta
 

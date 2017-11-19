@@ -4,9 +4,7 @@ Support for monitoring an SABnzbd NZB client.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sabnzbd/
 """
-import os
 import logging
-import json
 from datetime import timedelta
 
 import voluptuous as vol

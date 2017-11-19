@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/axis/
 """
 
-import json
 import logging
 import os
 
@@ -273,6 +272,7 @@ def setup_device(hass, config, device_config):
     if event_types:
         hass.add_job(device.start)
     return True
+
 
 class AxisDeviceEvent(Entity):
     """Representation of a Axis device event."""

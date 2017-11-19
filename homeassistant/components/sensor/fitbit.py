@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fitbit/
 """
 import os
-import json
 import logging
 import datetime
 import time
@@ -159,7 +158,7 @@ def request_app_setup(hass, config, add_devices, config_path,
         """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
         if os.path.isfile(config_path):
-            config_file = config_from_file(config_path)
+            config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
                 error_msg = ("You didn't correctly modify fitbit.conf",
                              " please try again")

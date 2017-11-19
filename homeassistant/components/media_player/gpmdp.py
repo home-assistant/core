@@ -86,8 +86,7 @@ def request_configuration(hass, config, url, add_devices_callback):
                 continue
             setup_gpmdp(hass, config, code,
                         add_devices_callback)
-            save_json(hass.config.path(GPMDP_CONFIG_FILE),
-                         {"CODE": code})
+            save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
             websocket.send(json.dumps({'namespace': 'connect',
                                        'method': 'connect',
                                        'arguments': ['Home Assistant', code]}))
@@ -120,6 +119,7 @@ def setup_gpmdp(hass, config, code, add_devices):
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
     add_devices([GPMDP(name, url, code)], True)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the GPMDP platform."""

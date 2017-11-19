@@ -5,8 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/ecosystem/ios/
 """
 import asyncio
-import os
-import json
 import logging
 import datetime
 
@@ -20,7 +18,6 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.remote import JSONEncoder
 from homeassistant.util.json import load_json, save_json
 
 
@@ -170,6 +167,7 @@ CONFIGURATION_FILE = '.ios.conf'
 CONFIG_FILE = {ATTR_DEVICES: {}}
 
 CONFIG_FILE_PATH = ""
+
 
 def devices_with_push():
     """Return a dictionary of push enabled targets."""

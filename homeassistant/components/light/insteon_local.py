@@ -4,9 +4,7 @@ Support for Insteon dimmers via local hub control.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.insteon_local/
 """
-import json
 import logging
-import os
 from datetime import timedelta
 
 from homeassistant.components.light import (
@@ -91,10 +89,11 @@ def setup_light(device_id, name, insteonhub, hass, add_devices_callback):
     if device_id not in conf_lights:
         conf_lights[device_id] = name
 
-    save_json(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF),conf_lights)
+    save_json(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF), conf_lights)
 
     device = insteonhub.dimmer(device_id)
     add_devices_callback([InsteonLocalDimmerDevice(device, name)])
+
 
 class InsteonLocalDimmerDevice(Light):
     """An abstract Class for an Insteon node."""
