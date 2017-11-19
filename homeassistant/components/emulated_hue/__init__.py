@@ -188,7 +188,7 @@ class Config(object):
             return entity_id
 
         if self.numbers is None:
-            self.numbers = self._load_json(self.hass.config.path(NUMBERS_FILE))
+            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         for number, ent_id in self.numbers.items():
@@ -208,7 +208,7 @@ class Config(object):
             return number
 
         if self.numbers is None:
-            self.numbers = self._load_json(self.hass.config.path(NUMBERS_FILE))
+            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         assert isinstance(number, str)
@@ -245,10 +245,11 @@ class Config(object):
 
         return is_default_exposed or expose
 
-    def _load_json(filename):
-        """Wrapper, because we actually want to handle invalid json."""
-        try:
-            return load_json(filename)
-        except HomeAssistantError:
-            pass
-        return {}
+
+def _load_json(filename):
+    """Wrapper, because we actually want to handle invalid json."""
+    try:
+        return load_json(filename)
+    except HomeAssistantError:
+        pass
+    return {}
