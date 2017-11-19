@@ -182,6 +182,9 @@ omit =
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
 
+    homeassistant/components/tahoma.py
+    homeassistant/components/*/tahoma.py
+
     homeassistant/components/tellduslive.py
     homeassistant/components/*/tellduslive.py
 

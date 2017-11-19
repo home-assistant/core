@@ -68,6 +68,8 @@ homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
+homeassistant/components/tahoma.py @philklei
+homeassistant/components/*/tahoma.py @philklei
 homeassistant/components/tesla.py @zabuldon
 homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/*/tradfri.py @ggravlingen
