@@ -14,8 +14,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components import recorder
 from homeassistant.const import (
     CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE, TEMP_CELSIUS,
-    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
-    STATE_UNAVAILABLE)
+    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN)
 from homeassistant import core as hacore
 from homeassistant.helpers import state as state_helper
 from homeassistant.util.temperature import fahrenheit_to_celsius
@@ -239,6 +238,7 @@ class Metrics(object):
         )
 
         metric.labels(**self._labels(state)).inc()
+
 
 class PrometheusView(HomeAssistantView):
     """Handle Prometheus requests."""
