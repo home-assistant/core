@@ -245,7 +245,7 @@ class Config(object):
 
         return is_default_exposed or expose
 
-    def _load_json(self, filename):
+    def _load_json(filename):
         """Wrapper, because we actually want to handle invalid json."""
         try:
             return load_json(filename)
