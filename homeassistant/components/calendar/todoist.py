@@ -237,41 +237,67 @@ class TodoistCalendar(Calendar):
             self._events.append(event)
 
     def update_next_event(self):
-        """Find next occuring event in all events."""
-        best_event = None
-        for event in self._events:
-            if best_event is None:
-                best_event = event
+        """
+        Search through a list of events for the "best" next event to select.		
+
+        The "best" event is determined by the following criteria:		
+          * A proposed event must not be completed		
+          * A proposed event must have a end date (otherwise we go with		
+            the event at index 0, selected above)		
+          * A proposed event must be on the same day or earlier as our		
+            current event		
+          * If a proposed event is an earlier day than what we have so		
+            far, select it		
+          * If a proposed event is on the same day as our current event		
+            and the proposed event has a higher priority than our current		
+            event, select it		
+          * If a proposed event is on the same day as our current event,		
+            has the same priority as our current event, but is due earlier		
+            in the day, select it		
+        """
+
+        event = None
+        for proposed_event in self._events:
+            if event is None:
+                event = proposed_event
                 continue
-            if event._task_info[CHECKED]:
+            if proposed_event._task_info[CHECKED]:
+                # Event is complete!
                 continue
-            if event.end is None:
-                if best_event.end is None and (
-                        event._task_info[PRIORITY] >
-                        best_event._task_info[PRIORITY]):
-                    best_event = event
+            if proposed_event.end is None:
+                # No end time:
+                if event.end is None and (
+                        proposed_event._task_info[PRIORITY] >
+                        event._task_info[PRIORITY]):
+                    # They also have no end time,
+                    # but we have a higher priority.
+                    event = proposed_event
                     continue
                 else:
                     continue
-            elif best_event.end is None:
-                best_event = event
+            elif event.end is None:
+                # We have an end time, they do not.
+                event = proposed_event
                 continue
-            if event.end.date() > best_event.end.date():
+            if proposed_event.end.date() > event.end.date():
+                # Event is too late.
                 continue
-            elif event.end.date() < best_event.end.date():
-                best_event = event
+            elif proposed_event.end.date() < event.end.date():
+                # Event is earlier than current, select it.
+                event = proposed_event
                 continue
             else:
-                if (event._task_info[PRIORITY] >
-                   best_event._task_info[PRIORITY]):
-                    best_event = event
+                if (proposed_event._task_info[PRIORITY] >
+                    event._task_info[PRIORITY]):
+                    # Proposed event has a higher priority.
+                    event = proposed_event
                     continue
-                elif (event._task_info[PRIORITY] ==
-                      best_event._task_info[PRIORITY]) and (
-                        event.end < best_event.end):
-                    best_event = event
+                elif (proposed_event._task_info[PRIORITY] ==
+                      event._task_info[PRIORITY]) and (
+                        proposed_event.end < event.end):
+                    event = proposed_event
                     continue
-        return best_event
+        return event
 
 
 class TodoistCalendarEvent(CalendarEvent):
