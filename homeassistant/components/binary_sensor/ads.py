@@ -39,18 +39,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    adsvar = config.get(CONF_ADS_VAR)
+    ads_var = config.get(CONF_ADS_VAR)
     name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
     use_notify = config.get(CONF_ADS_USE_NOTIFY, ads_hub.use_notify)
     poll_interval = config.get(CONF_ADS_POLL_INTERVAL, ads_hub.poll_interval)
 
-    ads_sensor = AdsBinarySensor(ads_hub, name, adsvar, device_class,
+    ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class,
                                  use_notify, poll_interval)
     add_devices([ads_sensor])
 
     if use_notify:
-        ads_hub.add_device_notification(adsvar, ads_hub.PLCTYPE_BOOL,
+        ads_hub.add_device_notification(ads_var, ads_hub.PLCTYPE_BOOL,
                                         ads_sensor.callback)
     else:
         dtime = timedelta(0, 0, poll_interval * 1000)
@@ -60,14 +60,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AdsBinarySensor(BinarySensorDevice):
     """Representation of ADS binary sensors."""
 
-    def __init__(self, ads_hub, name, adsvar, device_class, use_notify,
+    def __init__(self, ads_hub, name, ads_var, device_class, use_notify,
                  poll_interval):
         """Initialize AdsBinarySensor entity."""
         self._name = name
         self._state = False
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
-        self.adsvar = adsvar
+        self.ads_var = ads_var
         self.use_notify = use_notify
         self.poll_interval = poll_interval
 
@@ -104,14 +104,9 @@ class AdsBinarySensor(BinarySensorDevice):
         """Handle polling."""
         try:
             self._state = self._ads_hub.read_by_name(
-                self.adsvar, self._ads_hub.PLCTYPE_BOOL
+                self.ads_var, self._ads_hub.PLCTYPE_BOOL
             )
             _LOGGER.debug('Polled value for bool variable %s: %d',
-                          self.adsvar, self._state)
+                          self.ads_var, self._state)
         except self._ads_hub.ADSError as err:
             _LOGGER.error(err)
-
-        try:
-            self.schedule_update_ha_state()
-        except AttributeError:
-            pass

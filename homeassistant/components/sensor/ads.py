@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/sensor.ads/
 
 """
-
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -40,21 +39,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an ADS sensor device."""
     ads_hub = hass.data.get(ads.DATA_ADS)
 
-    adsvar = config.get(CONF_ADS_VAR)
-    adstype = config.get(CONF_ADS_TYPE)
+    ads_var = config.get(CONF_ADS_VAR)
+    ads_type = config.get(CONF_ADS_TYPE)
     name = config.get(CONF_NAME)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     use_notify = config.get(CONF_ADS_USE_NOTIFY, ads_hub.use_notify)
     poll_interval = config.get(CONF_ADS_POLL_INTERVAL, ads_hub.poll_interval)
     factor = config.get(CONF_ADS_FACTOR)
 
-    entity = AdsSensor(ads_hub, adsvar, adstype, name,
+    entity = AdsSensor(ads_hub, ads_var, ads_type, name,
                        unit_of_measurement, use_notify, poll_interval, factor)
 
     add_devices([entity])
 
     if use_notify:
-        ads_hub.add_device_notification(adsvar, ads_hub.ADS_TYPEMAP[adstype],
+        ads_hub.add_device_notification(ads_var, ads_hub.ADS_TYPEMAP[ads_type],
                                         entity.callback)
     else:
         dtime = timedelta(0, 0, poll_interval * 1000)
@@ -64,15 +63,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AdsSensor(Entity):
     """Representation of an ADS sensor entity."""
 
-    def __init__(self, ads_hub, adsvar, adstype, devname, unit_of_measurement,
+    def __init__(self, ads_hub, ads_var, ads_type, name, unit_of_measurement,
                  use_notify, poll_interval, factor):
         """Initialize AdsSensor entity."""
         self._ads_hub = ads_hub
-        self._name = devname
-        self._value = 0
+        self._name = name
+        self._value = None
         self._unit_of_measurement = unit_of_measurement
-        self.adsvar = adsvar
-        self.adstype = adstype
+        self.ads_var = ads_var
+        self.ads_type = ads_type
         self.use_notify = use_notify
         self.poll_interval = poll_interval
         self.factor = factor
@@ -115,7 +114,7 @@ class AdsSensor(Entity):
         """Poll value from ADS device."""
         try:
             val = self._ads_hub.read_by_name(
-                self.adsvar, self._ads_hub.ADS_TYPEMAP[self.adstype]
+                self.ads_var, self._ads_hub.ADS_TYPEMAP[self.ads_type]
             )
 
             if self.factor is None:
@@ -124,7 +123,7 @@ class AdsSensor(Entity):
                 self._value = val / self.factor
 
             _LOGGER.debug('Polled value for variable %s: %d',
-                          self.adsvar, self._value)
+                          self.ads_var, self._value)
 
         except self._ads_hub.ADSError as err:
             _LOGGER.error(err)

@@ -5,13 +5,11 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/switch.ads/
 
 """
-
 import logging
-
 import voluptuous as vol
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS
+from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
@@ -19,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS Switch'
-CONF_ADS_VAR = 'adsvar'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_NAME): cv.string,
@@ -65,11 +62,6 @@ class AdsSwitch(ToggleEntity):
         """Turn the switch off."""
         self._ads_hub.write_by_name(self.ads_var, False,
                                     self._ads_hub.PLCTYPE_BOOL)
-
-    def value_changed(self, val):
-        """Handle changed state."""
-        self._on_state = val
-        self.schedule_update_ha_state()
 
     def update(self):
         """Update state of entity."""

@@ -31,6 +31,7 @@ DOMAIN = 'ads'
 
 # config variable names
 CONF_ADS_VAR = 'adsvar'
+CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
 CONF_ADS_TYPE = 'adstype'
 CONF_ADS_USE_NOTIFY = 'use_notify'
 CONF_ADS_POLL_INTERVAL = 'poll_interval'
@@ -102,14 +103,12 @@ def setup(hass, config):
 
     def handle_write_data_by_name(call):
         """Write a value to the connected ADS device."""
-        adsvar = call.data.get('adsvar')
-        adstype = call.data.get('adstype')
-        value = call.data.get('value')
-
-        assert adstype in ads.ADS_TYPEMAP
+        ads_var = call.data.get(CONF_ADS_VAR)
+        ads_type = call.data.get(CONF_ADS_TYPE)
+        value = call.data.get(CONF_ADS_VALUE)
 
         try:
-            ads.write_by_name(adsvar, value, ads.ADS_TYPEMAP[adstype])
+            ads.write_by_name(ads_var, value, ads.ADS_TYPEMAP[ads_type])
         except pyads.ADSError as err:
             _LOGGER.error(err)
 

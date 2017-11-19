@@ -5,22 +5,18 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/light.ads/
 
 """
-
 import logging
-import math
-
 import voluptuous as vol
-
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
+from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR, \
+    CONF_ADS_VAR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS Light'
-CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
 SUPPORT_ADS = SUPPORT_BRIGHTNESS
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
@@ -35,21 +31,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     varname_enable = config.get(CONF_ADS_VAR)
     varname_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
-    devname = config.get(CONF_NAME)
+    name = config.get(CONF_NAME)
 
     add_devices([AdsLight(ads_hub, varname_enable, varname_brightness,
-                          devname)], True)
+                          name)], True)
 
 
 class AdsLight(Light):
     """Representation of ADS light."""
 
-    def __init__(self, ads_hub, varname_enable, varname_brightness, devname):
+    def __init__(self, ads_hub, varname_enable, varname_brightness, name):
         """Initialize AdsLight entity."""
         self._ads_hub = ads_hub
         self._on_state = False
         self._brightness = 50
-        self._devname = devname
+        self._name = name
         self.varname_enable = varname_enable
         self.varname_brightness = varname_brightness
         self.stype = 'dimmer'
@@ -57,7 +53,7 @@ class AdsLight(Light):
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._devname
+        return self._name
 
     @property
     def brightness(self):
@@ -86,35 +82,22 @@ class AdsLight(Light):
         if brightness is not None:
             self._brightness = brightness
 
-        bval = math.floor(self._brightness)
-
         self._ads_hub.write_by_name(self.varname_enable, True,
                                     self._ads_hub.PLCTYPE_BOOL)
 
         if self.varname_brightness is not None:
-            self._ads_hub.write_by_name(self.varname_brightness, bval,
-                                        self._ads_hub.PLCTYPE_UINT)
+            self._ads_hub.write_by_name(
+                self.varname_brightness, self._brightness,
+                self._ads_hub.PLCTYPE_UINT
+            )
 
         self._on_state = True
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
-            self._brightness = brightness
-        bval = math.floor(self._brightness)
         self._ads_hub.write_by_name(self.varname_enable, False,
                                     self._ads_hub.PLCTYPE_BOOL)
-        if self.varname_brightness is not None:
-            self._ads_hub.write_by_name(self.varname_brightness, bval,
-                                        self._ads_hub.PLCTYPE_UINT)
         self._on_state = False
-
-    def value_changed(self, val):
-        """Handle value change."""
-        self._brightness = val
-        self._on_state = bool(val != 0)
-        self.schedule_update_ha_state()
 
     def update(self):
         """Update state of entity."""
