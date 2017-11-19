@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, HTTP_BAD_REQUEST)
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import http
 
@@ -105,7 +105,8 @@ def async_setup(hass, config):
     hass.helpers.intent.async_register(TurnOffIntent())
     async_register(hass, INTENT_TURN_ON,
                    ['Turn {name} on', 'Turn on {name}'])
-    async_register(hass, INTENT_TURN_OFF, ['Turn {name} off', 'Turn off {name}'])
+    async_register(hass, INTENT_TURN_OFF, [
+        'Turn {name} off', 'Turn off {name}'])
 
     return True
 

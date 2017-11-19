@@ -1,21 +1,14 @@
 """The tests for the Conversation component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
-from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.setup import setup_component, async_setup_component
-import homeassistant.components as core_components
+from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers import intent
 
-from tests.common import (
-    get_test_home_assistant, async_mock_intent, async_mock_service)
+from tests.common import async_mock_intent, async_mock_service
 
 
 @asyncio.coroutine
