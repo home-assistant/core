@@ -222,9 +222,6 @@ class Metrics(object):
             'State of the switch (0/1)',
         )
 
-        if state.state == STATE_UNAVAILABLE:
-            metric.labels(**self._labels(state)).set(0)
-
         try:
             value = state_helper.state_as_number(state)
             metric.labels(**self._labels(state)).set(value)
