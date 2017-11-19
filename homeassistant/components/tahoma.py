@@ -27,7 +27,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list,
+            [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
