@@ -10,7 +10,6 @@ import voluptuous as vol
 from requests.exceptions import RequestException
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -22,15 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'tahoma'
 
-TAHOMA_ID_LIST_SCHEMA = vol.Schema([cv.string])
-
 TAHOMA_ID_FORMAT = '{}_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_EXCLUDE, default=[]): TAHOMA_ID_LIST_SCHEMA,
+        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
