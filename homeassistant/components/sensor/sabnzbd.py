@@ -4,9 +4,7 @@ Support for monitoring an SABnzbd NZB client.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sabnzbd/
 """
-import os
 import logging
-import json
 from datetime import timedelta
 
 import voluptuous as vol
@@ -17,6 +15,7 @@ from homeassistant.const import (
     CONF_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.json import load_json, save_json
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
@@ -104,9 +103,9 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
 
             def success():
                 """Set up was successful."""
-                conf = _read_config(hass)
+                conf = load_json(hass.config.path(CONFIG_FILE))
                 conf[host] = {'api_key': api_key}
-                _write_config(hass, conf)
+                save_json(hass.config.path(CONFIG_FILE), conf)
                 req_config = _CONFIGURING.pop(host)
                 hass.async_add_job(configurator.request_done, req_config)
 
@@ -144,7 +143,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api_key = config.get(CONF_API_KEY)
 
     if not api_key:
-        conf = _read_config(hass)
+        conf = load_json(hass.config.path(CONFIG_FILE))
         if conf.get(base_url, {}).get('api_key'):
             api_key = conf[base_url]['api_key']
 
@@ -214,22 +213,3 @@ class SabnzbdSensor(Entity):
                 self._state = self.sabnzb_client.queue.get('diskspace1')
             else:
                 self._state = 'Unknown'
-
-
-def _read_config(hass):
-    """Read SABnzbd config."""
-    path = hass.config.path(CONFIG_FILE)
-
-    if not os.path.isfile(path):
-        return {}
-
-    with open(path) as f_handle:
-        # Guard against empty file
-        return json.loads(f_handle.read() or '{}')
-
-
-def _write_config(hass, config):
-    """Write SABnzbd config."""
-    data = json.dumps(config)
-    with open(hass.config.path(CONFIG_FILE), 'w', encoding='utf-8') as outfile:
-        outfile.write(data)
