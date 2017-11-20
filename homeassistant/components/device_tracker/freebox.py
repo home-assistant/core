@@ -1,5 +1,6 @@
 """
 Support for French FAI Free routers.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.freebox/
 """
@@ -79,34 +80,35 @@ class FreeboxDeviceScanner(DeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Get connected devices"""
+        """Check the Freebox for devices.
+
+        Returns boolean if scanning successful.
+        """
         host = self.host
         username = self.username
         password = bytes(self.password, 'latin-1')
         session_token = self.token
 
-        ctx = ssl.create_default_context()
-
         if session_token != "0":
-            # J'ai déjà une session, toujours active ?
+            # Is my session stil active ?
             headers = {}
             headers['X-Fbx-App-Auth'] = session_token
             full_host = host+"lan/browser/pub/"
             req = urllib.request.Request(full_host, None, headers)
             try:
-                res = urllib.request.urlopen(req, context=ctx)
+                res = urllib.request.urlopen(req)
                 resultat = json.loads(res.read().decode('UTF-8'))
             except urllib.error.HTTPError as err:
-                _LOGGER.info("Freebox - HTTPError : "+err.msg)
+                _LOGGER.debug("Freebox - HTTPError : "+err.msg)
                 session_token = "0"
 
         if session_token == "0" or resultat["success"] is False:
-            # Je n'ai pas de session active alors je me connecte
+            # I have no active session so I login
             full_host = host+"login/"
-            with urllib.request.urlopen(full_host, context=ctx) as url:
+            with urllib.request.urlopen(full_host) as url:
                 content = url.read().decode('UTF-8')
                 challenge = json.loads(content)["result"]["challenge"]
-                _LOGGER.info("Freebox - Challenge : "+challenge)
+                _LOGGER.debug("Freebox - Challenge : "+challenge)
 
             data = {"app_id": username,
                     "password": hmac.new(password,
@@ -115,20 +117,19 @@ class FreeboxDeviceScanner(DeviceScanner):
             json_data = json.dumps(data)
             full_host = host+"login/session/"
             with urllib.request.urlopen(full_host,
-                                        json_data.encode('utf-8'),
-                                        context=ctx) as url:
+                                        json_data.encode('utf-8')) as url:
                 content = url.read().decode('UTF-8')
                 json_session = json.loads(content)
                 new_token = json_session["result"]["session_token"]
-                _LOGGER.info("Freebox - Token : "+new_token)
+                _LOGGER.debug("Freebox - Token : "+new_token)
                 self.token = new_token
 
-        # Je fais ma requête avec la session enregistrée
+        # I ask the router for connected devices
         headers = {}
         headers['X-Fbx-App-Auth'] = self.token
         full_host = host+"lan/browser/pub/"
         req = urllib.request.Request(full_host, None, headers)
-        res = urllib.request.urlopen(req, context=ctx).read().decode('UTF-8')
+        res = urllib.request.urlopen(req).read().decode('UTF-8')
         resultat = json.loads(res)
 
         last_results = []
@@ -143,12 +144,12 @@ class FreeboxDeviceScanner(DeviceScanner):
                             device['names'][0]['name'],
                             device['l3connectivities'][0]['addr'],
                             now))
-                        _LOGGER.info("Freebox - Device at Home : " +
+                        _LOGGER.debug("Freebox - Device at Home : " +
                                      device['names'][0]['name'])
-                    except:
-                        _LOGGER.info("Freebox - Device at Home : ERROR")
+                    except KeyError as e:
+                        _LOGGER.debug("Freebox - Error scanning : " + str(e))
             self.last_results = last_results
-            _LOGGER.debug("Freebox - Devices : Scan successful")
+            _LOGGER.info("Freebox - Devices : Scan successful")
             return True
 
         return False
