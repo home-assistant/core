@@ -18,8 +18,8 @@ REQUIREMENTS = ['py-cpuinfo==3.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BRAND = 'Brand'
-ATTR_HZ = 'GHz Advertised'
+ATTR_BRAND = 'brand'
+ATTR_HZ = 'ghz_dvertised'
 ATTR_ARCH = 'arch'
 
 RESOURCE = 'cpu_speed'
@@ -70,7 +70,7 @@ class CpuSpeed(SystemMonitoring):
             return {
                 ATTR_ARCH: self.info['arch'],
                 ATTR_BRAND: self.info['brand'],
-                ATTR_HZ: self.info['hz_advertised_raw'][0]
+                ATTR_HZ: self.info['hz_advertised_raw'][0],
             }
 
     def update(self):

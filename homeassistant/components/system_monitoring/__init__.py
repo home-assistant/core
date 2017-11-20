@@ -65,8 +65,7 @@ class SystemMonitoring(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return None if str(self.value.units) == 'dimensionless' else \
-            self.value.units
+        return SENSOR_TYPES[self.resource][1]
 
     @property
     def icon(self):
