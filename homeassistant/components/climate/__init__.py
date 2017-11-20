@@ -22,7 +22,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELSIUS, PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS)
+    TEMP_CELSIUS, PRECISION_WHOLE, PRECISION_TENTHS)
 
 DOMAIN = 'climate'
 
