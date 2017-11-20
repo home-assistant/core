@@ -20,7 +20,7 @@ from homeassistant.helpers import discovery
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==16']
+REQUIREMENTS = ['pydeconz==17']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +158,8 @@ class DeconzEvent(object):
         self._id = slugify(self._device.name)
 
     @callback
-    def _update_callback(self):
-        """Fire the event."""
-        data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
-        self._hass.bus.async_fire(self._event, data, EventOrigin.remote)
+    def _update_callback(self, reason):
+        """Fire the event if reason is that state is updated."""
+        if reason['state']:
+            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
+            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)

@@ -64,7 +64,7 @@ class DeconzLight(Light):
             self._features |= SUPPORT_EFFECT
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self, reason):
         """Update the sensor's state, if needed."""
         self.async_schedule_update_ha_state()
 

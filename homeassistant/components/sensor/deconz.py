@@ -50,9 +50,10 @@ class DeconzSensor(Entity):
         self._sensor.register_callback(self._update_callback)
 
     @callback
-    def _update_callback(self):
-        """Update the sensor's state, if needed."""
-        self.async_schedule_update_ha_state()
+    def _update_callback(self, reason):
+        """Update the sensor's state, if reason is that state is updated."""
+        if reason['state']:
+            self.async_schedule_update_ha_state()
 
     @property
     def state(self):
@@ -115,7 +116,7 @@ class DeconzBattery(Entity):
         self._device.register_callback(self._update_callback)
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self, reason):
         """Update the battery's state, if needed."""
         if self._battery != self._device.battery:
             self._battery = self._device.battery
