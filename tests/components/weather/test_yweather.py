@@ -4,8 +4,6 @@ import json
 import unittest
 from unittest.mock import patch
 
-import requests_mock  # pylint: disable=import-error
-
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED)
@@ -13,15 +11,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, load_fixture
-
-
-def mock_responses(mock):
-    """Mock responses for Yahoo Weather."""
-    base_url = 'https://query.yahooapis.com/v1/public/yql'
-    mock.get(base_url +
-             '?q=SELECT+woeid+FROM+geo.places+WHERE+text+%3D+%27%2832.87336' +
-             '%2C-117.22743%29%27&format=json',
-             text=load_fixture('yahooweather.json'))
 
 
 def _yql_queryMock(yql):  # pylint: disable=invalid-name
@@ -86,10 +75,8 @@ class TestWeather(unittest.TestCase):
 
     DEVICES = []
 
-    @requests_mock.Mocker()
-    def add_devices(self, devices, mock):
+    def add_devices(self, devices):
         """Mock add devices."""
-        mock_responses(mock)
         for device in devices:
             device.update()
             self.DEVICES.append(device)
@@ -106,10 +93,8 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    @requests_mock.Mocker()
-    def test_setup(self, mock):
+    def test_setup(self):
         """Test for typical weather data attributes."""
-        mock_responses(mock)
         self.assertTrue(
             setup_component(self.hass, 'weather', {
                 'weather': {
@@ -133,10 +118,8 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    @requests_mock.Mocker()
-    def test_setup_no_data(self, mock):
+    def test_setup_no_data(self):
         """Test for note receiving data."""
-        mock_responses(mock)
         self.assertTrue(
             setup_component(self.hass, 'weather', {
                 'weather': {
@@ -151,10 +134,8 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    @requests_mock.Mocker()
-    def test_setup_bad_data(self, mock):
+    def test_setup_bad_data(self):
         """Test for bad forecast data."""
-        mock_responses(mock)
         self.assertTrue(
             setup_component(self.hass, 'weather', {
                 'weather': {
@@ -169,10 +150,8 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    @requests_mock.Mocker()
-    def test_setup_condition_error(self, mock):
+    def test_setup_condition_error(self):
         """Test for bad forecast data."""
-        mock_responses(mock)
         self.assertTrue(
             setup_component(self.hass, 'weather', {
                 'weather': {
