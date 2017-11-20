@@ -112,7 +112,8 @@ class TestPlant(unittest.TestCase):
                                  {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
             self.hass.block_till_done()
         # wait for the recorder to really store the data
-        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+        self.hass.block_till_done()
+
         assert setup_component(self.hass, plant.DOMAIN, {
             plant.DOMAIN: {
                 plant_name: GOOD_CONFIG
