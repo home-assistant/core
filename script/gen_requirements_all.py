@@ -81,7 +81,6 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'warrant',
     'yahoo-finance',
-    'yahooweather',
     'pythonwhois',
     'wakeonlan',
     'vultr'

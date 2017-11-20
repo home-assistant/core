@@ -10,7 +10,8 @@ from homeassistant.components.weather import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, load_fixture
+from tests.common import (get_test_home_assistant, load_fixture,
+                          MockDependency)
 
 
 def _yql_queryMock(yql):  # pylint: disable=invalid-name
@@ -90,10 +91,11 @@ class TestWeather(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
+    @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    def test_setup(self):
+    def test_setup(self, mock_yahooweather):
         """Test for typical weather data attributes."""
         self.assertTrue(
             setup_component(self.hass, 'weather', {
@@ -115,10 +117,11 @@ class TestWeather(unittest.TestCase):
         self.assertEqual(data.get(ATTR_WEATHER_WIND_BEARING), 0)
         self.assertEqual(state.attributes.get('friendly_name'), 'Yweather')
 
+    @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    def test_setup_no_data(self):
+    def test_setup_no_data(self, mock_yahooweather):
         """Test for note receiving data."""
         self.assertTrue(
             setup_component(self.hass, 'weather', {
@@ -131,10 +134,11 @@ class TestWeather(unittest.TestCase):
         state = self.hass.states.get('weather.yweather')
         assert state is not None
 
+    @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    def test_setup_bad_data(self):
+    def test_setup_bad_data(self, mock_yahooweather):
         """Test for bad forecast data."""
         self.assertTrue(
             setup_component(self.hass, 'weather', {
@@ -147,10 +151,11 @@ class TestWeather(unittest.TestCase):
         state = self.hass.states.get('weather.yweather')
         assert state is None
 
+    @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)
     @patch('yahooweather.get_woeid', new=get_woeidMock)
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
-    def test_setup_condition_error(self):
+    def test_setup_condition_error(self, mock_yahooweather):
         """Test for bad forecast data."""
         self.assertTrue(
             setup_component(self.hass, 'weather', {
