@@ -6,8 +6,9 @@ http://home-assistant.io/components/climate.fritzhome/
 """
 import logging
 
-from components.fritzhome import (ATTR_AIN, ATTR_FW_VERSION,
-    ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME, DOMAIN)
+from components.fritzhome import (
+    ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME,
+    DOMAIN)
 from homeassistant.components.climate import (ClimateDevice, STATE_ECO)
 from homeassistant.const import (PRECISION_HALVES)
 from homeassistant.const import (TEMP_CELSIUS, ATTR_TEMPERATURE)
@@ -21,7 +22,6 @@ STATE_COMFORT = 'comfort'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome thermostat platform."""
-
     if DOMAIN not in hass.data:
         return False
 
@@ -41,6 +41,7 @@ class FritzhomeThermostat(ClimateDevice):
     OPERATION_LIST = [STATE_ECO, STATE_COMFORT]
 
     def __init__(self, hass, device):
+        """Initialize the thermostat."""
         self._device = device
         self._actual_temperature = None
         self._target_temperature = None

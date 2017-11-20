@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 
 _LOGGER = logging.getLogger(__name__)
