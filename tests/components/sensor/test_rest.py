@@ -203,6 +203,7 @@ class TestRestSensor(unittest.TestCase):
                                       self.unit_of_measurement,
                                       self.value_template, True)
         self.sensor.update()
+
         self.assertEqual('json_state_updated_value', self.sensor.state)
         self.assertEqual('json_state_updated_value',
                          self.sensor.device_state_attributes.key)
