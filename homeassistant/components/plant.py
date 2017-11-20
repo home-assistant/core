@@ -100,7 +100,7 @@ def async_setup(hass, config):
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
-        entity = Plant(hass, plant_name, plant_config)
+        entity = Plant(plant_name, plant_config)
         sensor_entity_ids = list(plant_config[CONF_SENSORS].values())
         _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
         async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
@@ -144,9 +144,8 @@ class Plant(Entity):
         }
     }
 
-    def __init__(self, hass, name, config):
+    def __init__(self, name, config):
         """Initialize the Plant component."""
-        self._hass = hass
         self._config = config
         self._sensormap = dict()
         self._readingmap = dict()
@@ -167,10 +166,6 @@ class Plant(Entity):
         if CONF_CHECK_DAYS in self._config:
             self._conf_check_days = self._config[CONF_CHECK_DAYS]
         self._brightness_history = DailyHistory(self._conf_check_days)
-
-        if 'recorder' in self._hass.config.components:
-            # only use the database if it's configured
-            hass.async_add_job(self._load_history_from_db)
 
     @callback
     def state_changed(self, entity_id, _, new_state):
@@ -246,6 +241,12 @@ class Plant(Entity):
         return None
 
     @asyncio.coroutine
+    def async_added_to_hass(self):
+        if 'recorder' in self.hass.config.components:
+            # only use the database if it's configured
+            self.hass.async_add_job(self._load_history_from_db)
+
+    @asyncio.coroutine
     def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
 
@@ -261,7 +262,7 @@ class Plant(Entity):
 
         _LOGGER.debug("initializing values for %s from the database",
                       self._name)
-        with session_scope(hass=self._hass) as session:
+        with session_scope(hass=self.hass) as session:
             query = session.query(States).filter(
                 (States.entity_id == entity_id.lower()) and
                 (States.last_updated > start_date)
@@ -277,6 +278,7 @@ class Plant(Entity):
                 except ValueError:
                     pass
         _LOGGER.debug("initializing from database completed")
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
