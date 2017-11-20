@@ -542,6 +542,9 @@ piglow==1.2.4
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.system_monitoring
+pint==0.8.1
+
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
 plexapi==3.0.3
