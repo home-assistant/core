@@ -6,7 +6,8 @@ https://home.assistant.io/components/switch.mochad
 """
 
 import logging
-
+import socket
+import threading
 import voluptuous as vol
 
 from homeassistant.components import mochad
@@ -50,7 +51,9 @@ class MochadSwitch(SwitchDevice):
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self.device = device.Device(ctrl, self._address,
                                     comm_type=self._comm_type)
-        self._state = self._get_device_status()
+        #Init with false to avoid locking HA for long on CM19A
+        self._state = False 
+        self.lock = threading.Lock()
 
     @property
     def name(self):
@@ -58,16 +61,36 @@ class MochadSwitch(SwitchDevice):
         return self._name
 
     def turn_on(self, **kwargs):
-        """Turn the switch on."""
-        self._state = True
-        self.device.send_cmd('on')
-        self._controller.read_data()
+        try:
+            self.lock.acquire()
+            """Turn the switch on."""
+            self._state = True
+            """Recycle socket on new command to recover mochad connection"""
+            _LOGGER.debug("Reconnect {} : {} ".format(self._controller.server, 
+                                                      self._controller.port))
+            self._controller.reconnect()
+            self.device.send_cmd('on')
+            self._controller.read_data()
+        except Exception as e:
+            _LOGGER.error("Error with mochad communication: {}".format(e))
+        finally:
+            self.lock.release()
 
     def turn_off(self, **kwargs):
-        """Turn the switch off."""
-        self._state = False
-        self.device.send_cmd('off')
-        self._controller.read_data()
+        try:
+            self.lock.acquire()
+            """Turn the switch off."""
+            self._state = False
+            """Recycle socket on new command to recover mochad connection"""
+            _LOGGER.debug("Reconnect {} : {} ".format(self._controller.server, 
+                                                      self._controller.port))
+            self._controller.reconnect()
+            self.device.send_cmd('off')
+            self._controller.read_data()
+        except Exception as e:
+            _LOGGER.error("Error with mochad communication: {}".format(e))
+        finally:
+            self.lock.release()
 
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
