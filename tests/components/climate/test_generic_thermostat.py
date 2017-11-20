@@ -88,7 +88,6 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
 
 class TestGenericThermostatHeaterSwitching(unittest.TestCase):
     """Test the Generic thermostat heater switching.
-
     Different toggle type devices are tested.
     """
 
@@ -335,7 +334,6 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_operating_mode_auto(self):
         """Test change mode from OFF to AUTO.
-
         Switch turns on when temp below setpoint and mode changes.
         """
         climate.set_operation_mode(self.hass, STATE_OFF)
@@ -901,6 +899,7 @@ def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
         State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20"}),
+        State('climate.test_thermostat', '0', {'operation_mode': STATE_OFF}),
     ))
 
     hass.state = CoreState.starting
@@ -911,7 +910,9 @@ def test_restore_state(hass):
             'name': 'test_thermostat',
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
+            'persistence': 'both',
         }})
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
+    assert(state.attributes['operation_mode'] == STATE_OFF)
