@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
                                  STATE_PROBLEM, STATE_OK)
+from homeassistant.components import recorder
 import homeassistant.components.plant as plant
 from homeassistant.setup import setup_component
 
@@ -111,7 +112,7 @@ class TestPlant(unittest.TestCase):
                                  {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
             self.hass.block_till_done()
         # wait for the recorder to really store the data
-        self.hass.block_till_done()
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
 
         assert setup_component(self.hass, plant.DOMAIN, {
             plant.DOMAIN: {
