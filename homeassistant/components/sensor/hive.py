@@ -33,7 +33,6 @@ DEVICETYPE_ICONS = {'Heating_CurrentTemperature': 'mdi:thermometer',
                     'HotWater_State': 'mdi:water-pump',
                     'HotWater_Mode': 'mdi:water-pump',
                     'HotWater_Boost': 'mdi:water-pump',
-                    'Hive_Device_Sensor': 'mdi:eye',
                     'Hive_Device_Light_Mode': 'mdi:eye',
                     'Hive_Device_Plug_Mode': 'mdi:eye'
                     }
@@ -76,8 +75,6 @@ class HiveSensorEntity(Entity):
                 friendly_name = "Thermostat Battery Level"
             else:
                 friendly_name = "Battery Level"
-        elif self.device_type == "Hive_Device_Sensor":
-            return self.node_name
         elif self.device_type == "Hive_Device_Light_Mode":
             return self.node_name
         elif self.device_type == "Hive_Device_Plug_Mode":
@@ -96,8 +93,6 @@ class HiveSensorEntity(Entity):
         if self.device_type == "Heating_TargetTemperature":
             return True
         elif self.device_type == "Hive_Device_BatteryLevel":
-            return True
-        elif self.device_type == "Hive_Device_Sensor":
             return True
         elif self.device_type == "Hive_Device_Light_Mode":
             return True
@@ -142,9 +137,6 @@ class HiveSensorEntity(Entity):
         elif self.device_type == "Hive_Device_BatteryLevel":
             self.batt_lvl = self.session.sensor.battery_level(self.node_id)
             return self.batt_lvl
-        elif self.device_type == "Hive_Device_Sensor":
-            return self.session.sensor.get_state(self.node_id,
-                                                 self.node_device_type)
         elif self.device_type == "Hive_Device_Light_Mode":
             return self.session.sensor.get_mode(self.node_id)
         elif self.device_type == "Hive_Device_Plug_Mode":
