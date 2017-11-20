@@ -85,6 +85,12 @@ SCENE_SCHEMA = vol.Schema({
 ATTR_IS_HUE_GROUP = "is_hue_group"
 GROUP_NAME_ALL_HUE_LIGHTS = "All Hue Lights"
 
+CONFIG_INSTRUCTIONS = """
+Press the button on the bridge to register Philips Hue with Home Assistant.
+
+![Location of button on bridge](/static/images/config_philips_hue.jpg)
+"""
+
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
     """Attempt to detect host based on existing configuration."""
@@ -298,10 +304,8 @@ def request_configuration(host, hass, add_devices, filename,
 
     _CONFIGURING[host] = configurator.request_config(
         "Philips Hue", hue_configuration_callback,
-        description=("Press the button on the bridge to register Philips Hue "
-                     "with Home Assistant."),
+        description=CONFIG_INSTRUCTIONS,
         entity_picture="/static/images/logo_philips_hue.png",
-        description_image="/static/images/config_philips_hue.jpg",
         submit_caption="I have pressed the button"
     )
 
