@@ -14,9 +14,9 @@ import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
-    CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME,
-    CONF_DISARM_AFTER_TRIGGER)
+    STATE_ALARM_ARMED_CUSTOM_BYPASS, STATE_ALARM_DISARMED, STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED, CONF_PLATFORM, CONF_NAME, CONF_CODE,
+    CONF_PENDING_TIME, CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 
@@ -26,7 +26,8 @@ DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
 SUPPORTED_PENDING_STATES = [STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-                            STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED]
+                            STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED,
+                            STATE_ALARM_ARMED_CUSTOM_BYPASS]
 
 ATTR_POST_PENDING_STATE = 'post_pending_state'
 
@@ -59,6 +60,8 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
     vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
     vol.Optional(STATE_ALARM_ARMED_HOME, default={}): STATE_SETTING_SCHEMA,
     vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): STATE_SETTING_SCHEMA,
+    vol.Optional(STATE_ALARM_ARMED_CUSTOM_BYPASS,
+                 default={}): STATE_SETTING_SCHEMA,
     vol.Optional(STATE_ALARM_TRIGGERED, default={}): STATE_SETTING_SCHEMA,
 }, _state_validator))
 
@@ -173,6 +176,13 @@ class ManualAlarm(alarm.AlarmControlPanel):
             return
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
+
+    def alarm_arm_custom_bypass(self, code=None):
+        """Send arm custom bypass command."""
+        if not self._validate_code(code, STATE_ALARM_ARMED_CUSTOM_BYPASS):
+            return
+
+        self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command. No code needed."""
