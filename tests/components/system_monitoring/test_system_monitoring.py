@@ -2,10 +2,6 @@
 import unittest
 
 from homeassistant.components import system_monitoring
-from homeassistant.components.weather import (
-    ATTR_WEATHER_ATTRIBUTION, ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED, ATTR_FORECAST, ATTR_FORECAST_TEMP)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
 
