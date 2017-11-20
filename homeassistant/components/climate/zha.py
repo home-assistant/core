@@ -23,6 +23,15 @@ DEPENDENCIES = ['zha']
 ATTR_HEATING_POWER = 'heating_power'
 STATE_COMFORT = 'comfort'
 CLEAN_TIME_ZONE = 1
+OPERATIONS = {0: STATE_OFF,
+              4: STATE_COMFORT,
+              5: STATE_ECO}
+REVERSE_OPERATIONS = dict((v, k) for k, v in OPERATIONS.items())
+OPERATION_LIST = list(OPERATIONS.values())
+OFF_CODE = 0x00
+COMFORT_CODE = 0x04
+ECO_CODE = 0x05
+NO_ERROR_ANSWER_CODE = 0x00
 
 
 @asyncio.coroutine
@@ -41,7 +50,8 @@ def safe_read(cluster, attributes, raw=False):
             raw=raw,
         )
         return result
-    except Exception:  # pylint: disable=broad-except
+    except OSError:  # pylint: disable=broad-except
+        _LOGGER.error("Can not read attributes %s", attributes)
         return {}
 
 
@@ -63,10 +73,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # Clean data
     for data in ('manufacturer', 'model'):
         if isinstance(discovery_info.get(data), bytes):
-            discovery_info[data] = discovery_info.get(data)\
+            discovery_info[data] = discovery_info[data]\
                 .split(b'\x00')[0].decode('utf-8')
-        if isinstance(discovery_info.get(data), str):
-            discovery_info[data] = discovery_info.get(data).split('\x00')[0]
+        elif isinstance(discovery_info.get(data), str):
+            discovery_info[data] = discovery_info[data].split('\x00')[0]
 
     if discovery_info['manufacturer'] == 'Stelpro' and \
             discovery_info['model'] == 'ST218':
@@ -87,16 +97,10 @@ class ClimateST218(zha.Entity, ClimateDevice):
         """Initialize the ZHA Climate."""
         super().__init__(**kwargs)
 
-        self._modes = {0: STATE_OFF,
-                       4: STATE_COMFORT,
-                       5: STATE_ECO}
-        self._reverse_modes = dict((v, k) for k, v in self._modes.items())
-
         self._target_temperature = None
         self._current_temperature = None
         self._current_operation = None
         self._heating_power = None
-        self._operation_list = list(self._modes.values())
         self.last_request = time.time()
 
         # Add Stelpro Specific
@@ -129,7 +133,7 @@ class ClimateST218(zha.Entity, ClimateDevice):
     def _wait_for_clean_communication(self):
         """Ensure that we not request the device more than time by second."""
         if time.time() - self.last_request < CLEAN_TIME_ZONE:
-            yield from asyncio.sleep(CLEAN_TIME_ZONE)
+            yield from asyncio.sleep(time.time() - self.last_request)
         self.last_request = time.time()
 
     @asyncio.coroutine
@@ -147,13 +151,18 @@ class ClimateST218(zha.Entity, ClimateDevice):
             _LOGGER.warning("No result received")
             return
 
-        self._heating_power = int(result.get('pi_heating_demand'))
+        try:
+            self._heating_power = int(result['pi_heating_demand'])
+        except (TypeError, KeyError):
+            _LOGGER.warning("Can not get heating power value")
+            self._heating_power = None
 
-        raw_mode = result.get('setpoint_mode_manuf_specific', {})
-        if raw_mode not in self._modes:
+        raw_mode = result.get('setpoint_mode_manuf_specific')
+        if raw_mode not in OPERATIONS:
             _LOGGER.warning("Mode %s not found in known modes %s",
-                            raw_mode, self._modes)
-        self._current_operation = self._modes.get(raw_mode)
+                            raw_mode, OPERATIONS)
+        else:
+            self._current_operation = OPERATIONS[raw_mode]
 
         raw_temp = result.get('occupied_heating_setpoint')
         if raw_temp:
@@ -180,25 +189,22 @@ class ClimateST218(zha.Entity, ClimateDevice):
     @property
     def operation_list(self):
         """Return a list of available operation modes."""
-        return self._operation_list
+        return OPERATION_LIST
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._target_temperature is None or self._target_temperature < 0:
-            return None
         return self._target_temperature
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_OPERATION_MODE) is not None:
-            yield from self.async_set_operation_mode(
-                kwargs.get(ATTR_OPERATION_MODE))
+        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        if operation_mode is not None:
+            yield from self.async_set_operation_mode(operation_mode)
 
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            temperature = kwargs.get(ATTR_TEMPERATURE)
-        else:
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
             return
         yield from self._wait_for_clean_communication()
 
@@ -209,7 +215,7 @@ class ClimateST218(zha.Entity, ClimateDevice):
         # Check result
         for result in res:
             for subresult in result:
-                if subresult.status != 0x00:
+                if subresult.status != NO_ERROR_ANSWER_CODE:
                     _LOGGER.error("Error setting operation mode: %s",
                                   subresult.status)
 
@@ -218,21 +224,21 @@ class ClimateST218(zha.Entity, ClimateDevice):
         """Set new target operation mode."""
         yield from self._wait_for_clean_communication()
         if operation_mode in (STATE_COMFORT, STATE_ECO):
-            data = {'system_mode': 0x04}
+            data = {'system_mode': COMFORT_CODE}
             res = yield from self._endpoint.thermostat.write_attributes(data)
         elif operation_mode == STATE_OFF:
-            data = {'system_mode': 0}
+            data = {'system_mode': OFF_CODE}
             res = yield from self._endpoint.thermostat.write_attributes(data)
         # To set eco mode we need to set comfort mode just before
         if operation_mode == STATE_ECO:
             self._wait_for_clean_communication()
-            data = {'setpoint_mode_manuf_specific': 0x05}
+            data = {'setpoint_mode_manuf_specific': ECO_CODE}
             res = yield from self._endpoint.thermostat.write_attributes(data)
         self.last_request = time.time()
         # Check result
         for result in res:
             for subresult in result:
-                if subresult.status != 0x00:
+                if subresult.status != NO_ERROR_ANSWER_CODE:
                     _LOGGER.error("Error setting operation mode: %s",
                                   subresult.status)
 
