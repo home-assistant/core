@@ -6,7 +6,6 @@ https://home.assistant.io/components/switch.mochad
 """
 
 import logging
-import socket
 import threading
 import voluptuous as vol
 
@@ -51,8 +50,8 @@ class MochadSwitch(SwitchDevice):
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self.device = device.Device(ctrl, self._address,
                                     comm_type=self._comm_type)
-        #Init with false to avoid locking HA for long on CM19A
-        self._state = False 
+        """Init with false to avoid locking HA for long on CM19A"""
+        self._state = False
         self.lock = threading.Lock()
 
     @property
