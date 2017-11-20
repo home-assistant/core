@@ -12,7 +12,6 @@ import json
 import logging
 import urllib.parse
 import urllib.request
-import ssl
 
 import voluptuous as vol
 
@@ -29,12 +28,10 @@ from homeassistant.components.device_tracker import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = 'http://mafreebox.freebox.fr'
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string
 })
@@ -61,7 +58,7 @@ class FreeboxDeviceScanner(DeviceScanner):
         _LOGGER.debug("Freebox - Credentials : " + self.username +
                       " & " + self.password)
 
-        self.last_results = []  # type: List[Device]
+        self.last_results = []
         self.success_init = self._update_info()
         _LOGGER.info("Freebox - Scanner initialized")
 
@@ -145,9 +142,10 @@ class FreeboxDeviceScanner(DeviceScanner):
                             device['l3connectivities'][0]['addr'],
                             now))
                         _LOGGER.debug("Freebox - Device at Home : " +
-                                     device['names'][0]['name'])
-                    except KeyError as e:
-                        _LOGGER.debug("Freebox - Error scanning : " + str(e))
+                                      device['names'][0]['name'])
+                    except KeyError as keyerror:
+                        _LOGGER.debug("Freebox - Error scanning : " +
+                                      str(keyerror))
             self.last_results = last_results
             _LOGGER.info("Freebox - Devices : Scan successful")
             return True
