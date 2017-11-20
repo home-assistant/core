@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 http://home-assistant.io/components/switch.fritzhome/
 """
 import logging
-from components.fritzhome import (
+from homeassistant.components.fritzhome import (
     ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME,
     DOMAIN)
 from homeassistant.components.switch import (SwitchDevice)

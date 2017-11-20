@@ -6,7 +6,7 @@ http://home-assistant.io/components/climate.fritzhome/
 """
 import logging
 
-from components.fritzhome import (
+from homeassistant.components.fritzhome import (
     ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME,
     DOMAIN)
 from homeassistant.components.climate import (ClimateDevice, STATE_ECO)
