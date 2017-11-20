@@ -90,7 +90,6 @@ class TimeDateSensor(Entity):
         if now is None:
             now = dt_util.utcnow()
         if self.type == 'date':
-            # now = dt_util.start_of_local_day()
             now = dt_util.start_of_local_day(dt_util.as_local(now))
             return now + timedelta(seconds=86400)
         elif self.type == 'beat':
