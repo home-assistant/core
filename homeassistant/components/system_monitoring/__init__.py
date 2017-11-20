@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['pint==0.8.1']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'system_monitoring'
@@ -28,6 +30,10 @@ SENSOR_TYPES = {
     'memory_free': ['Memory free', 'MiB', 'mdi:memory'],
     'memory_used': ['Memory used', 'MiB', 'mdi:memory'],
 }
+
+from pint import UnitRegistry
+
+unit_registry = UnitRegistry()
 
 
 @asyncio.coroutine
@@ -59,7 +65,8 @@ class SystemMonitoring(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.resource][1]
+        return None if str(self.value.units) == 'dimensionless' else \
+            self.value.units
 
     @property
     def icon(self):
@@ -79,4 +86,5 @@ class SystemMonitoring(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.value
+        data = self.value.to(unit_registry(SENSOR_TYPES[self.resource][1]))
+        return round(data.magnitude, 2)

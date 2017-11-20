@@ -11,6 +11,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.system_monitoring import (
     SystemMonitoring, PLATFORM_SCHEMA, CONF_SYSTEM)
+from homeassistant.components.system_monitoring.const import FREQUENCY_HZ
+from homeassistant.components.system_monitoring import unit_registry
 
 REQUIREMENTS = ['py-cpuinfo==3.3.0']
 
@@ -59,7 +61,7 @@ class CpuSpeed(SystemMonitoring):
     @property
     def value(self):
         """Return the current value of the resource."""
-        return self._state
+        return self._state * unit_registry(FREQUENCY_HZ)
 
     @property
     def device_state_attributes(self):
@@ -68,7 +70,7 @@ class CpuSpeed(SystemMonitoring):
             return {
                 ATTR_ARCH: self.info['arch'],
                 ATTR_BRAND: self.info['brand'],
-                ATTR_HZ: round(self.info['hz_advertised_raw'][0]/10**9, 2)
+                ATTR_HZ: self.info['hz_advertised_raw'][0]
             }
 
     def update(self):
@@ -76,4 +78,4 @@ class CpuSpeed(SystemMonitoring):
         from cpuinfo import cpuinfo
 
         self.info = cpuinfo.get_cpu_info()
-        self._state = round(float(self.info['hz_actual_raw'][0])/10**9, 2)
+        self._state = self.info['hz_actual_raw'][0]
