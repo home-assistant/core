@@ -12,6 +12,7 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
     CONF_HOST, CONF_PORT
@@ -28,6 +29,8 @@ CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_KNX_STATE_UPDATER = "state_updater"
 CONF_KNX_TIME_ADDRESS = "time_address"
+CONF_KNX_OUTSIDE_TEMPERATURE_SENSOR = "outside_temperature_sensor"
+CONF_KNX_OUTSIDE_TEMPERATURE_ADDRESS = "outside_temperature_address"
 
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
@@ -63,6 +66,10 @@ CONFIG_SCHEMA = vol.Schema({
                 [cv.string]),
         vol.Optional(CONF_KNX_TIME_ADDRESS): cv.string,
         vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
+        vol.Inclusive(CONF_KNX_OUTSIDE_TEMPERATURE_SENSOR, 'outside_temp'):
+            cv.string,
+        vol.Inclusive(CONF_KNX_OUTSIDE_TEMPERATURE_ADDRESS, 'outside_temp'):
+            cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -223,6 +230,12 @@ class KNXModule(object):
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
 
+        if CONF_KNX_OUTSIDE_TEMPERATURE_ADDRESS in self.config[DOMAIN]:
+            sensor_entity_id = \
+                self.config[DOMAIN][CONF_KNX_OUTSIDE_TEMPERATURE_SENSOR]
+            async_track_state_change(self.hass, sensor_entity_id,
+                                     self.async_broadcast_temperature)
+
     @asyncio.coroutine
     def telegram_received_cb(self, telegram):
         """Callback invoked after a KNX telegram was received."""
@@ -251,6 +264,20 @@ class KNXModule(object):
         telegram = Telegram()
         telegram.payload = payload
         telegram.group_address = address
+        yield from self.xknx.telegrams.put(telegram)
+
+    @asyncio.coroutine
+    def async_broadcast_temperature(self, entity_id, old_state, new_state):
+        """Broadcast new temperature of sensor to KNX bus."""
+        from xknx.knx import Telegram, Address, DPTArray, DPTFloat
+        if new_state is None:
+            return
+        address = Address(
+            self.config[DOMAIN][CONF_KNX_OUTSIDE_TEMPERATURE_ADDRESS])
+        payload = DPTArray(DPTFloat().to_knx(float(new_state.state)))
+        telegram = Telegram()
+        telegram.group_address = address
+        telegram.payload = payload
         yield from self.xknx.telegrams.put(telegram)
 
 
