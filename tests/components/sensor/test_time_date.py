@@ -1,6 +1,6 @@
 """The tests for Kira sensor platform."""
 import unittest
-from unittest import mock
+from unittest.mock import patch
 
 from homeassistant.components.sensor import time_date as time_date
 import homeassistant.util.dt as dt_util
@@ -91,12 +91,11 @@ class TestTimeDateSensor(unittest.TestCase):
         now = dt_util.parse_datetime('2017-11-13 19:47:19-07:00')
         device = time_date.TimeDateSensor(self.hass, 'date')
         next_time = device.get_next_interval(now)
-        assert next_time.timestamp() == \
-               dt_util.as_timestamp('2017-11-14 00:00:00-07:00')
+        assert (next_time.timestamp() ==
+                dt_util.as_timestamp('2017-11-14 00:00:00-07:00'))
 
-    @mock.patch('homeassistant.util.dt.utcnow',
-                return_value=
-                dt_util.parse_datetime('2017-11-14 02:47:19-00:00'))
+    @patch('homeassistant.util.dt.utcnow',
+           return_value=dt_util.parse_datetime('2017-11-14 02:47:19-00:00'))
     def test_timezone_intervals_empty_parameter(self, _):
         """Test get_interval() without parameters."""
         new_tz = dt_util.get_time_zone('America/Edmonton')
@@ -104,8 +103,8 @@ class TestTimeDateSensor(unittest.TestCase):
         dt_util.set_default_time_zone(new_tz)
         device = time_date.TimeDateSensor(self.hass, 'date')
         next_time = device.get_next_interval()
-        assert next_time.timestamp() == \
-               dt_util.as_timestamp('2017-11-14 00:00:00-07:00')
+        assert (next_time.timestamp() ==
+                dt_util.as_timestamp('2017-11-14 00:00:00-07:00'))
 
     def test_icons(self):
         """Test attributes of sensors."""
