@@ -44,7 +44,6 @@ class CanaryCamera(Camera):
         self._location = None
         self._last_entry = None
         self._image_content = None
-        self._force_update = False
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -71,15 +70,6 @@ class CanaryCamera(Camera):
             ATTR_MOTION_END_TIME: self._last_entry.end_time,
         }
 
-    @property
-    def force_update(self) -> bool:
-        """Return True if state updates should be forced."""
-        if self._force_update:
-            self._force_update = False
-            return True
-
-        return False
-
     def should_poll(self):
         """Update the recording state periodically."""
         return True
@@ -98,7 +88,6 @@ class CanaryCamera(Camera):
                 thumbnail = current_entry.thumbnails[0]
                 self._image_content = requests.get(thumbnail.image_url).content
                 self._last_entry = current_entry
-                self._force_update = True
 
     @property
     def motion_detection_enabled(self):
