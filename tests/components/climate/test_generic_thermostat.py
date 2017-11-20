@@ -901,6 +901,7 @@ def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
         State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20"}),
+        State('climate.test_thermostat', '0', {climate.ATTR_OPERATION_MODE: "off"}),
     ))
 
     hass.state = CoreState.starting
@@ -915,3 +916,4 @@ def test_restore_state(hass):
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
+    assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
