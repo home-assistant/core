@@ -82,10 +82,7 @@ class FritzhomeSwitch(SwitchDevice):
 
     def update(self):
         """Get latest data and states from the device."""
-        try:
-            self._device.update()
-        except Exception as exc:
-            _LOGGER.warning("Updating the state failed: %s", exc)
+        self._device.update()
 
     @property
     def current_power_w(self):

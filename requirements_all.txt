@@ -279,11 +279,6 @@ freesms==0.1.2
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.3
 
-# homeassistant.components.fritzhome
-# homeassistant.components.climate.fritzhome
-# homeassistant.components.switch.fritzhome
-pyfritzhome==0.3.5
-
 # homeassistant.components.media_player.frontier_silicon
 fsapi==0.0.7
 
@@ -677,6 +672,9 @@ pyfido==1.0.1
 
 # homeassistant.components.climate.flexit
 pyflexit==0.3
+
+# homeassistant.components.fritzhome
+pyfritzhome==0.3.5
 
 # homeassistant.components.ifttt
 pyfttt==0.3

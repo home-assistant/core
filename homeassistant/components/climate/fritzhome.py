@@ -125,15 +125,8 @@ class FritzhomeThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        try:
-            self._device.update()
-            self._actual_temperature = self._device.actual_temperature
-            self._target_temperature = self._device.target_temperature
-            self._comfort_temperature = self._device.comfort_temperature
-            self._eco_temperature = self._device.eco_temperature
-        except Exception as exc:
-            _LOGGER.warning("Updating the state failed: %s", exc)
-            self._actual_temperature = None
-            self._target_temperature = None
-            self._eco_temperature = None
-            self._comfort_temperature = None
+        self._device.update()
+        self._actual_temperature = self._device.actual_temperature
+        self._target_temperature = self._device.target_temperature
+        self._comfort_temperature = self._device.comfort_temperature
+        self._eco_temperature = self._device.eco_temperature
