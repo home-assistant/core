@@ -6,7 +6,8 @@ from unittest.mock import patch
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
 
@@ -672,4 +673,116 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
+                         self.hass.states.get(entity_id).state)
+
+    def test_arm_custom_bypass_no_pending(self):
+        """Test arm custom bypass method."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'code': CODE,
+                'pending_time': 0,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_custom_bypass(self.hass, CODE)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_CUSTOM_BYPASS,
+                         self.hass.states.get(entity_id).state)
+
+    def test_arm_custom_bypass_with_pending(self):
+        """Test arm custom bypass method."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'code': CODE,
+                'pending_time': 1,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_custom_bypass(self.hass, CODE, entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        state = self.hass.states.get(entity_id)
+        assert state.attributes['post_pending_state'] == \
+            STATE_ALARM_ARMED_CUSTOM_BYPASS
+
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_ARMED_CUSTOM_BYPASS
+
+    def test_arm_custom_bypass_with_invalid_code(self):
+        """Attempt to custom bypass without a valid code."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'code': CODE,
+                'pending_time': 1,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_custom_bypass(self.hass, CODE + '2')
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+    def test_armed_custom_bypass_with_specific_pending(self):
+        """Test arm custom bypass method."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'pending_time': 10,
+                'armed_custom_bypass': {
+                    'pending_time': 2
+                }
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        alarm_control_panel.alarm_arm_custom_bypass(self.hass)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=2)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_CUSTOM_BYPASS,
                          self.hass.states.get(entity_id).state)
