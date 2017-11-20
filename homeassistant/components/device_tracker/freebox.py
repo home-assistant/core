@@ -97,7 +97,7 @@ class FreeboxDeviceScanner(DeviceScanner):
                 res = urllib.request.urlopen(req, context=ctx)
                 resultat = json.loads(res.read().decode('UTF-8'))
             except urllib.error.HTTPError as err:
-                _LOGGER.info("Freebox - HTTPError : "+err)
+                _LOGGER.info("Freebox - HTTPError : "+err.msg)
                 session_token = "0"
 
         if session_token == "0" or resultat["success"] is False:
@@ -137,13 +137,16 @@ class FreeboxDeviceScanner(DeviceScanner):
         if resultat['success'] is True:
             for device in resultat["result"]:
                 if device['active'] is True:
-                    last_results.append(Device(
-                        device['l2ident']['id'],
-                        device['names'][0]['name'],
-                        device['l3connectivities'][0]['addr'],
-                        now))
-                    _LOGGER.info("Freebox - Device at Home : " +
-                                 device['names'][0]['name'])
+                    try:
+                        last_results.append(Device(
+                            device['l2ident']['id'],
+                            device['names'][0]['name'],
+                            device['l3connectivities'][0]['addr'],
+                            now))
+                        _LOGGER.info("Freebox - Device at Home : " +
+                                     device['names'][0]['name'])
+                    except:
+                        _LOGGER.info("Freebox - Device at Home : ERROR")
             self.last_results = last_results
             _LOGGER.debug("Freebox - Devices : Scan successful")
             return True
