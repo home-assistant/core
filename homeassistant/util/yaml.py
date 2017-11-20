@@ -12,11 +12,16 @@ try:
 except ImportError:
     keyring = None
 
+try:
+    import credstash  # pylint: disable=import-error
+except ImportError:
+    credstash = None
+
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
-_SECRET_YAML = 'secrets.yaml'
+SECRET_YAML = 'secrets.yaml'
 __SECRET_CACHE = {}  # type: Dict
 
 
@@ -73,7 +78,8 @@ def load_yaml(fname: str) -> Union[List, Dict]:
 
 def dump(_dict: dict) -> str:
     """Dump YAML to a string and remove null."""
-    return yaml.safe_dump(_dict, default_flow_style=False) \
+    return yaml.safe_dump(
+        _dict, default_flow_style=False, allow_unicode=True) \
         .replace(': null\n', ':\n')
 
 
@@ -128,7 +134,7 @@ def _include_dir_merge_named_yaml(loader: SafeLineLoader,
     mapping = OrderedDict()  # type: OrderedDict
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     for fname in _find_files(loc, '*.yaml'):
-        if os.path.basename(fname) == _SECRET_YAML:
+        if os.path.basename(fname) == SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, dict):
@@ -141,7 +147,7 @@ def _include_dir_list_yaml(loader: SafeLineLoader,
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     return [load_yaml(f) for f in _find_files(loc, '*.yaml')
-            if os.path.basename(f) != _SECRET_YAML]
+            if os.path.basename(f) != SECRET_YAML]
 
 
 def _include_dir_merge_list_yaml(loader: SafeLineLoader,
@@ -151,7 +157,7 @@ def _include_dir_merge_list_yaml(loader: SafeLineLoader,
                        node.value)  # type: str
     merged_list = []  # type: List
     for fname in _find_files(loc, '*.yaml'):
-        if os.path.basename(fname) == _SECRET_YAML:
+        if os.path.basename(fname) == SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, list):
@@ -180,12 +186,9 @@ def _ordered_dict(loader: SafeLineLoader,
 
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
-            first_mark = yaml.Mark(fname, 0, seen[key], -1, None, None)
-            second_mark = yaml.Mark(fname, 0, line, -1, None, None)
-            raise yaml.MarkedYAMLError(
-                context="duplicate key: \"{}\"".format(key),
-                context_mark=first_mark, problem_mark=second_mark,
-            )
+            _LOGGER.error(
+                'YAML file %s contains duplicate key "%s". '
+                'Check lines %d and %d.', fname, key, seen[key], line)
         seen[key] = line
 
     return _add_reference(OrderedDict(nodes), loader, node)
@@ -200,8 +203,13 @@ def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node):
 def _env_var_yaml(loader: SafeLineLoader,
                   node: yaml.nodes.Node):
     """Load environment variables and embed it into the configuration YAML."""
-    if node.value in os.environ:
-        return os.environ[node.value]
+    args = node.value.split()
+
+    # Check for a default value
+    if len(args) > 1:
+        return os.getenv(args[0], ' '.join(args[1:]))
+    elif args[0] in os.environ:
+        return os.environ[args[0]]
     else:
         _LOGGER.error("Environment variable %s not defined.", node.value)
         raise HomeAssistantError(node.value)
@@ -209,7 +217,7 @@ def _env_var_yaml(loader: SafeLineLoader,
 
 def _load_secret_yaml(secret_path: str) -> Dict:
     """Load the secrets yaml from path."""
-    secret_path = os.path.join(secret_path, _SECRET_YAML)
+    secret_path = os.path.join(secret_path, SECRET_YAML)
     if secret_path in __SECRET_CACHE:
         return __SECRET_CACHE[secret_path]
 
@@ -256,6 +264,20 @@ def _secret_yaml(loader: SafeLineLoader,
         if pwd:
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
+
+    global credstash  # pylint: disable=invalid-name
+
+    if credstash:
+        try:
+            pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
+            if pwd:
+                _LOGGER.debug("Secret %s retrieved from credstash", node.value)
+                return pwd
+        except credstash.ItemNotFound:
+            pass
+        except Exception:  # pylint: disable=broad-except
+            # Catch if package installed and no config
+            credstash = None
 
     _LOGGER.error("Secret %s not defined", node.value)
     raise HomeAssistantError(node.value)

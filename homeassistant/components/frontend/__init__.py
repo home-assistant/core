@@ -1,27 +1,43 @@
-"""Handle the frontend for Home Assistant."""
+"""
+Handle the frontend for Home Assistant.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/frontend/
+"""
 import asyncio
 import hashlib
 import json
 import logging
 import os
+from urllib.parse import urlparse
 
 from aiohttp import web
+import voluptuous as vol
+import jinja2
 
-from homeassistant.core import callback
-from homeassistant.const import HTTP_NOT_FOUND
-from homeassistant.components import api, group
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
-from homeassistant.components.http.const import KEY_DEVELOPMENT
-from .version import FINGERPRINTS
+from homeassistant.config import find_config_file, load_yaml_config_file
+from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.core import callback
+from homeassistant.loader import bind_hass
+
+REQUIREMENTS = ['home-assistant-frontend==20171118.0']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api']
+DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
 
-URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 
-STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static/')
+CONF_THEMES = 'themes'
+CONF_EXTRA_HTML_URL = 'extra_html_url'
+CONF_FRONTEND_REPO = 'development_repo'
+CONF_JS_VERSION = 'javascript_version'
+JS_DEFAULT_OPTION = 'es5'
+JS_OPTIONS = ['es5', 'latest', 'auto']
+
+DEFAULT_THEME_COLOR = '#03A9F4'
 
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
@@ -33,7 +49,7 @@ MANIFEST_JSON = {
     'name': 'Home Assistant',
     'short_name': 'Assistant',
     'start_url': '/',
-    'theme_color': '#03A9F4'
+    'theme_color': DEFAULT_THEME_COLOR
 }
 
 for size in (192, 384, 512, 1024):
@@ -43,101 +59,222 @@ for size in (192, 384, 512, 1024):
         'type': 'image/png'
     })
 
+DATA_FINALIZE_PANEL = 'frontend_finalize_panel'
 DATA_PANELS = 'frontend_panels'
-DATA_INDEX_VIEW = 'frontend_index_view'
+DATA_JS_VERSION = 'frontend_js_version'
+DATA_EXTRA_HTML_URL = 'frontend_extra_html_url'
+DATA_THEMES = 'frontend_themes'
+DATA_DEFAULT_THEME = 'frontend_default_theme'
+DEFAULT_THEME = 'default'
 
-# To keep track we don't register a component twice (gives a warning)
-_REGISTERED_COMPONENTS = set()
+PRIMARY_COLOR = 'primary-color'
+
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+        vol.Optional(CONF_THEMES): vol.Schema({
+            cv.string: {cv.string: cv.string}
+        }),
+        vol.Optional(CONF_EXTRA_HTML_URL):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_JS_VERSION, default=JS_DEFAULT_OPTION):
+            vol.In(JS_OPTIONS)
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
-def register_built_in_panel(hass, component_name, sidebar_title=None,
-                            sidebar_icon=None, url_path=None, config=None):
+SERVICE_SET_THEME = 'set_theme'
+SERVICE_RELOAD_THEMES = 'reload_themes'
+SERVICE_SET_THEME_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+})
+
+
+class AbstractPanel:
+    """Abstract class for panels."""
+
+    # Name of the webcomponent
+    component_name = None
+
+    # Icon to show in the sidebar (optional)
+    sidebar_icon = None
+
+    # Title to show in the sidebar (optional)
+    sidebar_title = None
+
+    # Url to the webcomponent (depending on JS version)
+    webcomponent_url_es5 = None
+    webcomponent_url_latest = None
+
+    # Url to show the panel in the frontend
+    frontend_url_path = None
+
+    # Config to pass to the webcomponent
+    config = None
+
+    @asyncio.coroutine
+    def async_register(self, hass):
+        """Register panel with HASS."""
+        panels = hass.data.get(DATA_PANELS)
+        if panels is None:
+            panels = hass.data[DATA_PANELS] = {}
+
+        if self.frontend_url_path in panels:
+            _LOGGER.warning("Overwriting component %s", self.frontend_url_path)
+
+        if DATA_FINALIZE_PANEL in hass.data:
+            yield from hass.data[DATA_FINALIZE_PANEL](self)
+
+        panels[self.frontend_url_path] = self
+
+    @callback
+    def async_register_index_routes(self, router, index_view):
+        """Register routes for panel to be served by index view."""
+        router.add_route(
+            'get', '/{}'.format(self.frontend_url_path), index_view.get)
+        router.add_route(
+            'get', '/{}/{{extra:.+}}'.format(self.frontend_url_path),
+            index_view.get)
+
+    def to_response(self, hass, request):
+        """Panel as dictionary."""
+        result = {
+            'component_name': self.component_name,
+            'icon': self.sidebar_icon,
+            'title': self.sidebar_title,
+            'url_path': self.frontend_url_path,
+            'config': self.config,
+        }
+        if _is_latest(hass.data[DATA_JS_VERSION], request):
+            result['url'] = self.webcomponent_url_latest
+        else:
+            result['url'] = self.webcomponent_url_es5
+        return result
+
+
+class BuiltInPanel(AbstractPanel):
+    """Panel that is part of hass_frontend."""
+
+    def __init__(self, component_name, sidebar_title, sidebar_icon,
+                 frontend_url_path, config):
+        """Initialize a built-in panel."""
+        self.component_name = component_name
+        self.sidebar_title = sidebar_title
+        self.sidebar_icon = sidebar_icon
+        self.frontend_url_path = frontend_url_path or component_name
+        self.config = config
+
+    @asyncio.coroutine
+    def async_finalize(self, hass, frontend_repository_path):
+        """Finalize this panel for usage.
+
+        If frontend_repository_path is set, will be prepended to path of
+        built-in components.
+        """
+        if frontend_repository_path is None:
+            import hass_frontend
+            import hass_frontend_es5
+
+            self.webcomponent_url_latest = \
+                '/frontend_latest/panels/ha-panel-{}-{}.html'.format(
+                    self.component_name,
+                    hass_frontend.FINGERPRINTS[self.component_name])
+            self.webcomponent_url_es5 = \
+                '/frontend_es5/panels/ha-panel-{}-{}.html'.format(
+                    self.component_name,
+                    hass_frontend_es5.FINGERPRINTS[self.component_name])
+        else:
+            # Dev mode
+            self.webcomponent_url_es5 = self.webcomponent_url_latest = \
+                '/home-assistant-polymer/panels/{}/ha-panel-{}.html'.format(
+                    self.component_name, self.component_name)
+
+
+class ExternalPanel(AbstractPanel):
+    """Panel that is added by a custom component."""
+
+    REGISTERED_COMPONENTS = set()
+
+    def __init__(self, component_name, path, md5, sidebar_title, sidebar_icon,
+                 frontend_url_path, config):
+        """Initialize an external panel."""
+        self.component_name = component_name
+        self.path = path
+        self.md5 = md5
+        self.sidebar_title = sidebar_title
+        self.sidebar_icon = sidebar_icon
+        self.frontend_url_path = frontend_url_path or component_name
+        self.config = config
+
+    @asyncio.coroutine
+    def async_finalize(self, hass, frontend_repository_path):
+        """Finalize this panel for usage.
+
+        frontend_repository_path is set, will be prepended to path of built-in
+        components.
+        """
+        try:
+            if self.md5 is None:
+                self.md5 = yield from hass.async_add_job(
+                    _fingerprint, self.path)
+        except OSError:
+            _LOGGER.error('Cannot find or access %s at %s',
+                          self.component_name, self.path)
+            hass.data[DATA_PANELS].pop(self.frontend_url_path)
+            return
+
+        self.webcomponent_url_es5 = self.webcomponent_url_latest = \
+            URL_PANEL_COMPONENT_FP.format(self.component_name, self.md5)
+
+        if self.component_name not in self.REGISTERED_COMPONENTS:
+            hass.http.register_static_path(
+                self.webcomponent_url_latest, self.path,
+                # if path is None, we're in prod mode, so cache static assets
+                frontend_repository_path is None)
+            self.REGISTERED_COMPONENTS.add(self.component_name)
+
+
+@bind_hass
+@asyncio.coroutine
+def async_register_built_in_panel(hass, component_name, sidebar_title=None,
+                                  sidebar_icon=None, frontend_url_path=None,
+                                  config=None):
     """Register a built-in panel."""
-    nondev_path = 'panels/ha-panel-{}.html'.format(component_name)
-
-    if hass.http.development:
-        url = ('/static/home-assistant-polymer/panels/'
-               '{0}/ha-panel-{0}.html'.format(component_name))
-        path = os.path.join(
-            STATIC_PATH, 'home-assistant-polymer/panels/',
-            '{0}/ha-panel-{0}.html'.format(component_name))
-    else:
-        url = None  # use default url generate mechanism
-        path = os.path.join(STATIC_PATH, nondev_path)
-
-    # Fingerprint doesn't exist when adding new built-in panel
-    register_panel(hass, component_name, path,
-                   FINGERPRINTS.get(nondev_path, 'dev'), sidebar_title,
-                   sidebar_icon, url_path, url, config)
+    panel = BuiltInPanel(component_name, sidebar_title, sidebar_icon,
+                         frontend_url_path, config)
+    yield from panel.async_register(hass)
 
 
-def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
-                   sidebar_icon=None, url_path=None, url=None, config=None):
+@bind_hass
+@asyncio.coroutine
+def async_register_panel(hass, component_name, path, md5=None,
+                         sidebar_title=None, sidebar_icon=None,
+                         frontend_url_path=None, config=None):
     """Register a panel for the frontend.
 
     component_name: name of the web component
     path: path to the HTML of the web component
-    md5: the md5 hash of the web component (for versioning, optional)
+          (required unless url is provided)
+    md5: the md5 hash of the web component (for versioning in url, optional)
     sidebar_title: title to show in the sidebar (optional)
     sidebar_icon: icon to show next to title in sidebar (optional)
     url_path: name to use in the url (defaults to component_name)
-    url: for the web component (for dev environment, optional)
     config: config to be passed into the web component
-
-    Warning: this API will probably change. Use at own risk.
     """
-    panels = hass.data.get(DATA_PANELS)
-    if panels is None:
-        panels = hass.data[DATA_PANELS] = {}
+    panel = ExternalPanel(component_name, path, md5, sidebar_title,
+                          sidebar_icon, frontend_url_path, config)
+    yield from panel.async_register(hass)
 
-    if url_path is None:
-        url_path = component_name
 
-    if url_path in panels:
-        _LOGGER.warning("Overwriting component %s", url_path)
-    if not os.path.isfile(path):
-        _LOGGER.error(
-            "Panel %s component does not exist: %s", component_name, path)
-        return
-
-    if md5 is None:
-        with open(path) as fil:
-            md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
-
-    data = {
-        'url_path': url_path,
-        'component_name': component_name,
-    }
-
-    if sidebar_title:
-        data['title'] = sidebar_title
-    if sidebar_icon:
-        data['icon'] = sidebar_icon
-    if config is not None:
-        data['config'] = config
-
-    if url is not None:
-        data['url'] = url
-    else:
-        url = URL_PANEL_COMPONENT.format(component_name)
-
-        if url not in _REGISTERED_COMPONENTS:
-            hass.http.register_static_path(url, path)
-            _REGISTERED_COMPONENTS.add(url)
-
-        fprinted_url = URL_PANEL_COMPONENT_FP.format(component_name, md5)
-        data['url'] = fprinted_url
-
-    panels[url_path] = data
-
-    # Register index view for this route if IndexView already loaded
-    # Otherwise it will be done during setup.
-    index_view = hass.data.get(DATA_INDEX_VIEW)
-
-    if index_view:
-        hass.http.app.router.add_route(
-            'get', '/{}'.format(url_path), index_view.get)
+@bind_hass
+@callback
+def add_extra_html_url(hass, url):
+    """Register extra html url to load."""
+    url_set = hass.data.get(DATA_EXTRA_HTML_URL)
+    if url_set is None:
+        url_set = hass.data[DATA_EXTRA_HTML_URL] = set()
+    url_set.add(url)
 
 
 def add_manifest_json_key(key, val):
@@ -145,65 +282,148 @@ def add_manifest_json_key(key, val):
     MANIFEST_JSON[key] = val
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the serving of the frontend."""
-    hass.http.register_view(BootstrapView)
     hass.http.register_view(ManifestJSONView)
 
-    if hass.http.development:
-        sw_path = "home-assistant-polymer/build/service_worker.js"
-    else:
-        sw_path = "service_worker.js"
+    conf = config.get(DOMAIN, {})
 
-    hass.http.register_static_path("/service_worker.js",
-                                   os.path.join(STATIC_PATH, sw_path), False)
-    hass.http.register_static_path("/robots.txt",
-                                   os.path.join(STATIC_PATH, "robots.txt"))
-    hass.http.register_static_path("/static", STATIC_PATH)
+    repo_path = conf.get(CONF_FRONTEND_REPO)
+    is_dev = repo_path is not None
+    hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
+
+    if is_dev:
+        hass.http.register_static_path(
+            "/home-assistant-polymer", repo_path, False)
+        hass.http.register_static_path(
+            "/static/translations",
+            os.path.join(repo_path, "build-translations"), False)
+        sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
+        sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
+        static_path = os.path.join(repo_path, 'hass_frontend')
+        frontend_es5_path = os.path.join(repo_path, 'build-es5')
+        frontend_latest_path = os.path.join(repo_path, 'build')
+    else:
+        import hass_frontend
+        import hass_frontend_es5
+        sw_path_es5 = os.path.join(hass_frontend_es5.where(),
+                                   "service_worker.js")
+        sw_path_latest = os.path.join(hass_frontend.where(),
+                                      "service_worker.js")
+        # /static points to dir with files that are JS-type agnostic.
+        # ES5 files are served from /frontend_es5.
+        # ES6 files are served from /frontend_latest.
+        static_path = hass_frontend.where()
+        frontend_es5_path = hass_frontend_es5.where()
+        frontend_latest_path = static_path
+
+    hass.http.register_static_path(
+        "/service_worker_es5.js", sw_path_es5, False)
+    hass.http.register_static_path(
+        "/service_worker.js", sw_path_latest, False)
+    hass.http.register_static_path(
+        "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
+    hass.http.register_static_path("/static", static_path, not is_dev)
+    hass.http.register_static_path(
+        "/frontend_latest", frontend_latest_path, not is_dev)
+    hass.http.register_static_path(
+        "/frontend_es5", frontend_es5_path, not is_dev)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
-        hass.http.register_static_path("/local", local)
+        hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = hass.data[DATA_INDEX_VIEW] = IndexView()
+    index_view = IndexView(repo_path, js_version)
     hass.http.register_view(index_view)
 
-    # Components have registered panels before frontend got setup.
-    # Now register their urls.
-    if DATA_PANELS in hass.data:
-        for url_path in hass.data[DATA_PANELS]:
-            hass.http.app.router.add_route('get', '/{}'.format(url_path),
-                                           index_view.get)
-    else:
-        hass.data[DATA_PANELS] = {}
+    @asyncio.coroutine
+    def finalize_panel(panel):
+        """Finalize setup of a panel."""
+        yield from panel.async_finalize(hass, repo_path)
+        panel.async_register_index_routes(hass.http.app.router, index_view)
 
-    register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
+    yield from asyncio.wait([
+        async_register_built_in_panel(hass, panel)
+        for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
+                      'dev-template', 'dev-mqtt', 'kiosk')], loop=hass.loop)
 
-    for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                  'dev-template'):
-        register_built_in_panel(hass, panel)
+    hass.data[DATA_FINALIZE_PANEL] = finalize_panel
+
+    # Finalize registration of panels that registered before frontend was setup
+    # This includes the built-in panels from line above.
+    yield from asyncio.wait(
+        [finalize_panel(panel) for panel in hass.data[DATA_PANELS].values()],
+        loop=hass.loop)
+
+    if DATA_EXTRA_HTML_URL not in hass.data:
+        hass.data[DATA_EXTRA_HTML_URL] = set()
+
+    for url in conf.get(CONF_EXTRA_HTML_URL, []):
+        add_extra_html_url(hass, url)
+
+    yield from async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-class BootstrapView(HomeAssistantView):
-    """View to bootstrap frontend with all needed data."""
+@asyncio.coroutine
+def async_setup_themes(hass, themes):
+    """Set up themes data and services."""
+    hass.http.register_view(ThemesView)
+    hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
+    if themes is None:
+        hass.data[DATA_THEMES] = {}
+        return
 
-    url = '/api/bootstrap'
-    name = 'api:bootstrap'
+    hass.data[DATA_THEMES] = themes
 
     @callback
-    def get(self, request):
-        """Return all data needed to bootstrap Home Assistant."""
-        hass = request.app['hass']
-
-        return self.json({
-            'config': hass.config.as_dict(),
-            'states': hass.states.async_all(),
-            'events': api.async_events_json(hass),
-            'services': api.async_services_json(hass),
-            'panels': hass.data[DATA_PANELS],
+    def update_theme_and_fire_event():
+        """Update theme_color in manifest."""
+        name = hass.data[DATA_DEFAULT_THEME]
+        themes = hass.data[DATA_THEMES]
+        if name != DEFAULT_THEME and PRIMARY_COLOR in themes[name]:
+            MANIFEST_JSON['theme_color'] = themes[name][PRIMARY_COLOR]
+        else:
+            MANIFEST_JSON['theme_color'] = DEFAULT_THEME_COLOR
+        hass.bus.async_fire(EVENT_THEMES_UPDATED, {
+            'themes': themes,
+            'default_theme': name,
         })
+
+    @callback
+    def set_theme(call):
+        """Set backend-prefered theme."""
+        data = call.data
+        name = data[CONF_NAME]
+        if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
+            _LOGGER.info("Theme %s set as default", name)
+            hass.data[DATA_DEFAULT_THEME] = name
+            update_theme_and_fire_event()
+        else:
+            _LOGGER.warning("Theme %s is not defined.", name)
+
+    @callback
+    def reload_themes(_):
+        """Reload themes."""
+        path = find_config_file(hass.config.config_dir)
+        new_themes = load_yaml_config_file(path)[DOMAIN].get(CONF_THEMES, {})
+        hass.data[DATA_THEMES] = new_themes
+        if hass.data[DATA_DEFAULT_THEME] not in new_themes:
+            hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
+        update_theme_and_fire_event()
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(DOMAIN, SERVICE_SET_THEME,
+                                 set_theme,
+                                 descriptions[SERVICE_SET_THEME],
+                                 SERVICE_SET_THEME_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
+                                 descriptions[SERVICE_RELOAD_THEMES])
 
 
 class IndexView(HomeAssistantView):
@@ -212,42 +432,42 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = 'frontend:index'
     requires_auth = False
-    extra_urls = ['/states', '/states/{entity_id}']
+    extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self):
+    def __init__(self, repo_path, js_option):
         """Initialize the frontend view."""
-        from jinja2 import FileSystemLoader, Environment
+        self.repo_path = repo_path
+        self.js_option = js_option
+        self._template_cache = {}
 
-        self.templates = Environment(
-            loader=FileSystemLoader(
-                os.path.join(os.path.dirname(__file__), 'templates/')
-            )
-        )
+    def get_template(self, latest):
+        """Get template."""
+        if self.repo_path is not None:
+            root = self.repo_path
+        elif latest:
+            import hass_frontend
+            root = hass_frontend.where()
+        else:
+            import hass_frontend_es5
+            root = hass_frontend_es5.where()
+
+        tpl = self._template_cache.get(root)
+
+        if tpl is None:
+            with open(os.path.join(root, 'index.html')) as file:
+                tpl = jinja2.Template(file.read())
+
+            # Cache template if not running from repository
+            if self.repo_path is None:
+                self._template_cache[root] = tpl
+
+        return tpl
 
     @asyncio.coroutine
-    def get(self, request, entity_id=None):
+    def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
-
-        if entity_id is not None:
-            state = hass.states.get(entity_id)
-
-            if (not state or state.domain != 'group' or
-                    not state.attributes.get(group.ATTR_VIEW)):
-                return self.json_message('Entity not found', HTTP_NOT_FOUND)
-
-        if request.app[KEY_DEVELOPMENT]:
-            core_url = '/static/home-assistant-polymer/build/core.js'
-            compatibility_url = \
-                '/static/home-assistant-polymer/build/compatibility.js'
-            ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
-        else:
-            core_url = '/static/core-{}.js'.format(
-                FINGERPRINTS['core.js'])
-            compatibility_url = '/static/compatibility-{}.js'.format(
-                FINGERPRINTS['compatibility.js'])
-            ui_url = '/static/frontend-{}.html'.format(
-                FINGERPRINTS['frontend.html'])
+        latest = _is_latest(self.js_option, request)
 
         if request.path == '/':
             panel = 'states'
@@ -256,29 +476,27 @@ class IndexView(HomeAssistantView):
 
         if panel == 'states':
             panel_url = ''
+        elif latest:
+            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_latest
         else:
-            panel_url = hass.data[DATA_PANELS][panel]['url']
+            panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = 'true'
-        if hass.config.api.api_password:
-            # require password if set
+        if hass.config.api.api_password and not is_trusted_ip(request):
+            # do not try to auto connect on load
             no_auth = 'false'
-            if is_trusted_ip(request):
-                # bypass for trusted networks
-                no_auth = 'true'
 
-        icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
-        template = yield from hass.loop.run_in_executor(
-            None, self.templates.get_template, 'index.html')
+        template = yield from hass.async_add_job(self.get_template, latest)
 
-        # pylint is wrong
-        # pylint: disable=no-member
-        # This is a jinja2 template, not a HA template so we call 'render'.
         resp = template.render(
-            core_url=core_url, ui_url=ui_url,
-            compatibility_url=compatibility_url, no_auth=no_auth,
-            icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url, panels=hass.data[DATA_PANELS])
+            no_auth=no_auth,
+            panel_url=panel_url,
+            panels=hass.data[DATA_PANELS],
+            dev_mode=self.repo_path is not None,
+            theme_color=MANIFEST_JSON['theme_color'],
+            extra_urls=hass.data[DATA_EXTRA_HTML_URL],
+            latest=latest,
+        )
 
         return web.Response(text=resp, content_type='text/html')
 
@@ -293,5 +511,46 @@ class ManifestJSONView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):    # pylint: disable=no-self-use
         """Return the manifest.json."""
-        msg = json.dumps(MANIFEST_JSON, sort_keys=True).encode('UTF-8')
-        return web.Response(body=msg, content_type="application/manifest+json")
+        msg = json.dumps(MANIFEST_JSON, sort_keys=True)
+        return web.Response(text=msg, content_type="application/manifest+json")
+
+
+class ThemesView(HomeAssistantView):
+    """View to return defined themes."""
+
+    requires_auth = False
+    url = '/api/themes'
+    name = 'api:themes'
+
+    @callback
+    def get(self, request):
+        """Return themes."""
+        hass = request.app['hass']
+
+        return self.json({
+            'themes': hass.data[DATA_THEMES],
+            'default_theme': hass.data[DATA_DEFAULT_THEME],
+        })
+
+
+def _fingerprint(path):
+    """Fingerprint a file."""
+    with open(path) as fil:
+        return hashlib.md5(fil.read().encode('utf-8')).hexdigest()
+
+
+def _is_latest(js_option, request):
+    """
+    Return whether we should serve latest untranspiled code.
+
+    Set according to user's preference and URL override.
+    """
+    if request is None:
+        return js_option == 'latest'
+    latest_in_query = 'latest' in request.query or (
+        request.headers.get('Referer') and
+        'latest' in urlparse(request.headers['Referer']).query)
+    es5_in_query = 'es5' in request.query or (
+        request.headers.get('Referer') and
+        'es5' in urlparse(request.headers['Referer']).query)
+    return latest_in_query or (not es5_in_query and js_option == 'latest')

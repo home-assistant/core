@@ -107,12 +107,7 @@ class ZoneMinderCamera(MjpegCamera):
                             self._monitor_id)
             return
 
-        if not status_response.get("success", False):
-            _LOGGER.warning("Alarm status API call failed for monitor %i",
-                            self._monitor_id)
-            return
-
-        self._is_recording = status_response['status'] == ZM_STATE_ALARM
+        self._is_recording = status_response.get('status') == ZM_STATE_ALARM
 
     @property
     def is_recording(self):

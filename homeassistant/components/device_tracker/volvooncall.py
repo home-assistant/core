@@ -7,7 +7,9 @@ https://home-assistant.io/components/device_tracker.volvooncall/
 import logging
 
 from homeassistant.util import slugify
-from homeassistant.components.volvooncall import DOMAIN
+from homeassistant.helpers.dispatcher import (
+    dispatcher_connect, dispatcher_send)
+from homeassistant.components.volvooncall import DATA_KEY, SIGNAL_VEHICLE_SEEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,19 +20,20 @@ def setup_scanner(hass, config, see, discovery_info=None):
         return
 
     vin, _ = discovery_info
-    vehicle = hass.data[DOMAIN].vehicles[vin]
-
-    host_name = vehicle.registration_number
-    dev_id = 'volvo_' + slugify(host_name)
+    voc = hass.data[DATA_KEY]
+    vehicle = voc.vehicles[vin]
 
     def see_vehicle(vehicle):
         """Handle the reporting of the vehicle position."""
+        host_name = voc.vehicle_name(vehicle)
+        dev_id = 'volvo_{}'.format(slugify(host_name))
         see(dev_id=dev_id,
             host_name=host_name,
             gps=(vehicle.position['latitude'],
-                 vehicle.position['longitude']))
+                 vehicle.position['longitude']),
+            icon='mdi:car')
 
-    hass.data[DOMAIN].entities[vin].append(see_vehicle)
-    see_vehicle(vehicle)
+    dispatcher_connect(hass, SIGNAL_VEHICLE_SEEN, see_vehicle)
+    dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
 
     return True

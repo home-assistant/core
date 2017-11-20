@@ -9,9 +9,9 @@ from functools import partial
 import logging
 
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES, DATA_DEVICE_REGISTER,
-    DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID, EVENT_KEY_SENSOR, EVENT_KEY_UNIT,
-    RflinkDevice, cv, vol)
+    CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
+    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID,
+    EVENT_KEY_SENSOR, EVENT_KEY_UNIT, RflinkDevice, cv, remove_deprecated, vol)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT)
@@ -36,7 +36,10 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE): cv.string,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
-            vol.Optional(CONF_ALIASSES, default=[]):
+            vol.Optional(CONF_ALIASES, default=[]):
+                vol.All(cv.ensure_list, [cv.string]),
+            # deprecated config options
+            vol.Optional(CONF_ALIASSES):
                 vol.All(cv.ensure_list, [cv.string]),
         },
     }),
@@ -61,6 +64,7 @@ def devices_from_config(domain_config, hass=None):
         if not config[ATTR_UNIT_OF_MEASUREMENT]:
             config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
                 config[CONF_SENSOR_TYPE])
+        remove_deprecated(config)
         device = RflinkSensor(device_id, hass, **config)
         devices.append(device)
 

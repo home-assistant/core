@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components import switch
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
+    STATE_AUTO)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME)
@@ -35,7 +36,8 @@ CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
 CONF_AC_MODE = 'ac_mode'
 CONF_MIN_DUR = 'min_cycle_duration'
-CONF_TOLERANCE = 'tolerance'
+CONF_COLD_TOLERANCE = 'cold_tolerance'
+CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 
 
@@ -47,7 +49,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
+    vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
+        float),
+    vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
+        float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
@@ -65,12 +70,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     target_temp = config.get(CONF_TARGET_TEMP)
     ac_mode = config.get(CONF_AC_MODE)
     min_cycle_duration = config.get(CONF_MIN_DUR)
-    tolerance = config.get(CONF_TOLERANCE)
+    cold_tolerance = config.get(CONF_COLD_TOLERANCE)
+    hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
 
     async_add_devices([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
-        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)])
+        target_temp, ac_mode, min_cycle_duration, cold_tolerance,
+        hot_tolerance, keep_alive)])
 
 
 class GenericThermostat(ClimateDevice):
@@ -78,15 +85,17 @@ class GenericThermostat(ClimateDevice):
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
-                 tolerance, keep_alive):
+                 cold_tolerance, hot_tolerance, keep_alive):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration
-        self._tolerance = tolerance
+        self._cold_tolerance = cold_tolerance
+        self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
+        self._enabled = True
 
         self._active = False
         self._cur_temp = None
@@ -131,17 +140,39 @@ class GenericThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
+        if not self._enabled:
+            return STATE_OFF
         if self.ac_mode:
             cooling = self._active and self._is_device_active
             return STATE_COOL if cooling else STATE_IDLE
-        else:
-            heating = self._active and self._is_device_active
-            return STATE_HEAT if heating else STATE_IDLE
+
+        heating = self._active and self._is_device_active
+        return STATE_HEAT if heating else STATE_IDLE
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
+
+    @property
+    def operation_list(self):
+        """List of available operation modes."""
+        return [STATE_AUTO, STATE_OFF]
+
+    def set_operation_mode(self, operation_mode):
+        """Set operation mode."""
+        if operation_mode == STATE_AUTO:
+            self._enabled = True
+            self._async_control_heating()
+        elif operation_mode == STATE_OFF:
+            self._enabled = False
+            if self._is_device_active:
+                switch.async_turn_off(self.hass, self.heater_entity_id)
+        else:
+            _LOGGER.error('Unrecognized operation mode: %s', operation_mode)
+            return
+        # Ensure we updae the current operation after changing the mode
+        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
@@ -159,9 +190,9 @@ class GenericThermostat(ClimateDevice):
         # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
-        else:
-            # get default temp from super class
-            return ClimateDevice.min_temp.fget(self)
+
+        # get default temp from super class
+        return ClimateDevice.min_temp.fget(self)
 
     @property
     def max_temp(self):
@@ -169,9 +200,9 @@ class GenericThermostat(ClimateDevice):
         # pylint: disable=no-member
         if self._max_temp:
             return self._max_temp
-        else:
-            # Get default temp from super class
-            return ClimateDevice.max_temp.fget(self)
+
+        # Get default temp from super class
+        return ClimateDevice.max_temp.fget(self)
 
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
@@ -188,7 +219,7 @@ class GenericThermostat(ClimateDevice):
         """Handle heater switch state changes."""
         if new_state is None:
             return
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @callback
     def _async_keep_alive(self, time):
@@ -221,6 +252,9 @@ class GenericThermostat(ClimateDevice):
         if not self._active:
             return
 
+        if not self._enabled:
+            return
+
         if self.min_cycle_duration:
             if self._is_device_active:
                 current_state = STATE_ON
@@ -235,25 +269,29 @@ class GenericThermostat(ClimateDevice):
         if self.ac_mode:
             is_cooling = self._is_device_active
             if is_cooling:
-                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                too_cold = self._target_temp - self._cur_temp >= \
+                    self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning off AC %s', self.heater_entity_id)
                     switch.async_turn_off(self.hass, self.heater_entity_id)
             else:
-                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                too_hot = self._cur_temp - self._target_temp >= \
+                    self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning on AC %s', self.heater_entity_id)
                     switch.async_turn_on(self.hass, self.heater_entity_id)
         else:
             is_heating = self._is_device_active
             if is_heating:
-                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                too_hot = self._cur_temp - self._target_temp >= \
+                    self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning off heater %s',
                                  self.heater_entity_id)
                     switch.async_turn_off(self.hass, self.heater_entity_id)
             else:
-                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                too_cold = self._target_temp - self._cur_temp >= \
+                    self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning on heater %s', self.heater_entity_id)
                     switch.async_turn_on(self.hass, self.heater_entity_id)

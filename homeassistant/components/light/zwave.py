@@ -47,24 +47,22 @@ TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 def get_device(node, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
-    name = '{}.{}'.format(DOMAIN, zwave.object_id(values.primary))
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
-    _LOGGER.debug("name=%s node_config=%s CONF_REFRESH_VALUE=%s"
-                  " CONF_REFRESH_DELAY=%s", name, node_config, refresh, delay)
+    _LOGGER.debug("node=%d value=%d node_config=%s CONF_REFRESH_VALUE=%s"
+                  " CONF_REFRESH_DELAY=%s", node.node_id,
+                  values.primary.value_id, node_config, refresh, delay)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         return ZwaveColorLight(values, refresh, delay)
-    else:
-        return ZwaveDimmer(values, refresh, delay)
+    return ZwaveDimmer(values, refresh, delay)
 
 
 def brightness_state(value):
     """Return the brightness and state."""
     if value.data > 0:
         return round((value.data / 99) * 255, 0), STATE_ON
-    else:
-        return 0, STATE_OFF
+    return 0, STATE_OFF
 
 
 def ct_to_rgb(temp):

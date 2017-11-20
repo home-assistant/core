@@ -9,30 +9,35 @@ from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
                                           SUPPORT_OSCILLATE, SUPPORT_DIRECTION)
 from homeassistant.const import STATE_OFF
 
-FAN_NAME = 'Living Room Fan'
-FAN_ENTITY_ID = 'fan.living_room_fan'
-
-DEMO_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
+FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
+LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the demo fan platform."""
     add_devices_callback([
-        DemoFan(hass, FAN_NAME, STATE_OFF),
+        DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
+        DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
     ])
 
 
 class DemoFan(FanEntity):
     """A demonstration fan component."""
 
-    def __init__(self, hass, name: str, initial_state: str) -> None:
+    def __init__(self, hass, name: str, supported_features: int) -> None:
         """Initialize the entity."""
         self.hass = hass
-        self._speed = initial_state
-        self.oscillating = False
-        self.direction = "forward"
+        self._supported_features = supported_features
+        self._speed = STATE_OFF
+        self.oscillating = None
+        self.direction = None
         self._name = name
+
+        if supported_features & SUPPORT_OSCILLATE:
+            self.oscillating = False
+        if supported_features & SUPPORT_DIRECTION:
+            self.direction = "forward"
 
     @property
     def name(self) -> str:
@@ -88,4 +93,4 @@ class DemoFan(FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return DEMO_SUPPORT
+        return self._supported_features

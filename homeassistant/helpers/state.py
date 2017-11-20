@@ -4,6 +4,7 @@ import json
 import logging
 from collections import defaultdict
 
+from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_SEEK_POSITION,
@@ -24,16 +25,19 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.ecobee import (
     ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME,
     ATTR_RESUME_ALL, SERVICE_RESUME_PROGRAM)
+from homeassistant.components.cover import (
+    ATTR_POSITION)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_ALARM_ARM_AWAY,
+    ATTR_ENTITY_ID, ATTR_OPTION, ATTR_TEMPERATURE, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_DISARM, SERVICE_ALARM_TRIGGER,
     SERVICE_LOCK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_UNLOCK,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_OPEN_COVER,
-    SERVICE_CLOSE_COVER, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED, STATE_CLOSED, STATE_LOCKED,
-    STATE_OFF, STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNKNOWN, STATE_UNLOCKED, SERVICE_SELECT_OPTION, ATTR_OPTION)
+    SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
+    STATE_CLOSED, STATE_HOME, STATE_LOCKED, STATE_NOT_HOME, STATE_OFF,
+    STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
+    STATE_UNLOCKED, SERVICE_SELECT_OPTION)
 from homeassistant.core import State
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -62,7 +66,8 @@ SERVICE_ATTRIBUTES = {
     SERVICE_SET_AUX_HEAT: [ATTR_AUX_HEAT],
     SERVICE_SELECT_SOURCE: [ATTR_INPUT_SOURCE],
     SERVICE_SEND_IR_CODE: [ATTR_IR_CODE],
-    SERVICE_SELECT_OPTION: [ATTR_OPTION]
+    SERVICE_SELECT_OPTION: [ATTR_OPTION],
+    SERVICE_SET_COVER_POSITION: [ATTR_POSITION]
 }
 
 # Update this dict when new services are added to HA.
@@ -116,6 +121,7 @@ def get_changed_since(states, utc_point_in_time):
             if state.last_updated >= utc_point_in_time]
 
 
+@bind_hass
 def reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     return run_coroutine_threadsafe(
@@ -123,6 +129,7 @@ def reproduce_state(hass, states, blocking=False):
 
 
 @asyncio.coroutine
+@bind_hass
 def async_reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     if isinstance(states, State):
@@ -203,10 +210,10 @@ def state_as_number(state):
     Raises ValueError if this is not possible.
     """
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                       STATE_OPEN):
+                       STATE_OPEN, STATE_HOME):
         return 1
     elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                         STATE_BELOW_HORIZON, STATE_CLOSED):
+                         STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME):
         return 0
 
     return float(state.state)

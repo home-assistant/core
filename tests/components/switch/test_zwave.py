@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant.components.switch import zwave
 
 from tests.mock.zwave import (
-   MockNode, MockValue, MockEntityValues, value_changed)
+    MockNode, MockValue, MockEntityValues, value_changed)
 
 
 def test_get_device_detects_switch(mock_openzwave):
@@ -61,7 +61,7 @@ def test_switch_refresh_on_update(mock_counter, mock_openzwave):
     mock_counter.return_value = 10
     node = MockNode(manufacturer_id='013c', product_type='0001',
                     product_id='0005')
-    value = MockValue(data=False, node=node)
+    value = MockValue(data=False, node=node, instance=1)
     values = MockEntityValues(primary=value)
     device = zwave.get_device(node=node, values=values, node_config={})
 

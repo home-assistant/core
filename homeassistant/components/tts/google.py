@@ -9,14 +9,15 @@ import logging
 import re
 
 import aiohttp
+from aiohttp.hdrs import REFERER, USER_AGENT
 import async_timeout
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ["gTTS-token==1.1.1"]
+REQUIREMENTS = ['gTTS-token==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,10 +53,10 @@ class GoogleProvider(Provider):
         self.hass = hass
         self._lang = lang
         self.headers = {
-            'Referer': "http://translate.google.com/",
-            'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
-                           "AppleWebKit/537.36 (KHTML, like Gecko) "
-                           "Chrome/47.0.2526.106 Safari/537.36")
+            REFERER: "http://translate.google.com/",
+            USER_AGENT: ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
+                         "AppleWebKit/537.36 (KHTML, like Gecko) "
+                         "Chrome/47.0.2526.106 Safari/537.36"),
         }
         self.name = 'Google'
 
@@ -80,13 +81,13 @@ class GoogleProvider(Provider):
 
         data = b''
         for idx, part in enumerate(message_parts):
-            part_token = yield from self.hass.loop.run_in_executor(
-                None, token.calculate_token, part)
+            part_token = yield from self.hass.async_add_job(
+                token.calculate_token, part)
 
             url_param = {
                 'ie': 'UTF-8',
                 'tl': language,
-                'q': yarl.quote(part, strict=False),
+                'q': yarl.quote(part),
                 'tk': part_token,
                 'total': len(message_parts),
                 'idx': idx,
@@ -129,8 +130,7 @@ class GoogleProvider(Provider):
             if len(fullstring) > MESSAGE_SIZE:
                 idx = fullstring.rfind(' ', 0, MESSAGE_SIZE)
                 return [fullstring[:idx]] + split_by_space(fullstring[idx:])
-            else:
-                return [fullstring]
+            return [fullstring]
 
         msg_parts = []
         for part in parts:

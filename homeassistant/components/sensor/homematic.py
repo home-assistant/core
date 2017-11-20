@@ -1,5 +1,5 @@
 """
-The homematic sensor platform.
+The HomeMatic sensor platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematic/
@@ -16,6 +16,7 @@ HM_STATE_HA_CAST = {
     'RotaryHandleSensor': {0: 'closed', 1: 'tilted', 2: 'open'},
     'WaterSensor': {0: 'dry', 1: 'wet', 2: 'water'},
     'CO2Sensor': {0: 'normal', 1: 'added', 2: 'strong'},
+    'IPSmoke': {0: 'off', 1: 'primary', 2: 'intrusion', 3: 'secondary'}
 }
 
 HM_UNIT_HA_CAST = {
@@ -51,21 +52,20 @@ HM_ICON_HA_CAST = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Homematic platform."""
+    """Set up the HomeMatic platform."""
     if discovery_info is None:
         return
 
     devices = []
-    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMSensor(hass, config)
-        new_device.link_homematic()
+    for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMSensor(conf)
         devices.append(new_device)
 
     add_devices(devices)
 
 
 class HMSensor(HMDevice):
-    """Represents various Homematic sensors in Home Assistant."""
+    """Represents various HomeMatic sensors in Home Assistant."""
 
     @property
     def state(self):
@@ -89,11 +89,8 @@ class HMSensor(HMDevice):
         return HM_ICON_HA_CAST.get(self._state, None)
 
     def _init_data_struct(self):
-        """Generate a data dict (self._data) from hm metadata."""
-        # Add state to data dict
+        """Generate a data dictionary (self._data) from metadata."""
         if self._state:
-            _LOGGER.debug("%s init datadict with main node %s", self._name,
-                          self._state)
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't correctly init sensor %s", self._name)
+            _LOGGER.critical("Can't initialize sensor %s", self._name)

@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
     )
 
-REQUIREMENTS = ['PyMVGLive==1.1.3']
+REQUIREMENTS = ['PyMVGLive==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,8 +91,7 @@ class MVGLiveSensor(Entity):
         """Return the name of the sensor."""
         if self._name:
             return self._name
-        else:
-            return self._station
+        return self._station
 
     @property
     def state(self):

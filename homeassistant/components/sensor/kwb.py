@@ -105,8 +105,7 @@ class KWBSensor(Entity):
         """Return the state of value."""
         if self._sensor.value is not None and self._sensor.available:
             return self._sensor.value
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def unit_of_measurement(self):

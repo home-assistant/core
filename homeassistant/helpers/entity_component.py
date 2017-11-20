@@ -8,17 +8,22 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
 from homeassistant.core import callback, valid_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_interval, async_track_point_in_time)
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.util import slugify
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+import homeassistant.util.dt as dt_util
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 SLOW_SETUP_WARNING = 10
+SLOW_SETUP_MAX_WAIT = 60
+PLATFORM_NOT_READY_RETRIES = 10
 
 
 class EntityComponent(object):
@@ -36,12 +41,10 @@ class EntityComponent(object):
         self.group_name = group_name
 
         self.entities = {}
-        self.group = None
-
         self.config = None
 
         self._platforms = {
-            'core': EntityPlatform(self, domain, self.scan_interval, None),
+            'core': EntityPlatform(self, domain, self.scan_interval, 0, None),
         }
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
@@ -94,6 +97,7 @@ class EntityComponent(object):
             expand_group
         ).result()
 
+    @callback
     def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
 
@@ -113,7 +117,7 @@ class EntityComponent(object):
 
     @asyncio.coroutine
     def _async_setup_platform(self, platform_type, platform_config,
-                              discovery_info=None):
+                              discovery_info=None, tries=0):
         """Set up a platform for this component.
 
         This method must be run in the event loop.
@@ -125,17 +129,23 @@ class EntityComponent(object):
             return
 
         # Config > Platform > Component
-        scan_interval = (platform_config.get(CONF_SCAN_INTERVAL) or
-                         getattr(platform, 'SCAN_INTERVAL', None) or
-                         self.scan_interval)
+        scan_interval = (
+            platform_config.get(CONF_SCAN_INTERVAL) or
+            getattr(platform, 'SCAN_INTERVAL', None) or self.scan_interval)
+        parallel_updates = getattr(
+            platform, 'PARALLEL_UPDATES',
+            int(not hasattr(platform, 'async_setup_platform')))
+
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
         key = (platform_type, scan_interval, entity_namespace)
 
         if key not in self._platforms:
-            self._platforms[key] = EntityPlatform(
-                self, platform_type, scan_interval, entity_namespace)
-        entity_platform = self._platforms[key]
+            entity_platform = self._platforms[key] = EntityPlatform(
+                self, platform_type, scan_interval, parallel_updates,
+                entity_namespace)
+        else:
+            entity_platform = self._platforms[key]
 
         self.logger.info("Setting up %s.%s", self.domain, platform_type)
         warn_task = self.hass.loop.call_later(
@@ -145,20 +155,38 @@ class EntityComponent(object):
 
         try:
             if getattr(platform, 'async_setup_platform', None):
-                yield from platform.async_setup_platform(
+                task = platform.async_setup_platform(
                     self.hass, platform_config,
                     entity_platform.async_schedule_add_entities, discovery_info
                 )
             else:
-                yield from self.hass.loop.run_in_executor(
+                # This should not be replaced with hass.async_add_job because
+                # we don't want to track this task in case it blocks startup.
+                task = self.hass.loop.run_in_executor(
                     None, platform.setup_platform, self.hass, platform_config,
                     entity_platform.schedule_add_entities, discovery_info
                 )
-
+            yield from asyncio.wait_for(
+                asyncio.shield(task, loop=self.hass.loop),
+                SLOW_SETUP_MAX_WAIT, loop=self.hass.loop)
             yield from entity_platform.async_block_entities_done()
-
             self.hass.config.components.add(
                 '{}.{}'.format(self.domain, platform_type))
+        except PlatformNotReady:
+            tries += 1
+            wait_time = min(tries, 6) * 30
+            self.logger.warning(
+                'Platform %s not ready yet. Retrying in %d seconds.',
+                platform_type, wait_time)
+            async_track_point_in_time(
+                self.hass, self._async_setup_platform(
+                    platform_type, platform_config, discovery_info, tries),
+                dt_util.utcnow() + timedelta(seconds=wait_time))
+        except asyncio.TimeoutError:
+            self.logger.error(
+                "Setup of platform %s is taking longer than %s seconds."
+                " Startup will proceed without waiting any longer.",
+                platform_type, SLOW_SETUP_MAX_WAIT)
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
                 "Error while setting up platform %s", platform_type)
@@ -183,13 +211,15 @@ class EntityComponent(object):
 
         entity.hass = self.hass
 
-        # update/init entity data
+        # Update properties before we generate the entity_id
         if update_before_add:
-            if hasattr(entity, 'async_update'):
-                yield from entity.async_update()
-            else:
-                yield from self.hass.loop.run_in_executor(None, entity.update)
+            try:
+                yield from entity.async_device_update(warning=False)
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception("Error on device update!")
+                return False
 
+        # Write entity_id to entity
         if getattr(entity, 'entity_id', None) is None:
             object_id = entity.name or DEVICE_DEFAULT_NAME
 
@@ -223,21 +253,20 @@ class EntityComponent(object):
         run_callback_threadsafe(
             self.hass.loop, self.async_update_group).result()
 
-    @asyncio.coroutine
+    @callback
     def async_update_group(self):
         """Set up and/or update component group.
 
         This method must be run in the event loop.
         """
-        if self.group is None and self.group_name is not None:
+        if self.group_name is not None:
+            ids = sorted(self.entities,
+                         key=lambda x: self.entities[x].name or x)
             group = get_component('group')
-            self.group = yield from group.Group.async_create_group(
-                self.hass, self.group_name, self.entities.keys(),
-                user_defined=False
+            group.async_set_group(
+                self.hass, slugify(self.group_name), name=self.group_name,
+                visible=False, entity_ids=ids
             )
-        elif self.group is not None:
-            yield from self.group.async_update_tracked_entity_ids(
-                self.entities.keys())
 
     def reset(self):
         """Remove entities and reset the entity component to initial values."""
@@ -261,9 +290,9 @@ class EntityComponent(object):
         self.entities = {}
         self.config = None
 
-        if self.group is not None:
-            yield from self.group.async_stop()
-            self.group = None
+        if self.group_name is not None:
+            group = get_component('group')
+            group.async_remove(self.hass, slugify(self.group_name))
 
     def prepare_reload(self):
         """Prepare reloading this entity component."""
@@ -296,16 +325,22 @@ class EntityComponent(object):
 class EntityPlatform(object):
     """Keep track of entities for a single platform and stay in loop."""
 
-    def __init__(self, component, platform, scan_interval, entity_namespace):
+    def __init__(self, component, platform, scan_interval, parallel_updates,
+                 entity_namespace):
         """Initialize the entity platform."""
         self.component = component
         self.platform = platform
         self.scan_interval = scan_interval
+        self.parallel_updates = None
         self.entity_namespace = entity_namespace
         self.platform_entities = []
         self._tasks = []
         self._async_unsub_polling = None
         self._process_updates = asyncio.Lock(loop=component.hass.loop)
+
+        if parallel_updates:
+            self.parallel_updates = asyncio.Semaphore(
+                parallel_updates, loop=component.hass.loop)
 
     @asyncio.coroutine
     def async_block_entities_done(self):
@@ -336,12 +371,14 @@ class EntityPlatform(object):
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
+        # That avoid deadlocks
         if update_before_add:
-            for entity in new_entities:
-                entity.update()
+            self.component.logger.warning(
+                "Call 'add_entities' with update_before_add=True "
+                "only inside tests or you can run into a deadlock!")
 
         run_coroutine_threadsafe(
-            self.async_add_entities(list(new_entities), False),
+            self.async_add_entities(list(new_entities), update_before_add),
             self.component.hass.loop).result()
 
     @asyncio.coroutine
@@ -357,6 +394,7 @@ class EntityPlatform(object):
         @asyncio.coroutine
         def async_process_entity(new_entity):
             """Add entities to StateMachine."""
+            new_entity.parallel_updates = self.parallel_updates
             ret = yield from self.component.async_add_entity(
                 new_entity, self, update_before_add=update_before_add
             )
@@ -366,7 +404,7 @@ class EntityPlatform(object):
         tasks = [async_process_entity(entity) for entity in new_entities]
 
         yield from asyncio.wait(tasks, loop=self.component.hass.loop)
-        yield from self.component.async_update_group()
+        self.component.async_update_group()
 
         if self._async_unsub_polling is not None or \
            not any(entity.should_poll for entity
@@ -412,26 +450,10 @@ class EntityPlatform(object):
 
         with (yield from self._process_updates):
             tasks = []
-            to_update = []
-
             for entity in self.platform_entities:
                 if not entity.should_poll:
                     continue
-
-                update_coro = entity.async_update_ha_state(True)
-                if hasattr(entity, 'async_update'):
-                    tasks.append(
-                        self.component.hass.async_add_job(update_coro))
-                else:
-                    to_update.append(update_coro)
-
-            for update_coro in to_update:
-                try:
-                    yield from update_coro
-                except Exception:  # pylint: disable=broad-except
-                    self.component.logger.exception(
-                        "Error while update entity from %s in %s",
-                        self.platform, self.component.domain)
+                tasks.append(entity.async_update_ha_state(True))
 
             if tasks:
                 yield from asyncio.wait(tasks, loop=self.component.hass.loop)

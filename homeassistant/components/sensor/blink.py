@@ -77,7 +77,7 @@ class BlinkSensor(Entity):
         if self._type == 'temperature':
             self._state = camera.temperature
         elif self._type == 'battery':
-            self._state = camera.battery
+            self._state = camera.battery_string
         elif self._type == 'notifications':
             self._state = camera.notifications
         else:

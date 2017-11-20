@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, __version__ as CURRENT_VERSION)
+    ATTR_FRIENDLY_NAME, __version__ as current_version)
 from homeassistant.helpers import event
 
 REQUIREMENTS = ['distro==1.0.4']
@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_RELEASE_NOTES = 'release_notes'
 
 CONF_REPORTING = 'reporting'
+CONF_COMPONENT_REPORTING = 'include_used_components'
 
 DOMAIN = 'updater'
 
@@ -41,11 +42,12 @@ UPDATER_URL = 'https://updater.home-assistant.io/'
 UPDATER_UUID_FILE = '.uuid'
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    vol.Optional(CONF_REPORTING, default=True): cv.boolean
+    vol.Optional(CONF_REPORTING, default=True): cv.boolean,
+    vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
 }}, extra=vol.ALLOW_EXTRA)
 
 RESPONSE_SCHEMA = vol.Schema({
-    vol.Required('version'): str,
+    vol.Required('version'): cv.string,
     vol.Required('release-notes'): cv.url,
 })
 
@@ -73,7 +75,7 @@ def _load_uuid(hass, filename=UPDATER_UUID_FILE):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the updater component."""
-    if 'dev' in CURRENT_VERSION:
+    if 'dev' in current_version:
         # This component only makes sense in release versions
         _LOGGER.warning("Running on 'dev', only analytics will be submitted")
 
@@ -83,26 +85,28 @@ def async_setup(hass, config):
     else:
         huuid = None
 
+    include_components = config.get(CONF_COMPONENT_REPORTING)
+
     @asyncio.coroutine
     def check_new_version(now):
         """Check if a new version is available and report if one is."""
-        result = yield from get_newest_version(hass, huuid)
+        result = yield from get_newest_version(hass, huuid, include_components)
 
         if result is None:
             return
 
         newest, releasenotes = result
 
-        if newest is None or 'dev' in CURRENT_VERSION:
+        if newest is None or 'dev' in current_version:
             return
 
-        if StrictVersion(newest) > StrictVersion(CURRENT_VERSION):
+        if StrictVersion(newest) > StrictVersion(current_version):
             _LOGGER.info("The latest available version is %s", newest)
             hass.states.async_set(
                 ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
                                     ATTR_RELEASE_NOTES: releasenotes}
             )
-        elif StrictVersion(newest) == StrictVersion(CURRENT_VERSION):
+        elif StrictVersion(newest) == StrictVersion(current_version):
             _LOGGER.info(
                 "You are on the latest version (%s) of Home Assistant", newest)
 
@@ -116,18 +120,21 @@ def async_setup(hass, config):
 
 
 @asyncio.coroutine
-def get_system_info(hass):
+def get_system_info(hass, include_components):
     """Return info about the system."""
     info_object = {
         'arch': platform.machine(),
-        'dev': 'dev' in CURRENT_VERSION,
+        'dev': 'dev' in current_version,
         'docker': False,
         'os_name': platform.system(),
         'python_version': platform.python_version(),
         'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
-        'version': CURRENT_VERSION,
+        'version': current_version,
         'virtualenv': os.environ.get('VIRTUAL_ENV') is not None,
     }
+
+    if include_components:
+        info_object['components'] = list(hass.config.components)
 
     if platform.system() == 'Windows':
         info_object['os_version'] = platform.win32_ver()[0]
@@ -147,10 +154,10 @@ def get_system_info(hass):
 
 
 @asyncio.coroutine
-def get_newest_version(hass, huuid):
+def get_newest_version(hass, huuid, include_components):
     """Get the newest Home Assistant version."""
     if huuid:
-        info_object = yield from get_system_info(hass)
+        info_object = yield from get_system_info(hass, include_components)
         info_object['huuid'] = huuid
     else:
         info_object = {}
@@ -174,7 +181,7 @@ def get_newest_version(hass, huuid):
 
     try:
         res = RESPONSE_SCHEMA(res)
-        return (res['version'], res['release-notes'])
+        return res['version'], res['release-notes']
     except vol.Invalid:
-        _LOGGER.error('Got unexpected response: %s', res)
+        _LOGGER.error("Got unexpected response: %s", res)
         return None

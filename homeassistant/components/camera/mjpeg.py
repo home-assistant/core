@@ -88,8 +88,8 @@ class MjpegCamera(Camera):
         # DigestAuth is not supported
         if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
            self._still_image_url is None:
-            image = yield from self.hass.loop.run_in_executor(
-                None, self.camera_image)
+            image = yield from self.hass.async_add_job(
+                self.camera_image)
             return image
 
         websession = async_get_clientsession(self.hass)

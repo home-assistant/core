@@ -2,12 +2,23 @@
 import io
 import os
 import unittest
+import logging
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from tests.common import get_test_config_dir, patch_yaml_files
+
+
+@pytest.fixture(autouse=True)
+def mock_credstash():
+    """Mock credstash so it doesn't connect to the internet."""
+    with patch.object(yaml, 'credstash') as mock_credstash:
+        mock_credstash.getSecret.return_value = None
+        yield mock_credstash
 
 
 class TestYaml(unittest.TestCase):
@@ -29,13 +40,6 @@ class TestYaml(unittest.TestCase):
             doc = yaml.yaml.safe_load(file)
         assert doc['key'] == 'value'
 
-    def test_duplicate_key(self):
-        """Test duplicate dict keys."""
-        files = {YAML_CONFIG_FILE: 'key: thing1\nkey: thing2'}
-        with self.assertRaises(HomeAssistantError):
-            with patch_yaml_files(files):
-                load_yaml_config_file(YAML_CONFIG_FILE)
-
     def test_unhashable_key(self):
         """Test an unhasable key."""
         files = {YAML_CONFIG_FILE: 'message:\n  {{ states.state }}'}
@@ -50,8 +54,8 @@ class TestYaml(unittest.TestCase):
                 patch_yaml_files(files):
             yaml.load_yaml(YAML_CONFIG_FILE)
 
-    def test_enviroment_variable(self):
-        """Test config file with enviroment variable."""
+    def test_environment_variable(self):
+        """Test config file with environment variable."""
         os.environ["PASSWORD"] = "secret_password"
         conf = "password: !env_var PASSWORD"
         with io.StringIO(conf) as file:
@@ -59,8 +63,15 @@ class TestYaml(unittest.TestCase):
         assert doc['password'] == "secret_password"
         del os.environ["PASSWORD"]
 
-    def test_invalid_enviroment_variable(self):
-        """Test config file with no enviroment variable sat."""
+    def test_environment_variable_default(self):
+        """Test config file with default value for environment variable."""
+        conf = "password: !env_var PASSWORD secret_password"
+        with io.StringIO(conf) as file:
+            doc = yaml.yaml.safe_load(file)
+        assert doc['password'] == "secret_password"
+
+    def test_invalid_environment_variable(self):
+        """Test config file with no environment variable sat."""
         conf = "password: !env_var PASSWORD"
         with self.assertRaises(HomeAssistantError):
             with io.StringIO(conf) as file:
@@ -256,6 +267,10 @@ class TestYaml(unittest.TestCase):
         """The that the dump method returns empty None values."""
         assert yaml.dump({'a': None, 'b': 'b'}) == 'a:\nb: b\n'
 
+    def test_dump_unicode(self):
+        """The that the dump method returns empty None values."""
+        assert yaml.dump({'a': None, 'b': 'привет'}) == 'a:\nb: привет\n'
+
 
 FILES = {}
 
@@ -291,7 +306,7 @@ class TestSecrets(unittest.TestCase):
         config_dir = get_test_config_dir()
         yaml.clear_secret_cache()
         self._yaml_path = os.path.join(config_dir, YAML_CONFIG_FILE)
-        self._secret_path = os.path.join(config_dir, yaml._SECRET_YAML)
+        self._secret_path = os.path.join(config_dir, yaml.SECRET_YAML)
         self._sub_folder_path = os.path.join(config_dir, 'subFolder')
         self._unrelated_path = os.path.join(config_dir, 'unrelated')
 
@@ -340,7 +355,7 @@ class TestSecrets(unittest.TestCase):
     def test_secret_overrides_parent(self):
         """Test loading current directory secret overrides the parent."""
         expected = {'api_password': 'override'}
-        load_yaml(os.path.join(self._sub_folder_path, yaml._SECRET_YAML),
+        load_yaml(os.path.join(self._sub_folder_path, yaml.SECRET_YAML),
                   'http_pw: override')
         self._yaml = load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
                                'http:\n'
@@ -354,7 +369,7 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_from_unrelated_fails(self):
         """Test loading secrets from unrelated folder fails."""
-        load_yaml(os.path.join(self._unrelated_path, yaml._SECRET_YAML),
+        load_yaml(os.path.join(self._unrelated_path, yaml.SECRET_YAML),
                   'test: failure')
         with self.assertRaises(HomeAssistantError):
             load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
@@ -371,6 +386,16 @@ class TestSecrets(unittest.TestCase):
         yaml.keyring = FakeKeyring({'http_pw_keyring': 'yeah'})
         _yaml = load_yaml(self._yaml_path, yaml_str)
         self.assertEqual({'http': {'api_password': 'yeah'}}, _yaml)
+
+    @patch.object(yaml, 'credstash')
+    def test_secrets_credstash(self, mock_credstash):
+        """Test credstash fallback & get_password."""
+        mock_credstash.getSecret.return_value = 'yeah'
+        yaml_str = 'http:\n  api_password: !secret http_pw_credstash'
+        _yaml = load_yaml(self._yaml_path, yaml_str)
+        log = logging.getLogger()
+        log.error(_yaml['http'])
+        self.assertEqual({'api_password': 'yeah'}, _yaml['http'])
 
     def test_secrets_logger_removed(self):
         """Ensure logger: debug was removed."""
@@ -393,3 +418,11 @@ def test_representing_yaml_loaded_data():
     with patch_yaml_files(files):
         data = load_yaml_config_file(YAML_CONFIG_FILE)
     assert yaml.dump(data) == "key:\n- 1\n- '2'\n- 3\n"
+
+
+def test_duplicate_key(caplog):
+    """Test duplicate dict keys."""
+    files = {YAML_CONFIG_FILE: 'key: thing1\nkey: thing2'}
+    with patch_yaml_files(files):
+        load_yaml_config_file(YAML_CONFIG_FILE)
+    assert 'contains duplicate key' in caplog.text

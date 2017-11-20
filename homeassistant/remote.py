@@ -15,21 +15,17 @@ import urllib.parse
 
 from typing import Optional
 
+from aiohttp.hdrs import METH_GET, METH_POST, METH_DELETE, CONTENT_TYPE
 import requests
 
 from homeassistant import core as ha
 from homeassistant.const import (
-    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API,
-    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
-    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
-    HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+    URL_API, SERVER_PORT, URL_API_CONFIG, URL_API_EVENTS, URL_API_STATES,
+    URL_API_SERVICES, CONTENT_TYPE_JSON, HTTP_HEADER_HA_AUTH,
+    URL_API_EVENTS_EVENT, URL_API_STATES_ENTITY, URL_API_SERVICES_SERVICE)
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
-
-METHOD_GET = 'get'
-METHOD_POST = 'post'
-METHOD_DELETE = 'delete'
 
 
 class APIStatus(enum.Enum):
@@ -67,9 +63,7 @@ class API(object):
             self.base_url += ':{}'.format(port)
 
         self.status = None
-        self._headers = {
-            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
-        }
+        self._headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
@@ -89,13 +83,13 @@ class API(object):
         url = urllib.parse.urljoin(self.base_url, path)
 
         try:
-            if method == METHOD_GET:
+            if method == METH_GET:
                 return requests.get(
                     url, params=data, timeout=timeout, headers=self._headers)
-            else:
-                return requests.request(
-                    method, url, data=data, timeout=timeout,
-                    headers=self._headers)
+
+            return requests.request(
+                method, url, data=data, timeout=timeout,
+                headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("Error connecting to server")
@@ -116,35 +110,35 @@ class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
     # pylint: disable=method-hidden
-    def default(self, obj):
+    def default(self, o):
         """Convert Home Assistant objects.
 
         Hand other objects to the original method.
         """
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, set):
-            return list(obj)
-        elif hasattr(obj, 'as_dict'):
-            return obj.as_dict()
+        if isinstance(o, datetime):
+            return o.isoformat()
+        elif isinstance(o, set):
+            return list(o)
+        elif hasattr(o, 'as_dict'):
+            return o.as_dict()
 
         try:
-            return json.JSONEncoder.default(self, obj)
+            return json.JSONEncoder.default(self, o)
         except TypeError:
             # If the JSON serializer couldn't serialize it
             # it might be a generator, convert it to a list
             try:
                 return [self.default(child_obj)
-                        for child_obj in obj]
+                        for child_obj in o]
             except TypeError:
                 # Ok, we're lost, cause the original error
-                return json.JSONEncoder.default(self, obj)
+                return json.JSONEncoder.default(self, o)
 
 
 def validate_api(api):
     """Make a call to validate API."""
     try:
-        req = api(METHOD_GET, URL_API)
+        req = api(METH_GET, URL_API)
 
         if req.status_code == 200:
             return APIStatus.OK
@@ -152,8 +146,7 @@ def validate_api(api):
         elif req.status_code == 401:
             return APIStatus.INVALID_PASSWORD
 
-        else:
-            return APIStatus.UNKNOWN
+        return APIStatus.UNKNOWN
 
     except HomeAssistantError:
         return APIStatus.CANNOT_CONNECT
@@ -162,7 +155,7 @@ def validate_api(api):
 def get_event_listeners(api):
     """List of events that is being listened for."""
     try:
-        req = api(METHOD_GET, URL_API_EVENTS)
+        req = api(METH_GET, URL_API_EVENTS)
 
         return req.json() if req.status_code == 200 else {}
 
@@ -176,7 +169,7 @@ def get_event_listeners(api):
 def fire_event(api, event_type, data=None):
     """Fire an event at remote API."""
     try:
-        req = api(METHOD_POST, URL_API_EVENTS_EVENT.format(event_type), data)
+        req = api(METH_POST, URL_API_EVENTS_EVENT.format(event_type), data)
 
         if req.status_code != 200:
             _LOGGER.error("Error firing event: %d - %s",
@@ -189,7 +182,7 @@ def fire_event(api, event_type, data=None):
 def get_state(api, entity_id):
     """Query given API for state of entity_id."""
     try:
-        req = api(METHOD_GET, URL_API_STATES_ENTITY.format(entity_id))
+        req = api(METH_GET, URL_API_STATES_ENTITY.format(entity_id))
 
         # req.status_code == 422 if entity does not exist
 
@@ -206,7 +199,7 @@ def get_state(api, entity_id):
 def get_states(api):
     """Query given API for all states."""
     try:
-        req = api(METHOD_GET,
+        req = api(METH_GET,
                   URL_API_STATES)
 
         return [ha.State.from_dict(item) for
@@ -225,7 +218,7 @@ def remove_state(api, entity_id):
     Return True if entity is gone (removed/never existed).
     """
     try:
-        req = api(METHOD_DELETE, URL_API_STATES_ENTITY.format(entity_id))
+        req = api(METH_DELETE, URL_API_STATES_ENTITY.format(entity_id))
 
         if req.status_code in (200, 404):
             return True
@@ -251,16 +244,14 @@ def set_state(api, entity_id, new_state, attributes=None, force_update=False):
             'force_update': force_update}
 
     try:
-        req = api(METHOD_POST,
-                  URL_API_STATES_ENTITY.format(entity_id),
-                  data)
+        req = api(METH_POST, URL_API_STATES_ENTITY.format(entity_id), data)
 
         if req.status_code not in (200, 201):
             _LOGGER.error("Error changing state: %d - %s",
                           req.status_code, req.text)
             return False
-        else:
-            return True
+
+        return True
 
     except HomeAssistantError:
         _LOGGER.exception("Error setting state")
@@ -281,7 +272,7 @@ def get_services(api):
     Each dict has a string "domain" and a list of strings "services".
     """
     try:
-        req = api(METHOD_GET, URL_API_SERVICES)
+        req = api(METH_GET, URL_API_SERVICES)
 
         return req.json() if req.status_code == 200 else {}
 
@@ -295,7 +286,7 @@ def get_services(api):
 def call_service(api, domain, service, service_data=None, timeout=5):
     """Call a service at the remote API."""
     try:
-        req = api(METHOD_POST,
+        req = api(METH_POST,
                   URL_API_SERVICES_SERVICE.format(domain, service),
                   service_data, timeout=timeout)
 
@@ -310,7 +301,7 @@ def call_service(api, domain, service, service_data=None, timeout=5):
 def get_config(api):
     """Return configuration."""
     try:
-        req = api(METHOD_GET, URL_API_CONFIG)
+        req = api(METH_GET, URL_API_CONFIG)
 
         if req.status_code != 200:
             return {}

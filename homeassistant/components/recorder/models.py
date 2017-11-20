@@ -16,7 +16,7 @@ from homeassistant.remote import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 4
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,12 +70,11 @@ class States(Base):   # type: ignore
                           index=True)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
-    __table_args__ = (Index('states__state_changes',
-                            'last_changed', 'last_updated', 'entity_id'),
-                      Index('states__significant_changes',
-                            'domain', 'last_updated', 'entity_id'),
-                      Index('ix_states_entity_id_created',
-                            'entity_id', 'created'),)
+    __table_args__ = (
+        # Used for fetching the state of entities at a specific time
+        # (get_states in history.py)
+        Index(
+            'ix_states_entity_id_last_updated', 'entity_id', 'last_updated'),)
 
     @staticmethod
     def from_event(event):
@@ -171,5 +170,5 @@ def _process_timestamp(ts):
         return None
     elif ts.tzinfo is None:
         return dt_util.UTC.localize(ts)
-    else:
-        return dt_util.as_utc(ts)
+
+    return dt_util.as_utc(ts)

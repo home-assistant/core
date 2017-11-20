@@ -1,131 +1,111 @@
 """
-Sensors of a KNX Device.
+Support for KNX/IP sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/knx/
+https://home-assistant.io/components/sensor.knx/
 """
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMPERATURE, CONF_TYPE, ILLUMINANCE, SPEED_MS, CONF_MINIMUM,
-    CONF_MAXIMUM)
-from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
+import asyncio
+import voluptuous as vol
 
+from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
+from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+
+CONF_ADDRESS = 'address'
+CONF_TYPE = 'type'
+
+DEFAULT_NAME = 'KNX Sensor'
 DEPENDENCIES = ['knx']
 
-# Speed units
-SPEED_METERPERSECOND = 'm/s'  # type: str
-
-# Illuminance units
-ILLUMINANCE_LUX = 'lx'  # type: str
-
-#  Predefined Minimum, Maximum Values for Sensors
-#  Temperature as defined in KNX Standard 3.10 - 9.001 DPT_Value_Temp
-KNX_TEMP_MIN = -273
-KNX_TEMP_MAX = 670760
-
-#  Luminance(LUX) as Defined in KNX Standard 3.10 - 9.004 DPT_Value_Lux
-KNX_LUX_MIN = 0
-KNX_LUX_MAX = 670760
-
-#  Speed m/s as defined in KNX Standard 3.10 - 9.005 DPT_Value_Wsp
-KNX_SPEED_MS_MIN = 0
-KNX_SPEED_MS_MAX = 670760
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TYPE): cv.string,
+})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the KNX Sensor platform."""
-    # KNX Datapoint 9.001 DPT_Value_Temp
-    if config[CONF_TYPE] == TEMPERATURE:
-        minimum_value, maximum_value = \
-            update_and_define_min_max(config, KNX_TEMP_MIN, KNX_TEMP_MAX)
-
-        add_entities([
-            KNXSensorFloatClass(
-                hass, KNXConfig(config), TEMP_CELSIUS, minimum_value,
-                maximum_value)
-        ])
-
-    # Add KNX Speed Sensors(Like Wind Speed)
-    # KNX Datapoint 9.005 DPT_Value_Wsp
-    elif config[CONF_TYPE] == SPEED_MS:
-        minimum_value, maximum_value = \
-            update_and_define_min_max(
-                config, KNX_SPEED_MS_MIN, KNX_SPEED_MS_MAX)
-
-        add_entities([
-            KNXSensorFloatClass(hass, KNXConfig(config), SPEED_METERPERSECOND,
-                                minimum_value, maximum_value)
-        ])
-
-    # Add KNX Illuminance Sensors(Lux)
-    # KNX Datapoint 9.004 DPT_Value_Lux
-    elif config[CONF_TYPE] == ILLUMINANCE:
-        minimum_value, maximum_value = \
-            update_and_define_min_max(config, KNX_LUX_MIN, KNX_LUX_MAX)
-
-        add_entities([
-            KNXSensorFloatClass(hass, KNXConfig(config), ILLUMINANCE_LUX,
-                                minimum_value, maximum_value)
-        ])
-
-
-def update_and_define_min_max(config, minimum_default, maximum_default):
-    """Determine a min/max value defined in the configuration."""
-    minimum_value = minimum_default
-    maximum_value = maximum_default
-    if config.get(CONF_MINIMUM):
-        minimum_value = config.get(CONF_MINIMUM)
-
-    if config.get(CONF_MAXIMUM):
-        maximum_value = config.get(CONF_MAXIMUM)
-
-    return minimum_value, maximum_value
-
-
-class KNXSensorBaseClass():
-    """Sensor Base Class for all KNX Sensors."""
-
-    @property
-    def cache(self):
-        """We don't want to cache any Sensor Value."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices,
+                         discovery_info=None):
+    """Set up sensor(s) for KNX platform."""
+    if DATA_KNX not in hass.data \
+            or not hass.data[DATA_KNX].initialized:
         return False
 
+    if discovery_info is not None:
+        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+    else:
+        async_add_devices_config(hass, config, async_add_devices)
 
-class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
-    """
-    Base Implementation of a 2byte Floating Point KNX Telegram.
+    return True
 
-    Defined in KNX 3.7.2 - 3.10
-    """
 
-    def __init__(self, hass, config, unit_of_measurement, minimum_sensor_value,
-                 maximum_sensor_value):
-        """Initialize a KNX Float Sensor."""
-        self._unit_of_measurement = unit_of_measurement
-        self._minimum_value = minimum_sensor_value
-        self._maximum_value = maximum_sensor_value
-        self._value = None
+@callback
+def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+    """Set up sensors for KNX platform configured via xknx.yaml."""
+    entities = []
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_KNX].xknx.devices[device_name]
+        entities.append(KNXSensor(hass, device))
+    async_add_devices(entities)
 
-        KNXGroupAddress.__init__(self, hass, config)
+
+@callback
+def async_add_devices_config(hass, config, async_add_devices):
+    """Set up sensor for KNX platform configured within plattform."""
+    import xknx
+    sensor = xknx.devices.Sensor(
+        hass.data[DATA_KNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address=config.get(CONF_ADDRESS),
+        value_type=config.get(CONF_TYPE))
+    hass.data[DATA_KNX].xknx.devices.add(sensor)
+    async_add_devices([KNXSensor(hass, sensor)])
+
+
+class KNXSensor(Entity):
+    """Representation of a KNX sensor."""
+
+    def __init__(self, hass, device):
+        """Initialization of KNXSensor."""
+        self.device = device
+        self.hass = hass
+        self.async_register_callbacks()
+
+    @callback
+    def async_register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
+        @asyncio.coroutine
+        def after_update_callback(device):
+            """Callback after device was updated."""
+            # pylint: disable=unused-argument
+            yield from self.async_update_ha_state()
+        self.device.register_device_updated_cb(after_update_callback)
+
+    @property
+    def name(self):
+        """Return the name of the KNX device."""
+        return self.device.name
+
+    @property
+    def should_poll(self):
+        """No polling needed within KNX."""
+        return False
 
     @property
     def state(self):
-        """Return the Value of the KNX Sensor."""
-        return self._value
+        """Return the state of the sensor."""
+        return self.device.resolve_state()
 
     @property
     def unit_of_measurement(self):
-        """Return the defined Unit of Measurement for the KNX Sensor."""
-        return self._unit_of_measurement
+        """Return the unit this state is expressed in."""
+        return self.device.unit_of_measurement()
 
-    def update(self):
-        """Update KNX sensor."""
-        from knxip.conversion import knx2_to_float
-
-        super().update()
-
-        self._value = None
-
-        if self._data:
-            value = 0 if self._data == 0 else knx2_to_float(self._data)
-            if self._minimum_value <= value <= self._maximum_value:
-                self._value = value
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return None

@@ -107,7 +107,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
             newstate = STATE_ALARM_ARMED_AWAY
 
         if not newstate == self._state:
-            _LOGGER.info("State Chnage from %s to %s", self._state, newstate)
+            _LOGGER.info("State Change from %s to %s", self._state, newstate)
             self._state = newstate
         return self._state
 
@@ -117,7 +117,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._alarm.arm('home')
+        self._alarm.arm('stay')
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""

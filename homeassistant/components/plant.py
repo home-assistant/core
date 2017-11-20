@@ -10,8 +10,9 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.const import (
-    STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_SENSORS,
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
+    STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
+    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
+from homeassistant.components import group
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -58,8 +59,8 @@ SCHEMA_SENSORS = vol.Schema({
 PLANT_SCHEMA = vol.Schema({
     vol.Required(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
     vol.Optional(CONF_MIN_BATTERY_LEVEL): cv.positive_int,
-    vol.Optional(CONF_MIN_TEMPERATURE): cv.small_float,
-    vol.Optional(CONF_MAX_TEMPERATURE): cv.small_float,
+    vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
+    vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_MIN_MOISTURE): cv.positive_int,
     vol.Optional(CONF_MAX_MOISTURE): cv.positive_int,
     vol.Optional(CONF_MIN_CONDUCTIVITY): cv.positive_int,
@@ -69,6 +70,10 @@ PLANT_SCHEMA = vol.Schema({
 })
 
 DOMAIN = 'plant'
+DEPENDENCIES = ['zone', 'group']
+
+GROUP_NAME_ALL_PLANTS = 'all plants'
+ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
@@ -80,7 +85,8 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_PLANTS)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -165,15 +171,15 @@ class Plant(Entity):
 
         reading = self._sensormap[entity_id]
         if reading == READING_MOISTURE:
-            self._moisture = int(value)
+            self._moisture = int(float(value))
         elif reading == READING_BATTERY:
-            self._battery = int(value)
+            self._battery = int(float(value))
         elif reading == READING_TEMPERATURE:
             self._temperature = float(value)
         elif reading == READING_CONDUCTIVITY:
-            self._conductivity = int(value)
+            self._conductivity = int(float(value))
         elif reading == READING_BRIGHTNESS:
-            self._brightness = int(value)
+            self._brightness = int(float(value))
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
@@ -198,15 +204,15 @@ class Plant(Entity):
                         result.append('{} high'.format(sensor_name))
                         self._icon = params['icon']
 
-        if len(result) == 0:
-            self._state = 'ok'
+        if result:
+            self._state = STATE_PROBLEM
+            self._problems = ','.join(result)
+        else:
+            self._state = STATE_OK
             self._icon = 'mdi:thumb-up'
             self._problems = PROBLEM_NONE
-        else:
-            self._state = 'problem'
-            self._problems = ','.join(result)
         _LOGGER.debug("New data processed")
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):

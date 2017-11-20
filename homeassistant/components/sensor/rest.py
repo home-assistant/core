@@ -27,13 +27,14 @@ DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
 
 CONF_JSON_ATTRS = "json_attributes"
+METHODS = ['POST', 'GET']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
@@ -78,7 +79,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([RestSensor(hass, rest, name, unit,
                             value_template, json_attrs)])
 
-
 class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
@@ -104,6 +104,11 @@ class RestSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def available(self):
+        """Return if the sensor data are available."""
+        return self.rest.data is not None
 
     @property
     def state(self):

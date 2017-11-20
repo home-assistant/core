@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.0.0rc3']
+REQUIREMENTS = ['netdisco==1.2.3']
 
 DOMAIN = 'discovery'
 
@@ -31,6 +31,10 @@ SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_HASSIO = 'hassio'
+SERVICE_AXIS = 'axis'
+SERVICE_APPLE_TV = 'apple_tv'
+SERVICE_WINK = 'wink'
+SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -38,6 +42,10 @@ SERVICE_HANDLERS = {
     SERVICE_WEMO: ('wemo', None),
     SERVICE_IKEA_TRADFRI: ('tradfri', None),
     SERVICE_HASSIO: ('hassio', None),
+    SERVICE_AXIS: ('axis', None),
+    SERVICE_APPLE_TV: ('apple_tv', None),
+    SERVICE_WINK: ('wink', None),
+    SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
@@ -50,10 +58,12 @@ SERVICE_HANDLERS = {
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
     'yeelight': ('light', 'yeelight'),
-    'apple_tv': ('media_player', 'apple_tv'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
+    'harmony': ('remote', 'harmony'),
+    'sabnzbd': ('sensor', 'sabnzbd'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
+    'bluesound': ('media_player', 'bluesound'),
 }
 
 CONF_IGNORE = 'ignore'
@@ -92,6 +102,7 @@ def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
+            logger.info("Unknown service discovered: %s %s", service, info)
             return
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
@@ -113,8 +124,7 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def scan_devices(now):
         """Scan for devices."""
-        results = yield from hass.loop.run_in_executor(
-            None, _discover, netdisco)
+        results = yield from hass.async_add_job(_discover, netdisco)
 
         for result in results:
             hass.async_add_job(new_service_found(*result))

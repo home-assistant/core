@@ -50,6 +50,13 @@ def no_auth_websocket_client(hass, loop, test_client):
         loop.run_until_complete(ws.close())
 
 
+@pytest.fixture
+def mock_low_queue():
+    """Mock a low queue."""
+    with patch.object(wapi, 'MAX_PENDING_MSG', 5):
+        yield
+
+
 @asyncio.coroutine
 def test_auth_via_msg(no_auth_websocket_client):
     """Test authenticating."""
@@ -271,6 +278,9 @@ def test_get_config(hass, websocket_client):
 
     if 'components' in msg['result']:
         msg['result']['components'] = set(msg['result']['components'])
+    if 'whitelist_external_dirs' in msg['result']:
+        msg['result']['whitelist_external_dirs'] = \
+            set(msg['result']['whitelist_external_dirs'])
 
     assert msg['result'] == hass.config.as_dict()
 
@@ -278,9 +288,9 @@ def test_get_config(hass, websocket_client):
 @asyncio.coroutine
 def test_get_panels(hass, websocket_client):
     """Test get_panels command."""
-    frontend.register_built_in_panel(hass, 'map', 'Map',
-                                     'mdi:account-location')
-
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'map', 'Map', 'mdi:account-location')
+    hass.data[frontend.DATA_JS_VERSION] = 'es5'
     websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_PANELS,
@@ -290,7 +300,14 @@ def test_get_panels(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
-    assert msg['result'] == hass.data[frontend.DATA_PANELS]
+    assert msg['result'] == {'map': {
+        'component_name': 'map',
+        'url_path': 'map',
+        'config': None,
+        'url': None,
+        'icon': 'mdi:account-location',
+        'title': 'Map',
+    }}
 
 
 @asyncio.coroutine
@@ -304,3 +321,15 @@ def test_ping(websocket_client):
     msg = yield from websocket_client.receive_json()
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_PONG
+
+
+@asyncio.coroutine
+def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
+    """Test get_panels command."""
+    for idx in range(10):
+        websocket_client.send_json({
+            'id': idx + 1,
+            'type': wapi.TYPE_PING,
+        })
+    msg = yield from websocket_client.receive()
+    assert msg.type == WSMsgType.close

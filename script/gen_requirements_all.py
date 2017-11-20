@@ -25,7 +25,65 @@ COMMENT_REQUIREMENTS = (
     'python-eq3bt',
     'avion',
     'decora',
-    'face_recognition'
+    'face_recognition',
+    'blinkt',
+    'smbus-cffi',
+    'envirophat',
+    'i2csense',
+    'credstash',
+    'aiocoap',  # Temp, will be removed when Python 3.4 is no longer supported.
+    'DTLSSocket'  # Requires cython.
+)
+
+TEST_REQUIREMENTS = (
+    'aioautomatic',
+    'aiohttp_cors',
+    'apns2',
+    'coinmarketcap',
+    'defusedxml',
+    'dsmr_parser',
+    'ephem',
+    'evohomeclient',
+    'feedparser',
+    'fuzzywuzzy',
+    'gTTS-token',
+    'ha-ffmpeg',
+    'haversine',
+    'hbmqtt',
+    'holidays',
+    'home-assistant-frontend',
+    'influxdb',
+    'libpurecoollink',
+    'libsoundtouch',
+    'mficlient',
+    'numpy',
+    'paho-mqtt',
+    'pexpect',
+    'pilight',
+    'pmsensor',
+    'prometheus_client',
+    'pydispatcher',
+    'PyJWT',
+    'pylitejet',
+    'pynx584',
+    'python-forecastio',
+    'pyunifi',
+    'pywebpush',
+    'restrictedpython',
+    'rflink',
+    'ring_doorbell',
+    'rxv',
+    'sleepyq',
+    'SoCo',
+    'somecomfort',
+    'sqlalchemy',
+    'statsd',
+    'uvcclient',
+    'warrant',
+    'yahoo-finance',
+    'pythonwhois',
+    'wakeonlan',
+    'vultr'
 )
 
 IGNORE_PACKAGES = (
@@ -44,6 +102,10 @@ URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
 
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
+CONSTRAINT_BASE = """
+# Breaks Python 3.6 and is not needed for our supported Pythons
+enum34==1000000000.0.0
+"""
 
 
 def explore_module(package, explore_children):
@@ -78,11 +140,10 @@ def comment_requirement(req):
 
 
 def gather_modules():
-    """Collect the information and construct the output."""
+    """Collect the information."""
     reqs = {}
 
     errors = []
-    output = []
 
     for package in sorted(explore_module('homeassistant.components', True) +
                           explore_module('homeassistant.scripts', True)):
@@ -115,10 +176,12 @@ def gather_modules():
         print("Make sure you import 3rd party libraries inside methods.")
         return None
 
-    output.append('# Home Assistant core')
-    output.append('\n')
-    output.append('\n'.join(core_requirements()))
-    output.append('\n')
+    return reqs
+
+
+def generate_requirements_list(reqs):
+    """Generate a pip file based on requirements."""
+    output = []
     for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
         for req in sorted(requirements,
                           key=lambda name: (len(name.split('.')), name)):
@@ -128,6 +191,34 @@ def gather_modules():
             output.append('\n# {}\n'.format(pkg))
         else:
             output.append('\n{}\n'.format(pkg))
+    return ''.join(output)
+
+
+def requirements_all_output(reqs):
+    """Generate output for requirements_all."""
+    output = []
+    output.append('# Home Assistant core')
+    output.append('\n')
+    output.append('\n'.join(core_requirements()))
+    output.append('\n')
+    output.append(generate_requirements_list(reqs))
+
+    return ''.join(output)
+
+
+def requirements_test_output(reqs):
+    """Generate output for test_requirements."""
+    output = []
+    output.append('# Home Assistant test')
+    output.append('\n')
+    with open('requirements_test.txt') as test_file:
+        output.append(test_file.read())
+    output.append('\n')
+    filtered = {key: value for key, value in reqs.items()
+                if any(
+                    re.search(r'(^|#){}($|[=><])'.format(ign),
+                              key) is not None for ign in TEST_REQUIREMENTS)}
+    output.append(generate_requirements_list(filtered))
 
     return ''.join(output)
 
@@ -143,22 +234,34 @@ def write_requirements_file(data):
         req_file.write(data)
 
 
+def write_test_requirements_file(data):
+    """Write the modules to the requirements_all.txt."""
+    with open('requirements_test_all.txt', 'w+', newline="\n") as req_file:
+        req_file.write(data)
+
+
 def write_constraints_file(data):
     """Write constraints to a file."""
     with open(CONSTRAINT_PATH, 'w+', newline="\n") as req_file:
-        req_file.write(data)
+        req_file.write(data + CONSTRAINT_BASE)
 
 
 def validate_requirements_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_all.txt', 'r') as req_file:
-        return data == ''.join(req_file)
+        return data == req_file.read()
+
+
+def validate_requirements_test_file(data):
+    """Validate if requirements_all.txt is up to date."""
+    with open('requirements_test_all.txt', 'r') as req_file:
+        return data == req_file.read()
 
 
 def validate_constraints_file(data):
     """Validate if constraints is up to date."""
     with open(CONSTRAINT_PATH, 'r') as req_file:
-        return data == ''.join(req_file)
+        return data + CONSTRAINT_BASE == req_file.read()
 
 
 def main():
@@ -174,22 +277,31 @@ def main():
 
     constraints = gather_constraints()
 
+    reqs_file = requirements_all_output(data)
+    reqs_test_file = requirements_test_output(data)
+
     if sys.argv[-1] == 'validate':
-        if not validate_requirements_file(data):
-            print("******* ERROR")
-            print("requirements_all.txt is not up to date")
-            print("Please run script/gen_requirements_all.py")
-            sys.exit(1)
+        errors = []
+        if not validate_requirements_file(reqs_file):
+            errors.append("requirements_all.txt is not up to date")
+
+        if not validate_requirements_test_file(reqs_test_file):
+            errors.append("requirements_test_all.txt is not up to date")
 
         if not validate_constraints_file(constraints):
+            errors.append(
+                "home-assistant/package_constraints.txt is not up to date")
+
+        if errors:
             print("******* ERROR")
-            print("home-assistant/package_constraints.txt is not up to date")
+            print('\n'.join(errors))
             print("Please run script/gen_requirements_all.py")
             sys.exit(1)
 
         sys.exit(0)
 
-    write_requirements_file(data)
+    write_requirements_file(reqs_file)
+    write_test_requirements_file(reqs_test_file)
     write_constraints_file(constraints)
 
 

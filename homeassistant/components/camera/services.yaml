@@ -1,0 +1,25 @@
+# Describes the format for available camera services
+
+enable_motion_detection:
+  description: Enable the motion detection in a camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to enable motion detection.
+      example: 'camera.living_room_camera'
+
+disable_motion_detection:
+  description: Disable the motion detection in a camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to disable motion detection.
+      example: 'camera.living_room_camera'
+
+snapshot:
+  description: Take a snapshot from a camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to create snapshots from.
+      example: 'camera.living_room_camera'
+    filename:
+      description: Template of a Filename. Variable is entity_id.
+      example: '/tmp/snapshot_{{ entity_id }}'

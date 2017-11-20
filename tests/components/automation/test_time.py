@@ -179,13 +179,13 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-    def test_if_fires_using_after(self):
-        """Test for firing after."""
+    def test_if_fires_using_at(self):
+        """Test for firing at."""
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
-                    'after': '5:00:00',
+                    'at': '5:00:00',
                 },
                 'action': {
                     'service': 'test.automation',
@@ -207,7 +207,7 @@ class TestAutomationTime(unittest.TestCase):
     def test_if_not_working_if_no_values_in_conf_provided(self):
         """Test for failure if no configuration."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'time',
@@ -224,17 +224,17 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    def test_if_not_fires_using_wrong_after(self):
+    def test_if_not_fires_using_wrong_at(self):
         """YAML translates time values to total seconds.
 
         This should break the before rule.
         """
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'time',
-                        'after': 3605,
+                        'at': 3605,
                         # Total seconds. Hour = 3600 second
                     },
                     'action': {

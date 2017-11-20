@@ -6,8 +6,6 @@ https://home-assistant.io/components/device_tracker.sky_hub/
 """
 import logging
 import re
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -16,12 +14,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string
@@ -43,11 +38,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         """Initialise the scanner."""
         _LOGGER.info("Initialising Sky Hub")
         self.host = config.get(CONF_HOST, '192.168.1.254')
-
-        self.lock = threading.Lock()
-
         self.last_results = {}
-
         self.url = 'http://{}/'.format(self.host)
 
         # Test the router is accessible
@@ -62,17 +53,15 @@ class SkyHubDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        with self.lock:
-            # If not initialised and not already scanned and not found.
-            if device not in self.last_results:
-                self._update_info()
+        # If not initialised and not already scanned and not found.
+        if device not in self.last_results:
+            self._update_info()
 
-                if not self.last_results:
-                    return None
+            if not self.last_results:
+                return None
 
-            return self.last_results.get(device)
+        return self.last_results.get(device)
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the Sky Hub is up to date.
 
@@ -81,18 +70,17 @@ class SkyHubDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        with self.lock:
-            _LOGGER.info("Scanning")
+        _LOGGER.info("Scanning")
 
-            data = _get_skyhub_data(self.url)
+        data = _get_skyhub_data(self.url)
 
-            if not data:
-                _LOGGER.warning('Error scanning devices')
-                return False
+        if not data:
+            _LOGGER.warning('Error scanning devices')
+            return False
 
-            self.last_results = data
+        self.last_results = data
 
-            return True
+        return True
 
 
 def _get_skyhub_data(url):

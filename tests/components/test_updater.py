@@ -19,6 +19,9 @@ MOCK_RESPONSE = {
     'version': '0.15',
     'release-notes': 'https://home-assistant.io'
 }
+MOCK_CONFIG = {updater.DOMAIN: {
+    'reporting': True
+}}
 
 
 @pytest.fixture
@@ -37,8 +40,8 @@ def mock_get_uuid():
 
 @asyncio.coroutine
 @freeze_time("Mar 15th, 2017")
-def test_new_version_shows_entity_after_hour(hass, mock_get_uuid,
-                                             mock_get_newest_version):
+def test_new_version_shows_entity_after_hour(
+        hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((NEW_VERSION, ''))
@@ -47,7 +50,7 @@ def test_new_version_shows_entity_after_hour(hass, mock_get_uuid,
         hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, 'Updater failed to setup'
 
-    with patch('homeassistant.components.updater.CURRENT_VERSION',
+    with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
@@ -57,8 +60,8 @@ def test_new_version_shows_entity_after_hour(hass, mock_get_uuid,
 
 @asyncio.coroutine
 @freeze_time("Mar 15th, 2017")
-def test_same_version_not_show_entity(hass, mock_get_uuid,
-                                      mock_get_newest_version):
+def test_same_version_not_show_entity(
+        hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((MOCK_VERSION, ''))
@@ -67,7 +70,7 @@ def test_same_version_not_show_entity(hass, mock_get_uuid,
         hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, 'Updater failed to setup'
 
-    with patch('homeassistant.components.updater.CURRENT_VERSION',
+    with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
@@ -88,15 +91,34 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
         }})
     assert res, 'Updater failed to setup'
 
-    with patch('homeassistant.components.updater.CURRENT_VERSION',
+    with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
     assert hass.states.get(updater.ENTITY_ID) is None
+    res = yield from updater.get_newest_version(hass, MOCK_HUUID, MOCK_CONFIG)
     call = mock_get_newest_version.mock_calls[0][1]
     assert call[0] is hass
     assert call[1] is None
+
+
+@asyncio.coroutine
+def test_enabled_component_info(hass, mock_get_uuid):
+    """Test if new entity is created if new version is available."""
+    with patch('homeassistant.components.updater.platform.system',
+               Mock(return_value="junk")):
+        res = yield from updater.get_system_info(hass, True)
+        assert 'components' in res, 'Updater failed to generate component list'
+
+
+@asyncio.coroutine
+def test_disable_component_info(hass, mock_get_uuid):
+    """Test if new entity is created if new version is available."""
+    with patch('homeassistant.components.updater.platform.system',
+               Mock(return_value="junk")):
+        res = yield from updater.get_system_info(hass, False)
+        assert 'components' not in res, 'Updater failed, components generate'
 
 
 @asyncio.coroutine
@@ -106,7 +128,7 @@ def test_get_newest_version_no_analytics_when_no_huuid(hass, aioclient_mock):
 
     with patch('homeassistant.components.updater.get_system_info',
                side_effect=Exception):
-        res = yield from updater.get_newest_version(hass, None)
+        res = yield from updater.get_newest_version(hass, None, False)
         assert res == (MOCK_RESPONSE['version'],
                        MOCK_RESPONSE['release-notes'])
 
@@ -118,7 +140,7 @@ def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
 
     with patch('homeassistant.components.updater.get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))):
-        res = yield from updater.get_newest_version(hass, MOCK_HUUID)
+        res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res == (MOCK_RESPONSE['version'],
                        MOCK_RESPONSE['release-notes'])
 
@@ -129,7 +151,7 @@ def test_error_fetching_new_version_timeout(hass):
     with patch('homeassistant.components.updater.get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))), \
             patch('async_timeout.timeout', side_effect=asyncio.TimeoutError):
-        res = yield from updater.get_newest_version(hass, MOCK_HUUID)
+        res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res is None
 
 
@@ -140,7 +162,7 @@ def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
 
     with patch('homeassistant.components.updater.get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))):
-        res = yield from updater.get_newest_version(hass, MOCK_HUUID)
+        res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res is None
 
 
@@ -154,5 +176,5 @@ def test_error_fetching_new_version_invalid_response(hass, aioclient_mock):
 
     with patch('homeassistant.components.updater.get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))):
-        res = yield from updater.get_newest_version(hass, MOCK_HUUID)
+        res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res is None

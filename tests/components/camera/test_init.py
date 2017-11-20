@@ -1,10 +1,10 @@
 """The tests for the camera component."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 
 import pytest
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import ATTR_ENTITY_PICTURE
 import homeassistant.components.camera as camera
 import homeassistant.components.http as http
@@ -13,6 +13,20 @@ from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component)
+
+
+@pytest.fixture
+def mock_camera(hass):
+    """Initialize a demo camera platform."""
+    assert hass.loop.run_until_complete(async_setup_component(hass, 'camera', {
+        camera.DOMAIN: {
+            'platform': 'demo'
+        }
+    }))
+
+    with patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+               return_value=b'Test'):
+        yield
 
 
 class TestSetupCamera(object):
@@ -27,7 +41,7 @@ class TestSetupCamera(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup demo platfrom on camera component."""
+        """Setup demo platform on camera component."""
         config = {
             camera.DOMAIN: {
                 'platform': 'demo'
@@ -105,3 +119,20 @@ class TestGetImage(object):
                 self.hass, 'camera.demo_camera'), self.hass.loop).result()
 
         assert len(aioclient_mock.mock_calls) == 1
+
+
+@asyncio.coroutine
+def test_snapshot_service(hass, mock_camera):
+    """Test snapshot service."""
+    mopen = mock_open()
+
+    with patch('homeassistant.components.camera.open', mopen, create=True), \
+            patch.object(hass.config, 'is_allowed_path',
+                         return_value=True):
+        hass.components.camera.async_snapshot('/tmp/bla')
+        yield from hass.async_block_till_done()
+
+        mock_write = mopen().write
+
+        assert len(mock_write.mock_calls) == 1
+        assert mock_write.mock_calls[0][1][0] == b'Test'

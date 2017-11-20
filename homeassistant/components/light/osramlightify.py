@@ -23,8 +23,7 @@ from homeassistant.util.color import (
     color_xy_brightness_to_RGB)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/'
-                '1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5']
+REQUIREMENTS = ['lightify==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,8 +156,6 @@ class Luminary(Light):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self._luminary.set_onoff(1)
-
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
             _LOGGER.debug("turn_on requested transition time for light: "
@@ -167,6 +164,16 @@ class Luminary(Light):
             transition = 0
             _LOGGER.debug("turn_on requested transition time for light: "
                           "%s is: %s", self._name, transition)
+
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
+                          self._name, self._brightness)
+            self._luminary.set_luminance(
+                int(self._brightness / 2.55),
+                transition)
+        else:
+            self._luminary.set_onoff(1)
 
         if ATTR_RGB_COLOR in kwargs:
             red, green, blue = kwargs[ATTR_RGB_COLOR]
@@ -190,14 +197,6 @@ class Luminary(Light):
             _LOGGER.debug("turn_on requested set_temperature for light: "
                           "%s: %s", self._name, kelvin)
             self._luminary.set_temperature(kelvin, transition)
-
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
-                          self._name, self._brightness)
-            self._brightness = self._luminary.set_luminance(
-                int(self._brightness / 2.55),
-                transition)
 
         if ATTR_EFFECT in kwargs:
             effect = kwargs.get(ATTR_EFFECT)
@@ -270,7 +269,7 @@ class OsramLightifyGroup(Luminary):
     def _get_state(self):
         """Get state of group.
 
-        The group is on, if any of the lights in on.
+        The group is on, if any of the lights is on.
         """
         lights = self._bridge.lights()
         return any(lights[light_id].on() for light_id in self._light_ids)

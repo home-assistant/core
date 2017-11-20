@@ -75,7 +75,7 @@ class TorqueReceiveDataView(HomeAssistantView):
     def get(self, request):
         """Handle Torque data request."""
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
             return
@@ -141,4 +141,4 @@ class TorqueSensor(Entity):
     def async_on_update(self, value):
         """Receive an update."""
         self._state = value
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()

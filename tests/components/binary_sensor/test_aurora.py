@@ -64,7 +64,7 @@ class TestAuroraSensorSetUp(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_custom_threshold_works(self, mock_req):
-        """Test that the the config can take a custom forecast threshold."""
+        """Test that the config can take a custom forecast threshold."""
         uri = re.compile(
             "http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
         )
@@ -91,5 +91,5 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         aurora.setup_platform(self.hass, config, mock_add_entities)
 
         aurora_component = entities[0]
-        self.assertEquals(aurora_component.aurora_data.visibility_level, '5')
+        self.assertEqual(aurora_component.aurora_data.visibility_level, '5')
         self.assertTrue(aurora_component.is_on)

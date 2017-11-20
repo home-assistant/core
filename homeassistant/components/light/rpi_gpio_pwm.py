@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pwmled==1.1.1']
+REQUIREMENTS = ['pwmled==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 """
-Component that will help set the microsoft face detect processing.
+Component that will help set the Microsoft face detect processing.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.microsoft_face_detect/
 """
 import asyncio

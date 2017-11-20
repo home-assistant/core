@@ -94,19 +94,24 @@ class KeyboardRemote(threading.Thread):
         if self.dev is not None:
             _LOGGER.debug("Keyboard connected, %s", self.device_id)
         else:
-            id_folder = '/dev/input/by-id/'
-            device_names = [InputDevice(file_name).name
-                            for file_name in list_devices()]
             _LOGGER.debug(
                 'Keyboard not connected, %s.\n\
-                Check /dev/input/event* permissions.\
-                Possible device names are:\n %s.\n \
-                Possible device descriptors are %s:\n %s',
-                self.device_id,
-                device_names,
-                id_folder,
-                os.listdir(id_folder)
+                Check /dev/input/event* permissions.',
+                self.device_id
                 )
+
+            id_folder = '/dev/input/by-id/'
+
+            if os.path.isdir(id_folder):
+                device_names = [InputDevice(file_name).name
+                                for file_name in list_devices()]
+                _LOGGER.debug(
+                    'Possible device names are:\n %s.\n \
+                    Possible device descriptors are %s:\n %s',
+                    device_names,
+                    id_folder,
+                    os.listdir(id_folder)
+                    )
 
         threading.Thread.__init__(self)
         self.stopped = threading.Event()

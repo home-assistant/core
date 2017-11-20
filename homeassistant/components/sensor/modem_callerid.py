@@ -14,9 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/vroomfonde1/basicmodem'
-                '/archive/0.7.zip'
-                '#basicmodem==0.7']
+REQUIREMENTS = ['basicmodem==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Modem CallerID'

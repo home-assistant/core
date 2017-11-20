@@ -10,13 +10,16 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS, CONF_DEVICES,
-    CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASSES, CONF_IGNORE_DEVICES,
+    CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS,
+    CONF_DEVICES, CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASES,
+    CONF_GROUP_ALIASSES, CONF_IGNORE_DEVICES, CONF_NOGROUP_ALIASES,
     CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
     DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
-    DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
+    DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv,
+    remove_deprecated, vol)
 from homeassistant.const import (
     CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN)
+from homeassistant.helpers.deprecation import get_deprecated
 
 DEPENDENCIES = ['rflink']
 
@@ -39,15 +42,22 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_TYPE):
                 vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE,
                         TYPE_HYBRID, TYPE_TOGGLE),
-            vol.Optional(CONF_ALIASSES, default=[]):
+            vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASSES, default=[]):
+            vol.Optional(CONF_GROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASSES, default=[]):
+            vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+            vol.Optional(CONF_FIRE_EVENT): cv.boolean,
             vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
             vol.Optional(CONF_GROUP, default=True): cv.boolean,
+            # deprecated config options
+            vol.Optional(CONF_ALIASSES):
+                vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_GROUP_ALIASSES):
+                vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_NOGROUP_ALIASSES):
+                vol.All(cv.ensure_list, [cv.string]),
         },
     }),
 })
@@ -103,6 +113,7 @@ def devices_from_config(domain_config, hass=None):
         entity_class = entity_class_for_type(entity_type)
 
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
+        remove_deprecated(device_config)
 
         is_hybrid = entity_class is HybridRflinkLight
 
@@ -112,30 +123,32 @@ def devices_from_config(domain_config, hass=None):
             _LOGGER.warning(
                 "Hybrid type for %s not compatible with signal "
                 "repetitions. Please set 'dimmable' or 'switchable' "
-                "type explicity in configuration", device_id)
+                "type explicitly in configuration", device_id)
 
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
 
-        # Register entity (and aliasses) to listen to incoming rflink events
+        # Register entity (and aliases) to listen to incoming rflink events
 
-        # Device id and normal aliasses respond to normal and group command
+        # Device id and normal aliases respond to normal and group command
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
         if config[CONF_GROUP]:
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in config[CONF_ALIASSES]:
+        for _id in get_deprecated(config, CONF_ALIASES, CONF_ALIASSES):
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
-        # group_aliasses only respond to group commands
-        for _id in config[CONF_GROUP_ALIASSES]:
+        # group_aliases only respond to group commands
+        for _id in get_deprecated(
+                config, CONF_GROUP_ALIASES, CONF_GROUP_ALIASSES):
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
-        # nogroup_aliasses only respond to normal commands
-        for _id in config[CONF_NOGROUP_ALIASSES]:
+        # nogroup_aliases only respond to normal commands
+        for _id in get_deprecated(
+                config, CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES):
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
 

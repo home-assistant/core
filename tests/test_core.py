@@ -1,16 +1,19 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access
 import asyncio
+import logging
+import os
 import unittest
 from unittest.mock import patch, MagicMock, sentinel
 from datetime import datetime, timedelta
+from tempfile import TemporaryDirectory
 
-import logging
 import pytz
 import pytest
 
 import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.exceptions import (InvalidEntityFormatError,
+                                      InvalidStateError)
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
@@ -419,6 +422,10 @@ class TestState(unittest.TestCase):
             InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
 
+        self.assertRaises(
+            InvalidStateError, ha.State,
+            'domain.long_state', 't' * 256)
+
     def test_domain(self):
         """Test domain."""
         state = ha.State('some_domain.hello', 'world')
@@ -487,18 +494,6 @@ class TestStateMachine(unittest.TestCase):
         self.assertTrue(self.states.is_state('light.Bowl', 'on'))
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
-
-    def test_is_state_attr(self):
-        """Test is_state_attr method."""
-        self.states.set("light.Bowl", "on", {"brightness": 100})
-        self.assertTrue(
-            self.states.is_state_attr('light.Bowl', 'brightness', 100))
-        self.assertFalse(
-            self.states.is_state_attr('light.Bowl', 'friendly_name', 200))
-        self.assertFalse(
-            self.states.is_state_attr('light.Bowl', 'friendly_name', 'Bowl'))
-        self.assertFalse(
-            self.states.is_state_attr('light.Non_existing', 'brightness', 100))
 
     def test_entity_ids(self):
         """Test get_entity_ids method."""
@@ -796,10 +791,43 @@ class TestConfig(unittest.TestCase):
             'time_zone': 'UTC',
             'components': set(),
             'config_dir': '/tmp/ha-config',
+            'whitelist_external_dirs': set(),
             'version': __version__,
         }
 
         self.assertEqual(expected, self.config.as_dict())
+
+    def test_is_allowed_path(self):
+        """Test is_allowed_path method."""
+        with TemporaryDirectory() as tmp_dir:
+            self.config.whitelist_external_dirs = set((
+                tmp_dir,
+            ))
+
+            test_file = os.path.join(tmp_dir, "test.jpg")
+            with open(test_file, "w") as tmp_file:
+                tmp_file.write("test")
+
+            valid = [
+                test_file,
+            ]
+            for path in valid:
+                assert self.config.is_allowed_path(path)
+
+            self.config.whitelist_external_dirs = set(('/home', '/var'))
+
+            unvalid = [
+                "/hass/config/secure",
+                "/etc/passwd",
+                "/root/secure_file",
+                "/var/../etc/passwd",
+                test_file,
+            ]
+            for path in unvalid:
+                assert not self.config.is_allowed_path(path)
+
+            with self.assertRaises(AssertionError):
+                self.config.is_allowed_path(None)
 
 
 @patch('homeassistant.core.monotonic')

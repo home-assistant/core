@@ -69,7 +69,6 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         topic = 'location/zanzito'
         location = json.dumps(LOCATION_MESSAGE)
 
-        self.hass.config.components = set(['mqtt_json', 'zone'])
         assert setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'mqtt_json',
@@ -88,7 +87,6 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         topic = 'location/zanzito'
         location = 'home'
 
-        self.hass.config.components = set(['mqtt_json'])
         assert setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'mqtt_json',
@@ -110,7 +108,6 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         topic = 'location/zanzito'
         location = json.dumps(LOCATION_MESSAGE_INCOMPLETE)
 
-        self.hass.config.components = set(['mqtt_json'])
         assert setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'mqtt_json',

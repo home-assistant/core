@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if light.is_valid:
             lights.append(light)
 
-    add_devices(lights)
+    add_devices(lights, True)
 
 
 class ZenggeLight(Light):
@@ -63,7 +63,6 @@ class ZenggeLight(Light):
             _LOGGER.error(
                 "Failed to connect to bulb %s, %s", self._address, self._name)
             return
-        self.update()
 
     @property
     def unique_id(self):

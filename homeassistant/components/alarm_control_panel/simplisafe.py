@@ -15,9 +15,8 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.loader as loader
 
-REQUIREMENTS = ['simplisafe-python==1.0.2']
+REQUIREMENTS = ['simplisafe-python==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    persistent_notification = loader.get_component('persistent_notification')
     simplisafe = SimpliSafeApiInterface()
     status = simplisafe.set_credentials(username, password)
     if status:
@@ -53,8 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         message = 'Failed to log into SimpliSafe. Check credentials.'
         _LOGGER.error(message)
-        persistent_notification.create(
-            hass, message,
+        hass.components.persistent_notification.create(
+            message,
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
@@ -80,8 +78,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         """Return the name of the device."""
         if self._name is not None:
             return self._name
-        else:
-            return 'Alarm {}'.format(self.simplisafe.location_id())
+        return 'Alarm {}'.format(self.simplisafe.location_id())
 
     @property
     def code_format(self):
@@ -92,11 +89,11 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         status = self.simplisafe.state()
-        if status == 'Off':
+        if status == 'off':
             state = STATE_ALARM_DISARMED
-        elif status == 'Home':
+        elif status == 'home':
             state = STATE_ALARM_ARMED_HOME
-        elif status == 'Away':
+        elif status == 'away':
             state = STATE_ALARM_ARMED_AWAY
         else:
             state = STATE_UNKNOWN
