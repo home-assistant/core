@@ -7,6 +7,7 @@ at https://home-assistant.io/components/climate.zha/
 
 import asyncio
 import logging
+import time
 
 from homeassistant.components import zha
 from homeassistant.components.climate import ClimateDevice
@@ -21,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zha']
 ATTR_HEATING_POWER = 'heating_power'
 STATE_COMFORT = 'comfort'
+CLEAN_TIME_ZONE = 1
 
 
 @asyncio.coroutine
@@ -95,6 +97,7 @@ class ClimateST218(zha.Entity, ClimateDevice):
         self._current_operation = None
         self._heating_power = None
         self._operation_list = list(self._modes.values())
+        self.last_request = time.time()
 
         # Add Stelpro Specific
         import bellows.types as t
@@ -123,15 +126,23 @@ class ClimateST218(zha.Entity, ClimateDevice):
             ('setpoint_mode_manuf_specific', t.enum8)
 
     @asyncio.coroutine
+    def _wait_for_clean_communication(self):
+        """Ensure that we not request the device more than time by second."""
+        if time.time() - self.last_request < CLEAN_TIME_ZONE:
+            yield from asyncio.sleep(CLEAN_TIME_ZONE)
+        self.last_request = time.time()
+
+    @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("%s async_update", self.entity_id)
-
+        yield from self._wait_for_clean_communication()
         result = yield from safe_read(self._endpoint.thermostat,
                                       ['local_temp',
                                        'pi_heating_demand',
                                        'occupied_heating_setpoint',
                                        'setpoint_mode_manuf_specific'])
+        self.last_request = time.time()
         if not result:
             _LOGGER.warning("No result received")
             return
@@ -189,10 +200,12 @@ class ClimateST218(zha.Entity, ClimateDevice):
             temperature = kwargs.get(ATTR_TEMPERATURE)
         else:
             return
+        yield from self._wait_for_clean_communication()
 
         temperature = temperature * 100
         data = {'occupied_heating_setpoint': temperature}
         res = yield from self._endpoint.thermostat.write_attributes(data)
+        self.last_request = time.time()
         # Check result
         for result in res:
             for subresult in result:
@@ -203,6 +216,7 @@ class ClimateST218(zha.Entity, ClimateDevice):
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
+        yield from self._wait_for_clean_communication()
         if operation_mode in (STATE_COMFORT, STATE_ECO):
             data = {'system_mode': 0x04}
             res = yield from self._endpoint.thermostat.write_attributes(data)
@@ -211,10 +225,10 @@ class ClimateST218(zha.Entity, ClimateDevice):
             res = yield from self._endpoint.thermostat.write_attributes(data)
         # To set eco mode we need to set comfort mode just before
         if operation_mode == STATE_ECO:
+            self._wait_for_clean_communication()
             data = {'setpoint_mode_manuf_specific': 0x05}
             res = yield from self._endpoint.thermostat.write_attributes(data)
-            # Force update
-            self.async_update()
+        self.last_request = time.time()
         # Check result
         for result in res:
             for subresult in result:
