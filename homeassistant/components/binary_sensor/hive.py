@@ -14,8 +14,7 @@ DEPENDENCIES = ['hive']
 _LOGGER = logging.getLogger(__name__)
 
 DEVICETYPE_DEVICE_CLASS = {'motionsensor': 'motion',
-                           'contactsensor': 'opening',
-                           }
+                           'contactsensor': 'opening'}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

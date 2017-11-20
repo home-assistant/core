@@ -23,8 +23,7 @@ FRIENDLY_NAMES = {'Heating_CurrentTemperature': "Current Temperature",
                   'Heating_Boost': "Heating Boost",
                   'HotWater_State': "Hot Water State",
                   'HotWater_Mode': "Hot Water Mode",
-                  'HotWater_Boost': "Hot Water Boost"
-                  }
+                  'HotWater_Boost': "Hot Water Boost"}
 DEVICETYPE_ICONS = {'Heating_CurrentTemperature': 'mdi:thermometer',
                     'Heating_TargetTemperature': 'mdi:thermometer',
                     'Heating_State': 'mdi:radiator',
@@ -34,8 +33,7 @@ DEVICETYPE_ICONS = {'Heating_CurrentTemperature': 'mdi:thermometer',
                     'HotWater_Mode': 'mdi:water-pump',
                     'HotWater_Boost': 'mdi:water-pump',
                     'Hive_Device_Light_Mode': 'mdi:eye',
-                    'Hive_Device_Plug_Mode': 'mdi:eye'
-                    }
+                    'Hive_Device_Plug_Mode': 'mdi:eye'}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
