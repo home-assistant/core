@@ -900,8 +900,8 @@ def test_custom_setup_params(hass):
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
-        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20"}),
-        State('climate.test_thermostat', '0',
+        State('climate.test_thermostat_temp', '0', {ATTR_TEMPERATURE: "20"}),
+        State('climate.test_thermostat_state', '0',
               {climate.ATTR_OPERATION_MODE: "off"}),
     ))
 
