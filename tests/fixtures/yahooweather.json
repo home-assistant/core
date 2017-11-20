@@ -23,15 +23,15 @@
           "region": " CA"
         },
         "wind": {
-          "chill": "66",
+          "chill": "56",
           "direction": "0",
-          "speed": "6.44"
+          "speed": "6.34"
         },
         "atmosphere": {
           "humidity": "71",
-          "pressure": "34100.95",
+          "pressure": "34123.95",
           "rising": "0",
-          "visibility": "25.91"
+          "visibility": "22.91"
         },
         "astronomy": {
           "sunrise": "6:21 am",

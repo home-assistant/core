@@ -125,8 +125,8 @@ class TestWeather(unittest.TestCase):
         data = state.attributes
         self.assertEqual(data.get(ATTR_WEATHER_TEMPERATURE), 18.0)
         self.assertEqual(data.get(ATTR_WEATHER_HUMIDITY), 71)
-        self.assertEqual(data.get(ATTR_WEATHER_PRESSURE), 34100.95)
-        self.assertEqual(data.get(ATTR_WEATHER_WIND_SPEED), 6.44)
+        self.assertEqual(data.get(ATTR_WEATHER_PRESSURE), 34123.95)
+        self.assertEqual(data.get(ATTR_WEATHER_WIND_SPEED), 6.34)
         self.assertEqual(data.get(ATTR_WEATHER_WIND_BEARING), 0)
         self.assertEqual(state.attributes.get('friendly_name'), 'Yweather')
 
