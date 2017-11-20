@@ -133,6 +133,8 @@ class SensiboClimate(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
+        # This field is not affected by temperatureUnit.
+        # It is always in C
         return convert_temperature(
             self._measurements['temperature'],
             TEMP_CELSIUS,
