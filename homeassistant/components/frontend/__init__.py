@@ -481,10 +481,10 @@ class IndexView(HomeAssistantView):
         else:
             panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
-        no_auth = 'true'
+        no_auth = '1'
         if hass.config.api.api_password and not is_trusted_ip(request):
             # do not try to auto connect on load
-            no_auth = 'false'
+            no_auth = '0'
 
         template = yield from hass.async_add_job(self.get_template, latest)
 
@@ -492,10 +492,8 @@ class IndexView(HomeAssistantView):
             no_auth=no_auth,
             panel_url=panel_url,
             panels=hass.data[DATA_PANELS],
-            dev_mode=self.repo_path is not None,
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[DATA_EXTRA_HTML_URL],
-            latest=latest,
         )
 
         return web.Response(text=resp, content_type='text/html')
