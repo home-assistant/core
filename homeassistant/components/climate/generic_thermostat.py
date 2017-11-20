@@ -89,7 +89,7 @@ class GenericThermostat(ClimateDevice):
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
-                 cold_tolerance, hot_tolerance, keep_alive, 
+                 cold_tolerance, hot_tolerance, keep_alive,
                  initial_operation_mode):
         """Initialize the thermostat."""
         self.hass = hass
