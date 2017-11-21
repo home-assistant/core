@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HiveBinarySensorEntity(BinarySensorDevice):
-    """representation of a Hive binary sensor."""
+    """Representation of a Hive binary sensor."""
 
     def __init__(self, hivesession, hivedevice):
         """Initialize the hive sensor."""
@@ -50,7 +50,7 @@ class HiveBinarySensorEntity(BinarySensorDevice):
     @property
     def should_poll(self):
         """No polling needed for the Hive binary sensor."""
-        return False
+        return True
 
     @property
     def name(self):
