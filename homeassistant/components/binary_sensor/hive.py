@@ -2,7 +2,7 @@
 Support for the Hive devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hive/
+https://home-assistant.io/components/binary_sensor.hive/
 """
 import logging
 
@@ -34,6 +34,8 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         self.device_type = hivedevice["HA_DeviceType"]
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
+
+        self.session.entities.append(self)
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
