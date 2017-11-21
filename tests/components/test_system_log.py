@@ -47,9 +47,7 @@ def assert_log(log, exception, message, level):
 
 def get_frame(name):
     """Get log stack frame."""
-    frame = MagicMock()
-    frame.filename = name
-    return frame
+    return (name, None, None, None)
 
 
 @asyncio.coroutine

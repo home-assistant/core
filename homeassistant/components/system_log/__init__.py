@@ -55,7 +55,9 @@ class LogErrorHandler(logging.Handler):
         be changed if neeeded.
         """
         if record.levelno >= logging.WARN:
-            self.records.appendleft([record, traceback.extract_stack()])
+            self.records.appendleft(
+                [record,
+                 [f for f, _, _, _ in traceback.extract_stack()]])
 
 
 @asyncio.coroutine
@@ -105,14 +107,14 @@ def _figure_out_source(record, call_stack, hass):
     else:
         index = -1
         for i, frame in enumerate(call_stack):
-            if frame.filename == record.pathname:
+            if frame == record.pathname:
                 index = i
                 break
         if index == -1:
             # For some reason we couldn't find pathname in the stack.
             stack = [record.pathname]
         else:
-            stack = [x.filename for x in call_stack[0:index+1]]
+            stack = call_stack[0:index+1]
 
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in HA. Try to figure out where error happened.
