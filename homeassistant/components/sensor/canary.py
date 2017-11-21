@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.canary/
 """
 from homeassistant.components.canary import DATA_CANARY
+from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['canary']
@@ -36,7 +37,7 @@ class CanarySensor(Entity):
         self._data = data
         self._sensor_type = sensor_type
         self._device_id = device.device_id
-        self._temperature_scale = self._data.temperature_scale
+        self._is_celsius = location.is_celsius
         self._sensor_value = None
 
         sensor_type_name = sensor_type.value.replace("_", " ").title()
@@ -65,7 +66,7 @@ class CanarySensor(Entity):
         """Return the unit of measurement this sensor expresses itself in."""
         from canary.api import SensorType
         if self._sensor_type == SensorType.TEMPERATURE:
-            return self._temperature_scale
+            return TEMP_CELSIUS if self._is_celsius else TEMP_FAHRENHEIT
         elif self._sensor_type == SensorType.HUMIDITY:
             return "%"
         elif self._sensor_type == SensorType.AIR_QUALITY:
@@ -75,7 +76,6 @@ class CanarySensor(Entity):
     def update(self):
         """Get the latest state of the sensor."""
         self._data.update()
-        self._temperature_scale = self._data.temperature_scale
 
         readings = self._data.get_readings(self._device_id)
         value = next((

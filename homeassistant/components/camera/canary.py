@@ -59,7 +59,7 @@ class CanaryCamera(Camera):
     @property
     def is_recording(self):
         """Return true if the device is recording."""
-        return not self._location.is_private
+        return self._location.is_recording
 
     @property
     def device_state_attributes(self):
@@ -95,4 +95,4 @@ class CanaryCamera(Camera):
     @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
-        return not self._location.is_private
+        return not self._location.is_recording
