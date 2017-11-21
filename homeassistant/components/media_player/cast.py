@@ -20,7 +20,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pychromecast==0.8.2']
+REQUIREMENTS = ['pychromecast==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
