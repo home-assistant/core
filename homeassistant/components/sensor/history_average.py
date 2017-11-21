@@ -8,7 +8,6 @@ import asyncio
 import bisect
 from collections import defaultdict
 import logging
-import math
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -21,7 +20,6 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,10 +63,9 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, 
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the HistoryAverage sensor."""
-    print("async_setup_platform!")
     entity_id = config.get(CONF_ENTITY_ID)
     start = config.get(CONF_START)
     end = config.get(CONF_END)
@@ -81,8 +78,8 @@ def async_setup_platform(hass, config, async_add_devices,
             template.hass = hass
 
     async_add_devices(
-        [HistoryAverageSensor(hass, entity_id, start, end, duration, 
-            name, unit)])
+        [HistoryAverageSensor(hass, entity_id, start, end, duration,
+                              name, unit)])
     return True
 
 
@@ -93,7 +90,7 @@ class HistoryAverageSensor(Entity):
     def async_get_history(self):
         """Pull states from recorder history."""
         yield from self.async_update_period()
-        start, end = self._period
+        start, _end = self._period
 
         self._history = []
 
@@ -101,35 +98,37 @@ class HistoryAverageSensor(Entity):
         states = history.state_changes_during_period(
             self._hass, start, None, self._entity_id)
         states = states.get(self._entity_id)
-        if(states):
+        if states:
             self._history.extend(states)
-
-        print("async_get_history: ", self._history)
 
     @asyncio.coroutine
     def asysnc_trim_history(self):
-        """Remove items which are not relevent to the current period"""
-
+        """Remove items which are not relevent to the current period."""
         yield from self.async_update_period()
-        start, end = self._period
+        start, _end = self._period
         start_timestamp = dt_util.as_timestamp(start)
 
-        def after_start(item, timestamp):
-            return item.last_changed.timestamp() >= timestamp 
+        def after_start(state, timestamp):
+            """Test if the State last changed after the timestamp."""
+            return state.last_changed.timestamp() >= timestamp
 
         # remove items before the current period's starting point,
         # keeping the first item before the starting period to enable
         # calculation of the state between start -> next state change
-        for index, x in enumerate(self._history[:]):
-            if after_start(x, start_timestamp):
+        for index, state in enumerate(self._history[:]):
+            if after_start(state, start_timestamp):
                 break
             else:
                 # remove if the next item is also before start
                 next_index = index + 1
-                if ((next_index < len(self._history)) and 
-                    (not after_start(self._history[next_index], 
-                        start_timestamp))):
+                if (next_index < len(self._history) and
+                        (not after_start(self._history[next_index],
+                                         start_timestamp))):
                     del self._history[index]
+
+    def get_period(self):
+        """Return current period, used for testing."""
+        return self._period
 
     def __init__(
             self, hass, entity_id, start, end, duration,
@@ -152,12 +151,9 @@ class HistoryAverageSensor(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Initialize data and register callbacks."""
-
         # load data from recorder and do initial calculation
         yield from self.async_get_history()
         yield from self.async_update()
-
-        print("async_added_to_hass")
 
         @callback
         def state_listener(entity, old_state, new_state):
@@ -168,10 +164,9 @@ class HistoryAverageSensor(Entity):
         @callback
         def sensor_startup(event):
             """Update on startup."""
-            print("sensor_startup")
             async_track_state_change(
                 self._hass, self._entity_id, state_listener)
-            
+
             self._hass.async_add_job(self.async_update_ha_state(True))
 
         self._hass.bus.async_listen_once(
@@ -215,16 +210,12 @@ class HistoryAverageSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Update the sensor's state."""
-
-        print("UPDATING....")
-
         # clean up history & update period
         yield from self.asysnc_trim_history()
         start, end = self._period
 
-        print(" - period start: ", start)
-        print(" - period end  : ", end)
-
+        _LOGGER.info(" - period start: %s", start)
+        _LOGGER.info(" - period end  : %s", end)
         now = HistoryAverageHelper.utcnow()
 
         # Compute timestamps
@@ -242,18 +233,15 @@ class HistoryAverageSensor(Entity):
             current_state = item.state
             current_time = item.last_changed.timestamp()
 
-            print("item: ", item)
-
             # don't include values not within the period
-            if(end_timestamp <= current_time):
+            if end_timestamp <= current_time:
                 break
 
             # Average over valid states
             if last_state is not None:
-                if(last_time < start_timestamp):
+                if last_time < start_timestamp:
                     last_time = start_timestamp
                 elapsed = current_time - last_time
-                print("  - adding elapsed time: ", elapsed)
                 total_elapsed += elapsed
                 intervals[float(last_state)] += elapsed
 
@@ -262,23 +250,16 @@ class HistoryAverageSensor(Entity):
 
         # Count time elapsed between last history state and end of measure
         if last_state is not None:
-            print("end          : ", dt_util.utc_from_timestamp(end_timestamp))
-            print("now          : ", dt_util.utc_from_timestamp(now_timestamp))
-            print("last_time    : ", dt_util.utc_from_timestamp(last_time))
-            print("last_state   : ", last_state)
             measure_end = min(end_timestamp, now_timestamp)
             elapsed = measure_end - last_time
-            print("  - adding elapsed time: ", elapsed)
             total_elapsed += elapsed
             intervals[float(last_state)] += elapsed
 
         # Calculate the weighted average
         updated_state = 0
         for state in intervals:
-            print('interval: ' + str(state) + ' duration: ' + str(intervals[state]))
             updated_state += float(state) * (intervals[state] / total_elapsed)
 
-        print("updated state: " + str(round(updated_state,2)))
         self._state = round(updated_state, 2)
 
     @asyncio.coroutine
@@ -332,12 +313,13 @@ class HistoryAverageSensor(Entity):
 
         self._period = start, end
 
+
 class HistoryAverageHelper:
     """Static methods to make the HistoryAverageSensor code lighter."""
 
     @staticmethod
     def utcnow():
-        """To test, enables patching now separately from dt_util"""
+        """To test, enables patching now separately from dt_util."""
         return dt_util.utcnow()
 
     @staticmethod
