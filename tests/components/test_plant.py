@@ -2,6 +2,7 @@
 import asyncio
 import unittest
 from datetime import datetime, timedelta
+from time import sleep
 
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
                                  STATE_PROBLEM, STATE_OK)
@@ -52,6 +53,7 @@ class TestPlant(unittest.TestCase):
     def setUp(self):
         """Create test instance of home assistant."""
         self.hass = get_test_home_assistant()
+        self.hass.start()
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -60,7 +62,7 @@ class TestPlant(unittest.TestCase):
     @asyncio.coroutine
     def test_valid_data(self):
         """Test processing valid data."""
-        sensor = plant.Plant(self.hass, 'my plant', GOOD_CONFIG)
+        sensor = plant.Plant('my plant', GOOD_CONFIG)
         sensor.hass = self.hass
         for reading, value in GOOD_DATA.items():
             sensor.state_changed(
@@ -76,7 +78,7 @@ class TestPlant(unittest.TestCase):
     @asyncio.coroutine
     def test_low_battery(self):
         """Test processing with low battery data and limit set."""
-        sensor = plant.Plant(self.hass, 'other plant', GOOD_CONFIG)
+        sensor = plant.Plant('other plant', GOOD_CONFIG)
         sensor.hass = self.hass
         assert sensor.state_attributes['problem'] == 'none'
         sensor.state_changed('sensor.mqtt_plant_battery',
@@ -113,6 +115,7 @@ class TestPlant(unittest.TestCase):
             self.hass.block_till_done()
         # wait for the recorder to really store the data
         self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+        sleep(0.1)
 
         assert setup_component(self.hass, plant.DOMAIN, {
             plant.DOMAIN: {
