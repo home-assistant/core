@@ -95,7 +95,7 @@ def _figure_out_source(record, call_stack, hass):
         # If netdisco is installed check its path too.
         from netdisco import __path__ as netdisco_path
         paths.append(netdisco_path[0])
-    except ModuleNotFoundError:
+    except ImportError:
         pass
     # If a stack trace exists, extract filenames from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
