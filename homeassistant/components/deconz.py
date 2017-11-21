@@ -20,7 +20,7 @@ from homeassistant.helpers import discovery
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==18']
+REQUIREMENTS = ['pydeconz==20']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,10 +93,13 @@ def async_setup(hass, config):
     else:
         from pydeconz.utils import get_api_key
         api_key = yield from get_api_key(hass.loop, **deconz_config)
-        deconz_config[CONF_API_KEY] = api_key
-        if not save_json(
-                hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key}):
-            _LOGGER.error("Failed to save API key to %s", CONFIG_FILE)
+        if api_key:
+            deconz_config[CONF_API_KEY] = api_key
+            save_json(hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
+        else:
+            hass.async_add_job(
+                request_configuration, hass, config, deconz_config)
+            return True
     result = yield from _setup_deconz(hass, config, deconz_config)
     return result is not False
 
@@ -140,6 +143,36 @@ def _setup_deconz(hass, config, deconz_config):
                                                      config))
     deconz.start()
     return True
+
+
+def request_configuration(hass, config, deconz_config):
+    """Request configuration steps from the user."""
+    configurator = hass.components.configurator
+
+    # pylint: disable=unused-argument
+    @asyncio.coroutine
+    def configuration_callback(data):
+        """Set up actions to do when our configuration callback is called."""
+        from pydeconz.utils import get_api_key
+        api_key = yield from get_api_key(hass.loop, **deconz_config)
+        if api_key:
+            deconz_config[CONF_API_KEY] = api_key
+            result = yield from _setup_deconz(hass, config, deconz_config)
+            save_json(hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
+            if result:
+                hass.async_add_job(configurator.request_done, request_id)
+                return True
+        hass.async_add_job(
+            configurator.notify_errors, request_id, "Didn't get an API key.")
+        return False
+
+    request_id = configurator.request_config(
+        "deCONZ", configuration_callback,
+        description="deCONZ -> Menu -> Settings -> Unlock Gateway",
+        submit_caption="I have unlocked the gateway",
+        link_name='deCONZ platform documentation',
+        link_url='https://home-assistant.io/components/deconz/',
+    )
 
 
 class DeconzEvent(object):
