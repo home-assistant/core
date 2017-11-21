@@ -287,6 +287,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_ARMED_NIGHT,
                          self.hass.states.get(entity_id).state)
 
+        # Do not go to the pending state when updating to the same state
+        alarm_control_panel.alarm_arm_night(self.hass, CODE, entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_NIGHT,
+                         self.hass.states.get(entity_id).state)
+
     def test_arm_night_with_invalid_code(self):
         """Attempt to arm night without a valid code."""
         self.assertTrue(setup_component(

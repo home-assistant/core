@@ -43,6 +43,7 @@ DEFAULT_DISARM = 'DISARM'
 SUPPORTED_PENDING_STATES = [STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
                             STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED]
 
+ATTR_PRE_PENDING_STATE = 'pre_pending_state'
 ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 
@@ -129,7 +130,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         self._pending_time = datetime.timedelta(seconds=pending_time)
         self._trigger_time = datetime.timedelta(seconds=trigger_time)
         self._disarm_after_trigger = disarm_after_trigger
-        self._pre_trigger_state = self._state
+        self._previous_state = self._state
         self._state_ts = None
 
         self._pending_time_by_state = {}
@@ -166,7 +167,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
                 else:
-                    self._state = self._pre_trigger_state
+                    self._state = self._previous_state
                     return self._state
 
         if self._state in SUPPORTED_PENDING_STATES and \
@@ -216,11 +217,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command. No code needed."""
-        self._pre_trigger_state = self._state
-
         self._update_state(STATE_ALARM_TRIGGERED)
 
     def _update_state(self, state):
+        if self._state == state:
+            return
+
+        self._previous_state = self._state
         self._state = state
         self._state_ts = dt_util.utcnow()
         self.schedule_update_ha_state()
@@ -253,6 +256,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         state_attr = {}
 
         if self.state == STATE_ALARM_PENDING:
+            state_attr[ATTR_PRE_PENDING_STATE] = self._previous_state
             state_attr[ATTR_POST_PENDING_STATE] = self._state
 
         return state_attr
