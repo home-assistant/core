@@ -32,6 +32,7 @@ DEVICE_CLASSES = [
     'opening',       # Door, window, etc.
     'plug',          # On means plugged in, Off means unplugged
     'power',         # Power, over-current, etc
+    'presence',      # On means home, Off means away
     'safety',        # Generic on=unsafe, off=safe
     'smoke',         # Smoke detector
     'sound',         # On means sound detected, Off means no sound
