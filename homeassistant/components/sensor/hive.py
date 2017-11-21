@@ -6,12 +6,8 @@ https://home-assistant.io/components/sensor.hive/
 """
 import logging
 
-from homeassistant.components.climate import (STATE_AUTO, STATE_HEAT,
-                                              STATE_OFF, STATE_ON)
 from homeassistant.components.hive import DATA_HIVE
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['hive']
 
