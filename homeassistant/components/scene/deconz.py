@@ -40,7 +40,7 @@ class DeconzScene(Scene):
     @property
     def name(self):
         """Return the name of the scene."""
-        return self._scene._group_name + ' ' + self._scene.name
+        return self._scene.full_name
 
     @property
     def should_poll(self):
