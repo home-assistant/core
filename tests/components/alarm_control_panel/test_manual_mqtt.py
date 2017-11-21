@@ -352,6 +352,49 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
 
+    def test_trigger_with_delay(self):
+        """Test trigger method and switch from pending to triggered."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code': CODE,
+                'delay_time': 1,
+                'pending_time': 0,
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state'
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_PENDING, state.state)
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes['post_pending_state'])
+
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_TRIGGERED, state.state)
+
     def test_trigger_zero_trigger_time(self):
         """Test disabled trigger."""
         self.assertTrue(setup_component(
@@ -717,6 +760,211 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
 
+    def test_trigger_with_unused_specific_delay(self):
+        """Test trigger method and switch from pending to triggered."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code': CODE,
+                'delay_time': 5,
+                'pending_time': 0,
+                'armed_home': {
+                    'delay_time': 10
+                },
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state'
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_PENDING, state.state)
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes['post_pending_state'])
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_TRIGGERED
+
+    def test_trigger_with_specific_delay(self):
+        """Test trigger method and switch from pending to triggered."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code': CODE,
+                'delay_time': 10,
+                'pending_time': 0,
+                'armed_away': {
+                    'delay_time': 1
+                },
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state'
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_PENDING, state.state)
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes['post_pending_state'])
+
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_TRIGGERED
+
+    def test_trigger_with_pending_and_delay(self):
+        """Test trigger method and switch from pending to triggered."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code': CODE,
+                'delay_time': 1,
+                'pending_time': 0,
+                'triggered': {
+                    'pending_time': 1
+                },
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state'
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_PENDING
+        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_PENDING
+        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+
+        future += timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_TRIGGERED
+
+    def test_trigger_with_pending_and_specific_delay(self):
+        """Test trigger method and switch from pending to triggered."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code': CODE,
+                'delay_time': 10,
+                'pending_time': 0,
+                'armed_away': {
+                    'delay_time': 1
+                },
+                'triggered': {
+                    'pending_time': 1
+                },
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state'
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_PENDING
+        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_PENDING
+        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+
+        future += timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ALARM_TRIGGERED
+
     def test_armed_home_with_specific_pending(self):
         """Test arm home method."""
         self.assertTrue(setup_component(
@@ -855,6 +1103,78 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
+
+    def test_arm_away_after_disabled_disarmed(self):
+        """Test pending state with and without zero trigger time."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'code': CODE,
+                'pending_time': 0,
+                'delay_time': 1,
+                'armed_away': {
+                    'pending_time': 1,
+                },
+                'disarmed': {
+                    'trigger_time': 0
+                },
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_PENDING, state.state)
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         state.attributes['pre_pending_state'])
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         state.attributes['post_pending_state'])
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_PENDING, state.state)
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         state.attributes['pre_pending_state'])
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         state.attributes['post_pending_state'])
+
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+            state = self.hass.states.get(entity_id)
+            self.assertEqual(STATE_ALARM_ARMED_AWAY, state.state)
+
+            alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+            self.hass.block_till_done()
+
+            state = self.hass.states.get(entity_id)
+            self.assertEqual(STATE_ALARM_PENDING, state.state)
+            self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                             state.attributes['pre_pending_state'])
+            self.assertEqual(STATE_ALARM_TRIGGERED,
+                             state.attributes['post_pending_state'])
+
+        future += timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_TRIGGERED, state.state)
 
     def test_arm_home_via_command_topic(self):
         """Test arming home via command topic."""
