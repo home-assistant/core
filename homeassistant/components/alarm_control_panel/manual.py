@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
-DEFAULT_PENDING_TIME = 60
+DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
 DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
@@ -44,7 +44,7 @@ def _state_validator(config):
 
 STATE_SETTING_SCHEMA = vol.Schema({
     vol.Optional(CONF_PENDING_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+        vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
     vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER,
@@ -75,7 +75,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
-        config.get(CONF_PENDING_TIME, DEFAULT_PENDING_TIME),
         config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
         config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
         config
@@ -92,7 +91,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
     the previous state or disarm if `disarm_after_trigger` is true.
     """
 
-    def __init__(self, hass, name, code, pending_time, trigger_time,
+    def __init__(self, hass, name, code, trigger_time,
                  disarm_after_trigger, config):
         """Init the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
@@ -104,10 +103,9 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._previous_state = self._state
         self._state_ts = None
 
-        self._pending_time_by_state = {}
-        for state in SUPPORTED_PENDING_STATES:
-            self._pending_time_by_state[state] = datetime.timedelta(
-                seconds=config[state][CONF_PENDING_TIME])
+        self._pending_time_by_state = {
+            state: config[state][CONF_PENDING_TIME]
+            for state in SUPPORTED_PENDING_STATES}
 
     @property
     def should_poll(self):

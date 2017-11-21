@@ -32,7 +32,7 @@ CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
 CONF_PAYLOAD_ARM_NIGHT = 'payload_arm_night'
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
-DEFAULT_PENDING_TIME = 60
+DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
 DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
 DEFAULT_ARM_AWAY = 'ARM_AWAY'
@@ -58,7 +58,7 @@ def _state_validator(config):
 
 STATE_SETTING_SCHEMA = vol.Schema({
     vol.Optional(CONF_PENDING_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+        vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 DEPENDENCIES = ['mqtt']
@@ -68,7 +68,7 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
     vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER,
@@ -94,7 +94,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
-        config.get(CONF_PENDING_TIME, DEFAULT_PENDING_TIME),
         config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
         config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
         config.get(mqtt.CONF_STATE_TOPIC),
@@ -117,7 +116,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
     the previous state or disarm if `disarm_after_trigger` is true.
     """
 
-    def __init__(self, hass, name, code, pending_time,
+    def __init__(self, hass, name, code,
                  trigger_time, disarm_after_trigger,
                  state_topic, command_topic, qos,
                  payload_disarm, payload_arm_home, payload_arm_away,
@@ -127,16 +126,14 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
-        self._pending_time = datetime.timedelta(seconds=pending_time)
         self._trigger_time = datetime.timedelta(seconds=trigger_time)
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
 
-        self._pending_time_by_state = {}
-        for state in SUPPORTED_PENDING_STATES:
-            self._pending_time_by_state[state] = datetime.timedelta(
-                seconds=config[state][CONF_PENDING_TIME])
+        self._pending_time_by_state = {
+            state: config[state][CONF_PENDING_TIME]
+            for state in SUPPORTED_PENDING_STATES}
 
         self._state_topic = state_topic
         self._command_topic = command_topic
