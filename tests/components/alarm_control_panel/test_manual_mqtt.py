@@ -162,6 +162,34 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
+    def test_arm_home_with_template_code(self):
+        """Attempt to arm with a template-based code."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code_template': '{{ "abc" }}',
+                'pending_time': 0,
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state',
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_home(self.hass, 'abc')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_ARMED_HOME, state.state)
+
     def test_arm_away_with_pending(self):
         """Test arm home method."""
         self.assertTrue(setup_component(
@@ -1109,7 +1137,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertTrue(setup_component(
             self.hass, alarm_control_panel.DOMAIN,
             {'alarm_control_panel': {
-                'platform': 'manual',
+                'platform': 'manual_mqtt',
                 'name': 'test',
                 'code': CODE,
                 'pending_time': 0,
@@ -1120,7 +1148,9 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 'disarmed': {
                     'trigger_time': 0
                 },
-                'disarm_after_trigger': False
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state',
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -1149,7 +1179,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                          state.attributes['post_pending_state'])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual.'
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1168,13 +1198,54 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                              state.attributes['post_pending_state'])
 
         future += timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual.'
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_TRIGGERED, state.state)
+
+    def test_disarm_with_template_code(self):
+        """Attempt to disarm with a valid or invalid template-based code."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'code_template':
+                    '{{ "" if from_state == "disarmed" else "abc" }}',
+                'pending_time': 0,
+                'disarm_after_trigger': False,
+                'command_topic': 'alarm/command',
+                'state_topic': 'alarm/state',
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_home(self.hass, 'def')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_ARMED_HOME, state.state)
+
+        alarm_control_panel.alarm_disarm(self.hass, 'def')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_ARMED_HOME, state.state)
+
+        alarm_control_panel.alarm_disarm(self.hass, 'abc')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(STATE_ALARM_DISARMED, state.state)
 
     def test_arm_home_via_command_topic(self):
         """Test arming home via command topic."""

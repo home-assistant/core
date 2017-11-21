@@ -21,6 +21,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 
+CONF_CODE_TEMPLATE = 'code_template'
+
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
 DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
@@ -71,7 +73,8 @@ def _state_schema(state):
 PLATFORM_SCHEMA = vol.Schema(vol.All({
     vol.Required(CONF_PLATFORM): 'manual',
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-    vol.Optional(CONF_CODE): cv.string,
+    vol.Exclusive(CONF_CODE, 'code validation'): cv.string,
+    vol.Exclusive(CONF_CODE_TEMPLATE, 'code validation'): cv.template,
     vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME):
         vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
@@ -103,6 +106,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
+        config.get(CONF_CODE_TEMPLATE),
         config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
         config
         )])
@@ -120,13 +124,17 @@ class ManualAlarm(alarm.AlarmControlPanel):
     A trigger_time of zero disables the alarm_trigger service.
     """
 
-    def __init__(self, hass, name, code,
+    def __init__(self, hass, name, code, code_template,
                  disarm_after_trigger, config):
         """Init the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
         self._name = name
-        self._code = str(code) if code else None
+        if code_template:
+            self._code = code_template
+            self._code.hass = hass
+        else:
+            self._code = code or None
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
@@ -267,7 +275,14 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     def _validate_code(self, code, state):
         """Validate given code."""
-        check = self._code is None or code == self._code
+        if self._code is None:
+            return True
+        if isinstance(self._code, str):
+            alarm_code = self._code
+        else:
+            alarm_code = self._code.render(from_state=self._state,
+                                           to_state=state)
+        check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
         return check
