@@ -24,7 +24,7 @@ NOTIFICATION_TITLE = 'Canary Setup'
 
 DOMAIN = 'canary'
 DATA_CANARY = 'canary'
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 DEFAULT_TIMEOUT = 15
 
 CONFIG_SCHEMA = vol.Schema({
