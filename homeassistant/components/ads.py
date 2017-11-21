@@ -33,8 +33,6 @@ DOMAIN = 'ads'
 CONF_ADS_VAR = 'adsvar'
 CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
 CONF_ADS_TYPE = 'adstype'
-CONF_ADS_USE_NOTIFY = 'use_notify'
-CONF_ADS_POLL_INTERVAL = 'poll_interval'
 CONF_ADS_FACTOR = 'factor'
 CONF_ADS_VALUE = 'value'
 
@@ -45,8 +43,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
         vol.Required(CONF_PORT): cv.port,
         vol.Optional(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_ADS_POLL_INTERVAL, default=1000): cv.positive_int,
-        vol.Optional(CONF_ADS_USE_NOTIFY, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -67,8 +63,6 @@ def setup(hass, config):
     net_id = conf.get(CONF_DEVICE)
     ip_address = conf.get(CONF_IP_ADDRESS)
     port = conf.get(CONF_PORT)
-    poll_interval = conf.get(CONF_ADS_POLL_INTERVAL)
-    use_notify = conf.get(CONF_ADS_USE_NOTIFY)
 
     # create a new ads connection
     client = pyads.Connection(net_id, port, ip_address)
@@ -89,8 +83,7 @@ def setup(hass, config):
 
     # connect to ads client and try to connect
     try:
-        ads = AdsHub(client, poll_interval=poll_interval,
-                     use_notify=use_notify)
+        ads = AdsHub(client)
     except pyads.pyads.ADSError:
         _LOGGER.error(
             'Could not connect to ADS host (netid=%s, port=%s)', net_id, port
@@ -128,11 +121,8 @@ NotificationItem = namedtuple(
 class AdsHub:
     """Representation of a PyADS connection."""
 
-    def __init__(self, ads_client, poll_interval, use_notify):
+    def __init__(self, ads_client):
         """Initialize the ADS Hub."""
-        self.poll_interval = poll_interval
-        self.use_notify = use_notify
-
         self._client = ads_client
         self._client.open()
 
