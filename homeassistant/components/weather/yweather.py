@@ -115,7 +115,7 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._data.yahoo.Now['temp']
+        return int(self._data.yahoo.Now['temp'])
 
     @property
     def temperature_unit(self):
