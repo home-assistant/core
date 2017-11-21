@@ -111,9 +111,9 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
     Representation of an alarm status.
 
     When armed, will be pending for 'pending_time', after that armed.
-    When triggered, will be pending for 'trigger_time'. After that will be
-    triggered for 'trigger_time', after that we return to the previous state
-    or disarm if `disarm_after_trigger` is true.
+    When triggered, will be pending for the triggered state's 'pending_time'.
+    After that will be triggered for 'trigger_time', after that we return to
+    the previous state or disarm if `disarm_after_trigger` is true.
     """
 
     def __init__(self, hass, name, code, pending_time,
