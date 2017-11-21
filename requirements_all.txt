@@ -331,7 +331,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171118.0
+home-assistant-frontend==20171121.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -676,7 +676,7 @@ pyhik==0.1.4
 pyhomematic==0.1.34
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==1.2.0
+pyhydroquebec==1.3.1
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
