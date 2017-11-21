@@ -124,7 +124,8 @@ def entity_to_device(entity: Entity, units: UnitSystem):
 
     if entity.domain == climate.DOMAIN:
         modes = ','.join(
-            m.lower() for m in entity.attributes.get(climate.ATTR_OPERATION_LIST, [])
+            m.lower() for m in entity.attributes.get(
+                climate.ATTR_OPERATION_LIST, [])
             if m.lower() in CLIMATE_SUPPORTED_MODES)
         device['attributes'] = {
             'availableThermostatModes': modes,
@@ -218,7 +219,6 @@ def determine_service(
     Attempt to return a tuple of service and service_data based on the entity
     and action requested.
     """
-
     _LOGGER.debug("Handling command %s with data %s", command, params)
     domain = entity_id.split('.')[0]
     service_data = {ATTR_ENTITY_ID: entity_id}  # type: Dict[str, Any]
