@@ -97,12 +97,10 @@ class WhoisSensor(Entity):
         """Get the more info attributes."""
         return self._attributes
 
-    def _empty_state_and_error(self, error_message, *args):
+    def _empty_state_and_attributes(self):
         """Empty the state and attributes on an error."""
         self._state = None
         self._attributes = None
-
-        _LOGGER.error(error_message, *args)
 
     def update(self):
         """Get the current WHOIS data for the domain."""
@@ -111,19 +109,22 @@ class WhoisSensor(Entity):
         try:
             response = self.whois(self._domain, normalized=True)
         except WhoisException as ex:
-            return self._empty_state_and_error(
-                "Exception %s occurred during WHOIS lookup", ex)
+            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
+            self._empty_state_and_attributes()
             return
 
         if response:
             if 'expiration_date' not in response:
-                return self._empty_state_and_error(
+                _LOGGER.error(
                     "Failed to find expiration_date in whois lookup response. "
                     "Did find: %s", ', '.join(response.keys()))
+                self._empty_state_and_attributes()
+                return
 
             if not response['expiration_date']:
-                return self._empty_state_and_error(
-                    "Whois response contains empty expiration_date")
+                _LOGGER.error("Whois response contains empty expiration_date")
+                self._empty_state_and_attributes()
+                return
 
             attrs = {}
 
