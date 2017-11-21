@@ -837,7 +837,7 @@ python-juicenet==0.0.5
 # homeassistant.components.light.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-miio==0.3.1
+python-miio==0.3.2
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
