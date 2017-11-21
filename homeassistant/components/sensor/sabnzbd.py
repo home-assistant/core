@@ -40,6 +40,7 @@ SENSOR_TYPES = {
     'queue_remaining': ['Left', 'MB'],
     'disk_size': ['Disk', 'GB'],
     'disk_free': ['Disk Free', 'GB'],
+    'queue_count': ['Queue Count', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -211,5 +212,7 @@ class SabnzbdSensor(Entity):
                 self._state = self.sabnzb_client.queue.get('diskspacetotal1')
             elif self.type == 'disk_free':
                 self._state = self.sabnzb_client.queue.get('diskspace1')
+            elif self.type == 'queue_count':
+                self._state = self.sabnzb_client.queue.get('noofslots_total')
             else:
                 self._state = 'Unknown'
