@@ -9,7 +9,7 @@ import logging
 import requests
 
 from homeassistant.components.camera import Camera
-from homeassistant.components.canary import DATA_CANARY
+from homeassistant.components.canary import DATA_CANARY, DEFAULT_TIMEOUT
 
 DEPENDENCIES = ['canary']
 
@@ -27,7 +27,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for location in data.locations:
         entries = data.get_motion_entries(location.location_id)
         if entries:
-            devices.append(CanaryCamera(data, location.location_id))
+            devices.append(CanaryCamera(data, location.location_id,
+                                        DEFAULT_TIMEOUT))
 
     add_devices(devices, True)
 
@@ -35,14 +36,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CanaryCamera(Camera):
     """An implementation of a Canary security camera."""
 
-    def __init__(self, data, location_id):
+    def __init__(self, data, location_id, timeout):
         """Initialize a Canary security camera."""
         super().__init__()
         self._data = data
         self._location_id = location_id
+        self._timeout = timeout
 
         self._location = None
-        self._last_entry = None
+        self._motion_entry = None
         self._image_content = None
 
     def camera_image(self):
@@ -62,12 +64,12 @@ class CanaryCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        if self._last_entry is None:
+        if self._motion_entry is None:
             return None
 
         return {
-            ATTR_MOTION_START_TIME: self._last_entry.start_time,
-            ATTR_MOTION_END_TIME: self._last_entry.end_time,
+            ATTR_MOTION_START_TIME: self._motion_entry.start_time,
+            ATTR_MOTION_END_TIME: self._motion_entry.end_time,
         }
 
     def should_poll(self):
@@ -81,13 +83,14 @@ class CanaryCamera(Camera):
 
         entries = self._data.get_motion_entries(self._location_id)
         if entries:
-            current_entry = entries[0]
+            current = entries[0]
+            previous = self._motion_entry
 
-            if self._last_entry is None \
-                    or self._last_entry.entry_id != current_entry.entry_id:
-                thumbnail = current_entry.thumbnails[0]
-                self._image_content = requests.get(thumbnail.image_url).content
-                self._last_entry = current_entry
+            if previous is None or previous.entry_id != current.entry_id:
+                self._motion_entry = current
+                self._image_content = requests.get(
+                    current.thumbnails[0].image_url,
+                    timeout=self._timeout).content
 
     @property
     def motion_detection_enabled(self):
