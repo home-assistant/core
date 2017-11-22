@@ -4,8 +4,6 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.hive/
 """
-import logging
-
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.hive import DATA_HIVE
 

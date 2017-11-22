@@ -4,8 +4,6 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.hive/
 """
-import logging
-
 from homeassistant.components.hive import DATA_HIVE
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
                                             SUPPORT_BRIGHTNESS,

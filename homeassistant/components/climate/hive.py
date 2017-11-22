@@ -4,8 +4,6 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.hive/
 """
-import logging
-
 from homeassistant.components.climate import (ClimateDevice,
                                               STATE_AUTO, STATE_HEAT,
                                               STATE_OFF, STATE_ON)

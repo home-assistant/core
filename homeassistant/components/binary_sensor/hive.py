@@ -4,8 +4,6 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.hive/
 """
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.hive import DATA_HIVE
 
