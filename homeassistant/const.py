@@ -291,6 +291,10 @@ ATTR_DEVICE_CLASS = 'device_class'
 # Temperature attribute
 ATTR_TEMPERATURE = 'temperature'
 
+# For alarms' STATE_ALARM_PENDING
+ATTR_PRE_PENDING_STATE = 'pre_pending_state'
+ATTR_POST_PENDING_STATE = 'post_pending_state'
+
 # #### UNITS OF MEASUREMENT ####
 # Temperature units
 TEMP_CELSIUS = '°C'

@@ -17,7 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
     CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_DELAY_TIME, CONF_PENDING_TIME,
-    CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
+    CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER, ATTR_PRE_PENDING_STATE,
+    ATTR_POST_PENDING_STATE)
 import homeassistant.components.mqtt as mqtt
 
 from homeassistant.helpers.event import async_track_state_change
@@ -54,9 +55,6 @@ SUPPORTED_PRETRIGGER_STATES = [state for state in SUPPORTED_STATES
 
 SUPPORTED_PENDING_STATES = [state for state in SUPPORTED_STATES
                             if state != STATE_ALARM_DISARMED]
-
-ATTR_PRE_PENDING_STATE = 'pre_pending_state'
-ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 
 def _state_validator(config):

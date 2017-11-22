@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
+    ATTR_PRE_PENDING_STATE, ATTR_POST_PENDING_STATE,
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
@@ -101,7 +102,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         state = self.hass.states.get(entity_id)
-        assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_HOME
+        self.assertEqual(STATE_ALARM_ARMED_HOME,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -216,7 +218,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         state = self.hass.states.get(entity_id)
-        assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_AWAY
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -303,8 +306,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         state = self.hass.states.get(entity_id)
-        assert state.attributes['post_pending_state'] == \
-            STATE_ALARM_ARMED_NIGHT
+        self.assertEqual(STATE_ALARM_ARMED_NIGHT,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -412,7 +415,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_PENDING, state.state)
         self.assertEqual(STATE_ALARM_TRIGGERED,
-                         state.attributes['post_pending_state'])
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -499,7 +502,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         state = self.hass.states.get(entity_id)
-        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -823,7 +827,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_PENDING, state.state)
         self.assertEqual(STATE_ALARM_TRIGGERED,
-                         state.attributes['post_pending_state'])
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -869,7 +873,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_PENDING, state.state)
         self.assertEqual(STATE_ALARM_TRIGGERED,
-                         state.attributes['post_pending_state'])
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -914,7 +918,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         state = self.hass.states.get(entity_id)
         assert state.state == STATE_ALARM_PENDING
-        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -924,7 +929,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         state = self.hass.states.get(entity_id)
         assert state.state == STATE_ALARM_PENDING
-        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future += timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -972,7 +978,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         state = self.hass.states.get(entity_id)
         assert state.state == STATE_ALARM_PENDING
-        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -982,7 +989,8 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         state = self.hass.states.get(entity_id)
         assert state.state == STATE_ALARM_PENDING
-        assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future += timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -1164,9 +1172,9 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_PENDING, state.state)
         self.assertEqual(STATE_ALARM_DISARMED,
-                         state.attributes['pre_pending_state'])
+                         state.attributes[ATTR_PRE_PENDING_STATE])
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
-                         state.attributes['post_pending_state'])
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
@@ -1174,9 +1182,9 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_PENDING, state.state)
         self.assertEqual(STATE_ALARM_DISARMED,
-                         state.attributes['pre_pending_state'])
+                         state.attributes[ATTR_PRE_PENDING_STATE])
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
-                         state.attributes['post_pending_state'])
+                         state.attributes[ATTR_POST_PENDING_STATE])
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -1193,9 +1201,9 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             state = self.hass.states.get(entity_id)
             self.assertEqual(STATE_ALARM_PENDING, state.state)
             self.assertEqual(STATE_ALARM_ARMED_AWAY,
-                             state.attributes['pre_pending_state'])
+                             state.attributes[ATTR_PRE_PENDING_STATE])
             self.assertEqual(STATE_ALARM_TRIGGERED,
-                             state.attributes['post_pending_state'])
+                             state.attributes[ATTR_POST_PENDING_STATE])
 
         future += timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
