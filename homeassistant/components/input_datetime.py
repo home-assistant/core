@@ -27,6 +27,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 CONF_HAS_DATE = 'has_date'
 CONF_HAS_TIME = 'has_time'
 CONF_INITIAL = 'initial'
+CONF_DEFAULT = 'default'
 
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
@@ -47,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HAS_TIME): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_INITIAL): cv.string,
+            vol.Optional(CONF_DEFAULT): cv.string,
         }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
                                          (CONF_HAS_TIME, True)))})
 }, extra=vol.ALLOW_EXTRA)
@@ -75,8 +77,10 @@ def async_setup(hass, config):
         has_date = cfg.get(CONF_HAS_DATE)
         icon = cfg.get(CONF_ICON)
         initial = cfg.get(CONF_INITIAL)
+        default = cfg.get(CONF_DEFAULT)
         entities.append(InputDatetime(object_id, name,
-                                      has_date, has_time, icon, initial))
+                                      has_date, has_time, icon,
+                                      initial, default))
 
     if not entities:
         return False
@@ -113,7 +117,8 @@ def async_setup(hass, config):
 class InputDatetime(Entity):
     """Representation of a datetime input."""
 
-    def __init__(self, object_id, name, has_date, has_time, icon, initial):
+    def __init__(self, object_id, name, has_date, has_time, icon,
+                 initial, default):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -121,6 +126,7 @@ class InputDatetime(Entity):
         self._has_time = has_time
         self._icon = icon
         self._initial = initial
+        self._default = default
         self._current_datetime = None
 
     @asyncio.coroutine
@@ -138,6 +144,10 @@ class InputDatetime(Entity):
                                                         self.entity_id)
             if old_state is not None:
                 restore_val = old_state.state
+
+        # Priority 3: Custom default
+        if self._default is not None and restore_val is None:
+            restore_val = self._default
 
         if restore_val is not None:
             if not self._has_date:
