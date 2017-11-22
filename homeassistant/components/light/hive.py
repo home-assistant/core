@@ -14,11 +14,11 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
 
 DEPENDENCIES = ['hive']
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive light devices."""
+    if discovery_info is None:
+        return
     session = hass.data.get(DATA_HIVE)
 
     add_devices([HiveDeviceLight(session, discovery_info)])
@@ -34,6 +34,8 @@ class HiveDeviceLight(Light):
         self.device_type = hivedevice["HA_DeviceType"]
         self.light_device_type = hivedevice["Hive_Light_DeviceType"]
         self.session = hivesession
+        self.data_updatesource = '{}.{}'.format(self.device_type,
+                                                self.node_id)
         self.session.entities.append(self)
 
     def handle_update(self, updatesource):
@@ -98,16 +100,14 @@ class HiveDeviceLight(Light):
         else:
             self.session.light.turn_on(self.node_id)
 
-        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
-            entity.handle_update(updatesource)
+            entity.handle_update(self.data_updatesource)
 
     def turn_off(self):
         """Instruct the light to turn off."""
         self.session.light.turn_off(self.node_id)
-        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
-            entity.handle_update(updatesource)
+            entity.handle_update(self.data_updatesource)
 
     @property
     def supported_features(self):
@@ -122,3 +122,9 @@ class HiveDeviceLight(Light):
                 SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR)
 
         return supported_features
+
+    def update(self):
+        """Update all Node data frome Hive."""
+        if self.session.core.update_data(self.node_id):
+            for entity in self.session.entities:
+                entity.handle_update(self.data_updatesource)

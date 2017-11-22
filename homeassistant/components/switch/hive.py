@@ -11,11 +11,11 @@ from homeassistant.components.hive import DATA_HIVE
 
 DEPENDENCIES = ['hive']
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive switches."""
+    if discovery_info is None:
+        return
     session = hass.data.get(DATA_HIVE)
 
     add_devices([HiveDevicePlug(session, discovery_info)])
@@ -30,6 +30,8 @@ class HiveDevicePlug(SwitchDevice):
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
+        self.data_updatesource = '{}.{}'.format(self.device_type,
+                                                self.node_id)
         self.session.entities.append(self)
 
     def handle_update(self, updatesource):
@@ -55,13 +57,17 @@ class HiveDevicePlug(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.session.switch.turn_on(self.node_id)
-        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
-            entity.handle_update(updatesource)
+            entity.handle_update(self.data_updatesource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self.session.switch.turn_off(self.node_id)
-        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
-            entity.handle_update(updatesource)
+            entity.handle_update(self.data_updatesource)
+
+    def update(self):
+        """Update all Node data frome Hive."""
+        if self.session.core.update_data(self.node_id):
+            for entity in self.session.entities:
+                entity.handle_update(self.data_updatesource)

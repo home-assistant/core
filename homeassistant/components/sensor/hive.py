@@ -11,11 +11,11 @@ from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['hive']
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive sensor devices."""
+    if discovery_info is None:
+        return
     session = hass.data.get(DATA_HIVE)
 
     if discovery_info["HA_DeviceType"] == "Hub_OnlineStatus":
@@ -30,6 +30,8 @@ class HiveSensorEntity(Entity):
         self.node_id = hivedevice["Hive_NodeID"]
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
+        self.data_updatesource = '{}.{}'.format(self.device_type,
+                                                self.node_id)
         self.session.entities.append(self)
 
     def handle_update(self, updatesource):
@@ -40,7 +42,7 @@ class HiveSensorEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Hub Status"
+        return "Hive hub status"
 
     @property
     def state(self):
@@ -48,5 +50,7 @@ class HiveSensorEntity(Entity):
         return self.session.sensor.hub_online_status(self.node_id)
 
     def update(self):
-        """Fetch new state data for the sensor."""
-        self.session.core.update_data(self.node_id)
+        """Update all Node data frome Hive."""
+        if self.session.core.update_data(self.node_id):
+            for entity in self.session.entities:
+                entity.handle_update(self.data_updatesource)

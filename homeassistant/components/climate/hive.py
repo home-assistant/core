@@ -13,8 +13,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.components.hive import DATA_HIVE
 
 DEPENDENCIES = ['hive']
-
-_LOGGER = logging.getLogger(__name__)
 HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
                       'ON': STATE_ON, 'OFF': STATE_OFF}
 HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
@@ -23,6 +21,8 @@ HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive climate devices."""
+    if discovery_info is None:
+        return
     session = hass.data.get(DATA_HIVE)
 
     add_devices([HiveClimateEntity(session, discovery_info)])
@@ -37,6 +37,8 @@ class HiveClimateEntity(ClimateDevice):
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
+        self.data_updatesource = '{}.{}'.format(self.device_type,
+                                                self.node_id)
 
         if self.device_type == "Heating":
             self.modes = [STATE_AUTO, STATE_HEAT, STATE_OFF]
@@ -113,9 +115,8 @@ class HiveClimateEntity(ClimateDevice):
         elif self.device_type == "HotWater":
             self.session.hotwater.set_mode(self.node_id, new_mode)
 
-        updatesource = '{}.{}'.format(self.device_type, self.node_id)
         for entity in self.session.entities:
-            entity.handle_update(updatesource)
+            entity.handle_update(self.data_updatesource)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -125,10 +126,11 @@ class HiveClimateEntity(ClimateDevice):
                 self.session.heating.set_target_temperature(self.node_id,
                                                             new_temperature)
 
-            updatesource = '{}.{}'.format(self.device_type, self.node_id)
             for entity in self.session.entities:
-                entity.handle_update(updatesource)
+                entity.handle_update(self.data_updatesource)
 
     def update(self):
         """Update all Node data frome Hive."""
-        self.session.core.update_data(self.node_id)
+        if self.session.core.update_data(self.node_id):
+            for entity in self.session.entities:
+                entity.handle_update(self.data_updatesource)

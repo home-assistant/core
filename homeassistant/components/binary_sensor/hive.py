@@ -11,14 +11,14 @@ from homeassistant.components.hive import DATA_HIVE
 
 DEPENDENCIES = ['hive']
 
-_LOGGER = logging.getLogger(__name__)
-
 DEVICETYPE_DEVICE_CLASS = {'motionsensor': 'motion',
                            'contactsensor': 'opening'}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive sensor devices."""
+    if discovery_info is None:
+        return
     session = hass.data.get(DATA_HIVE)
 
     add_devices([HiveBinarySensorEntity(session, discovery_info)])
@@ -34,6 +34,8 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         self.device_type = hivedevice["HA_DeviceType"]
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
+        self.data_updatesource = '{}.{}'.format(self.device_type,
+                                                self.node_id)
 
         self.session.entities.append(self)
 
@@ -48,11 +50,6 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         return DEVICETYPE_DEVICE_CLASS.get(self.node_device_type)
 
     @property
-    def should_poll(self):
-        """No polling needed for the Hive binary sensor."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the binary sensor."""
         return self.node_name
@@ -64,5 +61,7 @@ class HiveBinarySensorEntity(BinarySensorDevice):
                                              self.node_device_type)
 
     def update(self):
-        """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
+        """Update all Node data frome Hive."""
+        if self.session.core.update_data(self.node_id):
+            for entity in self.session.entities:
+                entity.handle_update(self.data_updatesource)
