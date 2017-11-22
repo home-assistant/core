@@ -319,6 +319,7 @@ omit =
     homeassistant/components/device_tracker/linksys_ap.py
     homeassistant/components/device_tracker/linksys_smart.py
     homeassistant/components/device_tracker/luci.py
+    homeassistant/components/device_tracker/meraki.py
     homeassistant/components/device_tracker/mikrotik.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
