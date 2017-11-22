@@ -20,7 +20,7 @@ certifi>=2017.4.17
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.doorbird
-DoorBirdPy==0.0.4
+DoorBirdPy==0.1.0
 
 # homeassistant.components.isy994
 PyISY==1.0.8
