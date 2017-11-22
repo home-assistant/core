@@ -1,13 +1,20 @@
 """The tests for the Canary sensor platform."""
 import copy
 import unittest
-
-import requests_mock
+from unittest.mock import patch
 
 from homeassistant.components import canary as base_canary
+from homeassistant.components.canary import DATA_CANARY
 from homeassistant.components.sensor import canary
 from tests.common import (get_test_home_assistant)
-from tests.components.test_canary import VALID_CONFIG, _setUpResponses
+from tests.components.test_canary import API_LOCATIONS
+
+VALID_CONFIG = {
+    "canary": {
+        "username": "foo@bar.org",
+        "password": "bar",
+    }
+}
 
 
 class TestCanarySensorSetup(unittest.TestCase):
@@ -29,27 +36,15 @@ class TestCanarySensorSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @requests_mock.Mocker()
-    def test_sensor(self, mock):
+    @patch('homeassistant.components.canary.CanaryData')
+    def test_setup_sensors(self, mock_canary):
         """Test the Canary senskor class and methods."""
-        _setUpResponses(mock)
+
         base_canary.setup(self.hass, self.config)
+
+        self.hass.data[DATA_CANARY] = mock_canary()
+        self.hass.data[DATA_CANARY].locations = API_LOCATIONS
+
         canary.setup_platform(self.hass, self.config, self.add_devices, None)
 
         self.assertEqual(6, len(self.DEVICES))
-
-        for device in self.DEVICES:
-            device.update()
-
-            if device.name == "New Home Family Room Air Quality":
-                self.assertEqual(0.9, device.state)
-            elif device.name == "New Home Family Room Humidity":
-                self.assertEqual(32.1, device.state)
-            elif device.name == "New Home Family Room Temperature":
-                self.assertEqual(18.3, device.state)
-            elif device.name == "Old Home Den Air Quality":
-                self.assertEqual(0.7, device.state)
-            elif device.name == "Old Home Den Humidity":
-                self.assertEqual(50.2, device.state)
-            elif device.name == "Old Home Den Temperature":
-                self.assertEqual(15.3, device.state)

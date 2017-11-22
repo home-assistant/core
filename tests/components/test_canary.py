@@ -1,72 +1,63 @@
 """The tests for the Canary component."""
-import copy
 import unittest
-
-import requests_mock
+from unittest.mock import patch
 
 import homeassistant.components.canary as canary
-from canary.api import URL_LOGIN_PAGE, COOKIE_SSESYRANAC, COOKIE_XSRF_TOKEN, \
-    URL_LOGIN_API, URL_ME_API, URL_LOCATIONS_API, URL_READINGS_API, \
-    URL_ENTRIES_API
-from homeassistant import setup
+from canary.api import Location, Mode
 from tests.common import (
-    get_test_home_assistant, load_fixture)
+    get_test_home_assistant)
 
-VALID_CONFIG = {
-    "canary": {
-        "username": "foo@bar.org",
-        "password": "bar",
-    }
+MODES_BY_NAME = {
+    "home": Mode({"id": 1, "name": "Home", "resource_uri": "/v1/home"}),
+    "away": Mode({"id": 2, "name": "Away", "resource_uri": "/v1/away"}),
+    "night": Mode({"id": 3, "name": "Night", "resource_uri": "/v1/night"}),
 }
 
-VALUE_XSRF_TOKEN = "&*GYG&*T*"
-VALUE_SSESYRANAC = "(Y(*YHH(H*H0h"
-
-
-def _setUpResponses(mock):
-    mock.register_uri(
-        "GET",
-        URL_LOGIN_PAGE,
-        status_code=200,
-        cookies={
-            COOKIE_XSRF_TOKEN: VALUE_XSRF_TOKEN,
-            COOKIE_SSESYRANAC: VALUE_SSESYRANAC,
-        })
-
-    mock.register_uri(
-        "POST",
-        URL_LOGIN_API,
-        text=load_fixture("canary_login.json"))
-
-    mock.register_uri(
-        "GET",
-        URL_ME_API.format("foo@bar.org"),
-        text=load_fixture("canary_me.json"))
-
-    mock.register_uri(
-        "GET",
-        URL_LOCATIONS_API,
-        text=load_fixture("canary_locations.json"))
-
-    mock.register_uri(
-        "GET",
-        URL_READINGS_API.format(40001, "canary"),
-        text=load_fixture("canary_readings_40001.json"))
-
-    mock.register_uri(
-        "GET",
-        URL_READINGS_API.format(40003, "canary"),
-        text=load_fixture("canary_readings_40003.json"))
-
-    mock.register_uri(
-        "GET",
-        URL_ENTRIES_API.format(30002, "motion", 6),
-        text=load_fixture("canary_entries_40001.json"))
-
-    mock.register_uri(
-        "GET",
-        URL_ENTRIES_API.format(30001, "motion", 6),
-        text="[]")
+API_LOCATIONS = [Location({
+    "id": 1,
+    "name": "Home",
+    "is_private": False,
+    "mode": {"name": "away"},
+    "current_mode": {"name": "armed"},
+    "devices": [
+        {
+            "id": 20,
+            "name": "Dining Room",
+            "online": True,
+            "device_type": {},
+        },
+        {
+            "id": 21,
+            "name": "Front Yard",
+            "online": False,
+            "device_type": {},
+        }
+    ],
+    "customers": [{
+        "id": 30,
+        "first_name": "",
+        "last_name": "",
+        "celsius": True,
+    }],
+}, MODES_BY_NAME), Location({
+    "id": 2,
+    "name": "Vacation Home",
+    "is_private": True,
+    "mode": {"name": "home"},
+    "current_mode": {"name": "standby"},
+    "devices": [{
+        "id": 22,
+        "name": "Den",
+        "online": True,
+        "device_type": {},
+    }],
+    "customers": [{
+        "id": 31,
+        "first_name": "",
+        "last_name": "",
+        "celsius": False,
+    }],
+}, MODES_BY_NAME)]
 
 
 class TestCanary(unittest.TestCase):
@@ -75,31 +66,43 @@ class TestCanary(unittest.TestCase):
     def setUp(self):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
-        self.config = copy.deepcopy(VALID_CONFIG)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
 
-    @requests_mock.Mocker()
-    def test_setup(self, mock):
-        """Test the setup."""
-        _setUpResponses(mock)
-        response = canary.setup(self.hass, self.config)
-        self.assertTrue(response)
+    @patch('homeassistant.components.canary.CanaryData.update')
+    @patch('canary.api.Api.login')
+    def test_setup_with_valid_config(self, mock_update, mock_login):
+        """Test setup component."""
+        config = {
+            "canary": {
+                "username": "foo@bar.org",
+                "password": "bar",
+            }
+        }
 
-    @requests_mock.Mocker()
-    def test_setup_component_no_login(self, mock):
-        """Test the setup when no login is configured."""
-        _setUpResponses(mock)
-        conf = self.config
-        del conf["canary"]["username"]
-        assert not setup.setup_component(self.hass, canary.DOMAIN, conf)
+        self.assertTrue(canary.setup(self.hass, config))
 
-    @requests_mock.Mocker()
-    def test_setup_component_no_pwd(self, mock):
-        """Test the setup when no password is configured."""
-        _setUpResponses(mock)
-        conf = self.config
-        del conf["canary"]["password"]
-        assert not setup.setup_component(self.hass, canary.DOMAIN, conf)
+        mock_update.assert_called_once()
+        mock_login.assert_called_once()
+
+    def test_setup_with_missing_password(self):
+        """Test setup component."""
+        config = {
+            "canary": {
+                "username": "foo@bar.org",
+            }
+        }
+
+        self.assertFalse(canary.setup(self.hass, config))
+
+    def test_setup_with_missing_username(self):
+        """Test setup component."""
+        config = {
+            "canary": {
+                "password": "bar",
+            }
+        }
+
+        self.assertFalse(canary.setup(self.hass, config))
