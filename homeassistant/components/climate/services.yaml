@@ -45,6 +45,9 @@ set_temperature:
     operation_mode:
       description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
       example: 'Heat'
+    until:
+      description: Return to the scheduled temperature at this time
+      example: "2017-11-20T08:30"
 set_humidity:
   description: Set target humidity of climate device.
   fields:
@@ -100,3 +103,4 @@ ecobee_resume_program:
     resume_all:
       description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
       example: true
+

@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_FAN_LIST,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST)
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_UNTIL)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FAN = 'fan'
 ATTR_SYSTEM_MODE = 'system_mode'
 ATTR_CURRENT_OPERATION = 'equipment_output_status'
+"""ATTR_UNTIL = 'until'"""
 
 CONF_AWAY_TEMPERATURE = 'away_temperature'
 CONF_COOL_AWAY_TEMPERATURE = 'away_cool_temperature'
@@ -153,7 +154,7 @@ class RoundThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self.client.set_temperature(self._name, temperature)
+        self.client.set_temperature(self._name, temperature, kwargs.get(ATTR_UNTIL))
 
     @property
     def current_operation(self: ClimateDevice) -> str:
