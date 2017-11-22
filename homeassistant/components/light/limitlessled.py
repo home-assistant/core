@@ -9,12 +9,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE)
+from homeassistant.const import (
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE, STATE_ON)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA,
+    PROP_TO_ATTR)
+from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['limitlessled==1.0.8']
@@ -167,10 +170,20 @@ class LimitlessLEDGroup(Light):
         self.config = config
 
     @asyncio.coroutine
-    def async_restore_state(self, is_on, **kwargs):
+    def async_added_to_hass(self):
         """Restore the state."""
-        if is_on:
-            yield from self.turn_on(**kwargs)
+        old_state = yield from async_get_last_state(self.hass, self.entity_id)
+
+        if not old_state:
+            return
+
+        params = {key: old_state.attributes[key] for key in PROP_TO_ATTR
+                  if key in old_state.attributes}
+
+        # We need to call turn_on here because the component turns the devices
+        # off on init to achieve a known state.
+        if old_state.state == STATE_ON:
+            yield from self.turn_on(**params)
 
     @staticmethod
     def factory(group, config):
@@ -189,6 +202,11 @@ class LimitlessLEDGroup(Light):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return if we should poll this device."""
+        return True
 
     @property
     def name(self):
