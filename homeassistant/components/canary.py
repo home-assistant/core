@@ -78,7 +78,7 @@ class CanaryData(object):
         self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self, **kwargs):
         """Get the latest data from py-canary."""
         for location in self._api.get_locations():
             location_id = location.location_id
@@ -116,5 +116,6 @@ class CanaryData(object):
         return self._readings_by_device_id.get(device_id, [])
 
     def set_location_mode(self, location_id, mode_name):
+        """Set location mode."""
         self._api.set_location_mode(location_id, mode_name)
         self.update(no_throttle=True)
