@@ -47,6 +47,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_setup(self):
         """Test the history average sensor setup."""
+        self.start_hass()
+
         config = {
             'history': {
             },
@@ -66,6 +68,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(state['state'], '0')
 
     def test_period_parsing(self):
+        self.start_hass()
+
         """Test the conversion from templates to period."""
         today = Template('{{ now().replace(hour=0).replace(minute=0)'
                          '.replace(second=0) }}', self.hass)
@@ -259,6 +263,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(float(state.state), 28.01)
 
     def test_wrong_date(self):
+        self.start_hass()
+
         """Test when start or end value is not a timestamp or a date."""
         good = Template('{{ now() }}', self.hass)
         bad = Template('{{ TEST }}', self.hass)
@@ -278,6 +284,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(before_update2, sensor2.get_period())
 
     def test_wrong_duration(self):
+        self.start_hass()
+
         """Test when duration value is not a timedelta."""
         config = {
             'history': {
@@ -297,6 +305,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
                           setup_component(self.hass, 'sensor', config))
 
     def test_bad_template(self):
+        self.start_hass()
+
         """Test Exception when the template cannot be parsed."""
         bad = Template('{{ x - 12 }}', self.hass)  # x is undefined
         duration = '01:00'
@@ -316,6 +326,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(before_update2, sensor2.get_period())
 
     def test_not_enough_arguments(self):
+        self.start_hass()
+
         """Test config when not enough arguments provided."""
         config = {
             'history': {
@@ -334,6 +346,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
                           setup_component(self.hass, 'sensor', config))
 
     def test_too_many_arguments(self):
+        self.start_hass()
+
         """Test config when too many arguments provided."""
         config = {
             'history': {
