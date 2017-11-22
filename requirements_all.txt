@@ -19,9 +19,6 @@ certifi>=2017.4.17
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
 
-# homeassistant.components.tradfri
-# DTLSSocket==0.1.4
-
 # homeassistant.components.doorbird
 DoorBirdPy==0.0.4
 
@@ -344,9 +341,6 @@ httplib2==0.10.3
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
-
-# homeassistant.components.tradfri
-# https://github.com/chrysn/aiocoap/archive/3286f48f0b949901c8b5c04c0719dc54ab63d431.zip#aiocoap==0.3
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
@@ -901,7 +895,7 @@ pytile==1.0.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==4.0.1
+# pytradfri[async]==4.1.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
