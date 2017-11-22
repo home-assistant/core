@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 
 import influxdb as influx_client
 
-import homeassistant.components
 from homeassistant.util import dt as dt_util
 from homeassistant import core as ha
 from homeassistant.setup import setup_component
@@ -703,7 +702,7 @@ class TestRetryOnErrorDecorator(unittest.TestCase):
     def test_no_retry(self):
         """Test that it does not retry if configured."""
         mock_method = MagicMock()
-        wrapped = homeassistant.components.influxdb.RetryOnError(self.hass)(mock_method)
+        wrapped = influxdb.RetryOnError(self.hass)(mock_method)
         wrapped(1, 2, test=3)
         self.assertEqual(mock_method.call_count, 1)
         mock_method.assert_called_with(1, 2, test=3)
@@ -716,7 +715,7 @@ class TestRetryOnErrorDecorator(unittest.TestCase):
     def test_single_retry(self):
         """Test that retry stops after a single try if configured."""
         mock_method = MagicMock()
-        retryer = homeassistant.components.influxdb.RetryOnError(self.hass, retry_limit=1)
+        retryer = influxdb.RetryOnError(self.hass, retry_limit=1)
         wrapped = retryer(mock_method)
         wrapped(1, 2, test=3)
         self.assertEqual(mock_method.call_count, 1)
@@ -746,7 +745,7 @@ class TestRetryOnErrorDecorator(unittest.TestCase):
     def test_multi_retry(self):
         """Test that multiple retries work."""
         mock_method = MagicMock()
-        retryer = homeassistant.components.influxdb.RetryOnError(self.hass, retry_limit=4)
+        retryer = influxdb.RetryOnError(self.hass, retry_limit=4)
         wrapped = retryer(mock_method)
         mock_method.side_effect = Exception()
 
@@ -767,7 +766,8 @@ class TestRetryOnErrorDecorator(unittest.TestCase):
         """Test the maximum queue length."""
         # make a wrapped method
         mock_method = MagicMock()
-        retryer = homeassistant.components.influxdb.RetryOnError(self.hass, retry_limit=4, queue_limit=3)
+        retryer = influxdb.RetryOnError(
+            self.hass, retry_limit=4, queue_limit=3)
         wrapped = retryer(mock_method)
         mock_method.side_effect = Exception()
 
