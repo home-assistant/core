@@ -112,7 +112,7 @@ class MerakiView(HomeAssistantView):
                 gps_location = (lat, lng)
                 attrs = {}
                 if ((not self.tn and mac.upper() not in self.devices) and
-                            mac.upper() not in self.devices):
+                        mac.upper() not in self.devices):
                     _LOGGER.debug("Skipping: %s", mac)
                     continue
                 if 'os' in i:
