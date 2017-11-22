@@ -31,9 +31,11 @@ CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
 DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
+STATE_CIRCULATE = "circulate"
+
 OPERATION_LIST = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 CT30_FAN_OPERATION_LIST = [STATE_ON, STATE_AUTO]
-CT80_FAN_OPERATION_LIST = [STATE_ON, "Circulate", STATE_AUTO]
+CT80_FAN_OPERATION_LIST = [STATE_ON, STATE_CIRCULATE, STATE_AUTO]
 
 # Mappings from radiotherm json data codes to and from HASS state
 # flags.  CODE is the thermostat integer code and these map to and
@@ -44,7 +46,7 @@ CODE_TO_TEMP_MODE = {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL, 3: STATE_AUTO}
 TEMP_MODE_TO_CODE = {v: k for k, v in CODE_TO_TEMP_MODE.items()}
 
 # Programmed fan mode (circulate is supported by CT80 models)
-CODE_TO_FAN_MODE = {0: STATE_AUTO, 1: "Circulate", 2: STATE_ON}
+CODE_TO_FAN_MODE = {0: STATE_AUTO, 1: STATE_CIRCULATE, 2: STATE_ON}
 FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
 
 # Active thermostat state (is it heating or cooling?).  In the future
