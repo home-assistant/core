@@ -15,7 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.device_tracker import (
-     PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER, CONF_TRACK_NEW, YAML_DEVICES, load_config, DEFAULT_TRACK_NEW)
+     PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER, CONF_TRACK_NEW,
+     YAML_DEVICES, load_config, DEFAULT_TRACK_NEW)
 
 CONF_VALIDATOR = 'validator'
 CONF_SECRET = 'secret'
@@ -57,8 +58,8 @@ class MerakiView(HomeAssistantView):
         self.see = see
         self.validator = config[CONF_VALIDATOR]
         self.secret = config[CONF_SECRET]
-        self.devs_to_track = devs_to_track
-        self.track_new = track_new
+        self.devices = devs_to_track
+        self.tn = track_new
 
     @asyncio.coroutine
     def get(self, request):
@@ -82,7 +83,7 @@ class MerakiView(HomeAssistantView):
             if data['secret'] != self.secret:
                 _LOGGER.error("Invalid Secret received from Meraki")
             elif data['version'] != VERSION:
-                _LOGGER.error("Invalid API version received: %s", data['version'])
+                _LOGGER.error("Invalid API version: %s", data['version'])
             else:
                 _LOGGER.debug('Valid Secret')
                 if data['type'] == "DevicesSeen":
@@ -106,13 +107,13 @@ class MerakiView(HomeAssistantView):
                 lat = i["location"]["lat"]
                 lng = i["location"]["lng"]
                 accuracy = int(float(i["location"]["unc"]))
-                clientMac = i["clientMac"]
-                _LOGGER.debug("clientMac: %s", clientMac)
+                mac = i["clientMac"]
+                _LOGGER.debug("clientMac: %s", mac)
                 gps_location = (lat, lng)
                 attrs = {}
-                if ((not self.track_new and clientMac.upper() not in self.devs_to_track) and
-                    clientMac.upper() not in self.devs_to_track):
-                    _LOGGER.debug("Skipping: %s", clientMac)
+                if ((not self.tn and mac.upper() not in self.devices) and
+                            mac.upper() not in self.devices):
+                    _LOGGER.debug("Skipping: %s", mac)
                     continue
                 if 'os' in i:
                     attrs['os'] = i['os']
@@ -129,7 +130,7 @@ class MerakiView(HomeAssistantView):
                 yield from hass.async_add_job(
                     partial(self.see,
                             gps=gps_location,
-                            mac=clientMac,
+                            mac=mac,
                             hide_if_away=True,
                             source_type=SOURCE_TYPE_ROUTER,
                             gps_accuracy=accuracy,
