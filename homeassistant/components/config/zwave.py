@@ -2,6 +2,8 @@
 import asyncio
 import logging
 
+from collections import deque
+from aiohttp.web import Response
 import homeassistant.core as ha
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.components.http import HomeAssistantView
@@ -12,7 +14,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 CONFIG_PATH = 'zwave_device_config.yaml'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
-URL_API_OZW_LOG = '/api/zwave/ozwlog'
 
 
 @asyncio.coroutine
@@ -26,11 +27,42 @@ def async_setup(hass):
     hass.http.register_view(ZWaveNodeGroupView)
     hass.http.register_view(ZWaveNodeConfigView)
     hass.http.register_view(ZWaveUserCodeView)
-    hass.http.register_static_path(
-        URL_API_OZW_LOG, hass.config.path(OZW_LOG_FILENAME), False)
+    hass.http.register_view(ZWaveLogView)
     hass.http.register_view(ZWaveConfigWriteView)
 
     return True
+
+
+class ZWaveLogView(HomeAssistantView):
+    """View to read the ZWave log file."""
+
+    url = "/api/zwave/ozwlog"
+    name = "api:zwave:ozwlog"
+
+# pylint: disable=no-self-use
+    @asyncio.coroutine
+    def get(self, request):
+        """Retrieve the lines from ZWave log."""
+        try:
+            lines = int(request.query.get('lines', 0))
+        except ValueError:
+            return Response(text='Invalid datetime', status=400)
+
+        hass = request.app['hass']
+        response = yield from hass.async_add_job(self._get_log, hass, lines)
+
+        return Response(text='\n'.join(response))
+
+    def _get_log(self, hass, lines):
+        """Retrieve the logfile content."""
+        logfilepath = hass.config.path(OZW_LOG_FILENAME)
+        with open(logfilepath, 'r') as logfile:
+            data = (line.rstrip() for line in logfile)
+            if lines == 0:
+                loglines = list(data)
+            else:
+                loglines = deque(data, lines)
+        return loglines
 
 
 class ZWaveConfigWriteView(HomeAssistantView):

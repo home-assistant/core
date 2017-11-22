@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/axis/
 """
 
-import json
 import logging
 import os
 
@@ -22,6 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.json import load_json, save_json
 
 
 REQUIREMENTS = ['axis==14']
@@ -103,9 +103,9 @@ def request_configuration(hass, config, name, host, serialnumber):
             return False
 
         if setup_device(hass, config, device_config):
-            config_file = _read_config(hass)
+            config_file = load_json(hass.config.path(CONFIG_FILE))
             config_file[serialnumber] = dict(device_config)
-            _write_config(hass, config_file)
+            save_json(hass.config.path(CONFIG_FILE), config_file)
             configurator.request_done(request_id)
         else:
             configurator.notify_errors(request_id,
@@ -163,7 +163,7 @@ def setup(hass, config):
         serialnumber = discovery_info['properties']['macaddress']
 
         if serialnumber not in AXIS_DEVICES:
-            config_file = _read_config(hass)
+            config_file = load_json(hass.config.path(CONFIG_FILE))
             if serialnumber in config_file:
                 # Device config previously saved to file
                 try:
@@ -272,25 +272,6 @@ def setup_device(hass, config, device_config):
     if event_types:
         hass.add_job(device.start)
     return True
-
-
-def _read_config(hass):
-    """Read Axis config."""
-    path = hass.config.path(CONFIG_FILE)
-
-    if not os.path.isfile(path):
-        return {}
-
-    with open(path) as f_handle:
-        # Guard against empty file
-        return json.loads(f_handle.read() or '{}')
-
-
-def _write_config(hass, config):
-    """Write Axis config."""
-    data = json.dumps(config)
-    with open(hass.config.path(CONFIG_FILE), 'w', encoding='utf-8') as outfile:
-        outfile.write(data)
 
 
 class AxisDeviceEvent(Entity):

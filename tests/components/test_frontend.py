@@ -166,7 +166,7 @@ def test_extra_urls(mock_http_client_with_urls):
     resp = yield from mock_http_client_with_urls.get('/states')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find('href=\'https://domain.com/my_extra_url.html\'') >= 0
+    assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
 
 
 @asyncio.coroutine

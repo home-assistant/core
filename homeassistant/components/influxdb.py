@@ -145,12 +145,18 @@ def setup(hass, config):
                     (whitelist_d and state.domain not in whitelist_d):
                 return
 
-            _state = float(state_helper.state_as_number(state))
-            _state_key = "value"
-        except ValueError:
-            _state = state.state
-            _state_key = "state"
+            _include_state = _include_value = False
 
+            _state_as_value = float(state.state)
+            _include_value = True
+        except ValueError:
+            try:
+                _state_as_value = float(state_helper.state_as_number(state))
+                _include_state = _include_value = True
+            except ValueError:
+                _include_state = True
+
+        include_uom = True
         measurement = component_config.get(state.entity_id).get(
             CONF_OVERRIDE_MEASUREMENT)
         if measurement in (None, ''):
@@ -163,6 +169,8 @@ def setup(hass, config):
                         measurement = default_measurement
                     else:
                         measurement = state.entity_id
+                else:
+                    include_uom = False
 
         json_body = [
             {
@@ -173,15 +181,18 @@ def setup(hass, config):
                 },
                 'time': event.time_fired,
                 'fields': {
-                    _state_key: _state,
                 }
             }
         ]
+        if _include_state:
+            json_body[0]['fields']['state'] = state.state
+        if _include_value:
+            json_body[0]['fields']['value'] = _state_as_value
 
         for key, value in state.attributes.items():
             if key in tags_attributes:
                 json_body[0]['tags'][key] = value
-            elif key != 'unit_of_measurement':
+            elif key != 'unit_of_measurement' or include_uom:
                 # If the key is already in fields
                 if key in json_body[0]['fields']:
                     key = key + "_"

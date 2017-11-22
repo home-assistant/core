@@ -7,7 +7,8 @@ import influxdb as influx_client
 
 from homeassistant.setup import setup_component
 import homeassistant.components.influxdb as influxdb
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, \
+                                STATE_STANDBY
 
 from tests.common import get_test_home_assistant
 
@@ -110,12 +111,14 @@ class TestInfluxDB(unittest.TestCase):
         """Test the event listener."""
         self._setup()
 
+        # map of HA State to valid influxdb [state, value] fields
         valid = {
-            '1': 1,
-            '1.0': 1.0,
-            STATE_ON: 1,
-            STATE_OFF: 0,
-            'foo': 'foo'
+            '1': [None, 1],
+            '1.0': [None, 1.0],
+            STATE_ON: [STATE_ON, 1],
+            STATE_OFF: [STATE_OFF, 0],
+            STATE_STANDBY: [STATE_STANDBY, None],
+            'foo': ['foo', None]
         }
         for in_, out in valid.items():
             attrs = {
@@ -132,53 +135,32 @@ class TestInfluxDB(unittest.TestCase):
                 state=in_, domain='fake', entity_id='fake.entity-id',
                 object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            if isinstance(out, str):
-                body = [{
-                    'measurement': 'foobars',
-                    'tags': {
-                        'domain': 'fake',
-                        'entity_id': 'entity',
-                    },
-                    'time': 12345,
-                    'fields': {
-                        'state': out,
-                        'longitude': 1.1,
-                        'latitude': 2.2,
-                        'battery_level_str': '99%',
-                        'battery_level': 99.0,
-                        'temperature_str': '20c',
-                        'temperature': 20.0,
-                        'last_seen_str': 'Last seen 23 minutes ago',
-                        'last_seen': 23.0,
-                        'updated_at_str': '2017-01-01 00:00:00',
-                        'updated_at': 20170101000000,
-                        'multi_periods_str': '0.120.240.2023873'
-                    },
-                }]
+            body = [{
+                'measurement': 'foobars',
+                'tags': {
+                    'domain': 'fake',
+                    'entity_id': 'entity',
+                },
+                'time': 12345,
+                'fields': {
+                    'longitude': 1.1,
+                    'latitude': 2.2,
+                    'battery_level_str': '99%',
+                    'battery_level': 99.0,
+                    'temperature_str': '20c',
+                    'temperature': 20.0,
+                    'last_seen_str': 'Last seen 23 minutes ago',
+                    'last_seen': 23.0,
+                    'updated_at_str': '2017-01-01 00:00:00',
+                    'updated_at': 20170101000000,
+                    'multi_periods_str': '0.120.240.2023873'
+                },
+            }]
+            if out[0] is not None:
+                body[0]['fields']['state'] = out[0]
+            if out[1] is not None:
+                body[0]['fields']['value'] = out[1]
 
-            else:
-                body = [{
-                    'measurement': 'foobars',
-                    'tags': {
-                        'domain': 'fake',
-                        'entity_id': 'entity',
-                    },
-                    'time': 12345,
-                    'fields': {
-                        'value': out,
-                        'longitude': 1.1,
-                        'latitude': 2.2,
-                        'battery_level_str': '99%',
-                        'battery_level': 99.0,
-                        'temperature_str': '20c',
-                        'temperature': 20.0,
-                        'last_seen_str': 'Last seen 23 minutes ago',
-                        'last_seen': 23.0,
-                        'updated_at_str': '2017-01-01 00:00:00',
-                        'updated_at': 20170101000000,
-                        'multi_periods_str': '0.120.240.2023873'
-                    },
-                }]
             self.handler_method(event)
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
@@ -428,12 +410,14 @@ class TestInfluxDB(unittest.TestCase):
         """Test the event listener when an attribute has an invalid type."""
         self._setup()
 
+        # map of HA State to valid influxdb [state, value] fields
         valid = {
-            '1': 1,
-            '1.0': 1.0,
-            STATE_ON: 1,
-            STATE_OFF: 0,
-            'foo': 'foo'
+            '1': [None, 1],
+            '1.0': [None, 1.0],
+            STATE_ON: [STATE_ON, 1],
+            STATE_OFF: [STATE_OFF, 0],
+            STATE_STANDBY: [STATE_STANDBY, None],
+            'foo': ['foo', None]
         }
         for in_, out in valid.items():
             attrs = {
@@ -446,37 +430,24 @@ class TestInfluxDB(unittest.TestCase):
                 state=in_, domain='fake', entity_id='fake.entity-id',
                 object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            if isinstance(out, str):
-                body = [{
-                    'measurement': 'foobars',
-                    'tags': {
-                        'domain': 'fake',
-                        'entity_id': 'entity',
-                    },
-                    'time': 12345,
-                    'fields': {
-                        'state': out,
-                        'longitude': 1.1,
-                        'latitude': 2.2,
-                        'invalid_attribute_str': "['value1', 'value2']"
-                    },
-                }]
+            body = [{
+                'measurement': 'foobars',
+                'tags': {
+                    'domain': 'fake',
+                    'entity_id': 'entity',
+                },
+                'time': 12345,
+                'fields': {
+                    'longitude': 1.1,
+                    'latitude': 2.2,
+                    'invalid_attribute_str': "['value1', 'value2']"
+                },
+            }]
+            if out[0] is not None:
+                body[0]['fields']['state'] = out[0]
+            if out[1] is not None:
+                body[0]['fields']['value'] = out[1]
 
-            else:
-                body = [{
-                    'measurement': 'foobars',
-                    'tags': {
-                        'domain': 'fake',
-                        'entity_id': 'entity',
-                    },
-                    'time': 12345,
-                    'fields': {
-                        'value': float(out),
-                        'longitude': 1.1,
-                        'latitude': 2.2,
-                        'invalid_attribute_str': "['value1', 'value2']"
-                    },
-                }]
             self.handler_method(event)
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
@@ -531,6 +502,48 @@ class TestInfluxDB(unittest.TestCase):
             else:
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_unit_of_measurement_field(self, mock_client):
+        """Test the event listener for unit of measurement field."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'override_measurement': 'state',
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        attrs = {
+            'unit_of_measurement': 'foobars',
+        }
+        state = mock.MagicMock(
+            state='foo', domain='fake', entity_id='fake.entity-id',
+            object_id='entity', attributes=attrs)
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+        body = [{
+            'measurement': 'state',
+            'tags': {
+                'domain': 'fake',
+                'entity_id': 'entity',
+            },
+            'time': 12345,
+            'fields': {
+                'state': 'foo',
+                'unit_of_measurement_str': 'foobars',
+            },
+        }]
+        self.handler_method(event)
+        self.assertEqual(
+            mock_client.return_value.write_points.call_count, 1
+        )
+        self.assertEqual(
+            mock_client.return_value.write_points.call_args,
+            mock.call(body)
+        )
+        mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_tags_attributes(self, mock_client):
         """Test the event listener when some attributes should be tags."""
