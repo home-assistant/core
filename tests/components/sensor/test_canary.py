@@ -39,7 +39,6 @@ class TestCanarySensorSetup(unittest.TestCase):
     @patch('homeassistant.components.canary.CanaryData')
     def test_setup_sensors(self, mock_canary):
         """Test the Canary senskor class and methods."""
-
         base_canary.setup(self.hass, self.config)
 
         self.hass.data[DATA_CANARY] = mock_canary()
