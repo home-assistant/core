@@ -15,8 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.device_tracker import (
-     PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER, CONF_TRACK_NEW,
-     YAML_DEVICES, load_config, DEFAULT_TRACK_NEW)
+    PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER, CONF_TRACK_NEW,
+    YAML_DEVICES, load_config, DEFAULT_TRACK_NEW)
 
 CONF_VALIDATOR = 'validator'
 CONF_SECRET = 'secret'
@@ -59,7 +59,7 @@ class MerakiView(HomeAssistantView):
         self.validator = config[CONF_VALIDATOR]
         self.secret = config[CONF_SECRET]
         self.devices = devs_to_track
-        self.tn = track_new
+        self.track = track_new
 
     @asyncio.coroutine
     def get(self, request):
@@ -111,7 +111,7 @@ class MerakiView(HomeAssistantView):
                 _LOGGER.debug("clientMac: %s", mac)
                 gps_location = (lat, lng)
                 attrs = {}
-                if ((not self.tn and mac.upper() not in self.devices) and
+                if ((not self.track and mac.upper() not in self.devices) and
                         mac.upper() not in self.devices):
                     _LOGGER.debug("Skipping: %s", mac)
                     continue
