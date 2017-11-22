@@ -362,7 +362,7 @@ class RetryOnError(object):
                 # pylint: disable=broad-except
                 try:
                     method(*args, **kwargs)
-                except Exception:
+                except Exception as ex:
                     if retry == self.retry_limit:
                         raise
                     if len(wrapper._retry_queue) >= self.queue_limit:
@@ -370,6 +370,10 @@ class RetryOnError(object):
                         if 'remove' in last:
                             func = last['remove']
                             func()
+                        if 'exc' in last:
+                            _LOGGER.error(
+                                "Retry queue overflow, drop oldest entry",
+                                last['exc'])
 
                     target = utcnow() + self.retry_delay
                     tracking = {'target': target}
@@ -379,6 +383,7 @@ class RetryOnError(object):
                                                              tracking),
                                                      target)
                     tracking['remove'] = remove
+                    tracking["exc"] = ex
                     wrapper._retry_queue.append(tracking)
 
             scheduled()
