@@ -75,6 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([RestSensor(hass, rest, name, unit,
                             value_template, json_attrs)])
 
+
 class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
