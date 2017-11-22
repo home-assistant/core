@@ -63,7 +63,7 @@ class MerakiView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request):
-        """Meraki message received as GET. """
+        """Meraki message received as GET."""
         _LOGGER.info("Merakicmx message received as a GET")
         _LOGGER.debug("Request: %s", request.text)
         return self.validator
