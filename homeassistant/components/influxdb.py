@@ -295,8 +295,8 @@ class RetryOnError(object):
                             func()
                         if 'exc' in last:
                             _LOGGER.error(
-                                "Retry queue overflow, drop oldest entry",
-                                last['exc'])
+                                "Retry queue overflow, drop oldest entry: %s",
+                                str(last['exc']))
 
                     target = utcnow() + self.retry_delay
                     tracking = {'target': target}
