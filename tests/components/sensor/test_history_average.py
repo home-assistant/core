@@ -68,9 +68,9 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(state['state'], '0')
 
     def test_period_parsing(self):
+        """Test the conversion from templates to period."""
         self.start_hass()
 
-        """Test the conversion from templates to period."""
         today = Template('{{ now().replace(hour=0).replace(minute=0)'
                          '.replace(second=0) }}', self.hass)
         duration = timedelta(hours=2, minutes=1)
@@ -105,34 +105,31 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(sensor2_end.minute, 0)
         self.assertEqual(sensor2_end.second, 0)
 
+    def _set_state(self, entity_id, value, now, timestamp):
+        """Set entity state state."""
+        state = State(entity_id, value, None, timestamp, timestamp)
+        _LOGGER.debug("set_state: " + str(value) + " @ " + str(timestamp))
+        mock_state_change_event(self.hass, state)
+        self.wait_recording_done()
+        self.recorder[entity_id].append(state)
+
     def _add_test_states(self, entity_id, now):
         """Add multiple states to history for testing."""
         # start hass before recording states
         self.start_hass()
-
-        def set_state(hass, entity_id, value, now, timestamp):
-            """Set the state."""
-            state = State(entity_id, value, None, timestamp, timestamp)
-            # with patch('homeassistant.components.sensor.'
-            #            'history_average.HistoryAverageHelper.utcnow',
-            #            return_value=now):
-            _LOGGER.debug("set_state: " + str(value) + " @ " + str(timestamp))
-            mock_state_change_event(hass, state)
-            self.wait_recording_done()
-            self.recorder[entity_id].append(state)
 
         # Start     t0        t1        t2        End (now)
         # |--20min--|--20min--|--10min--|--10min--|
         # |----?----|----1----|---10----|---100---|
 
         time0 = now - timedelta(minutes=40)
-        set_state(self.hass, entity_id, 1, now, time0)
+        self._set_state(entity_id, 1, now, time0)
 
         time1 = now - timedelta(minutes=20)
-        set_state(self.hass, entity_id, 10, now, time1)
+        self._set_state(entity_id, 10, now, time1)
 
         time2 = now - timedelta(minutes=10)
-        set_state(self.hass, entity_id, 100, now, time2)
+        self._set_state(entity_id, 100, now, time2)
 
     def _setup_sensor(self, sensor, sensor_source, now, start_offset,
                       end_offset):
@@ -143,9 +140,6 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
         with patch('homeassistant.components.history.'
                    'state_changes_during_period', return_value=self.recorder):
-            # with patch('homeassistant.components.sensor.'
-            #         'history_average.HistoryAverageHelper.utcnow',
-            #         return_value=now):
             assert setup_component(self.hass, 'sensor', {
                 'history': {
                 },
@@ -160,12 +154,6 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def _get_sensor_state(self, sensor, now):
         """Return current value of sensor."""
-        # with patch('homeassistant.components.sensor.'
-        #            'history_average.HistoryAverageHelper.utcnow',
-        #            return_value=now):
-        #     with patch('homeassistant.components.sensor.'
-        #                'history_average.dt_util.utcnow',
-        #                return_value=now):
         state = self.hass.states.get('sensor.' + sensor)
         return state
 
@@ -188,8 +176,10 @@ class TestHistoryAverageSensor(unittest.TestCase):
         sensor = 'sensor_end'
         sensor_source = 'sensor.source_end'
 
-        # add states before setting up the sensor
-        self._add_test_states(sensor_source, now)
+        # add state before setting up the sensor
+        self.start_hass()
+        time = now - timedelta(minutes=10)
+        self._set_state(sensor_source, 100, now, time)
         self._setup_sensor(sensor, sensor_source, now, '1', '0')
 
         state = self._get_sensor_state(sensor, now)
@@ -263,9 +253,9 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(float(state.state), 28.01)
 
     def test_wrong_date(self):
+        """Test when start or end value is not a timestamp or a date."""
         self.start_hass()
 
-        """Test when start or end value is not a timestamp or a date."""
         good = Template('{{ now() }}', self.hass)
         bad = Template('{{ TEST }}', self.hass)
 
@@ -284,9 +274,9 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(before_update2, sensor2.get_period())
 
     def test_wrong_duration(self):
+        """Test when duration value is not a timedelta."""
         self.start_hass()
 
-        """Test when duration value is not a timedelta."""
         config = {
             'history': {
             },
@@ -305,9 +295,9 @@ class TestHistoryAverageSensor(unittest.TestCase):
                           setup_component(self.hass, 'sensor', config))
 
     def test_bad_template(self):
+        """Test Exception when the template cannot be parsed."""
         self.start_hass()
 
-        """Test Exception when the template cannot be parsed."""
         bad = Template('{{ x - 12 }}', self.hass)  # x is undefined
         duration = '01:00'
 
@@ -326,9 +316,9 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(before_update2, sensor2.get_period())
 
     def test_not_enough_arguments(self):
+        """Test config when not enough arguments provided."""
         self.start_hass()
 
-        """Test config when not enough arguments provided."""
         config = {
             'history': {
             },
@@ -346,9 +336,9 @@ class TestHistoryAverageSensor(unittest.TestCase):
                           setup_component(self.hass, 'sensor', config))
 
     def test_too_many_arguments(self):
+        """Test config when too many arguments provided."""
         self.start_hass()
 
-        """Test config when too many arguments provided."""
         config = {
             'history': {
             },
