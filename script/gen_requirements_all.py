@@ -53,6 +53,7 @@ TEST_REQUIREMENTS = (
     'holidays',
     'home-assistant-frontend',
     'influxdb',
+    'kylin',
     'libpurecoollink',
     'libsoundtouch',
     'mficlient',

@@ -80,7 +80,7 @@ home-assistant-frontend==20171115.0
 # homeassistant.components.sensor.influxdb
 influxdb==4.1.1
 
-# homeassistant.components.sensor.teleinfo                                                                                                                                            
+# homeassistant.components.sensor.teleinfo
 kylin==0.3.0
 
 # homeassistant.components.dyson
