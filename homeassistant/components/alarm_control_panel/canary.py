@@ -8,8 +8,8 @@ import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.canary import DATA_CANARY
-from homeassistant.const import STATE_UNKNOWN, STATE_ALARM_DISARMED, \
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT
+from homeassistant.const import STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, \
+    STATE_ALARM_ARMED_NIGHT
 
 DEPENDENCIES = ['canary']
 
