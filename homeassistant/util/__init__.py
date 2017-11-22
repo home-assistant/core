@@ -2,13 +2,13 @@
 from collections.abc import MutableSet
 from itertools import chain
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 import enum
 import socket
 import random
 import string
-from functools import wraps, partial
+from functools import wraps
 from types import MappingProxyType
 from unicodedata import normalize
 
@@ -313,79 +313,3 @@ class Throttle(object):
 
         return wrapper
 
-
-class RetryOnError(object):
-    """A class for retrying a failed task a certain amount of tries.
-
-    This method decorator makes a method retrying on errors. If there was an
-    uncaught exception, it schedules another try to execute the task after a
-    retry delay. It does this up to the maximum number of retries.
-
-    It can be used for all probable "self-healing" problems like network
-    outages. The task will be rescheduled using HAs scheduling mechanism.
-
-    It takes a Hass instance, a maximum number of retries and a retry delay
-    in seconds as arguments.
-
-    The queue limit defines the maximum number of calls that are allowed to
-    be queued at a time. If this number is reached, every new call discards
-    an old one.
-    """
-
-    def __init__(self, hass, retry_limit=0, retry_delay=20, queue_limit=100):
-        """Initialize the decorator."""
-        self.hass = hass
-        self.retry_limit = retry_limit
-        self.retry_delay = timedelta(seconds=retry_delay)
-        self.queue_limit = queue_limit
-
-    def __call__(self, method):
-        """Decorate the target method."""
-        from homeassistant.helpers.event import track_point_in_utc_time
-
-        @wraps(method)
-        def wrapper(*args, **kwargs):
-            """Wrapped method."""
-            # pylint: disable=protected-access
-            if not hasattr(wrapper, "_retry_queue"):
-                wrapper._retry_queue = []
-
-            def scheduled(retry=0, untrack=None, event=None):
-                """Call the target method.
-
-                It is called directly at the first time and then called
-                scheduled within the Hass mainloop.
-                """
-                if untrack is not None:
-                    wrapper._retry_queue.remove(untrack)
-
-                # pylint: disable=broad-except
-                try:
-                    method(*args, **kwargs)
-                except Exception as ex:
-                    if retry == self.retry_limit:
-                        raise
-                    if len(wrapper._retry_queue) >= self.queue_limit:
-                        last = wrapper._retry_queue.pop(0)
-                        if 'remove' in last:
-                            func = last['remove']
-                            func()
-                        if 'exc' in last:
-                            _LOGGER.error(
-                                "Retry queue overflow, drop oldest entry",
-                                last['exc'])
-
-                    target = utcnow() + self.retry_delay
-                    tracking = {'target': target}
-                    remove = track_point_in_utc_time(self.hass,
-                                                     partial(scheduled,
-                                                             retry + 1,
-                                                             tracking),
-                                                     target)
-                    tracking['remove'] = remove
-                    tracking["exc"] = ex
-                    wrapper._retry_queue.append(tracking)
-
-            scheduled()
-
-        return wrapper
