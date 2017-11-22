@@ -127,14 +127,9 @@ def setup(hass, config):
             else:
                 authentication = None
 
-        amcrest_hub = AmcrestHub(camera,
-                                 name,
-                                 authentication,
-                                 ffmpeg_arguments,
-                                 stream_source,
-                                 resolution)
-
-        hass.data[DATA_AMCREST][name] = amcrest_hub
+        hass.data[DATA_AMCREST][name] = AmcrestDevice(
+            camera, name, authentication, ffmpeg_arguments, stream_source,
+            resolution)
 
         discovery.load_platform(
             hass, 'camera', DOMAIN, {
@@ -151,8 +146,8 @@ def setup(hass, config):
     return True
 
 
-class AmcrestHub(object):
-    """Representation of a base AmcrestHub discovery device."""
+class AmcrestDevice(object):
+    """Representation of a base Amcrest discovery device."""
 
     def __init__(self, camera, name, authentication, ffmpeg_arguments,
                  stream_source, resolution):
