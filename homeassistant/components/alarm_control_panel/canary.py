@@ -1,3 +1,9 @@
+"""
+Support for Canary alarm.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/alarm_control_panel.canary/
+"""
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
@@ -26,7 +32,6 @@ class CanaryAlarm(AlarmControlPanel):
 
     def __init__(self, data, location_id):
         """Initialize a Canary security camera."""
-        super().__init__()
         self._data = data
         self._location_id = location_id
 
@@ -52,7 +57,7 @@ class CanaryAlarm(AlarmControlPanel):
         elif mode.name == LOCATION_MODE_NIGHT:
             return STATE_ALARM_ARMED_NIGHT
         else:
-            return STATE_UNKNOWN
+            return None
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
