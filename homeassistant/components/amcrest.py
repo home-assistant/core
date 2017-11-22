@@ -163,13 +163,3 @@ class AmcrestHub(object):
         self.ffmpeg_arguments = ffmpeg_arguments
         self.stream_source = stream_source
         self.resolution = resolution
-
-    def as_dict(self):
-        """Convert entry to a dict to be used within JSON."""
-        return {
-            'device': self.device,
-            'name': self.name,
-            'ffmpeg_arguments': self.ffmpeg_arguments,
-            'stream_source': self.stream_source,
-            'resolution': self.resolution,
-        }

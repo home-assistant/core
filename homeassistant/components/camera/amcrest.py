@@ -30,14 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device_name = discovery_info[CONF_NAME]
     amcrest = hass.data[DATA_AMCREST][device_name]
 
-    async_add_devices([
-        AmcrestCam(hass,
-                   amcrest.name,
-                   amcrest.device,
-                   amcrest.authentication,
-                   amcrest.ffmpeg_arguments,
-                   amcrest.stream_source,
-                   amcrest.resolution)], True)
+    async_add_devices([AmcrestCam(hass, amcrest)], True)
 
     return True
 
@@ -45,18 +38,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
-    def __init__(self, hass, name, camera, authentication,
-                 ffmpeg_arguments, stream_source, resolution):
+    def __init__(self, hass, amcrest):
         """Initialize an Amcrest camera."""
         super(AmcrestCam, self).__init__()
-        self._name = name
-        self._camera = camera
+        self._name = amcrest.name
+        self._camera = amcrest.device
         self._base_url = self._camera.get_base_url()
         self._ffmpeg = hass.data[DATA_FFMPEG]
-        self._ffmpeg_arguments = ffmpeg_arguments
-        self._stream_source = stream_source
-        self._resolution = resolution
-        self._token = self._auth = authentication
+        self._ffmpeg_arguments = amcrest.ffmpeg_arguments
+        self._stream_source = amcrest.stream_source
+        self._resolution = amcrest.resolution
+        self._token = self._auth = amcrest.authentication
 
     def camera_image(self):
         """Return a still image response from the camera."""
