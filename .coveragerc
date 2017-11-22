@@ -182,6 +182,9 @@ omit =
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
 
+    homeassistant/components/tahoma.py
+    homeassistant/components/*/tahoma.py
+
     homeassistant/components/tellduslive.py
     homeassistant/components/*/tellduslive.py
 
@@ -426,7 +429,6 @@ omit =
     homeassistant/components/notify/clicksend.py
     homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/discord.py
-    homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/group.py

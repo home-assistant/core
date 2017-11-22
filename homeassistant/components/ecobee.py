@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
+from homeassistant.util.json import save_json
 
 REQUIREMENTS = ['python-ecobee-api==0.0.10']
 
@@ -110,12 +111,10 @@ def setup(hass, config):
     if 'ecobee' in _CONFIGURING:
         return
 
-    from pyecobee import config_from_file
-
     # Create ecobee.conf if it doesn't exist
     if not os.path.isfile(hass.config.path(ECOBEE_CONFIG_FILE)):
         jsonconfig = {"API_KEY": config[DOMAIN].get(CONF_API_KEY)}
-        config_from_file(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
+        save_json(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
 
     NETWORK = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))
 
