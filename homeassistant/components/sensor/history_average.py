@@ -101,6 +101,9 @@ class HistoryAverageSensor(Entity):
         if states:
             self._history.extend(states)
 
+        # helps in a test... probably should just setup the test right
+        yield from self.asysnc_trim_history()
+
     @asyncio.coroutine
     def asysnc_trim_history(self):
         """Remove items which are not relevent to the current period."""

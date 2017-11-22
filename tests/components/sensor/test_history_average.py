@@ -1,5 +1,6 @@
 """The test for the History Average sensor platform."""
 from datetime import timedelta
+from collections import defaultdict
 import logging
 import unittest
 from unittest.mock import patch
@@ -7,10 +8,15 @@ from unittest.mock import patch
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.sensor.history_average\
      import HistoryAverageSensor
+from homeassistant.core import State
 from homeassistant.helpers.template import Template
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import init_recorder_component, get_test_home_assistant
+from tests.common import (
+    init_recorder_component,
+    get_test_home_assistant,
+    mock_state_change_event
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +27,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.recorder = defaultdict(list)
         init_recorder_component(self.hass)
 
     def tearDown(self):
@@ -29,6 +36,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def start_hass(self):
         """Start hass and wait for recorder to finish."""
+        self.recorder = defaultdict(list)
         self.hass.start()
         self.wait_recording_done()
 
@@ -98,30 +106,29 @@ class TestHistoryAverageSensor(unittest.TestCase):
         # start hass before recording states
         self.start_hass()
 
-        def set_state(entity_id, state, now, timestamp):
+        def set_state(hass, entity_id, value, now, timestamp):
             """Set the state."""
-            with patch('homeassistant.components.sensor.'
-                       'history_average.HistoryAverageHelper.utcnow',
-                       return_value=now):
-                with patch('homeassistant.components.recorder.dt_util.utcnow',
-                           return_value=timestamp):
-                    _LOGGER.debug("set_state: " + str(state) + " @ " +
-                                  str(timestamp))
-                    self.hass.states.set(entity_id, state)
-                    self.wait_recording_done()
+            state = State(entity_id, value, None, timestamp, timestamp)
+            # with patch('homeassistant.components.sensor.'
+            #            'history_average.HistoryAverageHelper.utcnow',
+            #            return_value=now):
+            _LOGGER.debug("set_state: " + str(value) + " @ " + str(timestamp))
+            mock_state_change_event(hass, state)
+            self.wait_recording_done()
+            self.recorder[entity_id].append(state)
 
         # Start     t0        t1        t2        End (now)
         # |--20min--|--20min--|--10min--|--10min--|
         # |----?----|----1----|---10----|---100---|
 
         time0 = now - timedelta(minutes=40)
-        set_state(entity_id, 1, now, time0)
+        set_state(self.hass, entity_id, 1, now, time0)
 
         time1 = now - timedelta(minutes=20)
-        set_state(entity_id, 10, now, time1)
+        set_state(self.hass, entity_id, 10, now, time1)
 
         time2 = now - timedelta(minutes=10)
-        set_state(entity_id, 100, now, time2)
+        set_state(self.hass, entity_id, 100, now, time2)
 
     def _setup_sensor(self, sensor, sensor_source, now, start_offset,
                       end_offset):
@@ -130,9 +137,11 @@ class TestHistoryAverageSensor(unittest.TestCase):
         start = '{{ ' + now_string + ' - ' + start_offset + ' }}'
         end = '{{ ' + now_string + ' - ' + end_offset + ' }}'
 
-        with patch('homeassistant.components.sensor.'
-                   'history_average.HistoryAverageHelper.utcnow',
-                   return_value=now):
+        with patch('homeassistant.components.history.'
+                   'state_changes_during_period', return_value=self.recorder):
+            # with patch('homeassistant.components.sensor.'
+            #         'history_average.HistoryAverageHelper.utcnow',
+            #         return_value=now):
             assert setup_component(self.hass, 'sensor', {
                 'history': {
                 },
@@ -147,18 +156,18 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def _get_sensor_state(self, sensor, now):
         """Return current value of sensor."""
-        with patch('homeassistant.components.sensor.'
-                   'history_average.HistoryAverageHelper.utcnow',
-                   return_value=now):
-            with patch('homeassistant.components.sensor.'
-                       'history_average.dt_util.utcnow',
-                       return_value=now):
-                state = self.hass.states.get('sensor.' + sensor)
+        # with patch('homeassistant.components.sensor.'
+        #            'history_average.HistoryAverageHelper.utcnow',
+        #            return_value=now):
+        #     with patch('homeassistant.components.sensor.'
+        #                'history_average.dt_util.utcnow',
+        #                return_value=now):
+        state = self.hass.states.get('sensor.' + sensor)
         return state
 
     def test_history_loading(self):
         """Test the loading of historical data on sensor startup."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor_history'
         sensor_source = 'sensor.source_history'
 
@@ -171,7 +180,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_history_loading_at_end(self):
         """Test the loading of historical data, reading off end."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor_end'
         sensor_source = 'sensor.source_end'
 
@@ -184,7 +193,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_state_changes(self):
         """Test updates to source data on sensor."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor_state'
         sensor_source = 'sensor.source_state'
 
@@ -201,7 +210,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_range_1(self):
         """Test range: (t0 - 1 second) to End."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor1'
         sensor_source = 'sensor.source1'
         self._add_test_states(sensor_source, now)
@@ -211,7 +220,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_range_2(self):
         """Test range: (t1 - 1 second) to (t2 + 1 second)."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor2'
         sensor_source = 'sensor.source2'
         self._setup_sensor(sensor, sensor_source, now, '1201', '599')
@@ -221,7 +230,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_range_3(self):
         """Test range: (t2 + 1 second) to End."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor3'
         sensor_source = 'sensor.source3'
         self._setup_sensor(sensor, sensor_source, now, '599', '0')
@@ -231,7 +240,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_range_4_from_history(self):
         """Test range: (t0 + 1 second) to End (loaded from history)."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor4_history'
         sensor_source = 'sensor.source4_history'
         self._add_test_states(sensor_source, now)
@@ -241,7 +250,7 @@ class TestHistoryAverageSensor(unittest.TestCase):
 
     def test_range_4_from_updates(self):
         """Test range: (t0 + 1 second) to End (async updates)."""
-        now = dt_util.utcnow() + timedelta(hours=24)
+        now = dt_util.utcnow()
         sensor = 'sensor4_updates'
         sensor_source = 'sensor.source4_updates'
         self._setup_sensor(sensor, sensor_source, now, '2399', '0')
