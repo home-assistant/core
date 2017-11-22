@@ -4,6 +4,7 @@ Support for Radio Thermostat wifi-enabled home thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.radiotherm/
 """
+import asyncio
 import datetime
 import logging
 
@@ -30,6 +31,10 @@ CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
 DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
+OPERATION_LIST = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
+CT30_FAN_OPERATION_LIST = [STATE_ON, STATE_AUTO]
+CT80_FAN_OPERATION_LIST = [STATE_ON, "Circulate", STATE_AUTO]
+
 # Mappings from radiotherm json data codes to and from HASS state
 # flags.  CODE is the thermostat integer code and these map to and
 # from HASS state flags.
@@ -38,9 +43,8 @@ DEFAULT_AWAY_TEMPERATURE_COOL = 85
 CODE_TO_TEMP_MODE = {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL, 3: STATE_AUTO}
 TEMP_MODE_TO_CODE = {v: k for k, v in CODE_TO_TEMP_MODE.items()}
 
-# Programmed fan mode (circulate is supported by some thermostats but
-# not by HASS).
-CODE_TO_FAN_MODE = {0: STATE_AUTO, 1: "circulate", 2: STATE_ON}
+# Programmed fan mode (circulate is supported by CT80 models)
+CODE_TO_FAN_MODE = {0: STATE_AUTO, 1: "Circulate", 2: STATE_ON}
 FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
 
 # Active thermostat state (is it heating or cooling?).  In the future
@@ -111,10 +115,6 @@ class RadioThermostat(ClimateDevice):
     def __init__(self, device, hold_temp, away_temps):
         """Initialize the thermostat."""
         self.device = device
-        # It would be better if this was in update() since it triggers
-        # a network call but the thermostat will clear any temporary
-        # mode or temperature if this is called so we have to leave it here.
-        self.set_time()
         self._target_temperature = None
         self._current_temperature = None
         self._current_operation = STATE_IDLE
@@ -128,8 +128,21 @@ class RadioThermostat(ClimateDevice):
         self._away = False
         self._away_temps = away_temps
         self._prev_temp = None
-        self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
-        self._fan_list = [STATE_ON, STATE_AUTO]
+
+        # Fan circulate mode is only supported by the CT80 models.
+        import radiotherm
+        self._is_model_ct80 = isinstance(self.device,
+                                         radiotherm.thermostat.CT80)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        # Set the time on the device.  This shouldn't be in the
+        # constructor because it's a network call.  We can't put it in
+        # update() because calling it will clear any temporary mode or
+        # temperature in the thermostat.  So add it as a future job
+        # for the event loop to run.
+        self.hass.async_add_job(self.set_time)
 
     @property
     def name(self):
@@ -157,7 +170,10 @@ class RadioThermostat(ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return self._fan_list
+        if self._is_model_ct80:
+            return CT80_FAN_OPERATION_LIST
+        else:
+            return CT30_FAN_OPERATION_LIST
 
     @property
     def current_fan_mode(self):
@@ -183,7 +199,7 @@ class RadioThermostat(ClimateDevice):
     @property
     def operation_list(self):
         """Return the operation modes list."""
-        return self._operation_list
+        return OPERATION_LIST
 
     @property
     def target_temperature(self):
