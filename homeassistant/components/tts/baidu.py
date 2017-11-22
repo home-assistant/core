@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts.baidu/
 """
 
-import asyncio
 import logging
 import voluptuous as vol
 
@@ -48,8 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+def get_engine(hass, config):
     """Set up Baidu TTS component."""
     return BaiduTTSProvider(hass, config)
 
@@ -87,8 +85,7 @@ class BaiduTTSProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options=None):
         """Load TTS from BaiduTTS."""
         from aip import AipSpeech
         aip_speech = AipSpeech(
