@@ -183,7 +183,7 @@ class LimitlessLEDGroup(Light):
         # We need to call turn_on here because the component turns the devices
         # off on init to achieve a known state.
         if old_state.state == STATE_ON:
-            yield from self.turn_on(**params)
+            yield from self.async_turn_on(**params)
 
     @staticmethod
     def factory(group, config):
