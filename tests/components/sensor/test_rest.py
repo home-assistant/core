@@ -196,7 +196,7 @@ class TestRestSensor(unittest.TestCase):
                                       self.unit_of_measurement, None, True)
         self.sensor.update()
         self.assertEqual('some_json_value',
-                         self.sensor.device_state_attributes.key)
+                         self.sensor.device_state_attributes['key'])
 
     def test_update_with_josn_attrs_and_template(self):
         """Test attributes get extracted from a JSON result."""
@@ -210,7 +210,7 @@ class TestRestSensor(unittest.TestCase):
 
         self.assertEqual('json_state_updated_value', self.sensor.state)
         self.assertEqual('json_state_updated_value',
-                         self.sensor.device_state_attributes.key)
+                         self.sensor.device_state_attributes['key'])
 
 
 class TestRestData(unittest.TestCase):
