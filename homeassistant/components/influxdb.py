@@ -310,5 +310,4 @@ class RetryOnError(object):
                     wrapper._retry_queue.append(tracking)
 
             scheduled()
-
         return wrapper
