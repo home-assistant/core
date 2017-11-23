@@ -24,11 +24,13 @@
 #SUBSYSTEM=="usb", ATTR{idVendor}=="03eb", ATTR{idProduct}=="2013", MODE="666"
 #udevadm trigger
 
-from homeassistant.helpers.entity import Entity
-
 import logging
 import usb.core
 import usb.util
+
+from homeassistant.helpers.entity import Entity
+
+REQUIREMENTS = ['pyusb<=1.0.0']
 
 logger = logging.getLogger('iAQStick')
 
@@ -47,7 +49,7 @@ class iAQStick(Entity):
     def __init__(self):
         self._dev = usb.core.find(idVendor=0x03eb, idProduct=0x2013)
         if self._dev is None:
-            logger.error('iaqstick: iAQ Stick not found')
+            logger.error("iAQ Stick not found")
             return
         self._intf = 0
         #self._type1_seq = 0x0001
@@ -60,10 +62,10 @@ class iAQStick(Entity):
             self._dev.set_configuration(0x01)
             usb.util.claim_interface(self._dev, self._intf)
             self._dev.set_interface_altsetting(self._intf, 0x00)
-            logger.error("iaqstick: initialized")
+            logger.error("initialized")
 
         except Exception as e:
-            logger.error("iaqstick: init interface failed - {}".format(e))
+            logger.error("init interface failed - {}".format(e))
         self.initialized = True
         self._state = None
         self.update()
@@ -88,8 +90,10 @@ class iAQStick(Entity):
         return True
 
     def xfer_type2(self, msg):
-        out_data = bytes('@', 'utf-8') + self._type2_seq.to_bytes(1, byteorder='big') + bytes('{}\n@@@@@@@@@@@@@'.format(msg), 'utf-8')
-        self._type2_seq = (self._type2_seq + 1) if (self._type2_seq < 0xFF) else 0x67
+        out_data = bytes('@', 'utf-8') + self._type2_seq.to_bytes(1, \
+            byteorder='big') + bytes('{}\n@@@@@@@@@@@@@'.format(msg), 'utf-8')
+        self._type2_seq = (self._type2_seq + 1) if (self._type2_seq < 0xFF) \
+            else 0x67
         ret = self._dev.write(0x02, out_data[:16])
         in_data = bytes()
         while True:
@@ -106,7 +110,7 @@ class iAQStick(Entity):
         try:
             usb.util.release_interface(self._dev, self._intf)
         except Exception as e:
-            logger.error("iaqstick: releasing interface failed - {}".format(e))
+            logger.error("release interface failed - {}".format(e))
 
     def update(self):
 
@@ -118,18 +122,18 @@ class iAQStick(Entity):
             self.ppm = ppm
             self._state = ppm
         except Exception as e:
-            logger.error("iaqstick: update failed - {}".format(e))
+            logger.error("update failed - {}".format(e))
             self._state = 99
 
 
     def state_string(self):
         if self.ppm > 1500:
-            return "Bad"
+            return 'Bad'
         elif self.ppm > 1000:
-            return "Mediocre"
+            return 'Mediocre'
         elif self.ppm > 500:
-            return "Decent"
+            return 'Decent'
         elif self.ppm > 400:
-            return "Good"
+            return 'Good'
         else:
             return "Invalid Measurement"
