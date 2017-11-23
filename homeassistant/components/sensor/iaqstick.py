@@ -14,7 +14,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyusb>=1.0.0']
+REQUIREMENTS = ['pyusb==1.0.0']
 
 logger = logging.getLogger('iAQStick')
 
