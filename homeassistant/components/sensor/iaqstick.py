@@ -113,7 +113,6 @@ class iAQStick(Entity):
             logger.error("update failed - {}".format(e))
             self._state = 99
 
-
     def state_string(self):
         if self.ppm > 1500:
             return 'Bad'
