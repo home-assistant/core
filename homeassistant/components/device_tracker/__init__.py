@@ -84,6 +84,7 @@ SOURCE_TYPE_ROUTER = 'router'
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+    vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
                  default=DEFAULT_CONSIDER_HOME): vol.All(
                      cv.time_period, cv.positive_timedelta)
@@ -125,9 +126,11 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf = conf[0] if conf else {}
     consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
     track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+    hide_if_away = conf.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
-    tracker = DeviceTracker(hass, consider_home, track_new, devices)
+    tracker = DeviceTracker(
+        hass, consider_home, track_new, hide_if_away, devices)
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config, disc_info=None):
@@ -211,13 +214,15 @@ class DeviceTracker(object):
     """Representation of a device tracker."""
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
-                 track_new: bool, devices: Sequence) -> None:
+                 track_new: bool, hide_if_away: bool,
+                 devices: Sequence) -> None:
         """Initialize a device tracker."""
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = consider_home
         self.track_new = track_new
+        self.hide_if_away = hide_if_away
         self.group = None
         self._is_updating = asyncio.Lock(loop=hass.loop)
 
@@ -274,7 +279,7 @@ class DeviceTracker(object):
         device = Device(
             self.hass, self.consider_home, self.track_new,
             dev_id, mac, (host_name or dev_id).replace('_', ' '),
-            picture=picture, icon=icon)
+            picture=picture, icon=icon, hide_if_away=self.hide_if_away)
         self.devices[dev_id] = device
         if mac is not None:
             self.mac_to_dev[mac] = device
