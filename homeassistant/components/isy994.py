@@ -92,6 +92,16 @@ def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
     return filtered_nodes
 
 
+def _is_node_a_sensor(node, path: str, sensor_identifier: str) -> bool:
+    if sensor_identifier in path or sensor_identifier in node.name:
+        return True
+
+    try:
+        return node.node_def_id == 'BinaryAlarm'
+    except AttributeError:
+        return False
+
+
 def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
     """Categorize the ISY994 nodes."""
     global SENSOR_NODES
@@ -107,7 +117,7 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
         hidden = hidden_identifier in path or hidden_identifier in node.name
         if hidden:
             node.name += hidden_identifier
-        if sensor_identifier in path or sensor_identifier in node.name:
+        if _is_node_a_sensor(node, path, sensor_identifier):
             SENSOR_NODES.append(node)
         elif isinstance(node, PYISY.Nodes.Node):
             NODES.append(node)
