@@ -60,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # show notification for all cameras without an active subscription
     if cams_no_plan:
-        cameras = str(', '.join([camera for camera in cams_no_plan]))
+        cameras = str(', '.join([camera.name for camera in cams_no_plan]))
 
         err_msg = '''A Ring Protect Plan is required for the''' \
                   ''' following cameras: {}.'''.format(cameras)
