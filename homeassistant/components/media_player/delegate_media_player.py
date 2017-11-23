@@ -122,11 +122,6 @@ class DelegateMediaPlayerDevice(MediaPlayerDevice):
         return self._state
 
     @property
-    def source(self):
-        """Return the current input source."""
-        return self._selected_source
-
-    @property
     def source_list(self):
         """List of available input sources."""
         return list(self._sources.values())
