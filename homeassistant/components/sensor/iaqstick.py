@@ -75,9 +75,11 @@ class iAQStick(Entity):
         return True
 
     def xfer_type2(self, msg):
-        out_data = bytes('@', 'utf-8') + self._type2_seq.to_bytes(1,
-                    byteorder='big') + bytes('{}\n@@@@@@@@@@@@@'.format(msg),
-                                                                      'utf-8')
+        out_data = bytes('@', 'utf-8') + \
+            self._type2_seq.to_bytes(1,
+                                    byteorder='big') + \
+                                    bytes('{}\n@@@@@@@@@@@@@'.format(msg),
+                                    'utf-8')
         self._type2_seq = (self._type2_seq + 1) if (self._type2_seq < 0xFF) \
             else 0x67
         ret = self._dev.write(0x02, out_data[:16])
