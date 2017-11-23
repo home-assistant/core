@@ -276,19 +276,24 @@ class RestLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = 0
+        supported_features_bitfield = 0
         if "brightness" in self._supported_features:
-            supported_features = (supported_features | SUPPORT_BRIGHTNESS)
+            supported_features_bitfield = \
+                (supported_features_bitfield | SUPPORT_BRIGHTNESS)
         if "color_temp" in self._supported_features:
-            supported_features = (supported_features | SUPPORT_COLOR_TEMP)
+            supported_features_bitfield = \
+                (supported_features_bitfield | SUPPORT_COLOR_TEMP)
         if "effect" in self._supported_features:
-            supported_features = (supported_features | SUPPORT_EFFECT)
+            supported_features_bitfield = \
+                (supported_features_bitfield | SUPPORT_EFFECT)
         if "rgb_color" in self._supported_features:
-            supported_features = (supported_features | SUPPORT_RGB_COLOR)
+            supported_features_bitfield = \
+                (supported_features_bitfield | SUPPORT_RGB_COLOR)
         if "transition" in self._supported_features:
-            supported_features = (supported_features | SUPPORT_TRANSITION)
+            supported_features_bitfield = \
+                (supported_features_bitfield | SUPPORT_TRANSITION)
 
-        return supported_features
+        return supported_features_bitfield
 
     @property
     def effect_list(self):
