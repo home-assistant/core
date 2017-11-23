@@ -131,7 +131,6 @@ class MerakiView(HomeAssistantView):
                     partial(self.see,
                             gps=gps_location,
                             mac=mac,
-                            hide_if_away=True,
                             source_type=SOURCE_TYPE_ROUTER,
                             gps_accuracy=accuracy,
                             attributes=attrs))
