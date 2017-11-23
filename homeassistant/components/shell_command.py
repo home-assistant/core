@@ -62,6 +62,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
         if rendered_args == args:
             # No template used. default behavior
+
+            # pylint: disable=no-member
             create_process = asyncio.subprocess.create_subprocess_shell(
                 cmd,
                 loop=hass.loop,
@@ -72,6 +74,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             # Template used. Break into list and use create_subprocess_exec
             # (which uses shell=False) for security
             shlexed_cmd = [prog] + shlex.split(rendered_args)
+
+            # pylint: disable=no-member
             create_process = asyncio.subprocess.create_subprocess_exec(
                 *shlexed_cmd,
                 loop=hass.loop,
