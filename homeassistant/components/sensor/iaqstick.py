@@ -11,8 +11,6 @@ and run # udevadm control --reload-rules && udevadm trigger or reboot.
 """
 
 import logging
-import usb.core
-import usb.util
 
 from homeassistant.helpers.entity import Entity
 
@@ -33,6 +31,10 @@ class iAQStick(Entity):
     ppm = 0
 
     def __init__(self):
+
+        import usb.core
+        import usb.util
+
         self._dev = usb.core.find(idVendor=0x03eb, idProduct=0x2013)
         if self._dev is None:
             logger.error("iAQ Stick not found")
@@ -92,6 +94,9 @@ class iAQStick(Entity):
         return in_data
 
     def stop(self):
+
+        import usb.util
+
         if not self.initialized:
             return
         self.alive = False
