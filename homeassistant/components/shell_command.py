@@ -63,30 +63,30 @@ def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         if rendered_args == args:
             # No template used. default behavior
             create_process = asyncio.subprocess.create_subprocess_shell(
-                    cmd,
-                    loop=hass.loop,
-                    stdin=None,
-                    stdout=asyncio.subprocess.DEVNULL,
-                    stderr=asyncio.subprocess.DEVNULL,
-                    )
+                cmd,
+                loop=hass.loop,
+                stdin=None,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL
+                )
         else:
             # Template used. Break into list and use create_subprocess_exec
             # (which uses shell=False) for security
             shlexed_cmd = [prog] + shlex.split(rendered_args)
             create_process = asyncio.subprocess.create_subprocess_exec(
-                    *shlexed_cmd,
-                    loop=hass.loop,
-                    stdin=None,
-                    stdout=asyncio.subprocess.DEVNULL,
-                    stderr=asyncio.subprocess.DEVNULL
-                    )
+                *shlexed_cmd,
+                loop=hass.loop,
+                stdin=None,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL
+                )
 
         process = yield from create_process
-        stdout, stderr = yield from process.communicate()
+        yield from process.communicate()
 
         if process.returncode != 0:
-            _LOGGER.exception("Error running command: `{}`, return code: {}"
-                              .format(cmd, process.returncode))
+            _LOGGER.exception("Error running command: `%s`, return code: %s",
+                              cmd, process.returncode)
 
     for name in conf.keys():
         hass.services.async_register(DOMAIN, name, async_service_handler)
