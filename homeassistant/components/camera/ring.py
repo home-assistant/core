@@ -59,8 +59,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             cams_no_plan.append(camera)
 
     # show notification for all cameras without an active subscription
-    for camera in cams_no_plan:
-        err_msg = "A Ring Protect plan is required for {}.".format(camera.name)
+    if cams_no_plan:
+        cameras = str(', '.join([camera for camera in cams_no_plan]))
+
+        err_msg = '''A Ring Protect Plan is required for the''' \
+                  ''' following cameras: {}.'''.format(cameras)
+
         _LOGGER.error(err_msg)
         hass.components.persistent_notification.create(
             'Error: {}<br />'
