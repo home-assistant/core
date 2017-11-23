@@ -594,7 +594,6 @@ omit =
     homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
-    homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
     homeassistant/components/shiftr.py
     homeassistant/components/spc.py
