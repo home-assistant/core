@@ -78,7 +78,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                     loop=hass.loop,
                     stdin=None,
                     stdout=asyncio.subprocess.DEVNULL,
-                    stderr=asyncio.subprocess.DEVNULL,
+                    stderr=asyncio.subprocess.DEVNULL
                     )
 
         process = yield from create_process
