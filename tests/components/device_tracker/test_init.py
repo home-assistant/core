@@ -123,7 +123,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                   'My device', None, None, False),
             device_tracker.Device(self.hass, True, True, 'your_device',
                                   'AB:01', 'Your device', None, None, False)]
-        device_tracker.DeviceTracker(self.hass, False, True, devices)
+        device_tracker.DeviceTracker(self.hass, False, True, False, devices)
         _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
             "The only warning call should be duplicates (check DEBUG)"
@@ -137,7 +137,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                   'AB:01', 'My device', None, None, False),
             device_tracker.Device(self.hass, True, True, 'my_device',
                                   None, 'Your device', None, None, False)]
-        device_tracker.DeviceTracker(self.hass, False, True, devices)
+        device_tracker.DeviceTracker(self.hass, False, True, False, devices)
 
         _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
@@ -299,7 +299,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         vendor_string = 'Raspberry Pi Foundation'
 
         tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), 0, [])
+            self.hass, timedelta(seconds=60), 0, False, [])
 
         with mock_aiohttp_client() as aioclient_mock:
             aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
@@ -622,7 +622,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_see_failures(self, mock_warning):
         """Test that the device tracker see failures."""
         tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), 0, [])
+            self.hass, timedelta(seconds=60), 0, False, [])
 
         # MAC is not a string (but added)
         tracker.see(mac=567, host_name="Number MAC")
@@ -654,7 +654,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_picture_and_icon_on_see_discovery(self):
         """Test that picture and icon are set in initial see."""
         tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), False, [])
+            self.hass, timedelta(seconds=60), False, False, [])
         tracker.see(dev_id=11, picture='pic_url', icon='mdi:icon')
         self.hass.block_till_done()
         config = device_tracker.load_config(self.yaml_devices, self.hass,

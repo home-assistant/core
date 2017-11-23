@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
-    CONF_CONSIDER_HOME, CONF_TRACK_NEW)
+    CONF_CONSIDER_HOME, CONF_TRACK_NEW, CONF_AWAY_HIDE)
 from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN,
     CONF_PORT, PLATFORM_SCHEMA)
@@ -78,6 +78,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_USERNAME: 'fake_user',
                 CONF_PASSWORD: 'fake_pass',
                 CONF_TRACK_NEW: True,
+                CONF_AWAY_HIDE: False,
                 CONF_CONSIDER_HOME: timedelta(seconds=180)
             }
         }
@@ -104,6 +105,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_USERNAME: 'fake_user',
                 CONF_PUB_KEY: FAKEFILE,
                 CONF_TRACK_NEW: True,
+                CONF_AWAY_HIDE: True,
                 CONF_CONSIDER_HOME: timedelta(seconds=180)
             }
         }
