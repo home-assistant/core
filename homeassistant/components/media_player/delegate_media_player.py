@@ -1,5 +1,5 @@
 """
-Support for generic receivers by delegating actions to user configured scripts. 
+Support for generic receivers by delegating actions to user configured scripts.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.delegate_media_player/
@@ -194,4 +194,5 @@ class DelegateMediaPlayerDevice(MediaPlayerDevice):
                     self._selected_source = source_name
                     return
             raise ValueError(
-                f"Source '{requested_source_name}' was not found in source list.")
+                f"Source '{requested_source_name}' was not found in source list."
+            )
