@@ -1,28 +1,14 @@
-#!/usr/bin/env python3
-# vim: set encoding=utf-8 tabstop=4 softtabstop=4 shiftwidth=4 expandtab
-#########################################################################
-#  Copyright 2013 Robert Budde                       robert@projekt131.de
-#  Copyright 2017 Sebastian Kügler                          sebas@kde.org
-#########################################################################
-#  based on iAQ-Stick plugin for SmartHome.py.
-#                                        http://mknx.github.io/smarthome/
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#########################################################################
+"""
+Support for AppliedSensor iAQStick
 
-#/etc/udev/rules.d/99-iaqstick.rules
-#SUBSYSTEM=="usb", ATTR{idVendor}=="03eb", ATTR{idProduct}=="2013", MODE="666"
-#udevadm trigger
+On Linux, a custom udev rule is needed, add a file
+/etc/udev/rules.d/99-iaqstick.rules containing
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="03eb", ATTR{idProduct}=="2013", MODE="666"
+
+and run # udevadm control --reload-rules && udevadm trigger or reboot.
+
+"""
 
 import logging
 import usb.core
@@ -30,7 +16,7 @@ import usb.util
 
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyusb<=1.0.0']
+REQUIREMENTS = ['pyusb>=1.0.0']
 
 logger = logging.getLogger('iAQStick')
 
