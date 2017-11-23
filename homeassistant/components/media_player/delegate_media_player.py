@@ -12,7 +12,8 @@ import time
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.media_player import MediaPlayerDevice, SUPPORT_TURN_ON, PLATFORM_SCHEMA, SUPPORT_TURN_OFF, \
+from homeassistant.components.media_player import MediaPlayerDevice, \
+    SUPPORT_TURN_ON, PLATFORM_SCHEMA, SUPPORT_TURN_OFF, \
     SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE
 from homeassistant.const import CONF_NAME, STATE_ON, STATE_OFF
 from homeassistant.helpers.script import Script
@@ -52,7 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the delegate platform."""
-    media_player = DelegateMediaPlayerDevice(config.get(CONF_NAME), config, hass)
+    media_player = DelegateMediaPlayerDevice(config.get(CONF_NAME), config,
+                                             hass)
     add_devices([media_player])
 
 
@@ -62,19 +64,27 @@ class DelegateMediaPlayerDevice(MediaPlayerDevice):
     def __init__(self, name, config, hass):
         """Initialize the device."""
         self._name = name
-        self._turn_on_action = Script(hass, config.get(CONF_ON_ACTION)) if config.get(CONF_ON_ACTION) else None
-        self._turn_off_action = Script(hass, config.get(CONF_OFF_ACTION)) if config.get(CONF_OFF_ACTION) else None
-        self._volume_up_action = Script(hass, config.get(CONF_VOLUME_UP_ACTION)) if config.get(
+        self._turn_on_action = Script(hass, config.get(
+            CONF_ON_ACTION)) if config.get(CONF_ON_ACTION) else None
+        self._turn_off_action = Script(hass, config.get(
+            CONF_OFF_ACTION)) if config.get(CONF_OFF_ACTION) else None
+        self._volume_up_action = Script(hass, config.get(
+            CONF_VOLUME_UP_ACTION)) if config.get(
             CONF_VOLUME_UP_ACTION) else None
-        self._volume_down_action = Script(hass, config.get(CONF_VOLUME_DOWN_ACTION)) if config.get(
+        self._volume_down_action = Script(hass, config.get(
+            CONF_VOLUME_DOWN_ACTION)) if config.get(
             CONF_VOLUME_DOWN_ACTION) else None
-        self._volume_set_action = Script(hass, config.get(CONF_VOLUME_SET_ACTION)) if config.get(
+        self._volume_set_action = Script(hass, config.get(
+            CONF_VOLUME_SET_ACTION)) if config.get(
             CONF_VOLUME_SET_ACTION) else None
-        self._volume_mute_action = Script(hass, config.get(CONF_VOLUME_MUTE_ACTION)) if config.get(
+        self._volume_mute_action = Script(hass, config.get(
+            CONF_VOLUME_MUTE_ACTION)) if config.get(
             CONF_VOLUME_MUTE_ACTION) else None
-        self._volume_unmute_action = Script(hass, config.get(CONF_VOLUME_UNMUTE_ACTION)) if config.get(
+        self._volume_unmute_action = Script(hass, config.get(
+            CONF_VOLUME_UNMUTE_ACTION)) if config.get(
             CONF_VOLUME_UNMUTE_ACTION) else None
-        self._select_source_action = Script(hass, config.get(CONF_SELECT_SOURCE_ACTION)) if config.get(
+        self._select_source_action = Script(hass, config.get(
+            CONF_SELECT_SOURCE_ACTION)) if config.get(
             CONF_SELECT_SOURCE_ACTION) else None
         self._sources = config.get(CONF_SOURCE_NAMES)
         self._selected_source = None
@@ -97,7 +107,8 @@ class DelegateMediaPlayerDevice(MediaPlayerDevice):
             features |= SUPPORT_TURN_ON
         if self._turn_off_action:
             features |= SUPPORT_TURN_OFF
-        if (self._volume_up_action and self._volume_down_action) or self._volume_set_action:
+        if (self._volume_up_action and self._volume_down_action) or \
+                self._volume_set_action:
             features |= SUPPORT_VOLUME_SET
         if self._volume_mute_action and self._volume_unmute_action:
             features |= SUPPORT_VOLUME_MUTE
@@ -146,13 +157,15 @@ class DelegateMediaPlayerDevice(MediaPlayerDevice):
         elif self._volume_up_action and self._volume_down_action:
             if volume < self._volume:
                 while volume < self._volume:
-                    _LOGGER.debug(f"Setting volume from {self._volume} to {volume}")
+                    _LOGGER.debug(
+                        f"Setting volume from {self._volume} to {volume}")
                     self._volume -= self._volume_step
                     self._volume_down_action.run()
                     time.sleep(self._volume_step_delay)
             elif volume > self._volume:
                 while volume > self._volume:
-                    _LOGGER.debug(f"Setting volume from {self._volume} to {volume}")
+                    _LOGGER.debug(
+                        f"Setting volume from {self._volume} to {volume}")
                     self._volume += self._volume_step
                     self._volume_up_action.run()
                     time.sleep(self._volume_step_delay)
@@ -181,7 +194,9 @@ class DelegateMediaPlayerDevice(MediaPlayerDevice):
         if self._select_source_action:
             for source_key, source_name in self._sources.items():
                 if source_name == requested_source_name:
-                    self._select_source_action.run({'source_key': source_key, 'source_name': source_name})
+                    self._select_source_action.run(
+                        {'source_key': source_key, 'source_name': source_name})
                     self._selected_source = source_name
                     return
-            raise ValueError(f"Source '{requested_source_name}' was not found in source list.")
+            raise ValueError(
+                f"Source '{requested_source_name}' was not found in source list.")
