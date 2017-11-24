@@ -84,8 +84,8 @@ class TestCanary(unittest.TestCase):
 
         self.assertTrue(canary.setup(self.hass, config))
 
-        mock_update.assert_called_once()
-        mock_login.assert_called_once()
+        mock_update.assert_called_once_with()
+        mock_login.assert_called_once_with()
 
     def test_setup_with_missing_password(self):
         """Test setup component."""
