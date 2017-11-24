@@ -733,7 +733,7 @@ class ClimateDevice(Entity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        raise NotImplemented
+        raise NotImplementedError()
 
     @property
     def min_temp(self):

@@ -331,13 +331,13 @@ class Thermostat(ClimateDevice):
             cool_temp_setpoint = cool_temp
         else:
             cool_temp_setpoint = (
-                self.self.thermostat['runtime']['desiredCool'] / 10.0)
+                self.thermostat['runtime']['desiredCool'] / 10.0)
 
         if heat_temp is not None:
             heat_temp_setpoint = heat_temp
         else:
             heat_temp_setpoint = (
-                self.self.thermostat['runtime']['desiredCool'] / 10.0)
+                self.thermostat['runtime']['desiredCool'] / 10.0)
 
         self.data.ecobee.set_hold_temp(self.thermostat_index,
                                        cool_temp_setpoint, heat_temp_setpoint,

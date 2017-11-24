@@ -131,7 +131,7 @@ class RoundThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
-        if hasattr(self._device, ATTR_SYSTEM_MODE):
+        if hasattr(self.client, ATTR_SYSTEM_MODE):
             supported |= SUPPORT_OPERATION_MODE
         return supported
 
