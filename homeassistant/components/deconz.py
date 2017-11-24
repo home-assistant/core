@@ -49,8 +49,6 @@ def async_setup(hass, config):
     deconz_config = config[DOMAIN]
     config_file = yield from hass.async_add_job(
         load_json, hass.config.path(CONFIG_FILE))
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     if CONF_API_KEY in deconz_config:
         pass
@@ -97,6 +95,8 @@ def _setup_deconz(hass, config, deconz_config):
         hass, 'sensor', DOMAIN, deconz_config, config))
     deconz.start()
 
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(os.path.dirname(__file__), 'services.yaml'))
     @asyncio.coroutine
     def _configure(call):
         """Set attribute of device in Deconz.
@@ -118,6 +118,7 @@ def _setup_deconz(hass, config, deconz_config):
         yield from deconz.put_state_async(field, data)
     hass.services.async_register(
         DOMAIN, 'configure', _configure, descriptions[DOMAIN]['configure'])
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz.close)
     return True
 
