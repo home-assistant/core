@@ -2,7 +2,7 @@
 Support SmartMi acpartner.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
+https://home-assistant.io/components/climate.xiaomi_miio
 """
 import logging
 import asyncio
