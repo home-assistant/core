@@ -16,11 +16,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pytradfri==4.0.1',
-                'DTLSSocket==0.1.4',
-                'https://github.com/chrysn/aiocoap/archive/'
-                '3286f48f0b949901c8b5c04c0719dc54ab63d431.zip'
-                '#aiocoap==0.3']
+REQUIREMENTS = ['pytradfri[async]==4.1.0']
 
 DOMAIN = 'tradfri'
 GATEWAY_IDENTITY = 'homeassistant'
@@ -143,7 +139,7 @@ def async_setup(hass, config):
 def _setup_gateway(hass, hass_config, host, identity, key,
                    allow_tradfri_groups):
     """Create a gateway."""
-    from pytradfri import Gateway, RequestError
+    from pytradfri import Gateway, RequestError  # pylint: disable=import-error
     try:
         from pytradfri.api.aiocoap_api import APIFactory
     except ImportError:
