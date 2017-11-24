@@ -189,13 +189,13 @@ class WemoDimmer(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_WEMO
+        return SUPPORT_BRIGHTNESS
 
     @property
-    def get_brightness(self):
+    def brightness(self):
         """Return the brightness of this light between 1 and 100"""
-        brightness = self.wemo.get_brightness()
-        return brightness
+        wemobrightness = int(self.wemo.get_brightness())
+        return int((wemobrightness * 255) / 100)
 
     @property
     def is_on(self):
@@ -210,7 +210,8 @@ class WemoDimmer(Light):
         """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
-            self._brightness = int(self.wemo.get_brightness(force_update))
+            wemobrightness = int(self.wemo.get_brightness(force_update))
+            self._brightness = int((wemobrightness * 255) / 100)
         except AttributeError as err:
             _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)
