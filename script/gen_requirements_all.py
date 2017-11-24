@@ -73,6 +73,7 @@ TEST_REQUIREMENTS = (
     'python-forecastio',
     'pyunifi',
     'pywebpush',
+    'python-miio',
     'restrictedpython',
     'rflink',
     'ring_doorbell',
