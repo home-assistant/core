@@ -41,7 +41,7 @@ CONF_SENSOR = 'target_sensor'
 CONF_SYNC = 'sync'
 CONF_CUSTOMIZE = 'customize'
 
-Presets = {
+__Presets__ = {
     "default": {
         "description": "The Default Replacement of AC Partner",
         "defaultMain": "AC model(10)+po+mo+wi+sw+tt",
@@ -130,56 +130,54 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     customize = config.get(CONF_CUSTOMIZE)
 
     add_devices_callback([MiAcPartner(
-            hass, name, None, None, None, 'auto', None,
-            'off', 'off', None, DEFAULT_MAX_TMEP, DEFAULT_MIN_TMEP, host,
-            token, sensor_entity_id, sync, customize)])
+        hass, name, None, None, None, 'auto', None,
+        'off', 'off', None, DEFAULT_MAX_TMEP, DEFAULT_MIN_TMEP, host,
+        token, sensor_entity_id, sync, customize)])
 
 
-class ClimateStatus:
+class ClimateStatus(ClimateDevice):
     """Container for status reports from the climate."""
     def __init__(self, data):
         self.data = data
 
     @property
-    def acpower(self):
+    def _acpower(self):
         return self.data[2]
 
     @property
-    def acmodel(self):
+    def _acmodel(self):
         return str(self.data[0][0:2] + self.data[0][8:16])
 
     @property
-    def power(self):
+    def _power(self):
         return self.data[1][2:3]
 
     @property
-    def mode(self):
+    def _mode(self):
         return self.data[1][3:4]
 
     @property
-    def wind_force(self):
+    def _wind_force(self):
         if self.data[1][4:5] == '0':
             return 'low'
         elif self.data[1][4:5] == '1':
             return 'medium'
         elif self.data[1][4:5] == '2':
             return 'high'
-        else:
-            return 'auto'
+        return 'auto'
 
     @property
-    def sweep(self):
+    def _sweep(self):
         if self.data[1][5:6] == '0':
             return 'on'
-        else:
-            return 'off'
+        return 'off'
 
     @property
-    def temp(self):
+    def _temp(self):
         return int(self.data[1][6:8], 16)
 
     @property
-    def operation(self):
+    def _operation(self):
         if self.data[1][2:3] == '0':
             return 'off'
         else:
@@ -187,19 +185,17 @@ class ClimateStatus:
                 return 'heat'
             elif self.data[1][3:4] == '1':
                 return 'cool'
-            else:
-                return 'auto'
+            return 'auto'
 
 
 class MiAcPartner(ClimateDevice):
     """Representation of a demo climate device."""
 
-    def __init__(
-                self, hass, name, target_humidity,
-                away, hold, current_fan_mode, current_humidity,
-                current_swing_mode, current_operation, aux,
-                target_temp_high, target_temp_low, host,
-                token, sensor_entity_id, sync, customize):
+    def __init__(self, hass, name, target_humidity,
+                 away, hold, current_fan_mode, current_humidity,
+                 current_swing_mode, current_operation, aux,
+                 target_temp_high, target_temp_low, host,
+                 token, sensor_entity_id, sync, customize):
 
         """Initialize the climate device."""
         self.hass = hass
@@ -214,7 +210,7 @@ class MiAcPartner(ClimateDevice):
 
         self._climate = None
         self._state = None
-        self._state = self.climate_get_state()
+        self._state = self._climate_get_state()
 
         self._target_temperature = self._state.temp
         self._current_operation = self._state.operation
@@ -275,12 +271,12 @@ class MiAcPartner(ClimateDevice):
         if new_state is None:
             return
         self._async_update_temp(new_state)
-        yield from self.async_update_ha_state()
+        # yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def _async_get_states(self, now=None):
         """Update the state of this climate device."""
-        self.climate_get_state()
+        self._climate_get_state()
         self._current_operation = self._state.operation
         self._target_temperature = self._state.temp
         if (not self._customize) or (self._customize
@@ -291,19 +287,19 @@ class MiAcPartner(ClimateDevice):
             self._current_swing_mode = self._state.sweep
         if not self._sensor_entity_id:
             self._current_temperature = self._state.temp
-        _LOGGER.info('Sync climate status, acmodel: %s', 'operation: %s',
-                     'temperature: %s', 'fan: %s', 'swing: %s',
+        _LOGGER.info('Sync climate status, acmodel: %s, operation: %s,\
+                     temperature: %s, fan: %s, swing: %s',
                      self._state.acmodel, self._state.operation,
                      self._state.temp, self._state.wind_force,
                      self._state.sweep)
         self.schedule_update_ha_state()
 
     @property
-    def climate(self):
+    def _climate(self):
         import miio
         if not self._climate:
-            _LOGGER.info("initializing with host %s token %s"
-                         % (self.host, self.token))
+            _LOGGER.info("initializing with host %s token %s",
+                         self.host, self.token)
             self._climate = miio.Device(self.host, self.token)
         return self._climate
 
@@ -318,7 +314,7 @@ class MiAcPartner(ClimateDevice):
         return self._max_temp
 
     @property
-    def target_temperature_step(self):
+    def _target_temperature_step(self):
         return self._target_temp_step
 
     @property
@@ -434,7 +430,7 @@ class MiAcPartner(ClimateDevice):
         """Set new target temperature."""
         self._current_swing_mode = swing_mode
         if self._customize and ('swing' in self._customize):
-            self.customize_sendcmd('swing')
+            self._customize_sendcmd('swing')
         else:
             self.sendcmd()
         self.schedule_update_ha_state()
@@ -443,7 +439,7 @@ class MiAcPartner(ClimateDevice):
         """Set new target temperature."""
         self._current_fan_mode = fan
         if self._customize and ('fan' in self._customize):
-            self.customize_sendcmd('fan')
+            self._customize_sendcmd('fan')
         else:
             self.sendcmd()
         self.schedule_update_ha_state()
@@ -489,7 +485,7 @@ class MiAcPartner(ClimateDevice):
         self._aux = False
         self.schedule_update_ha_state()
 
-    def climate_get_state(self):
+    def _climate_get_state(self):
         getstate = self.climate.send("get_model_and_state", [])
         _LOGGER.info(getstate)
         self._state = ClimateStatus(getstate)
@@ -502,115 +498,115 @@ class MiAcPartner(ClimateDevice):
         """
         model = self._state.acmodel
 
-        if model not in Presets:
-            MainCode = model + "pomowiswtta0"
+        if model not in __Presets__:
+            maincode = model + "pomowiswtta0"
         else:
-            MainCode = Presets[model]['main']
-        if (model in Presets) and ('off' in Presets[model]) and (
+            maincode = __Presets__[model]['main']
+        if (model in __Presets__) and ('off' in __Presets__[model]) and (
                 (self._current_operation == 'off') or (
                     self._current_operation == 'idle')):
-            MainCode = Presets[model]['off']
+            maincode = __Presets__[model]['off']
         else:
-            CodeConfig = Presets['default']
-            ValueCont = Presets['default']['VALUE']
+            codeconfig = __Presets__['default']
+            valuecont = __Presets__['default']['VALUE']
             index = 0
-            while index < len(ValueCont):
-                tep = ValueCont[index]
+            while index < len(valuecont):
+                tep = valuecont[index]
                 if tep == "tt":
                     temp = hex(int(self._target_temperature))[2:]
-                    MainCode = MainCode.replace('tt', temp)
+                    maincode = maincode.replace('tt', temp)
                 if tep == "po":
                     if (self._current_operation == 'idle') or (
                             self._current_operation == 'off'):
-                        PoCode = CodeConfig['po']['off']
+                        pocode = codeconfig['po']['off']
                     else:
-                        PoCode = CodeConfig['po']['on']
-                    MainCode = MainCode.replace('po', PoCode)
+                        pocode = codeconfig['po']['on']
+                    maincode = maincode.replace('po', pocode)
                 if tep == "mo":
                     if self._current_operation == 'heat':
-                        MoCode = CodeConfig['mo']['heater']
+                        mocode = codeconfig['mo']['heater']
                     elif self._current_operation == 'cool':
-                        MoCode = CodeConfig['mo']['cooler']
+                        mocode = codeconfig['mo']['cooler']
                     else:
-                        MoCode = '2'
-                    MainCode = MainCode.replace('mo', MoCode)
+                        mocode = '2'
+                    maincode = maincode.replace('mo', mocode)
                 if tep == "wi":
                     if self._current_fan_mode == 'low':
-                        WiCode = '0'
+                        wicode = '0'
                     elif self._current_fan_mode == 'medium':
-                        WiCode = '1'
+                        wicode = '1'
                     elif self._current_fan_mode == 'high':
-                        WiCode = '2'
+                        wicode = '2'
                     else:
-                        WiCode = '3'
-                    MainCode = MainCode.replace('wi', WiCode)
+                        wicode = '3'
+                    maincode = maincode.replace('wi', wicode)
                 if tep == "sw":
                     if self._current_swing_mode == 'on':
-                        MainCode = MainCode.replace(
-                            'sw', CodeConfig['sw']['on'])
+                        maincode = maincode.replace(
+                            'sw', codeconfig['sw']['on'])
                     else:
-                        MainCode = MainCode.replace(
-                            'sw', CodeConfig['sw']['off'])
+                        maincode = maincode.replace(
+                            'sw', codeconfig['sw']['off'])
                 if tep == "li":
-                    MainCode = MainCode
+                    maincode = maincode
                 index += 1
 
-            if (model in Presets) and ('EXTRA_VALUE' in Presets[model]):
-                CodeConfig = Presets[model]
-                ValueCont = Presets[model]['EXTRA_VALUE']
+            if (model in __Presets__) and ('EXTRA_VALUE' in __Presets__[model]):
+                codeconfig = __Presets__[model]
+                valuecont = __Presets__[model]['EXTRA_VALUE']
                 index = 0
-                while index < len(ValueCont):
-                    tep = ValueCont[index]
+                while index < len(valuecont):
+                    tep = valuecont[index]
                     if tep == "t0t":
                         temp = (
-                            int(CodeConfig['t0t']) + int(
+                            int(codeconfig['t0t']) + int(
                                 self._target_temperature) - 17) % 16
                         temp = hex(temp)[2:].upper()
-                        MainCode = MainCode.replace('t0t', temp)
+                        maincode = maincode.replace('t0t', temp)
                     if tep == "t6t":
-                        temp = (int(CodeConfig['t6t']) + int(
-                                self._target_temperature) - 17) % 16
+                        temp = (int(codeconfig['t6t']) + int(
+                            self._target_temperature) - 17) % 16
                         temp = hex(temp)[2:].upper()
-                        MainCode = MainCode.replace('t6t', temp)
+                        maincode = maincode.replace('t6t', temp)
                     if tep == "t4wt":
-                        temp = (int(CodeConfig['t4wt']) + int(
-                                self._target_temperature) - 17) % 16
+                        temp = (int(codeconfig['t4wt']) + int(
+                            self._target_temperature) - 17) % 16
                         temp = hex(temp)[2:].upper()
-                        MainCode = MainCode.replace('t4wt', temp)
+                        maincode = maincode.replace('t4wt', temp)
                     index += 1
 
         try:
-            self.climate.send('send_cmd', [MainCode])
+            self.climate.send('send_cmd', [maincode])
             _LOGGER.info(
-                        'Change Climate Successful: acmodel: %s,\
-                        operation: %s\ , temperature: %s, fan: %s,\
-                        swing: %s, sendCode: %s',
-                        model, self._current_operation,
-                        self._target_temperature, self._current_fan_mode,
-                        self._current_swing_mode, MainCode)
+                'Change Climate Successful: acmodel: %s,\
+                operation: %s , temperature: %s, fan: %s,\
+                swing: %s, sendCode: %s',
+                model, self._current_operation,
+                self._target_temperature, self._current_fan_mode,
+                self._current_swing_mode, maincode)
         except ValueError as ex:
             _LOGGER.error('Change Climate Fail: %s', ex)
 
-    def customize_sendcmd(self, customize_mode):
+    def _customize_sendcmd(self, customize_mode):
         model = self._state.acmodel
         if customize_mode == 'fan' and self._current_fan_mode != 'idle':
-            MainCode = self._customize['fan'][self._current_fan_mode]
+            maincode = self._customize['fan'][self._current_fan_mode]
         elif customize_mode == 'swing' and self._current_swing_mode != 'idle':
-            MainCode = self._customize['swing'][self._current_swing_mode]
+            maincode = self._customize['swing'][self._current_swing_mode]
         else:
             return
 
         try:
-            if str(MainCode)[0:2] == "01":
-                self.climate.send('send_cmd', [MainCode])
+            if str(maincode)[0:2] == "01":
+                self._climate.send('send_cmd', [maincode])
             else:
-                self.climate.send('send_ir_code', [MainCode])
+                self._climate.send('send_ir_code', [maincode])
             _LOGGER.info(
-                        'Send Customize Code: acmodel: %s,\
-                        operation: %s , temperature: %s, fan: %s,\
-                        swing: %s, sendCode: %s',
-                        model, self._current_operation,
-                        self._target_temperature, self._current_fan_mode,
-                        self._current_swing_mode, MainCode)
+                'Send Customize Code: acmodel: %s,\
+                operation: %s , temperature: %s, fan: %s,\
+                swing: %s, sendCode: %s',
+                model, self._current_operation,
+                self._target_temperature, self._current_fan_mode,
+                self._current_swing_mode, maincode)
         except ValueError as ex:
             _LOGGER.error('Change Climate Fail: %s', ex)
