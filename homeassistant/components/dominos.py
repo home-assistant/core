@@ -70,14 +70,14 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     hass.data[DOMAIN] = {}
     entities = []
+    conf = config[DOMAIN]
 
     hass.services.register(DOMAIN, 'order', dominos.handle_order)
 
-    if config[DOMAIN].get(ATTR_SHOW_MENU):
-        dominos.show_menu(hass)
-        hass.http.register_view(DominosProductListView)
+    if conf.get(ATTR_SHOW_MENU):
+        hass.http.register_view(DominosProductListView(dominos))
 
-    for order_info in config[DOMAIN].get(ATTR_ORDERS):
+    for order_info in conf.get(ATTR_ORDERS):
         order = DominosOrder(order_info, dominos)
         entities.append(order)
 
@@ -92,20 +92,20 @@ class Dominos():
 
     def __init__(self, hass, config):
         """Set up main service."""
+        conf = config[DOMAIN]
         from pizzapi import Address, Customer, Store
         self.hass = hass
         self.customer = Customer(
-            config[DOMAIN].get(ATTR_FIRST_NAME),
-            config[DOMAIN].get(ATTR_LAST_NAME),
-            config[DOMAIN].get(ATTR_EMAIL),
-            config[DOMAIN].get(ATTR_PHONE),
-            config[DOMAIN].get(ATTR_ADDRESS))
+            conf.get(ATTR_FIRST_NAME),
+            conf.get(ATTR_LAST_NAME),
+            conf.get(ATTR_EMAIL),
+            conf.get(ATTR_PHONE),
+            conf.get(ATTR_ADDRESS))
         self.address = Address(
             *self.customer.address.split(','),
-            country=config[DOMAIN].get(ATTR_COUNTRY))
-        self.country = config[DOMAIN].get(ATTR_COUNTRY)
+            country=conf.get(ATTR_COUNTRY))
+        self.country = conf.get(ATTR_COUNTRY)
         self.closest_store = Store()
-        self.update_closest_store()
 
     def handle_order(self, call):
         """Handle ordering pizza."""
@@ -126,14 +126,14 @@ class Dominos():
         except StoreException:
             self.closest_store = False
 
-    def show_menu(self, hass):
-        """Dump the closest stores menu into the logs."""
+    def get_menu(self):
+        """Return the products from the closest stores menu."""
         if self.closest_store is False:
             _LOGGER.warning('Cannot get menu. Store may be closed')
             return
 
         menu = self.closest_store.get_menu()
-        hass.data[DOMAIN]['products'] = []
+        product_entries = []
 
         for product in menu.products:
             item = {}
@@ -143,7 +143,9 @@ class Dominos():
                 variants = product.menu_data['Variants']
             item['name'] = product.name
             item['variants'] = variants
-            hass.data[DOMAIN]['products'].append(item)
+            product_entries.append(item)
+        
+        return product_entries
 
 
 class DominosProductListView(http.HomeAssistantView):
@@ -152,10 +154,14 @@ class DominosProductListView(http.HomeAssistantView):
     url = '/api/dominos'
     name = "api:dominos"
 
+    def __init__(self, dominos):
+        """Initialize suite view."""
+        self.dominos = dominos
+
     @callback
     def get(self, request):
         """Retrieve if API is running."""
-        return self.json(request.app['hass'].data[DOMAIN]['products'])
+        return self.json(self.dominos.get_menu())
 
 
 class DominosOrder(Entity):
