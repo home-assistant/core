@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tellduslive/
 """
 from datetime import datetime, timedelta
-import asyncio
 import logging
 
 from homeassistant.const import (
@@ -53,9 +52,17 @@ CONFIG_SCHEMA = vol.Schema({
 ATTR_LAST_UPDATED = 'time_last_updated'
 
 CONFIG_INSTRUCTIONS = """
-To link your TelldusLive account,
-click the link, login, and authorize {app_name}.
-Then click the Confirm button.
+To link your TelldusLive account:
+
+1. Click the link below
+
+2. Login to Telldus Live
+
+3. Authorize {app_name}.
+
+4. Click the Confirm button.
+
+[Link TelldusLive account]({auth_url})
 """
 
 
@@ -96,28 +103,22 @@ def setup(hass, config, session=None):
             session.authorize()
             res = setup(hass, config, session)
             if not res:
-                hass.async_add_job(configurator.notify_errors,
-                                   hass.data[KEY_CONFIG].get(data_key),
-                                   'Unable to connect.')
+                configurator.notify_errors(
+                    hass.data[KEY_CONFIG].get(data_key),
+                    'Unable to connect.')
                 return
 
-            @asyncio.coroutine
-            def success():
-                """Set up was successful."""
-                conf.update(
-                    {host: {CONF_HOST: host,
-                            CONF_TOKEN: session.access_token}} if host else
-                    {DOMAIN: {CONF_TOKEN: session.access_token,
-                              CONF_TOKEN_SECRET: session.access_token_secret}})
-                save_json(config_filename, conf)
-                # Close all open configurators: for now, we only support one
-                # tellstick device, and configuration via either cloud service
-                # or via local API, not both at the same time
-                for instance in hass.data[KEY_CONFIG].values():
-                    hass.async_add_job(configurator.request_done,
-                                       instance)
-
-            hass.async_add_job(success)
+            conf.update(
+                {host: {CONF_HOST: host,
+                        CONF_TOKEN: session.access_token}} if host else
+                {DOMAIN: {CONF_TOKEN: session.access_token,
+                          CONF_TOKEN_SECRET: session.access_token_secret}})
+            save_json(config_filename, conf)
+            # Close all open configurators: for now, we only support one
+            # tellstick device, and configuration via either cloud service
+            # or via local API, not both at the same time
+            for instance in hass.data[KEY_CONFIG].values():
+                configurator.request_done(instance)
 
         hass.data[KEY_CONFIG][data_key] = \
             configurator.request_config(
@@ -126,10 +127,9 @@ def setup(hass, config, session=None):
                     else 'Cloud service'),
                 configuration_callback,
                 description=CONFIG_INSTRUCTIONS.format(
-                    app_name=APPLICATION_NAME),
+                    app_name=APPLICATION_NAME,
+                    auth_url=auth_url),
                 submit_caption='Confirm',
-                link_name='Link TelldusLive account',
-                link_url=auth_url,
                 entity_picture='/static/images/logo_tellduslive.png',
             )
 
@@ -157,10 +157,10 @@ def setup(hass, config, session=None):
             return
 
         # Offer configuration of both live and local API
-        hass.async_add_job(request_configuration)
-        hass.async_add_job(request_configuration, host)
+        request_configuration()
+        request_configuration(host)
 
-    discovery.async_listen(hass, SERVICE_TELLDUSLIVE, tellstick_discovered)
+    discovery.listen(hass, SERVICE_TELLDUSLIVE, tellstick_discovered)
 
     if session:
         _LOGGER.debug('Continuing setup configured by configurator')
@@ -176,13 +176,12 @@ def setup(hass, config, session=None):
     elif config.get(DOMAIN):
         _LOGGER.info('Found entry in configuration.yaml. '
                      'Requesting TelldusLive cloud service configuration')
-        hass.async_add_job(request_configuration)
+        request_configuration()
 
         if CONF_HOST in config.get(DOMAIN, {}):
             _LOGGER.info('Found TelldusLive host entry in configuration.yaml. '
                          'Requesting Telldus Local API configuration')
-            hass.async_add_job(request_configuration,
-                               config.get(DOMAIN).get(CONF_HOST))
+            request_configuration(config.get(DOMAIN).get(CONF_HOST))
 
         return True
     else:
@@ -199,7 +198,7 @@ def setup(hass, config, session=None):
     hass.data[DOMAIN] = client
 
     if session:
-        hass.async_add_job(client.update)
+        client.update()
     else:
         hass.bus.listen(EVENT_HOMEASSISTANT_START, client.update)
 
