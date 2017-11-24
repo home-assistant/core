@@ -312,4 +312,3 @@ class Throttle(object):
                 throttle[0].release()
 
         return wrapper
-
