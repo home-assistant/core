@@ -59,8 +59,9 @@ def async_setup(hass, config):
         api_key = yield from get_api_key(hass.loop, **deconz_config)
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
-            yield from hass.async_add_job(
-                save_json, hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
+            yield from hass.async_add_job(save_json,
+                                          hass.config.path(CONFIG_FILE),
+                                          {CONF_API_KEY: api_key})
         else:
             yield from request_configuration(hass, config, deconz_config)
             return True
@@ -97,6 +98,7 @@ def _setup_deconz(hass, config, deconz_config):
 
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file, os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
     @asyncio.coroutine
     def _configure(call):
         """Set attribute of device in Deconz.
@@ -137,8 +139,9 @@ def request_configuration(hass, config, deconz_config):
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
             result = yield from _setup_deconz(hass, config, deconz_config)
-            yield from hass.async_add_job(
-                save_json, hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
+            yield from hass.async_add_job(save_json,
+                                          hass.config.path(CONFIG_FILE),
+                                          {CONF_API_KEY: api_key})
             if result:
                 configurator.async_request_done(request_id)
                 return True
