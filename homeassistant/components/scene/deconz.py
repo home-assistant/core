@@ -20,9 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up scenes for the deCONZ platform."""
     scenes = hass.data[DECONZ_DATA].scenes
+    entities = []
 
     for scene in scenes.values():
-        async_add_devices([DeconzScene(scene)])
+        entities.append(DeconzScene(scene))
+    async_add_devices(entities)
 
 
 class DeconzScene(Scene):

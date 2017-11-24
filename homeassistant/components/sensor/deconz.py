@@ -30,15 +30,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     from pydeconz.sensor import DECONZ_SENSOR
     switch_as_event = discovery_info.get(CONF_SWITCH_AS_EVENT)
     sensors = hass.data[DECONZ_DATA].sensors
+    entities = []
 
     for sensor in sensors.values():
         if sensor.type in DECONZ_SENSOR:
             if switch_as_event and sensor.type == 'ZHASwitch':
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
-                    async_add_devices([DeconzBattery(sensor)], True)
+                    entities.append(DeconzBattery(sensor))
             else:
-                async_add_devices([DeconzSensor(sensor)], True)
+                entities.append(DeconzSensor(sensor))
+    async_add_devices(entities, True)
 
 
 class DeconzSensor(Entity):

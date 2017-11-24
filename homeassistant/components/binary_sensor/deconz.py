@@ -25,10 +25,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup binary sensor platform for Deconz."""
     from pydeconz.sensor import DECONZ_BINARY_SENSOR
     sensors = hass.data[DECONZ_DATA].sensors
+    entities = []
 
     for sensor in sensors.values():
         if sensor.type in DECONZ_BINARY_SENSOR:
-            async_add_devices([DeconzBinarySensor(sensor)], True)
+            entities.append(DeconzBinarySensor(sensor))
+    async_add_devices(entities, True)
 
 
 class DeconzBinarySensor(BinarySensorDevice):

@@ -32,13 +32,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup light platform for Deconz."""
     lights = hass.data[DECONZ_DATA].lights
     groups = hass.data[DECONZ_DATA].groups
+    entities = []
 
     for light in lights.values():
-        async_add_devices([DeconzLight(light)], True)
+        entities.append(DeconzLight(light))
 
     for group in groups.values():
         if group.lights:  # Don't create entity for group not containing light
-            async_add_devices([DeconzLight(group)], True)
+            entities.append(DeconzLight(group))
+    async_add_devices(entities, True)
 
 
 class DeconzLight(Light):
