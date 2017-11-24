@@ -73,7 +73,7 @@ class TestCanary(unittest.TestCase):
 
     @patch('homeassistant.components.canary.CanaryData.update')
     @patch('canary.api.Api.login')
-    def test_setup_with_valid_config(self, mock_update, mock_login):
+    def test_setup_with_valid_config(self, mock_login, mock_update):
         """Test setup component."""
         config = {
             "canary": {
