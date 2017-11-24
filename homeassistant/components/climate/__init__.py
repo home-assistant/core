@@ -733,30 +733,7 @@ class ClimateDevice(Entity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        # For now, we convert from the legacy technique to the new
-        # supported_features. This follows exactly the way of determining
-        # whether an attribute is included in state_attributes()
-
-        support = SUPPORT_TARGET_TEMPERATURE
-        if self.target_temperature_high is not None:
-            support |= SUPPORT_TARGET_TEMPERATURE_HIGH
-            support |= SUPPORT_TARGET_TEMPERATURE_LOW
-        if self.target_humidity:
-            support |= SUPPORT_TARGET_HUMIDITY
-        if self.current_fan_mode is not None:
-            support |= SUPPORT_FAN_MODE
-        if self.current_operation is not None:
-            support |= SUPPORT_OPERATION_MODE
-        if self.current_hold_mode is not None:
-            support |= SUPPORT_HOLD_MODE
-        if self.current_swing_mode is not None:
-            support |= SUPPORT_SWING_MODE
-        if self.is_away_mode_on is not None:
-            support |= SUPPORT_AWAY_MODE
-        if self.is_aux_heat_on is not None:
-            support |= SUPPORT_AUX_HEAT
-
-        return support
+        raise NotImplemented
 
     @property
     def min_temp(self):
