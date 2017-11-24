@@ -280,4 +280,3 @@ class TestUtil(unittest.TestCase):
         mock_random.SystemRandom.return_value = generator
 
         assert util.get_random_string(length=3) == 'ABC'
-
