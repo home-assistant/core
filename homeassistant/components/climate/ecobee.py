@@ -358,7 +358,7 @@ class Thermostat(ClimateDevice):
                 "Missing valid arguments for set_temperature in %s", kwargs)
 
     def set_humidity(self, humidity):
-        """Sets the humidity level"""
+        """Set the humidity level."""
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
 
     def set_operation_mode(self, operation_mode):
