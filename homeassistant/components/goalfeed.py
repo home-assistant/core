@@ -1,33 +1,49 @@
 DOMAIN = 'goalfeed'
 
-REQUIREMENTS = ['https://github.com/wardcraigj/PythonPusherClient/archive/773e8223ccdceb535cd6f47ceb8b5e951a13beb3.zip#PythonPusherClient==0.3.0']
+REQUIREMENTS = ['pysher==0.1.2']
 
-import pusherclient
-import sys
-
+import json
 # Add a logging handler so we can see the raw communication data
 import logging
+import sys
+from io import StringIO
+
+import requests
+
+import pysher
+
 root = logging.getLogger()
 root.setLevel(logging.INFO)
 ch = logging.StreamHandler(sys.stdout)
 root.addHandler(ch)
-from io import StringIO
-import json
 
 global pusher
+
+# GOALFEED_HOST = 'goalfeed.local'
+GOALFEED_AUTH_ENDPOINT = 'http://goalfeed.local/feed/auth'
 
 def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
     
     def connect_handler(data):
-        channel = pusher.subscribe('goals')
+        channel = pusher.subscribe('private-goals')
         channel.bind('goal', goal_handler)
 
-    pusher = pusherclient.Pusher('bfd4ed98c1ff22c04074')
-    pusher.host = 'ec2-54-186-137-237.us-west-2.compute.amazonaws.com'
+
+    username = 'user'
+    password = 'pass'
+    post_data = {'username': username, 'password': password}
+
+    response = requests.post(GOALFEED_AUTH_ENDPOINT, post_data).json()
+
+
+    pusher = pysher.Pusher('bfd4ed98c1ff22c04074', secret=response['auth'])
+    pusher.host = response['server']
 
     pusher.connection.bind('pusher:connection_established', connect_handler)
     pusher.connect()
+
+    return True
 
     def goal_handler(data):
         goal = json.loads(json.loads(data))

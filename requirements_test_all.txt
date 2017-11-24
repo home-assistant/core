@@ -74,7 +74,7 @@ hbmqtt==0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171021.2
+home-assistant-frontend==20171105.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -137,7 +137,7 @@ pyunifi==2.13
 pywebpush==1.1.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0a3
+restrictedpython==4.0b2
 
 # homeassistant.components.rflink
 rflink==0.0.34
