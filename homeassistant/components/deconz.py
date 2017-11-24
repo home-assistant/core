@@ -122,26 +122,14 @@ def _setup_deconz(hass, config, deconz_config):
     if result is False:
         _LOGGER.error('Failed to setup deCONZ component')
         return False
-    hass.async_add_job(discovery.async_load_platform(hass,
-                                                     'light',
-                                                     DOMAIN,
-                                                     {},
-                                                     config))
-    hass.async_add_job(discovery.async_load_platform(hass,
-                                                     'binary_sensor',
-                                                     DOMAIN,
-                                                     {},
-                                                     config))
-    hass.async_add_job(discovery.async_load_platform(hass,
-                                                     'scene',
-                                                     DOMAIN,
-                                                     {},
-                                                     config))
-    hass.async_add_job(discovery.async_load_platform(hass,
-                                                     'sensor',
-                                                     DOMAIN,
-                                                     deconz_config,
-                                                     config))
+    hass.async_add_job(discovery.async_load_platform(
+        hass, 'light', DOMAIN, {}, config))
+    hass.async_add_job(discovery.async_load_platform(
+        hass, 'binary_sensor', DOMAIN, {}, config))
+    hass.async_add_job(discovery.async_load_platform(
+        hass, 'scene', DOMAIN, {}, config))
+    hass.async_add_job(discovery.async_load_platform(
+        hass, 'sensor', DOMAIN, deconz_config, config))
     deconz.start()
     return True
 
