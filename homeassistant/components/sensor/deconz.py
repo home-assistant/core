@@ -8,9 +8,9 @@ https://home-assistant.io/components/sensor/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import DECONZ_DATA, DOMAIN, DeconzEvent
-from homeassistant.const import ATTR_BATTERY_LEVEL
-from homeassistant.core import callback
+from homeassistant.components.deconz import DECONZ_DATA, DOMAIN
+from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
+from homeassistant.core import callback, EventOrigin
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -157,3 +157,26 @@ class DeconzBattery(Entity):
             ATTR_EVENT_ID: slugify(self._device.name),
         }
         return attr
+
+
+class DeconzEvent(object):
+    """When you want signals instead of entities.
+
+    Stateless sensors such as remotes are expected to generate an event
+    instead of a sensor entity in hass.
+    """
+
+    def __init__(self, hass, device):
+        """Register callback that will be used for signals."""
+        self._hass = hass
+        self._device = device
+        self._device.register_callback(self._update_callback)
+        self._event = DOMAIN + '_' + CONF_EVENT
+        self._id = slugify(self._device.name)
+
+    @callback
+    def _update_callback(self, reason):
+        """Fire the event if reason is that state is updated."""
+        if reason['state']:
+            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
+            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)

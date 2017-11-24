@@ -12,12 +12,10 @@ import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_API_KEY, CONF_EVENT, CONF_HOST, CONF_ID, CONF_PASSWORD, CONF_PORT,
+    CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback, EventOrigin
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pydeconz==20']
@@ -93,7 +91,8 @@ def _setup_deconz(hass, config, deconz_config):
         hass, 'sensor', DOMAIN, deconz_config, config))
     deconz.start()
 
-    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
@@ -152,26 +151,3 @@ def request_configuration(hass, config, deconz_config):
         link_name='deCONZ platform documentation',
         link_url='https://home-assistant.io/components/deconz/',
     )
-
-
-class DeconzEvent(object):
-    """When you want signals instead of entities.
-
-    Stateless sensors such as remotes are expected to generate an event
-    instead of a sensor entity in hass.
-    """
-
-    def __init__(self, hass, device):
-        """Register callback that will be used for signals."""
-        self._hass = hass
-        self._device = device
-        self._device.register_callback(self._update_callback)
-        self._event = DOMAIN + '_' + CONF_EVENT
-        self._id = slugify(self._device.name)
-
-    @callback
-    def _update_callback(self, reason):
-        """Fire the event if reason is that state is updated."""
-        if reason['state']:
-            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
-            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)
