@@ -19,6 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up scenes for the deCONZ platform."""
+    if discovery_info is None:
+        return False
+
     scenes = hass.data[DECONZ_DATA].scenes
     entities = []
 

@@ -26,6 +26,9 @@ ATTR_EVENT_ID = 'event_id'
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup sensor platform for Deconz."""
+    if discovery_info is None:
+        return False
+
     from pydeconz.sensor import DECONZ_SENSOR
     switch_as_event = discovery_info.get(CONF_SWITCH_AS_EVENT)
     sensors = hass.data[DECONZ_DATA].sensors

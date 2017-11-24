@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup binary sensor platform for Deconz."""
+    if discovery_info is None:
+        return False
+
     from pydeconz.sensor import DECONZ_BINARY_SENSOR
     sensors = hass.data[DECONZ_DATA].sensors
     entities = []
