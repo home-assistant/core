@@ -97,8 +97,7 @@ def async_setup(hass, config):
             deconz_config[CONF_API_KEY] = api_key
             save_json(hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
         else:
-            hass.async_add_job(
-                request_configuration, hass, config, deconz_config)
+            yield from request_configuration(hass, config, deconz_config)
             return True
     result = yield from _setup_deconz(hass, config, deconz_config)
     return result is not False
@@ -145,6 +144,7 @@ def _setup_deconz(hass, config, deconz_config):
     return True
 
 
+@asyncio.coroutine
 def request_configuration(hass, config, deconz_config):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
@@ -160,13 +160,12 @@ def request_configuration(hass, config, deconz_config):
             result = yield from _setup_deconz(hass, config, deconz_config)
             save_json(hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
             if result:
-                hass.async_add_job(configurator.request_done, request_id)
+                configurator.async_request_done(request_id)
                 return True
-        hass.async_add_job(
-            configurator.notify_errors, request_id, "Didn't get an API key.")
+        configurator.async_notify_errors(request_id, "Didn't get an API key.")
         return False
 
-    request_id = configurator.request_config(
+    request_id = configurator.async_request_config(
         "deCONZ", configuration_callback,
         description="deCONZ -> Menu -> Settings -> Unlock Gateway",
         submit_caption="I have unlocked the gateway",
