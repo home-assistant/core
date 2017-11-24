@@ -7,7 +7,7 @@ from unittest.mock import call, patch
 import phue
 
 from homeassistant.components import configurator, hue
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.setup import setup_component
 
 from tests.common import (
@@ -54,21 +54,24 @@ class TestSetup(unittest.TestCase):
         """Host specified in the config file."""
         mock_bridge = mock_phue.Bridge
 
-        with assert_setup_component(2):
+        with assert_setup_component(1):
             with patch('homeassistant.helpers.discovery.load_platform') \
                     as mock_load:
                 self.assertTrue(setup_component(
                     self.hass, hue.DOMAIN,
-                    {hue.DOMAIN: {CONF_HOST: 'localhost'}}))
+                    {hue.DOMAIN: {hue.CONF_BRIDGES: [
+                        {CONF_HOST: 'localhost'}]}}))
 
                 mock_bridge.assert_called_once_with(
                     'localhost',
                     config_file_path=get_test_config_dir(hue.PHUE_CONFIG_FILE))
                 mock_load.assert_called_once_with(
                     self.hass, 'light', hue.DOMAIN, {},
-                    {'host': 'localhost', 'allow_hue_groups': True})
+                    {'bridges': [
+                        {'host': 'localhost', 'allow_hue_groups': True}]})
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
+                self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
 
     @MockDependency('phue')
     def test_setup_with_phue_conf(self, mock_phue):
@@ -82,7 +85,9 @@ class TestSetup(unittest.TestCase):
                 with patch('homeassistant.helpers.discovery.load_platform') \
                         as mock_load:
                     self.assertTrue(setup_component(
-                        self.hass, hue.DOMAIN, {hue.DOMAIN: {}}))
+                        self.hass, hue.DOMAIN,
+                        {hue.DOMAIN: {hue.CONF_BRIDGES: [
+                            {CONF_FILENAME: 'phue.conf'}]}}))
 
                     mock_bridge.assert_called_once_with(
                         'localhost',
@@ -90,9 +95,44 @@ class TestSetup(unittest.TestCase):
                             hue.PHUE_CONFIG_FILE))
                     mock_load.assert_called_once_with(
                         self.hass, 'light', hue.DOMAIN, {},
-                        {'allow_hue_groups': True})
+                        {'bridges': [
+                            {'filename': 'phue.conf', 'allow_hue_groups': True}
+                        ]})
 
                     self.assertTrue(hue.DOMAIN in self.hass.data)
+                    self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+
+    @MockDependency('phue')
+    def test_setup_with_multiple_hosts(self, mock_phue):
+        """Multiple hosts specified in the config file."""
+        mock_bridge = mock_phue.Bridge
+
+        with assert_setup_component(1):
+            with patch('homeassistant.helpers.discovery.load_platform') \
+                    as mock_load:
+                self.assertTrue(setup_component(
+                    self.hass, hue.DOMAIN,
+                    {hue.DOMAIN: {hue.CONF_BRIDGES: [
+                        {CONF_HOST: 'localhost'},
+                        {CONF_HOST: '192.168.0.1'}]}}))
+
+                mock_bridge.assert_has_calls([
+                    call(
+                        'localhost',
+                        config_file_path=get_test_config_dir(
+                            hue.PHUE_CONFIG_FILE)),
+                    call(
+                        '192.168.0.1',
+                        config_file_path=get_test_config_dir(
+                            hue.PHUE_CONFIG_FILE))])
+                mock_load.assert_called_once_with(
+                    self.hass, 'light', hue.DOMAIN, {},
+                    {'bridges': [
+                        {'host': 'localhost', 'allow_hue_groups': True},
+                        {'host': '192.168.0.1', 'allow_hue_groups': True}]})
+
+                self.assertTrue(hue.DOMAIN in self.hass.data)
+                self.assertEquals(2, len(self.hass.data[hue.DOMAIN]))
 
 
 class TestHueBridge(unittest.TestCase):

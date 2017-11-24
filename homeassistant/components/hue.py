@@ -23,6 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "hue"
 SERVICE_HUE_SCENE = "hue_activate_scene"
 
+CONF_BRIDGES = "bridges"
+
 CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 DEFAULT_ALLOW_UNREACHABLE = False
 
@@ -34,14 +36,18 @@ DEFAULT_ALLOW_IN_EMULATED_HUE = True
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
+BRIDGE_CONFIG_SCHEMA = vol.Schema([{
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_FILENAME): cv.string,
+    vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
+    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
+    vol.Optional(CONF_ALLOW_HUE_GROUPS,
+                 default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
+}])
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
-        vol.Optional(CONF_FILENAME): cv.string,
-        vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
-        vol.Optional(CONF_ALLOW_HUE_GROUPS,
-                     default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
+        vol.Optional(CONF_BRIDGES, default=[]): BRIDGE_CONFIG_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -82,30 +88,37 @@ def setup(hass, config):
     config = config.get(DOMAIN)
     if config is None:
         config = {}
-    filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
-    allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE,
-                                   DEFAULT_ALLOW_UNREACHABLE)
-    allow_in_emulated_hue = config.get(CONF_ALLOW_IN_EMULATED_HUE,
-                                       DEFAULT_ALLOW_IN_EMULATED_HUE)
-    allow_hue_groups = config.get(CONF_ALLOW_HUE_GROUPS,
-                                  DEFAULT_ALLOW_HUE_GROUPS)
 
-    host = config.get(CONF_HOST, None)
-
-    if host is None:
-        host = _find_host_from_config(hass, filename)
-
-    if host is None:
-        _LOGGER.error("No host found in configuration")
+    bridges = config.get(CONF_BRIDGES, [])
+    if len(bridges) == 0:
+        _LOGGER.error("No bridges found in configuration")
         return False
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    bridge = HueBridge(host, hass, filename, allow_unreachable,
-                       allow_in_emulated_hue, allow_hue_groups)
-    hass.data[DOMAIN][socket.gethostbyname(host)] = bridge
-    bridge.setup()
+    for bridge in bridges:
+        filename = bridge.get(CONF_FILENAME, PHUE_CONFIG_FILE)
+        allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE,
+                                       DEFAULT_ALLOW_UNREACHABLE)
+        allow_in_emulated_hue = bridge.get(CONF_ALLOW_IN_EMULATED_HUE,
+                                           DEFAULT_ALLOW_IN_EMULATED_HUE)
+        allow_hue_groups = bridge.get(CONF_ALLOW_HUE_GROUPS,
+                                      DEFAULT_ALLOW_HUE_GROUPS)
+
+        host = bridge.get(CONF_HOST, None)
+
+        if host is None:
+            host = _find_host_from_config(hass, filename)
+
+        if host is None:
+            _LOGGER.error("No host found in configuration")
+            return False
+
+        bridge = HueBridge(host, hass, filename, allow_unreachable,
+                           allow_in_emulated_hue, allow_hue_groups)
+        hass.data[DOMAIN][socket.gethostbyname(host)] = bridge
+        bridge.setup()
 
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
 
