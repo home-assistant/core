@@ -141,23 +141,28 @@ class ClimateStatus(ClimateDevice):
         self.data = data
 
     @property
-    def _acpower(self):
+    def acpower(self):
+        """Get acpower from the climate."""
         return self.data[2]
 
     @property
-    def _acmodel(self):
+    def acmodel(self):
+        """Get acmodel from the climate."""
         return str(self.data[0][0:2] + self.data[0][8:16])
 
     @property
-    def _power(self):
+    def power(self):
+        """Get power from the climate."""
         return self.data[1][2:3]
 
     @property
-    def _mode(self):
+    def mode(self):
+        """Get mode from the climate."""
         return self.data[1][3:4]
 
     @property
-    def _wind_force(self):
+    def wind_force(self):
+        """Get wind_force from the climate."""
         if self.data[1][4:5] == '0':
             return 'low'
         elif self.data[1][4:5] == '1':
@@ -167,17 +172,20 @@ class ClimateStatus(ClimateDevice):
         return 'auto'
 
     @property
-    def _sweep(self):
+    def sweep(self):
+        """Get sweep from the climate."""
         if self.data[1][5:6] == '0':
             return 'on'
         return 'off'
 
     @property
-    def _temp(self):
+    def temp(self):
+        """Get temp from the climate."""
         return int(self.data[1][6:8], 16)
 
     @property
-    def _operation(self):
+    def operation(self):
+        """Get operation from the climate."""
         if self.data[1][2:3] == '0':
             return 'off'
         else:
@@ -210,7 +218,7 @@ class MiAcPartner(ClimateDevice):
 
         self._climate = None
         self._state = None
-        self._state = self._climate_get_state()
+        self._state = self.climate_get_state()
 
         self._target_temperature = self._state.temp
         self._current_operation = self._state.operation
@@ -276,7 +284,7 @@ class MiAcPartner(ClimateDevice):
     @asyncio.coroutine
     def _async_get_states(self, now=None):
         """Update the state of this climate device."""
-        self._climate_get_state()
+        self.climate_get_state()
         self._current_operation = self._state.operation
         self._target_temperature = self._state.temp
         if (not self._customize) or (self._customize
@@ -295,7 +303,8 @@ class MiAcPartner(ClimateDevice):
         self.schedule_update_ha_state()
 
     @property
-    def _climate(self):
+    def climate(self):
+        """install device"""
         import miio
         if not self._climate:
             _LOGGER.info("initializing with host %s token %s",
@@ -314,7 +323,8 @@ class MiAcPartner(ClimateDevice):
         return self._max_temp
 
     @property
-    def _target_temperature_step(self):
+    def target_temperature_step(self):
+        """Return the target temperature step."""
         return self._target_temp_step
 
     @property
@@ -485,7 +495,8 @@ class MiAcPartner(ClimateDevice):
         self._aux = False
         self.schedule_update_ha_state()
 
-    def _climate_get_state(self):
+    def climate_get_state(self):
+        """get states from climate"""
         getstate = self.climate.send("get_model_and_state", [])
         _LOGGER.info(getstate)
         self._state = ClimateStatus(getstate)
@@ -551,7 +562,8 @@ class MiAcPartner(ClimateDevice):
                     maincode = maincode
                 index += 1
 
-            if (model in __Presets__) and ('EXTRA_VALUE' in __Presets__[model]):
+            if (model in __Presets__) and (
+                    'EXTRA_VALUE' in __Presets__[model]):
                 codeconfig = __Presets__[model]
                 valuecont = __Presets__[model]['EXTRA_VALUE']
                 index = 0
@@ -598,9 +610,9 @@ class MiAcPartner(ClimateDevice):
 
         try:
             if str(maincode)[0:2] == "01":
-                self._climate.send('send_cmd', [maincode])
+                self.climate.send('send_cmd', [maincode])
             else:
-                self._climate.send('send_ir_code', [maincode])
+                self.climate.send('send_ir_code', [maincode])
             _LOGGER.info(
                 'Send Customize Code: acmodel: %s,\
                 operation: %s , temperature: %s, fan: %s,\
