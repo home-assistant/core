@@ -2,7 +2,7 @@
 Support for generic receivers by delegating actions to user configured scripts.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.delegate_media_player/
+https://home-assistant.io/components/media_player.template_media_player/
 """
 
 import logging
@@ -32,7 +32,7 @@ CONF_VOLUME_MUTE_ACTION = 'volume_mute_action'
 CONF_VOLUME_UNMUTE_ACTION = 'volume_unmute_action'
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SELECT_SOURCE_ACTION = 'select_source_action'
-DEFAULT_NAME = "Delegate Media Player"
+DEFAULT_NAME = "Template Media Player"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -52,13 +52,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the delegate platform."""
-    media_player = DelegateMediaPlayerDevice(config.get(CONF_NAME), config,
+    """Set up the template media player platform."""
+    media_player = TemplateMediaPlayerDevice(config.get(CONF_NAME), config,
                                              hass)
     add_devices([media_player])
 
 
-class DelegateMediaPlayerDevice(MediaPlayerDevice):
+class TemplateMediaPlayerDevice(MediaPlayerDevice):
     """ Represents a generic device that delegates all operations to other services """
 
     def __init__(self, name, config, hass):
