@@ -8,9 +8,7 @@ https://home-assistant.io/components/light/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import (
-    ATTR_FW_VERSION, ATTR_MANUFACTURER, ATTR_MODEL_ID, ATTR_UNIQUE_ID,
-    DECONZ_DATA, DOMAIN)
+from homeassistant.components.deconz import DECONZ_DATA, DOMAIN
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
     ATTR_RGB_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,

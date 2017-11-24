@@ -9,9 +9,7 @@ import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.deconz import (
-    ATTR_FW_VERSION, ATTR_MANUFACTURER, ATTR_MODEL_ID, ATTR_UNIQUE_ID,
-    DECONZ_DATA, DOMAIN)
+from homeassistant.components.deconz import DECONZ_DATA, DOMAIN
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 
