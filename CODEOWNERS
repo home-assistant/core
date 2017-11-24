@@ -63,6 +63,8 @@ homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/broadlink.py @danielhiversen
+homeassistant/components/hive.py @Rendili @KJonline
+homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/*/rfxtrx.py @danielhiversen
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
