@@ -14,9 +14,9 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
     ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT)
-from homeassistant.helpers import condition
+# from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
 import homeassistant.helpers.config_validation as cv
@@ -235,7 +235,7 @@ class MiAcPartner(ClimateDevice):
             self._customize_swing_list = list(self._customize['swing'])
             self._swing_list = self._customize_swing_list
             self._current_swing_mode = 'idle'
-        else:  
+        else:
             self._swing_list = ['on', 'off']
             self._current_swing_mode = self._state.sweep
         self._target_temperature_high = target_temp_high
