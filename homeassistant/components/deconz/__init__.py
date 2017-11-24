@@ -96,8 +96,8 @@ def _setup_deconz(hass, config, deconz_config):
         hass, 'sensor', DOMAIN, deconz_config, config))
     deconz.start()
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
     def _configure(call):
