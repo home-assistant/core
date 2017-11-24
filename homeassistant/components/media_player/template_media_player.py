@@ -152,15 +152,11 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         elif self._volume_up_action and self._volume_down_action:
             if volume < self._volume:
                 while volume < self._volume:
-                    _LOGGER.debug(
-                        f"Setting volume from {self._volume} to {volume}")
                     self._volume -= self._volume_step
                     self._volume_down_action.run()
                     time.sleep(self._volume_step_delay)
             elif volume > self._volume:
                 while volume > self._volume:
-                    _LOGGER.debug(
-                        f"Setting volume from {self._volume} to {volume}")
                     self._volume += self._volume_step
                     self._volume_up_action.run()
                     time.sleep(self._volume_step_delay)
