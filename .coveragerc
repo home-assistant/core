@@ -53,6 +53,8 @@ omit =
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
+    homeassistant/components/dominos.py
+
 	homeassistant/components/doorbird.py
 	homeassistant/components/*/doorbird.py
 
@@ -638,7 +640,6 @@ omit =
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
     homeassistant/components/vacuum/mqtt.py
-
 
 [report]
 # Regexes for lines to exclude from consideration
