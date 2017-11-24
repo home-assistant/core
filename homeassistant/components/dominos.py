@@ -144,7 +144,7 @@ class Dominos():
             item['name'] = product.name
             item['variants'] = variants
             product_entries.append(item)
-        
+
         return product_entries
 
 
