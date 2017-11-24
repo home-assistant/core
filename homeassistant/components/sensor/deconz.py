@@ -95,10 +95,6 @@ class DeconzSensor(Entity):
         """Return the state attributes of the sensor."""
         attr = {
             ATTR_BATTERY_LEVEL: self._sensor.battery,
-            ATTR_FW_VERSION: self._sensor.swversion,
-            ATTR_MANUFACTURER: self._sensor.manufacturer,
-            ATTR_MODEL_ID: self._sensor.modelid,
-            ATTR_UNIQUE_ID: self._sensor.uniqueid,
         }
         return attr
 
@@ -157,9 +153,5 @@ class DeconzBattery(Entity):
         """Return the state attributes of the sensor."""
         attr = {
             ATTR_EVENT_ID: slugify(self._device.name),
-            ATTR_FW_VERSION: self._device.swversion,
-            ATTR_MANUFACTURER: self._device.manufacturer,
-            ATTR_MODEL_ID: self._device.modelid,
-            ATTR_UNIQUE_ID: self._device.uniqueid,
         }
         return attr

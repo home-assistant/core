@@ -167,15 +167,3 @@ class DeconzLight(Light):
                 del data['on']
 
         yield from self._light.set_state(data)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        if self._light.type != ATTR_LIGHT_GROUP:
-            attr = {
-                ATTR_FW_VERSION: self._light.swversion,
-                ATTR_MANUFACTURER: self._light.manufacturer,
-                ATTR_MODEL_ID: self._light.modelid,
-                ATTR_UNIQUE_ID: self._light.uniqueid,
-            }
-            return attr

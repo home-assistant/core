@@ -81,10 +81,6 @@ class DeconzBinarySensor(BinarySensorDevice):
         from pydeconz.sensor import PRESENCE
         attr = {
             ATTR_BATTERY_LEVEL: self._sensor.battery,
-            ATTR_FW_VERSION: self._sensor.swversion,
-            ATTR_MANUFACTURER: self._sensor.manufacturer,
-            ATTR_MODEL_ID: self._sensor.modelid,
-            ATTR_UNIQUE_ID: self._sensor.uniqueid,
         }
         if self._sensor.type == PRESENCE:
             attr['dark'] = self._sensor.dark
