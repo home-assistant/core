@@ -47,7 +47,7 @@ MANIFEST_JSON = {
     'icons': [],
     'lang': 'en-US',
     'name': 'Home Assistant',
-    'short_name': 'Assistant',
+    'short_name': 'Home Assistant',
     'start_url': '/',
     'theme_color': DEFAULT_THEME_COLOR
 }
