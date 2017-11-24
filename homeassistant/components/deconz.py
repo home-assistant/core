@@ -52,9 +52,10 @@ ATTR_UNIQUE_ID = 'uniqueid'
 def async_setup(hass, config):
     """Setup services for Deconz."""
     deconz_config = config[DOMAIN]
-    config_file = load_json(hass.config.path(CONFIG_FILE))
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
+    config_file = yield from hass.async_add_job(
+        load_json, hass.config.path(CONFIG_FILE))
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @callback
     def _shutdown(call):  # pylint: disable=unused-argument
@@ -84,7 +85,7 @@ def async_setup(hass, config):
         data = call.data.get('data')
         yield from deconz.put_state_async(field, data)
     hass.services.async_register(
-        DOMAIN, 'configure', _configure, descriptions['configure'])
+        DOMAIN, 'configure', _configure, descriptions[DOMAIN]['configure'])
 
     if CONF_API_KEY in deconz_config:
         pass
@@ -95,7 +96,8 @@ def async_setup(hass, config):
         api_key = yield from get_api_key(hass.loop, **deconz_config)
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
-            save_json(hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
+            yield from hass.async_add_job(
+                save_json, hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
         else:
             yield from request_configuration(hass, config, deconz_config)
             return True
@@ -158,7 +160,8 @@ def request_configuration(hass, config, deconz_config):
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
             result = yield from _setup_deconz(hass, config, deconz_config)
-            save_json(hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
+            yield from hass.async_add_job(
+                save_json, hass.config.path(CONFIG_FILE), {CONF_API_KEY: api_key})
             if result:
                 configurator.async_request_done(request_id)
                 return True
