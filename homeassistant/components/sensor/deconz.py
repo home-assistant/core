@@ -31,7 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     switch_as_event = discovery_info.get(CONF_SWITCH_AS_EVENT)
     sensors = hass.data[DECONZ_DATA].sensors
 
-    for _, sensor in sensors.items():
+    for sensor in sensors.values():
         if sensor.type in DECONZ_SENSOR:
             if switch_as_event and sensor.type == 'ZHASwitch':
                 DeconzEvent(hass, sensor)
