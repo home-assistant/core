@@ -536,6 +536,9 @@ piglow==1.2.4
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.system_monitoring
+pint==0.8.1
+
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
 plexapi==3.0.3
@@ -570,6 +573,7 @@ pushetta==1.0.15
 pwmled==1.2.1
 
 # homeassistant.components.sensor.cpuspeed
+# homeassistant.components.system_monitoring.cpuspeed
 py-cpuinfo==3.3.0
 
 # homeassistant.components.camera.synology

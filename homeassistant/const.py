@@ -292,8 +292,16 @@ ATTR_TEMPERATURE = 'temperature'
 
 # #### UNITS OF MEASUREMENT ####
 # Temperature units
-TEMP_CELSIUS = '°C'
-TEMP_FAHRENHEIT = '°F'
+TEMP_CELSIUS = '°C'  # type: str
+TEMP_FAHRENHEIT = '°F'  # type: str
+
+# Time & date units
+TIME_SECONDS = 's'  # type: str
+TIME_MINUTES = 'min'  # type: str
+TIME_HOURS = 'h'  # type: str
+TIME_DAYS = 'day'  # type: str
+TIME_MONTHS = 'month'  # type: str
+TIME_YEARS = 'year'  # type: str
 
 # Length units
 LENGTH_CENTIMETERS = 'cm'  # type: str
