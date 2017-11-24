@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'deconz'
 
 DECONZ_DATA = 'deconz_data'
-CONFIG_FILE = 'deconz.conf'
+CONFIG_FILE = '.deconz.conf'
 
 CONF_SWITCH_AS_EVENT = 'switch_as_event'
 
