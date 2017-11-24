@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.canary import DATA_CANARY
 from homeassistant.const import STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, \
-    STATE_ALARM_ARMED_NIGHT
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_HOME
 
 DEPENDENCIES = ['canary']
 
@@ -49,11 +49,14 @@ class CanaryAlarm(AlarmControlPanel):
 
         location = self._data.get_location(self._location_id)
 
+        if location.is_private:
+            return STATE_ALARM_DISARMED
+
         mode = location.mode
         if mode.name == LOCATION_MODE_AWAY:
             return STATE_ALARM_ARMED_AWAY
         elif mode.name == LOCATION_MODE_HOME:
-            return STATE_ALARM_DISARMED
+            return STATE_ALARM_ARMED_HOME
         elif mode.name == LOCATION_MODE_NIGHT:
             return STATE_ALARM_ARMED_NIGHT
         else:
@@ -61,8 +64,9 @@ class CanaryAlarm(AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        from canary.api import LOCATION_MODE_HOME
-        self._data.set_location_mode(self._location_id, LOCATION_MODE_HOME)
+        location = self._data.get_location(self._location_id)
+        self._data.set_location_mode(self._location_id, location.mode.name,
+                                     True)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
