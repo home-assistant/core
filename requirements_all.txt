@@ -1082,7 +1082,7 @@ todoist-python==7.0.17
 toonlib==1.0.2
 
 # homeassistant.components.alarm_control_panel.totalconnect
-total_connect_client==0.13
+total_connect_client==0.16
 
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
