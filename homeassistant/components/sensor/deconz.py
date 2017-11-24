@@ -8,8 +8,7 @@ https://home-assistant.io/components/sensor/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import (
-    CONF_SWITCH_AS_EVENT, DECONZ_DATA, DOMAIN, DeconzEvent)
+from homeassistant.components.deconz import DECONZ_DATA, DOMAIN, DeconzEvent
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -30,13 +29,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     from pydeconz.sensor import DECONZ_SENSOR
-    switch_as_event = discovery_info.get(CONF_SWITCH_AS_EVENT)
     sensors = hass.data[DECONZ_DATA].sensors
     entities = []
 
     for sensor in sensors.values():
         if sensor.type in DECONZ_SENSOR:
-            if switch_as_event and sensor.type == 'ZHASwitch':
+            if sensor.type == 'ZHASwitch':
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))

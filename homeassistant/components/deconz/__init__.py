@@ -29,14 +29,11 @@ DOMAIN = 'deconz'
 DECONZ_DATA = 'deconz_data'
 CONFIG_FILE = '.deconz.conf'
 
-CONF_SWITCH_AS_EVENT = 'switch_as_event'
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_SWITCH_AS_EVENT, default=True): cv.boolean,
         vol.Optional(CONF_USERNAME, default='delight'): cv.string,
         vol.Optional(CONF_PASSWORD, default='delight'): cv.string,
     })
