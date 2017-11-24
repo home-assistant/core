@@ -10,7 +10,7 @@ https://home-assistant.io/components/climate.toon/
 import homeassistant.components.toon as toon_main
 from homeassistant.components.climate import (
     ClimateDevice, ATTR_TEMPERATURE, STATE_PERFORMANCE, STATE_HEAT, STATE_ECO,
-    STATE_COOL)
+    STATE_COOL, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import TEMP_CELSIUS
 
 
@@ -37,6 +37,11 @@ class ThermostatDevice(ClimateDevice):
             STATE_ECO,
             STATE_COOL,
         ]
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
     def name(self):

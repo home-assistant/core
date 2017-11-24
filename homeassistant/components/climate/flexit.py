@@ -17,7 +17,9 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
     ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
-from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_FAN_MODE)
 import homeassistant.components.modbus as modbus
 import homeassistant.helpers.config_validation as cv
 
@@ -61,6 +63,11 @@ class Flexit(ClimateDevice):
         self._cooling = None
         self._alarm = False
         self.unit = pyflexit.pyflexit(modbus.HUB, modbus_slave)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
     def update(self):
         """Update unit attributes."""

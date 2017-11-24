@@ -7,7 +7,9 @@ https://home-assistant.io/components/switch.vera/
 import logging
 
 from homeassistant.util import convert
-from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate import (
+    ClimateDevice, ENTITY_ID_FORMAT, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
@@ -38,6 +40,12 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                SUPPORT_FAN_MODE)
 
     @property
     def current_operation(self):

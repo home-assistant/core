@@ -11,7 +11,10 @@ from homeassistant.components.climate import (
     STATE_ECO, STATE_GAS, STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ELECTRIC,
     STATE_FAN_ONLY, STATE_HEAT_PUMP, ATTR_TEMPERATURE, STATE_HIGH_DEMAND,
     STATE_PERFORMANCE, ATTR_TARGET_TEMP_LOW, ATTR_CURRENT_HUMIDITY,
-    ATTR_TARGET_TEMP_HIGH, ClimateDevice)
+    ATTR_TARGET_TEMP_HIGH, ClimateDevice, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_AUX_HEAT)
 from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
     STATE_ON, STATE_OFF, TEMP_CELSIUS, STATE_UNKNOWN, PRECISION_TENTHS)
@@ -71,6 +74,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=abstract-method
 class WinkThermostat(WinkDevice, ClimateDevice):
     """Representation of a Wink thermostat."""
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
+                SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -354,6 +364,12 @@ class WinkAC(WinkDevice, ClimateDevice):
     """Representation of a Wink air conditioner."""
 
     @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                SUPPORT_FAN_MODE)
+
+    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         # The Wink API always returns temp in Celsius
@@ -470,6 +486,12 @@ class WinkAC(WinkDevice, ClimateDevice):
 
 class WinkWaterHeater(WinkDevice, ClimateDevice):
     """Representation of a Wink water heater."""
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                SUPPORT_AWAY_MODE)
 
     @property
     def temperature_unit(self):

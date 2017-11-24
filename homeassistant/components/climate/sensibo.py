@@ -15,7 +15,10 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA)
+    ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_SWING_MODE,
+    SUPPORT_AUX_HEAT)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -74,6 +77,13 @@ class SensiboClimate(ClimateDevice):
         self._client = client
         self._id = data['id']
         self._do_update(data)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE | SUPPORT_SWING_MODE |
+                SUPPORT_AUX_HEAT)
 
     def _do_update(self, data):
         self._name = data['room']['name']

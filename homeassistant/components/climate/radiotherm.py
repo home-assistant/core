@@ -12,7 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_ON, STATE_OFF,
-    ClimateDevice, PLATFORM_SCHEMA)
+    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.const import (
     CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
@@ -135,6 +136,12 @@ class RadioThermostat(ClimateDevice):
         import radiotherm
         self._is_model_ct80 = isinstance(self.device,
                                          radiotherm.thermostat.CT80)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE)
 
     @asyncio.coroutine
     def async_added_to_hass(self):

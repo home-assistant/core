@@ -14,7 +14,8 @@ import voluptuous as vol
 
 # Import the device class from the component that you want to support
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, ATTR_TEMPERATURE)
+    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, ATTR_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE)
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PORT, TEMP_CELSIUS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -76,6 +77,11 @@ class ThermostatDevice(ClimateDevice):
         self._state = None
         self._temperature = None
         self._setpoint = None
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE
 
     @property
     def name(self):

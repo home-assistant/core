@@ -12,7 +12,9 @@ from homeassistant.components.nest import DATA_NEST
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE)
+    ATTR_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
@@ -86,6 +88,13 @@ class NestThermostat(ClimateDevice):
         self._locked_temperature = None
         self._min_temperature = None
         self._max_temperature = None
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
+                SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE)
 
     @property
     def name(self):
