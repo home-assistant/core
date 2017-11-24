@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         if device.model_name == 'Dimmer':
             add_devices_callback([WemoDimmer(device)])
-        else:		
+        else:
             setup_bridge(device, add_devices)
 
 def setup_bridge(bridge, add_devices):
@@ -194,7 +194,7 @@ class WemoDimmer(Light):
     @property
     def get_brightness(self):
         """Return the brightness of this light between 1 and 100"""
-        brightness = int(self.wemo.get_brightness())
+        brightness = self.wemo.get_brightness()
         return brightness
 
     @property
@@ -210,7 +210,7 @@ class WemoDimmer(Light):
         """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
-            self._brightness = self.get_brightness(force_update)
+            self._brightness = int(self.wemo.get_brightness(force_update))
         except AttributeError as err:
             _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)
@@ -220,7 +220,7 @@ class WemoDimmer(Light):
         self._state = WEMO_ON
         self.wemo.on()
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
-        
+
         # Wemo dimmer switches use a range of [0, 99] to control
         # brightness. Level 255 might mean to set it to previous value
         if ATTR_BRIGHTNESS in kwargs:
