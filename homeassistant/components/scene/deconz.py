@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up scenes for the deCONZ platform."""
+    """Set up scenes for deCONZ component."""
     if discovery_info is None:
         return False
 
@@ -31,7 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class DeconzScene(Scene):
-    """Representation of a single deCONZ scene."""
+    """Representation of a deCONZ scene."""
 
     def __init__(self, scene):
         """Setup scene."""

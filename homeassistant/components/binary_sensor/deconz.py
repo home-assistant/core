@@ -1,5 +1,5 @@
 """
-Support for deCONZ binary sensor support.
+Support for deCONZ binary sensor.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor/deconz/
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup binary sensor platform for Deconz."""
+    """Setup binary sensor for deCONZ component."""
     if discovery_info is None:
         return False
 
@@ -50,17 +50,17 @@ class DeconzBinarySensor(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return true if device is on."""
+        """Return true if sensor is on."""
         return self._sensor.is_tripped
 
     @property
     def name(self):
-        """Return the name of the event."""
+        """Return the name of the sensor."""
         return self._sensor.name
 
     @property
     def device_class(self):
-        """Class of the event."""
+        """Class of the sensor."""
         return self._sensor.sensor_class
 
     @property
@@ -70,7 +70,7 @@ class DeconzBinarySensor(BinarySensorDevice):
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return True if sensor is available."""
         return self._sensor.reachable
 
     @property

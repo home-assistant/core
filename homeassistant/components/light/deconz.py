@@ -1,5 +1,5 @@
 """
-Support for deCONZ light support.
+Support for deCONZ light.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light/deconz/
@@ -17,7 +17,6 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
-
 DEPENDENCIES = [DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ ATTR_LIGHT_GROUP = 'LightGroup'
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup light platform for Deconz."""
+    """Setup light for deCONZ component."""
     if discovery_info is None:
         return False
 
@@ -45,10 +44,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class DeconzLight(Light):
-    """Deconz light representation.
-
-    Only supports dimmable lights at the moment.
-    """
+    """Representation of a deCONZ light."""
 
     def __init__(self, light):
         """Setup light and add update callback to get data from websocket."""
@@ -58,17 +54,20 @@ class DeconzLight(Light):
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
         self._features |= SUPPORT_TRANSITION
+
         if self._light.ct is not None:
             self._features |= SUPPORT_COLOR_TEMP
+
         if self._light.xy is not None:
             self._features |= SUPPORT_RGB_COLOR
             self._features |= SUPPORT_XY_COLOR
+
         if self._light.effect is not None:
             self._features |= SUPPORT_EFFECT
 
     @callback
     def _update_callback(self, reason):
-        """Update the sensor's state, if needed."""
+        """Update the light's state."""
         self.async_schedule_update_ha_state()
 
     @property
@@ -93,12 +92,12 @@ class DeconzLight(Light):
 
     @property
     def is_on(self):
-        """Return true if device is on."""
+        """Return true if light is on."""
         return self._light.state
 
     @property
     def name(self):
-        """Return the name of the event."""
+        """Return the name of the light."""
         return self._light.name
 
     @property
@@ -108,7 +107,7 @@ class DeconzLight(Light):
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return True if light is available."""
         return self._light.reachable
 
     @property

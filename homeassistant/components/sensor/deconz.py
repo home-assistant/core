@@ -1,5 +1,5 @@
 """
-Support for deCONZ sensor support.
+Support for deCONZ sensor.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor/deconz/
@@ -20,11 +20,12 @@ DEPENDENCIES = [DOMAIN]
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EVENT_ID = 'event_id'
+ATTR_ZHASWITCH = 'ZHASwitch'
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup sensor platform for Deconz."""
+    """Setup sensor for deCONZ component."""
     if discovery_info is None:
         return False
 
@@ -34,7 +35,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for sensor in sensors.values():
         if sensor.type in DECONZ_SENSOR:
-            if sensor.type == 'ZHASwitch':
+            if sensor.type == ATTR_ZHASWITCH:
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))
@@ -64,12 +65,12 @@ class DeconzSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the event."""
+        """Return the name of the sensor."""
         return self._sensor.name
 
     @property
     def device_class(self):
-        """Class of the event."""
+        """Class of the sensor."""
         return self._sensor.sensor_class
 
     @property
@@ -79,12 +80,12 @@ class DeconzSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
+        """Unit of measurement of this sensor."""
         return self._sensor.sensor_unit
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return True if sensor is available."""
         return self._sensor.reachable
 
     @property
@@ -132,7 +133,7 @@ class DeconzBattery(Entity):
 
     @property
     def device_class(self):
-        """Class of the event."""
+        """This is a battery."""
         return self._device_class
 
     @property
@@ -152,7 +153,7 @@ class DeconzBattery(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
+        """Return the state attributes of the battery."""
         attr = {
             ATTR_EVENT_ID: slugify(self._device.name),
         }

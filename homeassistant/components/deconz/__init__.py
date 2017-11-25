@@ -47,7 +47,7 @@ Unlock your deCONZ gateway to register with Home Assistant.
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup services for Deconz."""
+    """Setup services and configuration for deCONZ component."""
     result = False
     config_file = yield from hass.async_add_job(
         load_json, hass.config.path(CONFIG_FILE))
@@ -79,13 +79,10 @@ def async_setup(hass, config):
 
 @asyncio.coroutine
 def _setup_deconz(hass, config, deconz_config):
-    """Setup Deconz session.
+    """Setup deCONZ session.
 
-    Load config data for server information.
-    Load group data containing which light groups are available.
-    Load light data containing which lights are available.
-    Load sensor data containing which sensors are available.
-    Start websocket for push notification of state changes from Deconz.
+    Load config, group, light and sensor data for server information.
+    Start websocket for push notification of state changes from deCONZ.
     """
     from pydeconz import DeconzSession
     deconz = DeconzSession(hass.loop, **deconz_config)
@@ -93,6 +90,7 @@ def _setup_deconz(hass, config, deconz_config):
     if result is False:
         _LOGGER.error('Failed to setup deCONZ component')
         return False
+
     hass.data[DECONZ_DATA] = deconz
     hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {}, config))
@@ -110,9 +108,9 @@ def _setup_deconz(hass, config, deconz_config):
 
     @asyncio.coroutine
     def _configure(call):
-        """Set attribute of device in Deconz.
+        """Set attribute of device in deCONZ.
 
-        Field is a string representing a specific device in Deconz
+        Field is a string representing a specific device in deCONZ
         e.g. field='/lights/1/state'.
         Data is a json object with what data you want to alter
         e.g. data={'on': true}.
@@ -154,7 +152,12 @@ def request_configuration(hass, config, deconz_config):
                                               deconz_config)
                 configurator.async_request_done(request_id)
                 return True
-        configurator.async_notify_errors(request_id, "Didn't get an API key.")
+            else:
+                configurator.async_notify_errors(
+                    request_id, "Couldn't load configuration.")
+        else:
+            configurator.async_notify_errors(
+                request_id, "Couldn't get an API key.")
         return False
 
     instructions = CONFIG_INSTRUCTIONS.format(
