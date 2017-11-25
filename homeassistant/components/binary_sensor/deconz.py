@@ -40,10 +40,10 @@ class DeconzBinarySensor(BinarySensorDevice):
     def __init__(self, sensor):
         """Setup sensor and add update callback to get data from websocket."""
         self._sensor = sensor
-        self._sensor.register_callback(self._update_callback)
+        self._sensor.register_async_callback(self.async_update_callback)
 
     @callback
-    def _update_callback(self, reason):
+    def async_update_callback(self, reason):
         """Update the sensor's state, if reason is that state is updated."""
         if reason['state']:
             self.async_schedule_update_ha_state()

@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==20']
+REQUIREMENTS = ['pydeconz==21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,32 +52,32 @@ def async_setup(hass, config):
         load_json, hass.config.path(CONFIG_FILE))
 
     @asyncio.coroutine
-    def _deconz_discovered(service, discovery_info):
+    def async_deconz_discovered(service, discovery_info):
         """Called when deCONZ gateway has been found."""
         deconz_config = {}
         deconz_config[CONF_HOST] = discovery_info.get(CONF_HOST)
         deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
-        yield from request_configuration(hass, config, deconz_config)
+        yield from async_request_configuration(hass, config, deconz_config)
 
     if config_file:
-        result = yield from _setup_deconz(hass, config, config_file)
+        result = yield from async_setup_deconz(hass, config, config_file)
 
     if not result and DOMAIN in config and CONF_HOST in config[DOMAIN]:
         deconz_config = config[DOMAIN]
         if CONF_API_KEY in deconz_config:
-            result = yield from _setup_deconz(hass, config, deconz_config)
+            result = yield from async_setup_deconz(hass, config, deconz_config)
         else:
-            yield from request_configuration(hass, config, deconz_config)
+            yield from async_request_configuration(hass, config, deconz_config)
             return True
 
     if not result:
-        discovery.async_listen(hass, SERVICE_DECONZ, _deconz_discovered)
+        discovery.async_listen(hass, SERVICE_DECONZ, async_deconz_discovered)
 
     return True
 
 
 @asyncio.coroutine
-def _setup_deconz(hass, config, deconz_config):
+def async_setup_deconz(hass, config, deconz_config):
     """Setup deCONZ session.
 
     Load config, group, light and sensor data for server information.
@@ -85,7 +85,7 @@ def _setup_deconz(hass, config, deconz_config):
     """
     from pydeconz import DeconzSession
     deconz = DeconzSession(hass.loop, **deconz_config)
-    result = yield from deconz.load_parameters()
+    result = yield from deconz.async_load_parameters()
     if result is False:
         _LOGGER.error('Failed to setup deCONZ component')
         return False
@@ -107,7 +107,7 @@ def _setup_deconz(hass, config, deconz_config):
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
-    def _configure(call):
+    def async_configure(call):
         """Set attribute of device in deCONZ.
 
         Field is a string representing a specific device in deCONZ
@@ -124,28 +124,29 @@ def _setup_deconz(hass, config, deconz_config):
         deconz = hass.data[DOMAIN]
         field = call.data.get('field')
         data = call.data.get('data')
-        yield from deconz.put_state_async(field, data)
+        yield from deconz.async_put_state(field, data)
     hass.services.async_register(
-        DOMAIN, 'configure', _configure, descriptions[DOMAIN]['configure'])
+        DOMAIN, 'configure', async_configure,
+        descriptions[DOMAIN]['configure'])
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz.close)
     return True
 
 
 @asyncio.coroutine
-def request_configuration(hass, config, deconz_config):
+def async_request_configuration(hass, config, deconz_config):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
     # pylint: disable=unused-argument
     @asyncio.coroutine
-    def configuration_callback(data):
+    def async_configuration_callback(data):
         """Set up actions to do when our configuration callback is called."""
-        from pydeconz.utils import get_api_key
-        api_key = yield from get_api_key(hass.loop, **deconz_config)
+        from pydeconz.utils import async_get_api_key
+        api_key = yield from async_get_api_key(hass.loop, **deconz_config)
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
-            result = yield from _setup_deconz(hass, config, deconz_config)
+            result = yield from async_setup_deconz(hass, config, deconz_config)
             if result:
                 yield from hass.async_add_job(save_json,
                                               hass.config.path(CONFIG_FILE),
@@ -164,7 +165,7 @@ def request_configuration(hass, config, deconz_config):
         deconz_config[CONF_HOST], deconz_config[CONF_PORT])
 
     request_id = configurator.async_request_config(
-        "deCONZ", configuration_callback,
+        "deCONZ", async_configuration_callback,
         description=instructions,
         submit_caption="I have unlocked the gateway",
     )

@@ -50,10 +50,10 @@ class DeconzSensor(Entity):
     def __init__(self, sensor):
         """Setup sensor and add update callback to get data from websocket."""
         self._sensor = sensor
-        self._sensor.register_callback(self._update_callback)
+        self._sensor.register_async_callback(self.async_update_callback)
 
     @callback
-    def _update_callback(self, reason):
+    def async_update_callback(self, reason):
         """Update the sensor's state, if reason is that state is updated."""
         if reason['state']:
             self.async_schedule_update_ha_state()
@@ -112,10 +112,10 @@ class DeconzBattery(Entity):
         self._name = self._device.name + ' battery level'
         self._device_class = 'battery'
         self._unit_of_measurement = "%"
-        self._device.register_callback(self._update_callback)
+        self._device.register_async_callback(self.async_update_callback)
 
     @callback
-    def _update_callback(self, reason):
+    def async_update_callback(self, reason):
         """Update the battery's state, if needed."""
         if self._battery != self._device.battery:
             self._battery = self._device.battery
@@ -171,12 +171,12 @@ class DeconzEvent(object):
         """Register callback that will be used for signals."""
         self._hass = hass
         self._device = device
-        self._device.register_callback(self._update_callback)
+        self._device.register_async_callback(self.async_update_callback)
         self._event = DOMAIN + '_' + CONF_EVENT
         self._id = slugify(self._device.name)
 
     @callback
-    def _update_callback(self, reason):
+    def async_update_callback(self, reason):
         """Fire the event if reason is that state is updated."""
         if reason['state']:
             data = {CONF_ID: self._id, CONF_EVENT: self._device.state}

@@ -49,7 +49,7 @@ class DeconzLight(Light):
     def __init__(self, light):
         """Setup light and add update callback to get data from websocket."""
         self._light = light
-        self._light.register_callback(self._update_callback)
+        self._light.register_async_callback(self.async_update_callback)
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
@@ -66,7 +66,7 @@ class DeconzLight(Light):
             self._features |= SUPPORT_EFFECT
 
     @callback
-    def _update_callback(self, reason):
+    def async_update_callback(self, reason):
         """Update the light's state."""
         self.async_schedule_update_ha_state()
 
@@ -149,7 +149,7 @@ class DeconzLight(Light):
             else:
                 data['effect'] = 'none'
 
-        yield from self._light.set_state(data)
+        yield from self._light.async_set_state(data)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -168,4 +168,4 @@ class DeconzLight(Light):
                 data['alert'] = 'lselect'
                 del data['on']
 
-        yield from self._light.set_state(data)
+        yield from self._light.async_set_state(data)
