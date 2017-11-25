@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class FritzhomeSwitch(SwitchDevice):
-    """The thermostat class for Fritzhome."""
+    """The switch class for Fritzhome switches."""
 
     def __init__(self, hass, device):
         """Initialize the switch."""

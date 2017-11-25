@@ -7,8 +7,8 @@ http://home-assistant.io/components/climate.fritzhome/
 import logging
 
 from homeassistant.components.fritzhome import (
-    ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME,
-    DOMAIN)
+    ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_OPERATION_MODE,
+    ATTR_PRODUCTNAME, DOMAIN)
 from homeassistant.components.climate import (ClimateDevice, STATE_ECO)
 from homeassistant.const import (PRECISION_HALVES)
 from homeassistant.const import (TEMP_CELSIUS, ATTR_TEMPERATURE)
@@ -18,6 +18,11 @@ DEPENDENCIES = ['fritzhome']
 _LOGGER = logging.getLogger(__name__)
 
 STATE_COMFORT = 'comfort'
+
+OPERATION_LIST = [STATE_ECO, STATE_COMFORT]
+
+MIN_TEMPERATURE = 8
+MAX_TEMPERATURE = 28
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,14 +41,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class FritzhomeThermostat(ClimateDevice):
-    """The thermostat class for Fritzhome."""
-
-    OPERATION_LIST = [STATE_ECO, STATE_COMFORT]
+    """The thermostat class for Fritzhome thermostates."""
 
     def __init__(self, hass, device):
         """Initialize the thermostat."""
         self._device = device
-        self._actual_temperature = None
+        self._current_temperature = None
         self._target_temperature = None
         self._eco_temperature = None
         self._comfort_temperature = None
@@ -70,8 +73,8 @@ class FritzhomeThermostat(ClimateDevice):
 
     @property
     def current_temperature(self):
-        """Can not report temperature, so return target_temperature."""
-        return self._actual_temperature
+        """Return the current temperature."""
+        return self._current_temperature
 
     @property
     def target_temperature(self):
@@ -80,10 +83,12 @@ class FritzhomeThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-        self._device.set_target_temperature(temperature)
+        if kwargs.get(ATTR_OPERATION_MODE) is not None:
+            operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+            self.set_operation_mode(operation_mode)
+        elif kwargs.get(ATTR_OPERATION_MODE) is not None:
+            temperature = kwargs.get(ATTR_TEMPERATURE)
+            self._device.set_target_temperature(temperature)
 
     @property
     def current_operation(self):
@@ -101,15 +106,23 @@ class FritzhomeThermostat(ClimateDevice):
         """Return the list of available operation modes."""
         return self.OPERATION_LIST
 
+    def set_operation_mode(self, operation_mode):
+        """Set new operation mode."""
+        if operation_mode == STATE_COMFORT:
+            self.set_temperature(temperature=self._comfort_temperature)
+        elif operation_mode == STATE_ECO:
+            self.set_temperature(temperature=self._eco_temperature)
+
+
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._eco_temperature
+        return MIN_TEMPERATURE
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._comfort_temperature
+        return MAX_TEMPERATURE
 
     @property
     def device_state_attributes(self):
@@ -126,7 +139,7 @@ class FritzhomeThermostat(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         self._device.update()
-        self._actual_temperature = self._device.actual_temperature
+        self._current_temperature = self._device.actual_temperature
         self._target_temperature = self._device.target_temperature
         self._comfort_temperature = self._device.comfort_temperature
         self._eco_temperature = self._device.eco_temperature
