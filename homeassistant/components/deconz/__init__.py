@@ -14,6 +14,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util.json import load_json, save_json
@@ -29,11 +30,9 @@ CONFIG_FILE = '.deconz.conf'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_USERNAME, default='delight'): cv.string,
-        vol.Optional(CONF_PASSWORD, default='delight'): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -41,27 +40,33 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup services for Deconz."""
-    deconz_config = config[DOMAIN]
+    result = False
     config_file = yield from hass.async_add_job(
         load_json, hass.config.path(CONFIG_FILE))
 
-    if CONF_API_KEY in deconz_config:
-        pass
-    elif CONF_API_KEY in config_file:
-        deconz_config[CONF_API_KEY] = config_file[CONF_API_KEY]
-    else:
-        from pydeconz.utils import get_api_key
-        api_key = yield from get_api_key(hass.loop, **deconz_config)
-        if api_key:
-            deconz_config[CONF_API_KEY] = api_key
-            yield from hass.async_add_job(save_json,
-                                          hass.config.path(CONFIG_FILE),
-                                          {CONF_API_KEY: api_key})
+    @asyncio.coroutine
+    def _deconz_discovered(service, discovery_info):
+        """Called when deCONZ gateway has been found."""
+        deconz_config = {}
+        deconz_config[CONF_HOST] = discovery_info.get(CONF_HOST)
+        deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
+        yield from request_configuration(hass, config, deconz_config)
+
+    if config_file:
+        result = yield from _setup_deconz(hass, config, config_file)
+
+    if not result and DOMAIN in config and CONF_HOST in config[DOMAIN]:
+        deconz_config = config[DOMAIN]
+        if CONF_API_KEY in deconz_config:
+            result = yield from _setup_deconz(hass, config, deconz_config)
         else:
             yield from request_configuration(hass, config, deconz_config)
             return True
-    result = yield from _setup_deconz(hass, config, deconz_config)
-    return result is not False
+
+    if not result:
+        discovery.async_listen(hass, SERVICE_DECONZ, _deconz_discovered)
+
+    return True
 
 
 @asyncio.coroutine
@@ -76,11 +81,11 @@ def _setup_deconz(hass, config, deconz_config):
     """
     from pydeconz import DeconzSession
     deconz = DeconzSession(hass.loop, **deconz_config)
-    hass.data[DECONZ_DATA] = deconz
     result = yield from deconz.load_parameters()
     if result is False:
         _LOGGER.error('Failed to setup deCONZ component')
         return False
+    hass.data[DECONZ_DATA] = deconz
     hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {}, config))
     hass.async_add_job(discovery.async_load_platform(
@@ -135,10 +140,10 @@ def request_configuration(hass, config, deconz_config):
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
             result = yield from _setup_deconz(hass, config, deconz_config)
-            yield from hass.async_add_job(save_json,
-                                          hass.config.path(CONFIG_FILE),
-                                          {CONF_API_KEY: api_key})
             if result:
+                yield from hass.async_add_job(save_json,
+                                              hass.config.path(CONFIG_FILE),
+                                              deconz_config)
                 configurator.async_request_done(request_id)
                 return True
         configurator.async_notify_errors(request_id, "Didn't get an API key.")
