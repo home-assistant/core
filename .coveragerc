@@ -325,6 +325,7 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tado.py
+    homeassistant/components/device_tracker/tile.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
@@ -517,6 +518,7 @@ omit =
     homeassistant/components/sensor/influxdb.py
     homeassistant/components/sensor/irish_rail_transport.py
     homeassistant/components/sensor/kwb.py
+    homeassistant/components/sensor/lacrosse.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
@@ -545,6 +547,7 @@ omit =
     homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
+    homeassistant/components/sensor/pyload.py
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/ripple.py

@@ -168,15 +168,9 @@ class Entity(object):
     def update(self):
         """Retrieve latest state.
 
-        When not implemented, will forward call to async version if available.
+        For asyncio use coroutine async_update.
         """
-        async_update = getattr(self, 'async_update', None)
-
-        if async_update is None:
-            return
-
-        # pylint: disable=not-callable
-        run_coroutine_threadsafe(async_update(), self.hass.loop).result()
+        pass
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
