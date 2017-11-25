@@ -34,7 +34,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         mock = MagicMock()
         add_devices = mock.MagicMock()
         demo.setup_platform(self.hass, {}, add_devices)
-        add_devices.assert_called_once()
+        self.assertEquals(add_devices.call_count, 1)
 
     def test_arm_home_no_pending(self):
         """Test arm home method."""
