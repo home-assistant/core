@@ -8,7 +8,7 @@ https://home-assistant.io/components/sensor/deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import DECONZ_DATA, DOMAIN
+from homeassistant.components.deconz import DOMAIN
 from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
 from homeassistant.core import callback, EventOrigin
 from homeassistant.helpers.entity import Entity
@@ -30,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     from pydeconz.sensor import DECONZ_SENSOR
-    sensors = hass.data[DECONZ_DATA].sensors
+    sensors = hass.data[DOMAIN].sensors
     entities = []
 
     for sensor in sensors.values():

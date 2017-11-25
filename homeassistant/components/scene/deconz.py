@@ -8,7 +8,7 @@ https://home-assistant.io/components/scene.deconz/
 import asyncio
 import logging
 
-from homeassistant.components.deconz import DECONZ_DATA, DOMAIN
+from homeassistant.components.deconz import DOMAIN
 from homeassistant.components.scene import Scene
 
 DEPENDENCIES = [DOMAIN]
@@ -22,7 +22,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return False
 
-    scenes = hass.data[DECONZ_DATA].scenes
+    scenes = hass.data[DOMAIN].scenes
     entities = []
 
     for scene in scenes.values():

@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'deconz'
 
-DECONZ_DATA = 'deconz_data'
 CONFIG_FILE = '.deconz.conf'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -91,7 +90,8 @@ def _setup_deconz(hass, config, deconz_config):
         _LOGGER.error('Failed to setup deCONZ component')
         return False
 
-    hass.data[DECONZ_DATA] = deconz
+    hass.data[DOMAIN] = deconz
+
     hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {}, config))
     hass.async_add_job(discovery.async_load_platform(
@@ -121,7 +121,7 @@ def _setup_deconz(hass, config, deconz_config):
         See Dresden Elektroniks REST API documentation for details:
         http://dresden-elektronik.github.io/deconz-rest-doc/rest/
         """
-        deconz = hass.data[DECONZ_DATA]
+        deconz = hass.data[DOMAIN]
         field = call.data.get('field')
         data = call.data.get('data')
         yield from deconz.put_state_async(field, data)
