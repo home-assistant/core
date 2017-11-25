@@ -137,14 +137,11 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                        offset='0', app=ATTR_TITLE_DEFAULT, force='true',
                        interrupt='%i' % self._default_interrupt)
 
+        icon_file = None
         data = kwargs.get(ATTR_DATA)
         if data:
             if ATTR_ICON in data:
                 icon_file = data.get(ATTR_ICON)
-                payload[ATTR_FILENAME] = ('icon.png',
-                                          open(icon_file, 'rb'),
-                                          'application/octet-stream',
-                                          {'Expires': '0'})
             if ATTR_DURATION in data:
                 duration = data.get(ATTR_DURATION)
                 try:
@@ -181,11 +178,12 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     _LOGGER.warning("Invalid interrupt-value: %s",
                                     str(interrupt))
 
-        if payload.get(ATTR_FILENAME, None) is None:
-            payload[ATTR_FILENAME] = ('icon.png',
-                                      open(self._icon_file, 'rb'),
-                                      'application/octet-stream',
-                                      {'Expires': '0'})
+        if icon_file is None:
+            icon_file = self._icon_file
+        payload[ATTR_FILENAME] = ('icon.png',
+                                  open(icon_file, 'rb'),
+                                  'application/octet-stream',
+                                  {'Expires': '0'})
 
         try:
             _LOGGER.debug("Payload: %s", str(payload))
