@@ -55,9 +55,12 @@ class LogErrorHandler(logging.Handler):
         be changed if neeeded.
         """
         if record.levelno >= logging.WARN:
-            self.records.appendleft(
-                [record,
-                 [f for f, _, _, _ in traceback.extract_stack()]])
+            if record.exc_info:
+                self.records.appendleft([record, None])
+            else:
+                self.records.appendleft(
+                    [record,
+                     [f for f, _, _, _ in traceback.extract_stack()]])
 
 
 @asyncio.coroutine
