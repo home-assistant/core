@@ -113,7 +113,6 @@ class FritzhomeThermostat(ClimateDevice):
         elif operation_mode == STATE_ECO:
             self.set_temperature(temperature=self._eco_temperature)
 
-
     @property
     def min_temp(self):
         """Return the minimum temperature."""
