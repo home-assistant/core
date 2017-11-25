@@ -15,13 +15,14 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-VALUE_TO_STATE = {
-    False: STATE_OFF,
-    True: STATE_ON,
-}
-
 UOM = ['2', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false']
+
+ISY_DEVICE_TYPES = {
+    'moisture': ['16.8', '16.13', '16.14'],
+    'opening': ['16.9', '16.6', '16.7', '16.2', '16.17', '16.20', '16.21'],
+    'motion': ['16.1', '16.4', '16.5', '16.3']
+}
 
 
 # pylint: disable=unused-argument
@@ -51,9 +52,9 @@ def setup_platform(hass, config: ConfigType,
         try:
             devices_by_nid[node.parent_node.nid].add_child_node(node)
         except KeyError:
-            _LOGGER.warning("Node %s has a parent node %s, but no device "
-                            "was created for the parent. Skipping.",
-                            node.nid, node.parent_nid)
+            _LOGGER.error("Node %s has a parent node %s, but no device "
+                          "was created for the parent. Skipping.",
+                          node.nid, node.parent_nid)
 
     for program in isy.PROGRAMS.get(DOMAIN, []):
         try:
@@ -82,9 +83,28 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         self._off_node = None
         self._heartbeat_node = None
         self._heartbeat_timestamp = None
+        self._device_class_from_type = self._detect_device_type()
         # pylint: disable=protected-access
         self._computed_state = bool(self._node.status._val)
         node.controlEvents.subscribe(self._positive_node_control_handler)
+
+    def _detect_device_type(self) -> str:
+        try:
+            device_type = self._node.type
+        except AttributeError:
+            self._device_class_from_type = None
+            return None
+
+        split_type = device_type.split('.')
+        _LOGGER.debug(split_type)
+        for cls, ids in ISY_DEVICE_TYPES.items():
+            _LOGGER.debug(split_type[0] + '.' + split_type[1])
+            if split_type[0] + '.' + split_type[1] in ids:
+                self._device_class_from_type = cls
+                return cls
+
+        self._device_class_from_type = None
+        return None
 
     def add_child_node(self, child):
         """Add a child node to this binary sensor device.
@@ -134,6 +154,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         """Update the heartbeat timestamp when an On event is sent."""
         if event == 'DON':
             self._heartbeat_timestamp = datetime.now().isoformat()
+            self.schedule_update_ha_state()
 
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
@@ -146,13 +167,32 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
 
     @property
     def value(self) -> bool:
-        """Get the current value of the device."""
+        """Get the current value of the device.
+
+        Insteon leak sensors set their primary node to On when the state is
+        DRY, not WET, so we invert the binary state if the user indicates
+        that it is a moisture sensor.
+        """
+        try:
+            if self.device_class == 'moisture':
+                return not self._computed_state
+        except AttributeError:
+            pass
+
         return self._computed_state
 
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 binary sensor device is on."""
         return self.value
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device.
+
+        This was discovered by parsing the device type code during init
+        """
+        return self._device_class_from_type
 
     @property
     def device_state_attributes(self):
