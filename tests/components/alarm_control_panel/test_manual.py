@@ -31,7 +31,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_setup_demo_platform(self):
         """Test setup."""
-        mock = MagicMock();
+        mock = MagicMock()
         add_devices = mock.MagicMock()
         demo.setup_platform(self.hass, {}, add_devices)
         add_devices.assert_called_once()
