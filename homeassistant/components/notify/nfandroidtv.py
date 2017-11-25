@@ -83,7 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In(COLORS.keys()),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
     vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
-    vol.Optional(CONF_ICON): cv.string,
+    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.string,
 })
 
 
