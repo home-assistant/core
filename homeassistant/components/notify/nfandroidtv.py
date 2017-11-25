@@ -24,6 +24,7 @@ CONF_POSITION = 'position'
 CONF_TRANSPARENCY = 'transparency'
 CONF_COLOR = 'color'
 CONF_INTERRUPT = 'interrupt'
+CONF_ICON = 'icon'
 
 DEFAULT_DURATION = 5
 DEFAULT_POSITION = 'bottom-right'
@@ -31,6 +32,7 @@ DEFAULT_TRANSPARENCY = 'default'
 DEFAULT_COLOR = 'grey'
 DEFAULT_INTERRUPT = False
 DEFAULT_TIMEOUT = 5
+DEFAULT_ICON = None
 
 ATTR_DURATION = 'duration'
 ATTR_POSITION = 'position'
@@ -38,6 +40,8 @@ ATTR_TRANSPARENCY = 'transparency'
 ATTR_COLOR = 'color'
 ATTR_BKGCOLOR = 'bkgcolor'
 ATTR_INTERRUPT = 'interrupt'
+ATTR_ICON = 'icon'
+ATTR_FILENAME = 'filename'
 
 POSITIONS = {
     'bottom-right': 0,
@@ -79,6 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In(COLORS.keys()),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
     vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
+    vol.Optional(CONF_ICON): cv.string,
 })
 
 
@@ -92,16 +97,18 @@ def get_service(hass, config, discovery_info=None):
     color = config.get(CONF_COLOR)
     interrupt = config.get(CONF_INTERRUPT)
     timeout = config.get(CONF_TIMEOUT)
+    icon = config.get(CONF_ICON)
 
     return NFAndroidTVNotificationService(
-        remoteip, duration, position, transparency, color, interrupt, timeout)
+        remoteip, duration, position, transparency, color, interrupt, timeout,
+        icon)
 
 
 class NFAndroidTVNotificationService(BaseNotificationService):
     """Notification service for Notifications for Android TV."""
 
     def __init__(self, remoteip, duration, position, transparency, color,
-                 interrupt, timeout):
+                 interrupt, timeout, icon):
         """Initialize the service."""
         self._target = 'http://{}:7676'.format(remoteip)
         self._default_duration = duration
@@ -110,19 +117,18 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         self._default_color = color
         self._default_interrupt = interrupt
         self._timeout = timeout
-        self._icon_file = os.path.join(
-            os.path.dirname(__file__), '..', 'frontend', 'www_static', 'icons',
-            'favicon-192x192.png')
+        if icon:
+            self._icon_file = icon
+        else:
+            self._icon_file = os.path.join(
+                os.path.dirname(__file__), '..', '..', '..', 'hass_frontend',
+                'icons', 'favicon-192x192.png')
 
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
 
-        payload = dict(filename=('icon.png',
-                                 open(self._icon_file, 'rb'),
-                                 'application/octet-stream',
-                                 {'Expires': '0'}), type='0',
-                       title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+        payload = dict(title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
                        msg=message, duration="%i" % self._default_duration,
                        position='%i' % POSITIONS.get(self._default_position),
                        bkgcolor='%s' % COLORS.get(self._default_color),
@@ -133,6 +139,12 @@ class NFAndroidTVNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
         if data:
+            if ATTR_ICON in data:
+                icon_file = data.get(ATTR_ICON)
+                payload[ATTR_FILENAME] = ('icon.png',
+                                          open(icon_file, 'rb'),
+                                          'application/octet-stream',
+                                          {'Expires': '0'})
             if ATTR_DURATION in data:
                 duration = data.get(ATTR_DURATION)
                 try:
@@ -168,6 +180,12 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 except vol.Invalid:
                     _LOGGER.warning("Invalid interrupt-value: %s",
                                     str(interrupt))
+
+        if payload.get(ATTR_FILENAME, None) is None:
+            payload[ATTR_FILENAME] = ('icon.png',
+                                      open(self._icon_file, 'rb'),
+                                      'application/octet-stream',
+                                      {'Expires': '0'})
 
         try:
             _LOGGER.debug("Payload: %s", str(payload))
