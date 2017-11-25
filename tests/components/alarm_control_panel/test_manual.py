@@ -1,7 +1,9 @@
 """The tests for the manual Alarm Control Panel component."""
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+from homeassistant.components.alarm_control_panel import demo
+
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
@@ -10,6 +12,8 @@ from homeassistant.const import (
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
+
+from tests.common import assert_setup_component
 
 from tests.common import fire_time_changed, get_test_home_assistant
 
@@ -26,6 +30,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""
         self.hass.stop()
+
+    def test_setup_demo_platform(self):
+        """Test setup."""
+        mock = MagicMock();
+        add_devices = mock.MagicMock()
+        demo.setup_platform(self.hass, {}, add_devices)
+        add_devices.assert_called_once()
 
     def test_arm_home_no_pending(self):
         """Test arm home method."""
