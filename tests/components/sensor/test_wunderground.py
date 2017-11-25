@@ -3,6 +3,7 @@ import unittest
 
 from homeassistant.components.sensor import wunderground
 from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES, STATE_UNKNOWN
+from homeassistant.exceptions import PlatformNotReady
 
 from requests.exceptions import ConnectionError
 
@@ -38,7 +39,6 @@ INVALID_CONFIG = {
 
 FEELS_LIKE = '40'
 WEATHER = 'Clear'
-WEATHER_LONG = 'Clear weather or any some other.' + 'abcd ' * 51
 HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
 ALERT_MESSAGE = 'This is a test alert message'
 ALERT_ICON = 'mdi:alert-circle-outline'
@@ -202,62 +202,6 @@ def mocked_requests_get_invalid(*args, **kwargs):
     }, 200)
 
 
-def mocked_requests_get_longstate(*args, **kwargs):
-    """Mock requests.get invocations long state."""
-    class MockResponse:
-        """Class to represent a mocked response."""
-
-        def __init__(self, json_data, status_code):
-            """Initialize the mock response class."""
-            self.json_data = json_data
-            self.status_code = status_code
-
-        def json(self):
-            """Return the json of the response."""
-            return self.json_data
-
-    return MockResponse({
-        "response": {
-            "version": "0.1",
-            "termsofService":
-                "http://www.wunderground.com/weather/api/d/terms.html",
-            "features": {
-                "conditions": 1,
-                "alerts": 1,
-                "forecast": 1,
-            }
-        }, "current_observation": {
-            "image": {
-                "url":
-                    'http://icons.wxug.com/graphics/wu2/logo_130x80.png',
-                "title": "Weather Underground",
-                "link": "http://www.wunderground.com"
-            },
-            "feelslike_c": FEELS_LIKE,
-            "weather": WEATHER_LONG,
-            "icon_url": 'http://icons.wxug.com/i/c/k/clear.gif',
-            "display_location": {
-                "city": "Holly Springs",
-                "country": "US",
-                "full": "Holly Springs, NC"
-            },
-            "observation_location": {
-                "elevation": "413 ft",
-                "full": "Twin Lake, Holly Springs, North Carolina"
-            },
-        }, "alerts": [
-            {
-                "type": 'FLO',
-                "description": "Areal Flood Warning",
-                "date": "9:36 PM CDT on September 22, 2016",
-                "expires": "10:00 AM CDT on September 23, 2016",
-                "message": ALERT_MESSAGE,
-            },
-
-        ]
-        }, 200)
-
-
 class TestWundergroundSetup(unittest.TestCase):
     """Test the WUnderground platform."""
 
@@ -294,10 +238,9 @@ class TestWundergroundSetup(unittest.TestCase):
             wunderground.setup_platform(self.hass, VALID_CONFIG,
                                         self.add_devices, None))
 
-        return  # disable test until code review finished
-        self.assertFalse(
+        with self.assertRaises(PlatformNotReady):
             wunderground.setup_platform(self.hass, INVALID_CONFIG,
-                                        self.add_devices, None))
+                                        self.add_devices, None)
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_sensor(self, req_mock):
@@ -336,9 +279,9 @@ class TestWundergroundSetup(unittest.TestCase):
                          side_effect=ConnectionError('test exception'))
     def test_connect_failed(self, req_mock):
         """Test the WUnderground connection error."""
-        return  # disable test until code review finished
-        self.assertFalse(wunderground.setup_platform(self.hass, VALID_CONFIG,
-                                                     self.add_devices, None))
+        with self.assertRaises(PlatformNotReady):
+            wunderground.setup_platform(self.hass, VALID_CONFIG,
+                                        self.add_devices, None)
 
     @unittest.mock.patch('requests.get',
                          side_effect=mocked_requests_get_invalid)
@@ -349,17 +292,3 @@ class TestWundergroundSetup(unittest.TestCase):
         for device in self.DEVICES:
             device.update()
             self.assertEqual(STATE_UNKNOWN, device.state)
-
-    @unittest.mock.patch('requests.get',
-                         side_effect=mocked_requests_get_longstate)
-    def test_long_state(self, req_mock):
-        """Test the WUnderground long state string."""
-        wunderground.setup_platform(self.hass, VALID_CONFIG_PWS,
-                                    self.add_devices, None)
-
-        for device in self.DEVICES:
-            device.update()
-            if device.name == 'PWS_weather':
-                self.assertTrue(len(device.state) < 256)
-                self.assertEqual(WEATHER_LONG,
-                                 device.device_state_attributes['long_text'])
