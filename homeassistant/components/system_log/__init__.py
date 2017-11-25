@@ -55,12 +55,14 @@ class LogErrorHandler(logging.Handler):
         be changed if neeeded.
         """
         if record.levelno >= logging.WARN:
-            if record.exc_info:
-                self.records.appendleft([record, None])
-            else:
-                self.records.appendleft(
-                    [record,
-                     [f for f, _, _, _ in traceback.extract_stack()]])
+            stack = []
+            if not record.exc_info:
+                try:
+                    stack = [f for f, _, _, _ in traceback.extract_stack()]
+                except ValueError:
+                    # On Python 3.4 under py.test getting the stack might fail.
+                    pass
+            self.records.appendleft([record, stack])
 
 
 @asyncio.coroutine
