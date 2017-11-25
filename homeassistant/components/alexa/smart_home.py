@@ -171,7 +171,7 @@ def async_api_discovery(hass, config, request):
 
         # Required description as per Amazon Scene docs
         if entity.domain == scene.DOMAIN:
-            scene_fmt = '%s (Scene connected via Home Assistant)'
+            scene_fmt = '{} (Scene connected via Home Assistant)'
             description = scene_fmt.format(description)
 
         cat_key = ATTR_ALEXA_DISPLAY_CATEGORIES

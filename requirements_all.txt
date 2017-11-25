@@ -19,11 +19,8 @@ certifi>=2017.4.17
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
 
-# homeassistant.components.tradfri
-# DTLSSocket==0.1.4
-
 # homeassistant.components.doorbird
-DoorBirdPy==0.0.4
+DoorBirdPy==0.1.0
 
 # homeassistant.components.isy994
 PyISY==1.0.8
@@ -331,7 +328,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171117.1
+home-assistant-frontend==20171121.1
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -344,9 +341,6 @@ httplib2==0.10.3
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
-
-# homeassistant.components.tradfri
-# https://github.com/chrysn/aiocoap/archive/3286f48f0b949901c8b5c04c0719dc54ab63d431.zip#aiocoap==0.3
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
@@ -542,6 +536,9 @@ piglow==1.2.4
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.dominos
+pizzapi==0.0.3
+
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
 plexapi==3.0.3
@@ -623,7 +620,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.2
+pychromecast==1.0.2
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -672,6 +669,9 @@ pyharmony==1.0.18
 
 # homeassistant.components.binary_sensor.hikvision
 pyhik==0.1.4
+
+# homeassistant.components.hive
+pyhiveapi==0.2.5
 
 # homeassistant.components.homematic
 pyhomematic==0.1.34
@@ -837,7 +837,7 @@ python-juicenet==0.0.5
 # homeassistant.components.light.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-miio==0.3.1
+python-miio==0.3.2
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -901,7 +901,7 @@ pytile==1.0.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==4.0.1
+# pytradfri[async]==4.1.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
@@ -952,7 +952,7 @@ restrictedpython==4.0b2
 rflink==0.0.34
 
 # homeassistant.components.ring
-ring_doorbell==0.1.7
+ring_doorbell==0.1.8
 
 # homeassistant.components.notify.rocketchat
 rocketchat-API==0.6.1
@@ -1082,7 +1082,7 @@ todoist-python==7.0.17
 toonlib==1.0.2
 
 # homeassistant.components.alarm_control_panel.totalconnect
-total_connect_client==0.13
+total_connect_client==0.16
 
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
