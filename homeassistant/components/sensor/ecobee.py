@@ -17,6 +17,9 @@ SENSOR_TYPES = {
     'humidity': ['Humidity', '%']
 }
 
+REMOTE_SENSOR = 1
+WEATHER_SENSOR = 2
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ecobee sensors."""
@@ -30,7 +33,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if item['type'] not in ('temperature', 'humidity'):
                     continue
 
-                dev.append(EcobeeSensor(sensor['name'], item['type'], index))
+                dev.append(EcobeeSensor(sensor['name'], item['type'],
+                                        index, REMOTE_SENSOR))
+        thermostat = data.ecobee.get_thermostat(index)
+        if 'weather' in thermostat and 'forecasts' in thermostat['weather']:
+            forecasts = thermostat['weather']['forecasts']
+            if forecasts:
+                for sensor_type in ('temperature', 'humidity'):
+                    dev.append(EcobeeSensor("Outside", sensor_type,
+                                            index, WEATHER_SENSOR))
 
     add_devices(dev, True)
 
@@ -38,12 +49,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EcobeeSensor(Entity):
     """Representation of an Ecobee sensor."""
 
-    def __init__(self, sensor_name, sensor_type, sensor_index):
+    def __init__(self, sensor_name, sensor_type, sensor_index, sensor_class):
         """Initialize the sensor."""
         self._name = '{} {}'.format(sensor_name, SENSOR_TYPES[sensor_type][0])
         self.sensor_name = sensor_name
         self.type = sensor_type
         self.index = sensor_index
+        self._class = sensor_class
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
@@ -71,6 +83,24 @@ class EcobeeSensor(Entity):
         """Get the latest state of the sensor."""
         data = ecobee.NETWORK
         data.update()
+        if self._class == WEATHER_SENSOR:
+            thermostat = data.ecobee.get_thermostat(self.index)
+            if ('weather' in thermostat and
+                    'forecasts' in thermostat['weather']):
+                forecasts = thermostat['weather']['forecasts']
+                if not forecasts:
+                    return
+                if self.type == 'temperature':
+                    value = forecasts[0]['temperature']
+                    if value != 'unknown':
+                        value = float(value) / 10
+                elif self.type == 'humidity':
+                    value = forecasts[0]['relativeHumidity']
+                else:
+                    return
+                self._state = value
+            return
+
         for sensor in data.ecobee.get_remote_sensors(self.index):
             for item in sensor['capability']:
                 if (item['type'] == self.type and
