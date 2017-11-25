@@ -66,7 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   ''' following cameras: {}.'''.format(cameras)
 
         _LOGGER.error(err_msg)
-        hass.components.persistent_notification.create(
+        hass.components.persistent_notification.async_create(
             'Error: {}<br />'
             'You will need to restart hass after fixing.'
             ''.format(err_msg),
