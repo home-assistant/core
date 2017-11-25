@@ -13,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component
-
 from tests.common import fire_time_changed, get_test_home_assistant
 
 CODE = 'HELLO_CODE'
