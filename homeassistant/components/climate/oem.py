@@ -35,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AWAY_TEMP, default=14): vol.Coerce(float)
 })
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the oemthermostat platform."""
@@ -81,7 +83,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE
+        return SUPPORT_FLAGS
 
     @property
     def name(self):

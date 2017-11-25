@@ -70,6 +70,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkWaterHeater(water_heater, hass)])
 
+SUPPORT_FLAGS_THERMOSTAT = (
+    SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+    SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
+    SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT)
+
+SUPPORT_FLAGS_AC = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                    SUPPORT_FAN_MODE)
+
+SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                        SUPPORT_AWAY_MODE)
+
 
 # pylint: disable=abstract-method
 class WinkThermostat(WinkDevice, ClimateDevice):
@@ -78,9 +89,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
-                SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT)
+        return SUPPORT_FLAGS_THERMOSTAT
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -366,8 +375,7 @@ class WinkAC(WinkDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                SUPPORT_FAN_MODE)
+        return SUPPORT_FLAGS_AC
 
     @property
     def temperature_unit(self):
@@ -490,8 +498,7 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                SUPPORT_AWAY_MODE)
+        return SUPPORT_FLAGS_HEATER
 
     @property
     def temperature_unit(self):

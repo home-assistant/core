@@ -36,6 +36,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_AWAY_MODE)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
@@ -69,8 +72,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                SUPPORT_AWAY_MODE)
+        return SUPPORT_FLAGS
 
     @property
     def name(self):

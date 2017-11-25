@@ -33,6 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Flexit Platform."""
@@ -67,7 +69,7 @@ class Flexit(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+        return SUPPORT_FLAGS
 
     def update(self):
         """Update unit attributes."""

@@ -19,6 +19,8 @@ STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Iterate through all MAX! Devices and add thermostats."""
@@ -52,7 +54,7 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return SUPPORT_FLAGS
 
     @property
     def should_poll(self):

@@ -25,6 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 OPERATION_LIST = ['Heat', 'Cool', 'Auto Changeover', 'Off']
 FAN_OPERATION_LIST = ['On', 'Auto', 'Cycle']
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_FAN_MODE)
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up of Vera thermostats."""
@@ -44,8 +47,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                SUPPORT_FAN_MODE)
+        return SUPPORT_FLAGS
 
     @property
     def current_operation(self):

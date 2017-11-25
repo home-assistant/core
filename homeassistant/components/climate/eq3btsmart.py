@@ -38,6 +38,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_AWAY_MODE)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the eQ-3 BLE thermostats."""
@@ -76,8 +79,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                SUPPORT_AWAY_MODE)
+        return SUPPORT_FLAGS
 
     @property
     def available(self) -> bool:

@@ -12,6 +12,12 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
+                 SUPPORT_AWAY_MODE | SUPPORT_HOLD_MODE | SUPPORT_FAN_MODE |
+                 SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT |
+                 SUPPORT_SWING_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo climate devices."""
@@ -54,11 +60,7 @@ class DemoClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
-                SUPPORT_AWAY_MODE | SUPPORT_HOLD_MODE | SUPPORT_FAN_MODE |
-                SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT |
-                SUPPORT_SWING_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                SUPPORT_TARGET_TEMPERATURE_LOW)
+        return SUPPORT_FLAGS
 
     @property
     def should_poll(self):

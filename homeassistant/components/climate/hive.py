@@ -16,6 +16,8 @@ HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
 HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
                       STATE_ON: 'ON', STATE_OFF: 'OFF'}
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive climate devices."""
@@ -48,7 +50,7 @@ class HiveClimateEntity(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return SUPPORT_FLAGS
 
     def handle_update(self, updatesource):
         """Handle the new update request."""

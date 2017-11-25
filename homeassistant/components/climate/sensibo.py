@@ -41,6 +41,10 @@ _FETCH_FIELDS = ','.join([
     'acState', 'connectionStatus{isAlive}'])
 _INITIAL_FETCH_FIELDS = 'id,' + _FETCH_FIELDS
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE | SUPPORT_SWING_MODE |
+                 SUPPORT_AUX_HEAT)
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -81,9 +85,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE | SUPPORT_SWING_MODE |
-                SUPPORT_AUX_HEAT)
+        return SUPPORT_FLAGS
 
     def _do_update(self, data):
         self._name = data['room']['name']

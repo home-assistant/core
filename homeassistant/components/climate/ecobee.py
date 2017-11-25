@@ -46,6 +46,10 @@ RESUME_PROGRAM_SCHEMA = vol.Schema({
     vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
 })
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
+                 SUPPORT_HOLD_MODE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ecobee Thermostat Platform."""
@@ -137,9 +141,7 @@ class Thermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
-                SUPPORT_HOLD_MODE | SUPPORT_OPERATION_MODE |
-                SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH)
+        return SUPPORT_FLAGS
 
     @property
     def name(self):
@@ -370,8 +372,8 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.current_operation == STATE_AUTO and (low_temp is not None
-                                                     or high_temp is not None):
+        if self.current_operation == STATE_AUTO and (low_temp is not None or
+                                                     high_temp is not None):
             self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
             self.set_temp_hold(temp)

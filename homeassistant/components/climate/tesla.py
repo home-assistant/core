@@ -20,6 +20,8 @@ DEPENDENCIES = ['tesla']
 
 OPERATION_LIST = [STATE_ON, STATE_OFF]
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla climate platform."""
@@ -41,7 +43,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return SUPPORT_FLAGS
 
     @property
     def current_operation(self):

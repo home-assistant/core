@@ -41,6 +41,7 @@ CONF_COLD_TOLERANCE = 'cold_tolerance'
 CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
@@ -316,7 +317,7 @@ class GenericThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return SUPPORT_FLAGS
 
     @callback
     def _heater_turn_on(self):

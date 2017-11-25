@@ -13,6 +13,8 @@ from homeassistant.components.climate import (
     STATE_COOL, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import TEMP_CELSIUS
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Toon thermostat."""
@@ -41,7 +43,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return SUPPORT_FLAGS
 
     @property
     def name(self):

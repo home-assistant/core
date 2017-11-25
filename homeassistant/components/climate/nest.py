@@ -30,6 +30,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 STATE_ECO = 'eco'
 STATE_HEAT_COOL = 'heat-cool'
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
+                 SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Nest thermostat."""
@@ -92,9 +96,7 @@ class NestThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
-                SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE)
+        return SUPPORT_FLAGS
 
     @property
     def name(self):
