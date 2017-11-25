@@ -53,6 +53,17 @@ HA_STATE_TO_WINK = {
 
 WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
 
+SUPPORT_FLAGS_THERMOSTAT = (
+    SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+    SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
+    SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT)
+
+SUPPORT_FLAGS_AC = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                    SUPPORT_FAN_MODE)
+
+SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                        SUPPORT_AWAY_MODE)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Wink climate devices."""
@@ -69,17 +80,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _id = water_heater.object_id() + water_heater.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkWaterHeater(water_heater, hass)])
-
-SUPPORT_FLAGS_THERMOSTAT = (
-    SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-    SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
-    SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT)
-
-SUPPORT_FLAGS_AC = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                    SUPPORT_FAN_MODE)
-
-SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                        SUPPORT_AWAY_MODE)
 
 
 # pylint: disable=abstract-method
