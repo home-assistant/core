@@ -19,6 +19,7 @@ from homeassistant.components.mqtt import (
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -301,9 +302,9 @@ def setup(hass, config):
                 """Call MQTT publish function."""
                 mqtt.publish(hass, topic, payload, qos, retain)
 
-            def sub_callback(topic, callback, qos):
+            def sub_callback(topic, sub_cb, qos):
                 """Call MQTT subscribe function."""
-                mqtt.subscribe(hass, topic, callback, qos)
+                mqtt.subscribe(hass, topic, sub_cb, qos)
             gateway = mysensors.MQTTGateway(
                 pub_callback, sub_callback,
                 event_callback=None, persistence=persistence,
@@ -627,6 +628,7 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Return true if entity is available."""
         return self.value_type in self._values
 
+    @callback
     def _async_update_callback(self):
         """Update the entity."""
         self.async_schedule_update_ha_state(True)
