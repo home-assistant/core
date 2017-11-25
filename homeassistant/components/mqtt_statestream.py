@@ -9,9 +9,11 @@ import json
 
 import voluptuous as vol
 
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import (CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE,
+                                 CONF_INCLUDE, MATCH_ALL)
 from homeassistant.core import callback
 from homeassistant.components.mqtt import valid_publish_topic
+from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.remote import JSONEncoder
 import homeassistant.helpers.config_validation as cv
@@ -24,6 +26,16 @@ DOMAIN = 'mqtt_statestream'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+        }),
+        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+        }),
         vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
         vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
         vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean
@@ -36,8 +48,14 @@ def async_setup(hass, config):
     """Set up the MQTT state feed."""
     conf = config.get(DOMAIN, {})
     base_topic = conf.get(CONF_BASE_TOPIC)
+    pub_include = conf.get(CONF_INCLUDE, {})
+    pub_exclude = conf.get(CONF_EXCLUDE, {})
     publish_attributes = conf.get(CONF_PUBLISH_ATTRIBUTES)
     publish_timestamps = conf.get(CONF_PUBLISH_TIMESTAMPS)
+    publish_filter = generate_filter(pub_include.get(CONF_DOMAINS, []),
+                                     pub_include.get(CONF_ENTITIES, []),
+                                     pub_exclude.get(CONF_DOMAINS, []),
+                                     pub_exclude.get(CONF_ENTITIES, []))
     if not base_topic.endswith('/'):
         base_topic = base_topic + '/'
 
@@ -45,6 +63,10 @@ def async_setup(hass, config):
     def _state_publisher(entity_id, old_state, new_state):
         if new_state is None:
             return
+
+        if not publish_filter(entity_id):
+            return
+
         payload = new_state.state
 
         mybase = base_topic + entity_id.replace('.', '/') + '/'

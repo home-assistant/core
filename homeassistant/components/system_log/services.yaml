@@ -1,0 +1,3 @@
+system_log:
+  clear:
+    description: Clear all log entries.

@@ -8,6 +8,7 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
@@ -108,6 +109,9 @@ class TradfriGroup(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
+                kwargs[ATTR_BRIGHTNESS] = 254
+
             self.hass.async_add_job(self._api(
                 self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys)))
         else:
@@ -116,6 +120,7 @@ class TradfriGroup(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
+        # pylint: disable=import-error
         from pytradfri.error import PyTradFriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
@@ -161,29 +166,29 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_control.max_kelvin
-        )
+        if self._light_control.max_kelvin is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                self._light_control.max_kelvin
+            )
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_control.min_kelvin
-        )
+        if self._light_control.min_kelvin is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                self._light_control.min_kelvin
+            )
 
     @property
     def device_state_attributes(self):
         """Return the devices' state attributes."""
         info = self._light.device_info
-        attrs = {
-            'manufacturer': info.manufacturer,
-            'model_number': info.model_number,
-            'serial': info.serial,
-            'firmware_version': info.firmware_version,
-            'power_source': info.power_source_str,
-            'battery_level': info.battery_level
-        }
+
+        attrs = {}
+
+        if info.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = info.battery_level
+
         return attrs
 
     @asyncio.coroutine
@@ -219,9 +224,11 @@ class TradfriLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_data.kelvin_color_inferred
-        )
+        kelvin_color = self._light_data.kelvin_color_inferred
+        if kelvin_color is not None:
+            return color_util.color_temperature_kelvin_to_mired(
+                kelvin_color
+            )
 
     @property
     def rgb_color(self):
@@ -260,6 +267,9 @@ class TradfriLight(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
+            if kwargs[ATTR_BRIGHTNESS] == 255:
+                kwargs[ATTR_BRIGHTNESS] = 254
+
             self.hass.async_add_job(self._api(
                 self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
                                                **keys)))
@@ -270,6 +280,7 @@ class TradfriLight(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
+        # pylint: disable=import-error
         from pytradfri.error import PyTradFriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,

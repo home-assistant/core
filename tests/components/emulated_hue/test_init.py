@@ -15,7 +15,7 @@ def test_config_google_home_entity_id_to_number():
     mop = mock_open(read_data=json.dumps({'1': 'light.test2'}))
     handle = mop()
 
-    with patch('homeassistant.components.emulated_hue.open', mop, create=True):
+    with patch('homeassistant.util.json.open', mop, create=True):
         number = conf.entity_id_to_number('light.test')
         assert number == '2'
         assert handle.write.call_count == 1
@@ -45,7 +45,7 @@ def test_config_google_home_entity_id_to_number_altered():
     mop = mock_open(read_data=json.dumps({'21': 'light.test2'}))
     handle = mop()
 
-    with patch('homeassistant.components.emulated_hue.open', mop, create=True):
+    with patch('homeassistant.util.json.open', mop, create=True):
         number = conf.entity_id_to_number('light.test')
         assert number == '22'
         assert handle.write.call_count == 1
@@ -75,7 +75,7 @@ def test_config_google_home_entity_id_to_number_empty():
     mop = mock_open(read_data='')
     handle = mop()
 
-    with patch('homeassistant.components.emulated_hue.open', mop, create=True):
+    with patch('homeassistant.util.json.open', mop, create=True):
         number = conf.entity_id_to_number('light.test')
         assert number == '1'
         assert handle.write.call_count == 1

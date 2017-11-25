@@ -3,12 +3,10 @@ import asyncio
 import re
 
 from aiohttp import hdrs
-from aiohttp.web import FileResponse
+from aiohttp.web import FileResponse, middleware
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 from yarl import unquote
-
-from .const import KEY_DEVELOPMENT
 
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
@@ -53,10 +51,9 @@ class CachingFileResponse(FileResponse):
         @asyncio.coroutine
         def sendfile(request, fobj, count):
             """Sendfile that includes a cache header."""
-            if not request.app[KEY_DEVELOPMENT]:
-                cache_time = 31 * 86400  # = 1 month
-                self.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
-                    cache_time)
+            cache_time = 31 * 86400  # = 1 month
+            self.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
+                cache_time)
 
             yield from orig_sendfile(request, fobj, count)
 
@@ -64,21 +61,18 @@ class CachingFileResponse(FileResponse):
         self._sendfile = sendfile
 
 
+@middleware
 @asyncio.coroutine
-def staticresource_middleware(app, handler):
+def staticresource_middleware(request, handler):
     """Middleware to strip out fingerprint from fingerprinted assets."""
-    @asyncio.coroutine
-    def static_middleware_handler(request):
-        """Strip out fingerprints from resource names."""
-        if not request.path.startswith('/static/'):
-            return handler(request)
-
-        fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
-
-        if fingerprinted:
-            request.match_info['filename'] = \
-                '{}.{}'.format(*fingerprinted.groups())
-
+    path = request.path
+    if not path.startswith('/static/') and not path.startswith('/frontend'):
         return handler(request)
 
-    return static_middleware_handler
+    fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
+
+    if fingerprinted:
+        request.match_info['filename'] = \
+            '{}.{}'.format(*fingerprinted.groups())
+
+    return handler(request)

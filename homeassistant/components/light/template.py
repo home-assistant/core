@@ -221,7 +221,7 @@ class LightTemplate(Light):
             self.hass.async_add_job(self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
         else:
-            self.hass.async_add_job(self._on_script.async_run())
+            yield from self._on_script.async_run()
 
         if optimistic_set:
             self.async_schedule_update_ha_state()
@@ -229,7 +229,7 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self.hass.async_add_job(self._off_script.async_run())
+        yield from self._off_script.async_run()
         if self._template is None:
             self._state = False
             self.async_schedule_update_ha_state()
