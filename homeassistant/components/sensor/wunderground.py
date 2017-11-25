@@ -639,9 +639,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))
 
-    if not rest.update():
-        return False
-
     add_devices(sensors)
 
     return True
@@ -668,14 +665,15 @@ class WUndergroundSensor(Entity):
         """Parse and return sensor data."""
         cfg = SENSOR_TYPES[self._condition]
         val = getattr(cfg, what)
-        if callable(val):
-            try:
-                val = val(self.rest)
-            except (KeyError, IndexError, TypeError, ValueError) as err:
-                _LOGGER.warning("Failed to expand cfg from WU API."
-                                " Condition: %s Attr: %s Error: %s",
-                                self._condition, what, repr(err))
-                val = default
+        if not callable(val):
+            return val
+        try:
+            val = val(self.rest)
+        except (KeyError, IndexError, TypeError, ValueError) as err:
+            _LOGGER.warning("Failed to expand cfg from WU API."
+                            " Condition: %s Attr: %s Error: %s",
+                            self._condition, what, repr(err))
+            val = default
 
         return val
 
