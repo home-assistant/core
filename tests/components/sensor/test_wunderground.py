@@ -294,7 +294,7 @@ class TestWundergroundSetup(unittest.TestCase):
             wunderground.setup_platform(self.hass, VALID_CONFIG,
                                         self.add_devices, None))
 
-        return # disable test until code review finished
+        return  # disable test until code review finished
         self.assertFalse(
             wunderground.setup_platform(self.hass, INVALID_CONFIG,
                                         self.add_devices, None))
@@ -336,7 +336,7 @@ class TestWundergroundSetup(unittest.TestCase):
                          side_effect=ConnectionError('test exception'))
     def test_connect_failed(self, req_mock):
         """Test the WUnderground connection error."""
-        return # disable test until code review finished
+        return  # disable test until code review finished
         self.assertFalse(wunderground.setup_platform(self.hass, VALID_CONFIG,
                                                      self.add_devices, None))
 
