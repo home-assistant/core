@@ -48,7 +48,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     away_mode_name = config.get(CONF_AWAY_MODE_NAME)
     base_stations = []
     for base_station in data.base_stations:
-        base_stations.append(ArloBaseStation(base_station, home_mode_name, away_mode_name))
+        base_stations.append(ArloBaseStation(base_station, home_mode_name, 
+                                             away_mode_name))
     async_add_devices(base_stations, True)
 
 
