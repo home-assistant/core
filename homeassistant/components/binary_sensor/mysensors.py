@@ -21,11 +21,12 @@ SENSORS = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MySensors platform for binary sensors."""
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
+    """Set up the mysensors platform for binary sensors."""
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, MySensorsBinarySensor,
-        add_devices=add_devices)
+        async_add_devices=async_add_devices)
 
 
 class MySensorsBinarySensor(mysensors.MySensorsEntity, BinarySensorDevice):
