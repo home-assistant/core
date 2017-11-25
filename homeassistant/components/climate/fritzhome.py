@@ -7,9 +7,10 @@ http://home-assistant.io/components/climate.fritzhome/
 import logging
 
 from homeassistant.components.fritzhome import (
-    ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_OPERATION_MODE,
-    ATTR_PRODUCTNAME, DOMAIN)
-from homeassistant.components.climate import (ClimateDevice, STATE_ECO)
+    ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME,
+    DOMAIN)
+from homeassistant.components.climate import (
+    ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO)
 from homeassistant.const import (PRECISION_HALVES)
 from homeassistant.const import (TEMP_CELSIUS, ATTR_TEMPERATURE)
 
