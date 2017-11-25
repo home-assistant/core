@@ -12,8 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+    CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -35,6 +34,15 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=80): cv.port,
     })
 }, extra=vol.ALLOW_EXTRA)
+
+CONFIG_INSTRUCTIONS = """
+Unlock your deCONZ gateway to register with Home Assistant.
+
+1. [Go to deCONZ system settings](http://{}:{}/edit_system.html)
+2. Press "Unlock Gateway" button
+
+[deCONZ platform documentation](https://home-assistant.io/components/deconz/)
+"""
 
 
 @asyncio.coroutine
@@ -149,10 +157,11 @@ def request_configuration(hass, config, deconz_config):
         configurator.async_notify_errors(request_id, "Didn't get an API key.")
         return False
 
+    instructions = CONFIG_INSTRUCTIONS.format(
+        deconz_config[CONF_HOST], deconz_config[CONF_PORT])
+
     request_id = configurator.async_request_config(
         "deCONZ", configuration_callback,
-        description="deCONZ -> Menu -> Settings -> Unlock Gateway",
+        description=instructions,
         submit_caption="I have unlocked the gateway",
-        link_name='deCONZ platform documentation',
-        link_url='https://home-assistant.io/components/deconz/',
     )
