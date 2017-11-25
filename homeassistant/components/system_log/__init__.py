@@ -14,6 +14,7 @@ from collections import deque
 
 import voluptuous as vol
 
+from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
@@ -54,7 +55,14 @@ class LogErrorHandler(logging.Handler):
         be changed if neeeded.
         """
         if record.levelno >= logging.WARN:
-            self.records.appendleft(record)
+            stack = []
+            if not record.exc_info:
+                try:
+                    stack = [f for f, _, _, _ in traceback.extract_stack()]
+                except ValueError:
+                    # On Python 3.4 under py.test getting the stack might fail.
+                    pass
+            self.records.appendleft([record, stack])
 
 
 @asyncio.coroutine
@@ -88,26 +96,41 @@ def async_setup(hass, config):
     return True
 
 
-def _figure_out_source(record):
+def _figure_out_source(record, call_stack, hass):
+    paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
+    try:
+        # If netdisco is installed check its path too.
+        from netdisco import __path__ as netdisco_path
+        paths.append(netdisco_path[0])
+    except ImportError:
+        pass
     # If a stack trace exists, extract filenames from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
         stack = [x[0] for x in traceback.extract_tb(record.exc_info[2])]
     else:
-        stack = [record.pathname]
+        index = -1
+        for i, frame in enumerate(call_stack):
+            if frame == record.pathname:
+                index = i
+                break
+        if index == -1:
+            # For some reason we couldn't find pathname in the stack.
+            stack = [record.pathname]
+        else:
+            stack = call_stack[0:index+1]
 
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in HA. Try to figure out where error happened.
     for pathname in reversed(stack):
 
         # Try to match with a file within HA
-        match = re.match(r'.*/homeassistant/(.*)', pathname)
+        match = re.match(r'(?:{})/(.*)'.format('|'.join(paths)), pathname)
         if match:
             return match.group(1)
-
     # Ok, we don't know what this is
-    return 'unknown'
+    return record.pathname
 
 
 def _exception_as_string(exc_info):
@@ -117,13 +140,13 @@ def _exception_as_string(exc_info):
     return buf.getvalue()
 
 
-def _convert(record):
+def _convert(record, call_stack, hass):
     return {
         'timestamp': record.created,
         'level': record.levelname,
         'message': record.getMessage(),
         'exception': _exception_as_string(record.exc_info),
-        'source': _figure_out_source(record),
+        'source': _figure_out_source(record, call_stack, hass),
         }
 
 
@@ -140,4 +163,5 @@ class AllErrorsView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Get all errors and warnings."""
-        return self.json([_convert(x) for x in self.handler.records])
+        return self.json([_convert(x[0], x[1], request.app['hass'])
+                          for x in self.handler.records])
