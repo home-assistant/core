@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.ziggo_mediabox_xl/
 """
 import logging
 import socket
-import requests
 
 import voluptuous as vol
 
@@ -16,13 +15,14 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_PLAY, SUPPORT_PAUSE)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN,
-    STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['ziggo-mediabox-xl==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-KNOWN_DEVICES_KEY = 'ziggo_mediabox_xl_known_devices'
+DATA_KNOWN_DEVICES = 'ziggo_mediabox_xl_known_devices'
 
 SUPPORT_ZIGGO = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
@@ -36,10 +36,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ziggo Mediabox XL platform."""
-    known_devices = hass.data.get(KNOWN_DEVICES_KEY)
-    if known_devices is None:
-        known_devices = set()
-        hass.data[KNOWN_DEVICES_KEY] = known_devices
+    from ziggo_mediabox_xl import ZiggoMediaboxXL
+
+    hass.data[DATA_KNOWN_DEVICES] = known_devices = set()
 
     # Is this a manual configuration?
     if config.get(CONF_HOST) is not None:
@@ -49,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         host = discovery_info.get('host')
         name = discovery_info.get('name')
     else:
-        _LOGGER.warning("Cannot determine device")
+        _LOGGER.error("Cannot determine device")
         return
 
     # Only add a device once, so discovered devices do not override manual
@@ -57,84 +56,48 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hosts = []
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
-        sock = socket.socket()
         try:
-            state = sock.connect_ex((ip_addr, 5900))
-        except socket.error:
-            _LOGGER.error("Couldn't connect to %s", ip_addr)
-        if state == 0:
-            hosts.append(ZiggoMediaboxXLDevice(ip_addr, name))
-            known_devices.add(ip_addr)
-        else:
-            _LOGGER.error("Can't connect to %s", host)
+            mediabox = ZiggoMediaboxXL(ip_addr)
+            if mediabox.test_connection():
+                hosts.append(ZiggoMediaboxXLDevice(mediabox, host, name))
+                known_devices.add(ip_addr)
+            else:
+                _LOGGER.error("Can't connect to %s", host)
+        except socket.error as error:
+            _LOGGER.error("Can't connect to %s: %s", host, error)
     else:
-        _LOGGER.warning("Ignoring duplicate Ziggo Mediabox XL %s", host)
+        _LOGGER.info("Ignoring duplicate Ziggo Mediabox XL %s", host)
     add_devices(hosts, True)
 
 
 class ZiggoMediaboxXLDevice(MediaPlayerDevice):
     """Representation of a Ziggo Mediabox XL Device."""
 
-    def __init__(self, host, name):
+    def __init__(self, mediabox, host, name):
         """Initialize the device."""
         # Generate a configuration for the Samsung library
+        self._mediabox = mediabox
         self._host = host
-        self._port = {"state": 62137, "cmd": 5900}
         self._name = name
-        self._state = STATE_UNKNOWN
-        self._channels = {}
-        self._keys = {
-            "POWER": "E0 00", "OK": "E0 01", "BACK": "E0 02",
-            "CHAN_UP": "E0 06", "CHAN_DOWN": "E0 07",
-            "HELP": "E0 09", "MENU": "E0 0A", "GUIDE": "E0 0B",
-            "INFO": "EO 0E", "TEXT": "E0 0F", "MENU1": "E0 11",
-            "MENU2": "EO 15", "DPAD_UP": "E1 00",
-            "DPAD_DOWN": "E1 01", "DPAD_LEFT": "E1 02",
-            "DPAD_RIGHT": "E1 03", "PAUSE": "E4 00", "STOP": "E4 02",
-            "RECORD": "E4 04", "FWD": "E4 05", "RWD": "E4 07",
-            "MENU3": "E4 07", "ONDEMAND": "EF 28", "DVR": "EF 29",
-            "TV": "EF 2A"}
-        for i in range(10):
-            self._keys["NUM_{}".format(i)] = "E3 {:02d}".format(i)
-        self._fetch_channels()
+        self._state = None
 
     def update(self):
         """Retrieve the state of the device."""
-        # Send an empty key to see if we are still connected
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            if sock.connect_ex((self._host, self._port['state'])) == 0:
+            if self._mediabox.turned_on():
                 if self._state != STATE_PAUSED:
                     self._state = STATE_PLAYING
             else:
                 self._state = STATE_OFF
-            sock.close()
         except socket.error:
             _LOGGER.error("Couldn't fetch state from %s", self._host)
 
     def send_keys(self, keys):
         """Send keys to the device and handle exceptions."""
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self._host, self._port['cmd']))
-            # mandatory dance
-            version_info = sock.recv(15)
-            sock.send(version_info)
-            sock.recv(2)
-            sock.send(bytes.fromhex('01'))
-            sock.recv(4)
-            sock.recv(24)
-            for key in keys:
-                if key in self._keys:
-                    sock.send(bytes.fromhex("04 01 00 00 00 00 " +
-                                            self._keys[key]))
-                    sock.send(bytes.fromhex("04 00 00 00 00 00 " +
-                                            self._keys[key]))
-                else:
-                    _LOGGER.error("%s key not supported", key)
-            sock.close()
+            self._mediabox.send_keys(keys)
         except socket.error:
-            _LOGGER.error("Couldn't connect to %s", self._host)
+            _LOGGER.error("Couldn't send keys to %s", self._host)
 
     @property
     def name(self):
@@ -149,8 +112,8 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available sources (channels)."""
-        return [self._channels[c]
-                for c in sorted(self._channels.keys())]
+        return [self._mediabox.channels()[c]
+                for c in sorted(self._mediabox.channels().keys())]
 
     @property
     def supported_features(self):
@@ -199,8 +162,8 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         """Select the channel."""
         if str(source).isdigit():
             digits = str(source)
-        elif source in self._channels.values():
-            for key, value in self._channels.items():
+        elif source in self._mediabox.channels().values():
+            for key, value in self._mediabox.channels().items():
                 if value == source:
                     digits = key
                     break
@@ -210,9 +173,3 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         self.send_keys(['NUM_{}'.format(digit)
                         for digit in str(digits)])
         self._state = STATE_PLAYING
-
-    def _fetch_channels(self):
-        json = requests.get(
-            'https://restapi.ziggo.nl/1.0/channels-overview').json()
-        self._channels = {c['channel']['code']: c['channel']['name']
-                          for c in json['channels']}
