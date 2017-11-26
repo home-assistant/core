@@ -19,8 +19,9 @@ DEPENDENCIES = ['fritzhome']
 _LOGGER = logging.getLogger(__name__)
 
 STATE_COMFORT = 'comfort'
+STATE_MANUAL = 'manual'
 
-OPERATION_LIST = [STATE_ECO, STATE_COMFORT]
+OPERATION_LIST = [STATE_COMFORT, STATE_ECO, STATE_MANUAL]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
@@ -47,10 +48,10 @@ class FritzhomeThermostat(ClimateDevice):
     def __init__(self, hass, device):
         """Initialize the thermostat."""
         self._device = device
-        self._current_temperature = None
-        self._target_temperature = None
-        self._eco_temperature = None
-        self._comfort_temperature = None
+        self._current_temperature = self._device.actual_temperature
+        self._target_temperature = self._device.target_temperature
+        self._comfort_temperature = self._device.comfort_temperature
+        self._eco_temperature = self._device.eco_temperature
 
     @property
     def available(self):
@@ -87,7 +88,7 @@ class FritzhomeThermostat(ClimateDevice):
         if kwargs.get(ATTR_OPERATION_MODE) is not None:
             operation_mode = kwargs.get(ATTR_OPERATION_MODE)
             self.set_operation_mode(operation_mode)
-        elif kwargs.get(ATTR_OPERATION_MODE) is not None:
+        elif kwargs.get(ATTR_TEMPERATURE) is not None:
             temperature = kwargs.get(ATTR_TEMPERATURE)
             self._device.set_target_temperature(temperature)
 
@@ -100,12 +101,12 @@ class FritzhomeThermostat(ClimateDevice):
             return STATE_COMFORT
         elif self._target_temperature == self._eco_temperature:
             return STATE_ECO
-        return 'unknown'
+        return STATE_MANUAL
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return self.OPERATION_LIST
+        return OPERATION_LIST
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
