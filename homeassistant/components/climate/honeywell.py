@@ -155,7 +155,7 @@ class RoundThermostat(ClimateDevice):
         if temperature is None:
             return
         self.client.set_temperature(self._name, temperature,
-            kwargs.get(ATTR_UNTIL))
+                                    kwargs.get(ATTR_UNTIL))
 
     @property
     def current_operation(self: ClimateDevice) -> str:
