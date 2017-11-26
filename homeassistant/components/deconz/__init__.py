@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'deconz'
 
-CONFIG_FILE = '.deconz.conf'
+CONFIG_FILE = 'deconz.conf'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -167,5 +167,6 @@ def async_request_configuration(hass, config, deconz_config):
     request_id = configurator.async_request_config(
         "deCONZ", async_configuration_callback,
         description=instructions,
+        entity_picture="/static/images/logo_deconz.jpeg",
         submit_caption="I have unlocked the gateway",
     )
