@@ -4,6 +4,8 @@ Support for ISY994 binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.isy994/
 """
+
+import asyncio
 import logging
 from datetime import datetime
 from typing import Callable  # noqa
@@ -78,32 +80,46 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 binary sensor device."""
-        isy.ISYDevice.__init__(self, node)
-        self._child_nodes = []
-        self._off_node = None
+        super().__init__(node)
+        self._negative_node = None
         self._heartbeat_node = None
         self._heartbeat_timestamp = None
         self._device_class_from_type = self._detect_device_type()
         # pylint: disable=protected-access
         self._computed_state = bool(self._node.status._val)
-        node.controlEvents.subscribe(self._positive_node_control_handler)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self) -> None:
+        """Subscribe to the node and subnode event emitters."""
+        super().async_added_to_hass()
+
+        self._node.controlEvents.subscribe(self._positive_node_control_handler)
+
+        try:
+            self._negative_node.controlEvents.subscribe(
+                self._negative_node_control_handler)
+        except AttributeError:
+            # Heartbeat node doesn't exist
+            pass
+
+        try:
+            self._heartbeat_node.controlEvents.subscribe(
+                self._heartbeat_node_control_handler)
+        except AttributeError:
+            # Heartbeat node doesn't exist
+            pass
 
     def _detect_device_type(self) -> str:
         try:
             device_type = self._node.type
         except AttributeError:
-            self._device_class_from_type = None
             return None
 
         split_type = device_type.split('.')
-        _LOGGER.debug(split_type)
-        for cls, ids in ISY_DEVICE_TYPES.items():
-            _LOGGER.debug(split_type[0] + '.' + split_type[1])
+        for device_class, ids in ISY_DEVICE_TYPES.items():
             if split_type[0] + '.' + split_type[1] in ids:
-                self._device_class_from_type = cls
-                return cls
+                return device_class
 
-        self._device_class_from_type = None
         return None
 
     def add_child_node(self, child):
@@ -116,11 +132,9 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         if subnode_id == 2:
             # "Negative" node that can be used to represent a negative state
             # when it reports "On"
-            child.controlEvents.subscribe(self._negative_node_control_handler)
-            self._off_node = child
+            self._negative_node = child
         elif subnode_id == 4:
             # Heartbeat node that just reports "On" every 24 hours
-            child.controlEvents.subscribe(self._heartbeat_node_control_handler)
             self._heartbeat_timestamp = STATE_UNKNOWN
             self._heartbeat_node = child
 
@@ -197,7 +211,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Get the state attributes for the device."""
-        attr = super(ISYBinarySensorDevice, self).device_state_attributes
+        attr = super().device_state_attributes
         if self._heartbeat_timestamp is not None:
             attr['last_heartbeat'] = self._heartbeat_timestamp
         return attr
@@ -212,7 +226,7 @@ class ISYBinarySensorProgram(isy.ISYDevice, BinarySensorDevice):
 
     def __init__(self, name, node) -> None:
         """Initialize the ISY994 binary sensor program."""
-        isy.ISYDevice.__init__(self, node)
+        super().__init__(node)
         self._name = name
 
     @property
