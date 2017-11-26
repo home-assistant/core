@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, BaseNotificationService,
     PLATFORM_SCHEMA)
-from homeassistant.const import CONF_TIMEOUT
+from homeassistant.const import CONF_TIMEOUT, CONF_ICON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,6 @@ CONF_POSITION = 'position'
 CONF_TRANSPARENCY = 'transparency'
 CONF_COLOR = 'color'
 CONF_INTERRUPT = 'interrupt'
-CONF_ICON = 'icon'
 
 DEFAULT_DURATION = 5
 DEFAULT_POSITION = 'bottom-right'
