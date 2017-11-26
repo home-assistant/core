@@ -37,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, vol.Length(min=1)),
     vol.Optional(CONF_FILE_PATH, default=DEFAULT_LOG): cv.isfile,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period
 })
 
 
