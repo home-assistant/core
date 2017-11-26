@@ -86,7 +86,10 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         self._heartbeat_timestamp = None
         self._device_class_from_type = self._detect_device_type()
         # pylint: disable=protected-access
-        self._computed_state = bool(self._node.status._val)
+        if self._node.status._val == -1:
+            self._computed_state = None
+        else:
+            self._computed_state = bool(self._node.status._val)
 
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
@@ -180,13 +183,17 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         pass
 
     @property
-    def value(self) -> bool:
+    def value(self) -> object:
         """Get the current value of the device.
 
         Insteon leak sensors set their primary node to On when the state is
         DRY, not WET, so we invert the binary state if the user indicates
         that it is a moisture sensor.
         """
+        if self._computed_state is None:
+            # Do this first so we don't invert None on moisture sensors
+            return None
+
         try:
             if self.device_class == 'moisture':
                 return not self._computed_state
@@ -197,8 +204,18 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
 
     @property
     def is_on(self) -> bool:
-        """Get whether the ISY994 binary sensor device is on."""
-        return self.value
+        """Get whether the ISY994 binary sensor device is on.
+
+        Note: This method will return false if the current state is UNKNOWN
+        """
+        return bool(self.value)
+
+    @property
+    def state(self):
+        """Return the state of the binary sensor."""
+        if self._computed_state is None:
+            return STATE_UNKNOWN
+        return STATE_ON if self.is_on else STATE_OFF
 
     @property
     def device_class(self) -> str:
