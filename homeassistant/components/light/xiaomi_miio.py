@@ -253,11 +253,11 @@ class XiaomiPhilipsGenericLight(Light):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @asyncio.coroutine
-    def async_set_scene(self, scene: int = 1):
+    def async_set_scene(self, number: int = 1):
         """Set the fixed scene."""
         yield from self._try_command(
-            "Setting the favorite level of the air purifier failed.",
-            self._light.set_scene, scene)
+            "Setting a fixed scene failed.",
+            self._light.set_scene, number)
 
     @staticmethod
     def translate(value, left_min, left_max, right_min, right_max):
