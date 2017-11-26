@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _FETCH_FIELDS = ','.join([
     'room{name}', 'measurements', 'remoteCapabilities',
-    'acState', 'connectionStatus{isAlive}'])
+    'acState', 'connectionStatus{isAlive}', 'temperatureUnit'])
 _INITIAL_FETCH_FIELDS = 'id,' + _FETCH_FIELDS
 
 
@@ -84,7 +84,8 @@ class SensiboClimate(ClimateDevice):
         self._operations = sorted(capabilities['modes'].keys())
         self._current_capabilities = capabilities[
             'modes'][self.current_operation]
-        temperature_unit_key = self._ac_states.get('temperatureUnit')
+        temperature_unit_key = data.get('temperatureUnit') or \
+            self._ac_states.get('temperatureUnit')
         if temperature_unit_key:
             self._temperature_unit = TEMP_CELSIUS if \
                 temperature_unit_key == 'C' else TEMP_FAHRENHEIT
