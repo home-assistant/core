@@ -1,0 +1,12 @@
+
+xiaomi_miio_set_scene:
+  description: Set a fixed scene.
+
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: 'light.xiaomi_miio'
+
+    level:
+      description: Number of the fixed scene, between 1 and 4.
+      example: '1'
