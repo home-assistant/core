@@ -31,6 +31,22 @@ xiaomi_miio_set_led_off:
       description: Name of the air purifier entity.
       example: 'fan.xiaomi_air_purifier'
 
+xiaomi_miio_set_child_lock_on:
+  description: Turn the child lock on.
+
+  fields:
+    entity_id:
+      description: Name of the air purifier entity.
+      example: 'fan.xiaomi_air_purifier'
+
+xiaomi_miio_set_child_lock_off:
+  description: Turn the child lock off.
+
+  fields:
+    entity_id:
+      description: Name of the air purifier entity.
+      example: 'fan.xiaomi_air_purifier'
+
 xiaomi_miio_set_favorite_level:
   description: Set the favorite level.
 
