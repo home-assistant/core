@@ -10,7 +10,7 @@ import mimetypes
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, ATTR_TARGET, PLATFORM_SCHEMA, ATTR_TITLE_DEFAULT,
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
