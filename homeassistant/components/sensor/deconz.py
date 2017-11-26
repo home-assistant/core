@@ -133,7 +133,7 @@ class DeconzBattery(Entity):
 
     @property
     def device_class(self):
-        """This is a battery."""
+        """Class of the sensor."""
         return self._device_class
 
     @property
