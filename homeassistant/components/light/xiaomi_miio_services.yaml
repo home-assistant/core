@@ -7,6 +7,6 @@ xiaomi_miio_set_scene:
       description: Name of the light entity.
       example: 'light.xiaomi_miio'
 
-    level:
+    scene:
       description: Number of the fixed scene, between 1 and 4.
       example: '1'
