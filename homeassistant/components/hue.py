@@ -11,6 +11,7 @@ import socket
 
 import voluptuous as vol
 
+from homeassistant.components.discovery import SERVICE_HUE
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
@@ -65,37 +66,25 @@ Press the button on the bridge to register Philips Hue with Home Assistant.
 """
 
 
-def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
-    """Attempt to detect host based on existing configuration."""
-    path = hass.config.path(filename)
-
-    if not os.path.isfile(path):
-        return None
-
-    try:
-        with open(path) as inp:
-            return next(json.loads(''.join(inp)).keys().__iter__())
-    except (ValueError, AttributeError, StopIteration):
-        # ValueError if can't parse as JSON
-        # AttributeError if JSON value is not a dict
-        # StopIteration if no keys
-        return None
-
-
 def setup(hass, config):
     """Set up the Hue platform."""
-    # Default needed in case of discovery
     config = config.get(DOMAIN)
     if config is None:
         config = {}
 
-    bridges = config.get(CONF_BRIDGES, [])
-    if len(bridges) == 0:
-        _LOGGER.error("No bridges found in configuration")
-        return False
-
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
+
+    discovery.listen(
+        hass,
+        SERVICE_HUE,
+        lambda service, discovery_info:
+        bridge_discovered(hass, service, discovery_info))
+
+    bridges = config.get(CONF_BRIDGES, [])
+    if len(bridges) == 0:
+        _LOGGER.info("No bridges found in configuration")
+        return True
 
     for bridge in bridges:
         filename = bridge.get(CONF_FILENAME, PHUE_CONFIG_FILE)
@@ -115,14 +104,53 @@ def setup(hass, config):
             _LOGGER.error("No host found in configuration")
             return False
 
-        bridge = HueBridge(host, hass, filename, allow_unreachable,
-                           allow_in_emulated_hue, allow_hue_groups)
-        hass.data[DOMAIN][socket.gethostbyname(host)] = bridge
-        bridge.setup()
+        setup_bridge(host, hass, filename, allow_unreachable,
+                     allow_in_emulated_hue, allow_hue_groups)
 
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
 
     return True
+
+
+def bridge_discovered(hass, service, discovery_info):
+    """Dispatcher for Hue discovery events."""
+    host = discovery_info.get('host')
+    serial = discovery_info.get('serial')
+
+    filename = 'phue-{}.conf'.format(serial)
+    setup_bridge(host, hass, filename)
+
+    discovery.load_platform(hass, 'light', DOMAIN, discovery_info, {})
+
+
+def setup_bridge(host, hass, filename=None, allow_unreachable=False,
+                 allow_in_emulated_hue=True, allow_hue_groups=True):
+    """Set up a given Hue bridge."""
+    # Only register a device once
+    if socket.gethostbyname(host) in hass.data[DOMAIN]:
+        return
+
+    bridge = HueBridge(host, hass, filename, allow_unreachable,
+                       allow_in_emulated_hue, allow_hue_groups)
+    hass.data[DOMAIN][socket.gethostbyname(host)] = bridge
+    bridge.setup()
+
+
+def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
+    """Attempt to detect host based on existing configuration."""
+    path = hass.config.path(filename)
+
+    if not os.path.isfile(path):
+        return None
+
+    try:
+        with open(path) as inp:
+            return next(json.loads(''.join(inp)).keys().__iter__())
+    except (ValueError, AttributeError, StopIteration):
+        # ValueError if can't parse as JSON
+        # AttributeError if JSON value is not a dict
+        # StopIteration if no keys
+        return None
 
 
 class HueBridge(object):
@@ -205,7 +233,7 @@ class HueBridge(object):
         )
 
     def get_api(self):
-        """Returns the full api dictionary from phue."""
+        """Return the full api dictionary from phue."""
         return self.bridge.get_api()
 
     def set_light(self, light_id, command):

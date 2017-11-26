@@ -2,7 +2,7 @@
 
 import logging
 import unittest
-from unittest.mock import call, patch
+from unittest.mock import call, MagicMock, patch
 
 import phue
 
@@ -35,19 +35,19 @@ class TestSetup(unittest.TestCase):
     def test_setup_no_domain(self, mock_phue):
         """If it's not in the config we won't even try."""
         with assert_setup_component(0):
-            self.assertFalse(setup_component(
+            self.assertTrue(setup_component(
                 self.hass, hue.DOMAIN, {}))
             mock_phue.Bridge.assert_not_called()
-            self.assertFalse(hue.DOMAIN in self.hass.data)
+            self.assertEquals({}, self.hass.data[hue.DOMAIN])
 
     @MockDependency('phue')
     def test_setup_no_host(self, mock_phue):
         """No host specified in any way."""
         with assert_setup_component(1):
-            self.assertFalse(setup_component(
+            self.assertTrue(setup_component(
                 self.hass, hue.DOMAIN, {hue.DOMAIN: {}}))
             mock_phue.Bridge.assert_not_called()
-            self.assertFalse(hue.DOMAIN in self.hass.data)
+            self.assertEquals({}, self.hass.data[hue.DOMAIN])
 
     @MockDependency('phue')
     def test_setup_with_host(self, mock_phue):
@@ -133,6 +133,82 @@ class TestSetup(unittest.TestCase):
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
                 self.assertEquals(2, len(self.hass.data[hue.DOMAIN]))
+
+    @MockDependency('phue')
+    def test_bridge_discovered(self, mock_phue):
+        """Bridge discovery."""
+        mock_bridge = mock_phue.Bridge
+        mock_service = MagicMock()
+        discovery_info = {'host': '192.168.0.10', 'serial': 'foobar'}
+
+        with patch('homeassistant.helpers.discovery.load_platform') \
+                as mock_load:
+            self.assertTrue(setup_component(
+                self.hass, hue.DOMAIN, {}))
+            hue.bridge_discovered(self.hass, mock_service, discovery_info)
+
+            mock_bridge.assert_called_once_with(
+                '192.168.0.10',
+                config_file_path=get_test_config_dir('phue-foobar.conf'))
+            mock_load.assert_called_once_with(
+                self.hass, 'light', hue.DOMAIN,
+                {'host': '192.168.0.10', 'serial': 'foobar'},
+                {})
+
+            self.assertTrue(hue.DOMAIN in self.hass.data)
+            self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+
+    @MockDependency('phue')
+    def test_bridge_configure_and_discovered(self, mock_phue):
+        """Bridge is in the config file, then we discover it."""
+        mock_bridge = mock_phue.Bridge
+        mock_service = MagicMock()
+        discovery_info = {'host': '192.168.1.10', 'serial': 'foobar'}
+
+        with assert_setup_component(1):
+            with patch('homeassistant.helpers.discovery.load_platform') \
+                    as mock_load:
+                # First we set up the component from config
+                self.assertTrue(setup_component(
+                    self.hass, hue.DOMAIN,
+                    {hue.DOMAIN: {hue.CONF_BRIDGES: [
+                        {CONF_HOST: '192.168.1.10'}]}}))
+
+                mock_bridge.assert_called_once_with(
+                    '192.168.1.10',
+                    config_file_path=get_test_config_dir(
+                        hue.PHUE_CONFIG_FILE))
+                calls_to_mock_load = [
+                    call(
+                        self.hass, 'light', hue.DOMAIN, {},
+                        {'bridges': [
+                            {'host': '192.168.1.10', 'allow_hue_groups': True}
+                        ]}),
+                ]
+                mock_load.assert_has_calls(calls_to_mock_load)
+
+                self.assertTrue(hue.DOMAIN in self.hass.data)
+                self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+
+                # Then we discover the same bridge
+                hue.bridge_discovered(self.hass, mock_service, discovery_info)
+
+                # No additional calls
+                mock_bridge.assert_called_once_with(
+                    '192.168.1.10',
+                    config_file_path=get_test_config_dir(
+                        hue.PHUE_CONFIG_FILE))
+                calls_to_mock_load.append(
+                    call(
+                        self.hass, 'light', hue.DOMAIN,
+                        {'host': '192.168.1.10', 'serial': 'foobar'},
+                        {}),
+                )
+                mock_load.assert_has_calls(calls_to_mock_load)
+
+                # Still only one
+                self.assertTrue(hue.DOMAIN in self.hass.data)
+                self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
 
 
 class TestHueBridge(unittest.TestCase):

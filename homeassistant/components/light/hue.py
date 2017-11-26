@@ -75,6 +75,9 @@ def unthrottled_update_lights(hass, bridge, add_devices):
     """Internal version of update_lights (intended for unit tests)."""
     import phue
 
+    if not bridge.configured:
+        return
+
     try:
         api = bridge.get_api()
     except phue.PhueRequestTimeout:
