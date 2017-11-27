@@ -10,31 +10,50 @@ from homeassistant.const import (
     SPEED_MPH,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     SPEED,
+    UNIT_AUTOCONVERT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_UNITS = [
+VALID_UNITS_METRIC = [
     SPEED_MS,
     SPEED_KMH,
+    UNIT_AUTOCONVERT,
+]
+
+VALID_UNITS_IMPERIAL = [
     SPEED_FTS,
     SPEED_MPH,
+    UNIT_AUTOCONVERT,
 ]
 
 
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
-    if unit_1 not in VALID_UNITS:
+    if unit_1 not in VALID_UNITS_METRIC + VALID_UNITS_IMPERIAL:
         raise ValueError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, SPEED))
-    if unit_2 not in VALID_UNITS:
+    if unit_2 not in VALID_UNITS_METRIC + VALID_UNITS_IMPERIAL:
         raise ValueError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, SPEED))
 
     if not isinstance(value, Number):
         raise TypeError('{} is not of numeric type'.format(value))
 
-    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
+    # Match imperial to metric units
+    if unit_1 in VALID_UNITS_METRIC and unit_2 is UNIT_AUTOCONVERT:
+        if unit_1 == SPEED_KMH:
+            unit_2 = SPEED_MPH
+        if unit_1 == SPEED_MS:
+            unit_2 = SPEED_FTS
+    elif unit_1 in VALID_UNITS_IMPERIAL and unit_2 is UNIT_AUTOCONVERT:
+        if unit_1 == SPEED_MPH:
+            unit_2 = SPEED_KMH
+        if unit_1 == SPEED_FTS:
+            unit_2 = SPEED_MS
+
+    if unit_1 == unit_2 or unit_1 not in (VALID_UNITS_METRIC +
+                                          VALID_UNITS_IMPERIAL):
         return value
 
     meters = value

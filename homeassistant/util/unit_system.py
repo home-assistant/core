@@ -11,8 +11,8 @@ from homeassistant.const import (
     MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS,
     SPEED_MS, SPEED_KMH, SPEED_FTS, SPEED_MPH,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH, MASS, VOLUME, SPEED,
-    TEMPERATURE, UNIT_NOT_RECOGNIZED_TEMPLATE)
+    LENGTH, MASS, VOLUME, SPEED, TEMPERATURE, UNIT_AUTOCONVERT,
+    UNIT_NOT_RECOGNIZED_TEMPLATE)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
 from homeassistant.util import speed as speed_util

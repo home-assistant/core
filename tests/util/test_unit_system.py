@@ -17,7 +17,8 @@ from homeassistant.const import (
     MASS,
     TEMPERATURE,
     VOLUME,
-    SPEED
+    SPEED,
+    UNIT_AUTOCONVERT
 )
 
 SYSTEM_NAME = 'TEST'
@@ -123,7 +124,7 @@ class TestUnitSystem(unittest.TestCase):
             IMPERIAL_SYSTEM.length(100, IMPERIAL_SYSTEM.length_unit)
         )
         self.assertEqual(
-            3.106855,
+            3.1068559611866697,
             IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit)
         )
 
