@@ -628,6 +628,7 @@ omit =
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
+    homeassistant/components/tts/baidu.py
     homeassistant/components/tts/microsoft.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/vacuum/roomba.py
