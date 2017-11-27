@@ -4,7 +4,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import threading
 
-from qqbot import _bot as bot
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'qq'
@@ -69,7 +68,8 @@ class QQ(threading.Thread):
         self.qq = qq
 
     def run(self):
-        """run threading"""
+        """run threading"""        
+        from qqbot import _bot as bot
         bot.Login(['-u', str(self.qq)])
         bot.Run()
 
