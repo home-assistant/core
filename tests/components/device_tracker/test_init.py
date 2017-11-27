@@ -481,6 +481,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert test_events[0].data == {
             'entity_id': 'device_tracker.hello',
             'host_name': 'hello',
+            'mac': 'MAC_1',
+            'vendor': 'unknown',
         }
 
     # pylint: disable=invalid-name

@@ -53,6 +53,8 @@ omit =
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
+    homeassistant/components/dominos.py
+
 	homeassistant/components/doorbird.py
 	homeassistant/components/*/doorbird.py
 
@@ -79,6 +81,9 @@ omit =
 
     homeassistant/components/hdmi_cec.py
     homeassistant/components/*/hdmi_cec.py
+
+    homeassistant/components/hive.py
+    homeassistant/components/*/hive.py
 
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
@@ -181,6 +186,9 @@ omit =
 
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
+
+    homeassistant/components/tahoma.py
+    homeassistant/components/*/tahoma.py
 
     homeassistant/components/tellduslive.py
     homeassistant/components/*/tellduslive.py
@@ -309,6 +317,7 @@ omit =
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/gpslogger.py
+    homeassistant/components/device_tracker/hitron_coda.py
     homeassistant/components/device_tracker/huawei_router.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/keenetic_ndms2.py
@@ -325,6 +334,7 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tado.py
+    homeassistant/components/device_tracker/tile.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
@@ -424,7 +434,6 @@ omit =
     homeassistant/components/notify/clicksend.py
     homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/discord.py
-    homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/group.py
@@ -581,12 +590,12 @@ omit =
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/vasttrafik.py
+    homeassistant/components/sensor/viaggiatreno.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/whois.py
     homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
-    homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
     homeassistant/components/shiftr.py
     homeassistant/components/spc.py
@@ -619,6 +628,7 @@ omit =
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
+    homeassistant/components/tts/baidu.py
     homeassistant/components/tts/microsoft.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/vacuum/roomba.py
@@ -631,7 +641,6 @@ omit =
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
     homeassistant/components/vacuum/mqtt.py
-
 
 [report]
 # Regexes for lines to exclude from consideration

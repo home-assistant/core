@@ -21,10 +21,16 @@ from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA
 
 from .const import (
-    CONF_ACCESS_TOKEN, CONF_EXPOSED_DOMAINS, ATTR_GOOGLE_ASSISTANT,
-    CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSED_DOMAINS, DEFAULT_EXPOSE_BY_DEFAULT,
-    GOOGLE_ASSISTANT_API_ENDPOINT)
-from .smart_home import query_device, entity_to_device, determine_service
+    GOOGLE_ASSISTANT_API_ENDPOINT,
+    CONF_ACCESS_TOKEN,
+    DEFAULT_EXPOSE_BY_DEFAULT,
+    DEFAULT_EXPOSED_DOMAINS,
+    CONF_EXPOSE_BY_DEFAULT,
+    CONF_EXPOSED_DOMAINS,
+    ATTR_GOOGLE_ASSISTANT,
+    CONF_AGENT_USER_ID
+    )
+from .smart_home import entity_to_device, query_device, determine_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +51,7 @@ class GoogleAssistantView(HomeAssistantView):
                                          DEFAULT_EXPOSE_BY_DEFAULT)
         self.exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS,
                                        DEFAULT_EXPOSED_DOMAINS)
+        self.agent_user_id = cfg.get(CONF_AGENT_USER_ID)
 
     def is_entity_exposed(self, entity) -> bool:
         """Determine if an entity should be exposed to Google Assistant."""
@@ -74,7 +81,7 @@ class GoogleAssistantView(HomeAssistantView):
             if not self.is_entity_exposed(entity):
                 continue
 
-            device = entity_to_device(entity)
+            device = entity_to_device(entity, hass.config.units)
             if device is None:
                 _LOGGER.warning("No mapping for %s domain", entity.domain)
                 continue
@@ -82,7 +89,9 @@ class GoogleAssistantView(HomeAssistantView):
             devices.append(device)
 
         return self.json(
-            make_actions_response(request_id, {'devices': devices}))
+            _make_actions_response(request_id,
+                                   {'agentUserId': self.agent_user_id,
+                                    'devices': devices}))
 
     @asyncio.coroutine
     def handle_query(self,
@@ -103,10 +112,10 @@ class GoogleAssistantView(HomeAssistantView):
                 # If we can't find a state, the device is offline
                 devices[devid] = {'online': False}
 
-            devices[devid] = query_device(state)
+            devices[devid] = query_device(state, hass.config.units)
 
         return self.json(
-            make_actions_response(request_id, {'devices': devices}))
+            _make_actions_response(request_id, {'devices': devices}))
 
     @asyncio.coroutine
     def handle_execute(self,
@@ -119,9 +128,11 @@ class GoogleAssistantView(HomeAssistantView):
             ent_ids = [ent.get('id') for ent in command.get('devices', [])]
             execution = command.get('execution')[0]
             for eid in ent_ids:
+                success = False
                 domain = eid.split('.')[0]
                 (service, service_data) = determine_service(
-                    eid, execution.get('command'), execution.get('params'))
+                    eid, execution.get('command'), execution.get('params'),
+                    hass.config.units)
                 success = yield from hass.services.async_call(
                     domain, service, service_data, blocking=True)
                 result = {"ids": [eid], "states": {}}
@@ -132,7 +143,7 @@ class GoogleAssistantView(HomeAssistantView):
                 commands.append(result)
 
         return self.json(
-            make_actions_response(request_id, {'commands': commands}))
+            _make_actions_response(request_id, {'commands': commands}))
 
     @asyncio.coroutine
     def post(self, request: Request) -> Response:
@@ -172,6 +183,5 @@ class GoogleAssistantView(HomeAssistantView):
             "invalid intent", status_code=HTTP_BAD_REQUEST)
 
 
-def make_actions_response(request_id: str, payload: dict) -> dict:
-    """Helper to simplify format for response."""
+def _make_actions_response(request_id: str, payload: dict) -> dict:
     return {'requestId': request_id, 'payload': payload}

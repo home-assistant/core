@@ -120,6 +120,7 @@ class TradfriGroup(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
+        # pylint: disable=import-error
         from pytradfri.error import PyTradFriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
@@ -279,6 +280,7 @@ class TradfriLight(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
+        # pylint: disable=import-error
         from pytradfri.error import PyTradFriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,

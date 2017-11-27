@@ -4,9 +4,7 @@ Support for Insteon fans via local hub control.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan.insteon_local/
 """
-import json
 import logging
-import os
 from datetime import timedelta
 
 from homeassistant.components.fan import (
@@ -14,6 +12,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.util as util
+from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local fan platform."""
     insteonhub = hass.data['insteon_local']
 
-    conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))
+    conf_fans = load_json(hass.config.path(INSTEON_LOCAL_FANS_CONF))
     if conf_fans:
         for device_id in conf_fans:
             setup_fan(device_id, conf_fans[device_id], insteonhub, hass,
@@ -88,42 +87,14 @@ def setup_fan(device_id, name, insteonhub, hass, add_devices_callback):
         configurator.request_done(request_id)
         _LOGGER.info("Device configuration done!")
 
-    conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))
+    conf_fans = load_json(hass.config.path(INSTEON_LOCAL_FANS_CONF))
     if device_id not in conf_fans:
         conf_fans[device_id] = name
 
-    if not config_from_file(
-            hass.config.path(INSTEON_LOCAL_FANS_CONF),
-            conf_fans):
-        _LOGGER.error("Failed to save configuration file")
+    save_json(hass.config.path(INSTEON_LOCAL_FANS_CONF), conf_fans)
 
     device = insteonhub.fan(device_id)
     add_devices_callback([InsteonLocalFanDevice(device, name)])
-
-
-def config_from_file(filename, config=None):
-    """Small configuration file management function."""
-    if config:
-        # We're writing configuration
-        try:
-            with open(filename, 'w') as fdesc:
-                fdesc.write(json.dumps(config))
-        except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
-            return False
-        return True
-    else:
-        # We're reading config
-        if os.path.isfile(filename):
-            try:
-                with open(filename, 'r') as fdesc:
-                    return json.loads(fdesc.read())
-            except IOError as error:
-                _LOGGER.error("Reading configuration file failed: %s", error)
-                # This won't work yet
-                return False
-        else:
-            return {}
 
 
 class InsteonLocalFanDevice(FanEntity):

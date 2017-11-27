@@ -13,6 +13,8 @@ from homeassistant.components.alexa import intent
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
 REQUEST_ID = "amzn1.echo-api.request.0000000-0000-0000-0000-00000000000"
+AUTHORITY_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.ZODIAC"
+BUILTIN_AUTH_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.TEST"
 
 # pylint: disable=invalid-name
 calls = []
@@ -90,7 +92,7 @@ def alexa_client(loop, hass, test_client):
                         "type": "plain",
                         "text": "LaunchRequest has been received.",
                     }
-                }
+                },
             }
         }))
     return loop.run_until_complete(test_client(hass.http.app))
@@ -208,6 +210,156 @@ def test_intent_request_with_slots(alexa_client):
 
 
 @asyncio.coroutine
+def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
+    """Test a request with slots and a name synonym."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
+            },
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False
+                }
+            },
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
+            }
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "GetZodiacHoroscopeIntent",
+                "slots": {
+                    "ZodiacSign": {
+                        "name": "ZodiacSign",
+                        "value": "V zodiac",
+                        "resolutions": {
+                            "resolutionsPerAuthority": [
+                                {
+                                    "authority": AUTHORITY_ID,
+                                    "status": {
+                                        "code": "ER_SUCCESS_MATCH"
+                                    },
+                                    "values": [
+                                        {
+                                            "value": {
+                                                "name": "Virgo"
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "authority": BUILTIN_AUTH_ID,
+                                    "status": {
+                                        "code": "ER_SUCCESS_NO_MATCH"
+                                    },
+                                    "values": [
+                                        {
+                                            "value": {
+                                                "name": "Test"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    data = yield from req.json()
+    text = data.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "You told us your sign is Virgo."
+
+
+@asyncio.coroutine
+def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_client):
+    """Test a request with slots and multiple name synonyms."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
+            },
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False
+                }
+            },
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
+            }
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "GetZodiacHoroscopeIntent",
+                "slots": {
+                    "ZodiacSign": {
+                        "name": "ZodiacSign",
+                        "value": "V zodiac",
+                        "resolutions": {
+                            "resolutionsPerAuthority": [
+                                {
+                                    "authority": AUTHORITY_ID,
+                                    "status": {
+                                        "code": "ER_SUCCESS_MATCH"
+                                    },
+                                    "values": [
+                                        {
+                                            "value": {
+                                                "name": "Virgo"
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "authority": BUILTIN_AUTH_ID,
+                                    "status": {
+                                        "code": "ER_SUCCESS_MATCH"
+                                    },
+                                    "values": [
+                                        {
+                                            "value": {
+                                                "name": "Test"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    data = yield from req.json()
+    text = data.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "You told us your sign is V zodiac."
+
+
+@asyncio.coroutine
 def test_intent_request_with_slots_but_no_value(alexa_client):
     """Test a request with slots but no value."""
     data = {
@@ -237,7 +389,7 @@ def test_intent_request_with_slots_but_no_value(alexa_client):
                 "name": "GetZodiacHoroscopeIntent",
                 "slots": {
                     "ZodiacSign": {
-                        "name": "ZodiacSign",
+                        "name": "ZodiacSign"
                     }
                 }
             }

@@ -12,7 +12,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+<<<<<<< HEAD
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
+=======
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP)
+>>>>>>> home-assistant/dev
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyserial-asyncio==0.4']
@@ -80,12 +85,22 @@ class SerialSensor(Entity):
         while True:
             line = yield from reader.readline()
             line = line.decode('utf-8').strip()
+<<<<<<< HEAD
             
             """ Parse the return text as JSON and save the json as an attribute. """
             try:
                 self._attributes = json.loads(line)
             except json.JSONDecodeError:
                 self._attributes = []
+=======
+
+            try:
+                data = json.loads(line)
+                if isinstance(data, dict):
+                    self._attributes = data
+            except ValueError:
+                pass
+>>>>>>> home-assistant/dev
 
             if self._template is not None:
                 line = self._template.async_render_with_possible_json_value(
@@ -111,12 +126,17 @@ class SerialSensor(Entity):
         return False
 
     @property
+<<<<<<< HEAD
     def state_attributes(self):
         """Return the attributes of the entity.
 
            Provide the parsed JSON data (if any).
         """
 
+=======
+    def device_state_attributes(self):
+        """Return the attributes of the entity (if any JSON present)."""
+>>>>>>> home-assistant/dev
         return self._attributes
 
     @property

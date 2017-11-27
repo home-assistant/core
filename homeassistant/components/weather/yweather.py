@@ -15,7 +15,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
 
-REQUIREMENTS = ["yahooweather==0.8"]
+REQUIREMENTS = ["yahooweather==0.9"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._data.yahoo.Now['temp']
+        return int(self._data.yahoo.Now['temp'])
 
     @property
     def temperature_unit(self):

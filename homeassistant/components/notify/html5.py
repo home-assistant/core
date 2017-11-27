@@ -8,7 +8,6 @@ import asyncio
 import datetime
 import json
 import logging
-import os
 import time
 import uuid
 
@@ -16,6 +15,8 @@ from aiohttp.hdrs import AUTHORIZATION
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.util.json import load_json, save_json
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.notify import (
@@ -125,21 +126,11 @@ def get_service(hass, config, discovery_info=None):
 
 def _load_config(filename):
     """Load configuration."""
-    if not os.path.isfile(filename):
-        return {}
-
     try:
-        with open(filename, 'r') as fdesc:
-            inp = fdesc.read()
-
-        # In case empty file
-        if not inp:
-            return {}
-
-        return json.loads(inp)
-    except (IOError, ValueError) as error:
-        _LOGGER.error("Reading config file %s failed: %s", filename, error)
-        return None
+        return load_json(filename)
+    except HomeAssistantError:
+        pass
+    return {}
 
 
 class JSONBytesDecoder(json.JSONEncoder):
@@ -151,18 +142,6 @@ class JSONBytesDecoder(json.JSONEncoder):
         if isinstance(obj, bytes):
             return obj.decode()
         return json.JSONEncoder.default(self, obj)
-
-
-def _save_config(filename, config):
-    """Save configuration."""
-    try:
-        with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(
-                config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
-    except (IOError, TypeError) as error:
-        _LOGGER.error("Saving configuration file failed: %s", error)
-        return False
-    return True
 
 
 class HTML5PushRegistrationView(HomeAssistantView):
@@ -194,7 +173,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         self.registrations[name] = data
 
-        if not _save_config(self.json_path, self.registrations):
+        if not save_json(self.json_path, self.registrations):
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
@@ -223,7 +202,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         reg = self.registrations.pop(found)
 
-        if not _save_config(self.json_path, self.registrations):
+        if not save_json(self.json_path, self.registrations):
             self.registrations[found] = reg
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
@@ -411,8 +390,8 @@ class HTML5NotificationService(BaseNotificationService):
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
-                if not _save_config(self.registrations_json_path,
-                                    self.registrations):
+                if not save_json(self.registrations_json_path,
+                                 self.registrations):
                     self.registrations[target] = reg
                     _LOGGER.error("Error saving registration")
                 else:

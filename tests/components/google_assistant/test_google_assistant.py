@@ -11,6 +11,7 @@ from homeassistant import core, const, setup
 from homeassistant.components import (
     fan, http, cover, light, switch, climate, async_setup, media_player)
 from homeassistant.components import google_assistant as ga
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import DEMO_DEVICES
 
@@ -180,6 +181,8 @@ def test_query_request(hass_fixture, assistant_client):
                     'id': "light.ceiling_lights",
                 }, {
                     'id': "light.bed_light",
+                }, {
+                    'id': "light.kitchen_lights",
                 }]
             }
         }]
@@ -192,10 +195,107 @@ def test_query_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     devices = body['payload']['devices']
-    assert len(devices) == 2
+    assert len(devices) == 3
     assert devices['light.bed_light']['on'] is False
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
+    assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
+    assert devices['light.kitchen_lights']['color']['temperature'] == 4166
+
+
+@asyncio.coroutine
+def test_query_climate_request(hass_fixture, assistant_client):
+    """Test a query request."""
+    reqid = '5711642932632160984'
+    data = {
+        'requestId':
+        reqid,
+        'inputs': [{
+            'intent': 'action.devices.QUERY',
+            'payload': {
+                'devices': [
+                    {'id': 'climate.hvac'},
+                    {'id': 'climate.heatpump'},
+                    {'id': 'climate.ecobee'},
+                ]
+            }
+        }]
+    }
+    result = yield from assistant_client.post(
+        ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
+        data=json.dumps(data),
+        headers=AUTH_HEADER)
+    assert result.status == 200
+    body = yield from result.json()
+    assert body.get('requestId') == reqid
+    devices = body['payload']['devices']
+    assert devices == {
+        'climate.heatpump': {
+            'thermostatTemperatureSetpoint': 20.0,
+            'thermostatTemperatureAmbient': 25.0,
+            'thermostatMode': 'heat',
+        },
+        'climate.ecobee': {
+            'thermostatTemperatureSetpointHigh': 24,
+            'thermostatTemperatureAmbient': 23,
+            'thermostatMode': 'on',
+            'thermostatTemperatureSetpointLow': 21
+        },
+        'climate.hvac': {
+            'thermostatTemperatureSetpoint': 21,
+            'thermostatTemperatureAmbient': 22,
+            'thermostatMode': 'cool',
+            'thermostatHumidityAmbient': 54,
+        }
+    }
+
+
+@asyncio.coroutine
+def test_query_climate_request_f(hass_fixture, assistant_client):
+    """Test a query request."""
+    hass_fixture.config.units = IMPERIAL_SYSTEM
+    reqid = '5711642932632160984'
+    data = {
+        'requestId':
+        reqid,
+        'inputs': [{
+            'intent': 'action.devices.QUERY',
+            'payload': {
+                'devices': [
+                    {'id': 'climate.hvac'},
+                    {'id': 'climate.heatpump'},
+                    {'id': 'climate.ecobee'},
+                ]
+            }
+        }]
+    }
+    result = yield from assistant_client.post(
+        ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
+        data=json.dumps(data),
+        headers=AUTH_HEADER)
+    assert result.status == 200
+    body = yield from result.json()
+    assert body.get('requestId') == reqid
+    devices = body['payload']['devices']
+    assert devices == {
+        'climate.heatpump': {
+            'thermostatTemperatureSetpoint': -6.7,
+            'thermostatTemperatureAmbient': -3.9,
+            'thermostatMode': 'heat',
+        },
+        'climate.ecobee': {
+            'thermostatTemperatureSetpointHigh': -4.4,
+            'thermostatTemperatureAmbient': -5,
+            'thermostatMode': 'on',
+            'thermostatTemperatureSetpointLow': -6.1,
+        },
+        'climate.hvac': {
+            'thermostatTemperatureSetpoint': -6.1,
+            'thermostatTemperatureAmbient': -5.6,
+            'thermostatMode': 'cool',
+            'thermostatHumidityAmbient': 54,
+        }
+    }
 
 
 @asyncio.coroutine
@@ -225,6 +325,31 @@ def test_execute_request(hass_fixture, assistant_client):
                             "on": False
                         }
                     }]
+                }, {
+                    "devices": [{
+                        "id": "light.kitchen_lights",
+                    }],
+                    "execution": [{
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "spectrumRGB": 16711680,
+                                "temperature": 2100
+                            }
+                        }
+                    }]
+                }, {
+                    "devices": [{
+                        "id": "light.kitchen_lights",
+                    }],
+                    "execution": [{
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "spectrumRGB": 16711680
+                            }
+                        }
+                    }]
                 }]
             }
         }]
@@ -237,7 +362,10 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 3
+    assert len(commands) == 5
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
+    kitchen = hass_fixture.states.get('light.kitchen_lights')
+    assert kitchen.attributes.get(light.ATTR_COLOR_TEMP) == 476
+    assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
     assert hass_fixture.states.get('switch.decorative_lights').state == 'off'
