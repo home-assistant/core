@@ -143,6 +143,12 @@ class TestHelpersTemplate(unittest.TestCase):
                     '{{ %s | log(%s) | round(1) }}' % (value, base),
                     self.hass).render())
 
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ log(%s, %s) | round(1) }}' % (value, base),
+                    self.hass).render())
+
     def test_strptime(self):
         """Test the parse timestamp method."""
         tests = [
