@@ -1162,6 +1162,3 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.19.1
-
-# homeassistant.components.sensor.qq
-qqbot==2.3.7
