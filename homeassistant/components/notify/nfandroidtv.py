@@ -116,12 +116,20 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         self._default_color = color
         self._default_interrupt = interrupt
         self._timeout = timeout
+        self._icon_file = None
         if icon:
             self._icon_file = icon
         else:
-            self._icon_file = os.path.join(
-                os.path.dirname(__file__), '..', '..', '..', 'hass_frontend',
-                'icons', 'favicon-192x192.png')
+            try:
+                import hass_frontend
+                default_icon = os.path.join(
+                    hass_frontend.__path__[0], 'icons', 'favicon-192x192.png')
+                if os.path.exists(default_icon):
+                    self._icon_file = default_icon
+            except ImportError:
+                _LOGGER.warning(
+                    "hass_frontend icon not found. " + \
+                    "Provide an icon when calling the service.")
 
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
@@ -177,6 +185,9 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     _LOGGER.warning("Invalid interrupt-value: %s",
                                     str(interrupt))
 
+        if self._icon_file is None and icon_file is None:
+            _LOGGER.error("No icon available. Not sending notification.")
+            return
         if icon_file is None:
             icon_file = self._icon_file
         payload[ATTR_FILENAME] = ('icon.png',
