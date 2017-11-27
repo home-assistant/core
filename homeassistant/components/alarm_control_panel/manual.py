@@ -25,9 +25,15 @@ DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
 DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
-SUPPORTED_PENDING_STATES = [STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-                            STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED,
-                            STATE_ALARM_ARMED_CUSTOM_BYPASS]
+SUPPORTED_STATES = [STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY,
+                    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+                    STATE_ALARM_ARMED_CUSTOM_BYPASS, STATE_ALARM_TRIGGERED]
+
+SUPPORTED_PRETRIGGER_STATES = [state for state in SUPPORTED_STATES
+                               if state != STATE_ALARM_TRIGGERED]
+
+SUPPORTED_PENDING_STATES = [state for state in SUPPORTED_STATES
+                            if state != STATE_ALARM_DISARMED]
 
 ATTR_PRE_PENDING_STATE = 'pre_pending_state'
 ATTR_POST_PENDING_STATE = 'post_pending_state'
@@ -35,6 +41,9 @@ ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 def _state_validator(config):
     config = copy.deepcopy(config)
+    for state in SUPPORTED_PRETRIGGER_STATES:
+        if CONF_TRIGGER_TIME not in config[state]:
+            config[state][CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
     for state in SUPPORTED_PENDING_STATES:
         if CONF_PENDING_TIME not in config[state]:
             config[state][CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
@@ -42,10 +51,15 @@ def _state_validator(config):
     return config
 
 
-STATE_SETTING_SCHEMA = vol.Schema({
-    vol.Optional(CONF_PENDING_TIME):
-        vol.All(cv.time_period, cv.positive_timedelta),
-})
+def _state_schema(state):
+    schema = {}
+    if state in SUPPORTED_PRETRIGGER_STATES:
+        schema[vol.Optional(CONF_TRIGGER_TIME)] = vol.All(
+            cv.time_period, cv.positive_timedelta)
+    if state in SUPPORTED_PENDING_STATES:
+        schema[vol.Optional(CONF_PENDING_TIME)] = vol.All(
+            cv.time_period, cv.positive_timedelta)
+    return vol.Schema(schema)
 
 
 PLATFORM_SCHEMA = vol.Schema(vol.All({
@@ -58,12 +72,18 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
         vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER,
                  default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
-    vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_ARMED_HOME, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_ARMED_CUSTOM_BYPASS,
-                 default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_TRIGGERED, default={}): STATE_SETTING_SCHEMA,
+    vol.Optional(STATE_ALARM_ARMED_AWAY, default={}):
+        _state_schema(STATE_ALARM_ARMED_AWAY),
+    vol.Optional(STATE_ALARM_ARMED_HOME, default={}):
+        _state_schema(STATE_ALARM_ARMED_HOME),
+    vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}):
+        _state_schema(STATE_ALARM_ARMED_NIGHT),
+    vol.Optional(STATE_ALARM_ARMED_CUSTOM_BYPASS, default={}):
+        _state_schema(STATE_ALARM_ARMED_CUSTOM_BYPASS),
+    vol.Optional(STATE_ALARM_DISARMED, default={}):
+        _state_schema(STATE_ALARM_DISARMED),
+    vol.Optional(STATE_ALARM_TRIGGERED, default={}):
+        _state_schema(STATE_ALARM_TRIGGERED),
 }, _state_validator))
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +95,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
-        config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
         config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
         config
         )])
@@ -92,18 +111,20 @@ class ManualAlarm(alarm.AlarmControlPanel):
     A trigger_time of zero disables the alarm_trigger service.
     """
 
-    def __init__(self, hass, name, code, trigger_time,
+    def __init__(self, hass, name, code,
                  disarm_after_trigger, config):
         """Init the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
-        self._trigger_time = trigger_time
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
 
+        self._trigger_time_by_state = {
+            state: config[state][CONF_TRIGGER_TIME]
+            for state in SUPPORTED_PRETRIGGER_STATES}
         self._pending_time_by_state = {
             state: config[state][CONF_PENDING_TIME]
             for state in SUPPORTED_PENDING_STATES}
@@ -124,8 +145,9 @@ class ManualAlarm(alarm.AlarmControlPanel):
         if self._state == STATE_ALARM_TRIGGERED:
             if self._within_pending_time(self._state):
                 return STATE_ALARM_PENDING
-            elif (self._state_ts + self._pending_time_by_state[self._state] +
-                  self._trigger_time) < dt_util.utcnow():
+            trigger_time = self._trigger_time_by_state[self._previous_state]
+            if (self._state_ts + self._pending_time_by_state[self._state] +
+                    trigger_time) < dt_util.utcnow():
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
                 else:
@@ -137,6 +159,13 @@ class ManualAlarm(alarm.AlarmControlPanel):
             return STATE_ALARM_PENDING
 
         return self._state
+
+    @property
+    def _active_state(self):
+        if self.state == STATE_ALARM_PENDING:
+            return self._previous_state
+        else:
+            return self._state
 
     def _within_pending_time(self, state):
         pending_time = self._pending_time_by_state[state]
@@ -188,11 +217,11 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """
         Send alarm trigger command.
 
-        No code needed, a trigger time of zero disables the alarm.
+        No code needed, a trigger time of zero for the current state
+        disables the alarm.
         """
-        if not self._trigger_time:
+        if not self._trigger_time_by_state[self._active_state]:
             return
-
         self._update_state(STATE_ALARM_TRIGGERED)
 
     def _update_state(self, state):
@@ -206,14 +235,15 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         pending_time = self._pending_time_by_state[state]
 
-        if state == STATE_ALARM_TRIGGERED and self._trigger_time:
+        if state == STATE_ALARM_TRIGGERED:
             track_point_in_time(
                 self._hass, self.async_update_ha_state,
                 self._state_ts + pending_time)
 
+            trigger_time = self._trigger_time_by_state[self._previous_state]
             track_point_in_time(
                 self._hass, self.async_update_ha_state,
-                self._state_ts + self._trigger_time + pending_time)
+                self._state_ts + pending_time + trigger_time)
         elif state in SUPPORTED_PENDING_STATES and pending_time:
             track_point_in_time(
                 self._hass, self.async_update_ha_state,

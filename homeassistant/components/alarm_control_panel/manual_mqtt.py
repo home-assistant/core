@@ -40,8 +40,15 @@ DEFAULT_ARM_HOME = 'ARM_HOME'
 DEFAULT_ARM_NIGHT = 'ARM_NIGHT'
 DEFAULT_DISARM = 'DISARM'
 
-SUPPORTED_PENDING_STATES = [STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-                            STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED]
+SUPPORTED_STATES = [STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY,
+                    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+                    STATE_ALARM_TRIGGERED]
+
+SUPPORTED_PRETRIGGER_STATES = [state for state in SUPPORTED_STATES
+                               if state != STATE_ALARM_TRIGGERED]
+
+SUPPORTED_PENDING_STATES = [state for state in SUPPORTED_STATES
+                            if state != STATE_ALARM_DISARMED]
 
 ATTR_PRE_PENDING_STATE = 'pre_pending_state'
 ATTR_POST_PENDING_STATE = 'post_pending_state'
@@ -49,6 +56,9 @@ ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 def _state_validator(config):
     config = copy.deepcopy(config)
+    for state in SUPPORTED_PRETRIGGER_STATES:
+        if CONF_TRIGGER_TIME not in config[state]:
+            config[state][CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
     for state in SUPPORTED_PENDING_STATES:
         if CONF_PENDING_TIME not in config[state]:
             config[state][CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
@@ -56,10 +66,16 @@ def _state_validator(config):
     return config
 
 
-STATE_SETTING_SCHEMA = vol.Schema({
-    vol.Optional(CONF_PENDING_TIME):
-        vol.All(cv.time_period, cv.positive_timedelta),
-})
+def _state_schema(state):
+    schema = {}
+    if state in SUPPORTED_PRETRIGGER_STATES:
+        schema[vol.Optional(CONF_TRIGGER_TIME)] = vol.All(
+            cv.time_period, cv.positive_timedelta)
+    if state in SUPPORTED_PENDING_STATES:
+        schema[vol.Optional(CONF_PENDING_TIME)] = vol.All(
+            cv.time_period, cv.positive_timedelta)
+    return vol.Schema(schema)
+
 
 DEPENDENCIES = ['mqtt']
 
@@ -73,10 +89,16 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
         vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER,
                  default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
-    vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_ARMED_HOME, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_TRIGGERED, default={}): STATE_SETTING_SCHEMA,
+    vol.Optional(STATE_ALARM_ARMED_AWAY, default={}):
+        _state_schema(STATE_ALARM_ARMED_AWAY),
+    vol.Optional(STATE_ALARM_ARMED_HOME, default={}):
+        _state_schema(STATE_ALARM_ARMED_HOME),
+    vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}):
+        _state_schema(STATE_ALARM_ARMED_NIGHT),
+    vol.Optional(STATE_ALARM_DISARMED, default={}):
+        _state_schema(STATE_ALARM_DISARMED),
+    vol.Optional(STATE_ALARM_TRIGGERED, default={}):
+        _state_schema(STATE_ALARM_TRIGGERED),
     vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
@@ -94,7 +116,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
-        config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
         config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
         config.get(mqtt.CONF_STATE_TOPIC),
         config.get(mqtt.CONF_COMMAND_TOPIC),
@@ -118,7 +139,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
     """
 
     def __init__(self, hass, name, code,
-                 trigger_time, disarm_after_trigger,
+                 disarm_after_trigger,
                  state_topic, command_topic, qos,
                  payload_disarm, payload_arm_home, payload_arm_away,
                  payload_arm_night, config):
@@ -127,11 +148,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
-        self._trigger_time = trigger_time
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
 
+        self._trigger_time_by_state = {
+            state: config[state][CONF_TRIGGER_TIME]
+            for state in SUPPORTED_PRETRIGGER_STATES}
         self._pending_time_by_state = {
             state: config[state][CONF_PENDING_TIME]
             for state in SUPPORTED_PENDING_STATES}
@@ -160,8 +183,9 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         if self._state == STATE_ALARM_TRIGGERED:
             if self._within_pending_time(self._state):
                 return STATE_ALARM_PENDING
-            elif (self._state_ts + self._pending_time_by_state[self._state] +
-                  self._trigger_time) < dt_util.utcnow():
+            trigger_time = self._trigger_time_by_state[self._previous_state]
+            if (self._state_ts + self._pending_time_by_state[self._state] +
+                    trigger_time) < dt_util.utcnow():
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
                 else:
@@ -173,6 +197,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
             return STATE_ALARM_PENDING
 
         return self._state
+
+    @property
+    def _active_state(self):
+        if self.state == STATE_ALARM_PENDING:
+            return self._previous_state
+        else:
+            return self._state
 
     def _within_pending_time(self, state):
         pending_time = self._pending_time_by_state[state]
@@ -217,11 +248,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         """
         Send alarm trigger command.
 
-        No code needed, a trigger time of zero disables the alarm.
+        No code needed, a trigger time of zero for the current state
+        disables the alarm.
         """
-        if not self._trigger_time:
+        if not self._trigger_time_by_state[self._active_state]:
             return
-
         self._update_state(STATE_ALARM_TRIGGERED)
 
     def _update_state(self, state):
@@ -235,14 +266,15 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
 
         pending_time = self._pending_time_by_state[state]
 
-        if state == STATE_ALARM_TRIGGERED and self._trigger_time:
+        if state == STATE_ALARM_TRIGGERED:
             track_point_in_time(
                 self._hass, self.async_update_ha_state,
                 self._state_ts + pending_time)
 
+            trigger_time = self._trigger_time_by_state[self._previous_state]
             track_point_in_time(
                 self._hass, self.async_update_ha_state,
-                self._state_ts + self._trigger_time + pending_time)
+                self._state_ts + pending_time + trigger_time)
         elif state in SUPPORTED_PENDING_STATES and pending_time:
             track_point_in_time(
                 self._hass, self.async_update_ha_state,

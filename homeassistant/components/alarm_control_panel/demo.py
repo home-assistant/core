@@ -7,26 +7,34 @@ https://home-assistant.io/components/demo/
 import datetime
 import homeassistant.components.alarm_control_panel.manual as manual
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS, STATE_ALARM_TRIGGERED, CONF_PENDING_TIME)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
+    CONF_PENDING_TIME, CONF_TRIGGER_TIME)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo alarm control panel platform."""
     add_devices([
-        manual.ManualAlarm(hass, 'Alarm', '1234',
-            datetime.timedelta(seconds=10), False, {
+        manual.ManualAlarm(hass, 'Alarm', '1234', False, {
             STATE_ALARM_ARMED_AWAY: {
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),
+                CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
             },
             STATE_ALARM_ARMED_HOME: {
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),
+                CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
             },
             STATE_ALARM_ARMED_NIGHT: {
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),
+                CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+            },
+            STATE_ALARM_DISARMED: {
+                CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
             },
             STATE_ALARM_ARMED_CUSTOM_BYPASS: {
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),
+                CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
             },
             STATE_ALARM_TRIGGERED: {
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),
