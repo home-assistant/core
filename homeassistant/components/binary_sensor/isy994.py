@@ -94,7 +94,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
         """Subscribe to the node and subnode event emitters."""
-        super().async_added_to_hass()
+        yield from super().async_added_to_hass()
 
         self._node.controlEvents.subscribe(self._positive_node_control_handler)
 
@@ -194,11 +194,8 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
             # Do this first so we don't invert None on moisture sensors
             return None
 
-        try:
-            if self.device_class == 'moisture':
-                return not self._computed_state
-        except AttributeError:
-            pass
+        if self.device_class == 'moisture':
+            return not self._computed_state
 
         return self._computed_state
 
@@ -214,7 +211,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
     def state(self):
         """Return the state of the binary sensor."""
         if self._computed_state is None:
-            return STATE_UNKNOWN
+            return None
         return STATE_ON if self.is_on else STATE_OFF
 
     @property
