@@ -119,7 +119,7 @@ def __millimeters_to_meters(millimeters: float) -> float:
 
 def __meters_to_miles(meters: float) -> float:
     """Convert meters to miles."""
-    return meters * 0.000621371
+    return meters / 1609.344
 
 
 def __meters_to_feet(meters: float) -> float:

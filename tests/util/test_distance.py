@@ -66,7 +66,7 @@ class TestDistanceUtil(unittest.TestCase):
             1524)
         self.assertEqual(
             distance_util.convert(feet, LENGTH_FEET, LENGTH_MILES),
-            0.9469694040000001)
+            0.9469696969696969)
 
     def test_convert_from_kilometers(self):
         """Test conversion from kilometers to other units."""
@@ -79,7 +79,7 @@ class TestDistanceUtil(unittest.TestCase):
             5000)
         self.assertEqual(
             distance_util.convert(kilometer, LENGTH_KILOMETERS, LENGTH_MILES),
-            3.106855)
+            3.1068559611866697)
         self.assertEqual(
             distance_util.convert(kilometer, LENGTH_KILOMETERS, LENGTH_INCHES),
             196850.39370078742)
@@ -98,7 +98,7 @@ class TestDistanceUtil(unittest.TestCase):
             5)
         self.assertEqual(
             distance_util.convert(meter, LENGTH_METERS, LENGTH_MILES),
-            3.106855)
+            3.1068559611866697)
         self.assertEqual(
             distance_util.convert(meter, LENGTH_METERS, LENGTH_INCHES),
             196850.39370078742)
