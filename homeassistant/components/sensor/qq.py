@@ -1,9 +1,11 @@
-from qqbot import _bot as bot
-from homeassistant.helpers.entity import Entity
+"""You can use this sensor to link your qq"""
+import os
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import threading
-import os
+
+from qqbot import _bot as bot
+from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'qq'
 CONFIG_SCHEMA = vol.Schema(
@@ -15,13 +17,13 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA)
 
-REQUIREMENTS = ['qqbot==2.3.7' ]
+REQUIREMENTS = ['qqbot==2.3.7']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Qqsensors."""
-    o = Qqsensor()
-    add_devices([o])
+    object_qq = Qqsensor()
+    add_devices([object_qq])
     thread1 = QQ(config['qq'])
     thread1.start()
 
@@ -53,20 +55,24 @@ class Qqsensor(Entity):
         """get message from file"""
         path = os.path.expanduser('~') + '/.homeassistant'
         path += '/msg.txt'
-        with open(path, 'r') as fs:
-            ms = fs.read()
-        self._state = ms
+        with open(path, 'r') as file_contain:
+            message = file_contain.read()
+        self._state = message
 
 
 class QQ(threading.Thread):
+    """Representation of qq threading."""
     def __init__(self, qq):
+        """Initialize threading"""
         threading.Thread.__init__(self)
         self.thread_stop = False
         self.qq = qq
 
     def run(self):
+        """run threading"""
         bot.Login(['-u', str(self.qq)])
         bot.Run()
 
     def stop(self):
+        """stop threading although it could not use."""
         self.thread_stop = True 
