@@ -427,10 +427,7 @@ def multiply(value, amount):
 def logarithm(value, base=math.e):
     """Filter to get logarithm of the value with a spesific base."""
     try:
-        if base == 10:
-            return math.log10(float(value))
-        else:
-            return math.log(float(value), float(base))
+        return math.log(float(value), float(base))
     except (ValueError, TypeError):
         return value
 

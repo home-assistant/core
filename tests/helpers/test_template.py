@@ -133,14 +133,15 @@ class TestHelpersTemplate(unittest.TestCase):
             (1000, 10, '3.0'),
             (math.e, '', '1.0'),
             ('"invalid"', '_', 'invalid'),
-            (10, '"invalid"', '10'),
+            (10, '"invalid"', '10.0'),
         ]
 
         for value, base, expected in tests:
             self.assertEqual(
                 expected,
-                template.Template('{{ %s | log(%s) }}' % (value, base),
-                                  self.hass).render())
+                template.Template(
+                    '{{ %s | log(%s) | round(1) }}' % (value, base),
+                    self.hass).render())
 
     def test_strptime(self):
         """Test the parse timestamp method."""
