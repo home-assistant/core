@@ -10,7 +10,9 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
+    LENGTH_MILES, LENGTH_YARD, LENGTH_FEET, LENGTH_INCHES, LENGTH_KILOMETERS,
+    LENGTH_METERS, LENGTH_CENTIMETERS, SPEED_MPH, SPEED_KMH, SPEED_MS,
+    SPEED_FTS, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
@@ -258,6 +260,21 @@ class Entity(object):
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
+            elif (unit_of_measure in (LENGTH_MILES, LENGTH_YARD, LENGTH_FEET,
+                                      LENGTH_INCHES, LENGTH_KILOMETERS,
+                                      LENGTH_METERS, LENGTH_CENTIMETERS) and
+                  unit_of_measure != units.length_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                length = units.length(float(state), unit_of_measure)
+                state = str(round(length) if prec == 0 else round(length, prec))
+                attr[ATTR_UNIT_OF_MEASUREMENT] = units.length_unit
+            elif (unit_of_measure in (SPEED_MPH, SPEED_KMH,
+                                      SPEED_MS, SPEED_FTS) and
+                  unit_of_measure != units.speed_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                speed = units.speed(float(state), unit_of_measure)
+                state = str(round(speed) if prec == 0 else round(speed, prec))
+                attr[ATTR_UNIT_OF_MEASUREMENT] = units.speed_unit
         except ValueError:
             # Could not convert state to float
             pass
