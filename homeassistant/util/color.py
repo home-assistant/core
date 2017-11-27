@@ -355,9 +355,9 @@ def color_rgbw_to_rgb(r, g, b, w):
     return _match_max_scale((r, g, b, w), rgb)
 
 
-def color_rgb_to_hex(r: int, g: int, b: int):
+def color_rgb_to_hex(r, g, b):
     """Return a RGB color from a hex color string."""
-    return '{0:02x}{1:02x}{2:02x}'.format(int(r), int(g), int(b))
+    return '{0:02x}{1:02x}{2:02x}'.format(round(r), round(g), round(b))
 
 
 def rgb_hex_to_rgb_list(hex_string):
@@ -392,8 +392,8 @@ def color_temperature_to_rgb(color_temperature_kelvin):
     return (red, green, blue)
 
 
-def _bound(color_component: int, minimum: int=0,
-           maximum: int=255) -> int:
+def _bound(color_component: float, minimum: float=0,
+           maximum: float=255) -> float:
     """
     Bound the given color component value between the given min and max values.
 
@@ -402,10 +402,10 @@ def _bound(color_component: int, minimum: int=0,
     will be 10.
     """
     color_component_out = max(color_component, minimum)
-    return int(min(color_component_out, maximum))
+    return min(color_component_out, maximum)
 
 
-def _get_red(temperature: float) -> int:
+def _get_red(temperature: float) -> float:
     """Get the red component of the temperature in RGB space."""
     if temperature <= 66:
         return 255
@@ -413,7 +413,7 @@ def _get_red(temperature: float) -> int:
     return _bound(tmp_red)
 
 
-def _get_green(temperature: float) -> int:
+def _get_green(temperature: float) -> float:
     """Get the green component of the given color temp in RGB space."""
     if temperature <= 66:
         green = 99.4708025861 * math.log(temperature) - 161.1195681661
@@ -422,7 +422,7 @@ def _get_green(temperature: float) -> int:
     return _bound(green)
 
 
-def _get_blue(temperature: float) -> int:
+def _get_blue(temperature: float) -> float:
     """Get the blue component of the given color temperature in RGB space."""
     if temperature >= 66:
         return 255
