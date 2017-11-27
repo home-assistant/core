@@ -296,6 +296,7 @@ TEMP_CELSIUS = '°C'
 TEMP_FAHRENHEIT = '°F'
 
 # Length units
+LENGTH_MILLIMETERS = 'mm'  # type: str
 LENGTH_CENTIMETERS = 'cm'  # type: str
 LENGTH_METERS = 'm'  # type: str
 LENGTH_KILOMETERS = 'km'  # type: str
@@ -318,6 +319,13 @@ MASS_KILOGRAMS = 'kg'  # type: str
 
 MASS_OUNCES = 'oz'  # type: str
 MASS_POUNDS = 'lb'  # type: str
+
+# Speed units
+SPEED_MS = 'm/s'  # type: str
+SPEED_KMH = 'km/h'  # type: str
+
+SPEED_FTS = 'ft/s'  # type: str
+SPEED_MPH = 'mi/h'  # type: str
 
 # UV Index units
 UNIT_UV_INDEX = 'UV index'  # type: str
@@ -417,8 +425,8 @@ LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
 VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
-SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
+SPEED = 'speed'  # type: str
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
