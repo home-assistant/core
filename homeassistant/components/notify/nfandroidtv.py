@@ -128,7 +128,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     self._icon_file = default_icon
             except ImportError:
                 _LOGGER.warning(
-                    "hass_frontend icon not found. " + \
+                    "hass_frontend icon not found. " +
                     "Provide an icon when calling the service.")
 
     def send_message(self, message="", **kwargs):
