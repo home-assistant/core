@@ -1,4 +1,3 @@
-
 from qqbot import _bot as bot
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
@@ -68,6 +67,6 @@ class QQ(threading.Thread):
         def run(self):
             bot.Login(['-u', str(self.qq)])
             bot.Run()
-      
+
         def stop(self):
             self.thread_stop = True 
