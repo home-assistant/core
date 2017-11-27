@@ -15,7 +15,7 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA)
 
-REQUIREMENTS = ['qqbot==2.3.7']
+REQUIREMENTS = ['qqbot==2.3.7' ]
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,7 +30,7 @@ class Qqsensor(Entity):
     """Representation of a Qqsensor."""
     def __init__(self):
         """Initialize the sensor."""
-        self._state = ' '
+        self._state = 'NULL'
         self._name = DOMAIN
         self._mutex = threading.Lock()
 
@@ -59,14 +59,14 @@ class Qqsensor(Entity):
 
 
 class QQ(threading.Thread):
-        def __init__(self, qq):
-            threading.Thread.__init__(self)
-            self.thread_stop = False
-            self.qq = qq
+    def __init__(self, qq):
+        threading.Thread.__init__(self)
+        self.thread_stop = False
+        self.qq = qq
 
-        def run(self):
-            bot.Login(['-u', str(self.qq)])
-            bot.Run()
+    def run(self):
+        bot.Login(['-u', str(self.qq)])
+        bot.Run()
 
-        def stop(self):
-            self.thread_stop = True 
+    def stop(self):
+        self.thread_stop = True 
