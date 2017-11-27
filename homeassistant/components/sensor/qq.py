@@ -1,3 +1,4 @@
+
 from qqbot import _bot as bot
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
@@ -17,6 +18,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA)
 
 REQUIREMENTS = ['qqbot==2.3.7']
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo sensors."""
     o = DemoSensor()
@@ -48,11 +51,6 @@ class DemoSensor(Entity):
         """Return the state of the sensor."""
         return self._name
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
     def update(self):
         path = os.path.expanduser('~') + '/.homeassistant'
         path += '/msg.txt'
@@ -67,9 +65,9 @@ class QQ(threading.Thread):
             self.thread_stop = False
             self.qq = qq
 
-        def run(self):  # Overwrite run() method, put what you want the thread do here
+        def run(self):
             bot.Login(['-u', str(self.qq)])
             bot.Run()
-                
+      
         def stop(self):
             self.thread_stop = True 
