@@ -104,6 +104,9 @@ asterisk_mbox==0.4.0
 # homeassistant.components.axis
 axis==14
 
+# homeassistant.components.tts.baidu
+baidu-aip==1.6.6
+
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
 
