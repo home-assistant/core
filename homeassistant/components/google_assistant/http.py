@@ -132,7 +132,9 @@ class GoogleAssistantView(HomeAssistantView):
                 domain = eid.split('.')[0]
                 (service, service_data) = determine_service(
                     eid, execution.get('command'), execution.get('params'),
-                    hass.config.units)
+                    hass.config_units)
+                if domain == "group":
+                    domain = "switch"
                 success = yield from hass.services.async_call(
                     domain, service, service_data, blocking=True)
                 result = {"ids": [eid], "states": {}}
