@@ -86,7 +86,8 @@ def confirm_register(cloud, confirmation_code, email):
         if cloud.cognito_email_based:
             cognito.confirm_sign_up(confirmation_code, email)
         else:
-            cognito.confirm_sign_up(confirmation_code, _generate_username(email))
+            cognito.confirm_sign_up(confirmation_code,
+                                    _generate_username(email))
     except ClientError as err:
         raise _map_aws_exception(err)
 
