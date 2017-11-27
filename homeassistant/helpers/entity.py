@@ -11,8 +11,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     LENGTH_MILES, LENGTH_YARD, LENGTH_FEET, LENGTH_INCHES, LENGTH_KILOMETERS,
-    LENGTH_METERS, LENGTH_CENTIMETERS, SPEED_MPH, SPEED_KMH, SPEED_MS,
-    SPEED_FTS, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
+    LENGTH_METERS, LENGTH_CENTIMETERS, LENGTH_MILLIMETERS, SPEED_MPH,
+    SPEED_KMH, SPEED_MS, SPEED_FTS, ATTR_ENTITY_PICTURE,
+    ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
@@ -264,7 +265,8 @@ class Entity(object):
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
             elif (unit_of_measure in (LENGTH_MILES, LENGTH_YARD, LENGTH_FEET,
                                       LENGTH_INCHES, LENGTH_KILOMETERS,
-                                      LENGTH_METERS, LENGTH_CENTIMETERS) and
+                                      LENGTH_METERS, LENGTH_CENTIMETERS,
+                                      LENGTH_MILLIMETERS) and
                   unit_of_measure != units.length_unit):
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 length = units.length(float(state), unit_of_measure)
