@@ -22,7 +22,7 @@ from homeassistant.helpers.event import track_point_in_time
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
-DEFAULT_TRIGGER_TIME = 120
+DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
 SUPPORTED_PENDING_STATES = [STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
         vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER,
                  default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
     vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
@@ -89,6 +89,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
     When triggered, will be pending for the triggered state's 'pending_time'.
     After that will be triggered for 'trigger_time', after that we return to
     the previous state or disarm if `disarm_after_trigger` is true.
+    A trigger_time of zero disables the alarm_trigger service.
     """
 
     def __init__(self, hass, name, code, trigger_time,
@@ -98,7 +99,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
-        self._trigger_time = datetime.timedelta(seconds=trigger_time)
+        self._trigger_time = trigger_time
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
@@ -120,7 +121,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._state == STATE_ALARM_TRIGGERED and self._trigger_time:
+        if self._state == STATE_ALARM_TRIGGERED:
             if self._within_pending_time(self._state):
                 return STATE_ALARM_PENDING
             elif (self._state_ts + self._pending_time_by_state[self._state] +
@@ -184,7 +185,14 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
     def alarm_trigger(self, code=None):
-        """Send alarm trigger command. No code needed."""
+        """
+        Send alarm trigger command.
+
+        No code needed, a trigger time of zero disables the alarm.
+        """
+        if not self._trigger_time:
+            return
+
         self._update_state(STATE_ALARM_TRIGGERED)
 
     def _update_state(self, state):

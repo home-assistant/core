@@ -14,7 +14,8 @@ from homeassistant.const import (
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo alarm control panel platform."""
     add_devices([
-        manual.ManualAlarm(hass, 'Alarm', '1234', 10, False, {
+        manual.ManualAlarm(hass, 'Alarm', '1234',
+            datetime.timedelta(seconds=10), False, {
             STATE_ALARM_ARMED_AWAY: {
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),
             },
