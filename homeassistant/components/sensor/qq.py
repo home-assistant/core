@@ -30,7 +30,7 @@ class Qqsensor(Entity):
     """Representation of a Qqsensor."""
     def __init__(self):
         """Initialize the sensor."""
-        self._state = 'NULL'
+        self._state = ' '
         self._name = DOMAIN
         self._mutex = threading.Lock()
 
