@@ -74,8 +74,7 @@ class TestUnitSystem(unittest.TestCase):
         """Test no conversion happens if to unit is same as from unit."""
         self.assertEqual(
             5,
-            METRIC_SYSTEM.temperature(5,
-                                      METRIC_SYSTEM.temperature_unit))
+            METRIC_SYSTEM.temperature(5, METRIC_SYSTEM.temperature_unit))
 
     def test_temperature_unknown_unit(self):
         """Test no conversion happens if unknown unit."""
@@ -121,8 +120,7 @@ class TestUnitSystem(unittest.TestCase):
         """Test length conversion to imperial system."""
         self.assertEqual(
             100,
-            IMPERIAL_SYSTEM.length(100,
-                                   IMPERIAL_SYSTEM.length_unit)
+            IMPERIAL_SYSTEM.length(100, IMPERIAL_SYSTEM.length_unit)
         )
         self.assertEqual(
             3.106855,
@@ -149,8 +147,7 @@ class TestUnitSystem(unittest.TestCase):
         """Test speed conversion to imperial system."""
         self.assertEqual(
             100,
-            IMPERIAL_SYSTEM.speed(100,
-                                   IMPERIAL_SYSTEM.speed_unit)
+            IMPERIAL_SYSTEM.speed(100, IMPERIAL_SYSTEM.speed_unit)
         )
         self.assertEqual(
             3.1068611135966,

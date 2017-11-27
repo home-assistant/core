@@ -112,7 +112,7 @@ class UnitSystem(object):
             raise TypeError(
                 '{} is not a numeric value.'.format(str(temperature)))
 
-        return temperature_util.convert(temperature,from_unit,
+        return temperature_util.convert(temperature, from_unit,
                                         self.temperature_unit)  # type: float
 
     def length(self: object, length: float, from_unit: str) -> float:

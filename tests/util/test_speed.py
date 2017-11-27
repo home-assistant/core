@@ -57,20 +57,20 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_convert_from_kilometers(self):
         """Test conversion from kilometers to other units."""
-        km = 5
-        self.assertEqual(speed_util.convert(km, SPEED_KMH, SPEED_FTS),
+        kilometer = 5
+        self.assertEqual(speed_util.convert(kilometer, SPEED_KMH, SPEED_FTS),
                          4.556722225867599)
-        self.assertEqual(speed_util.convert(km, SPEED_KMH, SPEED_MS),
+        self.assertEqual(speed_util.convert(kilometer, SPEED_KMH, SPEED_MS),
                          1.3888888899999998)
-        self.assertEqual(speed_util.convert(km, SPEED_KMH, SPEED_MPH),
+        self.assertEqual(speed_util.convert(kilometer, SPEED_KMH, SPEED_MPH),
                          3.1068611135966)
 
     def test_convert_from_meters(self):
         """Test conversion from meters to other units."""
-        m = 5000
-        self.assertEqual(speed_util.convert(m, SPEED_MS, SPEED_FTS),
+        meter = 5000
+        self.assertEqual(speed_util.convert(meter, SPEED_MS, SPEED_FTS),
                          16404.2)
-        self.assertEqual(speed_util.convert(m, SPEED_MS, SPEED_KMH),
+        self.assertEqual(speed_util.convert(meter, SPEED_MS, SPEED_KMH),
                          18000)
-        self.assertEqual(speed_util.convert(m, SPEED_MS, SPEED_MPH),
+        self.assertEqual(speed_util.convert(meter, SPEED_MS, SPEED_MPH),
                          11184.7)

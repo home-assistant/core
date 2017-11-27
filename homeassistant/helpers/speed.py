@@ -6,7 +6,7 @@ from homeassistant.util.speed import convert as convert_speed
 
 
 def display_speed(hass: HomeAssistant, speed: float, unit: str,
-                 precision: float) -> float:
+                  precision: float) -> float:
     """Convert sped into preferred units for display purposes."""
     speed_unit = unit
     ha_unit = hass.config.units.speed_unit
