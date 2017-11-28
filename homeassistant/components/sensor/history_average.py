@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.history_average/
 """
 import asyncio
-import bisect
+from operator import attrgetter 
 from collections import defaultdict
 import logging
 import voluptuous as vol
@@ -158,7 +158,8 @@ class HistoryAverageSensor(Entity):
         @callback
         def state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
-            bisect.insort(self._history, new_state)
+            self._history.append(new_state)
+            sorted(self._history, key=attrgetter('last_changed'))
             self._hass.async_add_job(self.async_update_ha_state(True))
 
         @callback

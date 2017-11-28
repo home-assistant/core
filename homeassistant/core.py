@@ -608,10 +608,6 @@ class State(object):
                 self.state == other.state and
                 self.attributes == other.attributes)
 
-    def __lt__(self, other):
-        """Return the less than comparison of the state."""
-        return self.last_changed < other.last_changed
-
     def __repr__(self):
         """Return the representation of the states."""
         attr = "; {}".format(util.repr_helper(self.attributes)) \
