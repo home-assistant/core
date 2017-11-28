@@ -180,6 +180,3 @@ warrant==0.5.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
-
-# homeassistant.components.sensor.qq
-qqbot==2.3.7
