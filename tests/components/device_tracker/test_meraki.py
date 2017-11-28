@@ -1,4 +1,4 @@
-"""The tests the for Meraki device tracker"""
+"""The tests the for Meraki device tracker."""
 import asyncio
 import json
 from unittest.mock import patch
@@ -31,7 +31,6 @@ def meraki_client(loop, hass, test_client):
 @asyncio.coroutine
 def test_invalid_or_missing_data(meraki_client):
     """Test validator with invalid or missing data."""
-
     req = yield from meraki_client.get(URL)
     text = yield from req.text()
     assert req.status == 200
@@ -68,7 +67,7 @@ def test_invalid_or_missing_data(meraki_client):
 
 @asyncio.coroutine
 def test_data_will_be_saved(hass, meraki_client):
-    """Test with valid data"""
+    """Test with valid data."""
     data = {
         "version": "2.0",
         "secret": "secret",
@@ -97,4 +96,3 @@ def test_data_will_be_saved(hass, meraki_client):
     state_name = hass.states.get('{}.{}'.format('device_tracker',
                                                 '0026abb8a9a4')).state
     assert 'home' == state_name
-
