@@ -97,4 +97,3 @@ def test_data_will_be_saved(hass, meraki_client):
     state_name = hass.states.get('{}.{}'.format('device_tracker',
                                                 '0026abb8a9a4')).state
     assert 'home' == state_name
-    
