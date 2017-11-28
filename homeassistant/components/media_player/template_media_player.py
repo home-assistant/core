@@ -4,7 +4,7 @@ Support for generic receivers by delegating actions to user configured scripts.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.template_media_player/
 """
-
+import asyncio
 import logging
 import math
 import time
@@ -143,6 +143,11 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         return self._volume / 100.0
 
+    @property
+    def is_volume_muted(self):
+        """Boolean if volume is currently muted."""
+        return self._is_muted
+
     def set_volume_level(self, volume):
         volume = volume * 100
         volume = int(math.ceil(volume / 10.0)) * 10
@@ -150,21 +155,27 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
             self._volume = volume
             self._volume_set_action.run({'volume:': volume})
         elif self._volume_up_action and self._volume_down_action:
-            if volume < self._volume:
-                while volume < self._volume:
-                    self._volume -= self._volume_step
-                    self._volume_down_action.run()
-                    time.sleep(self._volume_step_delay)
-            elif volume > self._volume:
-                while volume > self._volume:
-                    self._volume += self._volume_step
-                    self._volume_up_action.run()
-                    time.sleep(self._volume_step_delay)
+            adjustment_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(adjustment_loop)
+            adjustment_loop.run_until_complete(asyncio.ensure_future(
+                self.adjust_volume(volume)
+            ))
+            adjustment_loop.close()
 
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._is_muted
+    @asyncio.coroutine
+    def adjust_volume(self, volume):
+        if volume < self._volume:
+            while volume < self._volume:
+                self._volume -= self._volume_step
+                self._volume_down_action.run()
+                yield from asyncio.sleep(self._volume_step_delay)
+        else:
+            while volume > self._volume:
+                self._volume += self._volume_step
+                self._volume_up_action.run()
+                yield from asyncio.sleep(self._volume_step_delay)
+
+
 
     def mute_volume(self, mute):
         """Mute or unmute the media player"""
