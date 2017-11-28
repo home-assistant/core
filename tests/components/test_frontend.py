@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
-    DOMAIN, CONF_THEMES, CONF_EXTRA_HTML_URL, CONF_EXTRA_HTML_URL_ES5,
-    DATA_PANELS)
+    DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
+    CONF_EXTRA_HTML_URL_ES5, DATA_PANELS)
 
 
 @pytest.fixture
@@ -37,6 +37,7 @@ def mock_http_client_with_urls(hass, test_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
         DOMAIN: {
+            CONF_JS_VERSION: 'auto',
             CONF_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"],
             CONF_EXTRA_HTML_URL_ES5:
                 ["https://domain.com/my_extra_url_es5.html"]
