@@ -18,4 +18,5 @@ flake8-docstrings==1.0.2
 asynctest>=0.8.0
 freezegun>=0.3.8
 qqbot==2.3.7
+threading
 
