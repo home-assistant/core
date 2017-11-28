@@ -7,20 +7,25 @@ https://home-assistant.io/components/light.hue/
 from datetime import timedelta
 import logging
 import random
+import re
 import socket
+
+import voluptuous as vol
 
 import homeassistant.components.hue as hue
 
 import homeassistant.util as util
+from homeassistant.util import yaml
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    SUPPORT_XY_COLOR, Light)
-from homeassistant.const import DEVICE_DEFAULT_NAME
+    SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE_HIDDEN
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['hue']
 
@@ -48,10 +53,51 @@ SUPPORT_HUE = {
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
 
+# Legacy configuration, will be removed in 0.60
+CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
+DEFAULT_ALLOW_UNREACHABLE = False
+CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
+DEFAULT_ALLOW_IN_EMULATED_HUE = True
+CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
+DEFAULT_ALLOW_HUE_GROUPS = True
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
+    vol.Optional(CONF_FILENAME): cv.string,
+    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
+    vol.Optional(CONF_ALLOW_HUE_GROUPS,
+                 default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
+})
+
+MIGRATION_ID = 'light_hue_config_migration'
+MIGRATION_TITLE = 'Philips Hue Configuration Migration'
+MIGRATION_INSTRUCTIONS = """
+Configuration for the Philips Hue component has changed; action required.
+
+You have configured at least one bridge:
+
+    hue:
+{config}
+
+This configuration is deprecated, please check the
+[Hue component](https://home-assistant.io/components/hue/) page on the wiki
+for more information.
+"""
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Hue lights."""
     setup_data(hass)
+
+    if config is not None and len(config) > 0:
+        # Legacy configuration, will be removed in 0.60
+        config_str = yaml.dump([config])
+        config_str = re.sub('(?m)^', '      ', config_str)
+        hass.components.persistent_notification.async_create(
+            MIGRATION_INSTRUCTIONS.format(config=config_str),
+            title=MIGRATION_TITLE,
+            notification_id=MIGRATION_ID)
 
     for bridge in hass.data[hue.DOMAIN].values():
         update_lights(hass, bridge, add_devices)
