@@ -309,6 +309,18 @@ LENGTH_FEET = 'ft'  # type: str
 LENGTH_YARD = 'yd'  # type: str
 LENGTH_MILES = 'mi'  # type: str
 
+LENGTH_UNITS_METRIC = [
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILLIMETERS
+]
+
+LENGTH_UNITS_IMPERIAL = [
+    LENGTH_MILES,
+    LENGTH_FEET,
+    LENGTH_INCHES
+]
+
 # Volume units
 VOLUME_LITERS = 'L'  # type: str
 VOLUME_MILLILITERS = 'mL'  # type: str

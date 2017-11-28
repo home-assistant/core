@@ -14,72 +14,36 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     LENGTH,
-    UNIT_AUTOCONVERT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_UNITS_METRIC = [
+VALID_LENGTH = [
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_FEET,
+    LENGTH_YARD,
+    LENGTH_INCHES,
     LENGTH_METERS,
     LENGTH_CENTIMETERS,
     LENGTH_MILLIMETERS,
-    UNIT_AUTOCONVERT
-]
-
-VALID_UNITS_IMPERIAL = [
-    LENGTH_MILES,
-    LENGTH_YARD,
-    LENGTH_FEET,
-    LENGTH_INCHES,
-    UNIT_AUTOCONVERT
 ]
 
 
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
-    if unit_1 not in VALID_UNITS_METRIC + VALID_UNITS_IMPERIAL:
+    if unit_1 not in VALID_LENGTH:
         raise ValueError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, LENGTH))
-    if unit_2 not in VALID_UNITS_METRIC + VALID_UNITS_IMPERIAL:
+    if unit_2 not in VALID_LENGTH:
         raise ValueError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, LENGTH))
 
     if not isinstance(value, Number):
         raise TypeError('{} is not of numeric type'.format(value))
 
-    AUTOCONV = False
-
-    # Match imperial to metric units
-    if unit_1 in VALID_UNITS_METRIC and unit_2 is UNIT_AUTOCONVERT:
-        AUTOCONV = True
-        if unit_1 == LENGTH_KILOMETERS:
-            unit_2 = LENGTH_MILES
-        if unit_1 == LENGTH_METERS:
-            unit_2 = LENGTH_FEET
-        if unit_1 in (LENGTH_CENTIMETERS, LENGTH_MILLIMETERS):
-            unit_2 = LENGTH_INCHES
-    elif unit_1 in VALID_UNITS_IMPERIAL and unit_2 is UNIT_AUTOCONVERT:
-        AUTOCONV = True
-        if unit_1 == LENGTH_MILES:
-            unit_2 = LENGTH_KILOMETERS
-        elif unit_1 == LENGTH_FEET:
-            unit_2 = LENGTH_METERS
-        elif unit_1 == LENGTH_INCHES and value > 0.3:
-            unit_2 = LENGTH_CENTIMETERS
-        else:
-            unit_2 = LENGTH_MILLIMETERS
-
-    if ((((unit_1 in VALID_UNITS_METRIC and unit_2 in VALID_UNITS_METRIC) or
-        (unit_1 in VALID_UNITS_IMPERIAL and unit_2 in VALID_UNITS_IMPERIAL))
-        and AUTOCONV)
-        or unit_1 == unit_2 or unit_1 not in (VALID_UNITS_METRIC +
-                                              VALID_UNITS_IMPERIAL)):
+    if unit_1 == unit_2 or unit_1 not in VALID_LENGTH:
         return value
-
-    # if unit_1 == unit_2 or unit_1 not in (VALID_UNITS_METRIC +
-    #                                       VALID_UNITS_IMPERIAL):
-    #     return value
 
     meters = value
 

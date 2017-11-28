@@ -18,7 +18,6 @@ from homeassistant.const import (
     TEMPERATURE,
     VOLUME,
     SPEED,
-    UNIT_AUTOCONVERT
 )
 
 SYSTEM_NAME = 'TEST'
@@ -109,22 +108,22 @@ class TestUnitSystem(unittest.TestCase):
     def test_length_to_metric(self):
         """Test length conversion to metric system."""
         self.assertEqual(
-            100,
+            (100, 'km'),
             METRIC_SYSTEM.length(100, METRIC_SYSTEM.length_unit)
         )
         self.assertEqual(
-            8.04672,
+            (8.04672, 'km'),
             METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit)
         )
 
     def test_length_to_imperial(self):
         """Test length conversion to imperial system."""
         self.assertEqual(
-            100,
+            (100, 'mi'),
             IMPERIAL_SYSTEM.length(100, IMPERIAL_SYSTEM.length_unit)
         )
         self.assertEqual(
-            3.1068559611866697,
+            (3.1068559611866697, 'mi'),
             IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit)
         )
 

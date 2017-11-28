@@ -269,10 +269,10 @@ class Entity(object):
                                       LENGTH_MILLIMETERS) and
                   unit_of_measure != units.length_unit):
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                length = units.length(float(state), unit_of_measure)
+                length, attr[ATTR_UNIT_OF_MEASUREMENT] = units.length(
+                    float(state), unit_of_measure)
                 state = str(
                     round(length) if prec == 0 else round(length, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.length_unit
             elif (unit_of_measure in (SPEED_MPH, SPEED_KMH,
                                       SPEED_MS, SPEED_FTS) and
                   unit_of_measure != units.speed_unit):

@@ -5,7 +5,7 @@ import homeassistant.util.distance as distance_util
 from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_METERS,
                                  LENGTH_CENTIMETERS, LENGTH_MILLIMETERS,
                                  LENGTH_FEET, LENGTH_INCHES, LENGTH_MILES,
-                                 LENGTH_YARD, UNIT_AUTOCONVERT)
+                                 LENGTH_YARD)
 
 INVALID_SYMBOL = 'bob'
 VALID_SYMBOL = LENGTH_KILOMETERS
@@ -114,30 +114,3 @@ class TestDistanceUtil(unittest.TestCase):
         self.assertEqual(
             distance_util.convert(meter, LENGTH_METERS, LENGTH_MILLIMETERS),
             5000000)
-
-    def test_autoconvert(self):
-        """Test automatic conversion of units."""
-        self.assertEqual(
-            distance_util.convert(5, LENGTH_METERS, UNIT_AUTOCONVERT),
-            16.404199475065617)
-        self.assertEqual(
-            distance_util.convert(5, LENGTH_KILOMETERS, UNIT_AUTOCONVERT),
-            3.1068559611866697)
-        self.assertEqual(
-            distance_util.convert(12.7, LENGTH_CENTIMETERS, UNIT_AUTOCONVERT),
-            5)
-        self.assertEqual(
-            distance_util.convert(50, LENGTH_INCHES, UNIT_AUTOCONVERT),
-            127)
-        self.assertEqual(
-            distance_util.convert(0.5, LENGTH_INCHES, UNIT_AUTOCONVERT),
-            1.27)
-        self.assertEqual(
-            distance_util.convert(5, LENGTH_FEET, UNIT_AUTOCONVERT),
-            1.524)
-        self.assertEqual(
-            distance_util.convert(5, LENGTH_MILES, UNIT_AUTOCONVERT),
-            8.04672)
-        self.assertEqual(
-            distance_util.convert(5, LENGTH_MILES, LENGTH_MILES),
-            5)
