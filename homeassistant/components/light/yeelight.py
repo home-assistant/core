@@ -222,7 +222,8 @@ class YeelightLight(Light):
 
         color_mode = int(color_mode)
         if color_mode == 2:  # color temperature
-            return color_temperature_to_rgb(self.color_temp)
+            temp_in_k = mired_to_kelvin(self._color_temp)
+            return color_temperature_to_rgb(temp_in_k)
         if color_mode == 3:  # hsv
             hue = int(self._properties.get('hue'))
             sat = int(self._properties.get('sat'))
