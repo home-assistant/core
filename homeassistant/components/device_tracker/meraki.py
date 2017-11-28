@@ -32,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SECRET): cv.string
 })
 
+
 @asyncio.coroutine
 def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an endpoint for the Meraki tracker."""
