@@ -1,4 +1,4 @@
-"""You can use this sensor to link your qq"""
+"""You can use this sensor to link your qq."""
 import os
 import threading
 import voluptuous as vol
@@ -29,6 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class Qqsensor(Entity):
     """Representation of a Qqsensor."""
+
     def __init__(self):
         """Initialize the sensor."""
         self._state = 'NULL'
@@ -37,7 +38,7 @@ class Qqsensor(Entity):
 
     @property
     def should_poll(self):
-        """need polling"""
+        """Need polling."""
         return True
 
     @property
@@ -51,7 +52,7 @@ class Qqsensor(Entity):
         return self._name
 
     def update(self):
-        """get message from file"""
+        """Get message from file."""
         path = os.path.expanduser('~') + '/.homeassistant'
         path += '/msg.txt'
         with open(path, 'r') as file_contain:
@@ -61,18 +62,19 @@ class Qqsensor(Entity):
 
 class QQ(threading.Thread):
     """Representation of qq threading."""
+
     def __init__(self, qq_number):
-        """Initialize threading"""
+        """Initialize threading."""
         threading.Thread.__init__(self)
         self.thread_stop = False
         self._qq = qq_number
 
     def run(self):
-        """run threading"""
+        """Run threading."""
         from qqbot import _bot as bot
         bot.Login(['-u', str(self._qq)])
         bot.Run()
 
     def stop(self):
-        """stop threading although it could not use."""
+        """Rtop threading although it could not use."""
         self.thread_stop = True
