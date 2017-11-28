@@ -3,7 +3,8 @@ import asyncio
 import json
 from unittest.mock import patch
 import pytest
-from homeassistant.components.device_tracker.meraki import CONF_VALIDATOR, CONF_SECRET
+from homeassistant.components.device_tracker.meraki import (
+    CONF_VALIDATOR, CONF_SECRET)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.const import CONF_PLATFORM
@@ -73,7 +74,7 @@ def test_data_will_be_saved(hass, meraki_client):
         "secret": "secret",
         "type": "DevicesSeen",
         "data": {
-            "observations":[
+            "observations": [
                 {
                     "location": {
                         "lat": "51.5355157",
@@ -96,3 +97,4 @@ def test_data_will_be_saved(hass, meraki_client):
     state_name = hass.states.get('{}.{}'.format('device_tracker',
                                                 '0026abb8a9a4')).state
     assert 'home' == state_name
+    
