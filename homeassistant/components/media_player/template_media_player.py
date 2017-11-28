@@ -50,12 +50,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SOURCE_NAMES, default=None): {cv.string: cv.string},
 })
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the template media player platform."""
-    media_player = TemplateMediaPlayerDevice(config.get(CONF_NAME), config,
-                                             hass)
-    add_devices([media_player])
+    add_devices([
+        TemplateMediaPlayerDevice(
+            config.get(CONF_NAME),
+            config,
+            hass
+        )
+    ])
 
 
 class TemplateMediaPlayerDevice(MediaPlayerDevice):
@@ -116,6 +120,7 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return self._supported_features
+
 
     @property
     def state(self):
