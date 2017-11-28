@@ -9,14 +9,10 @@ from datetime import timedelta
 
 import homeassistant.util as util
 import homeassistant.util.color as color_util
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.util import convert
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
     ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
@@ -37,6 +33,7 @@ WEMO_STANDBY = 8
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up discovered WeMo switches."""
     import pywemo.discovery as discovery
+
 
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
@@ -151,6 +148,7 @@ class WemoLight(Light):
         """Synchronize state with bridge."""
         self.update_lights(no_throttle=True)
 
+
 class WemoDimmer(Light):
     """Representation of a WeMo dimmer"""
 
@@ -220,13 +218,12 @@ class WemoDimmer(Light):
         """Turn the dimmer on."""
         self._state = WEMO_ON
         self.wemo.on()
-        transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
 
-        # Wemo dimmer switches use a range of [0, 99] to control
+        # Wemo dimmer switches use a range of [0, 100] to control
         # brightness. Level 255 might mean to set it to previous value
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            brightness = int((self._brightness / 255) * 99)
+            brightness = int((self._brightness / 255) * 100)
         else:
             brightness = 255
         self.wemo.set_brightness(brightness)
