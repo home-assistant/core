@@ -93,6 +93,19 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         self._volume_step = config.get(CONF_VOLUME_STEP)
         self._volume_step_delay = config.get(CONF_VOLUME_STEP_DELAY)
         self._is_muted = False
+        self._supported_features = 0
+        if self._turn_on_action:
+            self._supported_features |= SUPPORT_TURN_ON
+        if self._turn_off_action:
+            self._supported_features |= SUPPORT_TURN_OFF
+        if (self._volume_up_action and self._volume_down_action) or \
+                self._volume_set_action:
+            self._supported_features |= SUPPORT_VOLUME_SET
+        if self._volume_mute_action and self._volume_unmute_action:
+            self._supported_features |= SUPPORT_VOLUME_MUTE
+        if self._sources and self._select_source_action:
+            self._supported_features |= SUPPORT_SELECT_SOURCE
+
 
     @property
     def name(self):
@@ -102,19 +115,7 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        features = 0
-        if self._turn_on_action:
-            features |= SUPPORT_TURN_ON
-        if self._turn_off_action:
-            features |= SUPPORT_TURN_OFF
-        if (self._volume_up_action and self._volume_down_action) or \
-                self._volume_set_action:
-            features |= SUPPORT_VOLUME_SET
-        if self._volume_mute_action and self._volume_unmute_action:
-            features |= SUPPORT_VOLUME_MUTE
-        if self._sources and self._select_source_action:
-            features |= SUPPORT_SELECT_SOURCE
-        return features
+        return self._supported_features
 
     @property
     def state(self):
