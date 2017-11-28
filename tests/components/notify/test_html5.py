@@ -220,7 +220,7 @@ class TestHtml5Notify(object):
                 # resp = view.post(Request(builder.get_environ()))
                 resp = yield from client.post(REGISTER_URL, data=json.dumps({
                     'browser': 'chrome',
-                    'subscription': 'sub info',
+                    'subscription': b'sub info',
                 }))
 
             assert resp.status == 400

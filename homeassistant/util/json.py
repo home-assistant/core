@@ -35,7 +35,8 @@ def save_json(filename: str, config: Union[List, Dict]):
     Returns True on success.
     """
     try:
-        data = json.dumps(config, sort_keys=True, indent=4)
+        data = json.dumps(config, sort_keys=True, indent=4,
+                          cls=JSONBytesDecoder)
         with open(filename, 'w', encoding='utf-8') as fdesc:
             fdesc.write(data)
             return True
@@ -48,3 +49,14 @@ def save_json(filename: str, config: Union[List, Dict]):
                           filename)
         raise HomeAssistantError(error)
     return False
+
+
+class JSONBytesDecoder(json.JSONEncoder):
+    """JSONEncoder to decode bytes objects to unicode."""
+
+    # pylint: disable=method-hidden
+    def default(self, obj):
+        """Decode object if it's a bytes object, else defer to base class."""
+        if isinstance(obj, bytes):
+            return obj.decode()
+        return json.JSONEncoder.default(self, obj)
