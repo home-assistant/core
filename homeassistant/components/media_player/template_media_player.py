@@ -50,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SOURCE_NAMES, default=None): {cv.string: cv.string},
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the template media player platform."""
@@ -68,28 +69,11 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
     def __init__(self, name, config, hass):
         """Initialize the device."""
         self._name = name
-        self._turn_on_action = Script(hass, config.get(
-            CONF_ON_ACTION)) if config.get(CONF_ON_ACTION) else None
-        self._turn_off_action = Script(hass, config.get(
-            CONF_OFF_ACTION)) if config.get(CONF_OFF_ACTION) else None
-        self._volume_up_action = Script(hass, config.get(
-            CONF_VOLUME_UP_ACTION)) if config.get(
-            CONF_VOLUME_UP_ACTION) else None
-        self._volume_down_action = Script(hass, config.get(
-            CONF_VOLUME_DOWN_ACTION)) if config.get(
-            CONF_VOLUME_DOWN_ACTION) else None
-        self._volume_set_action = Script(hass, config.get(
-            CONF_VOLUME_SET_ACTION)) if config.get(
-            CONF_VOLUME_SET_ACTION) else None
-        self._volume_mute_action = Script(hass, config.get(
-            CONF_VOLUME_MUTE_ACTION)) if config.get(
-            CONF_VOLUME_MUTE_ACTION) else None
-        self._volume_unmute_action = Script(hass, config.get(
-            CONF_VOLUME_UNMUTE_ACTION)) if config.get(
-            CONF_VOLUME_UNMUTE_ACTION) else None
-        self._select_source_action = Script(hass, config.get(
-            CONF_SELECT_SOURCE_ACTION)) if config.get(
-            CONF_SELECT_SOURCE_ACTION) else None
+        self._actions = {
+            key: Script(hass, value) for key, value in config.items()
+            if key.endswith("_action")
+        }
+
         self._sources = config.get(CONF_SOURCE_NAMES)
         self._selected_source = None
         self._state = STATE_OFF
@@ -97,19 +81,21 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         self._volume_step = config.get(CONF_VOLUME_STEP)
         self._volume_step_delay = config.get(CONF_VOLUME_STEP_DELAY)
         self._is_muted = False
-        self._supported_features = 0
-        if self._turn_on_action:
-            self._supported_features |= SUPPORT_TURN_ON
-        if self._turn_off_action:
-            self._supported_features |= SUPPORT_TURN_OFF
-        if (self._volume_up_action and self._volume_down_action) or \
-                self._volume_set_action:
-            self._supported_features |= SUPPORT_VOLUME_SET
-        if self._volume_mute_action and self._volume_unmute_action:
-            self._supported_features |= SUPPORT_VOLUME_MUTE
-        if self._sources and self._select_source_action:
-            self._supported_features |= SUPPORT_SELECT_SOURCE
 
+        self._supported_features = 0
+        if CONF_ON_ACTION in self._actions:
+            self._supported_features |= SUPPORT_TURN_ON
+        if CONF_OFF_ACTION in self._actions:
+            self._supported_features |= SUPPORT_TURN_OFF
+        if (CONF_VOLUME_UP_ACTION in self._actions and
+            CONF_VOLUME_DOWN_ACTION in self._actions) or \
+            CONF_VOLUME_SET_ACTION in self._actions:
+            self._supported_features |= SUPPORT_VOLUME_SET
+        if CONF_VOLUME_MUTE_ACTION in self._actions and \
+           CONF_VOLUME_UNMUTE_ACTION in self._actions:
+            self._supported_features |= SUPPORT_VOLUME_MUTE
+        if self._sources and CONF_SELECT_SOURCE_ACTION in self._actions:
+            self._supported_features |= SUPPORT_SELECT_SOURCE
 
     @property
     def name(self):
@@ -120,7 +106,6 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return self._supported_features
-
 
     @property
     def state(self):
@@ -135,14 +120,14 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn on media player."""
         self._state = STATE_ON
-        if self._turn_on_action:
-            self._turn_on_action.run()
+        if CONF_ON_ACTION in self._actions:
+            self._actions[CONF_ON_ACTION].async_run()
 
     def turn_off(self):
         """Turn off media player."""
         self._state = STATE_OFF
-        if self._turn_off_action:
-            self._turn_off_action.async_run()
+        if CONF_OFF_ACTION in self._actions:
+            self._actions[CONF_OFF_ACTION].async_run()
 
     @property
     def volume_level(self):
@@ -157,10 +142,12 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         volume = volume * 100
         volume = int(math.ceil(volume / 10.0)) * 10
-        if self._volume_set_action:
+        if CONF_VOLUME_SET_ACTION in self._actions:
             self._volume = volume
-            self._volume_set_action.async_run({'volume:': volume})
-        elif self._volume_up_action and self._volume_down_action:
+            self._actions[CONF_VOLUME_SET_ACTION].async_run(
+                {'volume:': volume})
+        elif CONF_VOLUME_UP_ACTION in self._actions and \
+                        CONF_VOLUME_UP_ACTION in self._actions:
             adjustment_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(adjustment_loop)
             adjustment_loop.run_until_complete(asyncio.ensure_future(
@@ -173,24 +160,22 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         if volume < self._volume:
             while volume < self._volume:
                 self._volume -= self._volume_step
-                self._volume_down_action.async_run()
+                self._actions[CONF_VOLUME_DOWN_ACTION].async_run()
                 yield from asyncio.sleep(self._volume_step_delay)
         else:
             while volume > self._volume:
                 self._volume += self._volume_step
-                self._volume_up_action.async_run()
+                self._actions[CONF_VOLUME_UP_ACTION].async_run()
                 yield from asyncio.sleep(self._volume_step_delay)
-
-
 
     def mute_volume(self, mute):
         """Mute or unmute the media player"""
         if mute:
             self._is_muted = True
-            self._volume_mute_action.async_run({'mute': True})
+            self._actions[CONF_VOLUME_MUTE_ACTION].async_run({'mute': True})
         else:
             self._is_muted = False
-            self._volume_unmute_action.async_run({'mute': False})
+            self._actions[CONF_VOLUME_UNMUTE_ACTION].async_run({'mute': False})
 
     @property
     def source(self):
@@ -199,16 +184,15 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
 
     def select_source(self, requested_source_name):
         """Select input source."""
-        if self._select_source_action:
+        if CONF_SELECT_SOURCE_ACTION in self._actions:
             for source_key, source_name in self._sources.items():
                 if source_name == requested_source_name:
-                    self._select_source_action.async_run(
+                    self._actions[CONF_SELECT_SOURCE_ACTION].async_run(
                         {'source_key': source_key, 'source_name': source_name})
                     self._selected_source = source_name
                     return
+
             raise ValueError(
-                """Source '{requested_source_name}' was 
-                not found in source list.""".format(
-                    requested_source_name=requested_source_name
-                )
+                """Source '{requested_source_name}' was not found in source list.""".format(
+                    requested_source_name=requested_source_name)
             )
