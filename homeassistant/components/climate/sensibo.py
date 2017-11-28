@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _FETCH_FIELDS = ','.join([
     'room{name}', 'measurements', 'remoteCapabilities',
-    'acState', 'connectionStatus{isAlive}'])
+    'acState', 'connectionStatus{isAlive}', 'temperatureUnit'])
 _INITIAL_FETCH_FIELDS = 'id,' + _FETCH_FIELDS
 
 
@@ -55,7 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 devices.append(SensiboClimate(client, dev))
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
-        _LOGGER.exception('Failed to connct to Sensibo servers.')
+        _LOGGER.exception('Failed to connect to Sensibo servers.')
         raise PlatformNotReady
 
     if devices:
@@ -63,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class SensiboClimate(ClimateDevice):
-    """Representation os a Sensibo device."""
+    """Representation of a Sensibo device."""
 
     def __init__(self, client, data):
         """Build SensiboClimate.
@@ -84,11 +84,16 @@ class SensiboClimate(ClimateDevice):
         self._operations = sorted(capabilities['modes'].keys())
         self._current_capabilities = capabilities[
             'modes'][self.current_operation]
-        temperature_unit_key = self._ac_states['temperatureUnit']
-        self._temperature_unit = \
-            TEMP_CELSIUS if temperature_unit_key == 'C' else TEMP_FAHRENHEIT
-        self._temperatures_list = self._current_capabilities[
-            'temperatures'][temperature_unit_key]['values']
+        temperature_unit_key = data.get('temperatureUnit') or \
+            self._ac_states.get('temperatureUnit')
+        if temperature_unit_key:
+            self._temperature_unit = TEMP_CELSIUS if \
+                temperature_unit_key == 'C' else TEMP_FAHRENHEIT
+            self._temperatures_list = self._current_capabilities[
+                'temperatures'].get(temperature_unit_key, {}).get('values', [])
+        else:
+            self._temperature_unit = self.unit_of_measurement
+            self._temperatures_list = []
 
     @property
     def device_state_attributes(self):
@@ -108,7 +113,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._ac_states['targetTemperature']
+        return self._ac_states.get('targetTemperature')
 
     @property
     def target_temperature_step(self):
@@ -178,12 +183,14 @@ class SensiboClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._temperatures_list[0]
+        return self._temperatures_list[0] \
+            if len(self._temperatures_list) else super.min_temp()
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._temperatures_list[-1]
+        return self._temperatures_list[-1] \
+            if len(self._temperatures_list) else super.max_temp()
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):

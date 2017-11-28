@@ -74,7 +74,7 @@ hbmqtt==0.9.1
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171121.1
+home-assistant-frontend==20171127.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -153,7 +153,7 @@ rxv==0.5.1
 sleepyq==0.6
 
 # homeassistant.components.climate.honeywell
-somecomfort==0.4.1
+somecomfort==0.5.0
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator

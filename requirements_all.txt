@@ -104,6 +104,9 @@ asterisk_mbox==0.4.0
 # homeassistant.components.axis
 axis==14
 
+# homeassistant.components.tts.baidu
+baidu-aip==1.6.6
+
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
 
@@ -328,7 +331,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171121.1
+home-assistant-frontend==20171127.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -1026,7 +1029,7 @@ sleepyq==0.6
 snapcast==2.0.8
 
 # homeassistant.components.climate.honeywell
-somecomfort==0.4.1
+somecomfort==0.5.0
 
 # homeassistant.components.sensor.speedtest
 speedtest-cli==1.0.7
@@ -1061,7 +1064,7 @@ tellcore-net==0.1
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.3.4
+tellduslive==0.10.3
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.3
