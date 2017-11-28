@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.history_average/
 """
 import asyncio
-from operator import attrgetter 
+from operator import attrgetter
 from collections import defaultdict
 import logging
 import voluptuous as vol
@@ -198,9 +198,26 @@ class HistoryAverageSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        hah = HistoryAverageHelper
+        def period_in_seconds(period):
+            """Get the period period duration in seconds."""
+            if len(period) != 2 or period[0] == period[1]:
+                return 0.0
+            return (period[1] - period[0]).total_seconds()
+
+        def pretty_duration(period):
+            """Format a duration in days, hours, minutes, seconds."""
+            seconds = period_in_seconds(period)
+            days, seconds = divmod(seconds, 86400)
+            hours, seconds = divmod(seconds, 3600)
+            minutes, seconds = divmod(seconds, 60)
+            if days > 0:
+                return '%dd %dh %dm' % (days, hours, minutes)
+            elif hours > 0:
+                return '%dh %dm' % (hours, minutes)
+            return '%dm' % minutes
+
         return {
-            ATTR_DURATION: hah.pretty_duration(self._period),
+            ATTR_DURATION: pretty_duration(self._period),
         }
 
     @property
@@ -217,7 +234,7 @@ class HistoryAverageSensor(Entity):
 
         _LOGGER.info(" - period start: %s", start)
         _LOGGER.info(" - period end  : %s", end)
-        now = HistoryAverageHelper.utcnow()
+        now = dt_util.utcnow()
 
         # Compute timestamps
         start_timestamp = dt_util.as_timestamp(start)
@@ -269,12 +286,22 @@ class HistoryAverageSensor(Entity):
         start = None
         end = None
 
+        def handle_template_exception(ex, field):
+            """Log an error nicely if the template cannot be interpreted."""
+            if ex.args and ex.args[0].startswith(
+                    "UndefinedError: 'None' has no attribute"):
+                # Common during HA startup - so just a warning
+                _LOGGER.warning("Error parsing template for field %s", field)
+                return
+            else:
+                _LOGGER.exception("Error parsing template for field %s", field)
+
         # Parse start
         if self._start is not None:
             try:
                 start_rendered = self._start.async_render()
             except (TemplateError, TypeError) as ex:
-                HistoryAverageHelper.handle_template_exception(ex, 'start')
+                handle_template_exception(ex, 'start')
                 return
             start = dt_util.parse_datetime(start_rendered)
 
@@ -291,7 +318,7 @@ class HistoryAverageSensor(Entity):
             try:
                 end_rendered = self._end.async_render()
             except (TemplateError, TypeError) as ex:
-                HistoryAverageHelper.handle_template_exception(ex, 'end')
+                handle_template_exception(ex, 'end')
                 return
             end = dt_util.parse_datetime(end_rendered)
             if end is None:
@@ -313,44 +340,3 @@ class HistoryAverageSensor(Entity):
         end = dt_util.as_utc(end)
 
         self._period = start, end
-
-
-class HistoryAverageHelper:
-    """Static methods to make the HistoryAverageSensor code lighter."""
-
-    @staticmethod
-    def utcnow():
-        """To test, enables patching now separately from dt_util."""
-        return dt_util.utcnow()
-
-    @staticmethod
-    def period_in_seconds(period):
-        """Get the period period duration in seconds."""
-        if len(period) != 2 or period[0] == period[1]:
-            return 0.0
-
-        return (period[1] - period[0]).total_seconds()
-
-    @staticmethod
-    def pretty_duration(period):
-        """Format a duration in days, hours, minutes, seconds."""
-        seconds = HistoryAverageHelper.period_in_seconds(period)
-        days, seconds = divmod(seconds, 86400)
-        hours, seconds = divmod(seconds, 3600)
-        minutes, seconds = divmod(seconds, 60)
-        if days > 0:
-            return '%dd %dh %dm' % (days, hours, minutes)
-        elif hours > 0:
-            return '%dh %dm' % (hours, minutes)
-        return '%dm' % minutes
-
-    @staticmethod
-    def handle_template_exception(ex, field):
-        """Log an error nicely if the template cannot be interpreted."""
-        if ex.args and ex.args[0].startswith(
-                "UndefinedError: 'None' has no attribute"):
-            # Common during HA startup - so just a warning
-            _LOGGER.warning(ex)
-            return
-        _LOGGER.error("Error parsing template for field %s", field)
-        _LOGGER.error(ex)
