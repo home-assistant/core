@@ -924,9 +924,6 @@ pyzabbix==0.7.4
 # homeassistant.components.sensor.qnap
 qnapstats==0.2.4
 
-# homeassistant.components.sensor.qq
-qqbot==2.3.7
-
 # homeassistant.components.switch.rachio
 rachiopy==0.1.2
 
