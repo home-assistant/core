@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_JSON_ATTRS): cv.boolean,
+    vol.Optional(CONF_JSON_ATTRS): cv.ensure_list_csv,
 })
 
 
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest.update()
 
     add_devices([RestSensor(hass, rest, name, unit,
-                            value_template, json_attrs)])
+                            value_template, json_attrs)], True)
 
 
 class RestSensor(Entity):
@@ -90,7 +90,6 @@ class RestSensor(Entity):
         self._value_template = value_template
         self._json_attrs = json_attrs
         self._attributes = None
-        self.update()
 
     @property
     def name(self):
@@ -120,9 +119,11 @@ class RestSensor(Entity):
         if self._json_attrs:
             self._attributes = None
             try:
-                attrs = json.loads(value)
-                if isinstance(attrs, dict):
-                    self._attributes = json.loads(value)
+                json_dict = json.loads(value)
+                if isinstance(json_dict, dict):
+                    attrs = {k: json_dict[k] for k in self._json_attrs
+                             if k in json_dict}
+                    self._attributes = attrs
                 else:
                     _LOGGER.warning('JSON result was not a dictionary')
             except ValueError:
