@@ -141,7 +141,7 @@ class GenericThermostat(ClimateDevice):
             # If we have no initial operation mode, restore
             if self._initial_operation_mode is None:
                 if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
-                    self.set_operation_mode(STATE_OFF)
+                    self._enabled = False
 
     @property
     def should_poll(self):
