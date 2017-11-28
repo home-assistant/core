@@ -76,15 +76,15 @@ DEMO_DEVICES = [{
         'name': 'all lights'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id': 'group.all_switches',
     'name': {
         'name': 'all switches'
     },
-    'traits': ['action.devices.traits.Scene'],
-    'type': 'action.devices.types.SCENE',
+    'traits': ['action.devices.traits.OnOff'],
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id':
@@ -132,7 +132,7 @@ DEMO_DEVICES = [{
         'name': 'all covers'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id':
@@ -200,7 +200,7 @@ DEMO_DEVICES = [{
         'name': 'all fans'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id': 'climate.hvac',
