@@ -343,8 +343,17 @@ class TelldusLiveEntity(Entity):
     @property
     def _battery_level(self):
         """Return the battery level of a device."""
-        return round(self.device.battery * 100 / 255) \
-            if self.device.battery else None
+        from tellduslive import (BATTERY_LOW,
+                                 BATTERY_UNKNOWN,
+                                 BATTERY_OK)
+        if self.device.battery == BATTERY_LOW:
+            return 1
+        elif self.device.battery == BATTERY_UNKNOWN:
+            return None
+        elif self.device.battery == BATTERY_OK:
+            return 100
+        else:
+            return self.device.battery  # Percentage
 
     @property
     def _last_updated(self):
