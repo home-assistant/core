@@ -136,7 +136,7 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         """Turn off media player."""
         self._state = STATE_OFF
         if self._turn_off_action:
-            self._turn_off_action.run()
+            self._turn_off_action.async_run()
 
     @property
     def volume_level(self):
@@ -153,7 +153,7 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         volume = int(math.ceil(volume / 10.0)) * 10
         if self._volume_set_action:
             self._volume = volume
-            self._volume_set_action.run({'volume:': volume})
+            self._volume_set_action.async_run({'volume:': volume})
         elif self._volume_up_action and self._volume_down_action:
             adjustment_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(adjustment_loop)
@@ -167,12 +167,12 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         if volume < self._volume:
             while volume < self._volume:
                 self._volume -= self._volume_step
-                self._volume_down_action.run()
+                self._volume_down_action.async_run()
                 yield from asyncio.sleep(self._volume_step_delay)
         else:
             while volume > self._volume:
                 self._volume += self._volume_step
-                self._volume_up_action.run()
+                self._volume_up_action.async_run()
                 yield from asyncio.sleep(self._volume_step_delay)
 
 
@@ -181,10 +181,10 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         """Mute or unmute the media player"""
         if mute:
             self._is_muted = True
-            self._volume_mute_action.run({'mute': True})
+            self._volume_mute_action.async_run({'mute': True})
         else:
             self._is_muted = False
-            self._volume_unmute_action.run({'mute': False})
+            self._volume_unmute_action.async_run({'mute': False})
 
     @property
     def source(self):
@@ -196,7 +196,7 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         if self._select_source_action:
             for source_key, source_name in self._sources.items():
                 if source_name == requested_source_name:
-                    self._select_source_action.run(
+                    self._select_source_action.async_run(
                         {'source_key': source_key, 'source_name': source_name})
                     self._selected_source = source_name
                     return
