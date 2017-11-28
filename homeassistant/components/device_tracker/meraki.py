@@ -6,7 +6,6 @@ https://home-assistant.io/components/device_tracker.meraki/
 
 """
 import asyncio
-from functools import partial
 import logging
 import json
 
@@ -30,19 +29,19 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VALIDATOR): cv.string,
-    vol.Required(CONF_SECRET): cv.string,
-    vol.Optional(CONF_TRACK_NEW): cv.boolean
+    vol.Required(CONF_SECRET): cv.string
 })
 
-
-def setup_scanner(hass, config, see, discovery_info=None):
+@asyncio.coroutine
+def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an endpoint for the Meraki tracker."""
     track_new = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
     yaml_path = hass.config.path(YAML_DEVICES)
     devs_to_track = []
     for device in load_config(yaml_path, hass, 0):
         devs_to_track.append(device.mac)
-    hass.http.register_view(MerakiView(config, see, devs_to_track, track_new))
+    hass.http.register_view(
+        MerakiView(config, async_see, devs_to_track, track_new))
 
     return True
 
@@ -53,9 +52,9 @@ class MerakiView(HomeAssistantView):
     url = URL
     name = 'api:meraki'
 
-    def __init__(self, config, see, devs_to_track, track_new):
+    def __init__(self, config, async_see, devs_to_track, track_new):
         """Initialize Meraki URL endpoints."""
-        self.see = see
+        self.async_see = async_see
         self.validator = config[CONF_VALIDATOR]
         self.secret = config[CONF_SECRET]
         self.devices = devs_to_track
@@ -76,13 +75,15 @@ class MerakiView(HomeAssistantView):
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))
         if not data.get('secret', False):
             _LOGGER.error("secret invalid")
-            return("No secret", HTTP_UNPROCESSABLE_ENTITY)
+            return self.json_message('No secret', HTTP_UNPROCESSABLE_ENTITY)
         if data['secret'] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
-            return ('Invalid secret', HTTP_UNPROCESSABLE_ENTITY)
+            return self.json_message('Invalid secret',
+                                     HTTP_UNPROCESSABLE_ENTITY)
         elif data['version'] != VERSION:
             _LOGGER.error("Invalid API version: %s", data['version'])
-            return ('Invalid api version', HTTP_UNPROCESSABLE_ENTITY)
+            return self.json_message('Invalid version',
+                                     HTTP_UNPROCESSABLE_ENTITY)
         else:
             _LOGGER.debug('Valid Secret')
             if data['type'] == "DevicesSeen":
@@ -91,7 +92,8 @@ class MerakiView(HomeAssistantView):
                 _LOGGER.debug("Bluetooth Devices Seen")
             else:
                 _LOGGER.error("Unknown Device %s", type)
-                return('invalid device type', HTTP_UNPROCESSABLE_ENTITY)
+                return self.json_message('invalid device type',
+                                         HTTP_UNPROCESSABLE_ENTITY)
         if len(data["data"]["observations"]) == 0:
             _LOGGER.debug("No observations found")
             return
@@ -125,10 +127,10 @@ class MerakiView(HomeAssistantView):
                 attrs['seenTime'] = i['seenTime']
             if i.get('ssid', False):
                 attrs['ssid'] = i['ssid']
-            yield from hass.async_add_job(
-                partial(self.see,
-                        gps=gps_location,
-                        mac=mac,
-                        source_type=SOURCE_TYPE_ROUTER,
-                        gps_accuracy=accuracy,
-                        attributes=attrs))
+            yield from self.async_see(
+                gps=gps_location,
+                mac=mac,
+                source_type=SOURCE_TYPE_ROUTER,
+                gps_accuracy=accuracy,
+                attributes=attrs
+            )
