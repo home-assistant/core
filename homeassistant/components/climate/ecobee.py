@@ -357,6 +357,10 @@ class Thermostat(ClimateDevice):
             _LOGGER.error(
                 "Missing valid arguments for set_temperature in %s", kwargs)
 
+    def set_humidity(self, humidity):
+        """Set the humidity level."""
+        self.data.ecobee.set_humidity(self.thermostat_index, humidity)
+
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, operation_mode)
