@@ -379,8 +379,14 @@ def _process_time_match(parameter):
         return lambda _: True
 
     elif isinstance(parameter, str) and parameter.startswith('/'):
-        parameter = float(parameter[1:])
-        return lambda time: time % parameter == 0
+        plus_pos = parameter.find('+', 2)
+        if plus_pos > 0:
+            remainder = float(parameter[plus_pos + 1:])
+            parameter = float(parameter[1:plus_pos])
+        else:
+            remainder = 0
+            parameter = float(parameter[1:])
+        return lambda time: time % parameter == remainder
 
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return lambda time: time == parameter

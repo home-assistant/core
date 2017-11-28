@@ -631,6 +631,114 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
+    def test_periodic_task_minute_remainder(self):
+        """Test periodic tasks per minute, with remainder."""
+        specific_runs = []
+
+        unsub = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), minute='/5+3')
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 3, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 6, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 8, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        unsub()
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 8, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+    def test_periodic_task_hour_remainder(self):
+        """Test periodic tasks per hour, with remainder."""
+        specific_runs = []
+
+        unsub = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), hour='/3+2')
+
+        self._send_time_changed(datetime(2014, 5, 24, 20, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 21, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 23, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 1, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(3, len(specific_runs))
+
+        unsub()
+
+        self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(3, len(specific_runs))
+
+    def test_periodic_task_day_remainder(self):
+        """Test periodic tasks per day, with remainder."""
+        specific_runs = []
+
+        unsub = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), day='/2+1')
+
+        self._send_time_changed(datetime(2014, 5, 3, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 4, 12, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 5, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        unsub()
+
+        self._send_time_changed(datetime(2014, 5, 5, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+    def test_periodic_task_year_remainder(self):
+        """Test periodic tasks per year, with remainder."""
+        specific_runs = []
+
+        unsub = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), year='/2+1')
+
+        self._send_time_changed(datetime(2015, 5, 2, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2017, 5, 2, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        unsub()
+
+        self._send_time_changed(datetime(2017, 5, 2, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
     def test_periodic_task_wrong_input(self):
         """Test periodic tasks with wrong input."""
         specific_runs = []
