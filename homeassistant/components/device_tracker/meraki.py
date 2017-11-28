@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Set up an endpoint for the Locative application."""
+    """Set up an endpoint for the Meraki tracker."""
     track_new = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
     yaml_path = hass.config.path(YAML_DEVICES)
     devs_to_track = []
@@ -54,7 +54,7 @@ class MerakiView(HomeAssistantView):
     name = 'api:meraki'
 
     def __init__(self, config, see, devs_to_track, track_new):
-        """Initialize Locative URL endpoints."""
+        """Initialize Meraki URL endpoints."""
         self.see = see
         self.validator = config[CONF_VALIDATOR]
         self.secret = config[CONF_SECRET]
@@ -64,8 +64,6 @@ class MerakiView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Meraki message received as GET."""
-        _LOGGER.info("Merakicmx message received as a GET")
-        _LOGGER.debug("Request: %s", request.text)
         return self.validator
 
     @asyncio.coroutine
@@ -76,62 +74,61 @@ class MerakiView(HomeAssistantView):
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))
-        if 'secret' not in data:
+        if not data.get('secret', False):
             _LOGGER.error("secret invalid")
             return("No secret", HTTP_UNPROCESSABLE_ENTITY)
+        if data['secret'] != self.secret:
+            _LOGGER.error("Invalid Secret received from Meraki")
+            return ('Invalid secret', HTTP_UNPROCESSABLE_ENTITY)
+        elif data['version'] != VERSION:
+            _LOGGER.error("Invalid API version: %s", data['version'])
+            return ('Invalid api version', HTTP_UNPROCESSABLE_ENTITY)
         else:
-            if data['secret'] != self.secret:
-                _LOGGER.error("Invalid Secret received from Meraki")
-            elif data['version'] != VERSION:
-                _LOGGER.error("Invalid API version: %s", data['version'])
+            _LOGGER.debug('Valid Secret')
+            if data['type'] == "DevicesSeen":
+                _LOGGER.debug("WiFi Devices Seen")
+            elif data['type'] == "BluetoothDevicesSeen":
+                _LOGGER.debug("Bluetooth Devices Seen")
             else:
-                _LOGGER.debug('Valid Secret')
-                if data['type'] == "DevicesSeen":
-                    _LOGGER.debug("WiFi Devices Seen")
-                elif data['type'] == "BluetoothDevicesSeen":
-                    _LOGGER.debug("Bluetooth Devices Seen")
-                else:
-                    _LOGGER.error("Unknown Device %s", type)
-                    return('invalid device type', HTTP_UNPROCESSABLE_ENTITY)
+                _LOGGER.error("Unknown Device %s", type)
+                return('invalid device type', HTTP_UNPROCESSABLE_ENTITY)
+        if len(data["data"]["observations"]) == 0:
+            _LOGGER.debug("No observations found")
+            return
         res = yield from self._handle(request.app['hass'], data)
         return res
 
     @asyncio.coroutine
     def _handle(self, hass, data):
-        if len(data["data"]["observations"]) == 0:
-            _LOGGER.debug("No observations found")
-        else:
-            for i in data["data"]["observations"]:
-                _LOGGER.debug("Raw observation data: %s", i)
-                data["data"]["secret"] = "hidden"
-                lat = i["location"]["lat"]
-                lng = i["location"]["lng"]
-                accuracy = int(float(i["location"]["unc"]))
-                mac = i["clientMac"]
-                _LOGGER.debug("clientMac: %s", mac)
-                gps_location = (lat, lng)
-                attrs = {}
-                if ((not self.track and mac.upper() not in self.devices) and
-                        mac.upper() not in self.devices):
-                    _LOGGER.debug("Skipping: %s", mac)
-                    continue
-                if 'os' in i:
-                    attrs['os'] = i['os']
-                if 'manufacturer' in i:
-                    attrs['manufacturer'] = i['manufacturer']
-                if 'ipv4' in i:
-                    attrs['ipv4'] = i['ipv4']
-                if 'ipv6' in i:
-                    attrs['ipv6'] = i['ipv6']
-                if 'seenTime' in i:
-                    attrs['seenTime'] = i['seenTime']
-                if 'ssid' in i:
-                    attrs['ssid'] = i['ssid']
-                yield from hass.async_add_job(
-                    partial(self.see,
-                            gps=gps_location,
-                            mac=mac,
-                            source_type=SOURCE_TYPE_ROUTER,
-                            gps_accuracy=accuracy,
-                            attributes=attrs))
-        return
+        for i in data["data"]["observations"]:
+            data["data"]["secret"] = "hidden"
+            lat = i["location"]["lat"]
+            lng = i["location"]["lng"]
+            accuracy = int(float(i["location"]["unc"]))
+            mac = i["clientMac"]
+            _LOGGER.debug("clientMac: %s", mac)
+            gps_location = (lat, lng)
+            attrs = {}
+            if ((not self.track and mac.upper() not in self.devices) and
+                    mac.upper() not in self.devices):
+                _LOGGER.debug("Skipping: %s", mac)
+                continue
+            if i.get('os', False):
+                attrs['os'] = i['os']
+            if i.get('manufacturer', False):
+                attrs['manufacturer'] = i['manufacturer']
+            if i.get('ipv4', False):
+                attrs['ipv4'] = i['ipv4']
+            if i.get('ipv6', False):
+                attrs['ipv6'] = i['ipv6']
+            if i.get('seenTime', False):
+                attrs['seenTime'] = i['seenTime']
+            if i.get('ssid', False):
+                attrs['ssid'] = i['ssid']
+            yield from hass.async_add_job(
+                partial(self.see,
+                        gps=gps_location,
+                        mac=mac,
+                        source_type=SOURCE_TYPE_ROUTER,
+                        gps_accuracy=accuracy,
+                        attributes=attrs))
