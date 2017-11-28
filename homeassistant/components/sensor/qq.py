@@ -65,12 +65,12 @@ class QQ(threading.Thread):
         """Initialize threading"""
         threading.Thread.__init__(self)
         self.thread_stop = False
-        self.qq = qq_number
+        self._qq = qq_number
 
     def run(self):
         """run threading"""
         from qqbot import _bot as bot
-        bot.Login(['-u', str(self.qq)])
+        bot.Login(['-u', str(self._qq)])
         bot.Run()
 
     def stop(self):
