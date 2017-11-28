@@ -190,5 +190,8 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
                     self._selected_source = source_name
                     return
             raise ValueError(
-                f"Source '{requested_source_name}' was not found in source list."
+                """Source '{requested_source_name}' was 
+                not found in source list.""".format(
+                    requested_source_name=requested_source_name
+                )
             )
