@@ -48,7 +48,8 @@ class CanaryCamera(Camera):
         self._image_content = None
 
     def camera_image(self):
-        """Return bytes of camera image."""
+        """Update the status of the camera and return bytes of camera image."""
+        self.update()
         return self._image_content
 
     @property
@@ -71,10 +72,6 @@ class CanaryCamera(Camera):
             ATTR_MOTION_START_TIME: self._motion_entry.start_time,
             ATTR_MOTION_END_TIME: self._motion_entry.end_time,
         }
-
-    def should_poll(self):
-        """Update the recording state periodically."""
-        return True
 
     def update(self):
         """Update the status of the camera."""
