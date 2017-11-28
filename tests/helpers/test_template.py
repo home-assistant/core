@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 import unittest
 import random
+import math
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -124,6 +125,29 @@ class TestHelpersTemplate(unittest.TestCase):
                 out,
                 template.Template('{{ %s | multiply(10) | round }}' % inp,
                                   self.hass).render())
+
+    def test_logarithm(self):
+        """Test logarithm."""
+        tests = [
+            (4, 2, '2.0'),
+            (1000, 10, '3.0'),
+            (math.e, '', '1.0'),
+            ('"invalid"', '_', 'invalid'),
+            (10, '"invalid"', '10.0'),
+        ]
+
+        for value, base, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | log(%s) | round(1) }}' % (value, base),
+                    self.hass).render())
+
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ log(%s, %s) | round(1) }}' % (value, base),
+                    self.hass).render())
 
     def test_strptime(self):
         """Test the parse timestamp method."""

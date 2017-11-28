@@ -2,7 +2,10 @@
 import unittest
 
 from homeassistant.components.sensor import wunderground
-from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES
+from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES, STATE_UNKNOWN
+from homeassistant.exceptions import PlatformNotReady
+
+from requests.exceptions import ConnectionError
 
 from tests.common import get_test_home_assistant
 
@@ -38,6 +41,7 @@ FEELS_LIKE = '40'
 WEATHER = 'Clear'
 HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
 ALERT_MESSAGE = 'This is a test alert message'
+ALERT_ICON = 'mdi:alert-circle-outline'
 FORECAST_TEXT = 'Mostly Cloudy. Fog overnight.'
 PRECIP_IN = 0.03
 
@@ -163,6 +167,41 @@ def mocked_requests_get(*args, **kwargs):
         }, 200)
 
 
+def mocked_requests_get_invalid(*args, **kwargs):
+    """Mock requests.get invocations invalid data."""
+    class MockResponse:
+        """Class to represent a mocked response."""
+
+        def __init__(self, json_data, status_code):
+            """Initialize the mock response class."""
+            self.json_data = json_data
+            self.status_code = status_code
+
+        def json(self):
+            """Return the json of the response."""
+            return self.json_data
+
+    return MockResponse({
+        "response": {
+            "version": "0.1",
+            "termsofService":
+                "http://www.wunderground.com/weather/api/d/terms.html",
+            "features": {
+                "conditions": 1,
+                "alerts": 1,
+                "forecast": 1,
+            }
+        }, "current_observation": {
+            "image": {
+                "url":
+                    'http://icons.wxug.com/graphics/wu2/logo_130x80.png',
+                "title": "Weather Underground",
+                "link": "http://www.wunderground.com"
+            },
+        },
+    }, 200)
+
+
 class TestWundergroundSetup(unittest.TestCase):
     """Test the WUnderground platform."""
 
@@ -199,9 +238,9 @@ class TestWundergroundSetup(unittest.TestCase):
             wunderground.setup_platform(self.hass, VALID_CONFIG,
                                         self.add_devices, None))
 
-        self.assertTrue(
+        with self.assertRaises(PlatformNotReady):
             wunderground.setup_platform(self.hass, INVALID_CONFIG,
-                                        self.add_devices, None))
+                                        self.add_devices, None)
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_sensor(self, req_mock):
@@ -219,6 +258,7 @@ class TestWundergroundSetup(unittest.TestCase):
                 self.assertEqual(1, device.state)
                 self.assertEqual(ALERT_MESSAGE,
                                  device.device_state_attributes['Message'])
+                self.assertEqual(ALERT_ICON, device.icon)
                 self.assertIsNone(device.entity_picture)
             elif device.name == 'PWS_location':
                 self.assertEqual('Holly Springs, NC', device.state)
@@ -234,3 +274,21 @@ class TestWundergroundSetup(unittest.TestCase):
                 self.assertEqual(device.name, 'PWS_precip_1d_in')
                 self.assertEqual(PRECIP_IN, device.state)
                 self.assertEqual(LENGTH_INCHES, device.unit_of_measurement)
+
+    @unittest.mock.patch('requests.get',
+                         side_effect=ConnectionError('test exception'))
+    def test_connect_failed(self, req_mock):
+        """Test the WUnderground connection error."""
+        with self.assertRaises(PlatformNotReady):
+            wunderground.setup_platform(self.hass, VALID_CONFIG,
+                                        self.add_devices, None)
+
+    @unittest.mock.patch('requests.get',
+                         side_effect=mocked_requests_get_invalid)
+    def test_invalid_data(self, req_mock):
+        """Test the WUnderground invalid data."""
+        wunderground.setup_platform(self.hass, VALID_CONFIG_PWS,
+                                    self.add_devices, None)
+        for device in self.DEVICES:
+            device.update()
+            self.assertEqual(STATE_UNKNOWN, device.state)
