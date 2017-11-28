@@ -135,7 +135,7 @@ pythonwhois==2.4.3
 pyunifi==2.13
 
 # homeassistant.components.sensor.qq
-qqbot==2.7.3
+qqbot==2.3.7
 
 # homeassistant.components.notify.html5
 pywebpush==1.3.0
