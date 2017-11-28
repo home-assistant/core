@@ -71,7 +71,6 @@ class CanaryData(object):
         self._api = Api(username, password, timeout)
 
         self._locations_by_id = {}
-        self._devices_by_id = {}
         self._readings_by_device_id = {}
         self._entries_by_location_id = {}
 
@@ -89,7 +88,6 @@ class CanaryData(object):
 
             for device in location.devices:
                 if device.is_online:
-                    self._devices_by_id[device.device_id] = device
                     self._readings_by_device_id[device.device_id] = \
                         self._api.get_latest_readings(device.device_id)
 
@@ -97,11 +95,6 @@ class CanaryData(object):
     def locations(self):
         """Return a list of locations."""
         return self._locations_by_id.values()
-
-    @property
-    def devices(self):
-        """Return a list of devices."""
-        return self._devices_by_id.values()
 
     def get_motion_entries(self, location_id):
         """Return a list of motion entries based on location_id."""
