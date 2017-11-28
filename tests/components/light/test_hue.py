@@ -196,7 +196,7 @@ class TestSetup(unittest.TestCase):
                         self.hass, self.mock_api, self.mock_bridge,
                         self.mock_bridge_type, mock.ANY)
                     self.mock_add_devices.assert_called_once_with(
-                        self.mock_lights + self.mock_groups)
+                        self.mock_lights)
 
     def test_process_lights_api_error(self):
         """Test the process_lights function when the bridge errors out."""
@@ -208,7 +208,9 @@ class TestSetup(unittest.TestCase):
             None)
 
         self.assertEquals([], ret)
-        self.assertEquals({}, self.hass.data[hue_light.DOMAIN]['lights'])
+        self.assertEquals(
+            {},
+            self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTS])
 
     def test_process_lights_no_lights(self):
         """Test the process_lights function when bridge returns no lights."""
@@ -219,7 +221,9 @@ class TestSetup(unittest.TestCase):
             None)
 
         self.assertEquals([], ret)
-        self.assertEquals({}, self.hass.data[hue_light.DOMAIN]['lights'])
+        self.assertEquals(
+            {},
+            self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTS])
 
     @patch('homeassistant.components.light.hue.HueLight')
     def test_process_lights_some_lights(self, mock_hue_light):
@@ -244,7 +248,7 @@ class TestSetup(unittest.TestCase):
                 self.mock_bridge.allow_in_emulated_hue),
         ])
         self.assertEquals(
-            len(self.hass.data[hue_light.DOMAIN]['lights']),
+            len(self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTS]),
             2)
 
     @patch('homeassistant.components.light.hue.HueLight')
@@ -257,7 +261,8 @@ class TestSetup(unittest.TestCase):
         self.setup_mocks_for_process_lights()
         self.mock_api.get.return_value = {
             1: {'state': 'on'}, 2: {'state': 'off'}}
-        self.hass.data[hue_light.DOMAIN]['lights'][1] = MagicMock()
+        self.hass.data[
+            hue_light.DATA_KEY][hue_light.DATA_LIGHTS][1] = MagicMock()
 
         ret = hue_light.process_lights(
             self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
@@ -270,10 +275,10 @@ class TestSetup(unittest.TestCase):
                 self.mock_bridge_type, self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue),
         ])
-        self.hass.data[hue_light.DOMAIN]['lights'][
+        self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTS][
             1].schedule_update_ha_state.assert_called_once_with()
         self.assertEquals(
-            len(self.hass.data[hue_light.DOMAIN]['lights']),
+            len(self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTS]),
             2)
 
     def test_process_groups_api_error(self):
@@ -286,7 +291,9 @@ class TestSetup(unittest.TestCase):
             None)
 
         self.assertEquals([], ret)
-        self.assertEquals({}, self.hass.data[hue_light.DOMAIN]['lightgroups'])
+        self.assertEquals(
+            {},
+            self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTGROUPS])
 
     def test_process_groups_no_state(self):
         """Test the process_groups function when bridge returns no status."""
@@ -298,7 +305,9 @@ class TestSetup(unittest.TestCase):
             None)
 
         self.assertEquals([], ret)
-        self.assertEquals({}, self.hass.data[hue_light.DOMAIN]['lightgroups'])
+        self.assertEquals(
+            {},
+            self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTGROUPS])
 
     @patch('homeassistant.components.light.hue.HueLight')
     def test_process_groups_some_groups(self, mock_hue_light):
@@ -323,7 +332,8 @@ class TestSetup(unittest.TestCase):
                 self.mock_bridge.allow_in_emulated_hue, True),
         ])
         self.assertEquals(
-            len(self.hass.data[hue_light.DOMAIN]['lightgroups']),
+            len(self.hass.data[
+                hue_light.DATA_KEY][hue_light.DATA_LIGHTGROUPS]),
             2)
 
     @patch('homeassistant.components.light.hue.HueLight')
@@ -336,7 +346,8 @@ class TestSetup(unittest.TestCase):
         self.setup_mocks_for_process_groups()
         self.mock_api.get.return_value = {
             1: {'state': 'on'}, 2: {'state': 'off'}}
-        self.hass.data[hue_light.DOMAIN]['lightgroups'][1] = MagicMock()
+        self.hass.data[
+            hue_light.DATA_KEY][hue_light.DATA_LIGHTGROUPS][1] = MagicMock()
 
         ret = hue_light.process_groups(
             self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
@@ -349,10 +360,11 @@ class TestSetup(unittest.TestCase):
                 self.mock_bridge_type, self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue, True),
         ])
-        self.hass.data[hue_light.DOMAIN]['lightgroups'][
+        self.hass.data[hue_light.DATA_KEY][hue_light.DATA_LIGHTGROUPS][
             1].schedule_update_ha_state.assert_called_once_with()
         self.assertEquals(
-            len(self.hass.data[hue_light.DOMAIN]['lightgroups']),
+            len(self.hass.data[
+                hue_light.DATA_KEY][hue_light.DATA_LIGHTGROUPS]),
             2)
 
 

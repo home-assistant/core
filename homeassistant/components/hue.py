@@ -39,9 +39,11 @@ DEFAULT_ALLOW_HUE_GROUPS = True
 
 BRIDGE_CONFIG_SCHEMA = vol.Schema([{
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_FILENAME): cv.string,
-    vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
-    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
+    vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
+    vol.Optional(CONF_ALLOW_UNREACHABLE,
+                 default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
+    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE,
+                 default=DEFAULT_ALLOW_IN_EMULATED_HUE): cv.boolean,
     vol.Optional(CONF_ALLOW_HUE_GROUPS,
                  default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
 }])
@@ -87,15 +89,12 @@ def setup(hass, config):
         return True
 
     for bridge in bridges:
-        filename = bridge.get(CONF_FILENAME, PHUE_CONFIG_FILE)
-        allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE,
-                                       DEFAULT_ALLOW_UNREACHABLE)
-        allow_in_emulated_hue = bridge.get(CONF_ALLOW_IN_EMULATED_HUE,
-                                           DEFAULT_ALLOW_IN_EMULATED_HUE)
-        allow_hue_groups = bridge.get(CONF_ALLOW_HUE_GROUPS,
-                                      DEFAULT_ALLOW_HUE_GROUPS)
+        filename = bridge.get(CONF_FILENAME)
+        allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE)
+        allow_in_emulated_hue = bridge.get(CONF_ALLOW_IN_EMULATED_HUE)
+        allow_hue_groups = bridge.get(CONF_ALLOW_HUE_GROUPS)
 
-        host = bridge.get(CONF_HOST, None)
+        host = bridge.get(CONF_HOST)
 
         if host is None:
             host = _find_host_from_config(hass, filename)
@@ -145,7 +144,7 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
 
     try:
         with open(path) as inp:
-            return next(json.loads(''.join(inp)).keys().__iter__())
+            return next(iter(json.load(inp).keys()))
     except (ValueError, AttributeError, StopIteration):
         # ValueError if can't parse as JSON
         # AttributeError if JSON value is not a dict

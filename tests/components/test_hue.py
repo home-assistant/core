@@ -68,7 +68,13 @@ class TestSetup(unittest.TestCase):
                 mock_load.assert_called_once_with(
                     self.hass, 'light', hue.DOMAIN, {},
                     {'bridges': [
-                        {'host': 'localhost', 'allow_hue_groups': True}]})
+                        {
+                            'host': 'localhost',
+                            'filename': 'phue.conf',
+                            'allow_in_emulated_hue': True,
+                            'allow_hue_groups': True,
+                            'allow_unreachable': False,
+                        }]})
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
                 self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
@@ -96,8 +102,12 @@ class TestSetup(unittest.TestCase):
                     mock_load.assert_called_once_with(
                         self.hass, 'light', hue.DOMAIN, {},
                         {'bridges': [
-                            {'filename': 'phue.conf', 'allow_hue_groups': True}
-                        ]})
+                            {
+                                'filename': 'phue.conf',
+                                'allow_in_emulated_hue': True,
+                                'allow_hue_groups': True,
+                                'allow_unreachable': False,
+                            }]})
 
                     self.assertTrue(hue.DOMAIN in self.hass.data)
                     self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
@@ -128,8 +138,21 @@ class TestSetup(unittest.TestCase):
                 mock_load.assert_called_once_with(
                     self.hass, 'light', hue.DOMAIN, {},
                     {'bridges': [
-                        {'host': 'localhost', 'allow_hue_groups': True},
-                        {'host': '192.168.0.1', 'allow_hue_groups': True}]})
+                        {
+                            'host': 'localhost',
+                            'filename': 'phue.conf',
+                            'allow_in_emulated_hue': True,
+                            'allow_hue_groups': True,
+                            'allow_unreachable': False,
+                        },
+                        {
+                            'host': '192.168.0.1',
+                            'filename': 'phue.conf',
+                            'allow_in_emulated_hue': True,
+                            'allow_hue_groups': True,
+                            'allow_unreachable': False,
+                        },
+                    ]})
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
                 self.assertEquals(2, len(self.hass.data[hue.DOMAIN]))
@@ -182,8 +205,13 @@ class TestSetup(unittest.TestCase):
                     call(
                         self.hass, 'light', hue.DOMAIN, {},
                         {'bridges': [
-                            {'host': '192.168.1.10', 'allow_hue_groups': True}
-                        ]}),
+                            {
+                                'host': '192.168.1.10',
+                                'filename': 'phue.conf',
+                                'allow_in_emulated_hue': True,
+                                'allow_hue_groups': True,
+                                'allow_unreachable': False,
+                            }]}),
                 ]
                 mock_load.assert_has_calls(calls_to_mock_load)
 

@@ -31,7 +31,9 @@ DEPENDENCIES = ['hue']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "hue.lights"
+DATA_KEY = 'hue.lights'
+DATA_LIGHTS = 'lights'
+DATA_LIGHTGROUPS = 'lightgroups'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -51,14 +53,14 @@ SUPPORT_HUE = {
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
     }
 
-ATTR_IS_HUE_GROUP = "is_hue_group"
+ATTR_IS_HUE_GROUP = 'is_hue_group'
 
 # Legacy configuration, will be removed in 0.60
 CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 DEFAULT_ALLOW_UNREACHABLE = False
-CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
+CONF_ALLOW_IN_EMULATED_HUE = 'allow_in_emulated_hue'
 DEFAULT_ALLOW_IN_EMULATED_HUE = True
-CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
+CONF_ALLOW_HUE_GROUPS = 'allow_hue_groups'
 DEFAULT_ALLOW_HUE_GROUPS = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -93,6 +95,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config is not None and len(config) > 0:
         # Legacy configuration, will be removed in 0.60
         config_str = yaml.dump([config])
+        # Indent so it renders in a fixed-width font
         config_str = re.sub('(?m)^', '      ', config_str)
         hass.components.persistent_notification.async_create(
             MIGRATION_INSTRUCTIONS.format(config=config_str),
@@ -107,8 +110,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def setup_data(hass):
     """Initialize internal data. Useful from tests."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {'lights': {}, 'lightgroups': {}}
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {DATA_LIGHTS: {}, DATA_LIGHTGROUPS: {}}
 
 
 @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
@@ -127,14 +130,14 @@ def unthrottled_update_lights(hass, bridge, add_devices):
     try:
         api = bridge.get_api()
     except phue.PhueRequestTimeout:
-        _LOGGER.warning("Timeout trying to reach the bridge")
+        _LOGGER.warning('Timeout trying to reach the bridge')
         return
     except ConnectionRefusedError:
-        _LOGGER.error("The bridge refused the connection")
+        _LOGGER.error('The bridge refused the connection')
         return
     except socket.error:
         # socket.error when we cannot reach Hue
-        _LOGGER.exception("Cannot reach the bridge")
+        _LOGGER.exception('Cannot reach the bridge')
         return
 
     bridge_type = get_bridge_type(api)
@@ -146,7 +149,7 @@ def unthrottled_update_lights(hass, bridge, add_devices):
         new_lightgroups = process_groups(
             hass, api, bridge, bridge_type,
             lambda **kw: update_lights(hass, bridge, add_devices, **kw))
-        new_lights = new_lights + new_lightgroups
+        new_lights.extend(new_lightgroups)
 
     if new_lights:
         add_devices(new_lights)
@@ -166,22 +169,23 @@ def process_lights(hass, api, bridge, bridge_type, update_lights_cb):
     api_lights = api.get('lights')
 
     if not isinstance(api_lights, dict):
-        _LOGGER.error("Got unexpected result from Hue API")
+        _LOGGER.error('Got unexpected result from Hue API')
         return []
 
     new_lights = []
 
+    lights = hass.data[DATA_KEY][DATA_LIGHTS]
     for light_id, info in api_lights.items():
-        if light_id not in hass.data[DOMAIN]['lights']:
-            hass.data[DOMAIN]['lights'][light_id] = HueLight(
+        if light_id not in lights:
+            lights[light_id] = HueLight(
                 int(light_id), info, bridge,
                 update_lights_cb,
                 bridge_type, bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue)
-            new_lights.append(hass.data[DOMAIN]['lights'][light_id])
+            new_lights.append(lights[light_id])
         else:
-            hass.data[DOMAIN]['lights'][light_id].info = info
-            hass.data[DOMAIN]['lights'][light_id].schedule_update_ha_state()
+            lights[light_id].info = info
+            lights[light_id].schedule_update_ha_state()
 
     return new_lights
 
@@ -191,28 +195,28 @@ def process_groups(hass, api, bridge, bridge_type, update_lights_cb):
     api_groups = api.get('groups')
 
     if not isinstance(api_groups, dict):
-        _LOGGER.error("Got unexpected result from Hue API")
+        _LOGGER.error('Got unexpected result from Hue API')
         return []
 
     new_lights = []
 
+    groups = hass.data[DATA_KEY][DATA_LIGHTGROUPS]
     for lightgroup_id, info in api_groups.items():
         if 'state' not in info:
-            _LOGGER.warning("Group info does not contain state. "
-                            "Please update your hub.")
+            _LOGGER.warning('Group info does not contain state. '
+                            'Please update your hub.')
             return []
 
-        if lightgroup_id not in hass.data[DOMAIN]['lightgroups']:
-            hass.data[DOMAIN]['lightgroups'][lightgroup_id] = HueLight(
+        if lightgroup_id not in groups:
+            groups[lightgroup_id] = HueLight(
                 int(lightgroup_id), info, bridge,
                 update_lights_cb,
                 bridge_type, bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue, True)
-            new_lights.append(hass.data[DOMAIN]['lightgroups'][lightgroup_id])
+            new_lights.append(groups[lightgroup_id])
         else:
-            hass.data[DOMAIN]['lightgroups'][lightgroup_id].info = info
-            hass.data[DOMAIN]['lightgroups'][
-                lightgroup_id].schedule_update_ha_state()
+            groups[lightgroup_id].info = info
+            groups[lightgroup_id].schedule_update_ha_state()
 
     return new_lights
 
@@ -304,7 +308,7 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_XY_COLOR in kwargs:
-            if self.info.get('manufacturername') == "OSRAM":
+            if self.info.get('manufacturername') == 'OSRAM':
                 color_hue, sat = color_util.color_xy_to_hs(
                     *kwargs[ATTR_XY_COLOR])
                 command['hue'] = color_hue
@@ -312,7 +316,7 @@ class HueLight(Light):
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
-            if self.info.get('manufacturername') == "OSRAM":
+            if self.info.get('manufacturername') == 'OSRAM':
                 hsv = color_util.color_RGB_to_hsv(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['hue'] = hsv[0]
