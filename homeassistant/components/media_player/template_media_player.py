@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.template_media_player/
 import asyncio
 import logging
 import math
-import time
 
 import voluptuous as vol
 
