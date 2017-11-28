@@ -1,8 +1,8 @@
 """You can use this sensor to link your qq"""
 import os
+import threading
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-import threading
 
 from homeassistant.helpers.entity import Entity
 
