@@ -61,18 +61,18 @@ class Qqsensor(Entity):
 
 class QQ(threading.Thread):
     """Representation of qq threading."""
-    def __init__(self, qq):
+    def __init__(self, qq_number):
         """Initialize threading"""
         threading.Thread.__init__(self)
         self.thread_stop = False
-        self.qq = qq
+        self.qq = qq_number
 
     def run(self):
-        """run threading"""        
+        """run threading"""
         from qqbot import _bot as bot
         bot.Login(['-u', str(self.qq)])
         bot.Run()
 
     def stop(self):
         """stop threading although it could not use."""
-        self.thread_stop = True 
+        self.thread_stop = True
