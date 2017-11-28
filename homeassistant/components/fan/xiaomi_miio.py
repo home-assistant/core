@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.1']
+REQUIREMENTS = ['python-miio==0.3.2']
 
 ATTR_TEMPERATURE = 'temperature'
 ATTR_HUMIDITY = 'humidity'

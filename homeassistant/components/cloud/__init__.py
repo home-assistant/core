@@ -105,6 +105,11 @@ class Cloud:
             self.relayer = info['relayer']
 
     @property
+    def cognito_email_based(self):
+        """Return if cognito is email based."""
+        return not self.user_pool_id.endswith('GmV')
+
+    @property
     def is_logged_in(self):
         """Get if cloud is logged in."""
         return self.id_token is not None
