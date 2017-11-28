@@ -18,6 +18,7 @@ from homeassistant.helpers import location as loc_helper
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -487,6 +488,26 @@ def forgiving_float(value):
         return value
 
 
+def hsv_to_rgb(value):
+    """Try to convert hsv (16,8,8 bits respectively) to rgb 8-bits."""
+    return list(color_hsv_to_RGB(*value))
+
+
+def rgb_to_hsv(value):
+    """Try to convert rgb 8-bits values to hsv (16,8,8 bits respectively)."""
+    return list(color_RGB_to_hsv(*value))
+
+
+def lshift(value, bits):
+    """Shift bits to the left by the given number of bits."""
+    return value << bits
+
+
+def rshift(value, bits):
+    """Shift bits to the right by the given number of bits."""
+    return value >> bits
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -515,6 +536,10 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['hsv_to_rgb'] = hsv_to_rgb
+ENV.filters['rgb_to_hsv'] = rgb_to_hsv
+ENV.filters['lshift'] = lshift
+ENV.filters['rshift'] = rshift
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow
