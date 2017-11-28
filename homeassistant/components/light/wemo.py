@@ -29,11 +29,11 @@ WEMO_ON = 1
 WEMO_OFF = 0
 WEMO_STANDBY = 8
 
+
 # pylint: disable=unused-argument, too-many-function-args
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, add_devices_callback, discovery_info=None):
     """Set up discovered WeMo switches."""
     import pywemo.discovery as discovery
-
 
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
@@ -44,6 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             add_devices_callback([WemoDimmer(device)])
         else:
             setup_bridge(device, add_devices)
+
 
 def setup_bridge(bridge, add_devices):
     """Set up a WeMo link."""
