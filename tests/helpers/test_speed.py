@@ -44,7 +44,6 @@ class TestHelpersSpeed(unittest.TestCase):
             self.hass, SPEED, SPEED_KMH, PRECISION_TENTHS))
 
     def test_mph_wholes(self):
-        """Test speed in fahrenheit rounding to wholes and converting
-        to HA units (metric)."""
+        """Test speed rounding to wholes and converting to HA units."""
         self.assertEqual(103, display_speed(
             self.hass, SPEED, SPEED_MPH, PRECISION_WHOLE))

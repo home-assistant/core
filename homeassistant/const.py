@@ -347,8 +347,8 @@ SPEED_UNITS_METRIC = [
 ]
 
 SPEED_UNITS_IMPERIAL = [
-        SPEED_FTS,
-        SPEED_MPH
+    SPEED_FTS,
+    SPEED_MPH
 ]
 
 # UV Index units
