@@ -79,7 +79,7 @@ def async_trigger(hass, config, action):
 
         matching = check_numeric_state(entity, from_s, to_s)
 
-        if matching or (matching and entity not in first_triggered:
+        if matching or (matching and entity not in first_triggered):
             if time_delta:
                 unsub_track_same[entity] = async_track_same_state(
                     hass, time_delta, call_action, entity_ids=entity_id,
