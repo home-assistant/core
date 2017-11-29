@@ -42,7 +42,7 @@ TELLCORE_REGISTRY = None
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_HOST, 'tellcore-net'): cv.string,
-        vol.Inclusive(CONF_PORT, 'tellcore-net'): 
+        vol.Inclusive(CONF_PORT, 'tellcore-net'):
             vol.All(cv.ensure_list, [cv.port]),
         vol.Optional(CONF_SIGNAL_REPETITIONS,
                      default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
