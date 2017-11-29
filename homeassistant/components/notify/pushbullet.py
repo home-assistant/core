@@ -10,8 +10,8 @@ import mimetypes
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -85,12 +85,12 @@ class PushBulletNotificationService(BaseNotificationService):
         refreshed = False
 
         if not targets:
-            # Backward compatibility, notify all devices in own account
+            # Backward compatibility, notify all devices in own account.
             self._push_data(message, title, data, self.pushbullet)
             _LOGGER.info("Sent notification to self")
             return
 
-        # Main loop, process all targets specified
+        # Main loop, process all targets specified.
         for target in targets:
             try:
                 ttype, tname = target.split('/', 1)
@@ -98,15 +98,15 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.error("Invalid target syntax: %s", target)
                 continue
 
-            # Target is email, send directly, don't use a target object
-            # This also seems works to send to all devices in own account
+            # Target is email, send directly, don't use a target object.
+            # This also seems works to send to all devices in own account.
             if ttype == 'email':
                 self._push_data(message, title, data, self.pushbullet, tname)
                 _LOGGER.info("Sent notification to email %s", tname)
                 continue
 
             # Refresh if name not found. While awaiting periodic refresh
-            # solution in component, poor mans refresh ;)
+            # solution in component, poor mans refresh.
             if ttype not in self.pbtargets:
                 _LOGGER.error("Invalid target syntax: %s", target)
                 continue
@@ -128,6 +128,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 continue
 
     def _push_data(self, message, title, data, pusher, tname=None):
+        """Helper for creating the message content."""
         from pushbullet import PushError
         if data is None:
             data = {}
@@ -142,17 +143,17 @@ class PushBulletNotificationService(BaseNotificationService):
                     pusher.push_link(title, url, body=message)
             elif filepath:
                 if not self.hass.config.is_allowed_path(filepath):
-                    _LOGGER.error("Filepath is not valid or allowed.")
+                    _LOGGER.error("Filepath is not valid or allowed")
                     return
-                with open(filepath, "rb") as fileh:
+                with open(filepath, 'rb') as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
                     if filedata.get('file_type') == 'application/x-empty':
-                        _LOGGER.error("Can not send an empty file.")
+                        _LOGGER.error("Can not send an empty file")
                         return
                     pusher.push_file(title=title, body=message, **filedata)
             elif file_url:
                 if not file_url.startswith('http'):
-                    _LOGGER.error("Url should start with http or https.")
+                    _LOGGER.error("URL should start with http or https")
                     return
                 pusher.push_file(title=title, body=message, file_name=file_url,
                                  file_url=file_url,

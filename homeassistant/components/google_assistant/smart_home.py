@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 # Mapping is [actions schema, primary trait, optional features]
 # optional is SUPPORT_* = (trait, command)
 MAPPING_COMPONENT = {
-    group.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
+    group.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     scene.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     script.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     switch.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
@@ -94,10 +94,11 @@ def entity_to_device(entity: Entity, units: UnitSystem):
 
     # use aliases
     aliases = entity.attributes.get(CONF_ALIASES)
-    if isinstance(aliases, list):
-        device['name']['nicknames'] = aliases
-    else:
-        _LOGGER.warning("%s must be a list", CONF_ALIASES)
+    if aliases:
+        if isinstance(aliases, list):
+            device['name']['nicknames'] = aliases
+        else:
+            _LOGGER.warning("%s must be a list", CONF_ALIASES)
 
     # add trait if entity supports feature
     if class_data[2]:
@@ -124,14 +125,15 @@ def entity_to_device(entity: Entity, units: UnitSystem):
 
     if entity.domain == climate.DOMAIN:
         modes = ','.join(
-            m for m in entity.attributes.get(climate.ATTR_OPERATION_LIST, [])
-            if m in CLIMATE_SUPPORTED_MODES)
+            m.lower() for m in entity.attributes.get(
+                climate.ATTR_OPERATION_LIST, [])
+            if m.lower() in CLIMATE_SUPPORTED_MODES)
         device['attributes'] = {
             'availableThermostatModes': modes,
             'thermostatTemperatureUnit':
             'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
-
+        _LOGGER.debug('Thermostat attributes %s', device['attributes'])
     return device
 
 
@@ -143,7 +145,7 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
     if entity.domain == climate.DOMAIN:
-        mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
+        mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
         if mode not in CLIMATE_SUPPORTED_MODES:
             mode = 'on'
         response = {
@@ -218,6 +220,7 @@ def determine_service(
     Attempt to return a tuple of service and service_data based on the entity
     and action requested.
     """
+    _LOGGER.debug("Handling command %s with data %s", command, params)
     domain = entity_id.split('.')[0]
     service_data = {ATTR_ENTITY_ID: entity_id}  # type: Dict[str, Any]
     # special media_player handling
@@ -260,7 +263,6 @@ def determine_service(
         service_data['brightness'] = int(brightness / 100 * 255)
         return (SERVICE_TURN_ON, service_data)
 
-    _LOGGER.debug("Handling command %s with data %s", command, params)
     if command == COMMAND_COLOR:
         color_data = params.get('color')
         if color_data is not None:

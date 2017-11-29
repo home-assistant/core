@@ -121,13 +121,12 @@ def setup_plexserver(
         _LOGGER.info("Discovery configuration done")
 
     # Save config
-    if not save_json(
-            hass.config.path(PLEX_CONFIG_FILE), {host: {
-                'token': token,
-                'ssl': has_ssl,
-                'verify': verify_ssl,
-            }}):
-        _LOGGER.error("Failed to save configuration file")
+    save_json(
+        hass.config.path(PLEX_CONFIG_FILE), {host: {
+            'token': token,
+            'ssl': has_ssl,
+            'verify': verify_ssl,
+        }})
 
     _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 

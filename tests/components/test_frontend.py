@@ -7,7 +7,8 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
-    DOMAIN, CONF_THEMES, CONF_EXTRA_HTML_URL, DATA_PANELS)
+    DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
+    CONF_EXTRA_HTML_URL_ES5, DATA_PANELS)
 
 
 @pytest.fixture
@@ -36,7 +37,10 @@ def mock_http_client_with_urls(hass, test_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
         DOMAIN: {
-            CONF_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"]
+            CONF_JS_VERSION: 'auto',
+            CONF_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"],
+            CONF_EXTRA_HTML_URL_ES5:
+                ["https://domain.com/my_extra_url_es5.html"]
         }}))
     return hass.loop.run_until_complete(test_client(hass.http.app))
 
@@ -163,10 +167,19 @@ def test_missing_themes(mock_http_client):
 @asyncio.coroutine
 def test_extra_urls(mock_http_client_with_urls):
     """Test that extra urls are loaded."""
-    resp = yield from mock_http_client_with_urls.get('/states')
+    resp = yield from mock_http_client_with_urls.get('/states?latest')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find('href=\'https://domain.com/my_extra_url.html\'') >= 0
+    assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
+
+
+@asyncio.coroutine
+def test_extra_urls_es5(mock_http_client_with_urls):
+    """Test that es5 extra urls are loaded."""
+    resp = yield from mock_http_client_with_urls.get('/states?es5')
+    assert resp.status == 200
+    text = yield from resp.text()
+    assert text.find('href="https://domain.com/my_extra_url_es5.html"') >= 0
 
 
 @asyncio.coroutine

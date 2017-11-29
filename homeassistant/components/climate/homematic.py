@@ -5,7 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.homematic/
 """
 import logging
-from homeassistant.components.climate import ClimateDevice, STATE_AUTO
+from homeassistant.components.climate import (
+    ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE)
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
 
@@ -38,6 +40,8 @@ HM_HUMI_MAP = [
 
 HM_CONTROL_MODE = 'CONTROL_MODE'
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Homematic thermostat platform."""
@@ -54,6 +58,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class HMThermostat(HMDevice, ClimateDevice):
     """Representation of a Homematic thermostat."""
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def temperature_unit(self):

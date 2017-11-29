@@ -30,7 +30,7 @@ delete_wink_device:
       description: The entity_id of the device to delete.
 
 pull_newly_added_devices_from_wink:
-  description: Pull newly pair devices from Wink.
+  description: Pull newly paired devices from Wink.
 
 refresh_state_from_wink:
   description: Pull the latest states for every device.
