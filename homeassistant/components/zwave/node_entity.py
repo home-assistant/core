@@ -2,14 +2,15 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID, ATTR_CURRENT_STATE
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID, ATTR_CURRENT_STATE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
-    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, COMMAND_CLASS_SWITCH_BINARY, ATTR_SCENE_ID, ATTR_SCENE_DATA,
-    ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN,
-    COMMAND_CLASS_CENTRAL_SCENE)
+    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, COMMAND_CLASS_SWITCH_BINARY,
+    ATTR_SCENE_ID, ATTR_SCENE_DATA, ATTR_BASIC_LEVEL, EVENT_NODE_EVENT,
+    EVENT_SCENE_ACTIVATED, DOMAIN, COMMAND_CLASS_CENTRAL_SCENE)
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
