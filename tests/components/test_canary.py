@@ -1,63 +1,34 @@
 """The tests for the Canary component."""
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, PropertyMock
 
 import homeassistant.components.canary as canary
-from canary.api import Location, Mode
+from homeassistant import setup
 from tests.common import (
     get_test_home_assistant)
 
-MODES_BY_NAME = {
-    "home": Mode({"id": 1, "name": "Home", "resource_uri": "/v1/home"}),
-    "away": Mode({"id": 2, "name": "Away", "resource_uri": "/v1/away"}),
-    "night": Mode({"id": 3, "name": "Night", "resource_uri": "/v1/night"}),
-}
 
-API_LOCATIONS = [Location({
-    "id": 1,
-    "name": "Home",
-    "is_private": False,
-    "mode": {"name": "away"},
-    "current_mode": {"name": "armed"},
-    "devices": [
-        {
-            "id": 20,
-            "name": "Dining Room",
-            "online": True,
-            "device_type": {},
-        },
-        {
-            "id": 21,
-            "name": "Front Yard",
-            "online": False,
-            "device_type": {},
-        }
-    ],
-    "customers": [{
-        "id": 30,
-        "first_name": "",
-        "last_name": "",
-        "celsius": True,
-    }],
-}, MODES_BY_NAME), Location({
-    "id": 2,
-    "name": "Vacation Home",
-    "is_private": True,
-    "mode": {"name": "home"},
-    "current_mode": {"name": "standby"},
-    "devices": [{
-        "id": 22,
-        "name": "Den",
-        "online": True,
-        "device_type": {},
-    }],
-    "customers": [{
-        "id": 31,
-        "first_name": "",
-        "last_name": "",
-        "celsius": False,
-    }],
-}, MODES_BY_NAME)]
+def mock_device(device_id, name, is_online=True):
+    device = MagicMock()
+    type(device).device_id = PropertyMock(return_value=device_id)
+    type(device).name = PropertyMock(return_value=name)
+    type(device).is_online = PropertyMock(return_value=is_online)
+    return device
+
+
+def mock_location(name, is_celsius=True, devices=[]):
+    location = MagicMock()
+    type(location).name = PropertyMock(return_value=name)
+    type(location).is_celsius = PropertyMock(return_value=is_celsius)
+    type(location).devices = PropertyMock(return_value=devices)
+    return location
+
+
+def mock_reading(sensor_type, sensor_value):
+    reading = MagicMock()
+    type(reading).sensor_type = PropertyMock(return_value=sensor_type)
+    type(reading).value = PropertyMock(return_value=sensor_value)
+    return reading
 
 
 class TestCanary(unittest.TestCase):
@@ -82,7 +53,8 @@ class TestCanary(unittest.TestCase):
             }
         }
 
-        self.assertTrue(canary.setup(self.hass, config))
+        self.assertTrue(
+            setup.setup_component(self.hass, canary.DOMAIN, config))
 
         mock_update.assert_called_once_with()
         mock_login.assert_called_once_with()
@@ -95,7 +67,8 @@ class TestCanary(unittest.TestCase):
             }
         }
 
-        self.assertFalse(canary.setup(self.hass, config))
+        self.assertFalse(
+            setup.setup_component(self.hass, canary.DOMAIN, config))
 
     def test_setup_with_missing_username(self):
         """Test setup component."""
@@ -105,4 +78,5 @@ class TestCanary(unittest.TestCase):
             }
         }
 
-        self.assertFalse(canary.setup(self.hass, config))
+        self.assertFalse(
+            setup.setup_component(self.hass, canary.DOMAIN, config))
