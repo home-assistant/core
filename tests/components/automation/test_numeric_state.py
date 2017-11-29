@@ -84,6 +84,36 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_entities_change_over_to_below(self):
+        """"Test the firing with changed entities."""
+        self.hass.states.set('test.entity_1', 11)
+        self.hass.states.set('test.entity_2', 11)
+        self.hass.block_till_done()
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': [
+                        'test.entity_1',
+                        'test.entity_2',
+                    ],
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        # 9 is below 10
+        self.hass.states.set('test.entity_1', 9)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.hass.states.set('test.entity_2', 9)
+        self.hass.block_till_done()
+        self.assertEqual(2, len(self.calls))
+
     def test_if_not_fires_on_entity_change_below_to_below(self):
         """"Test the firing with changed entity."""
         self.hass.states.set('test.entity', 11)
