@@ -87,6 +87,20 @@ def test_data_will_be_saved(hass, meraki_client):
                     "seenEpoch": "147369739",
                     "rssi": "20",
                     "manufacturer": "Seiko Epson"
+                },
+                {
+                    "location": {
+                        "lat": "51.5355357",
+                        "lng": "21.0699635",
+                        "unc": "46.3610585",
+                    },
+                    "seenTime": "2016-09-12T16:21:13Z",
+                    "ssid": 'ssid',
+                    "os": 'HA',
+                    "clientMac": "00:26:ab:b8:a9:a5",
+                    "seenEpoch": "147369750",
+                    "rssi": "20",
+                    "manufacturer": "Seiko Epson"
                 }
             ]
         }
@@ -95,4 +109,8 @@ def test_data_will_be_saved(hass, meraki_client):
     assert req.status == 200
     state_name = hass.states.get('{}.{}'.format('device_tracker',
                                                 '0026abb8a9a4')).state
+    assert 'home' == state_name
+
+    state_name = hass.states.get('{}.{}'.format('device_tracker',
+                                                '0026abb8a9a5')).state
     assert 'home' == state_name
