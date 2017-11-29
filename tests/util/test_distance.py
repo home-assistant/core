@@ -114,3 +114,18 @@ class TestDistanceUtil(unittest.TestCase):
         self.assertEqual(
             distance_util.convert(meter, LENGTH_METERS, LENGTH_MILLIMETERS),
             5000000)
+
+    def test_convert_to_meters(self):
+        """Test conversion from millimeters to other units."""
+        self.assertEqual(
+            distance_util.convert(5000, LENGTH_MILLIMETERS, LENGTH_METERS),
+            5)
+        self.assertEqual(
+            distance_util.convert(5000, LENGTH_CENTIMETERS, LENGTH_METERS),
+            50)
+        self.assertEqual(
+            distance_util.convert(2500, LENGTH_YARD, LENGTH_METERS),
+            2286)
+        self.assertEqual(
+            distance_util.convert(5000, LENGTH_INCHES, LENGTH_METERS),
+            127)
