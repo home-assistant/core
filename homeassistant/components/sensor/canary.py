@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class CanarySensor(Entity):
-    """Representation of an Canary sensor."""
+    """Representation of a Canary sensor."""
 
     def __init__(self, data, sensor_type, location, device):
         """Initialize the sensor."""

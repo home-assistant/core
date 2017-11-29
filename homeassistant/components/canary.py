@@ -25,7 +25,7 @@ NOTIFICATION_TITLE = 'Canary Setup'
 DOMAIN = 'canary'
 DATA_CANARY = 'canary'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
-DEFAULT_TIMEOUT = 15
+DEFAULT_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -34,6 +34,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+CANARY_COMPONENTS = [
+    'alarm_control_panel', 'camera', 'sensor'
+]
 
 
 def setup(hass, config):
@@ -55,9 +59,8 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    discovery.load_platform(hass, 'alarm_control_panel', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    for component in CANARY_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
