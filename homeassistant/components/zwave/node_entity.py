@@ -129,9 +129,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         """Retrieve current state of a binary switch"""
         if self.node.has_command_class(COMMAND_CLASS_SWITCH_BINARY):
             for value in self.node.get_values().values():
-                if value.data and value.is_polled:
-                    return None
-                else:
+                if value.data:
                     return value.data
 
     def node_changed(self):
