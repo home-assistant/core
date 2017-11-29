@@ -408,7 +408,7 @@ class Device(Entity):
 
         # Configured picture
         if gravatar is not None:
-            self.config_picture = get_gravatar_for_email(gravatar)
+            self.config_picture = get_gravatar_for_email(hass, gravatar)
         else:
             # Attempt to use googleplus but revert to picture if it fails
             googlepluspthumb = None
@@ -748,7 +748,7 @@ def update_config(path: str, dev_id: str, device: Device):
         out.write(dump(device))
 
 
-def get_gravatar_for_email(email: str):
+def get_gravatar_for_email(hass: HomeAssistantType, email: str):
     """Return an 80px Gravatar for the given email address.
 
     Async friendly.
@@ -771,12 +771,12 @@ def get_googlepluspthumb_from_email(email: str):
     try:
         url += urllib.parse.quote(email) + r'?alt=json'
 
-        websession = async_get_clientsession(self.hass)
-        with async_timeout.timeout(5, loop=self.hass.loop):
+        websession = async_get_clientsession(hass)
+        with async_timeout.timeout(5, loop=hass.loop):
             resp = yield from websession.get(url)
             print('resp.status=' + resp.status)
             jsontext = yield from resp.text()
-            debug_jsontext=yield from resp.json()
+            debug_jsontext=yield from resp.json(encoding = 'utf-8')
     except (asyncio.TimeoutError, aiohttp.ClientError, TypeError):
         _LOGGER.error('http timeout or invalid email\r\n  email: '
                       + email + '\r\n  url: ' + url)
@@ -785,8 +785,8 @@ def get_googlepluspthumb_from_email(email: str):
     try:
         print('jsontext')
         print(jsontext)
-        print('debug_json.keys()')
-        print(debug_json.keys())
+        print('debug_jsontext.keys()')
+        print(debug_jsontext.keys())
     except(TypeError):
         pass
 
