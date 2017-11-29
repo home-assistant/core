@@ -77,7 +77,7 @@ def setup(hass, config):
     net_ports = conf.get(CONF_PORT)
 
     # Initialize remote tellcore client
-    if net_host and net_port:
+    if net_host:
         net_client = TellCoreClient(
             host=net_host, port_client=net_ports[0], port_events=net_ports[1])
         net_client.start()
