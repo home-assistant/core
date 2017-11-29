@@ -57,13 +57,7 @@ class AdsLight(Light):
 
     @property
     def brightness(self):
-        """
-        Brightness of the light.
-
-        This method is optional. Removing it indicates to Home Assistant
-        that brightness is not supported for this light.
-
-        """
+        """Brightness of the light."""
         return self._brightness
 
     @property
