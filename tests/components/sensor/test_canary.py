@@ -41,7 +41,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     @patch('homeassistant.components.canary.CanaryData')
     def test_setup_sensors(self, mock_canary):
-        """Test the Canary senskor class and methods."""
+        """Test the sensor setup."""
         base_canary.setup(self.hass, self.config)
 
         online_device_at_home = mock_device(20, "Dining Room", True)
@@ -60,6 +60,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual(6, len(self.DEVICES))
 
     def test_celsius_temperature_sensor(self):
+        """Test temperature sensor with celsius."""
         device = mock_device(10, "Family Room")
         location = mock_location("Home", True)
 
@@ -76,6 +77,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual(21.1, sensor.state)
 
     def test_fahrenheit_temperature_sensor(self):
+        """Test temperature sensor with fahrenheit."""
         device = mock_device(10, "Family Room")
         location = mock_location("Home", False)
 
@@ -91,6 +93,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual(21.2, sensor.state)
 
     def test_humidity_sensor(self):
+        """Test humidity sensor."""
         device = mock_device(10, "Family Room")
         location = mock_location("Home")
 
@@ -106,6 +109,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual(50.5, sensor.state)
 
     def test_air_quality_sensor(self):
+        """Test air quality sensor."""
         device = mock_device(10, "Family Room")
         location = mock_location("Home")
 

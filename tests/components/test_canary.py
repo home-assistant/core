@@ -9,6 +9,7 @@ from tests.common import (
 
 
 def mock_device(device_id, name, is_online=True):
+    """Mock Canary Device class."""
     device = MagicMock()
     type(device).device_id = PropertyMock(return_value=device_id)
     type(device).name = PropertyMock(return_value=name)
@@ -17,6 +18,7 @@ def mock_device(device_id, name, is_online=True):
 
 
 def mock_location(name, is_celsius=True, devices=[]):
+    """Mock Canary Location class."""
     location = MagicMock()
     type(location).name = PropertyMock(return_value=name)
     type(location).is_celsius = PropertyMock(return_value=is_celsius)
@@ -25,6 +27,7 @@ def mock_location(name, is_celsius=True, devices=[]):
 
 
 def mock_reading(sensor_type, sensor_value):
+    """Mock Canary Reading class."""
     reading = MagicMock()
     type(reading).sensor_type = PropertyMock(return_value=sensor_type)
     type(reading).value = PropertyMock(return_value=sensor_value)
