@@ -90,8 +90,7 @@ class MerakiView(HomeAssistantView):
         if len(data["data"]["observations"]) == 0:
             _LOGGER.debug("No observations found")
             return
-        res = yield from self._handle(request.app['hass'], data)
-        return res
+        yield from self._handle(request.app['hass'], data)
 
     @asyncio.coroutine
     def _handle(self, hass, data):
@@ -116,10 +115,10 @@ class MerakiView(HomeAssistantView):
                 attrs['seenTime'] = i['seenTime']
             if i.get('ssid', False):
                 attrs['ssid'] = i['ssid']
-            yield from self.async_see(
+            yield from hass.async_add_job(self.async_see(
                 gps=gps_location,
                 mac=mac,
                 source_type=SOURCE_TYPE_ROUTER,
                 gps_accuracy=accuracy,
                 attributes=attrs
-            )
+            ))
