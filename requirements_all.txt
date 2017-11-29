@@ -1100,6 +1100,9 @@ uber_rides==0.6.0
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.6
 
+# homeassistant.components.frontend
+user-agents==1.1.0
+
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
