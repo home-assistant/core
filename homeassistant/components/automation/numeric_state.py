@@ -38,7 +38,7 @@ def async_trigger(hass, config, action):
     time_delta = config.get(CONF_FOR)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unsub_track_same = {}
-    entity_triggered = set()
+    entities_triggered = set()
 
     if value_template is not None:
         value_template.hass = hass
@@ -79,16 +79,16 @@ def async_trigger(hass, config, action):
 
         matching = check_numeric_state(entity, from_s, to_s)
 
-        if matching entity not in entity_triggered:
+        if matching and entity not in entities_triggered:
             if time_delta:
                 unsub_track_same[entity] = async_track_same_state(
                     hass, time_delta, call_action, entity_ids=entity_id,
                     async_check_same_func=check_numeric_state)
             else:
                 call_action()
-            entity_triggered.add(entity)
+            entities_triggered.add(entity)
 
-        entity_triggered.discard(entity)
+        entities_triggered.discard(entity)
 
     unsub = async_track_state_change(
         hass, entity_id, state_automation_listener)
