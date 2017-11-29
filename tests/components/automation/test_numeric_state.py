@@ -701,6 +701,48 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_if_not_fires_on_entities_change_with_for_afte_stop(self):
+        """Test for not firing on entities change with for after stop."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': [
+                        'test.entity_1',
+                        'test.entity_2',
+                    ],
+                    'above': 8,
+                    'below': 12,
+                    'for': {
+                        'seconds': 5
+                    },
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        self.hass.states.set('test.entity_1', 9)
+        self.hass.states.set('test.entity_2', 9)
+        self.hass.block_till_done()
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(self.calls))
+
+        self.hass.states.set('test.entity_1', 15)
+        self.hass.states.set('test.entity_2', 15)
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity_1', 9)
+        self.hass.states.set('test.entity_2', 9)
+        self.hass.block_till_done()
+        automation.turn_off(self.hass)
+        self.hass.block_till_done()
+
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(self.calls))
+
     def test_if_fires_on_entity_change_with_for_attribute_change(self):
         """Test for firing on entity change with for and attribute change."""
         assert setup_component(self.hass, automation.DOMAIN, {
