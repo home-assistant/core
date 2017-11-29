@@ -277,9 +277,9 @@ class Entity(object):
                                       SPEED_MS, SPEED_FTS) and
                   unit_of_measure != units.speed_unit):
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                speed = units.speed(float(state), unit_of_measure)
+                speed, attr[ATTR_UNIT_OF_MEASUREMENT] = units.speed(
+                    float(state), unit_of_measure)
                 state = str(round(speed) if prec == 0 else round(speed, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.speed_unit
         except ValueError:
             # Could not convert state to float
             pass
