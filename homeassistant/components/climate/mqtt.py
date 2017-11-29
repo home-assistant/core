@@ -15,7 +15,9 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
-    ATTR_OPERATION_MODE)
+    ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
+    SUPPORT_AUX_HEAT)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.components.mqtt import (CONF_QOS, CONF_RETAIN,
@@ -483,3 +485,38 @@ class MqttClimate(ClimateDevice):
         if self._topic[CONF_AUX_STATE_TOPIC] is None:
             self._aux = False
             self.async_schedule_update_ha_state()
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        support = 0
+
+        if (self._topic[CONF_TEMPERATURE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_TEMPERATURE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_TARGET_TEMPERATURE
+
+        if (self._topic[CONF_MODE_COMMAND_TOPIC] is not None) or \
+           (self._topic[CONF_MODE_STATE_TOPIC] is not None):
+            support |= SUPPORT_OPERATION_MODE
+
+        if (self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_FAN_MODE
+
+        if (self._topic[CONF_SWING_MODE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_SWING_MODE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_SWING_MODE
+
+        if (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_AWAY_MODE
+
+        if (self._topic[CONF_HOLD_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_HOLD_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_HOLD_MODE
+
+        if (self._topic[CONF_AUX_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_AUX_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_AUX_HEAT
+
+        return support
