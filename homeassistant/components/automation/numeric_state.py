@@ -79,17 +79,17 @@ def async_trigger(hass, config, action):
 
         matching = check_numeric_state(entity, from_s, to_s)
 
-        if matching and entity not in entities_triggered:
+        if not matching:
+            entities_triggered.discard(entity)
+        elif entity not in entities_triggered:
+            entities_triggered.add(entity)
+
             if time_delta:
                 unsub_track_same[entity] = async_track_same_state(
                     hass, time_delta, call_action, entity_ids=entity_id,
                     async_check_same_func=check_numeric_state)
             else:
                 call_action()
-
-            entities_triggered.add(entity)
-        elif matching:
-            entities_triggered.discard(entity)
 
     unsub = async_track_state_change(
         hass, entity_id, state_automation_listener)

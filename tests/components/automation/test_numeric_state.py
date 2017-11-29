@@ -142,6 +142,11 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+        # still below so should not fire again
+        self.hass.states.set('test.entity', 3)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_not_below_fires_on_entity_change_to_equal(self):
         """"Test the firing with changed entity."""
         self.hass.states.set('test.entity', 11)
