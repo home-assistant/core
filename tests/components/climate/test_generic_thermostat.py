@@ -888,12 +888,14 @@ def test_custom_setup_params(hass):
             'min_temp': MIN_TEMP,
             'max_temp': MAX_TEMP,
             'target_temp': TARGET_TEMP,
+            'inital_operation_mode': STATE_OFF,
         }})
     assert result
     state = hass.states.get(ENTITY)
     assert state.attributes.get('min_temp') == MIN_TEMP
     assert state.attributes.get('max_temp') == MAX_TEMP
     assert state.attributes.get('temperature') == TARGET_TEMP
+    assert state.attributes.get(climate.ATTR_OPERATION_MODE) == STATE_OFF
 
 
 @asyncio.coroutine
