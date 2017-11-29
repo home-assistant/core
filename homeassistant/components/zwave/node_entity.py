@@ -126,7 +126,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self._network.home_id, self.node_id)
 
     def get_current_state(self):
-        """Retrieve current state of a binary switch"""
+        """Retrieve current state of a binary switch."""
         if self.node.has_command_class(COMMAND_CLASS_SWITCH_BINARY):
             for value in self.node.get_values().values():
                 if value.data:
