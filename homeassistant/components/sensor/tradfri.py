@@ -32,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     devices_command = gateway.get_devices()
     devices_commands = yield from api(devices_command)
-    all_devices = yield from api(*devices_commands)
+    all_devices = yield from api(devices_commands)
     devices = [dev for dev in all_devices if not dev.has_light_control]
     async_add_devices(TradfriDevice(device, api) for device in devices)
 
@@ -90,6 +90,7 @@ class TradfriDevice(Entity):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
+        # pylint: disable=import-error
         from pytradfri.error import PyTradFriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,

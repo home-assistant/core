@@ -12,7 +12,9 @@ import voluptuous as vol
 from homeassistant.components import ecobee
 from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
@@ -43,6 +45,10 @@ RESUME_PROGRAM_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
 })
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
+                 SUPPORT_HOLD_MODE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -131,6 +137,11 @@ class Thermostat(ClimateDevice):
 
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def name(self):
@@ -318,8 +329,21 @@ class Thermostat(ClimateDevice):
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
         """Set temperature hold in auto mode."""
-        self.data.ecobee.set_hold_temp(self.thermostat_index, cool_temp,
-                                       heat_temp, self.hold_preference())
+        if cool_temp is not None:
+            cool_temp_setpoint = cool_temp
+        else:
+            cool_temp_setpoint = (
+                self.thermostat['runtime']['desiredCool'] / 10.0)
+
+        if heat_temp is not None:
+            heat_temp_setpoint = heat_temp
+        else:
+            heat_temp_setpoint = (
+                self.thermostat['runtime']['desiredCool'] / 10.0)
+
+        self.data.ecobee.set_hold_temp(self.thermostat_index,
+                                       cool_temp_setpoint, heat_temp_setpoint,
+                                       self.hold_preference())
         _LOGGER.debug("Setting ecobee hold_temp to: heat=%s, is=%s, "
                       "cool=%s, is=%s", heat_temp, isinstance(
                           heat_temp, (int, float)), cool_temp,
@@ -348,14 +372,18 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.current_operation == STATE_AUTO and low_temp is not None \
-           and high_temp is not None:
+        if self.current_operation == STATE_AUTO and (low_temp is not None or
+                                                     high_temp is not None):
             self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
             self.set_temp_hold(temp)
         else:
             _LOGGER.error(
                 "Missing valid arguments for set_temperature in %s", kwargs)
+
+    def set_humidity(self, humidity):
+        """Set the humidity level."""
+        self.data.ecobee.set_humidity(self.thermostat_index, humidity)
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""

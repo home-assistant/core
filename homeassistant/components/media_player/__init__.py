@@ -7,32 +7,33 @@ https://home-assistant.io/components/media_player/
 import asyncio
 from datetime import timedelta
 import functools as ft
+import collections
 import hashlib
 import logging
 import os
 from random import SystemRandom
 
 from aiohttp import web
+from aiohttp.hdrs import CONTENT_TYPE, CACHE_CONTROL
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.config import load_yaml_config_file
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+from homeassistant.const import (
+    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
+    SERVICE_TOGGLE, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
+    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_SHUFFLE_SET,
+    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 from homeassistant.util.async import run_coroutine_threadsafe
-from homeassistant.const import (
-    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK,
-    SERVICE_SHUFFLE_SET)
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -44,16 +45,15 @@ SCAN_INTERVAL = timedelta(seconds=10)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}&cache={2}'
-ATTR_CACHE_IMAGES = 'images'
-ATTR_CACHE_URLS = 'urls'
-ATTR_CACHE_MAXSIZE = 'maxsize'
+CACHE_IMAGES = 'images'
+CACHE_MAXSIZE = 'maxsize'
+CACHE_LOCK = 'lock'
+CACHE_URL = 'url'
+CACHE_CONTENT = 'content'
 ENTITY_IMAGE_CACHE = {
-    ATTR_CACHE_IMAGES: {},
-    ATTR_CACHE_URLS: [],
-    ATTR_CACHE_MAXSIZE: 16
+    CACHE_IMAGES: collections.OrderedDict(),
+    CACHE_MAXSIZE: 16
 }
-
-CONTENT_TYPE_HEADER = 'Content-Type'
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
@@ -406,16 +406,9 @@ def async_setup(hass, config):
         update_tasks = []
         for player in target_players:
             yield from getattr(player, method['method'])(**params)
-
-        for player in target_players:
             if not player.should_poll:
                 continue
-
-            update_coro = player.async_update_ha_state(True)
-            if hasattr(player, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(player.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
@@ -497,9 +490,8 @@ class MediaPlayerDevice(Entity):
     def media_image_hash(self):
         """Hash value for media image."""
         url = self.media_image_url
-
         if url is not None:
-            return hashlib.md5(url.encode('utf-8')).hexdigest()[:5]
+            return hashlib.sha256(url.encode('utf-8')).hexdigest()[:16]
 
         return None
 
@@ -904,43 +896,36 @@ def _async_fetch_image(hass, url):
 
     Images are cached in memory (the images are typically 10-100kB in size).
     """
-    cache_images = ENTITY_IMAGE_CACHE[ATTR_CACHE_IMAGES]
-    cache_urls = ENTITY_IMAGE_CACHE[ATTR_CACHE_URLS]
-    cache_maxsize = ENTITY_IMAGE_CACHE[ATTR_CACHE_MAXSIZE]
+    cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+    cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
-    if url in cache_images:
-        return cache_images[url]
+    if url not in cache_images:
+        cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
 
-    content, content_type = (None, None)
-    websession = async_get_clientsession(hass)
-    try:
-        with async_timeout.timeout(10, loop=hass.loop):
-            response = yield from websession.get(url)
+    with (yield from cache_images[url][CACHE_LOCK]):
+        if CACHE_CONTENT in cache_images[url]:
+            return cache_images[url][CACHE_CONTENT]
 
-            if response.status == 200:
-                content = yield from response.read()
-                content_type = response.headers.get(CONTENT_TYPE_HEADER)
-                if content_type:
-                    content_type = content_type.split(';')[0]
+        content, content_type = (None, None)
+        websession = async_get_clientsession(hass)
+        try:
+            with async_timeout.timeout(10, loop=hass.loop):
+                response = yield from websession.get(url)
 
-    except asyncio.TimeoutError:
-        pass
+                if response.status == 200:
+                    content = yield from response.read()
+                    content_type = response.headers.get(CONTENT_TYPE)
+                    if content_type:
+                        content_type = content_type.split(';')[0]
+                    cache_images[url][CACHE_CONTENT] = content, content_type
 
-    if not content:
-        return (None, None)
+        except asyncio.TimeoutError:
+            pass
 
-    cache_images[url] = (content, content_type)
-    cache_urls.append(url)
+        while len(cache_images) > cache_maxsize:
+            cache_images.popitem(last=False)
 
-    while len(cache_urls) > cache_maxsize:
-        # remove oldest item from cache
-        oldest_url = cache_urls[0]
-        if oldest_url in cache_images:
-            del cache_images[oldest_url]
-
-        cache_urls = cache_urls[1:]
-
-    return content, content_type
+        return content, content_type
 
 
 class MediaPlayerImageView(HomeAssistantView):
@@ -973,4 +958,6 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=500)
 
-        return web.Response(body=data, content_type=content_type)
+        headers = {CACHE_CONTROL: 'max-age=3600'}
+        return web.Response(
+            body=data, content_type=content_type, headers=headers)

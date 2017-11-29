@@ -7,7 +7,9 @@ https://home-assistant.io/components/climate.tesla/
 import logging
 
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate import (
+    ClimateDevice, ENTITY_ID_FORMAT, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE)
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
 from homeassistant.const import (
     TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_TEMPERATURE)
@@ -17,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tesla']
 
 OPERATION_LIST = [STATE_ON, STATE_OFF]
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -35,6 +39,11 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
         self._target_temperature = None
         self._temperature = None
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def current_operation(self):

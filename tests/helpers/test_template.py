@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 import unittest
 import random
+import math
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -124,6 +125,29 @@ class TestHelpersTemplate(unittest.TestCase):
                 out,
                 template.Template('{{ %s | multiply(10) | round }}' % inp,
                                   self.hass).render())
+
+    def test_logarithm(self):
+        """Test logarithm."""
+        tests = [
+            (4, 2, '2.0'),
+            (1000, 10, '3.0'),
+            (math.e, '', '1.0'),
+            ('"invalid"', '_', 'invalid'),
+            (10, '"invalid"', '10.0'),
+        ]
+
+        for value, base, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | log(%s) | round(1) }}' % (value, base),
+                    self.hass).render())
+
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ log(%s, %s) | round(1) }}' % (value, base),
+                    self.hass).render())
 
     def test_strptime(self):
         """Test the parse timestamp method."""
@@ -683,7 +707,7 @@ class TestHelpersTemplate(unittest.TestCase):
             MATCH_ALL,
             template.extract_entities("""
 {% for state in states.sensor %}
-  {{ state.entity_id }}={{ state.state }},
+  {{ state.entity_id }}={{ state.state }},d
 {% endfor %}
             """))
 
@@ -752,6 +776,35 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
                 " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
                 " %}true{% endif %}"
             )))
+
+    def test_extract_entities_with_variables(self):
+        """Test extract entities function with variables and entities stuff."""
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state('input_boolean.switch', 'off') }}", {}))
+
+        self.assertEqual(
+            ['trigger.entity_id'],
+            template.extract_entities(
+                "{{ is_state(trigger.entity_id, 'off') }}", {}))
+
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                "{{ is_state(data, 'off') }}", {}))
+
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state(data, 'off') }}",
+                {'data': 'input_boolean.switch'}))
+
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state(trigger.entity_id, 'off') }}",
+                {'trigger': {'entity_id': 'input_boolean.switch'}}))
 
 
 @asyncio.coroutine

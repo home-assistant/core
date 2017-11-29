@@ -18,10 +18,12 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_COLOR = 'default_color'
+CONF_PRIORITY = 'priority'
 
 DEFAULT_COLOR = [255, 255, 255]
 DEFAULT_NAME = 'Hyperion'
 DEFAULT_PORT = 19444
+DEFAULT_PRIORITY = 128
 
 SUPPORT_HYPERION = SUPPORT_RGB_COLOR
 
@@ -32,6 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.All(list, vol.Length(min=3, max=3),
             [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
 })
 
 
@@ -39,9 +42,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a Hyperion server remote."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    priority = config.get(CONF_PRIORITY)
     default_color = config.get(CONF_DEFAULT_COLOR)
 
-    device = Hyperion(config.get(CONF_NAME), host, port, default_color)
+    device = Hyperion(config.get(CONF_NAME), host, port, priority,
+                      default_color)
 
     if device.setup():
         add_devices([device])
@@ -52,11 +57,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, default_color):
+    def __init__(self, name, host, port, priority, default_color):
         """Initialize the light."""
         self._host = host
         self._port = port
         self._name = name
+        self._priority = priority
         self._default_color = default_color
         self._rgb_color = [0, 0, 0]
 
@@ -87,8 +93,11 @@ class Hyperion(Light):
         else:
             self._rgb_color = self._default_color
 
-        self.json_request(
-            {'command': 'color', 'priority': 128, 'color': self._rgb_color})
+        self.json_request({
+            'command': 'color',
+            'priority': self._priority,
+            'color': self._rgb_color
+        })
 
     def turn_off(self, **kwargs):
         """Disconnect all remotes."""

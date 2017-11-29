@@ -5,23 +5,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
 """
 import asyncio
+import base64
 import json
 import logging
-import base64
 from collections import defaultdict
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import STATE_HOME
-from homeassistant.util import slugify, decorator
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.const import STATE_HOME
+from homeassistant.core import callback
+from homeassistant.util import slugify, decorator
 
-DEPENDENCIES = ['mqtt']
-REQUIREMENTS = ['libnacl==1.5.2']
+REQUIREMENTS = ['libnacl==1.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +32,8 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_SECRET = 'secret'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
+
+DEPENDENCIES = ['mqtt']
 
 OWNTRACKS_TOPIC = 'owntracks/#'
 
@@ -74,6 +75,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         except ValueError:
             # If invalid JSON
             _LOGGER.error("Unable to parse payload as JSON: %s", payload)
+            return
 
         message['topic'] = topic
 
@@ -90,7 +92,11 @@ def _parse_topic(topic):
 
     Async friendly.
     """
-    _, user, device, *_ = topic.split('/', 3)
+    try:
+        _, user, device, *_ = topic.split('/', 3)
+    except ValueError:
+        _LOGGER.error("Can't parse topic: '%s'", topic)
+        raise
 
     return user, device
 
@@ -193,7 +199,7 @@ class OwnTracksContext:
         self.async_see = async_see
         self.secret = secret
         self.max_gps_accuracy = max_gps_accuracy
-        self.mobile_beacons_active = defaultdict(list)
+        self.mobile_beacons_active = defaultdict(set)
         self.regions_entered = defaultdict(list)
         self.import_waypoints = import_waypoints
         self.waypoint_whitelist = waypoint_whitelist
@@ -228,10 +234,25 @@ class OwnTracksContext:
         return True
 
     @asyncio.coroutine
-    def async_see_beacons(self, dev_id, kwargs_param):
+    def async_see_beacons(self, hass, dev_id, kwargs_param):
         """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
+
+        # Mobile beacons should always be set to the location of the
+        # tracking device. I get the device state and make the necessary
+        # changes to kwargs.
+        device_tracker_state = hass.states.get(
+            "device_tracker.{}".format(dev_id))
+
+        if device_tracker_state is not None:
+            acc = device_tracker_state.attributes.get("gps_accuracy")
+            lat = device_tracker_state.attributes.get("latitude")
+            lon = device_tracker_state.attributes.get("longitude")
+            kwargs['gps_accuracy'] = acc
+            kwargs['gps'] = (lat, lon)
+
         # the battery state applies to the tracking device, not the beacon
+        # kwargs location is the beacon's configured lat/lon
         kwargs.pop('battery', None)
         for beacon in self.mobile_beacons_active[dev_id]:
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
@@ -255,7 +276,7 @@ def async_handle_location_message(hass, context, message):
         return
 
     yield from context.async_see(**kwargs)
-    yield from context.async_see_beacons(dev_id, kwargs)
+    yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @asyncio.coroutine
@@ -265,11 +286,15 @@ def _async_transition_message_enter(hass, context, message, location):
     dev_id, kwargs = _parse_see_args(message)
 
     if zone is None and message.get('t') == 'b':
-        # Not a HA zone, and a beacon so assume mobile
+        # Not a HA zone, and a beacon so mobile beacon.
+        # kwargs will contain the lat/lon of the beacon
+        # which is not where the beacon actually is
+        # and is probably set to 0/0
         beacons = context.mobile_beacons_active[dev_id]
         if location not in beacons:
-            beacons.append(location)
+            beacons.add(location)
         _LOGGER.info("Added beacon %s", location)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
     else:
         # Normal region
         regions = context.regions_entered[dev_id]
@@ -277,9 +302,8 @@ def _async_transition_message_enter(hass, context, message, location):
             regions.append(location)
         _LOGGER.info("Enter region %s", location)
         _set_gps_from_zone(kwargs, location, zone)
-
-    yield from context.async_see(**kwargs)
-    yield from context.async_see_beacons(dev_id, kwargs)
+        yield from context.async_see(**kwargs)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @asyncio.coroutine
@@ -291,30 +315,29 @@ def _async_transition_message_leave(hass, context, message, location):
     if location in regions:
         regions.remove(location)
 
-    new_region = regions[-1] if regions else None
-
-    if new_region:
-        # Exit to previous region
-        zone = hass.states.get(
-            "zone.{}".format(slugify(new_region)))
-        _set_gps_from_zone(kwargs, new_region, zone)
-        _LOGGER.info("Exit to %s", new_region)
-        yield from context.async_see(**kwargs)
-        yield from context.async_see_beacons(dev_id, kwargs)
-        return
-
+    beacons = context.mobile_beacons_active[dev_id]
+    if location in beacons:
+        beacons.remove(location)
+        _LOGGER.info("Remove beacon %s", location)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
     else:
+        new_region = regions[-1] if regions else None
+        if new_region:
+            # Exit to previous region
+            zone = hass.states.get(
+                "zone.{}".format(slugify(new_region)))
+            _set_gps_from_zone(kwargs, new_region, zone)
+            _LOGGER.info("Exit to %s", new_region)
+            yield from context.async_see(**kwargs)
+            yield from context.async_see_beacons(hass, dev_id, kwargs)
+            return
+
         _LOGGER.info("Exit to GPS")
 
         # Check for GPS accuracy
         if context.async_valid_accuracy(message):
             yield from context.async_see(**kwargs)
-            yield from context.async_see_beacons(dev_id, kwargs)
-
-    beacons = context.mobile_beacons_active[dev_id]
-    if location in beacons:
-        beacons.remove(location)
-        _LOGGER.info("Remove beacon %s", location)
+            yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @HANDLERS.register('transition')
@@ -344,6 +367,29 @@ def async_handle_transition_message(hass, context, message):
             message['event'])
 
 
+@asyncio.coroutine
+def async_handle_waypoint(hass, name_base, waypoint):
+    """Handle a waypoint."""
+    name = waypoint['desc']
+    pretty_name = '{} - {}'.format(name_base, name)
+    lat = waypoint['lat']
+    lon = waypoint['lon']
+    rad = waypoint['rad']
+
+    # check zone exists
+    entity_id = zone_comp.ENTITY_ID_FORMAT.format(slugify(pretty_name))
+
+    # Check if state already exists
+    if hass.states.get(entity_id) is not None:
+        return
+
+    zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
+                          zone_comp.ICON_IMPORT, False)
+    zone.entity_id = entity_id
+    yield from zone.async_update_ha_state()
+
+
+@HANDLERS.register('waypoint')
 @HANDLERS.register('waypoints')
 @asyncio.coroutine
 def async_handle_waypoints_message(hass, context, message):
@@ -357,30 +403,17 @@ def async_handle_waypoints_message(hass, context, message):
         if user not in context.waypoint_whitelist:
             return
 
-    wayps = message['waypoints']
+    if 'waypoints' in message:
+        wayps = message['waypoints']
+    else:
+        wayps = [message]
 
     _LOGGER.info("Got %d waypoints from %s", len(wayps), message['topic'])
 
     name_base = ' '.join(_parse_topic(message['topic']))
 
     for wayp in wayps:
-        name = wayp['desc']
-        pretty_name = '{} - {}'.format(name_base, name)
-        lat = wayp['lat']
-        lon = wayp['lon']
-        rad = wayp['rad']
-
-        # check zone exists
-        entity_id = zone_comp.ENTITY_ID_FORMAT.format(slugify(pretty_name))
-
-        # Check if state already exists
-        if hass.states.get(entity_id) is not None:
-            continue
-
-        zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
-                              zone_comp.ICON_IMPORT, False)
-        zone.entity_id = entity_id
-        yield from zone.async_update_ha_state()
+        yield from async_handle_waypoint(hass, name_base, wayp)
 
 
 @HANDLERS.register('encrypted')
@@ -399,16 +432,30 @@ def async_handle_encrypted_message(hass, context, message):
     yield from async_handle_message(hass, context, decrypted)
 
 
+@HANDLERS.register('lwt')
+@HANDLERS.register('configuration')
+@HANDLERS.register('beacon')
+@HANDLERS.register('cmd')
+@HANDLERS.register('steps')
+@HANDLERS.register('card')
+@asyncio.coroutine
+def async_handle_not_impl_msg(hass, context, message):
+    """Handle valid but not implemented message types."""
+    _LOGGER.debug('Not handling %s message: %s', message.get("_type"), message)
+
+
+@asyncio.coroutine
+def async_handle_unsupported_msg(hass, context, message):
+    """Handle an unsupported or invalid message type."""
+    _LOGGER.warning('Received unsupported message type: %s.',
+                    message.get('_type'))
+
+
 @asyncio.coroutine
 def async_handle_message(hass, context, message):
     """Handle an OwnTracks message."""
     msgtype = message.get('_type')
 
-    handler = HANDLERS.get(msgtype)
-
-    if handler is None:
-        _LOGGER.warning(
-            'Received unsupported message type: %s.', msgtype)
-        return
+    handler = HANDLERS.get(msgtype, async_handle_unsupported_msg)
 
     yield from handler(hass, context, message)

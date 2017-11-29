@@ -14,23 +14,23 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
+REQUIREMENTS = ['pysnmp==4.4.2']
+
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pysnmp==4.3.10']
-
-CONF_COMMUNITY = 'community'
 CONF_AUTHKEY = 'authkey'
-CONF_PRIVKEY = 'privkey'
 CONF_BASEOID = 'baseoid'
+CONF_COMMUNITY = 'community'
+CONF_PRIVKEY = 'privkey'
 
 DEFAULT_COMMUNITY = 'public'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_BASEOID): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
     vol.Inclusive(CONF_AUTHKEY, 'keys'): cv.string,
     vol.Inclusive(CONF_PRIVKEY, 'keys'): cv.string,
-    vol.Required(CONF_BASEOID): cv.string
 })
 
 

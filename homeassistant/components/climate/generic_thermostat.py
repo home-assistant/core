@@ -10,17 +10,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components import switch
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
-    STATE_AUTO)
+    STATE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
-    CONF_NAME)
+    CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +37,11 @@ CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
 CONF_AC_MODE = 'ac_mode'
 CONF_MIN_DUR = 'min_cycle_duration'
-CONF_TOLERANCE = 'tolerance'
+CONF_COLD_TOLERANCE = 'cold_tolerance'
+CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
@@ -48,7 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
+    vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
+        float),
+    vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
+        float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
@@ -66,12 +72,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     target_temp = config.get(CONF_TARGET_TEMP)
     ac_mode = config.get(CONF_AC_MODE)
     min_cycle_duration = config.get(CONF_MIN_DUR)
-    tolerance = config.get(CONF_TOLERANCE)
+    cold_tolerance = config.get(CONF_COLD_TOLERANCE)
+    hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
 
     async_add_devices([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
-        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)])
+        target_temp, ac_mode, min_cycle_duration, cold_tolerance,
+        hot_tolerance, keep_alive)])
 
 
 class GenericThermostat(ClimateDevice):
@@ -79,14 +87,15 @@ class GenericThermostat(ClimateDevice):
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
-                 tolerance, keep_alive):
+                 cold_tolerance, hot_tolerance, keep_alive):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration
-        self._tolerance = tolerance
+        self._cold_tolerance = cold_tolerance
+        self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
         self._enabled = True
 
@@ -109,6 +118,17 @@ class GenericThermostat(ClimateDevice):
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
             self._async_update_temp(sensor_state)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        # If we have an old state and no target temp, restore
+        if self._target_temp is None:
+            old_state = yield from async_get_last_state(self.hass,
+                                                        self.entity_id)
+            if old_state is not None:
+                self._target_temp = float(
+                    old_state.attributes[ATTR_TEMPERATURE])
 
     @property
     def should_poll(self):
@@ -156,10 +176,11 @@ class GenericThermostat(ClimateDevice):
         """Set operation mode."""
         if operation_mode == STATE_AUTO:
             self._enabled = True
+            self._async_control_heating()
         elif operation_mode == STATE_OFF:
             self._enabled = False
             if self._is_device_active:
-                switch.async_turn_off(self.hass, self.heater_entity_id)
+                self._heater_turn_off()
         else:
             _LOGGER.error('Unrecognized operation mode: %s', operation_mode)
             return
@@ -217,9 +238,9 @@ class GenericThermostat(ClimateDevice):
     def _async_keep_alive(self, time):
         """Call at constant intervals for keep-alive purposes."""
         if self.current_operation in [STATE_COOL, STATE_HEAT]:
-            switch.async_turn_on(self.hass, self.heater_entity_id)
+            self._heater_turn_on()
         else:
-            switch.async_turn_off(self.hass, self.heater_entity_id)
+            self._heater_turn_off()
 
     @callback
     def _async_update_temp(self, state):
@@ -261,30 +282,53 @@ class GenericThermostat(ClimateDevice):
         if self.ac_mode:
             is_cooling = self._is_device_active
             if is_cooling:
-                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                too_cold = self._target_temp - self._cur_temp >= \
+                    self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning off AC %s', self.heater_entity_id)
-                    switch.async_turn_off(self.hass, self.heater_entity_id)
+                    self._heater_turn_off()
             else:
-                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                too_hot = self._cur_temp - self._target_temp >= \
+                    self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning on AC %s', self.heater_entity_id)
-                    switch.async_turn_on(self.hass, self.heater_entity_id)
+                    self._heater_turn_on()
         else:
             is_heating = self._is_device_active
             if is_heating:
-                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                too_hot = self._cur_temp - self._target_temp >= \
+                    self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning off heater %s',
                                  self.heater_entity_id)
-                    switch.async_turn_off(self.hass, self.heater_entity_id)
+                    self._heater_turn_off()
             else:
-                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                too_cold = self._target_temp - self._cur_temp >= \
+                    self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning on heater %s', self.heater_entity_id)
-                    switch.async_turn_on(self.hass, self.heater_entity_id)
+                    self._heater_turn_on()
 
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
-        return switch.is_on(self.hass, self.heater_entity_id)
+        return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
+
+    @callback
+    def _heater_turn_on(self):
+        """Turn heater toggleable device on."""
+        data = {ATTR_ENTITY_ID: self.heater_entity_id}
+        self.hass.async_add_job(
+            self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_ON, data))
+
+    @callback
+    def _heater_turn_off(self):
+        """Turn heater toggleable device off."""
+        data = {ATTR_ENTITY_ID: self.heater_entity_id}
+        self.hass.async_add_job(
+            self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data))
