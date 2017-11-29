@@ -14,8 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER, CONF_TRACK_NEW,
-    YAML_DEVICES, load_config, DEFAULT_TRACK_NEW)
+    PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER)
 
 CONF_VALIDATOR = 'validator'
 CONF_SECRET = 'secret'
@@ -36,13 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an endpoint for the Meraki tracker."""
-    track_new = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
-    yaml_path = hass.config.path(YAML_DEVICES)
-    devs_to_track = []
-    for device in load_config(yaml_path, hass, 0):
-        devs_to_track.append(device.mac)
     hass.http.register_view(
-        MerakiView(config, async_see, devs_to_track, track_new))
+        MerakiView(config, async_see))
 
     return True
 
@@ -53,13 +47,11 @@ class MerakiView(HomeAssistantView):
     url = URL
     name = 'api:meraki'
 
-    def __init__(self, config, async_see, devs_to_track, track_new):
+    def __init__(self, config, async_see):
         """Initialize Meraki URL endpoints."""
         self.async_see = async_see
         self.validator = config[CONF_VALIDATOR]
         self.secret = config[CONF_SECRET]
-        self.devices = devs_to_track
-        self.track = track_new
 
     @asyncio.coroutine
     def get(self, request):
@@ -112,10 +104,6 @@ class MerakiView(HomeAssistantView):
             _LOGGER.debug("clientMac: %s", mac)
             gps_location = (lat, lng)
             attrs = {}
-            if ((not self.track and mac.upper() not in self.devices) and
-                    mac.upper() not in self.devices):
-                _LOGGER.debug("Skipping: %s", mac)
-                continue
             if i.get('os', False):
                 attrs['os'] = i['os']
             if i.get('manufacturer', False):
