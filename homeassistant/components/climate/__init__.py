@@ -57,6 +57,7 @@ ATTR_MIN_TEMP = 'min_temp'
 ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
 ATTR_TARGET_TEMP_LOW = 'target_temp_low'
 ATTR_TARGET_TEMP_STEP = 'target_temp_step'
+ATTR_UNTIL = 'until'
 ATTR_AWAY_MODE = 'away_mode'
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_FAN_MODE = 'fan_mode'
@@ -96,6 +97,7 @@ SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Optional(ATTR_OPERATION_MODE): cv.string,
+        vol.Optional(ATTR_UNTIL): cv.datetime,
     }
 ))
 SET_FAN_MODE_SCHEMA = vol.Schema({
