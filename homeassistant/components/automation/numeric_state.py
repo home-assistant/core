@@ -37,7 +37,7 @@ def async_trigger(hass, config, action):
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-    unsub_track_same = None
+    unsub_track_same = {}
     first_triggered = set(entity_id)
 
     if value_template is not None:
