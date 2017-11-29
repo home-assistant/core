@@ -4,7 +4,6 @@ import logging
 from numbers import Number
 
 from homeassistant.const import (
-    SPEED_MS,
     SPEED_KMH,
     SPEED_FTS,
     SPEED_MPH,
