@@ -767,7 +767,7 @@ def get_googlepluspthumb_from_email(email: str):
     if email is None or email is False or email is True:
         email = ''
 
-    debug_jsontext=None
+    debug_jsontext={}
     try:
         url += urllib.parse.quote(email) + r'?alt=json'
 
@@ -776,7 +776,7 @@ def get_googlepluspthumb_from_email(email: str):
             resp = yield from websession.get(url)
             print('resp.status=' + resp.status)
             jsontext = yield from resp.text()
-            debug_jsontext=yield from resp.json(encoding = 'utf-8')
+            debug_jsontext=yield from resp.json()
     except (asyncio.TimeoutError, aiohttp.ClientError, TypeError):
         _LOGGER.error('http timeout or invalid email\r\n  email: '
                       + email + '\r\n  url: ' + url)
