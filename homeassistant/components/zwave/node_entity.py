@@ -2,14 +2,17 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
-    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
-    ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN,
-    COMMAND_CLASS_CENTRAL_SCENE)
+    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP,
+    ATTR_SCENE_ID, ATTR_SCENE_DATA, ATTR_BASIC_LEVEL, EVENT_NODE_EVENT,
+    EVENT_SCENE_ACTIVATED, EVENT_VALUE_CHANGED_EVENT, DOMAIN, COMMAND_CLASS_CENTRAL_SCENE,
+    ATTR_VALUE_INDEX, ATTR_VALUE_DATA, ATTR_VALUE_INSTANCE, ATTR_VALUE_COMMAND_CLASS,
+    ATTR_VALUE_GENRE, ATTR_VALUE_IS_SET, ATTR_VALUE_LABEL, ATTR_VALUE_IS_POLLED)
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +119,26 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
             self.central_scene_activated(value.index, value.data)
 
+        if value is not None:
+            self.fire_value_changed_event(value)
+
+
         self.node_changed()
+
+    def fire_value_changed_event(self, value):
+        """Fire a value_changed event when a value changes."""
+        self.hass.bus.fire(EVENT_VALUE_CHANGED_EVENT, {
+            ATTR_ENTITY_ID:           self.entity_id,
+            ATTR_NODE_ID:             self.node_id,
+            ATTR_VALUE_INDEX:         value.index,
+            ATTR_VALUE_DATA:          value.data,
+            ATTR_VALUE_INSTANCE:      value.instance,
+            ATTR_VALUE_COMMAND_CLASS: value.command_class,
+            ATTR_VALUE_GENRE:         value.genre,
+            ATTR_VALUE_IS_SET:        value.is_set,
+            ATTR_VALUE_LABEL:         value.label,
+            ATTR_VALUE_IS_POLLED:     value.is_polled
+        })
 
     def get_node_statistics(self):
         """Retrieve statistics from the node."""
