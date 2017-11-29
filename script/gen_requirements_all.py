@@ -32,6 +32,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'pytradfri',
+    'qqbot',
 )
 
 TEST_REQUIREMENTS = (
