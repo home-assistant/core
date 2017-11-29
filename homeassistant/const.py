@@ -244,6 +244,7 @@ ATTR_LOCATION = 'location'
 
 ATTR_BATTERY_LEVEL = 'battery_level'
 ATTR_WAKEUP = 'wake_up_interval'
+ATTR_CURRENT_STATE = 'current_state'
 
 # For devices which support a code attribute
 ATTR_CODE = 'code'

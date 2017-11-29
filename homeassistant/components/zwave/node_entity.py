@@ -2,12 +2,12 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID, ATTR_CURRENT_STATE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
-    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
+    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, COMMAND_CLASS_SWITCH_BINARY, ATTR_SCENE_ID, ATTR_SCENE_DATA,
     ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN,
     COMMAND_CLASS_CENTRAL_SCENE)
 from .util import node_name
@@ -93,6 +93,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.wakeup_interval = None
         self.location = None
         self.battery_level = None
+        self.current_state = None
         dispatcher.connect(
             self.network_node_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
@@ -123,6 +124,15 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         return self._network.manager.getNodeStatistics(
             self._network.home_id, self.node_id)
 
+    def get_current_state(self):
+        """Retrieve current state of a binary switch"""
+        if self.node.has_command_class(COMMAND_CLASS_SWITCH_BINARY):
+            for value in self.node.get_values().values():
+                if value.data and value.is_polled:
+                    return None
+                else:
+                    return value.data
+
     def node_changed(self):
         """Update node properties."""
         attributes = {}
@@ -143,6 +153,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.wakeup_interval = None
 
         self.battery_level = self.node.get_battery_level()
+        self.current_state = self.get_current_state()
+
         self._attributes = attributes
 
         self.maybe_schedule_update()
@@ -234,5 +246,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             attrs[ATTR_BATTERY_LEVEL] = self.battery_level
         if self.wakeup_interval is not None:
             attrs[ATTR_WAKEUP] = self.wakeup_interval
+        if self.current_state is not None:
+            attrs[ATTR_CURRENT_STATE] = self.current_state
 
         return attrs
