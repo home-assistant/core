@@ -86,9 +86,10 @@ def async_trigger(hass, config, action):
                     async_check_same_func=check_numeric_state)
             else:
                 call_action()
-            entities_triggered.add(entity)
 
-        entities_triggered.discard(entity)
+            entities_triggered.add(entity)
+        else:
+            entities_triggered.discard(entity)
 
     unsub = async_track_state_change(
         hass, entity_id, state_automation_listener)
