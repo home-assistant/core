@@ -88,7 +88,7 @@ def async_trigger(hass, config, action):
                 call_action()
 
             entities_triggered.add(entity)
-        else:
+        elif matching:
             entities_triggered.discard(entity)
 
     unsub = async_track_state_change(
