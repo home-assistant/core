@@ -748,7 +748,7 @@ def update_config(path: str, dev_id: str, device: Device):
         out.write(dump(device))
 
 
-def get_gravatar_for_email(hass: HomeAssistantType, email: str):
+def get_gravatar_for_email(email: str):
     """Return an 80px Gravatar for the given email address.
 
     Async friendly.
@@ -758,7 +758,7 @@ def get_gravatar_for_email(hass: HomeAssistantType, email: str):
     return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
 
 
-def get_googlepluspthumb_from_email(email: str):
+def get_googlepluspthumb_from_email(hass: HomeAssistantType, email: str):
     """Return a thumbnail image of a user's google plus profile image."""
     import urllib.parse
     from re import search
@@ -767,16 +767,16 @@ def get_googlepluspthumb_from_email(email: str):
     if email is None or email is False or email is True:
         email = ''
 
-    debug_jsontext={}
+    debug_jsontext = {}
     try:
         url += urllib.parse.quote(email) + r'?alt=json'
 
         websession = async_get_clientsession(hass)
         with async_timeout.timeout(5, loop=hass.loop):
             resp = yield from websession.get(url)
-            print('resp.status=' + resp.status)
-            jsontext = yield from resp.text()
-            debug_jsontext=yield from resp.json(encoding = 'utf-8')
+            if resp.status == 200:
+                jsontext = yield from resp.text()
+                debug_jsontext=yield from resp.json(encoding='utf-8')
     except (asyncio.TimeoutError, aiohttp.ClientError, TypeError):
         _LOGGER.error('http timeout or invalid email\r\n  email: '
                       + email + '\r\n  url: ' + url)
