@@ -206,7 +206,7 @@ directpy==0.2
 discord.py==0.16.12
 
 # homeassistant.components.updater
-distro==1.0.4
+distro==1.1.0
 
 # homeassistant.components.switch.digitalloggers
 dlipower==0.7.165
