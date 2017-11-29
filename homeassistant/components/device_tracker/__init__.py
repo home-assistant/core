@@ -408,12 +408,12 @@ class Device(Entity):
 
         # Configured picture
         if gravatar is not None:
-            self.config_picture = get_gravatar_for_email(hass, gravatar)
+            self.config_picture = get_gravatar_for_email(gravatar)
         else:
             # Attempt to use googleplus but revert to picture if it fails
             googlepluspthumb = None
             if googleplus is not None:
-                googlepluspthumb = get_googlepluspthumb_from_email(googleplus)
+                googlepluspthumb = get_googlepluspthumb_from_email(hass, googleplus)
             if googlepluspthumb is not None:
                 self.config_picture = googlepluspthumb
             else:
