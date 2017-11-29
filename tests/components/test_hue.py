@@ -209,6 +209,7 @@ class TestHueBridge(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.data[hue.DOMAIN] = {}
         self.skip_teardown_stop = False
 
     def tearDown(self):
@@ -368,3 +369,36 @@ class TestHueBridge(unittest.TestCase):
         self.assertEqual(
             'Failed to register, please try again.',
             self.hass.states.all()[0].attributes.get(configurator.ATTR_ERRORS))
+
+    @MockDependency('phue')
+    def test_hue_activate_scene(self, mock_phue):
+        """Test the hue_activate_scene service."""
+        with patch('homeassistant.helpers.discovery.load_platform'):
+            bridge = hue.HueBridge('localhost', self.hass,
+                                   hue.PHUE_CONFIG_FILE)
+            bridge.setup()
+
+            # No args
+            self.hass.services.call(hue.DOMAIN, hue.SERVICE_HUE_SCENE,
+                                    blocking=True)
+            bridge.bridge.run_scene.assert_not_called()
+
+            # Only one arg
+            self.hass.services.call(
+                hue.DOMAIN, hue.SERVICE_HUE_SCENE,
+                {hue.ATTR_GROUP_NAME: 'group'},
+                blocking=True)
+            bridge.bridge.run_scene.assert_not_called()
+
+            self.hass.services.call(
+                hue.DOMAIN, hue.SERVICE_HUE_SCENE,
+                {hue.ATTR_SCENE_NAME: 'scene'},
+                blocking=True)
+            bridge.bridge.run_scene.assert_not_called()
+
+            # Both required args
+            self.hass.services.call(
+                hue.DOMAIN, hue.SERVICE_HUE_SCENE,
+                {hue.ATTR_GROUP_NAME: 'group', hue.ATTR_SCENE_NAME: 'scene'},
+                blocking=True)
+            bridge.bridge.run_scene.assert_called_once_with('group', 'scene')

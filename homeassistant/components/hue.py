@@ -127,7 +127,6 @@ def setup_bridge(host, hass, filename=None, allow_unreachable=False,
 
     bridge = HueBridge(host, hass, filename, allow_unreachable,
                        allow_in_emulated_hue, allow_hue_groups)
-    hass.data[DOMAIN][socket.gethostbyname(host)] = bridge
     bridge.setup()
 
 
@@ -165,6 +164,8 @@ class HueBridge(object):
 
         self.configured = False
         self.config_request_id = None
+
+        hass.data[DOMAIN][socket.gethostbyname(host)] = self
 
     def setup(self):
         """Set up a phue bridge based on host parameter."""
