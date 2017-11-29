@@ -21,11 +21,6 @@ ATTR_POLL_INTENSITY = "poll_intensity"
 ATTR_VALUE_INDEX = "value_index"
 ATTR_VALUE_INSTANCE = "value_instance"
 ATTR_VALUE_DATA = "value_data"
-ATTR_VALUE_COMMAND_CLASS = "value_command_class"
-ATTR_VALUE_GENRE = "value_genre"
-ATTR_VALUE_IS_SET = "value_is_set"
-ATTR_VALUE_LABEL = "value_label"
-ATTR_VALUE_IS_POLLED = "value_is_polled"
 NETWORK_READY_WAIT_SECS = 30
 
 DISCOVERY_DEVICE = 'device'
