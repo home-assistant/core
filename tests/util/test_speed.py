@@ -2,8 +2,7 @@
 
 import unittest
 import homeassistant.util.speed as speed_util
-from homeassistant.const import (SPEED_MS, SPEED_KMH, SPEED_FTS, SPEED_MPH,
-                                 UNIT_AUTOCONVERT)
+from homeassistant.const import (SPEED_MS, SPEED_KMH, SPEED_FTS, SPEED_MPH)
 
 INVALID_SYMBOL = 'bob'
 VALID_SYMBOL = SPEED_KMH
@@ -75,14 +74,3 @@ class TestDistanceUtil(unittest.TestCase):
                          18000)
         self.assertEqual(speed_util.convert(meter, SPEED_MS, SPEED_MPH),
                          11184.7)
-
-    def test_autoconvert(self):
-        """Test automatic conversion of units."""
-        self.assertEqual(speed_util.convert(5000, SPEED_MS, UNIT_AUTOCONVERT),
-                         16404.2)
-        self.assertEqual(speed_util.convert(5000, SPEED_FTS, UNIT_AUTOCONVERT),
-                         1524)
-        self.assertEqual(speed_util.convert(5, SPEED_MPH, UNIT_AUTOCONVERT),
-                         8.04672)
-        self.assertEqual(speed_util.convert(5, SPEED_KMH, UNIT_AUTOCONVERT),
-                         3.1068611135966)

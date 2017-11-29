@@ -135,22 +135,22 @@ class TestUnitSystem(unittest.TestCase):
     def test_speed_to_metric(self):
         """Test speed conversion to metric system."""
         self.assertEqual(
-            100,
+            (100, 'km/h'),
             METRIC_SYSTEM.speed(100, METRIC_SYSTEM.speed_unit)
         )
         self.assertEqual(
-            8.04672,
+            (8.04672, 'km/h'),
             METRIC_SYSTEM.speed(5, IMPERIAL_SYSTEM.speed_unit)
         )
 
     def test_speed_to_imperial(self):
         """Test speed conversion to imperial system."""
         self.assertEqual(
-            100,
+            (100, 'mi/h'),
             IMPERIAL_SYSTEM.speed(100, IMPERIAL_SYSTEM.speed_unit)
         )
         self.assertEqual(
-            3.1068611135966,
+            (3.1068611135966, 'mi/h'),
             IMPERIAL_SYSTEM.speed(5, METRIC_SYSTEM.speed_unit)
         )
 

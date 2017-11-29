@@ -292,7 +292,6 @@ ATTR_TEMPERATURE = 'temperature'
 
 # #### UNITS OF MEASUREMENT ####
 #
-UNIT_AUTOCONVERT = 'auto'
 
 # Temperature units
 TEMP_CELSIUS = '°C'
@@ -341,6 +340,16 @@ SPEED_KMH = 'km/h'  # type: str
 
 SPEED_FTS = 'ft/s'  # type: str
 SPEED_MPH = 'mi/h'  # type: str
+
+SPEED_UNITS_METRIC = [
+    SPEED_MS,
+    SPEED_KMH
+]
+
+SPEED_UNITS_IMPERIAL = [
+        SPEED_FTS,
+        SPEED_MPH
+]
 
 # UV Index units
 UNIT_UV_INDEX = 'UV index'  # type: str

@@ -11,6 +11,7 @@ from homeassistant.const import (
     LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
     VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
     MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS,
+    SPEED_UNITS_IMPERIAL, SPEED_UNITS_METRIC,
     SPEED_MS, SPEED_KMH, SPEED_FTS, SPEED_MPH,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH, MASS, VOLUME, SPEED, TEMPERATURE,
@@ -21,7 +22,7 @@ from homeassistant.util import speed as speed_util
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_LENGTH = [
+LENGTH_UNITS = [
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     LENGTH_FEET,
@@ -62,7 +63,7 @@ SPEED_UNITS = [
 def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
-        units = VALID_LENGTH
+        units = LENGTH_UNITS
     elif unit_type == TEMPERATURE:
         units = TEMPERATURE_UNITS
     elif unit_type == MASS:
@@ -140,9 +141,19 @@ class UnitSystem(object):
         """Convert the given speed to this unit system."""
         if not isinstance(speed, Number):
             raise TypeError('{} is not a numeric value.'.format(str(speed)))
+        if (from_unit in SPEED_UNITS_METRIC and
+                self.name is CONF_UNIT_SYSTEM_IMPERIAL):
+            to_unit = SPEED_UNITS_IMPERIAL[
+                SPEED_UNITS_METRIC.index(from_unit)]
+        elif (from_unit in SPEED_UNITS_IMPERIAL and
+              self.name is CONF_UNIT_SYSTEM_METRIC):
+            to_unit = SPEED_UNITS_METRIC[
+                SPEED_UNITS_IMPERIAL.index(from_unit)]
+        else:
+            to_unit = from_unit
 
-        return speed_util.convert(speed, from_unit,
-                                  self.speed_unit)  # type: float
+        return (speed_util.convert(speed, from_unit, to_unit),
+                to_unit)  # type: Tuple[float, str]
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
