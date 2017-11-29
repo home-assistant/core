@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
@@ -67,6 +68,11 @@ class HeatmiserV3Thermostat(ClimateDevice):
         self.dcb = None
         self.update()
         self._target_temperature = int(self.dcb.get('roomset'))
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def name(self):

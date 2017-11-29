@@ -7,7 +7,8 @@ https://home-assistant.io/components/climate.tado/
 import logging
 
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import (
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO
 
@@ -42,6 +43,8 @@ OPERATION_LIST = {
     CONST_MODE_SMART_SCHEDULE: 'Smart schedule',
     CONST_MODE_OFF: 'Off',
 }
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -126,6 +129,11 @@ class TadoClimate(ClimateDevice):
         self._current_fan = CONST_MODE_OFF
         self._current_operation = CONST_MODE_SMART_SCHEDULE
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def name(self):

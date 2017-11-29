@@ -8,7 +8,9 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA, ClimateDevice, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE)
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -134,6 +136,14 @@ class KNXClimate(ClimateDevice):
         self.async_register_callbacks()
 
         self._unit_of_measurement = TEMP_CELSIUS
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        support = SUPPORT_TARGET_TEMPERATURE
+        if self.device.supports_operation_mode:
+            support |= SUPPORT_OPERATION_MODE
+        return support
 
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
