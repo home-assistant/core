@@ -461,7 +461,7 @@ miniupnpc==2.0.2
 motorparts==1.0.2
 
 # homeassistant.components.tts
-mutagen==1.38
+mutagen==1.39
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
