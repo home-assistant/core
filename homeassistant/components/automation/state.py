@@ -74,7 +74,7 @@ def async_trigger(hass, config, action):
     def async_remove():
         """Remove state listeners async."""
         unsub()
-        for async_remove in unsub_track_same:
+        for async_remove in unsub_track_same.values():
             async_remove()
 
     return async_remove
