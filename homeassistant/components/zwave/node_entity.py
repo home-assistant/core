@@ -2,17 +2,15 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID)
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
-    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP,
-    ATTR_SCENE_ID, ATTR_SCENE_DATA, ATTR_BASIC_LEVEL, EVENT_NODE_EVENT,
-    EVENT_SCENE_ACTIVATED, EVENT_VALUE_CHANGED_EVENT, DOMAIN,
-    COMMAND_CLASS_CENTRAL_SCENE, ATTR_VALUE_ID,
-    ATTR_VALUE_DATA)
+    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
+    ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED,
+    EVENT_VALUE_CHANGED_EVENT, DOMAIN, COMMAND_CLASS_CENTRAL_SCENE,
+    ATTR_VALUE_ID, ATTR_VALUE_DATA)
 
 from .util import node_name
 
@@ -120,7 +118,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
             self.central_scene_activated(value.index, value.data)
 
-        if value is not None:
+        if value is not None and not value.is_polled:
             self.fire_value_changed_event(value)
 
         self.node_changed()
@@ -128,10 +126,10 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
     def fire_value_changed_event(self, value):
         """Fire a value_changed event when a value changes."""
         self.hass.bus.fire(EVENT_VALUE_CHANGED_EVENT, {
-            ATTR_ENTITY_ID:           self.entity_id,
-            ATTR_NODE_ID:             self.node_id,
-            ATTR_VALUE_ID:            value.index,
-            ATTR_VALUE_DATA:          value.data
+            ATTR_ENTITY_ID:  self.entity_id,
+            ATTR_NODE_ID:    self.node_id,
+            ATTR_VALUE_ID:   value.index,
+            ATTR_VALUE_DATA: value.data
         })
 
     def get_node_statistics(self):
