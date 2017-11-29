@@ -767,28 +767,29 @@ def get_googlepluspthumb_from_email(email: str):
     if email is None or email is False or email is True:
         email = ''
 
-	debug_jsontext=None
+    debug_jsontext=None
     try:
         url += urllib.parse.quote(email) + r'?alt=json'
 
         websession = async_get_clientsession(self.hass)
         with async_timeout.timeout(5, loop=self.hass.loop):
             resp = yield from websession.get(url)
-        print('resp.status=' + resp.status)
-        jsontext = yield from resp.text()
-        debug_jsontext=yield from resp.json(encoding='utf-8')
+            print('resp.status=' + resp.status)
+            jsontext = yield from resp.text()
+            debug_jsontext=yield from resp.json(encoding = 'utf-8')
     except (asyncio.TimeoutError, aiohttp.ClientError, TypeError):
         _LOGGER.error('http timeout or invalid email\r\n  email: '
                       + email + '\r\n  url: ' + url)
         return None
-	
-	try:
-		print('jsontext')
+
+    try:
+        print('jsontext')
         print(jsontext)
         print('debug_json.keys()')
         print(debug_json.keys())
-	except(TypeError): pass
-	
+    except(TypeError):
+        pass
+
     thumbnail_pattern = r'gphoto\$thumbnail\"\:\{\"\$t\"\:\"([^\"]*?)\"'
     thumbnail_url = search(thumbnail_pattern, jsontext).group(1)
     if thumbnail_url == '':
