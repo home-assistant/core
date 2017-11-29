@@ -4,9 +4,9 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.hive/
 """
-from homeassistant.components.climate import (ClimateDevice,
-                                              STATE_AUTO, STATE_HEAT,
-                                              STATE_OFF, STATE_ON)
+from homeassistant.components.climate import (
+    ClimateDevice, STATE_AUTO, STATE_HEAT, STATE_OFF, STATE_ON,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.components.hive import DATA_HIVE
 
@@ -15,6 +15,8 @@ HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
                       'ON': STATE_ON, 'OFF': STATE_OFF}
 HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
                       STATE_ON: 'ON', STATE_OFF: 'OFF'}
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -44,6 +46,11 @@ class HiveClimateEntity(ClimateDevice):
             self.modes = [STATE_AUTO, STATE_ON, STATE_OFF]
 
         self.session.entities.append(self)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
