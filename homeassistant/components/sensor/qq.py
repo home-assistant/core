@@ -96,7 +96,7 @@ class QQ(threading.Thread):
             bot.Run()
 
     def stop(self):
-        """Rtop threading although it could not use."""
+        """Stop threading although it could not use."""
         if self.thread_state is True:
             os.system('qq stop')
             self.thread_state = False
