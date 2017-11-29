@@ -118,6 +118,7 @@ class UnitSystem(object):
         return temperature_util.convert(temperature, from_unit,
                                         self.temperature_unit)  # type: float
 
+    # pylint: disable=invalid-sequence-index
     def length(self: object, length: float,
                from_unit: str) -> Tuple[float, str]:
         """Convert the given length to this unit system."""
@@ -137,7 +138,8 @@ class UnitSystem(object):
         return (distance_util.convert(length, from_unit, to_unit),
                 to_unit)  # type: Tuple[float, str]
 
-    def speed(self: object, speed: float, from_unit: str) -> float:
+    # pylint: disable=invalid-sequence-index
+    def speed(self: object, speed: float, from_unit: str) -> Tuple[float, str]:
         """Convert the given speed to this unit system."""
         if not isinstance(speed, Number):
             raise TypeError('{} is not a numeric value.'.format(str(speed)))
