@@ -5,8 +5,10 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/binary_sensor.ads/
 
 """
+import asyncio
 import logging
 import voluptuous as vol
+from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, \
     PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
 from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
@@ -38,9 +40,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
     add_devices([ads_sensor])
 
-    ads_hub.add_device_notification(ads_var, ads_hub.PLCTYPE_BOOL,
-                                    ads_sensor.callback)
-
 
 class AdsBinarySensor(BinarySensorDevice):
     """Representation of ADS binary sensors."""
@@ -52,6 +51,21 @@ class AdsBinarySensor(BinarySensorDevice):
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register device notification."""
+        @callback
+        def async_update(name, value):
+            """Handle device notifications."""
+            _LOGGER.debug('Variable %s changed its value to %d',
+                          name, value)
+            self._state = value
+            self.async_schedule_update_ha_state()
+
+        self._ads_hub.add_device_notification(
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL, async_update
+        )
 
     @property
     def name(self):
@@ -67,13 +81,3 @@ class AdsBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return if the binary sensor is on."""
         return self._state
-
-    def callback(self, name, value):
-        """Handle device notifications."""
-        _LOGGER.debug('Variable %s changed its value to %d',
-                      name, value)
-        self._state = value
-        try:
-            self.schedule_update_ha_state()
-        except AttributeError:
-            pass

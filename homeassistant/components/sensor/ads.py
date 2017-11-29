@@ -5,8 +5,10 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/sensor.ads/
 
 """
+import asyncio
 import logging
 import voluptuous as vol
+from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.entity import Entity
@@ -47,9 +49,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([entity])
 
-    ads_hub.add_device_notification(ads_var, ads_hub.ADS_TYPEMAP[ads_type],
-                                    entity.callback)
-
 
 class AdsSensor(Entity):
     """Representation of an ADS sensor entity."""
@@ -65,6 +64,26 @@ class AdsSensor(Entity):
         self.ads_type = ads_type
         self.factor = factor
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register device notification."""
+        @callback
+        def async_update(name, value):
+            """Handle device notifications."""
+            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+
+            # if factor is set use it otherwise not
+            if self.factor is None:
+                self._value = value
+            else:
+                self._value = value / self.factor
+            self.schedule_update_ha_state()
+
+        self._ads_hub.add_device_notification(
+            self.ads_var, self._ads_hub.ADS_TYPEMAP[self.ads_type],
+            async_update
+        )
+
     @property
     def name(self):
         """Return the name of the entity."""
@@ -79,18 +98,3 @@ class AdsSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-
-    def callback(self, name, value):
-        """Handle device notifications."""
-        _LOGGER.debug('Variable %s changed its value to %d', name, value)
-
-        # if factor is set use it otherwise not
-        if self.factor is None:
-            self._value = value
-        else:
-            self._value = value / self.factor
-
-        try:
-            self.schedule_update_ha_state()
-        except AttributeError:
-            pass
