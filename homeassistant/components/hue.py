@@ -106,8 +106,6 @@ def setup(hass, config):
         setup_bridge(host, hass, filename, allow_unreachable,
                      allow_in_emulated_hue, allow_hue_groups)
 
-    discovery.load_platform(hass, 'light', DOMAIN, {}, config)
-
     return True
 
 
@@ -118,8 +116,6 @@ def bridge_discovered(hass, service, discovery_info):
 
     filename = 'phue-{}.conf'.format(serial)
     setup_bridge(host, hass, filename)
-
-    discovery.load_platform(hass, 'light', DOMAIN, discovery_info, {})
 
 
 def setup_bridge(host, hass, filename=None, allow_unreachable=False,
@@ -196,6 +192,10 @@ class HueBridge(object):
             configurator.request_done(request_id)
 
         self.configured = True
+
+        discovery.load_platform(
+            self.hass, 'light', DOMAIN,
+            {'bridge_id': socket.gethostbyname(self.host)})
 
         # create a service for calling run_scene directly on the bridge,
         # used to simplify automation rules.

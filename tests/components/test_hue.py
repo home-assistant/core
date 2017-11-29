@@ -66,15 +66,8 @@ class TestSetup(unittest.TestCase):
                     'localhost',
                     config_file_path=get_test_config_dir(hue.PHUE_CONFIG_FILE))
                 mock_load.assert_called_once_with(
-                    self.hass, 'light', hue.DOMAIN, {},
-                    {'bridges': [
-                        {
-                            'host': 'localhost',
-                            'filename': 'phue.conf',
-                            'allow_in_emulated_hue': True,
-                            'allow_hue_groups': True,
-                            'allow_unreachable': False,
-                        }]})
+                    self.hass, 'light', hue.DOMAIN,
+                    {'bridge_id': '127.0.0.1'})
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
                 self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
@@ -100,14 +93,8 @@ class TestSetup(unittest.TestCase):
                         config_file_path=get_test_config_dir(
                             hue.PHUE_CONFIG_FILE))
                     mock_load.assert_called_once_with(
-                        self.hass, 'light', hue.DOMAIN, {},
-                        {'bridges': [
-                            {
-                                'filename': 'phue.conf',
-                                'allow_in_emulated_hue': True,
-                                'allow_hue_groups': True,
-                                'allow_unreachable': False,
-                            }]})
+                        self.hass, 'light', hue.DOMAIN,
+                        {'bridge_id': '127.0.0.1'})
 
                     self.assertTrue(hue.DOMAIN in self.hass.data)
                     self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
@@ -135,24 +122,15 @@ class TestSetup(unittest.TestCase):
                         '192.168.0.1',
                         config_file_path=get_test_config_dir(
                             hue.PHUE_CONFIG_FILE))])
-                mock_load.assert_called_once_with(
-                    self.hass, 'light', hue.DOMAIN, {},
-                    {'bridges': [
-                        {
-                            'host': 'localhost',
-                            'filename': 'phue.conf',
-                            'allow_in_emulated_hue': True,
-                            'allow_hue_groups': True,
-                            'allow_unreachable': False,
-                        },
-                        {
-                            'host': '192.168.0.1',
-                            'filename': 'phue.conf',
-                            'allow_in_emulated_hue': True,
-                            'allow_hue_groups': True,
-                            'allow_unreachable': False,
-                        },
-                    ]})
+                mock_load.mock_bridge.assert_not_called()
+                mock_load.assert_has_calls([
+                    call(
+                        self.hass, 'light', hue.DOMAIN,
+                        {'bridge_id': '127.0.0.1'}),
+                    call(
+                        self.hass, 'light', hue.DOMAIN,
+                        {'bridge_id': '192.168.0.1'}),
+                ], any_order=True)
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
                 self.assertEquals(2, len(self.hass.data[hue.DOMAIN]))
@@ -175,8 +153,7 @@ class TestSetup(unittest.TestCase):
                 config_file_path=get_test_config_dir('phue-foobar.conf'))
             mock_load.assert_called_once_with(
                 self.hass, 'light', hue.DOMAIN,
-                {'host': '192.168.0.10', 'serial': 'foobar'},
-                {})
+                {'bridge_id': '192.168.0.10'})
 
             self.assertTrue(hue.DOMAIN in self.hass.data)
             self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
@@ -203,15 +180,8 @@ class TestSetup(unittest.TestCase):
                         hue.PHUE_CONFIG_FILE))
                 calls_to_mock_load = [
                     call(
-                        self.hass, 'light', hue.DOMAIN, {},
-                        {'bridges': [
-                            {
-                                'host': '192.168.1.10',
-                                'filename': 'phue.conf',
-                                'allow_in_emulated_hue': True,
-                                'allow_hue_groups': True,
-                                'allow_unreachable': False,
-                            }]}),
+                        self.hass, 'light', hue.DOMAIN,
+                        {'bridge_id': '192.168.1.10'}),
                 ]
                 mock_load.assert_has_calls(calls_to_mock_load)
 
@@ -226,12 +196,6 @@ class TestSetup(unittest.TestCase):
                     '192.168.1.10',
                     config_file_path=get_test_config_dir(
                         hue.PHUE_CONFIG_FILE))
-                calls_to_mock_load.append(
-                    call(
-                        self.hass, 'light', hue.DOMAIN,
-                        {'host': '192.168.1.10', 'serial': 'foobar'},
-                        {}),
-                )
                 mock_load.assert_has_calls(calls_to_mock_load)
 
                 # Still only one

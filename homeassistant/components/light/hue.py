@@ -90,6 +90,9 @@ for more information.
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Hue lights."""
+    if discovery_info is None or 'bridge_id' not in discovery_info:
+        return True
+
     setup_data(hass)
 
     if config is not None and len(config) > 0:
@@ -102,8 +105,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             title=MIGRATION_TITLE,
             notification_id=MIGRATION_ID)
 
-    for bridge in hass.data[hue.DOMAIN].values():
-        update_lights(hass, bridge, add_devices)
+    bridge_id = discovery_info['bridge_id']
+    bridge = hass.data[hue.DOMAIN][bridge_id]
+    unthrottled_update_lights(hass, bridge, add_devices)
 
     return True
 
@@ -121,7 +125,7 @@ def update_lights(hass, bridge, add_devices):
 
 
 def unthrottled_update_lights(hass, bridge, add_devices):
-    """Internal version of update_lights (intended for unit tests)."""
+    """Internal version of update_lights."""
     import phue
 
     if not bridge.configured:
