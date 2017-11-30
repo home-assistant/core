@@ -919,7 +919,8 @@ def test_restore_state(hass):
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
     assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
-    
+
+
 @asyncio.coroutine
 def test_no_restore_state(hass):
     """Ensure states are not restored on startup if not needed."""
