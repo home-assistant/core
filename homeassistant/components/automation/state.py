@@ -76,5 +76,6 @@ def async_trigger(hass, config, action):
         unsub()
         for async_remove in unsub_track_same.values():
             async_remove()
+        unsub_track_same.clear()
 
     return async_remove
