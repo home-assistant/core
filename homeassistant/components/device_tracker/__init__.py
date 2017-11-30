@@ -414,7 +414,7 @@ class Device(Entity):
             googlepluspthumb = None
             if googleplus is not None:
                 googlepluspthumb = (get_googlepluspthumb_from_email(
-                                        hass,googleplus))
+                                        hass, googleplus))
             if googlepluspthumb is not None:
                 self.config_picture = googlepluspthumb
             else:
