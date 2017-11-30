@@ -125,6 +125,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.node_changed()
 
     def fire_value_changed_event(self, value):
+        if self.hass is None:
+            return
+
         """Fire a value_changed event when a value changes."""
         self.hass.bus.fire(EVENT_VALUE_CHANGED_EVENT, {
             ATTR_ENTITY_ID:  self.entity_id,

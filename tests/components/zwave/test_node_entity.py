@@ -130,6 +130,7 @@ def test_fire_value_changed_event(hass, mock_openzwave):
     value_id = 0
     value_data = False
     entity_id = 'zwave.mock_node'
+    is_polled = False
 
     node = mock_zwave.MockNode(node_id=node_id)
 
@@ -150,7 +151,8 @@ def test_fire_value_changed_event(hass, mock_openzwave):
         entity_id=entity_id,
         node_id=node_id,
         value_id=value_id,
-        value_data=value_data)
+        data=value_data,
+        is_polled=is_polled)
 
     hass.async_add_job(mock_receivers[0], node, value)
     yield from hass.async_block_till_done()
@@ -164,8 +166,8 @@ def test_fire_value_changed_event(hass, mock_openzwave):
     yield from hass.async_block_till_done()
 
     assert len(events) == 1
-    assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"
-    assert events[0].data[const.ATTR_NODE_ID] == 11
+    assert events[0].data[ATTR_ENTITY_ID] == entity_id
+    assert events[0].data[const.ATTR_NODE_ID] == node_id
     assert events[0].data[const.ATTR_VALUE_ID] == value_id
     assert events[0].data[const.ATTR_VALUE_DATA] == value_data
 
