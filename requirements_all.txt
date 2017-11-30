@@ -1057,10 +1057,9 @@ tank_utility==1.4.0
 tapsaff==0.1.3
 
 # homeassistant.components.tellstick
-tellcore-net==0.1
+tellcore-net==0.3
 
 # homeassistant.components.tellstick
-# homeassistant.components.sensor.tellstick
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
