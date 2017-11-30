@@ -890,8 +890,11 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self._shuffle = True
-        self._player.play_mode = 'SHUFFLE'
+        self._shuffle = shuffle
+        if shuffle is True:
+            self._player.play_mode = 'SHUFFLE'
+        else:
+            self._player.play_mode = 'NORMAL'
 
     @soco_error
     def mute_volume(self, mute):
