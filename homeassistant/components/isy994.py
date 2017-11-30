@@ -295,6 +295,9 @@ class ISYDevice(Entity):
     def value(self) -> object:
         """Get the current value of the device."""
         # pylint: disable=protected-access
+        if self._node.status._val == -1*float('inf'):
+            return None
+
         return self._node.status._val
 
     @property

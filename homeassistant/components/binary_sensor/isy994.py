@@ -86,7 +86,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         self._heartbeat_timestamp = None
         self._device_class_from_type = self._detect_device_type()
         # pylint: disable=protected-access
-        if self._node.status._val == -1:
+        if self._node.status._val == -1*float('inf'):
             self._computed_state = None
         else:
             self._computed_state = bool(self._node.status._val)
