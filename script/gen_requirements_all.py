@@ -32,7 +32,6 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'pytradfri',
-    'qqbot',
 )
 
 TEST_REQUIREMENTS = (
@@ -84,6 +83,7 @@ TEST_REQUIREMENTS = (
     'pythonwhois',
     'wakeonlan',
     'vultr'
+    'qqbot'
 )
 
 IGNORE_PACKAGES = (
