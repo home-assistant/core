@@ -1,0 +1,55 @@
+{
+   "sleepers" : [
+      {
+         "timezone" : "US/Eastern",
+         "firstName" : "Test1",
+         "weight" : 150,
+         "birthMonth" : 12,
+         "birthYear" : "1990",
+         "active" : true,
+         "lastLogin" : "2016-08-26 21:43:27 CDT",
+         "side" : 1,
+         "accountId" : "-32",
+         "height" : 60,
+         "bedId" : "-31",
+         "username" : "test1@example.com",
+         "sleeperId" : "-80",
+         "avatar" : "",
+         "emailValidated" : true,
+         "licenseVersion" : 6,
+         "duration" : null,
+         "email" : "test1@example.com",
+         "isAccountOwner" : true,
+         "sleepGoal" : 480,
+         "zipCode" : "12345",
+         "isChild" : false,
+         "isMale" : true
+      },
+      {
+         "email" : "test2@example.com",
+         "duration" : null,
+         "emailValidated" : true,
+         "licenseVersion" : 5,
+         "isChild" : false,
+         "isMale" : false,
+         "zipCode" : "12345",
+         "isAccountOwner" : false,
+         "sleepGoal" : 480,
+         "side" : 0,
+         "lastLogin" : "2016-07-17 15:37:30 CDT",
+         "birthMonth" : 1,
+         "birthYear" : "1991",
+         "active" : true,
+         "weight" : 151,
+         "firstName" : "Test2",
+         "timezone" : "US/Eastern",
+         "avatar" : "",
+         "username" : "test2@example.com",
+         "sleeperId" : "-92",
+         "bedId" : "-31",
+         "height" : 65,
+         "accountId" : "-32"
+      }
+   ]
+}
+

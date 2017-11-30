@@ -1,0 +1,41 @@
+[MASTER]
+reports=no
+
+# Reasons disabled:
+# locally-disabled - it spams too much
+# duplicate-code - unavoidable
+# cyclic-import - doesn't test if both import on load
+# abstract-class-little-used - prevents from setting right foundation
+# abstract-class-not-used - is flaky, should not show up but does
+# unused-argument - generic callbacks and setup methods create a lot of warnings
+# global-statement - used for the on-demand requirement installation
+# redefined-variable-type - this is Python, we're duck typing!
+# too-many-* - are not enforced for the sake of readability
+# too-few-* - same as too-many-*
+# abstract-method - with intro of async there are always methods missing
+
+generated-members=botocore.errorfactory
+
+disable=
+  abstract-class-little-used,
+  abstract-class-not-used,
+  abstract-method,
+  cyclic-import,
+  duplicate-code,
+  global-statement,
+  locally-disabled,
+  not-context-manager,
+  redefined-variable-type,
+  too-few-public-methods,
+  too-many-arguments,
+  too-many-branches,
+  too-many-instance-attributes,
+  too-many-lines,
+  too-many-locals,
+  too-many-public-methods,
+  too-many-return-statements,
+  too-many-statements,
+  unused-argument
+
+[EXCEPTIONS]
+overgeneral-exceptions=Exception,HomeAssistantError

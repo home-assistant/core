@@ -1,0 +1,1 @@
+{"Error":{"Code":401,"Message":"Authentication token of type [class org.apache.shiro.authc.UsernamePasswordToken] could not be authenticated by any configured realms.  Please ensure that at least one realm can authenticate these tokens."}}

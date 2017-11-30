@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanUserTable>
+   <Ethernet>
+      <clientinfo>
+         <interface>Ethernet 1</interface>
+         <IPv4Addr>192.168.0.139/24</IPv4Addr>
+         <index>0</index>
+         <interfaceid>2</interfaceid>
+         <hostname>Unknown</hostname>
+         <MACAddr>30:D3:2D:0:69:21</MACAddr>
+         <method>2</method>
+         <leaseTime>00:00:00:00</leaseTime>
+         <speed>1000</speed>
+      </clientinfo>
+      <clientinfo>
+         <interface>Ethernet 2</interface>
+         <IPv4Addr>192.168.0.134/24</IPv4Addr>
+         <index>1</index>
+         <interfaceid>2</interfaceid>
+         <hostname>Unknown</hostname>
+         <MACAddr>5C:AA:FD:25:32:02</MACAddr>
+         <method>2</method>
+         <leaseTime>00:00:00:00</leaseTime>
+         <speed>10</speed>
+      </clientinfo>
+   </Ethernet>
+   <WIFI>
+      <clientinfo>
+         <interface>HASS</interface>
+         <IPv4Addr>192.168.0.194/24</IPv4Addr>
+         <index>3</index>
+         <interfaceid>3</interfaceid>
+         <hostname>Unknown</hostname>
+         <MACAddr>70:EE:50:27:A1:38</MACAddr>
+         <method>2</method>
+         <leaseTime>00:00:00:00</leaseTime>
+         <speed>39</speed>
+      </clientinfo>
+   </WIFI>
+   <totalClient>3</totalClient>
+   <Customer>upc</Customer>
+</LanUserTable>
