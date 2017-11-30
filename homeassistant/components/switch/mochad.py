@@ -63,7 +63,7 @@ class MochadSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        with self.lock
+        with self.lock:
             try:
                 self._state = True
                 #Recycle socket on new command to recover mochad connection
@@ -77,7 +77,7 @@ class MochadSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        with self.lock
+        with self.lock:
             try:
                 self._state = False
                 #Recycle socket on new command to recover mochad connection
