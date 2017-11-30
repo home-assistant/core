@@ -118,6 +118,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
             self.central_scene_activated(value.index, value.data)
 
+        # Fire event for nodes that are not polled
         if value is not None and not value.is_polled:
             self.fire_value_changed_event(value)
 
