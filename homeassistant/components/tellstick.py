@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.1']
+REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,8 @@ TELLCORE_REGISTRY = None
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_HOST, 'tellcore-net'): cv.string,
-        vol.Inclusive(CONF_PORT, 'tellcore-net'): cv.port,
+        vol.Inclusive(CONF_PORT, 'tellcore-net'):
+            vol.All(cv.ensure_list, [cv.port], vol.Length(min=2, max=2)),
         vol.Optional(CONF_SIGNAL_REPETITIONS,
                      default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
     }),
@@ -73,11 +74,12 @@ def setup(hass, config):
 
     conf = config.get(DOMAIN, {})
     net_host = conf.get(CONF_HOST)
-    net_port = conf.get(CONF_PORT)
+    net_ports = conf.get(CONF_PORT)
 
     # Initialize remote tellcore client
-    if net_host and net_port:
-        net_client = TellCoreClient(net_host, net_port)
+    if net_host:
+        net_client = TellCoreClient(
+            host=net_host, port_client=net_ports[0], port_events=net_ports[1])
         net_client.start()
 
         def stop_tellcore_net(event):
