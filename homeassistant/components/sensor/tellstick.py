@@ -14,7 +14,7 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['homematic']
+DEPENDENCIES = ['tellstick']
 
 _LOGGER = logging.getLogger(__name__)
 
