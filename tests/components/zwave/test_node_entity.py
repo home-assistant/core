@@ -116,6 +116,7 @@ def test_scene_activated(hass, mock_openzwave):
     assert events[0].data[const.ATTR_NODE_ID] == 11
     assert events[0].data[const.ATTR_SCENE_ID] == scene_id
 
+
 @asyncio.coroutine
 def test_fire_value_changed_event(hass, mock_openzwave):
     """Test central scene activated event."""
@@ -166,7 +167,7 @@ def test_fire_value_changed_event(hass, mock_openzwave):
     assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"
     assert events[0].data[const.ATTR_NODE_ID] == 11
     assert events[0].data[const.ATTR_VALUE_ID] == value_id
-    assert events[0].data[const.ATTR_SCENE_DATA] == value_data
+    assert events[0].data[const.ATTR_VALUE_DATA] == value_data
 
 
 @asyncio.coroutine
