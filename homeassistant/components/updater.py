@@ -4,28 +4,28 @@ Support to check for available updates.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/updater/
 """
+# pylint: disable=no-name-in-module, import-error
 import asyncio
+from datetime import timedelta
+from distutils.version import StrictVersion
 import json
 import logging
 import os
 import platform
 import uuid
-from datetime import timedelta
-# pylint: disable=no-name-in-module, import-error
-from distutils.version import StrictVersion
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import __version__ as current_version
+from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, __version__ as current_version)
-from homeassistant.helpers import event
 
-REQUIREMENTS = ['distro==1.0.4']
+REQUIREMENTS = ['distro==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
