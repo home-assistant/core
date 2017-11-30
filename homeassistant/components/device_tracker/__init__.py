@@ -769,6 +769,7 @@ def get_googlepluspthumb_from_email(hass: HomeAssistantType, email: str):
         email = ''
 
     debug_jsontext = {}
+    jsontext = ''
     try:
         url += urllib.parse.quote(email) + r'?alt=json'
 
@@ -776,7 +777,8 @@ def get_googlepluspthumb_from_email(hass: HomeAssistantType, email: str):
         with async_timeout.timeout(5, loop=hass.loop):
             resp = yield from websession.get(url)
             if resp.status == 200:
-                jsontext = ''.join(list(yield from resp.text()))
+                jsongenerator = yield from resp.text()
+                jsontext = str(jsongenerator)
                 debug_jsontext = yield from resp.json(encoding='utf-8')
     except (asyncio.TimeoutError, aiohttp.ClientError, TypeError):
         _LOGGER.error('http timeout or invalid email\r\n  email: '
