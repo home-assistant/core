@@ -116,6 +116,58 @@ def test_scene_activated(hass, mock_openzwave):
     assert events[0].data[const.ATTR_NODE_ID] == 11
     assert events[0].data[const.ATTR_SCENE_ID] == scene_id
 
+@asyncio.coroutine
+def test_fire_value_changed_event(hass, mock_openzwave):
+    """Test central scene activated event."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == mock_zwave.MockNetwork.SIGNAL_VALUE_CHANGED:
+            mock_receivers.append(receiver)
+
+    node_id = 11
+    value_id = 0
+    value_data = False
+    entity_id = 'zwave.mock_node'
+
+    node = mock_zwave.MockNode(node_id=node_id)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+
+    assert len(mock_receivers) == 1
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(const.EVENT_VALUE_CHANGED_EVENT, listener)
+
+    # Test event before entity added to hass
+    value = mock_zwave.MockValue(
+        entity_id=entity_id,
+        node_id=node_id,
+        value_id=value_id,
+        value_data=value_data)
+
+    hass.async_add_job(mock_receivers[0], node, value)
+    yield from hass.async_block_till_done()
+    assert len(events) == 0
+
+    # Add entity to hass
+    entity.hass = hass
+    entity.entity_id = entity_id
+
+    hass.async_add_job(mock_receivers[0], node, value)
+    yield from hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"
+    assert events[0].data[const.ATTR_NODE_ID] == 11
+    assert events[0].data[const.ATTR_VALUE_ID] == value_id
+    assert events[0].data[const.ATTR_SCENE_DATA] == value_data
+
 
 @asyncio.coroutine
 def test_central_scene_activated(hass, mock_openzwave):
