@@ -919,3 +919,27 @@ def test_restore_state(hass):
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
     assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
+    
+@asyncio.coroutine
+def test_no_restore_state(hass):
+    """Ensure states are not restored on startup if not needed."""
+    mock_restore_cache(hass, (
+        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
+              climate.ATTR_OPERATION_MODE: "off"}),
+    ))
+
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(
+        hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test_thermostat',
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'target_temp': 22,
+            'initial_operation_mode': 'auto',
+        }})
+
+    state = hass.states.get('climate.test_thermostat')
+    assert(state.attributes[ATTR_TEMPERATURE] == 22)
+    assert(state.attributes[climate.ATTR_OPERATION_MODE] != "off")
