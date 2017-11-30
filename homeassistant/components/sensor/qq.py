@@ -12,7 +12,7 @@ REQUIREMENTS = ['qqbot==2.3.7']
 
 _LOGGER = logging.getLogger(__name__)
 
-QQ_NUMBER = 'qq'
+QQ_NUMBER = 'qq_number'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(QQ_NUMBER): cv.string,
@@ -21,7 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Qqsensors."""
-    thread1 = QQ(config.getp[QQ_NUMBER])
+    thread1 = QQ(config[QQ_NUMBER])
     thread1.start()
     object_qq = Qqsensor(hass, QQ_NUMBER, thread1)
     add_devices([object_qq])
@@ -32,7 +32,7 @@ class Qqsensor(Entity):
 
     def __init__(self, hass, name, thread_qq):
         """Initialize the sensor."""
-        self._state = 'NULL'
+        self._state = None
         self._name = name
         self._hass = hass
         self._thread = thread_qq
