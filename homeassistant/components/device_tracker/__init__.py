@@ -413,9 +413,8 @@ class Device(Entity):
             # Attempt to use googleplus but revert to picture if it fails
             googlepluspthumb = None
             if googleplus is not None:
-                googlepluspthumb = (yield from
-                                    get_googlepluspthumb_from_email(
-                                        hass, googleplus))
+                googlepluspthumb = (get_googlepluspthumb_from_email(
+                                        hass,googleplus))
             if googlepluspthumb is not None:
                 self.config_picture = googlepluspthumb
             else:
@@ -777,7 +776,7 @@ def get_googlepluspthumb_from_email(hass: HomeAssistantType, email: str):
         with async_timeout.timeout(5, loop=hass.loop):
             resp = yield from websession.get(url)
             if resp.status == 200:
-                jsontext = yield from resp.text()
+                jsontext = ''.join(list(yield from resp.text()))
                 debug_jsontext = yield from resp.json(encoding='utf-8')
     except (asyncio.TimeoutError, aiohttp.ClientError, TypeError):
         _LOGGER.error('http timeout or invalid email\r\n  email: '
