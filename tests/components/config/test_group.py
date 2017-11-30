@@ -1,7 +1,7 @@
-"""Test Z-Wave config panel."""
+"""Test Group config panel."""
 import asyncio
 import json
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
@@ -66,8 +66,11 @@ def test_update_device_config(hass, test_client):
         """Mock writing data."""
         written.append(data)
 
+    mock_call = MagicMock()
+
     with patch('homeassistant.components.config._read', mock_read), \
-            patch('homeassistant.components.config._write', mock_write):
+            patch('homeassistant.components.config._write', mock_write), \
+            patch.object(hass.services, 'async_call', mock_call):
         resp = yield from client.post(
             '/api/config/group/config/hello_beer', data=json.dumps({
                 'name': 'Beer',
@@ -82,6 +85,7 @@ def test_update_device_config(hass, test_client):
     orig_data['hello_beer']['entities'] = ['light.top', 'light.bottom']
 
     assert written[0] == orig_data
+    mock_call.assert_called_once_with('group', 'reload')
 
 
 @asyncio.coroutine
