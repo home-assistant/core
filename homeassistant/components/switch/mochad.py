@@ -32,15 +32,16 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up X10 switches over a mochad controller."""
     devs = config.get(CONF_DEVICES)
+    crtl_lock = threading.Lock()
     add_devices([MochadSwitch(
-        hass, mochad.CONTROLLER.ctrl, dev) for dev in devs])
+        hass, mochad.CONTROLLER.ctrl, dev, crtl_lock) for dev in devs])
     return True
 
 
 class MochadSwitch(SwitchDevice):
     """Representation of a X10 switch over Mochad."""
 
-    def __init__(self, hass, ctrl, dev):
+    def __init__(self, hass, ctrl, dev, ctrl_lock):
         """Initialize a Mochad Switch Device."""
         from pymochad import device
 
@@ -50,9 +51,10 @@ class MochadSwitch(SwitchDevice):
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self.device = device.Device(ctrl, self._address,
                                     comm_type=self._comm_type)
-        """Init with false to avoid locking HA for long on CM19A"""
+        # Init with false to avoid locking HA for long on CM19A (goes from rf
+        # to pl via TM751, but not other way around)
         self._state = False
-        self.lock = threading.Lock()
+        self.lock = ctrl_lock
 
     @property
     def name(self):
@@ -60,36 +62,32 @@ class MochadSwitch(SwitchDevice):
         return self._name
 
     def turn_on(self, **kwargs):
-        try:
-            self.lock.acquire()
-            """Turn the switch on."""
-            self._state = True
-            """Recycle socket on new command to recover mochad connection"""
-            _LOGGER.debug("Reconnect {} : {} ".format(self._controller.server, 
-                                                      self._controller.port))
-            self._controller.reconnect()
-            self.device.send_cmd('on')
-            self._controller.read_data()
-        except Exception as e:
-            _LOGGER.error("Error with mochad communication: {}".format(e))
-        finally:
-            self.lock.release()
+        """Turn the switch on."""
+        with self.lock
+            try:
+                self._state = True
+                #Recycle socket on new command to recover mochad connection
+                _LOGGER.debug("Reconnect {}:{} ".format(self._controller.server,
+                                                        self._controller.port))
+                self._controller.reconnect()
+                self.device.send_cmd('on')
+                self._controller.read_data()
+            except Exception as e:
+                _LOGGER.error("Error with mochad communication: {}".format(e))
 
     def turn_off(self, **kwargs):
-        try:
-            self.lock.acquire()
-            """Turn the switch off."""
-            self._state = False
-            """Recycle socket on new command to recover mochad connection"""
-            _LOGGER.debug("Reconnect {} : {} ".format(self._controller.server, 
-                                                      self._controller.port))
-            self._controller.reconnect()
-            self.device.send_cmd('off')
-            self._controller.read_data()
-        except Exception as e:
-            _LOGGER.error("Error with mochad communication: {}".format(e))
-        finally:
-            self.lock.release()
+        """Turn the switch off."""
+        with self.lock
+            try:
+                self._state = False
+                #Recycle socket on new command to recover mochad connection
+                _LOGGER.debug("Reconnect {}:{} ".format(self._controller.server,
+                                                         self._controller.port))
+                self._controller.reconnect()
+                self.device.send_cmd('off')
+                self._controller.read_data()
+            except Exception as e:
+                _LOGGER.error("Error with mochad communication: {}".format(e))
 
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
