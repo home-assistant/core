@@ -83,6 +83,7 @@ TEST_REQUIREMENTS = (
     'pythonwhois',
     'wakeonlan',
     'vultr'
+    'qqbot'
 )
 
 IGNORE_PACKAGES = (
