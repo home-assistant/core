@@ -5,8 +5,10 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/light.ads/
 
 """
+import asyncio
 import logging
 import voluptuous as vol
+from homeassistant.core import callback
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
@@ -29,26 +31,52 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the light platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    varname_enable = config.get(CONF_ADS_VAR)
-    varname_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
+    ads_var_enable = config.get(CONF_ADS_VAR)
+    ads_var_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
     name = config.get(CONF_NAME)
 
-    add_devices([AdsLight(ads_hub, varname_enable, varname_brightness,
+    add_devices([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
                           name)], True)
 
 
 class AdsLight(Light):
     """Representation of ADS light."""
 
-    def __init__(self, ads_hub, varname_enable, varname_brightness, name):
+    def __init__(self, ads_hub, ads_var_enable, ads_var_brightness, name):
         """Initialize AdsLight entity."""
         self._ads_hub = ads_hub
         self._on_state = False
         self._brightness = 50
         self._name = name
-        self.varname_enable = varname_enable
-        self.varname_brightness = varname_brightness
+        self.ads_var_enable = ads_var_enable
+        self.ads_var_brightness = ads_var_brightness
         self.stype = 'dimmer'
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register device notification."""
+        @callback
+        def async_update_on_state(name, value):
+            """Handle device notifications for state."""
+            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            self._on_state = value
+            self.async_schedule_update_ha_state()
+
+        @callback
+        def async_update_brightness(name, value):
+            """Handle device notification for brightness."""
+            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            self._brightness = value
+            self.async_schedule_update_ha_state()
+
+        self._ads_hub.add_device_notification(
+            self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL,
+            async_update_on_state
+        )
+        self._ads_hub.add_device_notification(
+            self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
+            async_update_brightness
+        )
 
     @property
     def name(self):
@@ -76,12 +104,12 @@ class AdsLight(Light):
         if brightness is not None:
             self._brightness = brightness
 
-        self._ads_hub.write_by_name(self.varname_enable, True,
+        self._ads_hub.write_by_name(self.ads_var_enable, True,
                                     self._ads_hub.PLCTYPE_BOOL)
 
-        if self.varname_brightness is not None:
+        if self.ads_var_brightness is not None:
             self._ads_hub.write_by_name(
-                self.varname_brightness, self._brightness,
+                self.ads_var_brightness, self._brightness,
                 self._ads_hub.PLCTYPE_UINT
             )
 
@@ -89,15 +117,15 @@ class AdsLight(Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self._ads_hub.write_by_name(self.varname_enable, False,
+        self._ads_hub.write_by_name(self.ads_var_enable, False,
                                     self._ads_hub.PLCTYPE_BOOL)
         self._on_state = False
 
     def update(self):
         """Update state of entity."""
-        self._on_state = self._ads_hub.read_by_name(self.varname_enable,
+        self._on_state = self._ads_hub.read_by_name(self.ads_var_enable,
                                                     self._ads_hub.PLCTYPE_BOOL)
-        if self.varname_brightness is not None:
+        if self.ads_var_brightness is not None:
             self._brightness = self._ads_hub.read_by_name(
-                self.varname_brightness, self._ads_hub.PLCTYPE_UINT
+                self.ads_var_brightness, self._ads_hub.PLCTYPE_UINT
             )
