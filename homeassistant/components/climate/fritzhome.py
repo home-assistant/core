@@ -6,9 +6,7 @@ http://home-assistant.io/components/climate.fritzhome/
 """
 import logging
 
-from homeassistant.components.fritzhome import (
-    ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME,
-    DOMAIN)
+from homeassistant.components.fritzhome import DOMAIN
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO)
 from homeassistant.const import (PRECISION_HALVES)
@@ -29,9 +27,6 @@ MAX_TEMPERATURE = 28
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome thermostat platform."""
-    if DOMAIN not in hass.data:
-        return False
-
     device_list = hass.data[DOMAIN]
 
     devices = []
@@ -124,18 +119,6 @@ class FritzhomeThermostat(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return MAX_TEMPERATURE
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        attr = {
-            ATTR_AIN: self._device.ain,
-            ATTR_FW_VERSION: self._device.fw_version,
-            ATTR_ID: self._device.id,
-            ATTR_MANUFACTURER: self._device.manufacturer,
-            ATTR_PRODUCTNAME: self._device.productname,
-        }
-        return attr
 
     def update(self):
         """Update the data from the thermostat."""

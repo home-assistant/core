@@ -5,9 +5,7 @@ For more details about this component, please refer to the documentation at
 http://home-assistant.io/components/switch.fritzhome/
 """
 import logging
-from homeassistant.components.fritzhome import (
-    ATTR_AIN, ATTR_FW_VERSION, ATTR_ID, ATTR_MANUFACTURER, ATTR_PRODUCTNAME,
-    DOMAIN)
+from homeassistant.components.fritzhome import DOMAIN
 from homeassistant.components.switch import (SwitchDevice)
 
 DEPENDENCIES = ['fritzhome']
@@ -17,9 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome switch platform."""
-    if DOMAIN not in hass.data:
-        return False
-
     device_list = hass.data[DOMAIN]
 
     devices = []
@@ -49,28 +44,9 @@ class FritzhomeSwitch(SwitchDevice):
         return self._device.name
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {
-            ATTR_AIN: self._device.ain,
-            ATTR_FW_VERSION: self._device.fw_version,
-            ATTR_ID: self._device.id,
-            ATTR_MANUFACTURER: self._device.manufacturer,
-            ATTR_PRODUCTNAME: self._device.productname,
-        }
-        return attr
-
-    @property
     def is_on(self):
         """Return true if the switch is on."""
-        from pyfritzhome import InvalidError
-
-        try:
-            state = self._device.get_switch_state()
-        except InvalidError:
-            state = None
-
-        return state
+        return self._device.switch_state
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
