@@ -234,3 +234,4 @@ class WemoDimmer(Light):
         self._state = WEMO_OFF
         self.wemo.off()
         self.schedule_update_ha_state()
+        
