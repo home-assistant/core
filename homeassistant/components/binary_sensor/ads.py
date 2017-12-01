@@ -50,6 +50,7 @@ class AdsBinarySensor(BinarySensorDevice):
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var
+        self.should_poll = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):

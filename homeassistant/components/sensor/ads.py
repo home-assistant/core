@@ -62,6 +62,7 @@ class AdsSensor(Entity):
         self.ads_var = ads_var
         self.ads_type = ads_type
         self.factor = factor
+        self.should_poll = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):

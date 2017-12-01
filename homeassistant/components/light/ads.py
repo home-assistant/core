@@ -50,6 +50,7 @@ class AdsLight(Light):
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
         self.stype = 'dimmer'
+        self.should_poll = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):
