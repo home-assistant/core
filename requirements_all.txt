@@ -247,7 +247,7 @@ evohomeclient==0.2.5
 # face_recognition==1.0.0
 
 # homeassistant.components.sensor.fastdotcom
-fastdotcom==0.0.1
+fastdotcom==0.0.3
 
 # homeassistant.components.sensor.fedex
 fedexdeliverymanager==1.0.4
