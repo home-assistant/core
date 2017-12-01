@@ -476,7 +476,8 @@ class IndexView(HomeAssistantView):
     def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
-        latest = _is_latest(self.js_option, request)
+        latest = self.repo_path is not None or \
+            _is_latest(self.js_option, request)
 
         if request.path == '/':
             panel = 'states'
