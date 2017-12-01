@@ -151,7 +151,7 @@ class WemoLight(Light):
 
 
 class WemoDimmer(Light):
-    """Representation of a WeMo dimmer"""
+    """Representation of a WeMo dimmer."""
 
     def __init__(self, device):
         """Initialize the WeMo dimmer."""
@@ -192,7 +192,7 @@ class WemoDimmer(Light):
 
     @property
     def brightness(self):
-        """Return the brightness of this light between 1 and 100"""
+        """Return the brightness of this light between 1 and 100."""
         wemobrightness = int(self.wemo.get_brightness())
         return int((wemobrightness * 255) / 100)
 
