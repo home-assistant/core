@@ -1,4 +1,4 @@
-"""You can use this sensor to link your qq."""
+"""You can use this sensor to link your qq,send message to your home-assistant."""
 import os
 import logging
 import threading
