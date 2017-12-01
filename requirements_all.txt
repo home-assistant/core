@@ -809,7 +809,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.12
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.0.11
+python-ecobee-api==0.0.12
 
 # homeassistant.components.climate.eq3btsmart
 # python-eq3bt==0.1.6
