@@ -20,13 +20,14 @@ DOMAIN = 'wemo'
 
 # Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
-    'Bridge':  'light',
     'Insight': 'switch',
     'Maker':   'switch',
     'Sensor':  'binary_sensor',
     'Socket':  'switch',
     'LightSwitch': 'switch',
-    'CoffeeMaker': 'switch'
+    'Dimmer': 'light',
+    'CoffeeMaker': 'switch',
+    'Bridge':  'light'
 }
 
 SUBSCRIPTION_REGISTRY = None
