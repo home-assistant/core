@@ -43,7 +43,6 @@ class AdsSwitch(ToggleEntity):
         self._on_state = False
         self.dev_name = dev_name
         self.ads_var = ads_var
-        self.should_poll = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -69,6 +68,11 @@ class AdsSwitch(ToggleEntity):
     def name(self):
         """Return the name of the entity."""
         return self.dev_name
+
+    @property
+    def should_poll(self):
+        """False because entity pushes its state to HA."""
+        return False
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

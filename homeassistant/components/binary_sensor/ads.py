@@ -50,7 +50,6 @@ class AdsBinarySensor(BinarySensorDevice):
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var
-        self.should_poll = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -81,3 +80,8 @@ class AdsBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return if the binary sensor is on."""
         return self._state
+
+    @property
+    def should_poll(self):
+        """False because entity pushes its state to HA."""
+        return False

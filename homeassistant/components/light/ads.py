@@ -50,7 +50,6 @@ class AdsLight(Light):
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
         self.stype = 'dimmer'
-        self.should_poll = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -91,6 +90,11 @@ class AdsLight(Light):
     def is_on(self):
         """If light is on."""
         return self._on_state
+
+    @property
+    def should_poll(self):
+        """False because entity pushes its state to HA."""
+        return False
 
     @property
     def supported_features(self):

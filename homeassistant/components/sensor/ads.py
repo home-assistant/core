@@ -62,7 +62,6 @@ class AdsSensor(Entity):
         self.ads_var = ads_var
         self.ads_type = ads_type
         self.factor = factor
-        self.should_poll = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -97,3 +96,8 @@ class AdsSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
+
+    @property
+    def should_poll(self):
+        """False because entity pushes its state to HA."""
+        return False
