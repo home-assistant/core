@@ -1,4 +1,5 @@
-"""You can use this sensor to link your qq,send message to your home-assistant."""
+"""You can use this sensor to link your qq,
+send message to your home-assistant."""
 import os
 import logging
 import threading
@@ -32,7 +33,7 @@ class Qqsensor(Entity):
 
     def __init__(self, hass, name, thread_qq):
         """Initialize the sensor."""
-        self._state = 'None'
+        self._state = None
         self._name = name
         self._hass = hass
         self._thread = thread_qq
