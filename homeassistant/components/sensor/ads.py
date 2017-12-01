@@ -8,7 +8,6 @@ https://home-assistant.io/components/sensor.ads/
 import asyncio
 import logging
 import voluptuous as vol
-from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.entity import Entity
@@ -67,8 +66,7 @@ class AdsSensor(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register device notification."""
-        @callback
-        def async_update(name, value):
+        def update(name, value):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
 
@@ -79,9 +77,9 @@ class AdsSensor(Entity):
                 self._value = value / self.factor
             self.schedule_update_ha_state()
 
-        self._ads_hub.add_device_notification(
-            self.ads_var, self._ads_hub.ADS_TYPEMAP[self.ads_type],
-            async_update
+        self.hass.async_add_job(
+            self._ads_hub.add_device_notification,
+            self.ads_var, self._ads_hub.ADS_TYPEMAP[self.ads_type], update
         )
 
     @property

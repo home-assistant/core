@@ -8,7 +8,6 @@ https://home-assistant.io/components/binary_sensor.ads/
 import asyncio
 import logging
 import voluptuous as vol
-from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, \
     PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
 from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
@@ -55,16 +54,16 @@ class AdsBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register device notification."""
-        @callback
-        def async_update(name, value):
+        def update(name, value):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d',
                           name, value)
             self._state = value
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
-        self._ads_hub.add_device_notification(
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL, async_update
+        self.hass.async_add_job(
+            self._ads_hub.add_device_notification,
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update
         )
 
     @property

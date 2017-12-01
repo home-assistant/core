@@ -8,7 +8,6 @@ https://home-assistant.io/components/switch.ads/
 import asyncio
 import logging
 import voluptuous as vol
-from homeassistant.core import callback
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
@@ -48,16 +47,16 @@ class AdsSwitch(ToggleEntity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register device notification."""
-        @callback
-        def async_update(name, value):
+        def update(name, value):
             """Handle device notification."""
             _LOGGER.debug('Variable %s changed its value to %d',
                           name, value)
             self._on_state = value
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
-        self._ads_hub.add_device_notification(
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL, async_update
+        self.hass.async_add_job(
+            self._ads_hub.add_device_notification,
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update
         )
 
     @property
@@ -79,9 +78,3 @@ class AdsSwitch(ToggleEntity):
         """Turn the switch off."""
         self._ads_hub.write_by_name(self.ads_var, False,
                                     self._ads_hub.PLCTYPE_BOOL)
-
-    def update(self):
-        """Update state of entity."""
-        self._on_state = self._ads_hub.read_by_name(
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL
-        )

@@ -8,7 +8,6 @@ https://home-assistant.io/components/light.ads/
 import asyncio
 import logging
 import voluptuous as vol
-from homeassistant.core import callback
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
@@ -55,27 +54,26 @@ class AdsLight(Light):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register device notification."""
-        @callback
-        def async_update_on_state(name, value):
+        def update_on_state(name, value):
             """Handle device notifications for state."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._on_state = value
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
-        @callback
-        def async_update_brightness(name, value):
+        def update_brightness(name, value):
             """Handle device notification for brightness."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._brightness = value
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
-        self._ads_hub.add_device_notification(
-            self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL,
-            async_update_on_state
+        self.hass.async_add_job(
+            self._ads_hub.add_device_notification,
+            self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL, update_on_state
         )
-        self._ads_hub.add_device_notification(
+        self.hass.async_add_job(
+            self._ads_hub.add_device_notification,
             self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
-            async_update_brightness
+            update_brightness
         )
 
     @property
@@ -120,12 +118,3 @@ class AdsLight(Light):
         self._ads_hub.write_by_name(self.ads_var_enable, False,
                                     self._ads_hub.PLCTYPE_BOOL)
         self._on_state = False
-
-    def update(self):
-        """Update state of entity."""
-        self._on_state = self._ads_hub.read_by_name(self.ads_var_enable,
-                                                    self._ads_hub.PLCTYPE_BOOL)
-        if self.ads_var_brightness is not None:
-            self._brightness = self._ads_hub.read_by_name(
-                self.ads_var_brightness, self._ads_hub.PLCTYPE_UINT
-            )
