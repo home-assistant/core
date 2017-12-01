@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.volvooncall/
 """
 import logging
 
-from homeassistant.components.volvooncall import VolvoEntity, RESOURCES
+from homeassistant.components.volvooncall import VolvoEntity, RESOURCES, CONF_SCANDINAVIAN_MILES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,14 +26,25 @@ class VolvoSensor(VolvoEntity):
     def state(self):
         """Return the state of the sensor."""
         val = getattr(self.vehicle, self._attribute)
-        if self._attribute == 'odometer':
-            return round(val / 1000)  # km
+
+        if val and 'mil' in self.unit_of_measurement:
+            val /= 10
+
+        if val and self._attribute == 'odometer':
+            val = round(val / 1000)
+
+        if val and self._attribute == 'average_fuel_consumption':
+            val = round(val, 1)
+
         return val
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return RESOURCES[self._attribute][3]
+        if self._state.config[CONF_SCANDINAVIAN_MILES]:
+            return RESOURCES[self._attribute][3].replace('km', 'mil')
+        else:
+            return RESOURCES[self._attribute][3]
 
     @property
     def icon(self):
