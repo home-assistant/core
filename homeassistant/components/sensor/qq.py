@@ -32,7 +32,7 @@ class Qqsensor(Entity):
 
     def __init__(self, hass, name, thread_qq):
         """Initialize the sensor."""
-        self._state = None
+        self._state = 'None'
         self._name = name
         self._hass = hass
         self._thread = thread_qq
