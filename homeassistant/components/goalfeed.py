@@ -61,8 +61,8 @@ def setup(hass, config):
         channel = pusher.subscribe('private-goals', resp['auth'])
         channel.bind('goal', goal_handler)
 
-    pusher = pysher.Pusher('bfd4ed98c1ff22c04074')
-    pusher.host = GOALFEED_HOST
+    pusher = pysher.Pusher('bfd4ed98c1ff22c04074', secure=False, port=8080,
+                           custom_host=GOALFEED_HOST)
 
     pusher.connection.bind('pusher:connection_established', connect_handler)
     pusher.connect()
