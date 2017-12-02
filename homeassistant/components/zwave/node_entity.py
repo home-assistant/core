@@ -137,6 +137,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
         if self.node.can_wake_up():
             for value in self.node.get_values(COMMAND_CLASS_WAKE_UP).values():
+                if value.index != 0:
+                    continue
+
                 self.wakeup_interval = value.data
                 break
         else:
