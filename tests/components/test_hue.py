@@ -4,8 +4,6 @@ import logging
 import unittest
 from unittest.mock import call, MagicMock, patch
 
-import phue
-
 from homeassistant.components import configurator, hue
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.setup import setup_component
@@ -236,7 +234,7 @@ class TestHueBridge(unittest.TestCase):
     def test_setup_bridge_registration_exception(self, mock_phue):
         """Test a registration failed with an exception."""
         mock_bridge = mock_phue.Bridge
-        mock_phue.PhueRegistrationException = phue.PhueRegistrationException
+        mock_phue.PhueRegistrationException = Exception
         mock_bridge.side_effect = mock_phue.PhueRegistrationException(1, 2)
 
         bridge = hue.HueBridge('localhost', self.hass, hue.PHUE_CONFIG_FILE)
@@ -253,7 +251,7 @@ class TestHueBridge(unittest.TestCase):
     def test_setup_bridge_registration_succeeds(self, mock_phue):
         """Test a registration success sequence."""
         mock_bridge = mock_phue.Bridge
-        mock_phue.PhueRegistrationException = phue.PhueRegistrationException
+        mock_phue.PhueRegistrationException = Exception
         mock_bridge.side_effect = [
             # First call, raise because not registered
             mock_phue.PhueRegistrationException(1, 2),
@@ -294,7 +292,7 @@ class TestHueBridge(unittest.TestCase):
         responds to the request but the bridge has become unreachable.
         """
         mock_bridge = mock_phue.Bridge
-        mock_phue.PhueRegistrationException = phue.PhueRegistrationException
+        mock_phue.PhueRegistrationException = Exception
         mock_bridge.side_effect = [
             # First call, raise because not registered
             mock_phue.PhueRegistrationException(1, 2),
