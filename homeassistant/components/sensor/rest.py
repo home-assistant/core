@@ -90,7 +90,6 @@ class RestSensor(Entity):
         self._value_template = value_template
         self._json_attrs = json_attrs
         self._attributes = None
-        self.update()
 
     @property
     def name(self):
