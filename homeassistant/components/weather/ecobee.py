@@ -4,11 +4,10 @@ Support for displaying weather info from Ecobee API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.ecobee/
 """
-import logging
 from homeassistant.components import ecobee
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (STATE_UNKNOWN, TEMP_FAHRENHEIT)
+from homeassistant.const import (TEMP_FAHRENHEIT)
 
 
 DEPENDENCIES = ['ecobee']
@@ -52,8 +51,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             forecast = self.weather['forecasts'][index]
             return forecast[param]
-        except (ValueError, IndexError):
-            return STATE_UNKNOWN
+        except (ValueError, IndexError, KeyError):
+            raise ValueError
 
     @property
     def name(self):
@@ -63,12 +62,18 @@ class EcobeeWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self.get_forecast(0, 'condition')
+        try:
+            return self.get_forecast(0, 'condition')
+        except ValueError:
+            return None
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return float(self.get_forecast(0, 'temperature')) / 10
+        try:
+            return float(self.get_forecast(0, 'temperature')) / 10
+        except ValueError:
+            return None
 
     @property
     def temperature_unit(self):
@@ -78,34 +83,51 @@ class EcobeeWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return int(self.get_forecast(0, 'pressure'))
+        try:
+            return int(self.get_forecast(0, 'pressure'))
+        except ValueError:
+            return None
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return int(self.get_forecast(0, 'relativeHumidity'))
+        try:
+            return int(self.get_forecast(0, 'relativeHumidity'))
+        except ValueError:
+            return None
 
     @property
     def visibility(self):
         """Return the visibility."""
-        return int(self.get_forecast(0, 'visibility'))
+        try:
+            return int(self.get_forecast(0, 'visibility'))
+        except ValueError:
+            return None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return int(self.get_forecast(0, 'windSpeed'))
+        try:
+            return int(self.get_forecast(0, 'windSpeed'))
+        except ValueError:
+            return None
 
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return int(self.get_forecast(0, 'windBearing'))
+        try:
+            return int(self.get_forecast(0, 'windBearing'))
+        except ValueError:
+            return None
 
     @property
     def attribution(self):
         """Return the attribution."""
-        station = self.weather['weatherStation']
-        time = self.weather['timestamp']
-        return "Ecobee weather provided by " + station + " at " + time
+        if self.weather:
+            station = self.weather.get('weatherStation', "UNKNOWN")
+            time = self.weather.get('timestamp', "UNKNOWN")
+            return "Ecobee weather provided by {} at {}".format(station, time)
+        return None
 
     @property
     def forecast(self):
@@ -134,8 +156,8 @@ class EcobeeWeather(WeatherEntity):
                         int(day['relativeHumidity'])
                 forecasts.append(forecast)
             return forecasts
-        except (ValueError, IndexError):
-            return STATE_UNKNOWN
+        except (ValueError, IndexError, KeyError):
+            return None
 
     def update(self):
         """Get the latest state of the sensor."""
@@ -143,4 +165,3 @@ class EcobeeWeather(WeatherEntity):
         data.update()
         thermostat = data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get('weather', None)
-        logging.error("Weather Update")
