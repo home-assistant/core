@@ -75,6 +75,20 @@ class Calendar(Entity):
 
         return STATE_OFF
 
+    @property
+    def state_attributes(self):
+        """Return the state attributes."""
+        if self.next_event is None:
+            return None
+
+        data = {
+            'start': self.next_event.start,
+            'end': self.next_event.end,
+            'offset_reached': self.next_event.offset_reached
+        }
+
+        return data
+
 
 class CalendarEvent(object):
     """Representation of an event."""
@@ -103,6 +117,11 @@ class CalendarEvent(object):
     def labels(self):
         """Return labels of the event."""
         return None
+
+    @property
+    def offset_reached(self):
+        """Have we reached the offset time specified in the event title."""
+        return False
 
     def is_active(self):
         """Check whether event is currently active."""

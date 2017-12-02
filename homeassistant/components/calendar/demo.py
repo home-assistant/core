@@ -67,6 +67,12 @@ class DemoCalendar(Calendar):
                                       'Programming')
             self._events.append(event)
 
+        if name == 'DemoCalendar2':
+            event = DemoCalendarEvent(dt.now() + dt.dt.timedelta(hours=1),
+                                      dt.now() + dt.dt.timedelta(hours=2),
+                                      'Programming', True)
+            self._events.append(event)
+
         self._events.sort(key=lambda event: event.start)
 
     @property
@@ -88,16 +94,22 @@ class DemoCalendar(Calendar):
     def async_update(self):
         """Update calendar events."""
         _LOGGER.debug('Updating demo calendar')
+        self._next_event = self.update_next_event()
 
 
 class DemoCalendarEvent(CalendarEvent):
     """class for creating demo events."""
 
-    def __init__(self, start, end, message):
+    def __init__(self, start, end, message, offset=False):
         """Initialize google event."""
         self._start = start
         self._end = end
         self._message = message
+
+        if offset:
+            self._offset = dt.dt.timedelta(minutes=-30)
+        else:
+            self._offset = None
 
     @property
     def start(self):
@@ -113,3 +125,11 @@ class DemoCalendarEvent(CalendarEvent):
     def message(self):
         """Return text set on the event."""
         return self._message
+
+    @property
+    def offset_reached(self):
+        """Return whether event has reached offset time."""
+        if self.start is None or self._offset is None:
+            return False
+
+        return self.start + self._offset <= dt.now(self.start.tzinfo)
