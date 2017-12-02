@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLOSE = 'close'
 ATTR_HIGH = 'high'
-ATTR_OPEN = 'open'
 ATTR_LOW = 'low'
 ATTR_VOLUME = 'volume'
 
@@ -56,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         except ValueError:
             _LOGGER.error(
                 "API Key is not valid or symbol '%s' not known", symbol)
-            return False
+            return
         dev.append(AlphaVantageSensor(timeserie, symbol))
 
     add_devices(dev, True)
@@ -70,7 +69,6 @@ class AlphaVantageSensor(Entity):
         self._name = symbol
         self._timeserie = timeserie
         self._symbol = symbol
-        self._state = None
         self.values = None
         self._unit_of_measurement = None
 
