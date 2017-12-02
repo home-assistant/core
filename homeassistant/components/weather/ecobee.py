@@ -7,7 +7,7 @@ https://home-assistant.io/components/weather.ecobee/
 from homeassistant.components import ecobee
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (STATE_UNKNOWN, TEMP_FAHRENHEIT)
+from homeassistant.const import (TEMP_FAHRENHEIT)
 
 
 DEPENDENCIES = ['ecobee']
@@ -65,7 +65,7 @@ class EcobeeWeather(WeatherEntity):
         try:
             return self.get_forecast(0, 'condition')
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def temperature(self):
@@ -73,7 +73,7 @@ class EcobeeWeather(WeatherEntity):
         try:
             return float(self.get_forecast(0, 'temperature')) / 10
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def temperature_unit(self):
@@ -86,7 +86,7 @@ class EcobeeWeather(WeatherEntity):
         try:
             return int(self.get_forecast(0, 'pressure'))
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def humidity(self):
@@ -94,7 +94,7 @@ class EcobeeWeather(WeatherEntity):
         try:
             return int(self.get_forecast(0, 'relativeHumidity'))
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def visibility(self):
@@ -102,7 +102,7 @@ class EcobeeWeather(WeatherEntity):
         try:
             return int(self.get_forecast(0, 'visibility'))
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def wind_speed(self):
@@ -110,7 +110,7 @@ class EcobeeWeather(WeatherEntity):
         try:
             return int(self.get_forecast(0, 'windSpeed'))
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def wind_bearing(self):
@@ -118,7 +118,7 @@ class EcobeeWeather(WeatherEntity):
         try:
             return int(self.get_forecast(0, 'windBearing'))
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def attribution(self):
@@ -127,7 +127,7 @@ class EcobeeWeather(WeatherEntity):
             station = self.weather.get('weatherStation', "UNKNOWN")
             time = self.weather.get('timestamp', "UNKNOWN")
             return "Ecobee weather provided by {} at {}".format(station, time)
-        return STATE_UNKNOWN
+        return None
 
     @property
     def forecast(self):
@@ -157,7 +157,7 @@ class EcobeeWeather(WeatherEntity):
                 forecasts.append(forecast)
             return forecasts
         except (ValueError, IndexError, KeyError):
-            return STATE_UNKNOWN
+            return None
 
     def update(self):
         """Get the latest state of the sensor."""
