@@ -52,25 +52,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for symbol in symbols:
         try:
-            data = AlphaVantageData(timeserie, symbol)
-            data.update()
+            timeserie.get_intraday(symbol)
         except ValueError:
-            _LOGGER.error("API Key is not valid or symbol not known")
+            _LOGGER.error(
+                "API Key is not valid or symbol '%s' not known", symbol)
             return False
-        dev.append(AlphaVantageSensor(data, symbol))
+        dev.append(AlphaVantageSensor(timeserie, symbol))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class AlphaVantageSensor(Entity):
     """Representation of a Alpha Vantage sensor."""
 
-    def __init__(self, data, symbol):
+    def __init__(self, timeserie, symbol):
         """Initialize the sensor."""
         self._name = symbol
-        self.data = data
+        self._timeserie = timeserie
         self._symbol = symbol
         self._state = None
+        self.values = None
         self._unit_of_measurement = None
 
     @property
@@ -86,38 +87,24 @@ class AlphaVantageSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.data.values['1. open']
+        return self.values['1. open']
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.data is not None:
+        if self.values is not None:
             return {
                 ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                ATTR_CLOSE: self.data.values['4. close'],
-                ATTR_HIGH: self.data.values['2. high'],
-                ATTR_LOW: self.data.values['3. low'],
-                ATTR_VOLUME: self.data.values['5. volume'],
+                ATTR_CLOSE: self.values['4. close'],
+                ATTR_HIGH: self.values['2. high'],
+                ATTR_LOW: self.values['3. low'],
+                ATTR_VOLUME: self.values['5. volume'],
             }
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
-
-    def update(self):
-        """Get the latest data and updates the states."""
-        self.data.update()
-
-
-class AlphaVantageData(object):
-    """Get data from Alpha Vantage."""
-
-    def __init__(self, timeserie, symbol):
-        """Initialize the data object."""
-        self._symbol = symbol
-        self._timeserie = timeserie
-        self.values = None
 
     def update(self):
         """Get the latest data and updates the states."""
