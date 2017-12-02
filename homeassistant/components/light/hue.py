@@ -31,7 +31,7 @@ DEPENDENCIES = ['hue']
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_KEY = 'hue.lights'
+DATA_KEY = 'hue_lights'
 DATA_LIGHTS = 'lights'
 DATA_LIGHTGROUPS = 'lightgroups'
 
@@ -83,15 +83,15 @@ You have configured at least one bridge:
 {config}
 
 This configuration is deprecated, please check the
-[Hue component](https://home-assistant.io/components/hue/) page on the wiki
-for more information.
+[Hue component](https://home-assistant.io/components/hue/) page for more
+information.
 """
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Hue lights."""
     if discovery_info is None or 'bridge_id' not in discovery_info:
-        return True
+        return
 
     setup_data(hass)
 
@@ -108,8 +108,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bridge_id = discovery_info['bridge_id']
     bridge = hass.data[hue.DOMAIN][bridge_id]
     unthrottled_update_lights(hass, bridge, add_devices)
-
-    return True
 
 
 def setup_data(hass):

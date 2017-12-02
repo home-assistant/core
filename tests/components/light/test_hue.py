@@ -62,18 +62,18 @@ class TestSetup(unittest.TestCase):
         """Test setup_platform without discovery info."""
         self.hass.data[hue.DOMAIN] = {}
         mock_add_devices = MagicMock()
-        config = {}
-        self.assertTrue(
-            hue_light.setup_platform(self.hass, config, mock_add_devices))
+
+        hue_light.setup_platform(self.hass, {}, mock_add_devices)
+
         mock_add_devices.assert_not_called()
 
     def test_setup_platform_no_bridge_id(self):
         """Test setup_platform without a bridge."""
         self.hass.data[hue.DOMAIN] = {}
         mock_add_devices = MagicMock()
-        config = {}
-        self.assertTrue(
-            hue_light.setup_platform(self.hass, config, mock_add_devices, {}))
+
+        hue_light.setup_platform(self.hass, {}, mock_add_devices, {})
+
         mock_add_devices.assert_not_called()
 
     def test_setup_platform_one_bridge(self):
@@ -81,15 +81,12 @@ class TestSetup(unittest.TestCase):
         mock_bridge = MagicMock()
         self.hass.data[hue.DOMAIN] = {'10.0.0.1': mock_bridge}
         mock_add_devices = MagicMock()
-        config = {
-            }
 
         with patch('homeassistant.components.light.hue.' +
                    'unthrottled_update_lights') as mock_update_lights:
-            self.assertTrue(
-                hue_light.setup_platform(
-                    self.hass, config, mock_add_devices,
-                    {'bridge_id': '10.0.0.1'}))
+            hue_light.setup_platform(
+                self.hass, {}, mock_add_devices,
+                {'bridge_id': '10.0.0.1'})
             mock_update_lights.assert_called_once_with(
                 self.hass, mock_bridge, mock_add_devices)
 
@@ -102,17 +99,16 @@ class TestSetup(unittest.TestCase):
             '192.168.0.10': mock_bridge2,
         }
         mock_add_devices = MagicMock()
-        config = {
-            }
 
         with patch('homeassistant.components.light.hue.' +
                    'unthrottled_update_lights') as mock_update_lights:
-            self.assertTrue(hue_light.setup_platform(
-                self.hass, config, mock_add_devices,
-                {'bridge_id': '10.0.0.1'}))
-            self.assertTrue(hue_light.setup_platform(
-                self.hass, config, mock_add_devices,
-                {'bridge_id': '192.168.0.10'}))
+            hue_light.setup_platform(
+                self.hass, {}, mock_add_devices,
+                {'bridge_id': '10.0.0.1'})
+            hue_light.setup_platform(
+                self.hass, {}, mock_add_devices,
+                {'bridge_id': '192.168.0.10'})
+
             mock_update_lights.assert_has_calls([
                 call(self.hass, mock_bridge, mock_add_devices),
                 call(self.hass, mock_bridge2, mock_add_devices),

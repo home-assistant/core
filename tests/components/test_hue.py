@@ -335,7 +335,7 @@ class TestHueBridge(unittest.TestCase):
         responds to the request but we fail to confirm it with the bridge.
         """
         mock_bridge = mock_phue.Bridge
-        mock_phue.PhueRegistrationException = phue.PhueRegistrationException
+        mock_phue.PhueRegistrationException = Exception
         mock_bridge.side_effect = [
             # First call, raise because not registered
             mock_phue.PhueRegistrationException(1, 2),

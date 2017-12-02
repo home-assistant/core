@@ -84,10 +84,6 @@ def setup(hass, config):
         bridge_discovered(hass, service, discovery_info))
 
     bridges = config.get(CONF_BRIDGES, [])
-    if len(bridges) == 0:
-        _LOGGER.info("No bridges found in configuration")
-        return True
-
     for bridge in bridges:
         filename = bridge.get(CONF_FILENAME)
         allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE)
