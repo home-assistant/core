@@ -102,7 +102,7 @@ def test_set_datetime_time(hass):
 @asyncio.coroutine
 def test_set_invalid(hass):
     """Test set_datetime method with only time."""
-    initial = datetime.datetime(2017, 1, 1, 0, 0)
+    initial = '2017-01-01'
     yield from async_setup_component(hass, DOMAIN, {
         DOMAIN: {
             'test_date': {
@@ -124,7 +124,7 @@ def test_set_invalid(hass):
     yield from hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == str(initial.date())
+    assert state.state == initial
 
 
 @asyncio.coroutine
@@ -159,8 +159,8 @@ def test_set_datetime_date(hass):
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
-        State('input_datetime.test_time', '2017-09-07 19:46:00'),
-        State('input_datetime.test_date', '2017-09-07 19:46:00'),
+        State('input_datetime.test_time', '19:46:00'),
+        State('input_datetime.test_date', '2017-09-07'),
         State('input_datetime.test_datetime', '2017-09-07 19:46:00'),
         State('input_datetime.test_bogus_data', 'this is not a date'),
     ))

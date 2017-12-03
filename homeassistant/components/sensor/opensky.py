@@ -10,27 +10,29 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE,
     LENGTH_KILOMETERS, LENGTH_METERS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance
 from homeassistant.util import location as util_location
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
-DOMAIN = 'opensky'
-EVENT_OPENSKY_ENTRY = '{}_entry'.format(DOMAIN)
-EVENT_OPENSKY_EXIT = '{}_exit'.format(DOMAIN)
-CONF_RADIUS = 'radius'
+ATTR_CALLSIGN = 'callsign'
+ATTR_ON_GROUND = 'on_ground'
 ATTR_SENSOR = 'sensor'
 ATTR_STATES = 'states'
-ATTR_ON_GROUND = 'on_ground'
-ATTR_CALLSIGN = 'callsign'
+
+DOMAIN = 'opensky'
+
+EVENT_OPENSKY_ENTRY = '{}_entry'.format(DOMAIN)
+EVENT_OPENSKY_EXIT = '{}_exit'.format(DOMAIN)
+SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
+
 OPENSKY_ATTRIBUTION = "Information provided by the OpenSky Network "\
                       "(https://opensky-network.org)"
 OPENSKY_API_URL = 'https://opensky-network.org/api/states/all'
@@ -88,7 +90,7 @@ class OpenSkySensor(Entity):
         for callsign in callsigns:
             data = {
                 ATTR_CALLSIGN: callsign,
-                ATTR_SENSOR: self._name
+                ATTR_SENSOR: self._name,
             }
             self._hass.bus.fire(event, data)
 

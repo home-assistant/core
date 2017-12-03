@@ -29,20 +29,17 @@ class TeslaLock(TeslaDevice, LockDevice):
         """Initialisation of the lock."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self._name = self.tesla_device.name
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def lock(self, **kwargs):
         """Send the lock command."""
         _LOGGER.debug("Locking doors for: %s", self._name)
         self.tesla_device.lock()
-        self._state = STATE_LOCKED
 
     def unlock(self, **kwargs):
         """Send the unlock command."""
         _LOGGER.debug("Unlocking doors for: %s", self._name)
         self.tesla_device.unlock()
-        self._state = STATE_UNLOCKED
 
     @property
     def is_locked(self):

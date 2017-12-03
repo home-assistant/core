@@ -8,7 +8,6 @@ and grouped by category.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.geo_rss_events/
 """
-
 import logging
 from collections import namedtuple
 from datetime import timedelta
@@ -17,8 +16,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT,
-                                 CONF_NAME)
+from homeassistant.const import (
+    STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_RADIUS, CONF_URL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -31,8 +30,6 @@ ATTR_DISTANCE = 'distance'
 ATTR_TITLE = 'title'
 
 CONF_CATEGORIES = 'categories'
-CONF_RADIUS = 'radius'
-CONF_URL = 'url'
 
 DEFAULT_ICON = 'mdi:alert'
 DEFAULT_NAME = "Event Service"
@@ -50,8 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_CATEGORIES, default=[]): vol.All(cv.ensure_list,
-                                                       [cv.string]),
+    vol.Optional(CONF_CATEGORIES, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                  default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
 })
@@ -59,7 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the GeoRSS component."""
-    # Grab location from config
     home_latitude = hass.config.latitude
     home_longitude = hass.config.longitude
     url = config.get(CONF_URL)
@@ -154,7 +150,7 @@ class GeoRssServiceSensor(Entity):
 
 
 class GeoRssServiceData(object):
-    """Provides access to GeoRSS feed and stores the latest data."""
+    """Provide access to GeoRSS feed and stores the latest data."""
 
     def __init__(self, home_latitude, home_longitude, url, radius_in_km):
         """Initialize the update service."""

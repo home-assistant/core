@@ -84,3 +84,22 @@ def test_component_wrapper(hass):
     yield from hass.async_block_till_done()
 
     assert len(calls) == 1
+
+
+@asyncio.coroutine
+def test_helpers_wrapper(hass):
+    """Test helpers wrapper."""
+    helpers = loader.Helpers(hass)
+
+    result = []
+
+    def discovery_callback(service, discovered):
+        """Handle discovery callback."""
+        result.append(discovered)
+
+    helpers.discovery.async_listen('service_name', discovery_callback)
+
+    yield from helpers.discovery.async_discover('service_name', 'hello')
+    yield from hass.async_block_till_done()
+
+    assert result == ['hello']

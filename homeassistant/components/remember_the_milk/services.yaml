@@ -1,0 +1,9 @@
+# Describes the format for available Remember The Milk services
+
+create_task:
+  description: Create a new task in your Remember The Milk account
+
+  fields:
+    name:
+      description: name of the new task, you can use the smart syntax here
+      example: 'do this ^today #from_hass'

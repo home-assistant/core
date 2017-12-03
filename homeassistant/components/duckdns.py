@@ -1,4 +1,9 @@
-"""Integrate with DuckDNS."""
+"""
+Integrate with DuckDNS.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/duckdns/
+"""
 import asyncio
 from datetime import timedelta
 import logging
@@ -11,12 +16,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-DOMAIN = 'duckdns'
-UPDATE_URL = 'https://www.duckdns.org/update'
-INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
-SERVICE_SET_TXT = 'set_txt'
+
 ATTR_TXT = 'txt'
+
+DOMAIN = 'duckdns'
+
+INTERVAL = timedelta(minutes=5)
+
+SERVICE_SET_TXT = 'set_txt'
+
+UPDATE_URL = 'https://www.duckdns.org/update'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -59,8 +69,8 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def update_domain_service(call):
         """Update the DuckDNS entry."""
-        yield from _update_duckdns(session, domain, token,
-                                   txt=call.data[ATTR_TXT])
+        yield from _update_duckdns(
+            session, domain, token, txt=call.data[ATTR_TXT])
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
     hass.services.async_register(
@@ -96,7 +106,7 @@ def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False):
     body = yield from resp.text()
 
     if body != 'OK':
-        _LOGGER.warning('Updating DuckDNS domain %s failed', domain)
+        _LOGGER.warning("Updating DuckDNS domain failed: %s", domain)
         return False
 
     return True

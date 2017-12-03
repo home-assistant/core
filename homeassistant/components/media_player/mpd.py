@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mpd/
 """
 import logging
+import os
 from datetime import timedelta
 
 import voluptuous as vol
@@ -176,9 +177,13 @@ class MpdDevice(MediaPlayerDevice):
         """Return the title of current playing media."""
         name = self._currentsong.get('name', None)
         title = self._currentsong.get('title', None)
+        file_name = self._currentsong.get('file', None)
 
         if name is None and title is None:
-            return "None"
+            if file_name is None:
+                return "None"
+            else:
+                return os.path.basename(file_name)
         elif name is None:
             return title
         elif title is None:

@@ -12,7 +12,8 @@ import pytz
 import pytest
 
 import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.exceptions import (InvalidEntityFormatError,
+                                      InvalidStateError)
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
@@ -421,6 +422,10 @@ class TestState(unittest.TestCase):
             InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
 
+        self.assertRaises(
+            InvalidStateError, ha.State,
+            'domain.long_state', 't' * 256)
+
     def test_domain(self):
         """Test domain."""
         state = ha.State('some_domain.hello', 'world')
@@ -489,18 +494,6 @@ class TestStateMachine(unittest.TestCase):
         self.assertTrue(self.states.is_state('light.Bowl', 'on'))
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
-
-    def test_is_state_attr(self):
-        """Test is_state_attr method."""
-        self.states.set("light.Bowl", "on", {"brightness": 100})
-        self.assertTrue(
-            self.states.is_state_attr('light.Bowl', 'brightness', 100))
-        self.assertFalse(
-            self.states.is_state_attr('light.Bowl', 'friendly_name', 200))
-        self.assertFalse(
-            self.states.is_state_attr('light.Bowl', 'friendly_name', 'Bowl'))
-        self.assertFalse(
-            self.states.is_state_attr('light.Non_existing', 'brightness', 100))
 
     def test_entity_ids(self):
         """Test get_entity_ids method."""

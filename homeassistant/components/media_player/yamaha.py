@@ -18,7 +18,7 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
                                  STATE_PLAYING, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.4.0']
+REQUIREMENTS = ['rxv==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -252,6 +252,20 @@ class YamahaDevice(MediaPlayerDevice):
         Yamaha to direct play certain kinds of media. media_type is
         treated as the input type that we are setting, and media id is
         specific to it.
+
+        For the NET RADIO mediatype the format for ``media_id`` is a
+        "path" in your vtuner hierarchy. For instance:
+        ``Bookmarks>Internet>Radio Paradise``. The separators are
+        ``>`` and the parts of this are navigated by name behind the
+        scenes. There is a looping construct built into the yamaha
+        library to do this with a fallback timeout if the vtuner
+        service is unresponsive.
+
+        NOTE: this might take a while, because the only API interface
+        for setting the net radio station emulates button pressing and
+        navigating through the net radio menu hiearchy. And each sub
+        menu must be fetched by the receiver from the vtuner service.
+
         """
         if media_type == "NET RADIO":
             self._receiver.net_radio(media_id)

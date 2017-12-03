@@ -19,15 +19,13 @@
 #
 import sys
 import os
-from os.path import relpath
 import inspect
-from homeassistant.const import (__version__, __short_version__, PROJECT_NAME,
-                                 PROJECT_LONG_DESCRIPTION,
-                                 PROJECT_COPYRIGHT, PROJECT_AUTHOR,
-                                 PROJECT_GITHUB_USERNAME,
-                                 PROJECT_GITHUB_REPOSITORY,
-                                 GITHUB_PATH, GITHUB_URL)
 
+from homeassistant.const import __version__, __short_version__
+from setup import (
+    PROJECT_NAME, PROJECT_LONG_DESCRIPTION, PROJECT_COPYRIGHT, PROJECT_AUTHOR,
+    PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY, GITHUB_PATH,
+    GITHUB_URL)
 
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('../homeassistant'))
@@ -87,9 +85,7 @@ edit_on_github_src_path = 'docs/source/'
 
 
 def linkcode_resolve(domain, info):
-    """
-    Determine the URL corresponding to Python object
-    """
+    """Determine the URL corresponding to Python object."""
     if domain != 'py':
         return None
     modname = info['module']

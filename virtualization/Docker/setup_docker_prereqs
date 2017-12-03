@@ -9,7 +9,6 @@ INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
-INSTALL_COAP="${INSTALL_COAP:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 
 # Required debian packages for running hass or components
@@ -57,10 +56,6 @@ fi
 
 if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
   virtualization/Docker/scripts/phantomjs
-fi
-
-if [ "$INSTALL_COAP" == "yes" ]; then
-  virtualization/Docker/scripts/aiocoap
 fi
 
 if [ "$INSTALL_SSOCR" == "yes" ]; then

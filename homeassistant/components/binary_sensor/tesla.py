@@ -30,7 +30,6 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
     def __init__(self, tesla_device, controller, sensor_type):
         """Initialisation of binary sensor."""
         super().__init__(tesla_device, controller)
-        self._name = self.tesla_device.name
         self._state = False
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
         self._sensor_type = sensor_type

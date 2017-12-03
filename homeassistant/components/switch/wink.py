@@ -5,11 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.wink/
 """
 import asyncio
+import logging
 
 from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['wink']
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -21,10 +24,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(switch, hass)])
     for switch in pywink.get_powerstrips():
-        _id = switch.object_id() + switch.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkToggleDevice(switch, hass)])
-    for switch in pywink.get_sirens():
         _id = switch.object_id() + switch.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(switch, hass)])

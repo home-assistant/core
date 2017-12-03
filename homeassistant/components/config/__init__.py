@@ -8,7 +8,6 @@ from homeassistant.core import callback
 from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
 from homeassistant.setup import (
     async_prepare_setup_platform, ATTR_COMPONENT)
-from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.util.yaml import load_yaml, dump
 
@@ -21,7 +20,8 @@ ON_DEMAND = ('zwave')
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the config component."""
-    register_built_in_panel(hass, 'config', 'Configuration', 'mdi:settings')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'config', 'config', 'mdi:settings')
 
     @asyncio.coroutine
     def setup_panel(panel_name):

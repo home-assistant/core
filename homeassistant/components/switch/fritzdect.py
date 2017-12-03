@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, STATE_UNKNOWN
 
-REQUIREMENTS = ['fritzhome==1.0.2']
+REQUIREMENTS = ['fritzhome==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

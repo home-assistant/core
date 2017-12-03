@@ -9,7 +9,7 @@ from typing import Callable  # noqa
 
 import homeassistant.components.isy994 as isy
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF, STATE_ON)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF, STATE_ON, UNIT_UV_INDEX)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ UOM_FRIENDLY_NAME = {
     '64': 'shindo',
     '65': 'SML',
     '69': 'gal',
-    '71': 'UV index',
+    '71': UNIT_UV_INDEX,
     '72': 'V',
     '73': 'W',
     '74': 'W/m²',

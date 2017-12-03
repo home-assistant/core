@@ -18,7 +18,6 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
-from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -77,6 +76,7 @@ ATTR_LOCATION_NAME = 'location_name'
 ATTR_MAC = 'mac'
 ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
+ATTR_VENDOR = 'vendor'
 
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
@@ -88,10 +88,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
                  default=DEFAULT_CONSIDER_HOME): vol.All(
                      cv.time_period, cv.positive_timedelta)
 })
-
-DISCOVERY_PLATFORMS = {
-    SERVICE_NETGEAR: 'netgear',
-}
 
 
 @bind_hass
@@ -179,15 +175,6 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
 
     tracker.async_setup_group()
-
-    @callback
-    def async_device_tracker_discovered(service, info):
-        """Handle the discovery of device tracker platforms."""
-        hass.async_add_job(
-            async_setup_platform(DISCOVERY_PLATFORMS[service], {}, info))
-
-    discovery.async_listen(
-        hass, DISCOVERY_PLATFORMS.keys(), async_device_tracker_discovered)
 
     @asyncio.coroutine
     def async_platform_discovered(platform, info):
@@ -299,11 +286,6 @@ class DeviceTracker(object):
         if device.track:
             yield from device.async_update_ha_state()
 
-        self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
-            ATTR_ENTITY_ID: device.entity_id,
-            ATTR_HOST_NAME: device.host_name,
-        })
-
         # During init, we ignore the group
         if self.group and self.track_new:
             self.group.async_set_group(
@@ -312,6 +294,13 @@ class DeviceTracker(object):
 
         # lookup mac vendor string to be stored in config
         yield from device.set_vendor_for_mac()
+
+        self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
+            ATTR_ENTITY_ID: device.entity_id,
+            ATTR_HOST_NAME: device.host_name,
+            ATTR_MAC: device.mac,
+            ATTR_VENDOR: device.vendor,
+        })
 
         # update known_devices.yaml
         self.hass.async_add_job(

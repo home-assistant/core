@@ -15,13 +15,12 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
-    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, STATE_ON)
+    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_same_state)
-from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,10 +93,6 @@ class BinarySensorTemplate(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._state = state.state == STATE_ON
-
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
             """Handle the target device state changes."""
@@ -135,7 +130,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         return False
 
     @callback
-    def _async_render(self, *args):
+    def _async_render(self):
         """Get the state of template."""
         try:
             return self._template.async_render().lower() == 'true'
@@ -171,5 +166,5 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         period = self._delay_on if state else self._delay_off
         async_track_same_state(
-            self.hass, state, period, set_state, entity_ids=self._entities,
-            async_check_func=self._async_render)
+            self.hass, period, set_state, entity_ids=self._entities,
+            async_check_same_func=lambda *args: self._async_render() == state)

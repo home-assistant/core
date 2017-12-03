@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.remote import JSONEncoder
 
 from tests.common import (
-    get_test_home_assistant, fire_time_changed, fire_service_discovered,
+    get_test_home_assistant, fire_time_changed,
     patch_yaml_files, assert_setup_component, mock_restore_cache, mock_coro)
 
 from ...test_util.aiohttp import mock_aiohttp_client
@@ -311,19 +311,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                 'No http request for macvendor made!'
         self.assertEqual(tracker.devices['b827eb000000'].vendor, vendor_string)
 
-    def test_discovery(self):
-        """Test discovery."""
-        scanner = get_component('device_tracker.test').SCANNER
-
-        with patch.dict(device_tracker.DISCOVERY_PLATFORMS, {'test': 'test'}):
-            with patch.object(scanner, 'scan_devices',
-                              autospec=True) as mock_scan:
-                with assert_setup_component(1, device_tracker.DOMAIN):
-                    assert setup_component(
-                        self.hass, device_tracker.DOMAIN, TEST_PLATFORM)
-                fire_service_discovered(self.hass, 'test', {})
-                self.assertTrue(mock_scan.called)
-
     @patch(
         'homeassistant.components.device_tracker.DeviceTracker.see')
     @patch(
@@ -494,6 +481,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert test_events[0].data == {
             'entity_id': 'device_tracker.hello',
             'host_name': 'hello',
+            'mac': 'MAC_1',
+            'vendor': 'unknown',
         }
 
     # pylint: disable=invalid-name

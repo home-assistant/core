@@ -27,6 +27,7 @@ class TestHelpersDiscovery:
     @patch('homeassistant.setup.async_setup_component')
     def test_listen(self, mock_setup_component):
         """Test discovery listen/discover combo."""
+        helpers = self.hass.helpers
         calls_single = []
         calls_multi = []
 
@@ -40,12 +41,12 @@ class TestHelpersDiscovery:
             """Service discovered callback."""
             calls_multi.append((service, info))
 
-        discovery.listen(self.hass, 'test service', callback_single)
-        discovery.listen(self.hass, ['test service', 'another service'],
-                         callback_multi)
+        helpers.discovery.listen('test service', callback_single)
+        helpers.discovery.listen(['test service', 'another service'],
+                                 callback_multi)
 
-        discovery.discover(self.hass, 'test service', 'discovery info',
-                           'test_component')
+        helpers.discovery.discover('test service', 'discovery info',
+                                   'test_component')
         self.hass.block_till_done()
 
         assert mock_setup_component.called
@@ -54,8 +55,8 @@ class TestHelpersDiscovery:
         assert len(calls_single) == 1
         assert calls_single[0] == ('test service', 'discovery info')
 
-        discovery.discover(self.hass, 'another service', 'discovery info',
-                           'test_component')
+        helpers.discovery.discover('another service', 'discovery info',
+                                   'test_component')
         self.hass.block_till_done()
 
         assert len(calls_single) == 1

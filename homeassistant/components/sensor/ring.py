@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
@@ -27,24 +27,43 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 # Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
-    'battery': ['Battery', ['doorbell'], '%', 'battery-50', None],
-    'last_activity': ['Last Activity', ['doorbell'], None, 'history', None],
-    'last_ding': ['Last Ding', ['doorbell'], None, 'history', 'ding'],
-    'last_motion': ['Last Motion', ['doorbell'], None, 'history', 'motion'],
-    'volume': ['Volume', ['chime', 'doorbell'], None, 'bell-ring', None],
+    'battery': [
+        'Battery', ['doorbell', 'stickup_cams'], '%', 'battery-50', None],
+
+    'last_activity': [
+        'Last Activity', ['doorbell', 'stickup_cams'], None, 'history', None],
+
+    'last_ding': [
+        'Last Ding', ['doorbell'], None, 'history', 'ding'],
+
+    'last_motion': [
+        'Last Motion', ['doorbell', 'stickup_cams'], None,
+        'history', 'motion'],
+
+    'volume': [
+        'Volume', ['chime', 'doorbell', 'stickup_cams'], None,
+        'bell-ring', None],
+
+    'wifi_signal_category': [
+        'WiFi Signal Category', ['chime', 'doorbell', 'stickup_cams'], None,
+        'wifi', None],
+
+    'wifi_signal_strength': [
+        'WiFi Signal Strength', ['chime', 'doorbell', 'stickup_cams'], 'dBm',
+        'wifi', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    ring = hass.data.get('ring')
+    ring = hass.data[DATA_RING]
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
@@ -54,6 +73,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
+                sensors.append(RingSensor(hass, device, sensor_type))
+
+        for device in ring.stickup_cams:
+            if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
     add_devices(sensors, True)
@@ -97,6 +120,7 @@ class RingSensor(Entity):
         attrs['kind'] = self._data.kind
         attrs['timezone'] = self._data.timezone
         attrs['type'] = self._data.family
+        attrs['wifi_name'] = self._data.wifi_name
 
         if self._extra and self._sensor_type.startswith('last_'):
             attrs['created_at'] = self._extra['created_at']
@@ -132,10 +156,18 @@ class RingSensor(Entity):
             self._state = self._data.battery_life
 
         if self._sensor_type.startswith('last_'):
-            history = self._data.history(timezone=self._tz,
-                                         kind=self._kind)
+            history = self._data.history(limit=5,
+                                         timezone=self._tz,
+                                         kind=self._kind,
+                                         enforce_limit=True)
             if history:
                 self._extra = history[0]
                 created_at = self._extra['created_at']
                 self._state = '{0:0>2}:{1:0>2}'.format(
                     created_at.hour, created_at.minute)
+
+        if self._sensor_type == 'wifi_signal_category':
+            self._state = self._data.wifi_signal_category
+
+        if self._sensor_type == 'wifi_signal_strength':
+            self._state = self._data.wifi_signal_strength
