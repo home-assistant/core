@@ -1,8 +1,13 @@
-# pylint: disable=missing-docstring, too-many-arguments
+"""Implements a base class for all IHC devices."""
+# pylint: too-many-arguments
+
 
 class IHCDevice:
-    """Base class for all ihc devices"""
-    def __init__(self, ihccontroller, name, ihcid, ihcname: str, ihcnote: str, ihcposition: str):
+    """Base class for all ihc devices."""
+
+    def __init__(self, ihccontroller, name, ihcid, ihcname: str,
+                 ihcnote: str, ihcposition: str):
+        """Initialize IHC attributes."""
         self.ihc = ihccontroller
         self._name = name
         self._ihcid = ihcid
@@ -10,18 +15,22 @@ class IHCDevice:
         self.ihcnote = ihcnote
         self.ihcposition = ihcposition
 
+
     @property
     def name(self):
-        """Return the device name"""
+        """Return the device name."""
         return self._name
+
 
     def get_ihcid(self) -> int:
         """Return the ihc resource id."""
         return self._ihcid
 
+
     def set_name(self, name):
-        """Set the name"""
+        """Set the name."""
         self._name = name
+
 
     @property
     def device_state_attributes(self):
@@ -30,7 +39,7 @@ class IHCDevice:
             return {}
         return {
             'ihcid': self._ihcid,
-            'ihcname' : self.ihcname,
-            'ihcnote' : self.ihcnote,
-            'ihcposition' : self.ihcposition
+            'ihcname': self.ihcname,
+            'ihcnote': self.ihcnote,
+            'ihcposition': self.ihcposition
         }
