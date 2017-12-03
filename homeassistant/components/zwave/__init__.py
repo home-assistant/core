@@ -45,6 +45,7 @@ CONF_DEBUG = 'debug'
 CONF_POLLING_INTENSITY = 'polling_intensity'
 CONF_POLLING_INTERVAL = 'polling_interval'
 CONF_USB_STICK_PATH = 'usb_path'
+CONF_USER_PATH = 'user_path'
 CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_INVERT_OPENCLOSE_BUTTONS = 'invert_openclose_buttons'
@@ -149,6 +150,7 @@ SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
+        vol.Optional(CONF_USER_PATH): cv.string,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
         vol.Optional(CONF_NETWORK_KEY): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
@@ -224,6 +226,7 @@ async def async_setup(hass, config):
 
     Will automatically load components to support devices found on the network.
     """
+    import os
     from pydispatch import dispatcher
     # pylint: disable=import-error
     from openzwave.option import ZWaveOption
@@ -238,10 +241,17 @@ async def async_setup(hass, config):
         config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
         config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
 
+    user_path = config[DOMAIN].get(CONF_USER_PATH)
+    if not os.path.isabs(user_path):
+        user_path = hass.config.path(user_path)
+    if not os.path.isdir(user_path):
+        _LOGGER.info("Creating user path %s.", user_path)
+        os.mkdir(user_path)
+
     # Setup options
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH),
-        user_path=hass.config.config_dir,
+        user_path=user_path,
         config_path=config[DOMAIN].get(CONF_CONFIG_PATH))
 
     options.set_console_output(use_debug)
