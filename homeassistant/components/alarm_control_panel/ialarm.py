@@ -23,7 +23,7 @@ DEFAULT_NAME = 'iAlarm'
 
 
 def no_application_protocol(value):
-    """Validate that value is without the application protocol"""
+    """Validate that value is without the application protocol."""
     protocol_separator = "://"
     if not value or protocol_separator in value:
         raise vol.Invalid(
