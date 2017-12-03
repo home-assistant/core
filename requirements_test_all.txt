@@ -113,7 +113,7 @@ pilight==0.1.1
 pmsensor==0.4
 
 # homeassistant.components.prometheus
-prometheus_client==0.0.19
+prometheus_client==0.0.21
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
