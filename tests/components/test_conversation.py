@@ -1,123 +1,14 @@
 """The tests for the Conversation component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
-from unittest.mock import patch
 
-from homeassistant.core import callback
-from homeassistant.setup import setup_component, async_setup_component
-import homeassistant.components as core_components
+import pytest
+
+from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers import intent
 
-from tests.common import get_test_home_assistant, async_mock_intent
-
-
-class TestConversation(unittest.TestCase):
-    """Test the conversation component."""
-
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.ent_id = 'light.kitchen_lights'
-        self.hass = get_test_home_assistant()
-        self.hass.states.set(self.ent_id, 'on')
-        self.assertTrue(run_coroutine_threadsafe(
-            core_components.async_setup(self.hass, {}), self.hass.loop
-        ).result())
-        self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
-            conversation.DOMAIN: {}
-        }))
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_turn_on(self):
-        """Setup and perform good turn on requests."""
-        calls = []
-
-        @callback
-        def record_call(service):
-            """Recorder for a call."""
-            calls.append(service)
-
-        self.hass.services.register('light', 'turn_on', record_call)
-
-        event_data = {conversation.ATTR_TEXT: 'turn kitchen lights on'}
-        self.assertTrue(self.hass.services.call(
-            conversation.DOMAIN, 'process', event_data, True))
-
-        call = calls[-1]
-        self.assertEqual('light', call.domain)
-        self.assertEqual('turn_on', call.service)
-        self.assertEqual([self.ent_id], call.data[ATTR_ENTITY_ID])
-
-    def test_turn_off(self):
-        """Setup and perform good turn off requests."""
-        calls = []
-
-        @callback
-        def record_call(service):
-            """Recorder for a call."""
-            calls.append(service)
-
-        self.hass.services.register('light', 'turn_off', record_call)
-
-        event_data = {conversation.ATTR_TEXT: 'turn kitchen lights off'}
-        self.assertTrue(self.hass.services.call(
-            conversation.DOMAIN, 'process', event_data, True))
-
-        call = calls[-1]
-        self.assertEqual('light', call.domain)
-        self.assertEqual('turn_off', call.service)
-        self.assertEqual([self.ent_id], call.data[ATTR_ENTITY_ID])
-
-    @patch('homeassistant.components.conversation.logging.Logger.error')
-    @patch('homeassistant.core.ServiceRegistry.call')
-    def test_bad_request_format(self, mock_logger, mock_call):
-        """Setup and perform a badly formatted request."""
-        event_data = {
-            conversation.ATTR_TEXT:
-            'what is the answer to the ultimate question of life, ' +
-            'the universe and everything'}
-        self.assertTrue(self.hass.services.call(
-            conversation.DOMAIN, 'process', event_data, True))
-        self.assertTrue(mock_logger.called)
-        self.assertFalse(mock_call.called)
-
-    @patch('homeassistant.components.conversation.logging.Logger.error')
-    @patch('homeassistant.core.ServiceRegistry.call')
-    def test_bad_request_entity(self, mock_logger, mock_call):
-        """Setup and perform requests with bad entity id."""
-        event_data = {conversation.ATTR_TEXT: 'turn something off'}
-        self.assertTrue(self.hass.services.call(
-            conversation.DOMAIN, 'process', event_data, True))
-        self.assertTrue(mock_logger.called)
-        self.assertFalse(mock_call.called)
-
-    @patch('homeassistant.components.conversation.logging.Logger.error')
-    @patch('homeassistant.core.ServiceRegistry.call')
-    def test_bad_request_command(self, mock_logger, mock_call):
-        """Setup and perform requests with bad command."""
-        event_data = {conversation.ATTR_TEXT: 'turn kitchen lights over'}
-        self.assertTrue(self.hass.services.call(
-            conversation.DOMAIN, 'process', event_data, True))
-        self.assertTrue(mock_logger.called)
-        self.assertFalse(mock_call.called)
-
-    @patch('homeassistant.components.conversation.logging.Logger.error')
-    @patch('homeassistant.core.ServiceRegistry.call')
-    def test_bad_request_notext(self, mock_logger, mock_call):
-        """Setup and perform requests with bad command with no text."""
-        event_data = {}
-        self.assertTrue(self.hass.services.call(
-            conversation.DOMAIN, 'process', event_data, True))
-        self.assertTrue(mock_logger.called)
-        self.assertFalse(mock_call.called)
+from tests.common import async_mock_intent, async_mock_service
 
 
 @asyncio.coroutine
@@ -248,3 +139,89 @@ def test_http_processing_intent(hass, test_client):
             }
         }
     }
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize('sentence', ('turn on kitchen', 'turn kitchen on'))
+def test_turn_on_intent(hass, sentence):
+    """Test calling the turn on intent."""
+    result = yield from async_setup_component(hass, 'conversation', {})
+    assert result
+
+    hass.states.async_set('light.kitchen', 'off')
+    calls = async_mock_service(hass, 'homeassistant', 'turn_on')
+
+    yield from hass.services.async_call(
+        'conversation', 'process', {
+            conversation.ATTR_TEXT: sentence
+        })
+    yield from hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'homeassistant'
+    assert call.service == 'turn_on'
+    assert call.data == {'entity_id': 'light.kitchen'}
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize('sentence', ('turn off kitchen', 'turn kitchen off'))
+def test_turn_off_intent(hass, sentence):
+    """Test calling the turn on intent."""
+    result = yield from async_setup_component(hass, 'conversation', {})
+    assert result
+
+    hass.states.async_set('light.kitchen', 'on')
+    calls = async_mock_service(hass, 'homeassistant', 'turn_off')
+
+    yield from hass.services.async_call(
+        'conversation', 'process', {
+            conversation.ATTR_TEXT: sentence
+        })
+    yield from hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'homeassistant'
+    assert call.service == 'turn_off'
+    assert call.data == {'entity_id': 'light.kitchen'}
+
+
+@asyncio.coroutine
+def test_http_api(hass, test_client):
+    """Test the HTTP conversation API."""
+    result = yield from async_setup_component(hass, 'conversation', {})
+    assert result
+
+    client = yield from test_client(hass.http.app)
+    hass.states.async_set('light.kitchen', 'off')
+    calls = async_mock_service(hass, 'homeassistant', 'turn_on')
+
+    resp = yield from client.post('/api/conversation/process', json={
+        'text': 'Turn kitchen on'
+    })
+    assert resp.status == 200
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'homeassistant'
+    assert call.service == 'turn_on'
+    assert call.data == {'entity_id': 'light.kitchen'}
+
+
+@asyncio.coroutine
+def test_http_api_wrong_data(hass, test_client):
+    """Test the HTTP conversation API."""
+    result = yield from async_setup_component(hass, 'conversation', {})
+    assert result
+
+    client = yield from test_client(hass.http.app)
+
+    resp = yield from client.post('/api/conversation/process', json={
+        'text': 123
+    })
+    assert resp.status == 400
+
+    resp = yield from client.post('/api/conversation/process', json={
+    })
+    assert resp.status == 400
