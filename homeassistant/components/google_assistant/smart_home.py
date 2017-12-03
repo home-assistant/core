@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 # Mapping is [actions schema, primary trait, optional features]
 # optional is SUPPORT_* = (trait, command)
 MAPPING_COMPONENT = {
-    group.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
+    group.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     scene.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     script.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
     switch.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
@@ -94,10 +94,11 @@ def entity_to_device(entity: Entity, units: UnitSystem):
 
     # use aliases
     aliases = entity.attributes.get(CONF_ALIASES)
-    if isinstance(aliases, list):
-        device['name']['nicknames'] = aliases
-    else:
-        _LOGGER.warning("%s must be a list", CONF_ALIASES)
+    if aliases:
+        if isinstance(aliases, list):
+            device['name']['nicknames'] = aliases
+        else:
+            _LOGGER.warning("%s must be a list", CONF_ALIASES)
 
     # add trait if entity supports feature
     if class_data[2]:

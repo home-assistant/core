@@ -14,12 +14,13 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_FAN_LIST,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST)
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
 
-REQUIREMENTS = ['evohomeclient==0.2.5', 'somecomfort==0.4.1']
+REQUIREMENTS = ['evohomeclient==0.2.5', 'somecomfort==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,6 +126,14 @@ class RoundThermostat(ClimateDevice):
         self._is_dhw = False
         self._away_temp = away_temp
         self._away = False
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
+        if hasattr(self.client, ATTR_SYSTEM_MODE):
+            supported |= SUPPORT_OPERATION_MODE
+        return supported
 
     @property
     def name(self):
@@ -233,6 +242,14 @@ class HoneywellUSThermostat(ClimateDevice):
         self._away = False
         self._username = username
         self._password = password
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
+        if hasattr(self._device, ATTR_SYSTEM_MODE):
+            supported |= SUPPORT_OPERATION_MODE
+        return supported
 
     @property
     def is_fan_on(self):

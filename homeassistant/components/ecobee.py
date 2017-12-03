@@ -16,7 +16,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
 from homeassistant.util.json import save_json
 
-REQUIREMENTS = ['python-ecobee-api==0.0.10']
+REQUIREMENTS = ['python-ecobee-api==0.0.14']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +82,7 @@ def setup_ecobee(hass, network, config):
         hass, 'climate', DOMAIN, {'hold_temp': hold_temp}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'weather', DOMAIN, {}, config)
 
 
 class EcobeeData(object):

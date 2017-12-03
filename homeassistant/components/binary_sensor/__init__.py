@@ -20,6 +20,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 DEVICE_CLASSES = [
+    'battery',       # On means low, Off means normal
     'cold',          # On means cold (or too cold)
     'connectivity',  # On means connection present, Off = no connection
     'gas',           # CO, CO2, etc.
