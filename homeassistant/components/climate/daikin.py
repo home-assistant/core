@@ -15,8 +15,9 @@ from homeassistant.components.climate import (
     SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
     PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_CUSTOMIZE, CONF_IP_ADDRESS, CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE)
-import pydaikin.appliance as appliance
+from homeassistant.const import (
+    CONF_CUSTOMIZE, CONF_IP_ADDRESS, CONF_NAME,
+    TEMP_CELSIUS, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
 
@@ -77,9 +78,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def setup_hvac(ip_address, name, customize):
     if ip_address is None:
-        _LOGGER.error("Missing required configuration items %s", CONF_IP_ADDRESS)
+        _LOGGER.error("Missing required configuration items %s",
+                      CONF_IP_ADDRESS)
         return False
 
+    import pydaikin.appliance as appliance
     device = appliance.Appliance(ip_address)
 
     if name is None:
@@ -92,6 +95,8 @@ class DaikinHVAC(ClimateDevice):
     """Representation of a Daikin HVAC."""
 
     def __init__(self, device, name, customize):
+        import pydaikin.appliance as appliance
+
         """Initialize the HVAC."""
         self._name = name
         self._device = device
@@ -163,7 +168,7 @@ class DaikinHVAC(ClimateDevice):
         state = self._device.represent('mode')[1]
 
         current_operation = DAIKIN_STATE_TO_HA.get(state)
-        if current_operation == STATE_ECO or current_operation == STATE_PERFORMANCE:
+        if current_operation in [STATE_ECO, STATE_PERFORMANCE]:
             current_operation = STATE_AUTO
 
         return current_operation
@@ -243,6 +248,8 @@ class DaikinHVAC(ClimateDevice):
         return value
 
     def update(self):
+        import pydaikin.appliance as appliance
+
         """Get the latest data."""
         for resource in appliance.HTTP_RESOURCES:
             self._device.values.update(self._device.get_resource(resource))
