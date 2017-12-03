@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pydaikin==0.4']
 
 HA_STATE_TO_DAIKIN = {
     STATE_OFF: 'off',
@@ -42,8 +43,6 @@ DAIKIN_OPERATION_LIST = {
 }
 
 DAIKIN_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_DAIKIN.items()}
-
-REQUIREMENTS = ['pydaikin==0.4']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
