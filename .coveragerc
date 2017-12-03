@@ -473,6 +473,7 @@ omit =
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/scene/lifx_cloud.py
     homeassistant/components/sensor/airvisual.py
+    homeassistant/components/sensor/alpha_vantage.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bbox.py
@@ -483,8 +484,8 @@ omit =
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
-    homeassistant/components/sensor/citybikes.py
     homeassistant/components/sensor/cert_expiry.py
+    homeassistant/components/sensor/citybikes.py
     homeassistant/components/sensor/comed_hourly_pricing.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/crimereports.py
