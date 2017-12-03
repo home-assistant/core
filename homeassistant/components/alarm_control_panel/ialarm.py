@@ -21,10 +21,20 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'iAlarm'
 
+
+def no_application_protocol(value):
+    """Validate that value is without the application protocol"""
+    protocol_separator = "://"
+    if not value or protocol_separator in value:
+        raise vol.Invalid('invalid host')
+
+    return str(value)
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_HOST): no_application_protocol,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
