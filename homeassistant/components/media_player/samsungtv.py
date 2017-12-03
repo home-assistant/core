@@ -104,7 +104,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._remote = None
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
-        self._end_of_power_off_command = None
+        self._end_of_power_off = None
         # Generate a configuration for the Samsung library
         self._config = {
             'name': 'HomeAssistant',
@@ -156,8 +156,8 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def _power_off_in_progress(self):
-        return self._end_of_power_off_command is not None and \
-               self._end_of_power_off_command > dt_util.utcnow()
+        return self._end_of_power_off is not None and \
+               self._end_of_power_off > dt_util.utcnow()
 
     @property
     def name(self):
@@ -183,7 +183,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self._end_of_power_off_command \
+        self._end_of_power_off \
             = dt_util.utcnow() + timedelta(seconds=15)
 
         if self._config['method'] == 'websocket':
