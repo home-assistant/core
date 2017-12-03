@@ -113,7 +113,7 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_WRITE_DATA_BY_NAME, handle_write_data_by_name,
-        descriptions[DOMAIN][SERVICE_WRITE_DATA_BY_NAME],
+        descriptions[SERVICE_WRITE_DATA_BY_NAME],
         schema=SCHEMA_SERVICE_WRITE_DATA_BY_NAME
     )
 

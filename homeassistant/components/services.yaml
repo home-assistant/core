@@ -437,7 +437,7 @@ input_text:
   set_value:
     description: Set the value of an input text entity.
     fields:
-      entity_id: 
+      entity_id:
         description: Entity id of the input text to set the new value.
         example: 'input_text.text1'
       value:
@@ -448,7 +448,7 @@ input_number:
   set_value:
     description: Set the value of an input number entity.
     fields:
-      entity_id: 
+      entity_id:
         description: Entity id of the input number to set the new value.
         example: 'input_number.threshold'
       value:
@@ -457,13 +457,13 @@ input_number:
   increment:
     description: Increment the value of an input number entity by its stepping.
     fields:
-      entity_id: 
+      entity_id:
         description: Entity id of the input number the should be incremented.
         example: 'input_number.threshold'
   decrement:
     description: Decrement the value of an input number entity by its stepping.
     fields:
-      entity_id: 
+      entity_id:
         description: Entity id of the input number the should be decremented.
         example: 'input_number.threshold'
 
@@ -494,18 +494,3 @@ homeassistant:
       entity_id:
         description: The entity_id of the device to turn off.
         example: light.living_room
-        
-ads:
-  write_data_by_name:
-    description: Write a value to the connected ADS device.
-
-    fields:
-      adsvar:
-        description: The name of the variable to write to.
-        example: '.global_var'
-      adstype:
-        description: The data type of the variable to write to.
-        example: 'int'
-      value:
-        description: The value to write to the variable.
-        example: 1
