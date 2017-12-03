@@ -26,7 +26,7 @@ DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
 
-CONF_JSON_ATTRS = "json_attributes"
+CONF_JSON_ATTRS = 'json_attributes'
 METHODS = ['POST', 'GET']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -34,6 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
@@ -42,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
 })
 
 
@@ -59,6 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
+
     if value_template is not None:
         value_template.hass = hass
 
@@ -72,8 +73,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
-    add_devices([RestSensor(hass, rest, name, unit,
-                            value_template, json_attrs)], True)
+    add_devices([RestSensor(
+        hass, rest, name, unit, value_template, json_attrs)], True)
 
 
 class RestSensor(Entity):
@@ -125,10 +126,10 @@ class RestSensor(Entity):
                              if k in json_dict}
                     self._attributes = attrs
                 else:
-                    _LOGGER.warning('JSON result was not a dictionary')
+                    _LOGGER.warning("JSON result was not a dictionary")
             except ValueError:
-                _LOGGER.warning('REST result could not be parsed as JSON')
-                _LOGGER.debug('Erroneous JSON: %s', value)
+                _LOGGER.warning("REST result could not be parsed as JSON")
+                _LOGGER.debug("Erroneous JSON: %s", value)
 
         if value is None:
             value = STATE_UNKNOWN
