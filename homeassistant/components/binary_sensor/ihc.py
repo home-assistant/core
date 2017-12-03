@@ -1,7 +1,5 @@
-"""
-IHC binary sensor platform.
-"""
-# pylint: disable=too-many-arguments, too-many-instance-attributes
+"""IHC binary sensor platform."""
+# pylint: disable=too-many-instance-attributes
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -103,10 +101,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def auto_setup(ihcplatform, devices):
-    """auto setup ihc binary sensors from ihc project."""
+    """Auto setup ihc binary sensors from ihc project."""
     _LOGGER.info("Auto setup - IHC Binary sensors")
 
     def setup_product(ihcid, name, product, productcfg):
+        """Product setup callback."""
         add_sensor_from_node(devices, ihcplatform.ihc, ihcid, name,
                              product, productcfg['type'],
                              productcfg['inverting'])
@@ -115,9 +114,11 @@ def auto_setup(ihcplatform, devices):
 
 class IHCBinarySensor(IHCDevice, BinarySensorDevice):
     """IHC Binary Sensor."""
+
     def __init__(self, ihccontroller, name, ihcid, sensortype: str,
                  inverting: bool, ihcname: str, ihcnote: str,
                  ihcposition: str):
+        """Initialize the IHC binary sensor."""
         IHCDevice.__init__(self, ihccontroller, name, ihcid, ihcname,
                            ihcnote, ihcposition)
         self._state = STATE_UNKNOWN
@@ -140,6 +141,7 @@ class IHCBinarySensor(IHCDevice, BinarySensorDevice):
         return self._state
 
     def update(self):
+        """We do not nothing."""
         pass
 
     def on_ihc_change(self, ihcid, value):
@@ -163,9 +165,9 @@ def add_sensor_from_node(devices, ihccontroller, ihcid: int, name: str,
 
 
 def add_sensor(devices, ihccontroller, ihcid: int, name: str,
-               sensortype: str = None, overwrite: bool = False,
-               inverting: bool = False, ihcname: str = "",
-               ihcnote: str = "", ihcposition: str = "") -> IHCBinarySensor:
+               sensortype: str=None, overwrite: bool=False,
+               inverting: bool=False, ihcname: str="",
+               ihcnote: str="", ihcposition: str="") -> IHCBinarySensor:
     """Add a new a sensor."""
     if ihcid in _IHCBINARYSENSORS:
         sensor = _IHCBINARYSENSORS[ihcid]
