@@ -93,6 +93,7 @@ class SerialSensor(Entity):
                 line = self._template.async_render_with_possible_json_value(
                     line)
 
+            _LOGGER.debug("Received: %s", line)
             self._state = line
             self.async_schedule_update_ha_state()
 
