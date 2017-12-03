@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.5.4']
+REQUIREMENTS = ['denonavr==0.5.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,12 +102,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config.get(CONF_HOST) is None and discovery_info is None:
         d_receivers = denonavr.discover()
         # More than one receiver could be discovered by that method
-        if d_receivers is not None:
-            for d_receiver in d_receivers:
-                host = d_receiver["host"]
-                name = d_receiver["friendlyName"]
-                new_hosts.append(
-                    NewHost(host=host, name=name))
+        for d_receiver in d_receivers:
+            host = d_receiver["host"]
+            name = d_receiver["friendlyName"]
+            new_hosts.append(
+                NewHost(host=host, name=name))
 
     for entry in new_hosts:
         # Check if host not in cache, append it and save for later
