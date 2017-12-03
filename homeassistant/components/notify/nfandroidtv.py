@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, BaseNotificationService,
     PLATFORM_SCHEMA)
-from homeassistant.const import CONF_TIMEOUT, CONF_ICON
+from homeassistant.const import CONF_TIMEOUT
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
