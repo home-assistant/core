@@ -1,6 +1,4 @@
-"""
-IHC platform constants
-"""
+"""IHC platform constants."""
 
 CONF_AUTOSETUP = 'autosetup'
 CONF_INVERTING = 'inverting'
