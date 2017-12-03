@@ -104,22 +104,14 @@ class AdsLight(Light):
     def turn_on(self, **kwargs):
         """Turn the light on or set a specific dimmer value."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
-            self._brightness = brightness
-
         self._ads_hub.write_by_name(self.ads_var_enable, True,
                                     self._ads_hub.PLCTYPE_BOOL)
 
         if self.ads_var_brightness is not None:
-            self._ads_hub.write_by_name(
-                self.ads_var_brightness, self._brightness,
-                self._ads_hub.PLCTYPE_UINT
-            )
-
-        self._on_state = True
+            self._ads_hub.write_by_name(self.ads_var_brightness, brightness,
+                                        self._ads_hub.PLCTYPE_UINT)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self._ads_hub.write_by_name(self.ads_var_enable, False,
                                     self._ads_hub.PLCTYPE_BOOL)
-        self._on_state = False
