@@ -6,6 +6,8 @@ https://home-assistant.io/components/notify.nfandroidtv/
 """
 import os
 import logging
+import io
+import base64
 
 import requests
 import voluptuous as vol
@@ -31,7 +33,9 @@ DEFAULT_TRANSPARENCY = 'default'
 DEFAULT_COLOR = 'grey'
 DEFAULT_INTERRUPT = False
 DEFAULT_TIMEOUT = 5
-DEFAULT_ICON = None
+DEFAULT_ICON = (
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApo'
+    'cMXEAAAAASUVORK5CYII=')
 
 ATTR_DURATION = 'duration'
 ATTR_POSITION = 'position'
@@ -39,8 +43,6 @@ ATTR_TRANSPARENCY = 'transparency'
 ATTR_COLOR = 'color'
 ATTR_BKGCOLOR = 'bkgcolor'
 ATTR_INTERRUPT = 'interrupt'
-ATTR_ICON = 'icon'
-ATTR_FILENAME = 'filename'
 
 POSITIONS = {
     'bottom-right': 0,
@@ -82,7 +84,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In(COLORS.keys()),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
     vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
-    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.string,
 })
 
 
@@ -96,18 +97,16 @@ def get_service(hass, config, discovery_info=None):
     color = config.get(CONF_COLOR)
     interrupt = config.get(CONF_INTERRUPT)
     timeout = config.get(CONF_TIMEOUT)
-    icon = config.get(CONF_ICON)
 
     return NFAndroidTVNotificationService(
-        remoteip, duration, position, transparency, color, interrupt, timeout,
-        icon)
+        remoteip, duration, position, transparency, color, interrupt, timeout)
 
 
 class NFAndroidTVNotificationService(BaseNotificationService):
     """Notification service for Notifications for Android TV."""
 
     def __init__(self, remoteip, duration, position, transparency, color,
-                 interrupt, timeout, icon):
+                 interrupt, timeout):
         """Initialize the service."""
         self._target = 'http://{}:7676'.format(remoteip)
         self._default_duration = duration
@@ -116,39 +115,26 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         self._default_color = color
         self._default_interrupt = interrupt
         self._timeout = timeout
-        self._icon_file = None
-        if icon:
-            self._icon_file = icon
-        else:
-            try:
-                import hass_frontend
-                default_icon = os.path.join(
-                    hass_frontend.__path__[0], 'icons', 'favicon-192x192.png')
-                if os.path.exists(default_icon):
-                    self._icon_file = default_icon
-            except ImportError:
-                _LOGGER.warning(
-                    "hass_frontend icon not found. " +
-                    "Provide an icon when calling the service.")
+        self._icon_file = io.BytesIO(base64.b64decode(DEFAULT_ICON))
 
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
 
-        payload = dict(title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+        payload = dict(filename=('icon.png', self._icon_file,
+                                 'application/octet-stream',
+                                 {'Expires': '0'}), type='0',
+                       title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
                        msg=message, duration="%i" % self._default_duration,
                        position='%i' % POSITIONS.get(self._default_position),
                        bkgcolor='%s' % COLORS.get(self._default_color),
                        transparency='%i' % TRANSPARENCIES.get(
                            self._default_transparency),
                        offset='0', app=ATTR_TITLE_DEFAULT, force='true',
-                       interrupt='%i' % self._default_interrupt)
+                       interrupt='%i' % self._default_interrupt,)
 
-        icon_file = None
         data = kwargs.get(ATTR_DATA)
         if data:
-            if ATTR_ICON in data:
-                icon_file = data.get(ATTR_ICON)
             if ATTR_DURATION in data:
                 duration = data.get(ATTR_DURATION)
                 try:
@@ -184,16 +170,6 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 except vol.Invalid:
                     _LOGGER.warning("Invalid interrupt-value: %s",
                                     str(interrupt))
-
-        if self._icon_file is None and icon_file is None:
-            _LOGGER.error("No icon available. Not sending notification.")
-            return
-        if icon_file is None:
-            icon_file = self._icon_file
-        payload[ATTR_FILENAME] = ('icon.png',
-                                  open(icon_file, 'rb'),
-                                  'application/octet-stream',
-                                  {'Expires': '0'})
 
         try:
             _LOGGER.debug("Payload: %s", str(payload))
