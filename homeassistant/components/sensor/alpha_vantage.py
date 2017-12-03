@@ -46,17 +46,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api_key = config.get(CONF_API_KEY)
     symbols = config.get(CONF_SYMBOLS)
 
-    timeserie = TimeSeries(key=api_key)
+    timeseries = TimeSeries(key=api_key)
 
     dev = []
     for symbol in symbols:
         try:
-            timeserie.get_intraday(symbol)
+            timeseries.get_intraday(symbol)
         except ValueError:
             _LOGGER.error(
                 "API Key is not valid or symbol '%s' not known", symbol)
             return
-        dev.append(AlphaVantageSensor(timeserie, symbol))
+        dev.append(AlphaVantageSensor(timeseries, symbol))
 
     add_devices(dev, True)
 
@@ -64,10 +64,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AlphaVantageSensor(Entity):
     """Representation of a Alpha Vantage sensor."""
 
-    def __init__(self, timeserie, symbol):
+    def __init__(self, timeseries, symbol):
         """Initialize the sensor."""
         self._name = symbol
-        self._timeserie = timeserie
+        self._timeseries = timeseries
         self._symbol = symbol
         self.values = None
         self._unit_of_measurement = None
@@ -106,5 +106,5 @@ class AlphaVantageSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        all_values, _ = self._timeserie.get_intraday(self._symbol)
+        all_values, _ = self._timeseries.get_intraday(self._symbol)
         self.values = next(iter(all_values.values()))
