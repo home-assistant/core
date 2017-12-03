@@ -1,7 +1,5 @@
-"""
-IHC sensor platform.
-"""
-# pylint: disable=too-many-arguments, too-many-instance-attributes
+"""IHC sensor platform."""
+# pylint: disable=too-many-instance-attributes
 # pylint: disable=unused-argument
 import logging
 import voluptuous as vol
@@ -62,7 +60,7 @@ _IHCSENSORS = {}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ihc sensor platform"""
+    """Setup the ihc sensor platform."""
     ihcplatform = get_ihc_platform(hass)
     devices = []
     if config.get('autosetup'):
@@ -94,6 +92,7 @@ def auto_setup(ihcplatform, devices):
     _LOGGER.info("Auto setup for IHC sensor")
 
     def setup_product(ihcid, name, product, productcfg):
+        """Product setup callback."""
         add_sensor(devices, ihcplatform.ihc, ihcid, name,
                    productcfg['sensortype'],
                    productcfg['unit_of_measurement'], False,
@@ -104,8 +103,10 @@ def auto_setup(ihcplatform, devices):
 
 class IHCSensor(IHCDevice, Entity):
     """Implementation of the IHC sensor."""
+
     def __init__(self, ihccontroller, name, ihcid, sensortype, unit, ihcname,
                  ihcnote, ihcposition):
+        """Initialize the IHC sensor."""
         IHCDevice.__init__(self, ihccontroller, name, ihcid, ihcname,
                            ihcnote, ihcposition)
         self._state = None
@@ -125,10 +126,11 @@ class IHCSensor(IHCDevice, Entity):
         return self._unit_of_measurement
 
     def update(self):
+        """We do not need to update."""
         pass
 
     def set_unit(self, unit):
-        """Set unit of measusement"""
+        """Set unit of measusement."""
         self._unit_of_measurement = unit
 
     def on_ihc_change(self, ihcid, value):
@@ -139,9 +141,9 @@ class IHCSensor(IHCDevice, Entity):
 
 def add_sensor(devices, ihccontroller, ihcid: int, name: str, sensortype: str,
                unit: str, overwrite: bool=False,
-               ihcname: str = "", ihcnote: str = "",
-               ihcposition: str = "") -> IHCSensor:
-    """Add a new ihc sensor"""
+               ihcname: str="", ihcnote: str="",
+               ihcposition: str="") -> IHCSensor:
+    """Add a new ihc sensor."""
     if ihcid in _IHCSENSORS:
         sensor = _IHCSENSORS[ihcid]
         if overwrite:

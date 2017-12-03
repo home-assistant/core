@@ -1,8 +1,5 @@
-"""
-IHC switch platform that implements a switch.
-"""
-# pylint: disable=too-many-arguments, too-many-instance-attributes
-# pylint: disable=unused-argument
+"""IHC switch platform that implements a switch."""
+# pylint: disable=too-many-instance-attributes, unused-argument
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -70,14 +67,17 @@ def auto_setup(ihcplatform, devices):
     _LOGGER.info("Auto setup for IHC switch")
 
     def setup_product(ihcid, name, product, productcfg):
+        """Product setup callback."""
         add_switch_from_node(devices, ihcplatform.ihc, ihcid, name, product)
     ihcplatform.autosetup(PRODUCTAUTOSETUP, setup_product)
 
 
 class IHCSwitch(IHCDevice, SwitchDevice):
     """IHC Switch."""
+
     def __init__(self, ihccontroller, name: str, ihcid: int,
                  ihcname: str, ihcnote: str, ihcposition: str):
+        """Initialize the IHC switch."""
         IHCDevice.__init__(self, ihccontroller, name, ihcid, ihcname, ihcnote,
                            ihcposition)
         self._state = False
@@ -86,6 +86,7 @@ class IHCSwitch(IHCDevice, SwitchDevice):
 
     @property
     def should_poll(self):
+        """We do not need to poll."""
         return False
 
     @property
@@ -142,9 +143,9 @@ def add_switch_from_node(devices, ihccontroller, ihcid: int, name: str,
 
 
 def add_switch(devices, ihccontroller, ihcid: int, name: str,
-               overwrite: bool = False, ihcname: str = "", ihcnote: str = "",
-               ihcposition: str = "") -> IHCSwitch:
-    """Add a new ihc switch"""
+               overwrite: bool=False, ihcname: str="", ihcnote: str="",
+               ihcposition: str="") -> IHCSwitch:
+    """Add a new ihc switch."""
     if ihcid in _IHCSWITCHES:
         switch = _IHCSWITCHES[ihcid]
         if overwrite:

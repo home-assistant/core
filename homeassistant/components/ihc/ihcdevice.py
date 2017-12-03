@@ -1,5 +1,4 @@
 """Implements a base class for all IHC devices."""
-# pylint: too-many-arguments
 
 
 class IHCDevice:

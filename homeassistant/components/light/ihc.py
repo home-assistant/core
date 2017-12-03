@@ -1,8 +1,6 @@
-"""
-IHC light platform.
-"""
-# pylint: disable=too-many-arguments, too-many-instance-attributes
-# pylint: disable=unused-argument
+"""IHC light platform."""
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=unused-argument, unidiomatic-typecheck
 import logging
 import voluptuous as vol
 from homeassistant.components.light import (
@@ -50,7 +48,7 @@ _IHCLIGHTS = {}
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the ihc lights platform"""
+    """Setup the ihc lights platform."""
     ihcplatform = get_ihc_platform(hass)
     devices = []
     if config.get(CONF_AUTOSETUP):
@@ -73,10 +71,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 def auto_setup(ihcplatform, devices):
-    """Auto setup ihc light product from ihc project """
+    """Auto setup ihc light product from ihc project."""
     _LOGGER.info("Auto setup for IHC light")
 
     def setup_product(ihcid, name, product, productcfg):
+        """Product setup callback."""
         add_light_from_node(devices, ihcplatform.ihc, ihcid, name, product)
     ihcplatform.autosetup(PRODUCTAUTOSETUP, setup_product)
 
@@ -150,7 +149,7 @@ class IhcLight(IHCDevice, Light):
         self.schedule_update_ha_state()
 
     def on_ihc_change(self, ihcid, value):
-        """Callback from Ihc notifications"""
+        """Callback from Ihc notifications."""
         if type(value) is int:
             self._dimmable = True
             self._brightness = value * 255 / 100
@@ -172,9 +171,9 @@ def add_light_from_node(devices, ihccontroller, ihcid: int, name: str,
 
 
 def add_light(devices, ihccontroller, ihcid: int, name: str,
-              overwrite: bool = False, ihcname: str = "",
-              ihcnote: str = "", ihcposition: str = "") -> IhcLight:
-    """Add a new ihc light"""
+              overwrite: bool=False, ihcname: str="",
+              ihcnote: str="", ihcposition: str="") -> IhcLight:
+    """Add a new ihc light."""
     if ihcid in _IHCLIGHTS:
         light = _IHCLIGHTS[ihcid]
         if overwrite:
