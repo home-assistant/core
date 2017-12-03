@@ -13,7 +13,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, CONF_HOST, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN, CONF_NAME)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, CONF_NAME)
 
 REQUIREMENTS = ['pyialarm==0.2']
 
@@ -48,12 +48,11 @@ class IAlarmPanel(alarm.AlarmControlPanel):
         """Initialize the iAlarm status."""
         from pyialarm import IAlarm
 
-        _LOGGER.debug("Setting up iAlarm...")
         self._name = name
         self._username = username
         self._password = password
         self._url = url
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._client = IAlarm(username, password, url)
 
     @property
@@ -80,7 +79,7 @@ class IAlarmPanel(alarm.AlarmControlPanel):
         elif status == self._client.ARMED_STAY:
             state = STATE_ALARM_ARMED_HOME
         else:
-            state = STATE_UNKNOWN
+            state = None
 
         self._state = state
 
