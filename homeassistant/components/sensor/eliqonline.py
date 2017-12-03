@@ -30,7 +30,7 @@ UNIT_OF_MEASUREMENT = 'W'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_CHANNEL_ID): cv.positive_int,
+    vol.Required(CONF_CHANNEL_ID): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
