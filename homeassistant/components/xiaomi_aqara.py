@@ -3,11 +3,15 @@ import asyncio
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+from datetime import timedelta
+from homeassistant.util.dt import utcnow
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_MAC, CONF_HOST, CONF_PORT)
+                                 CONF_MAC, CONF_HOST, CONF_PORT, STATE_UNAVAILABLE)
 
 REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
 
@@ -21,6 +25,7 @@ CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
 DOMAIN = 'xiaomi_aqara'
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
+TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
 SERVICE_PLAY_RINGTONE = 'play_ringtone'
 SERVICE_STOP_RINGTONE = 'stop_ringtone'
@@ -189,7 +194,7 @@ def setup(hass, config):
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
-    def __init__(self, device, name, xiaomi_hub):
+    def __init__(self, device, name, xiaomi_hub, hass):
         """Initialize the xiaomi device."""
         self._state = None
         self._sid = device['sid']
@@ -197,10 +202,12 @@ class XiaomiDevice(Entity):
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
+        self._remove_unavailability_tracker = None
+        self._track_unavailable()
         xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self.parse_data(device['data'])
         self.parse_voltage(device['data'])
-
+        
     @property
     def name(self):
         """Return the name of the device."""
@@ -216,9 +223,23 @@ class XiaomiDevice(Entity):
         """Return the state attributes."""
         return self._device_state_attributes
 
+    @callback
+    def _set_unavailable(self):
+        """Set state to UNAVAILABLE."""
+        self._remove_unavailability_tracker = None
+        self._state = STATE_UNAVAILABLE
+        self.schedule_update_ha_state()
+
+    def _track_unavailable(self):
+        if self._remove_unavailability_tracker:
+            self._remove_unavailability_tracker()
+        self._remove_unavailability_tracker = async_track_point_in_utc_time(
+            self.hass, self._set_unavailable, utcnow() + TIME_TILL_UNAVAILABLE)
+
     def push_data(self, data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
+        self._track_unavailable()
         is_data = self.parse_data(data)
         is_voltage = self.parse_voltage(data)
         if is_data or is_voltage:
