@@ -4,7 +4,6 @@ Notifications for Android TV notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.nfandroidtv/
 """
-import os
 import logging
 import io
 import base64
