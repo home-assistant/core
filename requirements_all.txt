@@ -1188,3 +1188,7 @@ zeroconf==0.19.1
 
 # homeassistant.components.media_player.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.0.0
+
+# homeassistant.components.climate.daikin
+pydaikin==0.4
+
