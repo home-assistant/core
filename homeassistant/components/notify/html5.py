@@ -149,6 +149,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         """Accept the POST request for push registrations from a browser."""
         try:
             data = yield from request.json()
+            data = json.loads(json.dumps(data, cls=JSONBytesDecoder))
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -197,6 +198,17 @@ class HTML5PushRegistrationView(HomeAssistantView):
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message('Push notification subscriber unregistered.')
+
+
+class JSONBytesDecoder(json.JSONEncoder):
+    """JSONEncoder to decode bytes objects to unicode."""
+
+    # pylint: disable=method-hidden
+    def default(self, obj):
+        """Decode object if it's a bytes object, else defer to base class."""
+        if isinstance(obj, bytes):
+            return obj.decode()
+        return json.JSONEncoder.default(self, obj)
 
 
 class HTML5PushCallbackView(HomeAssistantView):
