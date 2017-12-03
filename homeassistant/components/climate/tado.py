@@ -61,7 +61,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
      for zone in zones:
         climate_devices.append(create_climate_device(
         device = create_climate_device(
-            tado, hass, zone, zone['name'], zone['id']))
             tado, hass, zone, zone['name'], zone['id'])
         if device is False:
           continue
