@@ -264,7 +264,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         #     return self.json_message(humanize_error(request.json, ex),
         #                              HTTP_BAD_REQUEST)
 
-        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now()
+        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 
         name = data.get(ATTR_DEVICE_ID)
 
