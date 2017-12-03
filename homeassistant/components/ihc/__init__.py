@@ -1,7 +1,5 @@
-"""
-IHC platform.
-"""
-# pylint: disable=too-many-arguments, too-many-instance-attributes, bare-except
+"""IHC platform."""
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 import time
 import logging
 import os.path
@@ -49,19 +47,19 @@ def setup(hass, config):
     # Service functions
 
     def set_runtime_value_bool(call):
-        """Set a IHC runtime bool value service function """
+        """Set a IHC runtime bool value service function."""
         ihcid = int(call.data.get('ihcid', 0))
         value = bool(call.data.get('value', 0))
         ihc.set_runtime_value_bool(ihcid, value)
 
     def set_runtime_value_int(call):
-        """Set a IHC runtime integer value service function """
+        """Set a IHC runtime integer value service function."""
         ihcid = int(call.data.get('ihcid', 0))
         value = int(call.data.get('value', 0))
         ihc.set_runtime_value_int(ihcid, value)
 
     def set_runtime_value_float(call):
-        """Set a IHC runtime float value service function """
+        """Set a IHC runtime float value service function."""
         ihcid = int(call.data.get('ihcid', 0))
         value = float(call.data.get('value', 0))
         ihc.set_runtime_value_float(ihcid, value)
@@ -82,23 +80,25 @@ def setup(hass, config):
 
 
 class IHCPlatform:
-    """Wraps the IHCController for caching of ihc project and autosetup"""
+    """Wraps the IHCController for caching of ihc project and autosetup."""
+
     def __init__(self, ihccontroller):
+        """Initialize the caching of the project."""
         self.ihc = ihccontroller
         project = self.ihc.get_project()
         self._project = xml.etree.ElementTree.fromstring(project)
         self._groups = self._project.findall(r'.//group')
 
     def get_project_xml(self):
-        """Get the cached ihc project as xml"""
+        """Get the cached ihc project as xml."""
         return self._project
 
     def get_groups_xml(self):
-        """Get the groups from the ihc project and cache the result"""
+        """Get the groups from the ihc project and cache the result."""
         return self._groups
 
     def autosetup(self, productautosetup, callback):
-        """Do autosetup of a component usign the specified productautosetup"""
+        """Do autosetup of a component usign the specified productautosetup."""
         groups = self.get_groups_xml()
         for group in groups:
             groupname = group.attrib['name']
@@ -116,9 +116,7 @@ class IHCPlatform:
 
 
 def get_ihc_platform(hass) -> IHCPlatform:
-    """Get the ihc platform instance from the hass configuration.
-    This is a singleton object.
-    """
+    """Get the ihc platform instance from the hass configuration."""
     while DOMAIN not in hass.data:
         time.sleep(0.1)
     return hass.data[DOMAIN]
