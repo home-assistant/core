@@ -117,7 +117,7 @@ class RestSensor(Entity):
         value = self.rest.data
 
         if self._json_attrs:
-            self._attributes = None
+            self._attributes = {}
             try:
                 json_dict = json.loads(value)
                 if isinstance(json_dict, dict):
