@@ -49,7 +49,6 @@ class AdsLight(Light):
         self._name = name
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
-        self.stype = 'dimmer'
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -88,7 +87,7 @@ class AdsLight(Light):
 
     @property
     def is_on(self):
-        """ Return if light is on."""
+        """Return if light is on."""
         return self._on_state
 
     @property
