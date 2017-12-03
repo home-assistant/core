@@ -58,12 +58,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     climate_devices = []
-     for zone in zones:
-        climate_devices.append(create_climate_device(
+    for zone in zones:
         device = create_climate_device(
             tado, hass, zone, zone['name'], zone['id'])
         if device is False:
-          continue
+            continue
         climate_devices.append(device)
 
     if climate_devices:
@@ -80,11 +79,11 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     if ac_mode:
         temperatures = capabilities['HEAT']['temperatures']
     elif 'temperatures' in capabilities:
-         temperatures = capabilities['temperatures']
-         temperatures = capabilities['temperatures']
+        temperatures = capabilities['temperatures']
+        temperatures = capabilities['temperatures']
     else:
         _LOGGER.debug("Recieved zone %s has no temperature; not adding", name)
-        return False;
+        return False
 
     min_temp = float(temperatures['celsius']['min'])
     max_temp = float(temperatures['celsius']['max'])
