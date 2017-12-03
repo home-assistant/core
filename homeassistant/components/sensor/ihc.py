@@ -1,14 +1,15 @@
 """
 IHC sensor platform.
 """
-# pylint: disable=too-many-arguments, too-many-instance-attributes, bare-except, unused-argument, missing-docstring
+# pylint: disable=too-many-arguments, too-many-instance-attributes
+# pylint: disable=unused-argument
 import logging
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_ID, CONF_NAME, CONF_TYPE,CONF_UNIT_OF_MEASUREMENT, CONF_SENSORS)
+    CONF_ID, CONF_NAME, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, CONF_SENSORS)
 
 from homeassistant.components.ihc.const import CONF_AUTOSETUP
 from homeassistant.components.ihc import get_ihc_platform
@@ -18,7 +19,7 @@ DEPENDENCIES = ['ihc']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AUTOSETUP, default='False'): cv.boolean,
-    vol.Optional(CONF_SENSORS) :
+    vol.Optional(CONF_SENSORS):
         [{
             vol.Required(CONF_ID): cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
@@ -59,6 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _IHCSENSORS = {}
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ihc sensor platform"""
     ihcplatform = get_ihc_platform(hass)
@@ -67,35 +69,45 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         auto_setup(ihcplatform, devices)
 
     sensors = config.get(CONF_SENSORS)
-    if sensors != None:
+    if sensors:
         _LOGGER.info("Adding IHC Sensor")
         for sensor in sensors:
             ihcid = sensor[CONF_ID]
-            name = sensor[CONF_NAME] if CONF_NAME in sensor else "ihc_" + str(ihcid)
-            sensortype = sensor[CONF_TYPE] if CONF_TYPE in sensor else "Temperature"
-            unit = sensor[CONF_UNIT_OF_MEASUREMENT] if CONF_UNIT_OF_MEASUREMENT in sensor else "°C"
-            add_sensor(devices, ihcplatform.ihc, int(ihcid), name, sensortype, unit, True)
+            name = (sensor[CONF_NAME] if CONF_NAME in sensor
+                    else "ihc_" + str(ihcid))
+            sensortype = (sensor[CONF_TYPE] if CONF_TYPE in sensor
+                          else "Temperature")
+            unit = (sensor[CONF_UNIT_OF_MEASUREMENT]
+                    if CONF_UNIT_OF_MEASUREMENT in sensor else "°C")
+            add_sensor(devices, ihcplatform.ihc, int(ihcid), name, sensortype,
+                       unit, True)
 
     add_devices(devices)
     # Start notification after devices has been added
     for sensor in devices:
-        sensor.ihc.add_notify_event(sensor.get_ihcid(), sensor.on_ihc_change, True)
+        sensor.ihc.add_notify_event(sensor.get_ihcid(), sensor.on_ihc_change,
+                                    True)
+
 
 def auto_setup(ihcplatform, devices):
     """Setup ihc sensors from the ihc project file."""
     _LOGGER.info("Auto setup for IHC sensor")
+
     def setup_product(ihcid, name, product, productcfg):
         add_sensor(devices, ihcplatform.ihc, ihcid, name,
-                   productcfg['sensortype'], productcfg['unit_of_measurement'],
-                   False, product.attrib['name'], product.attrib['note'],
+                   productcfg['sensortype'],
+                   productcfg['unit_of_measurement'], False,
+                   product.attrib['name'], product.attrib['note'],
                    product.attrib['position'])
     ihcplatform.autosetup(PRODUCTAUTOSETUP, setup_product)
 
 
 class IHCSensor(IHCDevice, Entity):
     """Implementation of the IHC sensor."""
-    def __init__(self, ihccontroller, name, ihcid, sensortype, unit, ihcname, ihcnote, ihcposition):
-        IHCDevice.__init__(self, ihccontroller, name, ihcid, ihcname, ihcnote, ihcposition)
+    def __init__(self, ihccontroller, name, ihcid, sensortype, unit, ihcname,
+                 ihcnote, ihcposition):
+        IHCDevice.__init__(self, ihccontroller, name, ihcid, ihcname,
+                           ihcnote, ihcposition)
         self._state = None
         self._icon = None
         self._assumed = False
@@ -121,15 +133,14 @@ class IHCSensor(IHCDevice, Entity):
 
     def on_ihc_change(self, ihcid, value):
         """Callback when ihc resource changes."""
-        try:
-            self._state = value
-            self.schedule_update_ha_state()
-        except:
-            pass
+        self._state = value
+        self.schedule_update_ha_state()
+
 
 def add_sensor(devices, ihccontroller, ihcid: int, name: str, sensortype: str,
-               unit: str, overwrite: bool = False,
-               ihcname: str = "", ihcnote: str = "", ihcposition: str = "") -> IHCSensor:
+               unit: str, overwrite: bool=False,
+               ihcname: str = "", ihcnote: str = "",
+               ihcposition: str = "") -> IHCSensor:
     """Add a new ihc sensor"""
     if ihcid in _IHCSENSORS:
         sensor = _IHCSENSORS[ihcid]
