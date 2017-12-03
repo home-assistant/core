@@ -69,6 +69,7 @@ SERVICE_HANDLERS = {
     'sabnzbd': ('sensor', 'sabnzbd'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
     'bluesound': ('media_player', 'bluesound'),
+    'daikin': ('climate', 'daikin'),
 }
 
 CONF_IGNORE = 'ignore'
