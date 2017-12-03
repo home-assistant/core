@@ -77,11 +77,12 @@ def setup(hass, config):
     if conf.get(ATTR_SHOW_MENU):
         hass.http.register_view(DominosProductListView(dominos))
 
-    for order_info in conf.get(ATTR_ORDERS):
-        order = DominosOrder(order_info, dominos)
-        entities.append(order)
+    if conf.get(ATTR_ORDERS) is not None:
+        for order_info in conf.get(ATTR_ORDERS):
+            order = DominosOrder(order_info, dominos)
+            entities.append(order)
 
-    component.add_entities(entities)
+        component.add_entities(entities)
 
     # Return boolean to indicate that initialization was successfully.
     return True
