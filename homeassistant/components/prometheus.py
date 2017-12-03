@@ -19,7 +19,7 @@ from homeassistant import core as hacore
 from homeassistant.helpers import state as state_helper
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
-REQUIREMENTS = ['prometheus_client==0.0.19']
+REQUIREMENTS = ['prometheus_client==0.0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,6 +189,14 @@ class Metrics(object):
                 'electricity_usage_w', self.prometheus_client.Gauge,
                 'Currently reported electricity draw in Watts',
             ),
+            'min': (
+                'sensor_min', self.prometheus_client.Gauge,
+                'Time in minutes reported by a sensor'
+            ),
+            'Events': (
+                'sensor_event_count', self.prometheus_client.Gauge,
+                'Number of events for a sensor'
+            ),
         }
 
         unit = state.attributes.get('unit_of_measurement')
@@ -212,11 +220,24 @@ class Metrics(object):
             self.prometheus_client.Gauge,
             'State of the switch (0/1)',
         )
-        value = state_helper.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+
+        try:
+            value = state_helper.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
 
     def _handle_zwave(self, state):
         self._battery(state)
+
+    def _handle_automation(self, state):
+        metric = self._metric(
+            'automation_triggered_count',
+            self.prometheus_client.Counter,
+            'Count of times an automation has been triggered',
+        )
+
+        metric.labels(**self._labels(state)).inc()
 
 
 class PrometheusView(HomeAssistantView):
