@@ -28,20 +28,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up switch platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    dev_name = config.get(CONF_NAME)
+    name = config.get(CONF_NAME)
     ads_var = config.get(CONF_ADS_VAR)
 
-    add_devices([AdsSwitch(ads_hub, dev_name, ads_var)], True)
+    add_devices([AdsSwitch(ads_hub, name, ads_var)], True)
 
 
 class AdsSwitch(ToggleEntity):
     """Representation of an Ads switch device."""
 
-    def __init__(self, ads_hub, dev_name, ads_var):
+    def __init__(self, ads_hub, name, ads_var):
         """Initialize the AdsSwitch entity."""
         self._ads_hub = ads_hub
         self._on_state = False
-        self.dev_name = dev_name
+        self._name = name
         self.ads_var = ads_var
 
     @asyncio.coroutine
@@ -67,11 +67,11 @@ class AdsSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        return self.dev_name
+        return self._name
 
     @property
     def should_poll(self):
-        """False because entity pushes its state to HA."""
+        """Return False because entity pushes its state to HA."""
         return False
 
     def turn_on(self, **kwargs):

@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS Light'
-SUPPORT_ADS = SUPPORT_BRIGHTNESS
+CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
@@ -45,7 +45,7 @@ class AdsLight(Light):
         """Initialize AdsLight entity."""
         self._ads_hub = ads_hub
         self._on_state = False
-        self._brightness = 50
+        self._brightness = None
         self._name = name
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
@@ -83,23 +83,24 @@ class AdsLight(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light."""
+        """Return the brightness of the light (0..255)."""
         return self._brightness
 
     @property
     def is_on(self):
-        """If light is on."""
+        """ Return if light is on."""
         return self._on_state
 
     @property
     def should_poll(self):
-        """False because entity pushes its state to HA."""
+        """Return False because entity pushes its state to HA."""
         return False
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_ADS
+        if self.ads_var_brightness is not None:
+            return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn the light on or set a specific dimmer value."""

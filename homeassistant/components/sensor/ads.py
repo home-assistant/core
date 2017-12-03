@@ -99,5 +99,5 @@ class AdsSensor(Entity):
 
     @property
     def should_poll(self):
-        """False because entity pushes its state to HA."""
+        """Return False because entity pushes its state to HA."""
         return False
