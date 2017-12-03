@@ -107,7 +107,7 @@ class AdsLight(Light):
         self._ads_hub.write_by_name(self.ads_var_enable, True,
                                     self._ads_hub.PLCTYPE_BOOL)
 
-        if self.ads_var_brightness is not None:
+        if self.ads_var_brightness is not None and brightness is not None:
             self._ads_hub.write_by_name(self.ads_var_brightness, brightness,
                                         self._ads_hub.PLCTYPE_UINT)
 
