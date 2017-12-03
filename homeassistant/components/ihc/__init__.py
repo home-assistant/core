@@ -5,7 +5,6 @@ IHC platform.
 import time
 import logging
 import os.path
-import asyncio
 import xml.etree.ElementTree
 import voluptuous as vol
 
@@ -31,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup(hass, config):
     """Setyp the IHC platform."""
     from ihcsdk.ihccontroller import IHCController
@@ -40,13 +40,13 @@ def setup(hass, config):
     ihc = IHCController(url, username, password)
     ihc.info = config[DOMAIN].get(CONF_INFO)
 
-    if  not ihc.authenticate():
-        _LOGGER.error("Unable to authenticate on ihc controller. Username/password may be wrong")
+    if not ihc.authenticate():
+        _LOGGER.error("Unable to authenticate on ihc controller.")
         return False
 
     hass.data[DOMAIN] = IHCPlatform(ihc)
 
-    #Service functions
+    # Service functions
 
     def set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function """
@@ -78,10 +78,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, const.SERVICE_SET_RUNTIME_VALUE_FLOAT,
                            set_runtime_value_float,
                            descriptions[const.SERVICE_SET_RUNTIME_VALUE_FLOAT])
-
-    #hass.http.register_view(IHCSetupView())
     return True
-
 
 
 class IHCPlatform:
@@ -110,16 +107,18 @@ class IHCPlatform:
                 for product in products:
                     nodes = product.findall(productcfg['node'])
                     for node in nodes:
-                        if 'setting' in node.attrib and node.attrib['setting'] == 'yes':
+                        if ('setting' in node.attrib
+                                and node.attrib['setting'] == 'yes'):
                             continue
                         ihcid = int(node.attrib['id'].strip('_'), 0)
                         name = groupname + "_" + str(ihcid)
                         callback(ihcid, name, product, productcfg)
 
+
 def get_ihc_platform(hass) -> IHCPlatform:
-    """Get the ihc platform instance from the hass configuration
+    """Get the ihc platform instance from the hass configuration.
     This is a singleton object.
     """
-    while not DOMAIN in hass.data:
+    while DOMAIN not in hass.data:
         time.sleep(0.1)
     return hass.data[DOMAIN]

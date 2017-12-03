@@ -1,13 +1,14 @@
 """
 IHC binary sensor platform.
 """
-# pylint: disable=too-many-arguments, too-many-instance-attributes, bare-except, missing-docstring
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
-from homeassistant.const import STATE_UNKNOWN, CONF_NAME, CONF_TYPE, CONF_ID, CONF_BINARY_SENSORS
+from homeassistant.const import (STATE_UNKNOWN, CONF_NAME, CONF_TYPE,
+                                 CONF_ID, CONF_BINARY_SENSORS)
 
 from homeassistant.components.ihc.const import CONF_AUTOSETUP, CONF_INVERTING
 from homeassistant.components.ihc import get_ihc_platform
@@ -17,7 +18,7 @@ DEPENDENCIES = ['ihc']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AUTOSETUP, default='False'): cv.boolean,
-    vol.Optional(CONF_BINARY_SENSORS) :
+    vol.Optional(CONF_BINARY_SENSORS):
         [{
             vol.Required(CONF_ID): cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
@@ -68,6 +69,7 @@ PRODUCTAUTOSETUP = [
 _LOGGER = logging.getLogger(__name__)
 _IHCBINARYSENSORS = {}
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the IHC binary setsor platform."""
@@ -81,19 +83,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Adding IHC Binary Sensors")
         for binarysensor in binarysensors:
             ihcid = binarysensor[CONF_ID]
-            name = binarysensor[CONF_NAME] if CONF_NAME in binarysensor else "ihc_" + str(ihcid)
-            sensortype = binarysensor[CONF_TYPE] if CONF_TYPE in binarysensor else None
-            inverting = binarysensor[CONF_INVERTING] if CONF_INVERTING in binarysensor else False
-            add_sensor(devices, ihcplatform.ihc, int(ihcid), name, sensortype, True, inverting)
+            name = (binarysensor[CONF_NAME]
+                    if CONF_NAME in binarysensor
+                    else "ihc_" + str(ihcid))
+            sensortype = (binarysensor[CONF_TYPE]
+                          if CONF_TYPE in binarysensor
+                          else None)
+            inverting = (binarysensor[CONF_INVERTING]
+                         if CONF_INVERTING in binarysensor
+                         else False)
+            add_sensor(devices, ihcplatform.ihc, int(ihcid), name, sensortype,
+                       True, inverting)
 
     add_devices(devices)
     # Start notification after devices has been added
     for device in devices:
-        device.ihc.add_notify_event(device.get_ihcid(), device.on_ihc_change, True)
+        device.ihc.add_notify_event(device.get_ihcid(),
+                                    device.on_ihc_change, True)
+
 
 def auto_setup(ihcplatform, devices):
     """auto setup ihc binary sensors from ihc project."""
     _LOGGER.info("Auto setup - IHC Binary sensors")
+
     def setup_product(ihcid, name, product, productcfg):
         add_sensor_from_node(devices, ihcplatform.ihc, ihcid, name,
                              product, productcfg['type'],
@@ -103,9 +115,11 @@ def auto_setup(ihcplatform, devices):
 
 class IHCBinarySensor(IHCDevice, BinarySensorDevice):
     """IHC Binary Sensor."""
-    def __init__(self, ihccontroller, name, ihcid, sensortype: str, inverting: bool,
-                 ihcname: str, ihcnote: str, ihcposition: str):
-        IHCDevice.__init__(self, ihccontroller, name, ihcid, ihcname, ihcnote, ihcposition)
+    def __init__(self, ihccontroller, name, ihcid, sensortype: str,
+                 inverting: bool, ihcname: str, ihcnote: str,
+                 ihcposition: str):
+        IHCDevice.__init__(self, ihccontroller, name, ihcid, ihcname,
+                           ihcnote, ihcposition)
         self._state = STATE_UNKNOWN
         self._sensor_type = sensortype
         self.inverting = inverting
@@ -130,24 +144,23 @@ class IHCBinarySensor(IHCDevice, BinarySensorDevice):
 
     def on_ihc_change(self, ihcid, value):
         """Callback when ihc resource changes."""
-        try:
-            if self.inverting:
-                self._state = not value
-            else:
-                self._state = value
-            self.schedule_update_ha_state()
-        except:
-            pass
+        if self.inverting:
+            self._state = not value
+        else:
+            self._state = value
+        self.schedule_update_ha_state()
 
 
 def add_sensor_from_node(devices, ihccontroller, ihcid: int, name: str,
-                         product, sensortype, inverting: bool) -> IHCBinarySensor:
+                         product, sensortype,
+                         inverting: bool) -> IHCBinarySensor:
     """Add a sensor from the ihc project node."""
     ihcname = product.attrib['name']
     ihcnote = product.attrib['note']
     ihcposition = product.attrib['position']
     return add_sensor(devices, ihccontroller, ihcid, name, sensortype, False,
                       inverting, ihcname, ihcnote, ihcposition)
+
 
 def add_sensor(devices, ihccontroller, ihcid: int, name: str,
                sensortype: str = None, overwrite: bool = False,
