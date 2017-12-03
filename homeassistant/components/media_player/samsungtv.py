@@ -183,8 +183,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self._end_of_power_off \
-            = dt_util.utcnow() + timedelta(seconds=15)
+        self._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
 
         if self._config['method'] == 'websocket':
             self.send_key('KEY_POWER')
