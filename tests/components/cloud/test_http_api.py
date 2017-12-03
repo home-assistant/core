@@ -191,7 +191,7 @@ def test_register_view(mock_cognito, cloud_client):
     assert req.status == 200
     assert len(mock_cognito.register.mock_calls) == 1
     result_email, result_pass = mock_cognito.register.mock_calls[0][1]
-    assert result_email == auth_api._generate_username('hello@bla.com')
+    assert result_email == 'hello@bla.com'
     assert result_pass == 'falcon42'
 
 
@@ -238,7 +238,7 @@ def test_confirm_register_view(mock_cognito, cloud_client):
     assert req.status == 200
     assert len(mock_cognito.confirm_sign_up.mock_calls) == 1
     result_code, result_email = mock_cognito.confirm_sign_up.mock_calls[0][1]
-    assert result_email == auth_api._generate_username('hello@bla.com')
+    assert result_email == 'hello@bla.com'
     assert result_code == '123456'
 
 

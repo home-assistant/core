@@ -44,12 +44,13 @@ class TestConfigurator(unittest.TestCase):
         """Test request config with all possible info."""
         exp_attr = {
             ATTR_FRIENDLY_NAME: "Test Request",
-            configurator.ATTR_DESCRIPTION: "config description",
-            configurator.ATTR_DESCRIPTION_IMAGE: "config image url",
+            configurator.ATTR_DESCRIPTION: """config description
+
+[link name](link url)
+
+![Description image](config image url)""",
             configurator.ATTR_SUBMIT_CAPTION: "config submit caption",
             configurator.ATTR_FIELDS: [],
-            configurator.ATTR_LINK_NAME: "link name",
-            configurator.ATTR_LINK_URL: "link url",
             configurator.ATTR_ENTITY_PICTURE: "config entity picture",
             configurator.ATTR_CONFIGURE_ID: configurator.request_config(
                 self.hass,
@@ -70,7 +71,7 @@ class TestConfigurator(unittest.TestCase):
         state = states[0]
 
         self.assertEqual(configurator.STATE_CONFIGURE, state.state)
-        assert exp_attr == dict(state.attributes)
+        assert exp_attr == state.attributes
 
     def test_callback_called_on_configure(self):
         """Test if our callback gets called when configure service called."""

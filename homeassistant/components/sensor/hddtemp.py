@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.hddtemp/
 import logging
 from datetime import timedelta
 from telnetlib import Telnet
+import socket
 
 import voluptuous as vol
 
@@ -46,16 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hddtemp = HddTempData(host, port)
     hddtemp.update()
 
-    if hddtemp.data is None:
-        return False
-
     if not disks:
         disks = [next(iter(hddtemp.data)).split('|')[0]]
 
     dev = []
     for disk in disks:
-        if disk in hddtemp.data:
-            dev.append(HddTempSensor(name, disk, hddtemp))
+        dev.append(HddTempSensor(name, disk, hddtemp))
 
     add_devices(dev, True)
 
@@ -70,6 +67,7 @@ class HddTempSensor(Entity):
         self._name = '{} {}'.format(name, disk)
         self._state = None
         self._details = None
+        self._unit = None
 
     @property
     def name(self):
@@ -84,17 +82,16 @@ class HddTempSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if self._details[3] == 'C':
-            return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
+        return self._unit
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            ATTR_DEVICE: self._details[0],
-            ATTR_MODEL: self._details[1],
-        }
+        if self._details is not None:
+            return {
+                ATTR_DEVICE: self._details[0],
+                ATTR_MODEL: self._details[1],
+                }
 
     def update(self):
         """Get the latest data from HDDTemp daemon and updates the state."""
@@ -103,6 +100,10 @@ class HddTempSensor(Entity):
         if self.hddtemp.data and self.disk in self.hddtemp.data:
             self._details = self.hddtemp.data[self.disk].split('|')
             self._state = self._details[2]
+            if self._details is not None and self._details[3] == 'F':
+                self._unit = TEMP_FAHRENHEIT
+            else:
+                self._unit = TEMP_CELSIUS
         else:
             self._state = None
 
@@ -126,6 +127,9 @@ class HddTempData(object):
             self.data = {data[i].split('|')[0]: data[i]
                          for i in range(0, len(data), 1)}
         except ConnectionRefusedError:
-            _LOGGER.error(
-                "HDDTemp is not available at %s:%s", self.host, self.port)
+            _LOGGER.error("HDDTemp is not available at %s:%s",
+                          self.host, self.port)
+            self.data = None
+        except socket.gaierror:
+            _LOGGER.error("HDDTemp host not found %s:%s", self.host, self.port)
             self.data = None

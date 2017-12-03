@@ -316,8 +316,6 @@ def test_execute_request(hass_fixture, assistant_client):
                         "id": "light.ceiling_lights",
                     }, {
                         "id": "switch.decorative_lights",
-                    }, {
-                        "id": "light.bed_light",
                     }],
                     "execution": [{
                         "command": "action.devices.commands.OnOff",
@@ -350,6 +348,25 @@ def test_execute_request(hass_fixture, assistant_client):
                             }
                         }
                     }]
+                }, {
+                    "devices": [{
+                        "id": "light.bed_light"
+                    }],
+                    "execution": [{
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "spectrumRGB": 65280
+                            }
+                        }
+                    }, {
+                        "command": "action.devices.commands.ColorAbsolute",
+                        "params": {
+                            "color": {
+                                "temperature": 4700
+                            }
+                        }
+                    }]
                 }]
             }
         }]
@@ -362,10 +379,17 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 5
+    assert len(commands) == 6
+
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
+
     kitchen = hass_fixture.states.get('light.kitchen_lights')
     assert kitchen.attributes.get(light.ATTR_COLOR_TEMP) == 476
     assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
+
+    bed = hass_fixture.states.get('light.bed_light')
+    assert bed.attributes.get(light.ATTR_COLOR_TEMP) == 212
+    assert bed.attributes.get(light.ATTR_RGB_COLOR) == (0, 255, 0)
+
     assert hass_fixture.states.get('switch.decorative_lights').state == 'off'
