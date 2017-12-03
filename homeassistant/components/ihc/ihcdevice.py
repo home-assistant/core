@@ -15,22 +15,18 @@ class IHCDevice:
         self.ihcnote = ihcnote
         self.ihcposition = ihcposition
 
-
     @property
     def name(self):
         """Return the device name."""
         return self._name
 
-
     def get_ihcid(self) -> int:
         """Return the ihc resource id."""
         return self._ihcid
 
-
     def set_name(self, name):
         """Set the name."""
         self._name = name
-
 
     @property
     def device_state_attributes(self):
