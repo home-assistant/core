@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tplink/
 """
 import logging
-
 import time
 
 import voluptuous as vol
@@ -107,9 +106,9 @@ class SmartPlugSwitch(SwitchDevice):
                     self._emeter_params[ATTR_DAILY_CONSUMPTION] \
                         = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
                 except KeyError:
-                    # device returned no daily history
+                    # Device returned no daily history
                     pass
 
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
+            _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
             self._available = False
