@@ -27,34 +27,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             model = device['model']
             if model == 'plug':
                 devices.append(XiaomiGenericSwitch(device, "Plug", 'status',
-                                                   True, gateway))
+                                                   True, hass, gateway))
             elif model == 'ctrl_neutral1':
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch',
                                                    'channel_0',
-                                                   False, gateway))
+                                                   False, hass, gateway))
             elif model == 'ctrl_ln1':
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch LN',
                                                    'channel_0',
-                                                   False, gateway))
+                                                   False, hass, gateway))
             elif model == 'ctrl_neutral2':
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch Left',
                                                    'channel_0',
-                                                   False, gateway))
+                                                   False, hass, gateway))
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch Right',
                                                    'channel_1',
-                                                   False, gateway))
+                                                   False, hass, gateway))
             elif model == 'ctrl_ln2':
                 devices.append(XiaomiGenericSwitch(device,
                                                    'Wall Switch LN Left',
                                                    'channel_0',
-                                                   False, gateway))
+                                                   False, hass, gateway))
                 devices.append(XiaomiGenericSwitch(device,
                                                    'Wall Switch LN Right',
                                                    'channel_1',
-                                                   False, gateway))
+                                                   False, hass, gateway))
             elif model == '86plug':
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
-                                                   'status', True, gateway))
+                                                   'status', True, hass, gateway))
     add_devices(devices)
 
 
@@ -62,14 +62,14 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
     """Representation of a XiaomiPlug."""
 
     def __init__(self, device, name, data_key, supports_power_consumption,
-                 xiaomi_hub):
+                 hass, xiaomi_hub):
         """Initialize the XiaomiPlug."""
         self._data_key = data_key
         self._in_use = None
         self._load_power = None
         self._power_consumed = None
         self._supports_power_consumption = supports_power_consumption
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, hass, xiaomi_hub)
 
     @property
     def icon(self):
@@ -81,7 +81,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
     @property
     def is_on(self):
         """Return true if it is on."""
-        return self._state
+        return self._state is True
 
     @property
     def device_state_attributes(self):
