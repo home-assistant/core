@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
     PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_CUSTOMIZE, CONF_IP_ADDRESS, CONF_NAME,
+    CONF_IP_ADDRESS, CONF_NAME,
     TEMP_CELSIUS, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
@@ -59,23 +59,21 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Daikin HVAC platform."""
-    customize = config.get(CONF_CUSTOMIZE, {})
-
     devices = []
 
     name = config.get(CONF_NAME, None)
 
     if discovery_info is not None:
         ip_address = discovery_info['ip']
-        devices.append(setup_hvac(ip_address, name, customize))
+        devices.append(setup_hvac(ip_address, name))
     else:
         ip_address = config.get(CONF_IP_ADDRESS, None)
-        devices.append(setup_hvac(ip_address, name, customize))
+        devices.append(setup_hvac(ip_address, name))
 
     add_devices(devices)
 
 
-def setup_hvac(ip_address, name, customize):
+def setup_hvac(ip_address, name):
     if ip_address is None:
         _LOGGER.error("Missing required configuration items %s",
                       CONF_IP_ADDRESS)
@@ -87,19 +85,18 @@ def setup_hvac(ip_address, name, customize):
     if name is None:
         name = device.values['name']
 
-    return DaikinHVAC(device, name, customize)
+    return DaikinHVAC(device, name)
 
 
 class DaikinHVAC(ClimateDevice):
     """Representation of a Daikin HVAC."""
 
-    def __init__(self, device, name, customize):
+    def __init__(self, device, name):
         import pydaikin.appliance as appliance
 
         """Initialize the HVAC."""
         self._name = name
         self._device = device
-        self._customize = customize
 
         self._current_temperature = self.settings('htemp', True)
         self._operation_list = list(DAIKIN_OPERATION_LIST.values())
