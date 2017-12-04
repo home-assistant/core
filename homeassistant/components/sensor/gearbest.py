@@ -25,8 +25,6 @@ ICON = 'mdi:coin'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2*60*60)  # 2h
 MIN_TIME_BETWEEN_CURRENCY_UPDATES = timedelta(seconds=12*60*60)  # 12h
 
-DOMAIN = 'gearbest'
-
 
 _ITEM_SCHEMA = vol.All(
     vol.Schema({
@@ -53,45 +51,41 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     items = config.get(CONF_ITEMS)
 
-    hass.data[DOMAIN] = CurrencyConverter()
-    hass.data[DOMAIN].update()
+    converter = CurrencyConverter()
+    converter.update()
 
     for item in items:
         try:
-            sensor = GearbestSensor(hass, item, currency)
-            if sensor is not None:
-                sensors.append(sensor)
+            sensors.append(GearbestSensor(converter, item, currency))
         except ValueError as exc:
             _LOGGER.error(exc)
 
     def currency_update(event_time):
         """Update currency list."""
-        hass.data[DOMAIN].update()
+        converter.update()
 
     track_time_interval(hass,
                         currency_update,
                         MIN_TIME_BETWEEN_CURRENCY_UPDATES)
 
-    add_devices(sensors)
+    add_devices(sensors, True)
 
 
 class GearbestSensor(Entity):
     """Implementation of the sensor."""
 
-    def __init__(self, hass, item, currency):
+    def __init__(self, converter, item, currency):
         """Initialize the sensor."""
         from gearbest_parser import GearbestParser
 
-        self._hass = hass
-        self._name = item.get(CONF_NAME, None)
+        self._name = item.get(CONF_NAME)
         self._parser = GearbestParser()
-        self._parser.set_currency_converter(hass.data[DOMAIN])
-        self._item = self._parser.load(item.get(CONF_ID, None),
-                                       item.get(CONF_URL, None),
+        self._parser.set_currency_converter(converter)
+        self._item = self._parser.load(item.get(CONF_ID),
+                                       item.get(CONF_URL),
                                        item.get(CONF_CURRENCY, currency))
         if self._item is None:
             raise ValueError("id and url could not be resolved")
-        self._item.update()
 
     @property
     def name(self):
@@ -123,7 +117,6 @@ class GearbestSensor(Entity):
         """Return the state attributes."""
         attrs = {'name': self._item.name,
                  'description': self._item.description,
-                 'price': self._item.price,
                  'currency': self._item.currency,
                  'url': self._item.url}
         return attrs
