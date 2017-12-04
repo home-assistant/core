@@ -47,6 +47,7 @@ class SmartPlugSwitch(SwitchDevice):
         self.smartplug = smartplug
         self._name = name
         self._state = None
+        self._available = True
         # Set up emeter cache
         self._emeter_params = {}
 
@@ -54,6 +55,11 @@ class SmartPlugSwitch(SwitchDevice):
     def name(self):
         """Return the name of the Smart Plug, if any."""
         return self._name
+
+    @property
+    def available(self) -> bool:
+        """Return if switch is available."""
+        return self._available
 
     @property
     def is_on(self):
@@ -77,6 +83,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         from pyHS100 import SmartDeviceException
         try:
+            self._available = True
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
 
@@ -105,3 +112,4 @@ class SmartPlugSwitch(SwitchDevice):
 
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
+            self._available = False
