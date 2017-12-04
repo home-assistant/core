@@ -53,7 +53,10 @@ class MochadSwitch(SwitchDevice):
                                     comm_type=self._comm_type)
         # Init with false to avoid locking HA for long on CM19A (goes from rf
         # to pl via TM751, but not other way around)
-        self._state = False
+        if (self._comm_type == 'pl'):
+            self._state = self._get_device_status()
+        else:
+            self._state = False
         self.lock = ctrl_lock
 
     @property
@@ -66,28 +69,32 @@ class MochadSwitch(SwitchDevice):
         with self.lock:
             try:
                 self._state = True
-                #Recycle socket on new command to recover mochad connection
-                _LOGGER.debug("Reconnect {}:{} ".format(self._controller.server,
-                                                        self._controller.port))
+                # Recycle socket on new command to recover mochad connection
+                _LOGGER.debug("Reconnect %s:%s", self._controller.server,
+                                                        self._controller.port)
                 self._controller.reconnect()
                 self.device.send_cmd('on')
-                self._controller.read_data()
+                # No read data on CM19A which is rf only
+                if (self._comm_type == 'pl'):
+                    self._controller.read_data()
             except Exception as e:
-                _LOGGER.error("Error with mochad communication: {}".format(e))
+                _LOGGER.error("Error with mochad communication: %s", e)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         with self.lock:
             try:
                 self._state = False
-                #Recycle socket on new command to recover mochad connection
-                _LOGGER.debug("Reconnect {}:{} ".format(self._controller.server,
-                                                         self._controller.port))
+                # Recycle socket on new command to recover mochad connection
+                _LOGGER.debug("Reconnect %s:%s", self._controller.server,
+                                                         self._controller.port)
                 self._controller.reconnect()
                 self.device.send_cmd('off')
-                self._controller.read_data()
+                # No read data on CM19A which is rf only
+                if (self._comm_type == 'pl'):
+                    self._controller.read_data()
             except Exception as e:
-                _LOGGER.error("Error with mochad communication: {}".format(e))
+                _LOGGER.error("Error with mochad communication: %s", e)
 
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
