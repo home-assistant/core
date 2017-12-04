@@ -24,9 +24,10 @@ from homeassistant.const import (
     STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
     SERVICE_TOGGLE, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
-    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_SHUFFLE_SET,
-    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK)
+    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_REPEAT_SET, 
+    SERVICE_SHUFFLE_SET, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, 
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE, 
+    SERVICE_MEDIA_PREVIOUS_TRACK)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -82,6 +83,7 @@ ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
+ATTR_MEDIA_REPEAT = 'repeat'
 ATTR_MEDIA_SHUFFLE = 'shuffle'
 
 MEDIA_TYPE_MUSIC = 'music'
@@ -107,6 +109,7 @@ SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
 SUPPORT_SHUFFLE_SET = 32768
+SUPPORT_REPEAT_SET = 65536
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -134,6 +137,10 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+})
+
+MEDIA_PLAYER_SET_REPEAT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_REPEAT): cv.boolean,
 })
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -168,9 +175,13 @@ SERVICE_TO_METHOD = {
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
+    SERVICE_REPEAT_SET: {
+        'method': 'async_set_repeat',
+        'schema': MEDIA_PLAYER_SET_REPEAT_SCHEMA},
     SERVICE_SHUFFLE_SET: {
         'method': 'async_set_shuffle',
         'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
+
 }
 
 ATTR_TO_PROPERTY = [
@@ -195,6 +206,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
 ]
 
@@ -350,6 +362,15 @@ def clear_playlist(hass, entity_id=None):
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
+@bind_hass
+def set_repeat(hass, repeat, entity_id=None):
+    """Send the media player the command to enable/disable repeat mode."""
+    data = {ATTR_MEDIA_REPEAT: repeat}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_REPEAT_SET, data)
 
 @bind_hass
 def set_shuffle(hass, shuffle, entity_id=None):
@@ -360,7 +381,6 @@ def set_shuffle(hass, shuffle, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
-
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -398,6 +418,9 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
+        elif service.service == SERVICE_REPEAT_SET:
+            params[ATTR_MEDIA_REPEAT] = \
+                service.data.get(ATTR_MEDIA_REPEAT)
         elif service.service == SERVICE_SHUFFLE_SET:
             params[ATTR_MEDIA_SHUFFLE] = \
                 service.data.get(ATTR_MEDIA_SHUFFLE)
@@ -575,6 +598,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def repeat(self):
+        """Boolean if repeat is enabled."""
+        return None
+
+    @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
         return None
@@ -728,6 +756,17 @@ class MediaPlayerDevice(Entity):
         """
         return self.hass.async_add_job(self.clear_playlist)
 
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        raise NotImplementedError()
+
+    def async_set_repeat(self, repeat):
+        """Enable/disable repeat mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.set_repeat, repeat)
+
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         raise NotImplementedError()
@@ -794,6 +833,11 @@ class MediaPlayerDevice(Entity):
     def support_clear_playlist(self):
         """Boolean if clear playlist command supported."""
         return bool(self.supported_features & SUPPORT_CLEAR_PLAYLIST)
+
+    @property
+    def support_repeat_set(self):
+        """Boolean if repeat is supported."""
+        return bool(self.supported_features & SUPPORT_REPEAT_SET)
 
     @property
     def support_shuffle_set(self):
