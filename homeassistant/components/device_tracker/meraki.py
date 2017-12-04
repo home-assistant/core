@@ -12,6 +12,7 @@ import json
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_UNPROCESSABLE_ENTITY)
+from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER)
@@ -90,15 +91,18 @@ class MerakiView(HomeAssistantView):
         if len(data["data"]["observations"]) == 0:
             _LOGGER.debug("No observations found")
             return
-        yield from self._handle(request.app['hass'], data)
+        self._handle(request.app['hass'], data)
 
-    @asyncio.coroutine
+    @callback
     def _handle(self, hass, data):
         for i in data["data"]["observations"]:
             data["data"]["secret"] = "hidden"
             lat = i["location"]["lat"]
             lng = i["location"]["lng"]
-            accuracy = int(float(i["location"]["unc"]))
+            try:
+                accuracy = int(float(i["location"]["unc"]))
+            except ValueError:
+                accuracy = 0
             mac = i["clientMac"]
             _LOGGER.debug("clientMac: %s", mac)
             gps_location = (lat, lng)
@@ -115,7 +119,7 @@ class MerakiView(HomeAssistantView):
                 attrs['seenTime'] = i['seenTime']
             if i.get('ssid', False):
                 attrs['ssid'] = i['ssid']
-            yield from hass.async_add_job(self.async_see(
+            hass.async_add_job(self.async_see(
                 gps=gps_location,
                 mac=mac,
                 source_type=SOURCE_TYPE_ROUTER,
