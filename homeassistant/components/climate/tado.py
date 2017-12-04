@@ -81,7 +81,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     elif 'temperatures' in capabilities:
         temperatures = capabilities['temperatures']
     else:
-        _LOGGER.debug("Recieved zone %s has no temperature; not adding", name)
+        _LOGGER.debug("Received zone %s has no temperature; not adding", name)
         return
 
     min_temp = float(temperatures['celsius']['min'])
