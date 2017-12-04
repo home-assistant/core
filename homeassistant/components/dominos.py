@@ -58,7 +58,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(ATTR_PHONE): cv.string,
         vol.Required(ATTR_ADDRESS): cv.string,
         vol.Optional(ATTR_SHOW_MENU): cv.boolean,
-        vol.Optional(ATTR_ORDERS): vol.All(cv.ensure_list, [_ORDERS_SCHEMA]),
+        vol.Optional(ATTR_ORDERS, default={}): vol.All(
+            cv.ensure_list, [_ORDERS_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -77,11 +78,11 @@ def setup(hass, config):
     if conf.get(ATTR_SHOW_MENU):
         hass.http.register_view(DominosProductListView(dominos))
 
-    if conf.get(ATTR_ORDERS) is not None:
-        for order_info in conf.get(ATTR_ORDERS):
-            order = DominosOrder(order_info, dominos)
-            entities.append(order)
+    for order_info in conf.get(ATTR_ORDERS):
+        order = DominosOrder(order_info, dominos)
+        entities.append(order)
 
+    if entities:
         component.add_entities(entities)
 
     # Return boolean to indicate that initialization was successfully.
@@ -110,7 +111,7 @@ class Dominos():
         try:
             self.closest_store = self.address.closest_store()
         except StoreException:
-            self.closest_store = False
+            self.closest_store = None
 
     def handle_order(self, call):
         """Handle ordering pizza."""
@@ -128,29 +129,31 @@ class Dominos():
         from pizzapi.address import StoreException
         try:
             self.closest_store = self.address.closest_store()
+            return True
         except StoreException:
-            self.closest_store = False
+            self.closest_store = None
+            return False
 
     def get_menu(self):
         """Return the products from the closest stores menu."""
-        if self.closest_store is False:
+        if self.closest_store is None:
             _LOGGER.warning('Cannot get menu. Store may be closed')
-            return
+            return []
+        else:
+            menu = self.closest_store.get_menu()
+            product_entries = []
 
-        menu = self.closest_store.get_menu()
-        product_entries = []
+            for product in menu.products:
+                item = {}
+                if isinstance(product.menu_data['Variants'], list):
+                    variants = ', '.join(product.menu_data['Variants'])
+                else:
+                    variants = product.menu_data['Variants']
+                item['name'] = product.name
+                item['variants'] = variants
+                product_entries.append(item)
 
-        for product in menu.products:
-            item = {}
-            if isinstance(product.menu_data['Variants'], list):
-                variants = ', '.join(product.menu_data['Variants'])
-            else:
-                variants = product.menu_data['Variants']
-            item['name'] = product.name
-            item['variants'] = variants
-            product_entries.append(item)
-
-        return product_entries
+            return product_entries
 
 
 class DominosProductListView(http.HomeAssistantView):
@@ -197,7 +200,7 @@ class DominosOrder(Entity):
     @property
     def state(self):
         """Return the state either closed, orderable or unorderable."""
-        if self.dominos.closest_store is False:
+        if self.dominos.closest_store is None:
             return 'closed'
         else:
             return 'orderable' if self._orderable else 'unorderable'
@@ -224,7 +227,7 @@ class DominosOrder(Entity):
         from pizzapi import Order
         from pizzapi.address import StoreException
 
-        if self.dominos.closest_store is False:
+        if self.dominos.closest_store is None:
             raise StoreException
 
         order = Order(
