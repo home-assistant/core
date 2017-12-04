@@ -103,6 +103,8 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         else:
             self._rs_codes = rs_codes
 
+        self.getstatusfromsystem()
+
         if self._rs_enabled:
             self.listen_to_system_status()
 
@@ -162,8 +164,12 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     def update(self):
         """Update the alarm status."""
         if not self._rs_enabled:
-            status = self._egardiasystem.getstate()
-            self.parsestatus(status)
+            self.getstatusfromsystem()
+
+    def getstatusfromsystem(self):
+        """Get status from EgardiaSystem."""
+        status = self._egardiasystem.getstate()
+        self.parsestatus(status)
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
