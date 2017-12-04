@@ -285,9 +285,9 @@ omit =
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
-    homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/onvif.py
     homeassistant/components/camera/ring.py
+    homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/synology.py
     homeassistant/components/camera/yi.py
     homeassistant/components/climate/ephember.py
@@ -295,6 +295,7 @@ omit =
     homeassistant/components/climate/flexit.py
     homeassistant/components/climate/heatmiser.py
     homeassistant/components/climate/homematic.py
+    homeassistant/components/climate/honeywell.py
     homeassistant/components/climate/knx.py
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
@@ -332,10 +333,10 @@ omit =
     homeassistant/components/device_tracker/sky_hub.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/swisscom.py
-    homeassistant/components/device_tracker/thomson.py
-    homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tado.py
+    homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tile.py
+    homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
@@ -353,8 +354,8 @@ omit =
     homeassistant/components/keyboard.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/light/avion.py
-    homeassistant/components/light/blinkt.py
     homeassistant/components/light/blinksticklight.py
+    homeassistant/components/light/blinkt.py
     homeassistant/components/light/decora.py
     homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/flux_led.py
@@ -365,8 +366,8 @@ omit =
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/mystrom.py
     homeassistant/components/light/osramlightify.py
-    homeassistant/components/light/rpi_gpio_pwm.py
     homeassistant/components/light/piglow.py
+    homeassistant/components/light/rpi_gpio_pwm.py
     homeassistant/components/light/sensehat.py
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/tplink.py
@@ -377,9 +378,9 @@ omit =
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
+    homeassistant/components/lock/lockitron.py
     homeassistant/components/lock/nello.py
     homeassistant/components/lock/nuki.py
-    homeassistant/components/lock/lockitron.py
     homeassistant/components/lock/sesame.py
     homeassistant/components/media_extractor.py
     homeassistant/components/media_player/anthemav.py
@@ -623,8 +624,8 @@ omit =
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py
-    homeassistant/components/switch/tplink.py
     homeassistant/components/switch/telnet.py
+    homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/xiaomi_miio.py
     homeassistant/components/telegram_bot/*
@@ -633,7 +634,9 @@ omit =
     homeassistant/components/tts/baidu.py
     homeassistant/components/tts/microsoft.py
     homeassistant/components/tts/picotts.py
+    homeassistant/components/vacuum/mqtt.py
     homeassistant/components/vacuum/roomba.py
+    homeassistant/components/vacuum/xiaomi_miio.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/metoffice.py
@@ -642,7 +645,6 @@ omit =
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
-    homeassistant/components/vacuum/mqtt.py
 
 [report]
 # Regexes for lines to exclude from consideration
