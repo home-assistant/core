@@ -110,7 +110,7 @@ class Dominos():
         try:
             self.closest_store = self.address.closest_store()
         except StoreException:
-            self.closest_store = Falsee
+            self.closest_store = False
 
     def handle_order(self, call):
         """Handle ordering pizza."""
