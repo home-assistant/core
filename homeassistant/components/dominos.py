@@ -95,6 +95,7 @@ class Dominos():
         """Set up main service."""
         conf = config[DOMAIN]
         from pizzapi import Address, Customer, Store
+        from pizzapi.address import StoreException
         self.hass = hass
         self.customer = Customer(
             conf.get(ATTR_FIRST_NAME),
@@ -106,7 +107,10 @@ class Dominos():
             *self.customer.address.split(','),
             country=conf.get(ATTR_COUNTRY))
         self.country = conf.get(ATTR_COUNTRY)
-        self.closest_store = Store()
+        try:
+            self.closest_store = self.address.closest_store()
+        except StoreException:
+            self.closest_store = Falsee
 
     def handle_order(self, call):
         """Handle ordering pizza."""
@@ -218,6 +222,11 @@ class DominosOrder(Entity):
     def order(self):
         """Create the order object."""
         from pizzapi import Order
+        from pizzapi.address import StoreException
+
+        if self.dominos.closest_store is False:
+            raise StoreException
+
         order = Order(
             self.dominos.closest_store,
             self.dominos.customer,
