@@ -888,7 +888,7 @@ def test_custom_setup_params(hass):
             'min_temp': MIN_TEMP,
             'max_temp': MAX_TEMP,
             'target_temp': TARGET_TEMP,
-            'inital_operation_mode': STATE_OFF,
+            'initial_operation_mode': STATE_OFF,
         }})
     assert result
     state = hass.states.get(ENTITY)
