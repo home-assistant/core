@@ -194,7 +194,7 @@ def setup(hass, config):
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
-    def __init__(self, device, name, xiaomi_hub, hass):
+    def __init__(self, device, name, hass, xiaomi_hub):
         """Initialize the xiaomi device."""
         self._state = None
         self._sid = device['sid']
