@@ -20,18 +20,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiGenericCover(device, "Curtain",
                                                   {'status': 'status',
                                                    'pos': 'curtain_level'},
-                                                  gateway))
+                                                  hass, gateway))
     add_devices(devices)
 
 
 class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     """Representation of a XiaomiGenericCover."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub):
+    def __init__(self, device, name, data_key, hass, xiaomi_hub):
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key
         self._pos = 0
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, hass, xiaomi_hub)
 
     @property
     def current_cover_position(self):
