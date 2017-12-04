@@ -37,10 +37,10 @@ class DiscogsCollection(Entity):
     def __init__(self, token):
         """Initialize the sensor."""
         import discogs_client
-        ds = discogs_client.Client(
+        discogs = discogs_client.Client(
             'HomeAssistantDiscogs/0.1.0', user_token=token)
 
-        self._ds_user = ds.identity()
+        self._ds_user = discogs.identity()
         self._state = None
 
     @property
