@@ -21,7 +21,8 @@ from homeassistant.components.climate import (
     ATTR_HUMIDITY, ATTR_OPERATION_MODE, ATTR_SWING_MODE,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE, SERVICE_SET_HOLD_MODE,
     SERVICE_SET_FAN_MODE, SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE)
+    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE, STATE_HEAT, STATE_COOL,
+    STATE_IDLE)
 from homeassistant.components.climate.ecobee import (
     ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME,
     ATTR_RESUME_ALL, SERVICE_RESUME_PROGRAM)
@@ -210,10 +211,11 @@ def state_as_number(state):
     Raises ValueError if this is not possible.
     """
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                       STATE_OPEN, STATE_HOME):
+                       STATE_OPEN, STATE_HOME, STATE_HEAT, STATE_COOL):
         return 1
     elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                         STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME):
+                         STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
+                         STATE_IDLE):
         return 0
 
     return float(state.state)
