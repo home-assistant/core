@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ClimateDevice,
     STATE_OFF, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_DRY, STATE_FAN_ONLY,
     STATE_ECO, STATE_PERFORMANCE,
+    ATTR_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
@@ -33,14 +34,14 @@ HA_STATE_TO_DAIKIN = {
     STATE_PERFORMANCE: 'auto-7',
 }
 
-DAIKIN_OPERATION_LIST = {
-    STATE_OFF: 'off',
-    STATE_HEAT: 'hot',
-    STATE_COOL: 'cool',
-    STATE_FAN_ONLY: 'fan',
-    STATE_DRY: 'dry',
-    STATE_AUTO: 'auto',
-}
+DAIKIN_OPERATION_LIST = [
+    STATE_OFF,
+    STATE_HEAT,
+    STATE_COOL,
+    STATE_FAN_ONLY,
+    STATE_DRY,
+    STATE_AUTO
+]
 
 DAIKIN_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_DAIKIN.items()}
 
@@ -98,11 +99,11 @@ class DaikinHVAC(ClimateDevice):
         self._name = name
         self._device = device
 
-        self._current_temperature = self.settings('htemp', True)
-        self._operation_list = list(DAIKIN_OPERATION_LIST.values())
+        self._operation_list = DAIKIN_OPERATION_LIST
         self._fan_list = appliance.daikin_values('f_rate')
         self._swing_list = appliance.daikin_values('f_dir')
 
+        self._current_temperature = None
         self._target_temperature = None
         self._current_humidity = None
         self._target_humidity = None
@@ -118,11 +119,6 @@ class DaikinHVAC(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def should_poll(self):
-        """Polling needed for a demo climate device."""
-        return True
 
     @property
     def name(self):
@@ -150,21 +146,29 @@ class DaikinHVAC(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        #if kwargs.get(ATTR_OPERATION_MODE) is not None:
-        #    operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        settings = None
+
+        if kwargs.get(ATTR_OPERATION_MODE) is not None:
+            operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+            current_operation = HA_STATE_TO_DAIKIN.get(operation_mode)
+            if current_operation is not None:
+                settings.mode = current_operation
 
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             temperature = kwargs.get(ATTR_TEMPERATURE)
-            self._device.set({"temp": temperature})
             self._target_temperature = temperature
+            settings.temp = temperature
 
+        if settings is not None:
+            self._device.set(settings)
+            self.schedule_update_ha_state()
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        state = self._device.represent('mode')[1]
+        operation_mode = self._device.represent('mode')[1]
 
-        current_operation = DAIKIN_STATE_TO_HA.get(state)
+        current_operation = DAIKIN_STATE_TO_HA.get(operation_mode)
         if current_operation in [STATE_ECO, STATE_PERFORMANCE]:
             current_operation = STATE_AUTO
 
@@ -177,10 +181,10 @@ class DaikinHVAC(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
-
         current_operation = HA_STATE_TO_DAIKIN.get(operation_mode)
         if current_operation is not None:
             self._device.set({"mode": current_operation})
+            self.schedule_update_ha_state()
 
     @property
     def current_humidity(self):
@@ -191,8 +195,11 @@ class DaikinHVAC(ClimateDevice):
 
     def set_humidity(self, humidity):
         """Set new target temperature."""
-        self._target_humidity = humidity
-        self._device.set({"shum": humidity})
+
+        if humidity is not None:
+            self._target_humidity = humidity
+            self._device.set({"shum": humidity})
+            self.schedule_update_ha_state()
 
     @property
     def current_fan_mode(self):
@@ -203,8 +210,11 @@ class DaikinHVAC(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Set fan mode."""
-        self._device.set({"f_rate": fan})
-        self._current_fan_mode = fan
+
+        if fan is not None:
+            self._device.set({"f_rate": fan})
+            self._current_fan_mode = fan
+            self.schedule_update_ha_state()
 
     @property
     def fan_list(self):
@@ -220,8 +230,10 @@ class DaikinHVAC(ClimateDevice):
 
     def set_swing_mode(self, swing_mode):
         """Set new target temperature."""
-        self._device.set({"f_dir": swing_mode})
-        self._current_swing_mode = swing_mode
+        if swing_mode is not None:
+            self._device.set({"f_dir": swing_mode})
+            self._current_swing_mode = swing_mode
+            self.schedule_update_ha_state()
 
     @property
     def swing_list(self):
@@ -246,6 +258,7 @@ class DaikinHVAC(ClimateDevice):
         return value
 
     def update(self):
+        """Retrieve latest state """
         import pydaikin.appliance as appliance
 
         """Get the latest data."""
