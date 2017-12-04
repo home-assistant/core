@@ -664,7 +664,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert config[0].entity_picture == 'pic_url'
 
     def test_default_hide_if_away_is_used(self):
-        """Test that picture and icon are set in initial see."""
+        """Test that default track_new is used."""
         tracker = device_tracker.DeviceTracker(
             self.hass, timedelta(seconds=60), False,
             {device_tracker.CONF_AWAY_HIDE: True}, [])
@@ -673,7 +673,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
         assert len(config) == 1
-        assert config[0].hidden == True
+        self.assertTrue(config[0].hidden)
 
 
 @asyncio.coroutine
