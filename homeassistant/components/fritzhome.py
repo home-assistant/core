@@ -23,12 +23,6 @@ DOMAIN = 'fritzhome'
 
 DEFAULT_HOST = 'fritz.box'
 
-ATTR_AIN = 'ain'
-ATTR_ID = 'id'
-ATTR_FW_VERSION = 'firmware_version'
-ATTR_MANUFACTURER = 'manufacturer'
-ATTR_PRODUCTNAME = 'product_name'
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
