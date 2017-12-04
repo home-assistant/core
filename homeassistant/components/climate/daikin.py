@@ -150,13 +150,14 @@ class DaikinHVAC(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        #if kwargs.get(ATTR_OPERATION_MODE) is not None:
+        #    operation_mode = kwargs.get(ATTR_OPERATION_MODE)
 
-        if temperature is None:
-            return
+        if kwargs.get(ATTR_TEMPERATURE) is not None:
+            temperature = kwargs.get(ATTR_TEMPERATURE)
+            self._device.set({"temp": temperature})
+            self._target_temperature = temperature
 
-        self._device.set({"temp": temperature})
-        self._target_temperature = temperature
 
     @property
     def current_operation(self):
