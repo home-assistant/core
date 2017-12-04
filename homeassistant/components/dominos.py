@@ -94,7 +94,7 @@ class Dominos():
     def __init__(self, hass, config):
         """Set up main service."""
         conf = config[DOMAIN]
-        from pizzapi import Address, Customer, Store
+        from pizzapi import Address, Customer
         from pizzapi.address import StoreException
         self.hass = hass
         self.customer = Customer(
