@@ -205,6 +205,10 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
         self.assertEqual(30.0, state.attributes.get('temperature'))
+        climate.set_temperature(self.hass, None)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY)
+        self.assertEqual(30.0, state.attributes.get('temperature'))
 
     def test_sensor_bad_unit(self):
         """Test sensor that have bad unit."""
