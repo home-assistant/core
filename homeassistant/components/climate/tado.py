@@ -80,7 +80,6 @@ def create_climate_device(tado, hass, zone, name, zone_id):
         temperatures = capabilities['HEAT']['temperatures']
     elif 'temperatures' in capabilities:
         temperatures = capabilities['temperatures']
-        temperatures = capabilities['temperatures']
     else:
         _LOGGER.debug("Recieved zone %s has no temperature; not adding", name)
         return
