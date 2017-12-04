@@ -1063,7 +1063,7 @@ tellcore-net==0.3
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.3
+tellduslive==0.10.4
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.3
