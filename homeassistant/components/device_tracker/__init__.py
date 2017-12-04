@@ -228,7 +228,7 @@ class DeviceTracker(object):
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = consider_home
         self.track_new = defaults.get(CONF_TRACK_NEW, track_new)
-        self.hide_if_away = defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE)
+        self.defaults = defaults
         self.group = None
         self._is_updating = asyncio.Lock(loop=hass.loop)
 
@@ -285,7 +285,8 @@ class DeviceTracker(object):
         device = Device(
             self.hass, self.consider_home, self.track_new,
             dev_id, mac, (host_name or dev_id).replace('_', ' '),
-            picture=picture, icon=icon, hide_if_away=self.hide_if_away)
+            picture=picture, icon=icon,
+            hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
         self.devices[dev_id] = device
         if mac is not None:
             self.mac_to_dev[mac] = device
