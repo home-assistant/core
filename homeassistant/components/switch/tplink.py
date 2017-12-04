@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tplink/
 """
 import logging
-
 import time
 
 import voluptuous as vol
@@ -47,6 +46,7 @@ class SmartPlugSwitch(SwitchDevice):
         self.smartplug = smartplug
         self._name = name
         self._state = None
+        self._available = True
         # Set up emeter cache
         self._emeter_params = {}
 
@@ -54,6 +54,11 @@ class SmartPlugSwitch(SwitchDevice):
     def name(self):
         """Return the name of the Smart Plug, if any."""
         return self._name
+
+    @property
+    def available(self) -> bool:
+        """Return if switch is available."""
+        return self._available
 
     @property
     def is_on(self):
@@ -77,6 +82,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         from pyHS100 import SmartDeviceException
         try:
+            self._available = True
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
 
@@ -100,8 +106,9 @@ class SmartPlugSwitch(SwitchDevice):
                     self._emeter_params[ATTR_DAILY_CONSUMPTION] \
                         = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
                 except KeyError:
-                    # device returned no daily history
+                    # Device returned no daily history
                     pass
 
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
+            _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
+            self._available = False
