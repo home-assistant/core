@@ -123,12 +123,12 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.send_keys(['POWER'])
-        self._state = STATE_OFF
+        self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
         self.send_keys(['POWER'])
-        self._state = STATE_ON
+        self._state = STATE_OFF
 
     def media_play(self):
         """Send play command."""
@@ -162,12 +162,11 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         """Select the channel."""
         if str(source).isdigit():
             digits = str(source)
-        elif source in self._mediabox.channels().values():
-            for key, value in self._mediabox.channels().items():
-                if value == source:
-                    digits = key
-                    break
         else:
+            digits = next((
+                key for key, value in self._mediabox.channels().items()
+                if value == source), None)
+        if digits is None:
             return
 
         self.send_keys(['NUM_{}'.format(digit)
