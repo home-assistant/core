@@ -14,7 +14,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components import recorder
 from homeassistant.const import (
     CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE, TEMP_CELSIUS,
-    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN)
+    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant import core as hacore
 from homeassistant.helpers import state as state_helper
 from homeassistant.util.temperature import fahrenheit_to_celsius
@@ -159,6 +160,26 @@ class Metrics(object):
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_climate(self, state):
+        temp = state.attributes.get(ATTR_TEMPERATURE)
+        if temp:
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit == TEMP_FAHRENHEIT:
+                temp = fahrenheit_to_celsius(temp)
+            metric = self._metric(
+                'temperature_c', self.prometheus_client.Gauge,
+                'Temperature in degrees Celsius')
+            metric.labels(**self._labels(state)).set(temp)
+
+        metric = self._metric(
+            'climate_state', self.prometheus_client.Gauge,
+            'State of the thermostat (0/1)')
+        try:
+            value = state_helper.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
     def _handle_sensor(self, state):
         _sensor_types = {
             TEMP_CELSIUS: (
@@ -199,7 +220,7 @@ class Metrics(object):
             ),
         }
 
-        unit = state.attributes.get('unit_of_measurement')
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         metric = _sensor_types.get(unit)
 
         if metric is not None:
