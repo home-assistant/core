@@ -58,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(ATTR_PHONE): cv.string,
         vol.Required(ATTR_ADDRESS): cv.string,
         vol.Optional(ATTR_SHOW_MENU): cv.boolean,
-        vol.Optional(ATTR_ORDERS, default={}): vol.All(
+        vol.Optional(ATTR_ORDERS, default=[]): vol.All(
             cv.ensure_list, [_ORDERS_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
