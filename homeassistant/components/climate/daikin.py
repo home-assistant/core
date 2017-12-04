@@ -178,7 +178,8 @@ class DaikinHVAC(ClimateDevice):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
 
         current_operation = HA_STATE_TO_DAIKIN.get(operation_mode)
-        self._device.set({"mode": current_operation})
+        if current_operation != None:
+            self._device.set({"mode": current_operation})
 
     @property
     def current_humidity(self):
