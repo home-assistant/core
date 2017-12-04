@@ -1,5 +1,5 @@
 """
-Support for Tellstick switches.
+Support for Tellstick covers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tellstick/
@@ -12,9 +12,8 @@ from homeassistant.components.tellstick import (
     DATA_TELLSTICK, TellstickDevice)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Tellstick lights."""
+    """Set up the Tellstick covers."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
@@ -29,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TellstickCover(TellstickDevice, CoverDevice):
-    """Representation of a Tellstick switch."""
+    """Representation of a Tellstick cover."""
 
     @property
     def is_closed(self):
