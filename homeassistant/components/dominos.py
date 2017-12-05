@@ -136,6 +136,7 @@ class Dominos():
 
     def get_menu(self):
         """Return the products from the closest stores menu."""
+        self.update_closest_store()
         if self.closest_store is None:
             _LOGGER.warning('Cannot get menu. Store may be closed')
             return []
@@ -169,7 +170,8 @@ class DominosProductListView(http.HomeAssistantView):
     @callback
     def get(self, request):
         """Retrieve if API is running."""
-        return self.json(self.dominos.get_menu())
+        menu = self.dominos.get_menu()
+        return self.json(menu)
 
 
 class DominosOrder(Entity):
