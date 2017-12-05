@@ -28,7 +28,7 @@ CONF_BYTESIZE = 'bytesize'
 CONF_STOPBITS = 'stopbits'
 CONF_PARITY = 'parity'
 
-CONF_DELAY_BETWEEN_QUERIES  = 'delay_between_queries'
+CONF_DELAY_BETWEEN_QUERIES = 'delay_between_queries'
 CONF_DELAY_BEFORE_TX = 'delay_before_tx'
 CONF_DELAY_BEFORE_RX = 'delay_before_rx'
 CONF_RTS_LEVEL_FOR_TX = 'rts_level_for_tx'
@@ -115,13 +115,13 @@ def setup(hass, config):
     # Modbus connection type
     # pylint: disable=global-statement, import-error
     client_type = config[DOMAIN][CONF_TYPE]
-    delay_between_queries = ( 
+    delay_between_queries = (
         config[DOMAIN][CONF_DELAY_BETWEEN_QUERIES] / 1000)
     rs485_mode = False
 
     # Connect to Modbus network
     # pylint: disable=global-statement, import-error
-    
+
     if client_type in [ATTR_SERIAL, ATTR_RS485]:
         from pymodbus.client.sync import ModbusSerialClient as ModbusClient
         client = ModbusClient(method=config[DOMAIN][CONF_METHOD],
@@ -133,13 +133,13 @@ def setup(hass, config):
                               timeout=config[DOMAIN][CONF_TIMEOUT])
         if client_type == ATTR_RS485:
             rs485_mode = {
-                CONF_DELAY_BEFORE_TX : (
+                CONF_DELAY_BEFORE_TX: (
                     config[DOMAIN][CONF_DELAY_BEFORE_TX]),
-                CONF_DELAY_BEFORE_RX : (
+                CONF_DELAY_BEFORE_RX: (
                     config[DOMAIN][CONF_DELAY_BEFORE_RX]),
-                CONF_RTS_LEVEL_FOR_TX : (
+                CONF_RTS_LEVEL_FOR_TX: (
                     config[DOMAIN][CONF_RTS_LEVEL_FOR_TX]),
-                CONF_RTS_LEVEL_FOR_RX : (
+                CONF_RTS_LEVEL_FOR_RX: (
                     config[DOMAIN][CONF_RTS_LEVEL_FOR_RX])}
 
     elif client_type == ATTR_TCP:
@@ -211,8 +211,8 @@ def setup(hass, config):
 class ModbusHub(object):
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, modbus_client, rs485_mode = False,
-                 delay_between_queries = 0):
+    def __init__(self, modbus_client, rs485_mode=False,
+                 delay_between_queries=0):
         """Initialize the modbus hub."""
         self._client = modbus_client
         self._lock = threading.Lock()
@@ -231,17 +231,17 @@ class ModbusHub(object):
             if isinstance(self._rs485_mode, dict):
                 from serial.rs485 import RS485Settings
                 rs485_mode = RS485Settings(
-                    delay_before_tx = (
+                    delay_before_tx=(
                         self._rs485_mode[CONF_DELAY_BEFORE_TX]),
-                    delay_before_rx = (
+                    delay_before_rx=(
                         self._rs485_mode[CONF_DELAY_BEFORE_RX]),
-                    rts_level_for_tx = (
+                    rts_level_for_tx=(
                         self._rs485_mode[CONF_RTS_LEVEL_FOR_TX]),
-                    rts_level_for_rx = (
+                    rts_level_for_rx=(
                         self._rs485_mode[CONF_RTS_LEVEL_FOR_RX]),
-                    loopback = False)
+                    loopback=False)
                 self._client.socket.rs485_mode = rs485_mode
-                
+
     def read_coils(self, unit, address, count):
         """Read coils."""
         with self._lock:
