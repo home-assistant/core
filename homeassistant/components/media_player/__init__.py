@@ -24,9 +24,9 @@ from homeassistant.const import (
     STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
     SERVICE_TOGGLE, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
-    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_REPEAT_SET, 
-    SERVICE_SHUFFLE_SET, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, 
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE, 
+    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_REPEAT_SET,
+    SERVICE_SHUFFLE_SET, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -362,6 +362,7 @@ def clear_playlist(hass, entity_id=None):
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
+
 @bind_hass
 def set_repeat(hass, repeat, entity_id=None):
     """Send the media player the command to enable/disable repeat mode."""
@@ -371,6 +372,7 @@ def set_repeat(hass, repeat, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_REPEAT_SET, data)
+
 
 @bind_hass
 def set_shuffle(hass, shuffle, entity_id=None):
@@ -901,7 +903,7 @@ class MediaPlayerDevice(Entity):
         return self.async_media_play()
 
     @property
-    def entity_picture(self):
+    [5~def entity_picture(self):
         """Return image of the media playing."""
         if self.state == STATE_OFF:
             return None

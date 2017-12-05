@@ -721,7 +721,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['clear_playlist']))
 
-       run_coroutine_threadsafe(
+        run_coroutine_threadsafe(
             ump.async_set_repeat(True),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['repeat_set']))
