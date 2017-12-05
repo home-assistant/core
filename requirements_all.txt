@@ -1185,3 +1185,6 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.19.1
+
+# homeassistant.components.media_player.ziggo_mediabox_xl
+ziggo-mediabox-xl==1.0.0
