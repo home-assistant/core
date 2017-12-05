@@ -125,11 +125,3 @@ class DemoCalendarEvent(CalendarEvent):
     def message(self):
         """Return text set on the event."""
         return self._message
-
-    @property
-    def offset_reached(self):
-        """Return whether event has reached offset time."""
-        if self.start is None or self._offset is None:
-            return False
-
-        return self.start + self._offset <= dt.now(self.start.tzinfo)

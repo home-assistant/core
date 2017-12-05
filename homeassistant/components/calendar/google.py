@@ -7,6 +7,7 @@ https://home-assistant.io/components/binary_sensor.google_calendar/
 # pylint: disable=import-error
 import logging
 import asyncio
+import re
 
 from datetime import timedelta, datetime
 
@@ -15,6 +16,8 @@ from homeassistant.components.calendar import Calendar, CalendarEvent
 from homeassistant.components.google import (
     GoogleCalendarService, TOKEN_FILE, CONF_TRACK, CONF_ENTITIES, CONF_CAL_ID)
 from homeassistant.util import Throttle, dt
+
+from homeassistant.helpers.config_validation import time_period_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,6 +116,7 @@ class GoogleCalendarEvent(CalendarEvent):
         self._message = event['summary']
 
         self._location = event.get('location')
+        self.extract_offset()
 
     @property
     def location(self):
@@ -140,3 +144,25 @@ class GoogleCalendarEvent(CalendarEvent):
     def message(self):
         """Return text set on the event."""
         return self._message
+
+    def extract_offset(self):
+        """Extract offset from title."""
+        reg = '{}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)'.format('!!')  # TODO: Replace hardcoded offset format
+        search = re.search(reg, self._message)
+        if search and search.group(1):
+            time = search.group(1)
+            if ':' not in time:
+                if time[0] == '+' or time[0] == '-':
+                    time = '{}0:{}'.format(time[0], time[1:])
+                else:
+                    time = '0:{}'.format(time)
+
+            offset_time = time_period_str(time)
+
+            summary = (self._message[:search.start()] + self._message[search.end():]) \
+                .strip()
+            self._message = re.sub('  +', '', summary).strip()
+        else:
+            offset_time = dt.dt.timedelta()  # default it
+
+        self._offset = offset_time

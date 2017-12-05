@@ -120,8 +120,11 @@ class CalendarEvent(object):
 
     @property
     def offset_reached(self):
-        """Have we reached the offset time specified in the event title."""
-        return False
+        """Return whether event has reached offset time."""
+        if self.start is None or self._offset is None:
+            return False
+
+        return self.start + self._offset <= dt.now(self.start.tzinfo)
 
     def is_active(self):
         """Check whether event is currently active."""
