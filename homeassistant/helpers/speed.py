@@ -21,6 +21,7 @@ def display_speed(hass: HomeAssistant, speed: float, unit: str,
             "Speed is not a number: {}".format(speed))
 
     if speed_unit != ha_unit:
+        print('speed helper', speed_unit, '->', ha_unit)
         speed = convert_speed(
             speed, speed_unit, ha_unit)
 

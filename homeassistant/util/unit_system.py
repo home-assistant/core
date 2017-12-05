@@ -167,6 +167,37 @@ class UnitSystem(object):
             SPEED: self.speed_unit
         }
 
+    def convert(self, state, unit_of_measure) -> Tuple[float, str]:
+        """Generic conversion method."""
+        try:
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                    unit_of_measure != self.temperature_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                temp = self.temperature(float(state), unit_of_measure)
+                value = str(round(temp) if prec == 0 else round(temp, prec))
+                to_unit = self.temperature_unit
+            elif (unit_of_measure in (LENGTH_MILES, LENGTH_YARD, LENGTH_FEET,
+                                      LENGTH_INCHES, LENGTH_KILOMETERS,
+                                      LENGTH_METERS, LENGTH_CENTIMETERS,
+                                      LENGTH_MILLIMETERS) and
+                  unit_of_measure != self.length_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                length, to_unit = self.length(float(state), unit_of_measure)
+                value = str(
+                    round(length) if prec == 0 else round(length, prec))
+            elif (unit_of_measure in (SPEED_MPH, SPEED_KMH,
+                                      SPEED_MS, SPEED_FTS) and
+                  unit_of_measure != self.speed_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                speed, to_unit = self.speed(float(state), unit_of_measure)
+                value = str(round(speed) if prec == 0 else round(speed, prec))
+            else:
+                return (state, unit_of_measure)
+            return (value, to_unit)
+        except ValueError:
+            # Could not convert state to float
+            pass
+
 
 METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,
                            LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS,
