@@ -6,6 +6,7 @@ https://home-assistant.io/components/modbus/
 """
 import logging
 import threading
+import time
 import os
 
 import voluptuous as vol
@@ -14,7 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_HOST, CONF_METHOD, CONF_PORT, CONF_TYPE, CONF_TIMEOUT, ATTR_STATE)
+    CONF_HOST, CONF_METHOD, CONF_PORT, CONF_TYPE,
+    CONF_TIMEOUT, ATTR_STATE)
 
 DOMAIN = 'modbus'
 
@@ -26,15 +28,47 @@ CONF_BYTESIZE = 'bytesize'
 CONF_STOPBITS = 'stopbits'
 CONF_PARITY = 'parity'
 
+CONF_DELAY_BETWEEN_QUERIES  = 'delay_between_queries'
+CONF_DELAY_BEFORE_TX = 'delay_before_tx'
+CONF_DELAY_BEFORE_RX = 'delay_before_rx'
+CONF_RTS_LEVEL_FOR_TX = 'rts_level_for_tx'
+CONF_RTS_LEVEL_FOR_RX = 'rts_level_for_rx'
+
+ATTR_RTU = 'rtu'
+ATTR_ASCII = 'ascii'
+ATTR_SERIAL = 'serial'
+ATTR_RS485 = 'rs485'
+ATTR_TCP = 'tcp'
+ATTR_UDP = 'udp'
+
 SERIAL_SCHEMA = {
     vol.Required(CONF_BAUDRATE): cv.positive_int,
     vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
-    vol.Required(CONF_METHOD): vol.Any('rtu', 'ascii'),
+    vol.Required(CONF_METHOD): vol.Any(ATTR_RTU, ATTR_ASCII),
     vol.Required(CONF_PORT): cv.string,
     vol.Required(CONF_PARITY): vol.Any('E', 'O', 'N'),
     vol.Required(CONF_STOPBITS): vol.Any(1, 2),
-    vol.Required(CONF_TYPE): 'serial',
+    vol.Required(CONF_TYPE): ATTR_SERIAL,
     vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+    vol.Optional(CONF_DELAY_BETWEEN_QUERIES, default=0):
+        cv.socket_timeout,
+}
+
+RS485_SCHEMA = {
+    vol.Required(CONF_BAUDRATE): cv.positive_int,
+    vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
+    vol.Required(CONF_METHOD): vol.Any(ATTR_RTU, ATTR_ASCII),
+    vol.Required(CONF_PORT): cv.string,
+    vol.Required(CONF_PARITY): vol.Any('E', 'O', 'N'),
+    vol.Required(CONF_STOPBITS): vol.Any(1, 2),
+    vol.Required(CONF_TYPE): ATTR_RS485,
+    vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+    vol.Optional(CONF_DELAY_BEFORE_TX, default=0): cv.socket_timeout,
+    vol.Optional(CONF_DELAY_BEFORE_RX, default=0): cv.socket_timeout,
+    vol.Optional(CONF_RTS_LEVEL_FOR_TX, default=1): cv.boolean,
+    vol.Optional(CONF_RTS_LEVEL_FOR_RX, default=0): cv.boolean,
+    vol.Optional(CONF_DELAY_BETWEEN_QUERIES, default=0):
+        cv.socket_timeout,
 }
 
 ETHERNET_SCHEMA = {
@@ -42,11 +76,13 @@ ETHERNET_SCHEMA = {
     vol.Required(CONF_PORT): cv.positive_int,
     vol.Required(CONF_TYPE): vol.Any('tcp', 'udp'),
     vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+    vol.Optional(CONF_DELAY_BETWEEN_QUERIES, default=0):
+        cv.socket_timeout,
 }
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
+    DOMAIN: vol.Any(SERIAL_SCHEMA, RS485_SCHEMA, ETHERNET_SCHEMA)
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -79,11 +115,14 @@ def setup(hass, config):
     # Modbus connection type
     # pylint: disable=global-statement, import-error
     client_type = config[DOMAIN][CONF_TYPE]
+    delay_between_queries = ( 
+        config[DOMAIN][CONF_DELAY_BETWEEN_QUERIES] / 1000)
+    rs485_mode = False
 
     # Connect to Modbus network
     # pylint: disable=global-statement, import-error
-
-    if client_type == 'serial':
+    
+    if client_type in [ATTR_SERIAL, ATTR_RS485]:
         from pymodbus.client.sync import ModbusSerialClient as ModbusClient
         client = ModbusClient(method=config[DOMAIN][CONF_METHOD],
                               port=config[DOMAIN][CONF_PORT],
@@ -92,12 +131,23 @@ def setup(hass, config):
                               bytesize=config[DOMAIN][CONF_BYTESIZE],
                               parity=config[DOMAIN][CONF_PARITY],
                               timeout=config[DOMAIN][CONF_TIMEOUT])
-    elif client_type == 'tcp':
+        if client_type == ATTR_RS485:
+            rs485_mode = {
+                CONF_DELAY_BEFORE_TX : (
+                    config[DOMAIN][CONF_DELAY_BEFORE_TX]),
+                CONF_DELAY_BEFORE_RX : (
+                    config[DOMAIN][CONF_DELAY_BEFORE_RX]),
+                CONF_RTS_LEVEL_FOR_TX : (
+                    config[DOMAIN][CONF_RTS_LEVEL_FOR_TX]),
+                CONF_RTS_LEVEL_FOR_RX : (
+                    config[DOMAIN][CONF_RTS_LEVEL_FOR_RX])}
+
+    elif client_type == ATTR_TCP:
         from pymodbus.client.sync import ModbusTcpClient as ModbusClient
         client = ModbusClient(host=config[DOMAIN][CONF_HOST],
                               port=config[DOMAIN][CONF_PORT],
                               timeout=config[DOMAIN][CONF_TIMEOUT])
-    elif client_type == 'udp':
+    elif client_type == ATTR_UDP:
         from pymodbus.client.sync import ModbusUdpClient as ModbusClient
         client = ModbusClient(host=config[DOMAIN][CONF_HOST],
                               port=config[DOMAIN][CONF_PORT],
@@ -106,7 +156,7 @@ def setup(hass, config):
         return False
 
     global HUB
-    HUB = ModbusHub(client)
+    HUB = ModbusHub(client, rs485_mode, delay_between_queries)
 
     def stop_modbus(event):
         """Stop Modbus service."""
@@ -161,10 +211,13 @@ def setup(hass, config):
 class ModbusHub(object):
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, modbus_client):
+    def __init__(self, modbus_client, rs485_mode = False,
+                 delay_between_queries = 0):
         """Initialize the modbus hub."""
         self._client = modbus_client
         self._lock = threading.Lock()
+        self._rs485_mode = rs485_mode
+        self._delay_between_queries = delay_between_queries
 
     def close(self):
         """Disconnect client."""
@@ -175,10 +228,24 @@ class ModbusHub(object):
         """Connect client."""
         with self._lock:
             self._client.connect()
-
+            if isinstance(self._rs485_mode, dict):
+                from serial.rs485 import RS485Settings
+                rs485_mode = RS485Settings(
+                    delay_before_tx = (
+                        self._rs485_mode[CONF_DELAY_BEFORE_TX]),
+                    delay_before_rx = (
+                        self._rs485_mode[CONF_DELAY_BEFORE_RX]),
+                    rts_level_for_tx = (
+                        self._rs485_mode[CONF_RTS_LEVEL_FOR_TX]),
+                    rts_level_for_rx = (
+                        self._rs485_mode[CONF_RTS_LEVEL_FOR_RX]),
+                    loopback = False)
+                self._client.socket.rs485_mode = rs485_mode
+                
     def read_coils(self, unit, address, count):
         """Read coils."""
         with self._lock:
+            time.sleep(self._delay_between_queries)
             kwargs = {'unit': unit} if unit else {}
             return self._client.read_coils(
                 address,
@@ -188,6 +255,7 @@ class ModbusHub(object):
     def read_input_registers(self, unit, address, count):
         """Read input registers."""
         with self._lock:
+            time.sleep(self._delay_between_queries)
             kwargs = {'unit': unit} if unit else {}
             return self._client.read_input_registers(
                 address,
@@ -197,6 +265,7 @@ class ModbusHub(object):
     def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
         with self._lock:
+            time.sleep(self._delay_between_queries)
             kwargs = {'unit': unit} if unit else {}
             return self._client.read_holding_registers(
                 address,
@@ -206,6 +275,7 @@ class ModbusHub(object):
     def write_coil(self, unit, address, value):
         """Write coil."""
         with self._lock:
+            time.sleep(self._delay_between_queries)
             kwargs = {'unit': unit} if unit else {}
             self._client.write_coil(
                 address,
@@ -215,6 +285,7 @@ class ModbusHub(object):
     def write_register(self, unit, address, value):
         """Write register."""
         with self._lock:
+            time.sleep(self._delay_between_queries)
             kwargs = {'unit': unit} if unit else {}
             self._client.write_register(
                 address,
@@ -224,6 +295,7 @@ class ModbusHub(object):
     def write_registers(self, unit, address, values):
         """Write registers."""
         with self._lock:
+            time.sleep(self._delay_between_queries)
             kwargs = {'unit': unit} if unit else {}
             self._client.write_registers(
                 address,
