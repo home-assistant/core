@@ -64,6 +64,27 @@ def test_invalid_or_missing_data(meraki_client):
     assert req.status == 422
     assert text['message'] == 'Invalid secret'
 
+    data = {
+        "version": "2.0",
+        "secret": "secret",
+        "type": "InvalidType"
+    }
+    req = yield from meraki_client.post(URL, data=json.dumps(data))
+    text = yield from req.json()
+    assert req.status == 422
+    assert text['message'] == 'Invalid device type'
+
+    data = {
+        "version": "2.0",
+        "secret": "secret",
+        "type": "BluetoothDevicesSeen",
+        "data": {
+            "observations": []
+        }
+    }
+    req = yield from meraki_client.post(URL, data=json.dumps(data))
+    assert req.status == 200
+
 
 @asyncio.coroutine
 def test_data_will_be_saved(hass, meraki_client):
@@ -83,6 +104,7 @@ def test_data_will_be_saved(hass, meraki_client):
                     "seenTime": "2016-09-12T16:23:13Z",
                     "ssid": 'ssid',
                     "os": 'HA',
+                    "ipv6": '2607:f0d0:1002:51::4/64',
                     "clientMac": "00:26:ab:b8:a9:a4",
                     "seenEpoch": "147369739",
                     "rssi": "20",
@@ -97,6 +119,7 @@ def test_data_will_be_saved(hass, meraki_client):
                     "seenTime": "2016-09-12T16:21:13Z",
                     "ssid": 'ssid',
                     "os": 'HA',
+                    "ipv4": '192.168.0.1',
                     "clientMac": "00:26:ab:b8:a9:a5",
                     "seenEpoch": "147369750",
                     "rssi": "20",
