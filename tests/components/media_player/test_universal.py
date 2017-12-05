@@ -158,7 +158,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._tracks = 0
 
     def set_repeat(self, repeat):
-        """Set player to repeat"""
+        """Set player to repeat."""
         self._repeat = repeat
 
     def set_shuffle(self, shuffle):
