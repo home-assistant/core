@@ -109,14 +109,26 @@ class UnitSystem(object):
         """Determine if this is the metric unit system."""
         return self.name == CONF_UNIT_SYSTEM_METRIC
 
-    def temperature(self: object, temperature: float, from_unit: str) -> float:
+    def temperature(self: object, temperature: float,
+                    from_unit: str) -> Tuple[float, str]:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
             raise TypeError(
                 '{} is not a numeric value.'.format(str(temperature)))
 
-        return temperature_util.convert(temperature, from_unit,
-                                        self.temperature_unit)  # type: float
+        if (from_unit is TEMP_CELSIUS and
+                self.name is CONF_UNIT_SYSTEM_IMPERIAL):
+            to_unit = TEMP_FAHRENHEIT
+        elif (from_unit is TEMP_FAHRENHEIT and
+              self.name is CONF_UNIT_SYSTEM_METRIC):
+            to_unit = TEMP_CELSIUS
+        else:
+            to_unit = from_unit
+
+        print(to_unit, from_unit)
+        return (temperature_util.convert(temperature, from_unit,
+                                         self.temperature_unit),
+                to_unit)  # type: Tuple[float, str]
 
     # pylint: disable=invalid-sequence-index
     def length(self: object, length: float,
@@ -167,33 +179,32 @@ class UnitSystem(object):
             SPEED: self.speed_unit
         }
 
-    def convert(self, state, unit_of_measure) -> Tuple[float, str]:
+    def convert(self, value, unit_of_measure) -> Tuple[float, str]:
         """Generic conversion method."""
         try:
             if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
                     unit_of_measure != self.temperature_unit):
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                temp = self.temperature(float(state), unit_of_measure)
-                value = str(round(temp) if prec == 0 else round(temp, prec))
+                conv = self.temperature
                 to_unit = self.temperature_unit
             elif (unit_of_measure in (LENGTH_MILES, LENGTH_YARD, LENGTH_FEET,
                                       LENGTH_INCHES, LENGTH_KILOMETERS,
                                       LENGTH_METERS, LENGTH_CENTIMETERS,
                                       LENGTH_MILLIMETERS) and
                   unit_of_measure != self.length_unit):
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                length, to_unit = self.length(float(state), unit_of_measure)
-                value = str(
-                    round(length) if prec == 0 else round(length, prec))
+                conv = self.length
             elif (unit_of_measure in (SPEED_MPH, SPEED_KMH,
                                       SPEED_MS, SPEED_FTS) and
                   unit_of_measure != self.speed_unit):
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                speed, to_unit = self.speed(float(state), unit_of_measure)
-                value = str(round(speed) if prec == 0 else round(speed, prec))
+                conv = self.speed
             else:
-                return (state, unit_of_measure)
+                return (value, unit_of_measure)
+
+            prec = len(value) - value.index('.') - 1 if '.' in value else 0
+            value, to_unit = conv(float(value), unit_of_measure)
+            value = str(round(value) if prec == 0 else round(value, prec))
+
             return (value, to_unit)
+
         except ValueError:
             # Could not convert state to float
             pass

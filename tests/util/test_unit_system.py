@@ -73,7 +73,7 @@ class TestUnitSystem(unittest.TestCase):
     def test_temperature_same_unit(self):
         """Test no conversion happens if to unit is same as from unit."""
         self.assertEqual(
-            5,
+            (5, '°C'),
             METRIC_SYSTEM.temperature(5, METRIC_SYSTEM.temperature_unit))
 
     def test_temperature_unknown_unit(self):
@@ -84,20 +84,16 @@ class TestUnitSystem(unittest.TestCase):
     def test_temperature_to_metric(self):
         """Test temperature conversion to metric system."""
         self.assertEqual(
-            25,
+            (25, '°C'),
             METRIC_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit))
-        self.assertEqual(
-            26.7,
-            round(METRIC_SYSTEM.temperature(
-                80, IMPERIAL_SYSTEM.temperature_unit), 1))
 
     def test_temperature_to_imperial(self):
         """Test temperature conversion to imperial system."""
         self.assertEqual(
-            77,
+            (77, '°F'),
             IMPERIAL_SYSTEM.temperature(77, IMPERIAL_SYSTEM.temperature_unit))
         self.assertEqual(
-            77,
+            (77, '°F'),
             IMPERIAL_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit))
 
     def test_length_unknown_unit(self):
@@ -166,3 +162,24 @@ class TestUnitSystem(unittest.TestCase):
         """Test the is metric flag."""
         self.assertTrue(METRIC_SYSTEM.is_metric)
         self.assertFalse(IMPERIAL_SYSTEM.is_metric)
+
+    def test_convert(self):
+        """Test the convert method."""
+        self.assertEqual(
+            ('3', 'mi/h'),
+            IMPERIAL_SYSTEM.convert('5', METRIC_SYSTEM.speed_unit))
+        self.assertEqual(
+            ('5.0', 'km/h'),
+            METRIC_SYSTEM.convert('3.1', IMPERIAL_SYSTEM.speed_unit))
+        self.assertEqual(
+            ('3', 'mi'),
+            IMPERIAL_SYSTEM.convert('5', METRIC_SYSTEM.length_unit))
+        self.assertEqual(
+            ('5.0', 'km'),
+            METRIC_SYSTEM.convert('3.1', IMPERIAL_SYSTEM.length_unit))
+        self.assertEqual(
+            ('77', '°F'),
+            IMPERIAL_SYSTEM.convert('25', METRIC_SYSTEM.temperature_unit))
+        self.assertEqual(
+            ('25.3', '°C'),
+            METRIC_SYSTEM.convert('77.6', IMPERIAL_SYSTEM.temperature_unit))

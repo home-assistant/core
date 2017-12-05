@@ -28,8 +28,6 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
     if not isinstance(value, Number):
         raise TypeError('{} is not of numeric type'.format(value))
 
-    print('speed util', unit_1, '->', unit_2)
-
     if unit_1 == unit_2 or unit_1 not in (SPEED_UNITS_METRIC +
                                           SPEED_UNITS_IMPERIAL):
         return value
