@@ -7,13 +7,16 @@ https://home-assistant.io/components/binary_sensor.isy994/
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import timedelta
 from typing import Callable  # noqa
 
+from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
 import homeassistant.components.isy994 as isy
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,11 +55,21 @@ def setup_platform(hass, config: ConfigType,
 
     for node in child_nodes:
         try:
-            devices_by_nid[node.parent_node.nid].add_child_node(node)
+            parent_device = devices_by_nid[node.parent_node.nid]
         except KeyError:
             _LOGGER.error("Node %s has a parent node %s, but no device "
                           "was created for the parent. Skipping.",
                           node.nid, node.parent_nid)
+        else:
+            subnode_id = int(node.nid[-1])
+            if subnode_id == 4:
+                # Subnode 4 is the heartbeat node, which we will represent
+                # as a separate binary_sensor
+                device = ISYBinarySensorHeartbeat(node, parent_device)
+                parent_device.add_heartbeat_device(device)
+                devices.append(device)
+            elif subnode_id == 2:
+                parent_device.add_negative_node(node)
 
     for program in isy.PROGRAMS.get(DOMAIN, []):
         try:
@@ -82,8 +95,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         """Initialize the ISY994 binary sensor device."""
         super().__init__(node)
         self._negative_node = None
-        self._heartbeat_node = None
-        self._heartbeat_timestamp = None
+        self._heartbeat_device = None
         self._device_class_from_type = self._detect_device_type()
         # pylint: disable=protected-access
         if self._node.status._val == -1*float('inf'):
@@ -105,13 +117,6 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
             # Heartbeat node doesn't exist
             pass
 
-        try:
-            self._heartbeat_node.controlEvents.subscribe(
-                self._heartbeat_node_control_handler)
-        except AttributeError:
-            # Heartbeat node doesn't exist
-            pass
-
     def _detect_device_type(self) -> str:
         try:
             device_type = self._node.type
@@ -125,21 +130,30 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
 
         return None
 
-    def add_child_node(self, child):
-        """Add a child node to this binary sensor device.
+    def add_heartbeat_device(self, device) -> None:
+        """Register a heartbeat device for this sensor.
 
-        The child node can either be a node that receives the 'off' events, or
-        a heartbeat node for reporting that this device is still alive
+        The heartbeat node beats on its own, but we can gain a little
+        reliability by considering any node activity for this sensor
+        to be a heartbeat as well.
         """
-        subnode_id = int(child.nid[-1])
-        if subnode_id == 2:
-            # "Negative" node that can be used to represent a negative state
-            # when it reports "On"
-            self._negative_node = child
-        elif subnode_id == 4:
-            # Heartbeat node that just reports "On" every 24 hours
-            self._heartbeat_timestamp = STATE_UNKNOWN
-            self._heartbeat_node = child
+        self._heartbeat_device = device
+
+    def _heartbeat(self) -> None:
+        """Send a heartbeat to our heartbeat device, if we have one."""
+        try:
+            self._heartbeat_device.heartbeat()
+        except AttributeError:
+            # No heartbeat device exists
+            pass
+
+    def add_negative_node(self, child) -> None:
+        """Add a negative node to this binary sensor device.
+
+        The negative node is a node that can receive the 'off' events
+        for the sensor, depending on device configuration and type.
+        """
+        self._negative_node = child
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""
@@ -148,6 +162,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
                           "sending a DON command", self.name)
             self._computed_state = False
             self.schedule_update_ha_state()
+            self._heartbeat()
 
     def _positive_node_control_handler(self, event: object) -> None:
         """Handle On and Off control event coming from the primary node.
@@ -161,17 +176,13 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
                           "sending a DON command", self.name)
             self._computed_state = True
             self.schedule_update_ha_state()
+            self._heartbeat()
         if event == 'DOF':
             _LOGGER.debug("Sensor %s turning Off via the Primary node "
                           "sending a DOF command", self.name)
             self._computed_state = False
             self.schedule_update_ha_state()
-
-    def _heartbeat_node_control_handler(self, event: object) -> None:
-        """Update the heartbeat timestamp when an On event is sent."""
-        if event == 'DON':
-            self._heartbeat_timestamp = datetime.now().isoformat()
-            self.schedule_update_ha_state()
+            self._heartbeat()
 
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
@@ -222,12 +233,107 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         """
         return self._device_class_from_type
 
+
+class ISYBinarySensorHeartbeat(isy.ISYDevice, BinarySensorDevice):
+    """Representation of the battery state of an ISY994 sensor."""
+
+    def __init__(self, node, parent_device) -> None:
+        """Initialize the ISY994 binary sensor device."""
+        super().__init__(node)
+        self._computed_state = None
+        self._parent_device = parent_device
+        self._heartbeat_timer = None
+
+    @asyncio.coroutine
+    def async_added_to_hass(self) -> None:
+        """Subscribe to the node and subnode event emitters."""
+        yield from super().async_added_to_hass()
+
+        self._node.controlEvents.subscribe(
+            self._heartbeat_node_control_handler)
+
+        # Start the timer on bootup, so we can change from UNKNOWN to ON
+        self._restart_timer()
+
+    def _heartbeat_node_control_handler(self, event: object) -> None:
+        """Update the heartbeat timestamp when an On event is sent."""
+        if event == 'DON':
+            self.heartbeat()
+
+    def heartbeat(self):
+        """Mark the device as online, and restart the 25 hour timer.
+
+        This gets called when the heartbeat node beats, but also when the
+        parent sensor sends any events, as we can trust that to mean the device
+        is online. This mitigates the risk of false positives due to a single
+        missed heartbeat event.
+        """
+        self._computed_state = False
+        self._restart_timer()
+        self.schedule_update_ha_state()
+
+    def _restart_timer(self):
+        """Restart the 25 hour timer."""
+        try:
+            self._heartbeat_timer()
+            self._heartbeat_timer = None
+        except TypeError:
+            # No heartbeat timer is active
+            pass
+
+        # pylint: disable=unused-argument
+        @callback
+        def timer_elapsed(now) -> None:
+            """Heartbeat missed; set state to indicate dead battery."""
+            self._computed_state = True
+            self._heartbeat_timer = None
+            self.schedule_update_ha_state()
+
+        point_in_time = dt_util.utcnow() + timedelta(hours=25)
+        _LOGGER.debug("Timer starting. Now: %s Then: %s",
+                      dt_util.utcnow(), point_in_time)
+
+        self._heartbeat_timer = async_track_point_in_utc_time(
+            self.hass, timer_elapsed, point_in_time)
+
+    # pylint: disable=unused-argument
+    def on_update(self, event: object) -> None:
+        """Ignore node status updates.
+
+        We listen directly to the Control events for this device.
+        """
+        pass
+
+    @property
+    def value(self) -> object:
+        """Get the current value of this sensor."""
+        return self._computed_state
+
+    @property
+    def is_on(self) -> bool:
+        """Get whether the ISY994 binary sensor device is on.
+
+        Note: This method will return false if the current state is UNKNOWN
+        """
+        return bool(self.value)
+
+    @property
+    def state(self):
+        """Return the state of the binary sensor."""
+        if self._computed_state is None:
+            return None
+        return STATE_ON if self.is_on else STATE_OFF
+
+    @property
+    def device_class(self) -> str:
+        """Get the class of this device."""
+        return 'battery'
+
     @property
     def device_state_attributes(self):
         """Get the state attributes for the device."""
         attr = super().device_state_attributes
-        if self._heartbeat_timestamp is not None:
-            attr['last_heartbeat'] = self._heartbeat_timestamp
+        attr['parent_entity_id'] = self._parent_device.entity_id
         return attr
 
 
