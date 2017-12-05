@@ -281,3 +281,13 @@ kodi_call_method:
     method:
       description: Name of the Kodi JSONRPC API method to be called.
       example: 'VideoLibrary.GetRecentlyAddedEpisodes'
+
+squeezebox_call_method:
+  description: 'Call a Squeezebox JSON/RPC API method.'
+  fields:
+    entity_id:
+      description: Name(s) of the Squeexebox entities where to run the API method.
+      example: 'media_player.squeezebox_radio'
+    method:
+      description: Squeezebox JSON/RPC method call, in the form of an array of positional parameters. See 'Command Line Interface' official help page from Logitech for details.
+      example: '["playlist", "loadtracks", "track.titlesearch=you''re welcome"]'
