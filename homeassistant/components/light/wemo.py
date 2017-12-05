@@ -191,6 +191,11 @@ class WemoDimmer(Light):
         return SUPPORT_BRIGHTNESS
 
     @property
+    def should_poll(self):
+        """No polling needed with subscriptions."""
+        return False
+
+    @property
     def brightness(self):
         """Return the brightness of this light between 1 and 100."""
         wemobrightness = int(self.wemo.get_brightness())
@@ -228,6 +233,7 @@ class WemoDimmer(Light):
         else:
             brightness = 255
         self.wemo.set_brightness(brightness)
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
