@@ -303,7 +303,7 @@ def async_setup(hass, config):
             "/home-assistant-polymer", repo_path, False)
         hass.http.register_static_path(
             "/static/translations",
-            os.path.join(repo_path, "build-translations"), False)
+            os.path.join(repo_path, "build-translations/output"), False)
         sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
         sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
