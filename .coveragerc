@@ -11,6 +11,9 @@ omit =
     homeassistant/components/abode.py
     homeassistant/components/*/abode.py
 
+    homeassistant/components/ads/__init__.py
+    homeassistant/components/*/ads.py
+
     homeassistant/components/alarmdecoder.py
     homeassistant/components/*/alarmdecoder.py
 
