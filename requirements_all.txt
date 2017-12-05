@@ -600,6 +600,9 @@ pyTibber==0.2.1
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
+# homeassistant.components.ads
+pyads==2.2.6
+
 # homeassistant.components.sensor.airvisual
 pyairvisual==1.0.0
 
