@@ -8,9 +8,9 @@ import logging
 import asyncio
 import urllib.parse
 import json
+import os
 import aiohttp
 import async_timeout
-import os
 
 import voluptuous as vol
 
