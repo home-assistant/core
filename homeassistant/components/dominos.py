@@ -170,8 +170,7 @@ class DominosProductListView(http.HomeAssistantView):
     @callback
     def get(self, request):
         """Retrieve if API is running."""
-        menu = self.dominos.get_menu()
-        return self.json(menu)
+        return self.json(self.dominos.get_menu())
 
 
 class DominosOrder(Entity):
