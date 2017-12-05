@@ -153,6 +153,7 @@ class HiveClimateEntity(ClimateDevice):
         target_boost_time = 30
         if self.device_type == "Heating":
             curtemp = self.session.heating.current_temperature(self.node_id)
+            curtemp = round(curtemp * 2) / 2
             target_boost_temperature = curtemp + 0.5
             self.session.heating.turn_boost_on(self.node_id,
                                                 target_boost_time,
@@ -160,7 +161,7 @@ class HiveClimateEntity(ClimateDevice):
         elif self.device_type == "HotWater":
             self.session.hotwater.turn_boost_on(self.node_id,
                                                 target_boost_time)
-        self.schedule_update_ha_state()
+
         for entity in self.session.entities:
             entity.handle_update(self.data_updatesource)
 
@@ -170,7 +171,7 @@ class HiveClimateEntity(ClimateDevice):
             self.session.heating.turn_boost_off(self.node_id)
         elif self.device_type == "HotWater":
             self.session.hotwater.turn_boost_off(self.node_id)
-        self.schedule_update_ha_state()
+
         for entity in self.session.entities:
             entity.handle_update(self.data_updatesource)
 
