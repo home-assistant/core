@@ -2,8 +2,10 @@
 
 import unittest
 import homeassistant.util.distance as distance_util
-from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_METERS, LENGTH_FEET,
-                                 LENGTH_MILES)
+from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_METERS,
+                                 LENGTH_CENTIMETERS, LENGTH_MILLIMETERS,
+                                 LENGTH_FEET, LENGTH_INCHES, LENGTH_MILES,
+                                 LENGTH_YARD)
 
 INVALID_SYMBOL = 'bob'
 VALID_SYMBOL = LENGTH_KILOMETERS
@@ -51,7 +53,7 @@ class TestDistanceUtil(unittest.TestCase):
             8046.72)
         self.assertEqual(
             distance_util.convert(miles, LENGTH_MILES, LENGTH_FEET),
-            26400.0008448)
+            26400)
 
     def test_convert_from_feet(self):
         """Test conversion from feet to other units."""
@@ -64,28 +66,66 @@ class TestDistanceUtil(unittest.TestCase):
             1524)
         self.assertEqual(
             distance_util.convert(feet, LENGTH_FEET, LENGTH_MILES),
-            0.9469694040000001)
+            0.9469696969696969)
 
     def test_convert_from_kilometers(self):
         """Test conversion from kilometers to other units."""
-        km = 5
+        kilometer = 5
         self.assertEqual(
-            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_FEET),
-            16404.2)
+            distance_util.convert(kilometer, LENGTH_KILOMETERS, LENGTH_FEET),
+            16404.199475065616)
         self.assertEqual(
-            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_METERS),
+            distance_util.convert(kilometer, LENGTH_KILOMETERS, LENGTH_METERS),
             5000)
         self.assertEqual(
-            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_MILES),
-            3.106855)
+            distance_util.convert(kilometer, LENGTH_KILOMETERS, LENGTH_MILES),
+            3.1068559611866697)
+        self.assertEqual(
+            distance_util.convert(kilometer, LENGTH_KILOMETERS, LENGTH_INCHES),
+            196850.39370078742)
+        self.assertEqual(
+            distance_util.convert(5.08, LENGTH_KILOMETERS, LENGTH_INCHES),
+            200000)
 
     def test_convert_from_meters(self):
         """Test conversion from meters to other units."""
-        m = 5000
-        self.assertEqual(distance_util.convert(m, LENGTH_METERS, LENGTH_FEET),
-                         16404.2)
+        meter = 5000
         self.assertEqual(
-            distance_util.convert(m, LENGTH_METERS, LENGTH_KILOMETERS),
+            distance_util.convert(meter, LENGTH_METERS, LENGTH_FEET),
+            16404.199475065616)
+        self.assertEqual(
+            distance_util.convert(meter, LENGTH_METERS, LENGTH_KILOMETERS),
             5)
-        self.assertEqual(distance_util.convert(m, LENGTH_METERS, LENGTH_MILES),
-                         3.106855)
+        self.assertEqual(
+            distance_util.convert(meter, LENGTH_METERS, LENGTH_MILES),
+            3.1068559611866697)
+        self.assertEqual(
+            distance_util.convert(meter, LENGTH_METERS, LENGTH_INCHES),
+            196850.39370078742)
+        self.assertEqual(
+            distance_util.convert(127, LENGTH_METERS, LENGTH_INCHES),
+            5000)
+        self.assertEqual(
+            distance_util.convert(2286, LENGTH_METERS, LENGTH_YARD),
+            2500)
+        self.assertEqual(
+            distance_util.convert(meter, LENGTH_METERS, LENGTH_CENTIMETERS),
+            500000)
+        self.assertEqual(
+            distance_util.convert(meter, LENGTH_METERS, LENGTH_MILLIMETERS),
+            5000000)
+
+    def test_convert_to_meters(self):
+        """Test conversion from millimeters to other units."""
+        self.assertEqual(
+            distance_util.convert(5000, LENGTH_MILLIMETERS, LENGTH_METERS),
+            5)
+        self.assertEqual(
+            distance_util.convert(5000, LENGTH_CENTIMETERS, LENGTH_METERS),
+            50)
+        self.assertEqual(
+            distance_util.convert(2500, LENGTH_YARD, LENGTH_METERS),
+            2286)
+        self.assertEqual(
+            distance_util.convert(5000, LENGTH_INCHES, LENGTH_METERS),
+            127)

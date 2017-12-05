@@ -9,8 +9,8 @@ from typing import Optional, List
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
-    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
+    STATE_UNAVAILABLE, STATE_UNKNOWN, ATTR_ENTITY_PICTURE,
+    ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
@@ -248,19 +248,14 @@ class Entity(object):
         if not attr.get(ATTR_HIDDEN, True):
             attr.pop(ATTR_HIDDEN)
 
-        # Convert temperature if we detect one
-        try:
+        # Convert certain units if we detect one
+        # autoconvertable units are:
+        #   temperature, length and speed
+        if attr.get(ATTR_UNIT_OF_MEASUREMENT) is not None:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
-            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                    unit_of_measure != units.temperature_unit):
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                temp = units.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
+            state, attr[ATTR_UNIT_OF_MEASUREMENT] = \
+                units.convert(state, unit_of_measure)
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)

@@ -1,9 +1,10 @@
 """Test Home Assistant template helper methods."""
 import asyncio
 from datetime import datetime
-import unittest
 import random
 import math
+
+import unittest
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -15,6 +16,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     MASS_GRAMS,
     VOLUME_LITERS,
+    SPEED_MS,
     MATCH_ALL,
 )
 import homeassistant.util.dt as dt_util
@@ -31,7 +33,7 @@ class TestHelpersTemplate(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
                                             LENGTH_METERS, VOLUME_LITERS,
-                                            MASS_GRAMS)
+                                            MASS_GRAMS, SPEED_MS)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -184,7 +186,7 @@ class TestHelpersTemplate(unittest.TestCase):
             (1469119144, '%Y', True, '2016'),
             (1469119144, 'invalid', True, 'invalid'),
             (dt_util.as_timestamp(now), None, False,
-                now.strftime('%Y-%m-%d %H:%M:%S'))
+             now.strftime('%Y-%m-%d %H:%M:%S'))
         ]
 
         for inp, fmt, local, out in tests:
@@ -196,9 +198,9 @@ class TestHelpersTemplate(unittest.TestCase):
                 fil = 'timestamp_custom'
 
             self.assertEqual(
-                    out,
-                    template.Template('{{ %s | %s }}' % (inp, fil),
-                                      self.hass).render())
+                out,
+                template.Template('{{ %s | %s }}' % (inp, fil),
+                                  self.hass).render())
 
     def test_timestamp_local(self):
         """Test the timestamps to local filter."""

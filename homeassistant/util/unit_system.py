@@ -2,27 +2,35 @@
 
 import logging
 from numbers import Number
+from typing import Tuple
 
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_CENTIMETERS, LENGTH_METERS,
-    LENGTH_KILOMETERS, LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    LENGTH_UNITS_IMPERIAL, LENGTH_UNITS_METRIC,
+    LENGTH_MILLIMETERS, LENGTH_CENTIMETERS, LENGTH_METERS, LENGTH_KILOMETERS,
+    LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
     VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
     MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS,
-    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, LENGTH, MASS, VOLUME,
-    TEMPERATURE, UNIT_NOT_RECOGNIZED_TEMPLATE)
+    SPEED_UNITS_IMPERIAL, SPEED_UNITS_METRIC,
+    SPEED_MS, SPEED_KMH, SPEED_FTS, SPEED_MPH,
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH, MASS, VOLUME, SPEED, TEMPERATURE,
+    UNIT_NOT_RECOGNIZED_TEMPLATE)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
+from homeassistant.util import speed as speed_util
 
 _LOGGER = logging.getLogger(__name__)
 
 LENGTH_UNITS = [
-    LENGTH_MILES,
-    LENGTH_YARD,
-    LENGTH_FEET,
-    LENGTH_INCHES,
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_FEET,
+    LENGTH_YARD,
+    LENGTH_INCHES,
     LENGTH_METERS,
     LENGTH_CENTIMETERS,
+    LENGTH_MILLIMETERS,
 ]
 
 MASS_UNITS = [
@@ -44,6 +52,13 @@ TEMPERATURE_UNITS = [
     TEMP_CELSIUS,
 ]
 
+SPEED_UNITS = [
+    SPEED_MS,
+    SPEED_KMH,
+    SPEED_FTS,
+    SPEED_MPH
+]
+
 
 def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
@@ -55,6 +70,8 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
         units = MASS_UNITS
     elif unit_type == VOLUME:
         units = VOLUME_UNITS
+    elif unit_type == SPEED:
+        units = SPEED_UNITS
     else:
         return False
 
@@ -65,7 +82,7 @@ class UnitSystem(object):
     """A container for units of measure."""
 
     def __init__(self: object, name: str, temperature: str, length: str,
-                 volume: str, mass: str) -> None:
+                 volume: str, mass: str, speed: str) -> None:
         """Initialize the unit system object."""
         errors = \
             ', '.join(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
@@ -73,7 +90,8 @@ class UnitSystem(object):
                           (temperature, TEMPERATURE),
                           (length, LENGTH),
                           (volume, VOLUME),
-                          (mass, MASS), ]
+                          (mass, MASS),
+                          (speed, SPEED), ]
                       if not is_valid_unit(unit, unit_type))  # type: str
 
         if errors:
@@ -84,28 +102,72 @@ class UnitSystem(object):
         self.length_unit = length
         self.mass_unit = mass
         self.volume_unit = volume
+        self.speed_unit = speed
 
     @property
     def is_metric(self: object) -> bool:
         """Determine if this is the metric unit system."""
         return self.name == CONF_UNIT_SYSTEM_METRIC
 
-    def temperature(self: object, temperature: float, from_unit: str) -> float:
+    def temperature(self: object, temperature: float,
+                    from_unit: str) -> Tuple[float, str]:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
             raise TypeError(
                 '{} is not a numeric value.'.format(str(temperature)))
 
-        return temperature_util.convert(temperature,
-                                        from_unit, self.temperature_unit)
+        if (from_unit is TEMP_CELSIUS and
+                self.name is CONF_UNIT_SYSTEM_IMPERIAL):
+            to_unit = TEMP_FAHRENHEIT
+        elif (from_unit is TEMP_FAHRENHEIT and
+              self.name is CONF_UNIT_SYSTEM_METRIC):
+            to_unit = TEMP_CELSIUS
+        else:
+            to_unit = from_unit
 
-    def length(self: object, length: float, from_unit: str) -> float:
+        print(to_unit, from_unit)
+        return (temperature_util.convert(temperature, from_unit,
+                                         self.temperature_unit),
+                to_unit)  # type: Tuple[float, str]
+
+    # pylint: disable=invalid-sequence-index
+    def length(self: object, length: float,
+               from_unit: str) -> Tuple[float, str]:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
+        if (from_unit in LENGTH_UNITS_METRIC and
+                self.name is CONF_UNIT_SYSTEM_IMPERIAL):
+            to_unit = LENGTH_UNITS_IMPERIAL[
+                LENGTH_UNITS_METRIC.index(from_unit)]
+        elif (from_unit in LENGTH_UNITS_IMPERIAL and
+              self.name is CONF_UNIT_SYSTEM_METRIC):
+            to_unit = LENGTH_UNITS_METRIC[
+                LENGTH_UNITS_IMPERIAL.index(from_unit)]
+        else:
+            to_unit = from_unit
 
-        return distance_util.convert(length, from_unit,
-                                     self.length_unit)  # type: float
+        return (distance_util.convert(length, from_unit, to_unit),
+                to_unit)  # type: Tuple[float, str]
+
+    # pylint: disable=invalid-sequence-index
+    def speed(self: object, speed: float, from_unit: str) -> Tuple[float, str]:
+        """Convert the given speed to this unit system."""
+        if not isinstance(speed, Number):
+            raise TypeError('{} is not a numeric value.'.format(str(speed)))
+        if (from_unit in SPEED_UNITS_METRIC and
+                self.name is CONF_UNIT_SYSTEM_IMPERIAL):
+            to_unit = SPEED_UNITS_IMPERIAL[
+                SPEED_UNITS_METRIC.index(from_unit)]
+        elif (from_unit in SPEED_UNITS_IMPERIAL and
+              self.name is CONF_UNIT_SYSTEM_METRIC):
+            to_unit = SPEED_UNITS_METRIC[
+                SPEED_UNITS_IMPERIAL.index(from_unit)]
+        else:
+            to_unit = from_unit
+
+        return (speed_util.convert(speed, from_unit, to_unit),
+                to_unit)  # type: Tuple[float, str]
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
@@ -113,12 +175,45 @@ class UnitSystem(object):
             LENGTH: self.length_unit,
             MASS: self.mass_unit,
             TEMPERATURE: self.temperature_unit,
-            VOLUME: self.volume_unit
+            VOLUME: self.volume_unit,
+            SPEED: self.speed_unit
         }
+
+    def convert(self, value, unit_of_measure) -> Tuple[float, str]:
+        """Generic conversion method."""
+        try:
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                    unit_of_measure != self.temperature_unit):
+                conv = self.temperature
+                to_unit = self.temperature_unit
+            elif (unit_of_measure in (LENGTH_MILES, LENGTH_YARD, LENGTH_FEET,
+                                      LENGTH_INCHES, LENGTH_KILOMETERS,
+                                      LENGTH_METERS, LENGTH_CENTIMETERS,
+                                      LENGTH_MILLIMETERS) and
+                  unit_of_measure != self.length_unit):
+                conv = self.length
+            elif (unit_of_measure in (SPEED_MPH, SPEED_KMH,
+                                      SPEED_MS, SPEED_FTS) and
+                  unit_of_measure != self.speed_unit):
+                conv = self.speed
+            else:
+                return (value, unit_of_measure)
+
+            prec = len(value) - value.index('.') - 1 if '.' in value else 0
+            value, to_unit = conv(float(value), unit_of_measure)
+            value = str(round(value) if prec == 0 else round(value, prec))
+
+            return (value, to_unit)
+
+        except ValueError:
+            # Could not convert state to float
+            pass
 
 
 METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,
-                           LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS)
+                           LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS,
+                           SPEED_KMH)
 
 IMPERIAL_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_IMPERIAL, TEMP_FAHRENHEIT,
-                             LENGTH_MILES, VOLUME_GALLONS, MASS_POUNDS)
+                             LENGTH_MILES, VOLUME_GALLONS, MASS_POUNDS,
+                             SPEED_MPH)
