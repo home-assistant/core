@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
     PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_NAME,
+    CONF_HOST, CONF_NAME,
     TEMP_CELSIUS, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
@@ -46,7 +46,7 @@ DAIKIN_OPERATION_LIST = [
 DAIKIN_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_DAIKIN.items()}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=None): cv.string,
 })
 
@@ -57,6 +57,11 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
                  SUPPORT_OPERATION_MODE |
                  SUPPORT_SWING_MODE)
 
+# Description of how the platform is defined
+# climate:
+#   platform: daikin
+#   host: 192.168.10.26
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Daikin HVAC platform."""
@@ -65,23 +70,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME, None)
 
     if discovery_info is not None:
-        ip_address = discovery_info['ip']
-        devices.append(setup_hvac(ip_address, name))
+        """Run when a Daikin AC is discovered."""
+        host = discovery_info['ip']
+        _LOGGER.info("Discovered a Daikin AC %s", host)
     else:
-        ip_address = config.get(CONF_IP_ADDRESS, None)
-        devices.append(setup_hvac(ip_address, name))
+        host = config.get(CONF_HOST, None)
+        _LOGGER.info("Added Daikin AC %s", host)
 
+    devices.append(setup_hvac(host, name))
     add_devices(devices)
 
 
-def setup_hvac(ip_address, name):
-    if ip_address is None:
+def setup_hvac(host, name):
+    if host is None:
         _LOGGER.error("Missing required configuration items %s",
-                      CONF_IP_ADDRESS)
+                      CONF_HOST)
         return False
 
     import pydaikin.appliance as appliance
-    device = appliance.Appliance(ip_address)
+    device = appliance.Appliance(host)
 
     if name is None:
         name = device.values['name']
