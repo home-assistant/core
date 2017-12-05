@@ -304,7 +304,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def app_id(self):
         """ID of the current running app."""
-        [6~return self._child_attr(ATTR_APP_ID)
+        return self._child_attr(ATTR_APP_ID)
 
     @property
     def app_name(self):
