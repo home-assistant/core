@@ -95,7 +95,7 @@ class SmartPlugSwitch(SwitchDevice):
                 self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
                     = "%.1f W" % emeter_readings["power"]
                 self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
-                    = "%.2f kW" % emeter_readings["total"]
+                    = "%.2f kWh" % emeter_readings["total"]
                 self._emeter_params[ATTR_VOLTAGE] \
                     = "%.2f V" % emeter_readings["voltage"]
                 self._emeter_params[ATTR_CURRENT] \
@@ -104,7 +104,7 @@ class SmartPlugSwitch(SwitchDevice):
                 emeter_statics = self.smartplug.get_emeter_daily()
                 try:
                     self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                        = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+                        = "%.2f kWh" % emeter_statics[int(time.strftime("%e"))]
                 except KeyError:
                     # Device returned no daily history
                     pass
