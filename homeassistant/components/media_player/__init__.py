@@ -903,7 +903,7 @@ class MediaPlayerDevice(Entity):
         return self.async_media_play()
 
     @property
-    [5~def entity_picture(self):
+    def entity_picture(self):
         """Return image of the media playing."""
         if self.state == STATE_OFF:
             return None
