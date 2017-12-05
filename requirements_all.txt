@@ -1221,4 +1221,3 @@ ziggo-mediabox-xl==1.0.0
 
 # homeassistant.components.climate.daikin
 pydaikin==0.4
-
