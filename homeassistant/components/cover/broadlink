@@ -13,11 +13,12 @@ from base64 import b64decode
 
 import voluptuous as vol
 
-from homeassistant.components.cover import (PLATFORM_SCHEMA, CoverDevice)
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA, CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.helpers.event import track_utc_time_change
 
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_MAC, CONF_TIMEOUT)
-
+from homeassistant.const import (
+    CONF_NAME, CONF_HOST, CONF_MAC, CONF_TIMEOUT, STATE_OPEN, STATE_CLOSED)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.entity import async_generate_entity_id
 import homeassistant.helpers.config_validation as cv
@@ -27,9 +28,7 @@ REQUIREMENTS = ['broadlink==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-HOMEBRIDGE_COVER_TYPE = 'rollershutter'
-
-DEFAULT_NAME = 'cover'
+DEFAULT_TIMEOUT = 10
 
 CONF_COMMAND_OPEN = 'command_open'
 CONF_COMMAND_CLOSE = 'command_close'
@@ -43,18 +42,18 @@ COVERS_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OPEN, default=None): cv.string,
     vol.Optional(CONF_COMMAND_CLOSE, default=None): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TRAVEL_TIME): vol.Coerce(float),
-    vol.Optional(CONF_POS_SENSOR): cv.entity_id,
+    vol.Optional(CONF_TRAVEL_TIME, default=None): cv.positive_int,
+    vol.Optional(CONF_POS_SENSOR, default=None): cv.entity_id,
 })
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COVERS, default={}):
         vol.Schema({cv.slug: COVERS_SCHEMA}),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MAC): cv.string
+    vol.Required(CONF_MAC): cv.string,
 })
-
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -64,7 +63,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     ip_addr = config.get(CONF_HOST)
     mac_addr = binascii.unhexlify(
         config.get(CONF_MAC).encode().replace(b':', b''))
-
     broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
 
     covers = []
@@ -79,47 +77,59 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_CLOSE),
                 device_config.get(CONF_COMMAND_STOP),
                 device_config.get(CONF_TRAVEL_TIME),
-                device_config.get(CONF_POS_SENSOR,),
+                device_config.get(CONF_POS_SENSOR),
             )
         )
 
-    broadlink_device.timeout = 10
+    broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
         broadlink_device.auth()
     except socket.timeout:
         _LOGGER.error("Failed to connect to device")    
 
-    async_add_devices(covers)
+    async_add_devices(covers, True)
+    return True
 
 
 class RMCover(CoverDevice):
     """Representation of a cover."""
 
     # pylint: disable=no-self-use
-    def __init__(self, hass, entity_id, device, name, 
-                    cmd_open, cmd_close, cmd_stop,
-                    travel_time, pos_entity_id=None, device_class=None,):
+    def __init__(self, hass, entity_id, device, name, cmd_open, cmd_close, 
+                    cmd_stop, travel_time, pos_entity_id):
         """Initialize the cover."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             'cover.{}', entity_id, hass=hass)
-        self._name = name
+        self._name = name or entity_id
+
+        if travel_time:
+            self._position = 50
+            self._travel_time = travel_time + 1
+            self._step = round(100.0 / travel_time ,2)
+            self._device_class = 'window'
+        else:
+            self._position = None
+            self._device_class = 'garage'
+
         self._cmd_open = b64decode(cmd_open) if cmd_open else None
         self._cmd_close = b64decode(cmd_close) if cmd_close else None
-        self._cmd_stop = b64decode(cmd_stop) if cmd_stop else None
+        if cmd_stop:
+            self._cmd_stop = b64decode(cmd_stop)
+            self._supported_features=None
+        else:
+            self._position = None
+            self._supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE)
+            self._device_class = 'garage'
 
-        self._position = 100
-        self._step = round(100.0 / travel_time)
-        self._device_class = device_class
-        self._set_position = None
         self._requested_closing = True
         self._unsub_listener_cover = None
         self._is_opening = False
         self._is_closing = False
         self._device = device
+        self._travel = 0
+        self._closed = False
         self._delay = False
-
-        self._closed = self.current_cover_position <= 0
 
         if pos_entity_id:
             async_track_state_change(
@@ -131,26 +141,47 @@ class RMCover(CoverDevice):
     
     @callback
     def _async_update_pos(self, state):
-        if state.state is 'closed':
-            self._position = 0
+        if state.state in ('false', STATE_CLOSED):
+            if self.__device_class == 'window':
+                self._position = 0
+            self._closed = True
+        else:
+            self._closed = False
+            if self._position == 0:
+                self._position = 100
+
 
     @asyncio.coroutine
     def _async_pos_changed(self, entity_id, old_state, new_state):
         if new_state is None:
             return
-
         self._async_update_pos(new_state)
         yield from self.async_update_ha_state()
 
 
     @property
     def device_state_attributes(self):
-        return {'homebridge_cover_type': HOMEBRIDGE_COVER_TYPE}
+        if self._device_class == 'window':
+            return {'homebridge_cover_type': 'rollershutter'}
+        else:
+            return {'homebridge_cover_type': 'garage_door'}
 
     @property
     def name(self):
         """Return the name of the cover."""
         return self._name
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        if self._supported_features is not None:
+            return self._supported_features
+        return super().supported_features
 
     @property
     def should_poll(self):
@@ -165,7 +196,10 @@ class RMCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._closed
+        if self._position is None:
+            return self._closed
+        else:
+            return self._position == 0         
 
     @property
     def is_closing(self):
@@ -186,57 +220,57 @@ class RMCover(CoverDevice):
         """Close the cover."""
         if self._position == 0:
             return
-
-        if self._position == 100:
-            self._position = round(100.0 /self._step, 0) * self._step
-
         elif self._position is None:
-            self._closed = True
-            self.schedule_update_ha_state()
+            if self._sendpacket(self._cmd_close):
+                self._closed = True
+                self.schedule_update_ha_state()
             return
 
-        self._sendpacket(self._cmd_close)
-        self._is_closing = True
-        self._listen_cover()
-        self._requested_closing = True
-        self.schedule_update_ha_state()
+        if self._sendpacket(self._cmd_close):
+            self._travel = self._travel_time
+            self._is_closing = True
+            self._listen_cover()
+            self._requested_closing = True
+            self.schedule_update_ha_state()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         if self._position == 100:
             return
         elif self._position is None:
-            self._closed = False
-            self.schedule_update_ha_state()
+            if self._sendpacket(self._cmd_open):
+                self._closed = False
+                self.schedule_update_ha_state()
             return
 
-        self._sendpacket(self._cmd_open)
-        self._is_opening = True
-        self._listen_cover()
-        self._requested_closing = False
-        self.schedule_update_ha_state()
+        if self._sendpacket(self._cmd_open):
+            self._travel = self._travel_time
+            self._is_opening = True
+            self._listen_cover()
+            self._requested_closing = False
+            self.schedule_update_ha_state()
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
         if position == 0:
-            self._set_position = 0
-            self._position = 99
-        elif position == 100:
-            self._set_position = 100
-            self._position = 1
-        else:            
-            self._set_position = round(float(position)/self._step, 0) * self._step
-        
-        if self._position == position:
-            return
-
-        if position < self._position:
             self.close_cover()
-        else:
+        elif position == 100:
             self.open_cover()
-
-        self._listen_cover()
-        self._requested_closing = position < self._position
+        elif self._position == position:
+            return
+        else:
+            steps = abs((position - self._position) / self._step)
+            if steps >= 1:        
+                self._travel = round(steps, 0)
+            else:
+                self._travel = 1
+            self._requested_closing = position < self._position
+            if self._requested_closing:
+                if self._sendpacket(self._cmd_close):
+                    self._listen_cover()
+            else:
+                if self._sendpacket(self._cmd_open):
+                    self._listen_cover()
 
 
     def stop_cover(self, **kwargs):
@@ -244,18 +278,21 @@ class RMCover(CoverDevice):
         self._is_closing = False
         self._is_opening = False
         if self._position is None:
+            self._sendpacket(self._cmd_stop)
             return
+        elif self._position > 0 and self._position < 100:
+                self._sendpacket(self._cmd_stop)
+
         if self._unsub_listener_cover is not None:
             self._unsub_listener_cover()
             self._unsub_listener_cover = None
-            self._set_position = None
+            self._travel = None
 
-        self._sendpacket(self._cmd_stop)
 
     def _listen_cover(self):
         """Listen for changes in cover."""
+        self._delay = True
         if self._unsub_listener_cover is None:
-            self._delay = True
             self._unsub_listener_cover = track_utc_time_change(
                 self.hass, self._time_changed_cover)
 
@@ -265,20 +302,22 @@ class RMCover(CoverDevice):
             self._delay = False
         else:
             if self._requested_closing:
-                self._position -= self._step
-                if self._position < 0:
+                if self._position - self._step >= 0:
+                    self._position -= self._step
+                else:
                     self._position = 0
             else:
-                self._position += self._step
-                if self._position > 100:
+                if self._position + self._step <= 100:
+                    self._position += self._step
+                else:
                     self._position = 100
 
-            if self._position in (100, 0, self._set_position):
+            self._travel -= 1
+
+            if self._travel == 0:
                 self.stop_cover()
 
-        self._closed = self.current_cover_position <= 0
-
-        self.schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
 
     def _sendpacket(self, packet, retry=2):
@@ -305,3 +344,4 @@ class RMCover(CoverDevice):
         if not auth and retry > 0:
             return self._auth(retry-1)
         return auth
+
