@@ -36,6 +36,9 @@ aiohttp_cors==0.5.3
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
+# homeassistant.components.calendar.caldav
+caldav==0.5.0
+
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==4.1.1
 
