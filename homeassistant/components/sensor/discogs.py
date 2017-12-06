@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_TOKEN)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +44,7 @@ class DiscogsCollection(Entity):
     def __init__(self, token):
         """Initialize the sensor."""
         import discogs_client
-        discogs = discogs_client.Client(
-            'HomeAssistantDiscogs/0.1.0', user_token=token)
+        discogs = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
 
         self._ds_user = discogs.identity()
         self._state = None
