@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_NAME, CONF_SWITCHES, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['Vesync==1.0.1']
@@ -29,11 +29,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up Vesync switches."""
     from vesync.api import VesyncApi
 
-    switch_data = {}
     switches = []
 
     try:
-        api = VesyncApi(config.get(CONF_USERNAME),config.get(CONF_PASSWORD))
+        api = VesyncApi(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
         _LOGGER.info("Connected to Vesync API")
     except RuntimeException:
         _LOGGER.error("Failed to connect to Vesync API")
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("Failed to retrieve devices from Vesync API")
 
     for switch in devices:
-        switches.append(VesyncSwitch(switch,api))
+        switches.append(VesyncSwitch(switch, api))
 
     add_devices_callback(switches)
 
