@@ -70,7 +70,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME, None)
 
     if discovery_info is not None:
-        """Run when a Daikin AC is discovered."""
         host = discovery_info['ip']
         _LOGGER.info("Discovered a Daikin AC %s", host)
     else:
@@ -104,7 +103,6 @@ class DaikinHVAC(ClimateDevice):
         """Initialize the climate device."""
         import pydaikin.appliance as appliance
 
-        """Initialize the HVAC."""
         self._name = name
         self._device = device
 
@@ -269,6 +267,6 @@ class DaikinHVAC(ClimateDevice):
         """Retrieve latest state."""
         import pydaikin.appliance as appliance
 
-        """Get the latest data."""
+        #Get the latest data from API
         for resource in appliance.HTTP_RESOURCES:
             self._device.values.update(self._device.get_resource(resource))
