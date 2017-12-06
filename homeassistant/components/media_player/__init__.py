@@ -384,6 +384,7 @@ def set_shuffle(hass, shuffle, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for media_players."""
