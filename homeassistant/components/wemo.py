@@ -6,9 +6,9 @@ https://home-assistant.io/components/wemo/
 """
 import logging
 
-import voluptuous as vol
-
 import re
+
+import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_WEMO
 from homeassistant.helpers import discovery
@@ -99,8 +99,8 @@ def setup(hass, config):
             device = pywemo.discovery.device_from_description(url, None)
 
         discovery_info = {
-            'model_name': re.search('(?:\S+\s+){1}(\S+)', repr(device))
-                            .group(1),
+            'model_name': re.search(r"(?:\S+\s+){1}(\S+)", repr(device))
+                          .group(1),
             'serial': device.serialnumber,
             'mac_address': device.mac,
             'ssdp_description': url,
