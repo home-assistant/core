@@ -1,3 +1,9 @@
+"""
+Shows the amount of records in a user's Discogs collection.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.discogs/
+"""
 import asyncio
 import logging
 from datetime import timedelta
@@ -19,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 REQUIREMENTS = ['discogs_client==2.2.1']
 
-SCAN_INTERVAL = timedelta(seconds=7200)
+SCAN_INTERVAL = timedelta(hours=2)
 
 
 @asyncio.coroutine
