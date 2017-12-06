@@ -136,6 +136,7 @@ class Dominos():
 
     def get_menu(self):
         """Return the products from the closest stores menu."""
+        self.update_closest_store()
         if self.closest_store is None:
             _LOGGER.warning('Cannot get menu. Store may be closed')
             return []
