@@ -93,6 +93,9 @@ def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
 
 
 def _is_node_a_sensor(node, path: str, sensor_identifier: str) -> bool:
+    if not isinstance(node, PYISY.Nodes.Node):
+        return False
+
     if sensor_identifier in path or sensor_identifier in node.name:
         return True
 
@@ -299,6 +302,21 @@ class ISYDevice(Entity):
             return None
 
         return self._node.status._val
+
+    def is_unknown(self) -> bool:
+        """Get whether or not the value of this Entity's node is unknown.
+
+        PyISY reports unknown values as -inf
+        """
+        return self.value == -1 * float('inf')
+
+    @property
+    def state(self):
+        """Return the state of the ISY device."""
+        if self.is_unknown():
+            return None
+        else:
+            return super().state
 
     @property
     def device_state_attributes(self) -> Dict:

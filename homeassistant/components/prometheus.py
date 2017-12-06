@@ -14,12 +14,13 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components import recorder
 from homeassistant.const import (
     CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE, TEMP_CELSIUS,
-    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN)
+    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant import core as hacore
 from homeassistant.helpers import state as state_helper
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
-REQUIREMENTS = ['prometheus_client==0.0.19']
+REQUIREMENTS = ['prometheus_client==0.0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,6 +160,26 @@ class Metrics(object):
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_climate(self, state):
+        temp = state.attributes.get(ATTR_TEMPERATURE)
+        if temp:
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit == TEMP_FAHRENHEIT:
+                temp = fahrenheit_to_celsius(temp)
+            metric = self._metric(
+                'temperature_c', self.prometheus_client.Gauge,
+                'Temperature in degrees Celsius')
+            metric.labels(**self._labels(state)).set(temp)
+
+        metric = self._metric(
+            'climate_state', self.prometheus_client.Gauge,
+            'State of the thermostat (0/1)')
+        try:
+            value = state_helper.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
     def _handle_sensor(self, state):
         _sensor_types = {
             TEMP_CELSIUS: (
@@ -189,9 +210,17 @@ class Metrics(object):
                 'electricity_usage_w', self.prometheus_client.Gauge,
                 'Currently reported electricity draw in Watts',
             ),
+            'min': (
+                'sensor_min', self.prometheus_client.Gauge,
+                'Time in minutes reported by a sensor'
+            ),
+            'Events': (
+                'sensor_event_count', self.prometheus_client.Gauge,
+                'Number of events for a sensor'
+            ),
         }
 
-        unit = state.attributes.get('unit_of_measurement')
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         metric = _sensor_types.get(unit)
 
         if metric is not None:
@@ -212,11 +241,24 @@ class Metrics(object):
             self.prometheus_client.Gauge,
             'State of the switch (0/1)',
         )
-        value = state_helper.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+
+        try:
+            value = state_helper.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
 
     def _handle_zwave(self, state):
         self._battery(state)
+
+    def _handle_automation(self, state):
+        metric = self._metric(
+            'automation_triggered_count',
+            self.prometheus_client.Counter,
+            'Count of times an automation has been triggered',
+        )
+
+        metric.labels(**self._labels(state)).inc()
 
 
 class PrometheusView(HomeAssistantView):

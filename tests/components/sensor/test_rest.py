@@ -133,9 +133,9 @@ class TestRestSensor(unittest.TestCase):
         self.value_template = template('{{ value_json.key }}')
         self.value_template.hass = self.hass
 
-        self.sensor = rest.RestSensor(
-            self.hass, self.rest, self.name, self.unit_of_measurement,
-            self.value_template)
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement,
+                                      self.value_template, [])
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -181,11 +181,61 @@ class TestRestSensor(unittest.TestCase):
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(
                                     'plain_state'))
-        self.sensor = rest.RestSensor(
-            self.hass, self.rest, self.name, self.unit_of_measurement, None)
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, [])
         self.sensor.update()
         self.assertEqual('plain_state', self.sensor.state)
         self.assertTrue(self.sensor.available)
+
+    def test_update_with_json_attrs(self):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '{ "key": "some_json_value" }'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'])
+        self.sensor.update()
+        self.assertEqual('some_json_value',
+                         self.sensor.device_state_attributes['key'])
+
+    @patch('homeassistant.components.sensor.rest._LOGGER')
+    def test_update_with_json_attrs_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '["list", "of", "things"]'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'])
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.sensor.rest._LOGGER')
+    def test_update_with_json_attrs_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    'This is text rather than JSON data.'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'])
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+        self.assertTrue(mock_logger.debug.called)
+
+    def test_update_with_json_attrs_and_template(self):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '{ "key": "json_state_updated_value" }'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement,
+                                      self.value_template, ['key'])
+        self.sensor.update()
+
+        self.assertEqual('json_state_updated_value', self.sensor.state)
+        self.assertEqual('json_state_updated_value',
+                         self.sensor.device_state_attributes['key'])
 
 
 class TestRestData(unittest.TestCase):
