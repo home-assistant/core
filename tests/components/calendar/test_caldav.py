@@ -126,7 +126,8 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
 
         caldav.setup_platform(self.hass,
                               {
-                                  "url": "http://test.local"
+                                  "url": "http://test.local",
+                                  "custom_calendars": []
                               },
                               _add_device)
 
@@ -139,7 +140,8 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
         caldav.setup_platform(self.hass,
                               {
                                   "url": "http://test.local",
-                                  "calendars": ["none"]
+                                  "calendars": ["none"],
+                                  "custom_calendars": []
                               },
                               _add_device)
 
@@ -153,7 +155,8 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
         caldav.setup_platform(self.hass,
                               {
                                   "url": "http://test.local",
-                                  "calendars": ["Second"]
+                                  "calendars": ["Second"],
+                                  "custom_calendars": []
                               },
                               _add_device)
 

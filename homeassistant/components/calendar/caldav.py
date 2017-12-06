@@ -4,18 +4,17 @@ Support for WebDav Calendar.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar.caldav/
 """
-
-
 import logging
-from datetime import (timedelta, datetime)
+from datetime import datetime, timedelta
 import re
+
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.calendar import (
     CalendarEventDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, CONF_URL, CONF_USERNAME, CONF_PASSWORD)
-
+    CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
 from homeassistant.util import dt, Throttle
 
 REQUIREMENTS = ['caldav==0.5.0']
@@ -30,7 +29,7 @@ CONF_ALL_DAY = 'all_day'
 CONF_SEARCH = 'search'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): vol.Url(),
+    vol.Required(CONF_URL): vol.Url,
     vol.Optional(CONF_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             cv.string
@@ -73,27 +72,28 @@ def setup_platform(hass, config, add_devices, disc_info=None):
 
         # Create additional calendars based on custom filtering
         # rules
-        if config.get(CONF_CUSTOM_CALENDARS) is not None:
-            for cust_calendar in list(config.get(CONF_CUSTOM_CALENDARS)):
-                # Check that the base calendar matches
-                if cust_calendar.get(CONF_CALENDAR) != calendar.name:
-                    continue
+        for cust_calendar in config.get(CONF_CUSTOM_CALENDARS):
+            # Check that the base calendar matches
+            if cust_calendar.get(CONF_CALENDAR) != calendar.name:
+                continue
 
-                device_data = {
-                    CONF_NAME: cust_calendar.get(CONF_NAME),
-                    CONF_DEVICE_ID: "%s %s" % (
-                        cust_calendar.get(CONF_CALENDAR),
-                        cust_calendar.get(CONF_NAME)),
-                }
+            device_data = {
+                CONF_NAME: cust_calendar.get(CONF_NAME),
+                CONF_DEVICE_ID: "{} {}".format(
+                    cust_calendar.get(CONF_CALENDAR),
+                    cust_calendar.get(CONF_NAME)),
+            }
 
-                calendar_devices.append(
-                    WebDavCalendarEventDevice(hass,
-                                              device_data,
-                                              calendar,
-                                              cust_calendar.get(CONF_ALL_DAY),
-                                              cust_calendar.get(CONF_SEARCH))
+            calendar_devices.append(
+                WebDavCalendarEventDevice(hass,
+                                          device_data,
+                                          calendar,
+                                          cust_calendar.get(CONF_ALL_DAY),
+                                          cust_calendar.get(CONF_SEARCH))
                 )
-        else:
+
+        # Create a default calendar if there was no custom one
+        if not config.get(CONF_CUSTOM_CALENDARS):
             device_data = {
                 CONF_NAME: calendar.name,
                 CONF_DEVICE_ID: calendar.name
@@ -156,18 +156,16 @@ class WebDavCalendarData(object):
             x.instance.vevent.dtstart.value
         ))
 
-        vevent = None
-        for event in results:
+        vevent = next((
+            event.instance.vevent for event in results
             if (self.is_matching(event.instance.vevent, self.search)
-                    and (not self.is_all_day(event.instance.vevent)
-                         or self.include_all_day)
-                    and not self.is_over(event.instance.vevent)):
-                vevent = event.instance.vevent
-                break
+                and (not self.is_all_day(event.instance.vevent)
+                     or self.include_all_day)
+                and not self.is_over(event.instance.vevent))), None)
 
         # If no matching event could be found
         if vevent is None:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "No matching event found in the %d results for %s",
                 len(results),
                 self.calendar.name,
