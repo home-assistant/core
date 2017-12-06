@@ -8,6 +8,8 @@ import logging
 
 import voluptuous as vol
 
+import re
+
 from homeassistant.components.discovery import SERVICE_WEMO
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
@@ -23,8 +25,8 @@ WEMO_MODEL_DISPATCH = {
     'Bridge':  'light',
     'Insight': 'switch',
     'Maker':   'switch',
-    'Sensor':  'binary_sensor',
-    'Socket':  'switch',
+    'Motion':  'binary_sensor',
+    'Switch':  'switch',
     'LightSwitch': 'switch',
     'CoffeeMaker': 'switch'
 }
@@ -97,7 +99,7 @@ def setup(hass, config):
             device = pywemo.discovery.device_from_description(url, None)
 
         discovery_info = {
-            'model_name': device.model_name,
+            'model_name': re.search('(?:\S+\s+){1}(\S+)', repr(device)).group(1),
             'serial': device.serialnumber,
             'mac_address': device.mac,
             'ssdp_description': url,
