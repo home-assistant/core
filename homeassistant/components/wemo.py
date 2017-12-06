@@ -99,8 +99,7 @@ def setup(hass, config):
             device = pywemo.discovery.device_from_description(url, None)
 
         discovery_info = {
-            'model_name': re.search(r"(?:\S+\s+){1}(\S+)", repr(device))
-                          .group(1),
+            'model_name': re.search(r"(?:\S+\s+)(\S+)", repr(device)).group(1),
             'serial': device.serialnumber,
             'mac_address': device.mac,
             'ssdp_description': url,
