@@ -623,7 +623,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==1.0.2
+pychromecast==0.8.2
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
