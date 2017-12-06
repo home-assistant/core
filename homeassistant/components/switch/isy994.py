@@ -69,7 +69,10 @@ class ISYSwitchDevice(isy.ISYDevice, SwitchDevice):
     @property
     def state(self) -> str:
         """Get the state of the ISY994 device."""
-        return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
+        if self.is_unknown():
+            return None
+        else:
+            return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch."""

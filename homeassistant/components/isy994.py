@@ -107,7 +107,8 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
         hidden = hidden_identifier in path or hidden_identifier in node.name
         if hidden:
             node.name += hidden_identifier
-        if sensor_identifier in path or sensor_identifier in node.name:
+        if (sensor_identifier in path or sensor_identifier in node.name) \
+                and isinstance(node, PYISY.Nodes.Node):
             SENSOR_NODES.append(node)
         elif isinstance(node, PYISY.Nodes.Node):
             NODES.append(node)
@@ -286,6 +287,21 @@ class ISYDevice(Entity):
         """Get the current value of the device."""
         # pylint: disable=protected-access
         return self._node.status._val
+
+    def is_unknown(self) -> bool:
+        """Get whether or not the value of this Entity's node is unknown.
+
+        PyISY reports unknown values as -inf
+        """
+        return self.value == -1 * float('inf')
+
+    @property
+    def state(self):
+        """Return the state of the ISY device."""
+        if self.is_unknown():
+            return None
+        else:
+            return super().state
 
     @property
     def device_state_attributes(self) -> Dict:
