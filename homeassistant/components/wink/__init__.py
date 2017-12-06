@@ -28,7 +28,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.7.0', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.7.1', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -460,10 +460,11 @@ def setup(hass, config):
                     sirens_to_set.append(siren)
 
         for siren in sirens_to_set:
+            _man = siren.wink.device_manufacturer()
             if (service.service != SERVICE_SET_AUTO_SHUTOFF and
                     service.service != SERVICE_ENABLE_SIREN and
-                    siren.wink.device_manufacturer() != 'dome'):
-                _LOGGER.error("Service only valid for Dome sirens.")
+                    (_man != 'dome' and _man != 'wink')):
+                _LOGGER.error("Service only valid for Dome or Wink sirens.")
                 return
 
             if service.service == SERVICE_ENABLE_SIREN:
@@ -494,10 +495,11 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     sirens = []
-    has_dome_siren = False
+    has_dome_or_wink_siren = False
     for siren in pywink.get_sirens():
-        if siren.device_manufacturer() == "dome":
-            has_dome_siren = True
+        _man = siren.device_manufacturer()
+        if _man == "dome" or _man == "wink":
+            has_dome_or_wink_siren = True
         _id = siren.object_id() + siren.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             sirens.append(WinkSirenDevice(siren, hass))
@@ -514,7 +516,7 @@ def setup(hass, config):
                                descriptions.get(SERVICE_ENABLE_SIREN),
                                schema=ENABLED_SIREN_SCHEMA)
 
-    if has_dome_siren:
+    if has_dome_or_wink_siren:
 
         hass.services.register(DOMAIN, SERVICE_SET_SIREN_TONE,
                                service_handle,
