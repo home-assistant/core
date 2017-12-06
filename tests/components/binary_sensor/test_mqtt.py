@@ -3,7 +3,8 @@ import unittest
 
 from homeassistant.setup import setup_component
 import homeassistant.components.binary_sensor as binary_sensor
-from homeassistant.const import (STATE_OFF, STATE_ON)
+from homeassistant.const import (STATE_OFF, STATE_ON,
+                                 STATE_UNAVAILABLE)
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
@@ -73,3 +74,70 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test')
         self.assertIsNone(state)
+
+    def test_availability_without_topic(self):
+        """Test availability without defined availability topic."""
+        self.assertTrue(setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+            }
+        }))
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_availability_by_defaults(self):
+        """Test availability by defaults with defined topic."""
+        self.assertTrue(setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'availability_topic': 'availability-topic'
+            }
+        }))
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_availability_by_custom_payload(self):
+        """Test availability by custom payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'availability_topic': 'availability-topic',
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
+            }
+        }))
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)

@@ -96,3 +96,53 @@ class TestThresholdSensor(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test_threshold')
 
         assert state.state == 'off'
+
+    def test_sensor_hysteresis(self):
+        """Test if source is above threshold using hysteresis."""
+        config = {
+            'binary_sensor': {
+                'platform': 'threshold',
+                'threshold': '15',
+                'hysteresis': '2.5',
+                'name': 'Test_threshold',
+                'type': 'upper',
+                'entity_id': 'sensor.test_monitored',
+            }
+        }
+
+        assert setup_component(self.hass, 'binary_sensor', config)
+
+        self.hass.states.set('sensor.test_monitored', 20)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_threshold')
+
+        assert state.state == 'on'
+
+        self.hass.states.set('sensor.test_monitored', 13)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_threshold')
+
+        assert state.state == 'on'
+
+        self.hass.states.set('sensor.test_monitored', 12)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_threshold')
+
+        assert state.state == 'off'
+
+        self.hass.states.set('sensor.test_monitored', 17)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_threshold')
+
+        assert state.state == 'off'
+
+        self.hass.states.set('sensor.test_monitored', 18)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_threshold')
+
+        assert state.state == 'on'

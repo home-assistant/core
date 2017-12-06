@@ -30,7 +30,7 @@ UNIT_OF_MEASUREMENT = 'W'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_CHANNEL_ID): cv.string,
+    vol.Required(CONF_CHANNEL_ID): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -49,11 +49,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Probing for access to ELIQ Online API")
         api.get_data_now(channelid=channel_id)
     except OSError as error:
-        _LOGGER.error("Could not access the ELIQ Online API. "
-                      "Is the configuration valid? %s", error)
+        _LOGGER.error("Could not access the ELIQ Online API: %s", error)
         return False
 
-    add_devices([EliqSensor(api, channel_id, name)])
+    add_devices([EliqSensor(api, channel_id, name)], True)
 
 
 class EliqSensor(Entity):
@@ -65,7 +64,6 @@ class EliqSensor(Entity):
         self._state = STATE_UNKNOWN
         self._api = api
         self._channel_id = channel_id
-        self.update()
 
     @property
     def name(self):

@@ -41,14 +41,14 @@ def _create_sensor(hass, zone):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Initialize the platform."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
 
-    async_add_entities(
+    async_add_devices(
         _create_sensor(hass, zone)
         for zone in discovery_info[ATTR_DISCOVER_DEVICES]
         if _get_device_class(zone['type']))
@@ -67,7 +67,7 @@ class SpcBinarySensor(BinarySensorDevice):
         spc_registry.register_sensor_device(zone_id, self)
 
     @asyncio.coroutine
-    def async_update_from_spc(self, state):
+    def async_update_from_spc(self, state, extra):
         """Update the state of the device."""
         self._state = state
         yield from self.async_update_ha_state()

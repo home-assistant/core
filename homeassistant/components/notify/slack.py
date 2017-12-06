@@ -5,20 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.slack/
 """
 import logging
-import requests
-from requests.auth import HTTPDigestAuth
-from requests.auth import HTTPBasicAuth
 
+import requests
+from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_DATA,
-    PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (
-    CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import (
+    ATTR_TARGET, ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA,
+    BaseNotificationService)
+from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 
-REQUIREMENTS = ['slacker==0.9.50']
+REQUIREMENTS = ['slacker==0.9.60']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ ATTR_FILE_PATH = 'path'
 ATTR_FILE_USERNAME = 'username'
 ATTR_FILE_PASSWORD = 'password'
 ATTR_FILE_AUTH = 'auth'
-# Any other value or absense of 'auth' lead to basic authentication being used
+# Any other value or absence of 'auth' lead to basic authentication being used
 ATTR_FILE_AUTH_DIGEST = 'digest'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -49,14 +48,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
     import slacker
+    channel = config.get(CONF_CHANNEL)
+    api_key = config.get(CONF_API_KEY)
+    username = config.get(CONF_USERNAME)
+    icon = config.get(CONF_ICON)
 
     try:
         return SlackNotificationService(
-            config[CONF_CHANNEL],
-            config[CONF_API_KEY],
-            config.get(CONF_USERNAME, None),
-            config.get(CONF_ICON, None),
-            hass.config.is_allowed_path)
+            channel, api_key, username, icon, hass.config.is_allowed_path)
 
     except slacker.Error:
         _LOGGER.exception("Authentication failed")
@@ -66,9 +65,8 @@ def get_service(hass, config, discovery_info=None):
 class SlackNotificationService(BaseNotificationService):
     """Implement the notification service for Slack."""
 
-    def __init__(self, default_channel,
-                 api_token, username,
-                 icon, is_allowed_path):
+    def __init__(
+            self, default_channel, api_token, username, icon, is_allowed_path):
         """Initialize the service."""
         from slacker import Slacker
         self._default_channel = default_channel
@@ -101,7 +99,7 @@ class SlackNotificationService(BaseNotificationService):
         for target in targets:
             try:
                 if file is not None:
-                    # Load from file or url
+                    # Load from file or URL
                     file_as_bytes = self.load_file(
                         url=file.get(ATTR_FILE_URL),
                         local_path=file.get(ATTR_FILE_PATH),
@@ -113,7 +111,7 @@ class SlackNotificationService(BaseNotificationService):
                         filename = file.get(ATTR_FILE_URL)
                     else:
                         filename = file.get(ATTR_FILE_PATH)
-                    # Prepare structure for slack API
+                    # Prepare structure for Slack API
                     data = {
                         'content': None,
                         'filetype': None,
@@ -135,35 +133,33 @@ class SlackNotificationService(BaseNotificationService):
             except slacker.Error as err:
                 _LOGGER.error("Could not send notification. Error: %s", err)
 
-    def load_file(self, url=None, local_path=None,
-                  username=None, password=None, auth=None):
-        """Load image/document/etc from a local path or url."""
+    def load_file(self, url=None, local_path=None, username=None,
+                  password=None, auth=None):
+        """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:
-                # check whether authentication parameters are provided
+                # Check whether authentication parameters are provided
                 if username is not None and password is not None:
                     # Use digest or basic authentication
                     if ATTR_FILE_AUTH_DIGEST == auth:
                         auth_ = HTTPDigestAuth(username, password)
                     else:
                         auth_ = HTTPBasicAuth(username, password)
-                    # load file from url with authentication
+                    # Load file from URL with authentication
                     req = requests.get(url, auth=auth_, timeout=CONF_TIMEOUT)
                 else:
-                    # load file from url without authentication
+                    # Load file from URL without authentication
                     req = requests.get(url, timeout=CONF_TIMEOUT)
                 return req.content
 
             elif local_path is not None:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
-                    # load file from local path on server
                     return open(local_path, "rb")
                 _LOGGER.warning("'%s' is not secure to load data from!",
                                 local_path)
             else:
-                # neither url nor path provided
-                _LOGGER.warning("Neither url nor local path found in params!")
+                _LOGGER.warning("Neither URL nor local path found in params!")
 
         except OSError as error:
             _LOGGER.error("Can't load from url or local path: %s", error)

@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
@@ -41,6 +41,7 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
         entity_id_format.format(slugify(name)), current_ids)
 
 
+@callback
 def async_generate_entity_id(entity_id_format: str, name: Optional[str],
                              current_ids: Optional[List[str]]=None,
                              hass: Optional[HomeAssistant]=None) -> str:
@@ -71,8 +72,11 @@ class Entity(object):
     # If we reported if this entity was slow
     _slow_reported = False
 
-    # protect for multible updates
-    _update_warn = None
+    # Protect for multiple updates
+    _update_staged = False
+
+    # Process updates pararell
+    parallel_updates = None
 
     @property
     def should_poll(self) -> bool:
@@ -165,29 +169,14 @@ class Entity(object):
     def update(self):
         """Retrieve latest state.
 
-        When not implemented, will forward call to async version if available.
+        For asyncio use coroutine async_update.
         """
-        async_update = getattr(self, 'async_update', None)
-
-        if async_update is None:
-            return
-
-        # pylint: disable=not-callable
-        run_coroutine_threadsafe(async_update(), self.hass.loop).result()
+        pass
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
-
-    def update_ha_state(self, force_refresh=False):
-        """Update Home Assistant with current state of entity.
-
-        If force_refresh == True will update entity before setting state.
-        """
-        _LOGGER.warning("'update_ha_state' is deprecated. "
-                        "Use 'schedule_update_ha_state' instead.")
-        self.schedule_update_ha_state(force_refresh)
 
     @asyncio.coroutine
     def async_update_ha_state(self, force_refresh=False):
@@ -206,29 +195,11 @@ class Entity(object):
 
         # update entity data
         if force_refresh:
-            if self._update_warn:
-                _LOGGER.warning("Update for %s is already in progress",
-                                self.entity_id)
-                return
-
-            self._update_warn = self.hass.loop.call_later(
-                SLOW_UPDATE_WARNING, _LOGGER.warning,
-                "Update of %s is taking over %s seconds", self.entity_id,
-                SLOW_UPDATE_WARNING
-            )
-
             try:
-                if hasattr(self, 'async_update'):
-                    # pylint: disable=no-member
-                    yield from self.async_update()
-                else:
-                    yield from self.hass.async_add_job(self.update)
+                yield from self.async_device_update()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
-            finally:
-                self._update_warn.cancel()
-                self._update_warn = None
 
         start = timer()
 
@@ -264,10 +235,10 @@ class Entity(object):
 
         if not self._slow_reported and end - start > 0.4:
             self._slow_reported = True
-            _LOGGER.warning("Updating state for %s took %.3f seconds. "
+            _LOGGER.warning("Updating state for %s (%s) took %.3f seconds. "
                             "Please report platform to the developers at "
                             "https://goo.gl/Nvioub", self.entity_id,
-                            end - start)
+                            type(self), end - start)
 
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
@@ -297,9 +268,48 @@ class Entity(object):
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule a update ha state change task.
 
-        That is only needed on executor to not block.
+        That avoid executor dead looks.
         """
         self.hass.add_job(self.async_update_ha_state(force_refresh))
+
+    @callback
+    def async_schedule_update_ha_state(self, force_refresh=False):
+        """Schedule a update ha state change task."""
+        self.hass.async_add_job(self.async_update_ha_state(force_refresh))
+
+    @asyncio.coroutine
+    def async_device_update(self, warning=True):
+        """Process 'update' or 'async_update' from entity.
+
+        This method is a coroutine.
+        """
+        if self._update_staged:
+            return
+        self._update_staged = True
+
+        # Process update sequential
+        if self.parallel_updates:
+            yield from self.parallel_updates.acquire()
+
+        if warning:
+            update_warn = self.hass.loop.call_later(
+                SLOW_UPDATE_WARNING, _LOGGER.warning,
+                "Update of %s is taking over %s seconds", self.entity_id,
+                SLOW_UPDATE_WARNING
+            )
+
+        try:
+            if hasattr(self, 'async_update'):
+                # pylint: disable=no-member
+                yield from self.async_update()
+            else:
+                yield from self.hass.async_add_job(self.update)
+        finally:
+            self._update_staged = False
+            if warning:
+                update_warn.cancel()
+            if self.parallel_updates:
+                self.parallel_updates.release()
 
     def remove(self) -> None:
         """Remove entity from HASS."""

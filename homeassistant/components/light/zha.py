@@ -27,8 +27,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     endpoint = discovery_info['endpoint']
     try:
-        primaries = yield from endpoint.light_color['num_primaries']
-        discovery_info['num_primaries'] = primaries
+        discovery_info['color_capabilities'] \
+            = yield from endpoint.light_color['color_capabilities']
     except (AttributeError, KeyError):
         pass
 
@@ -54,11 +54,11 @@ class Light(zha.Entity, light.Light):
             self._supported_features |= light.SUPPORT_TRANSITION
             self._brightness = 0
         if zcl_clusters.lighting.Color.cluster_id in self._in_clusters:
-            # Not sure all color lights necessarily support this directly
-            # Should we emulate it?
-            self._supported_features |= light.SUPPORT_COLOR_TEMP
-            # Silly heuristic, not sure if it works widely
-            if kwargs.get('num_primaries', 1) >= 3:
+            color_capabilities = kwargs.get('color_capabilities', 0x10)
+            if color_capabilities & 0x10:
+                self._supported_features |= light.SUPPORT_COLOR_TEMP
+
+            if color_capabilities & 0x08:
                 self._supported_features |= light.SUPPORT_XY_COLOR
                 self._supported_features |= light.SUPPORT_RGB_COLOR
                 self._xy_color = (1.0, 1.0)
@@ -105,19 +105,19 @@ class Light(zha.Entity, light.Light):
                 duration
             )
             self._state = 1
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
             return
 
         yield from self._endpoint.on_off.on()
         self._state = 1
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         yield from self._endpoint.on_off.off()
         self._state = 0
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def brightness(self):

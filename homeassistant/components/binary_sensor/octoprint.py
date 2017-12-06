@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
             SENSOR_TYPES[octo_type][1], 'flags')
         devices.append(new_sensor)
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class OctoPrintBinarySensor(BinarySensorDevice):
@@ -69,8 +69,6 @@ class OctoPrintBinarySensor(BinarySensorDevice):
         self.api_endpoint = endpoint
         self.api_group = group
         self.api_tool = tool
-        # Set initial state
-        self.update()
         _LOGGER.debug("Created OctoPrint binary sensor %r", self)
 
     @property

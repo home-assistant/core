@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in monitored_variables:
         dev.append(OpenEVSESensor(variable, charger))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class OpenEVSESensor(Entity):

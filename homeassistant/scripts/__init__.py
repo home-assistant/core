@@ -51,7 +51,7 @@ def run(args: List) -> int:
                 req, target=deps_dir, constraints=os.path.join(
                     os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
         if not returncode:
-            print('Aborting scipt, could not install dependency', req)
+            print('Aborting script, could not install dependency', req)
             return 1
 
     return script.run(args[1:])  # type: ignore

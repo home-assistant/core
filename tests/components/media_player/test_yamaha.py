@@ -29,7 +29,7 @@ class FakeYamaha(rxv.rxv.RXV):
 
     @property
     def input(self):
-        """A fake input for the reciever."""
+        """A fake input for the receiver."""
         return self._fake_input
 
     @input.setter
@@ -39,7 +39,7 @@ class FakeYamaha(rxv.rxv.RXV):
         self._fake_input = input_name
 
     def inputs(self):
-        """All inputs of the the fake receiver."""
+        """All inputs of the fake receiver."""
         return {'AUDIO1': None,
                 'AUDIO2': None,
                 'AV1': None,

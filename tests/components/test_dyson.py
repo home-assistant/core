@@ -11,6 +11,7 @@ def _get_dyson_account_device_available():
     device = mock.Mock()
     device.serial = "XX-XXXXX-XX"
     device.connect = mock.Mock(return_value=True)
+    device.auto_connect = mock.Mock(return_value=True)
     return device
 
 
@@ -19,6 +20,15 @@ def _get_dyson_account_device_not_available():
     device = mock.Mock()
     device.serial = "XX-XXXXX-XX"
     device.connect = mock.Mock(return_value=False)
+    device.auto_connect = mock.Mock(return_value=False)
+    return device
+
+
+def _get_dyson_account_device_error():
+    """Return an invalid device raising OSError while connecting."""
+    device = mock.Mock()
+    device.serial = "XX-XXXXX-XX"
+    device.connect = mock.Mock(side_effect=OSError("Network error"))
     return device
 
 
@@ -77,7 +87,7 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(mocked_login.call_count, 1)
         self.assertEqual(mocked_devices.call_count, 1)
         self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
-        self.assertEqual(mocked_discovery.call_count, 2)
+        self.assertEqual(mocked_discovery.call_count, 3)
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])
@@ -85,6 +95,27 @@ class DysonTest(unittest.TestCase):
     def test_dyson_custom_conf_device_not_available(self, mocked_login,
                                                     mocked_devices):
         """Test device connection with an invalid device."""
+        dyson.setup(self.hass, {dyson.DOMAIN: {
+            dyson.CONF_USERNAME: "email",
+            dyson.CONF_PASSWORD: "password",
+            dyson.CONF_LANGUAGE: "FR",
+            dyson.CONF_DEVICES: [
+                {
+                    "device_id": "XX-XXXXX-XX",
+                    "device_ip": "192.168.0.1"
+                }
+            ]
+        }})
+        self.assertEqual(mocked_login.call_count, 1)
+        self.assertEqual(mocked_devices.call_count, 1)
+        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 0)
+
+    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+                return_value=[_get_dyson_account_device_error()])
+    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    def test_dyson_custom_conf_device_error(self, mocked_login,
+                                            mocked_devices):
+        """Test device connection with device raising an exception."""
         dyson.setup(self.hass, {dyson.DOMAIN: {
             dyson.CONF_USERNAME: "email",
             dyson.CONF_PASSWORD: "password",
@@ -141,7 +172,7 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(mocked_login.call_count, 1)
         self.assertEqual(mocked_devices.call_count, 1)
         self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
-        self.assertEqual(mocked_discovery.call_count, 2)
+        self.assertEqual(mocked_discovery.call_count, 3)
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])

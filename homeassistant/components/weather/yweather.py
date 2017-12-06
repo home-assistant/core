@@ -15,7 +15,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
 
-REQUIREMENTS = ["yahooweather==0.8"]
+REQUIREMENTS = ["yahooweather==0.9"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,16 +37,16 @@ CONDITION_CLASSES = {
     'fog': [19, 20, 21, 22, 23],
     'hail': [17, 18, 35],
     'lightning': [37],
-    'lightning-rainy': [38, 39, 47],
+    'lightning-rainy': [3, 4, 38, 39, 47],
     'partlycloudy': [44],
     'pouring': [40, 45],
     'rainy': [9, 11, 12],
     'snowy': [8, 13, 14, 15, 16, 41, 42, 43],
     'snowy-rainy': [5, 6, 7, 10, 46],
-    'sunny': [32, 33, 34],
+    'sunny': [32, 33, 34, 25, 36],
     'windy': [24],
     'windy-variant': [],
-    'exceptional': [0, 1, 2, 3, 4, 25, 36],
+    'exceptional': [0, 1, 2],
 }
 
 
@@ -86,16 +86,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    add_devices([YahooWeatherWeather(yahoo_api, name)], True)
+    add_devices([YahooWeatherWeather(yahoo_api, name, unit)], True)
 
 
 class YahooWeatherWeather(WeatherEntity):
     """Representation of Yahoo! weather data."""
 
-    def __init__(self, weather_data, name):
+    def __init__(self, weather_data, name, unit):
         """Initialize the sensor."""
         self._name = name
         self._data = weather_data
+        self._unit = unit
 
     @property
     def name(self):
@@ -114,12 +115,12 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._data.yahoo.Now['temp']
+        return int(self._data.yahoo.Now['temp'])
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return self._unit
 
     @property
     def pressure(self):

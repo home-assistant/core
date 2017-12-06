@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
                 dev.append(EcobeeBinarySensor(sensor['name'], index))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class EcobeeBinarySensor(BinarySensorDevice):
@@ -39,7 +39,6 @@ class EcobeeBinarySensor(BinarySensorDevice):
         self.index = sensor_index
         self._state = None
         self._device_class = 'occupancy'
-        self.update()
 
     @property
     def name(self):

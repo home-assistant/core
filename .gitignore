@@ -73,6 +73,7 @@ pyvenv.cfg
 pip-selfcheck.json
 venv
 .venv
+Pipfile*
 
 # vimmy stuff
 *.swp
@@ -93,3 +94,6 @@ docs/build
 
 # Windows Explorer
 desktop.ini
+/home-assistant.pyproj
+/home-assistant.sln
+/.vs/*

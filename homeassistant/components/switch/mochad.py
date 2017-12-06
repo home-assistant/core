@@ -11,21 +11,20 @@ import voluptuous as vol
 
 from homeassistant.components import mochad
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import (CONF_NAME, CONF_PLATFORM)
+from homeassistant.const import (CONF_NAME, CONF_DEVICES,
+                                 CONF_PLATFORM, CONF_ADDRESS)
 from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADDRESS = 'address'
-CONF_DEVICES = 'devices'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): mochad.DOMAIN,
     CONF_DEVICES: [{
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.x10_address,
-        vol.Optional('comm_type'): cv.string,
+        vol.Optional(mochad.CONF_COMM_TYPE): cv.string,
     }]
 })
 
@@ -48,7 +47,7 @@ class MochadSwitch(SwitchDevice):
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
         self._name = dev.get(CONF_NAME, 'x10_switch_dev_%s' % self._address)
-        self._comm_type = dev.get('comm_type', 'pl')
+        self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self.device = device.Device(ctrl, self._address,
                                     comm_type=self._comm_type)
         self._state = self._get_device_status()

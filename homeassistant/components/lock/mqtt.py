@@ -93,7 +93,7 @@ class MqttLock(LockDevice):
             elif payload == self._payload_unlock:
                 self._state = False
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._state_topic is None:
             # Force into optimistic mode.
@@ -134,7 +134,7 @@ class MqttLock(LockDevice):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_unlock(self, **kwargs):
@@ -148,4 +148,4 @@ class MqttLock(LockDevice):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

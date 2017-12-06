@@ -194,7 +194,7 @@ class TestRadarrSetup(unittest.TestCase):
     # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_devices(self, devices, update):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -395,8 +395,7 @@ class TestRadarrSetup(unittest.TestCase):
             self.assertEqual('mdi:information', device.icon)
             self.assertEqual('Radarr Status', device.name)
             self.assertEqual(
-                '4.8.13.1',
-                device.device_state_attributes['osVersion'])
+                '4.8.13.1', device.device_state_attributes['osVersion'])
 
     @pytest.mark.skip
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)

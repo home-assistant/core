@@ -8,20 +8,20 @@ from homeassistant.core import callback
 from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
 from homeassistant.setup import (
     async_prepare_setup_platform, ATTR_COMPONENT)
-from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
-SECTIONS = ('core', 'group', 'hassbian', 'automation')
+SECTIONS = ('core', 'customize', 'group', 'hassbian', 'automation', 'script')
 ON_DEMAND = ('zwave')
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the config component."""
-    register_built_in_panel(hass, 'config', 'Configuration', 'mdi:settings')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'config', 'config', 'mdi:settings')
 
     @asyncio.coroutine
     def setup_panel(panel_name):
@@ -77,11 +77,11 @@ class BaseEditConfigView(HomeAssistantView):
         """Empty config if file not found."""
         raise NotImplementedError
 
-    def _get_value(self, data, config_key):
+    def _get_value(self, hass, data, config_key):
         """Get value."""
         raise NotImplementedError
 
-    def _write_value(self, data, config_key, new_value):
+    def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
         raise NotImplementedError
 
@@ -90,7 +90,7 @@ class BaseEditConfigView(HomeAssistantView):
         """Fetch device specific config."""
         hass = request.app['hass']
         current = yield from self.read_config(hass)
-        value = self._get_value(current, config_key)
+        value = self._get_value(hass, current, config_key)
 
         if value is None:
             return self.json_message('Resource not found', 404)
@@ -121,7 +121,7 @@ class BaseEditConfigView(HomeAssistantView):
         path = hass.config.path(self.path)
 
         current = yield from self.read_config(hass)
-        self._write_value(current, config_key, data)
+        self._write_value(hass, current, config_key, data)
 
         yield from hass.async_add_job(_write, path, current)
 
@@ -149,11 +149,11 @@ class EditKeyBasedConfigView(BaseEditConfigView):
         """Return an empty config."""
         return {}
 
-    def _get_value(self, data, config_key):
+    def _get_value(self, hass, data, config_key):
         """Get value."""
         return data.get(config_key, {})
 
-    def _write_value(self, data, config_key, new_value):
+    def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
         data.setdefault(config_key, {}).update(new_value)
 
@@ -165,14 +165,14 @@ class EditIdBasedConfigView(BaseEditConfigView):
         """Return an empty config."""
         return []
 
-    def _get_value(self, data, config_key):
+    def _get_value(self, hass, data, config_key):
         """Get value."""
         return next(
             (val for val in data if val.get(CONF_ID) == config_key), None)
 
-    def _write_value(self, data, config_key, new_value):
+    def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        value = self._get_value(data, config_key)
+        value = self._get_value(hass, data, config_key)
 
         if value is None:
             value = {CONF_ID: config_key}

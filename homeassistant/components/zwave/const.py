@@ -8,12 +8,16 @@ ATTR_INSTANCE = "instance"
 ATTR_GROUP = "group"
 ATTR_VALUE_ID = "value_id"
 ATTR_OBJECT_ID = "object_id"
+ATTR_MESSAGES = "messages"
 ATTR_NAME = "name"
+ATTR_RETURN_ROUTES = "return_routes"
 ATTR_SCENE_ID = "scene_id"
+ATTR_SCENE_DATA = "scene_data"
 ATTR_BASIC_LEVEL = "basic_level"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_SIZE = "size"
 ATTR_CONFIG_VALUE = "value"
+ATTR_POLL_INTENSITY = "poll_intensity"
 ATTR_VALUE_INDEX = "value_index"
 ATTR_VALUE_INSTANCE = "value_instance"
 NETWORK_READY_WAIT_SECS = 30
@@ -30,13 +34,16 @@ SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
 SERVICE_CANCEL_COMMAND = "cancel_command"
 SERVICE_HEAL_NETWORK = "heal_network"
+SERVICE_HEAL_NODE = "heal_node"
 SERVICE_SOFT_RESET = "soft_reset"
+SERVICE_TEST_NODE = "test_node"
 SERVICE_TEST_NETWORK = "test_network"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_PRINT_CONFIG_PARAMETER = "print_config_parameter"
 SERVICE_PRINT_NODE = "print_node"
 SERVICE_REMOVE_FAILED_NODE = "remove_failed_node"
 SERVICE_REPLACE_FAILED_NODE = "replace_failed_node"
+SERVICE_SET_POLL_INTENSITY = "set_poll_intensity"
 SERVICE_SET_WAKEUP = "set_wakeup"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
@@ -344,6 +351,9 @@ DISC_VALUES = "values"
 INDEX_ALARM_TYPE = 0
 INDEX_ALARM_LEVEL = 1
 INDEX_ALARM_ACCESS_CONTROL = 9
+
+# https://github.com/OpenZWave/open-zwave/blob/de1c0e60edf1d1bee81f1ae54b1f58e66c6fd8ed/cpp/src/command_classes/BarrierOperator.cpp#L69
+INDEX_BARRIER_OPERATOR_LABEL = 1
 
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/DoorLock.cpp#L77
 INDEX_DOOR_LOCK_LOCK = 0

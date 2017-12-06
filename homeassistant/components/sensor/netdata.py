@@ -38,11 +38,24 @@ SENSOR_TYPES = {
                           'running', 0],
     'processes_blocked': ['Processes Blocked', 'Count', 'system.processes',
                           'blocked', 0],
-    'system_load': ['System Load', '15 min', 'system.processes', 'running', 2],
+    'system_load': ['System Load', '15 min', 'system.load', 'load15', 2],
     'system_io_in': ['System IO In', 'Count', 'system.io', 'in', 0],
     'system_io_out': ['System IO Out', 'Count', 'system.io', 'out', 0],
     'ipv4_in': ['IPv4 In', 'kb/s', 'system.ipv4', 'received', 0],
     'ipv4_out': ['IPv4 Out', 'kb/s', 'system.ipv4', 'sent', 0],
+    'disk_free': ['Disk Free', 'GiB', 'disk_space._', 'avail', 2],
+    'cpu_iowait': ['CPU IOWait', '%', 'system.cpu', 'iowait', 1],
+    'cpu_user': ['CPU User', '%', 'system.cpu', 'user', 1],
+    'cpu_system': ['CPU System', '%', 'system.cpu', 'system', 1],
+    'cpu_softirq': ['CPU SoftIRQ', '%', 'system.cpu', 'softirq', 1],
+    'cpu_guest': ['CPU Guest', '%', 'system.cpu', 'guest', 1],
+    'uptime': ['Uptime', 's', 'system.uptime', 'uptime', 0],
+    'packets_received': ['Packets Received', 'packets/s', 'ipv4.packets',
+                         'received', 0],
+    'packets_sent': ['Packets Sent', 'packets/s', 'ipv4.packets',
+                     'sent', 0],
+    'connections': ['Active Connections', 'Count',
+                    'netfilter.conntrack_sockets', 'connections', 0]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

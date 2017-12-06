@@ -87,9 +87,14 @@ def _async_process_message(sia_message, spc_registry):
     # ZX - Zone Short
     # ZD - Zone Disconnected
 
-    if sia_code in ('BA', 'CG', 'NL', 'OG', 'OQ'):
+    extra = {}
+
+    if sia_code in ('BA', 'CG', 'NL', 'OG'):
         # change in area status, notify alarm panel device
         device = spc_registry.get_alarm_device(spc_id)
+        data = sia_message['description'].split('¦')
+        if len(data) == 3:
+            extra['changed_by'] = data[1]
     else:
         # change in zone status, notify sensor device
         device = spc_registry.get_sensor_device(spc_id)
@@ -98,7 +103,6 @@ def _async_process_message(sia_message, spc_registry):
                              'CG': STATE_ALARM_ARMED_AWAY,
                              'NL': STATE_ALARM_ARMED_HOME,
                              'OG': STATE_ALARM_DISARMED,
-                             'OQ': STATE_ALARM_DISARMED,
                              'ZO': STATE_ON,
                              'ZC': STATE_OFF,
                              'ZX': STATE_UNKNOWN,
@@ -110,7 +114,7 @@ def _async_process_message(sia_message, spc_registry):
         _LOGGER.warning("No device mapping found for SPC area/zone id %s.",
                         spc_id)
     elif new_state:
-        yield from device.async_update_from_spc(new_state)
+        yield from device.async_update_from_spc(new_state, extra)
 
 
 class SpcRegistry:

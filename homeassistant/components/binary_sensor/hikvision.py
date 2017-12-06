@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.1.3']
+REQUIREMENTS = ['pyhik==0.1.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'
@@ -47,6 +47,7 @@ DEVICE_CLASS_MAP = {
     'PIR Alarm': 'motion',
     'Face Detection': 'motion',
     'Scene Change Detection': 'motion',
+    'I/O': None,
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({

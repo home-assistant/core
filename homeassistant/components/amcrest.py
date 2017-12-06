@@ -89,6 +89,7 @@ def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera
 
+    hass.data[DATA_AMCREST] = {}
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
@@ -126,22 +127,34 @@ def setup(hass, config):
             else:
                 authentication = None
 
+        hass.data[DATA_AMCREST][name] = AmcrestDevice(
+            camera, name, authentication, ffmpeg_arguments, stream_source,
+            resolution)
+
         discovery.load_platform(
             hass, 'camera', DOMAIN, {
-                'device': camera,
-                CONF_AUTHENTICATION: authentication,
-                CONF_FFMPEG_ARGUMENTS: ffmpeg_arguments,
                 CONF_NAME: name,
-                CONF_RESOLUTION: resolution,
-                CONF_STREAM_SOURCE: stream_source,
             }, config)
 
         if sensors:
             discovery.load_platform(
                 hass, 'sensor', DOMAIN, {
-                    'device': camera,
                     CONF_NAME: name,
                     CONF_SENSORS: sensors,
                 }, config)
 
     return True
+
+
+class AmcrestDevice(object):
+    """Representation of a base Amcrest discovery device."""
+
+    def __init__(self, camera, name, authentication, ffmpeg_arguments,
+                 stream_source, resolution):
+        """Initialize the entity."""
+        self.device = camera
+        self.name = name
+        self.authentication = authentication
+        self.ffmpeg_arguments = ffmpeg_arguments
+        self.stream_source = stream_source
+        self.resolution = resolution

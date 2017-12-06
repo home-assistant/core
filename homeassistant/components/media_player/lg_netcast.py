@@ -47,10 +47,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
-    client = LgNetCastClient(
-        config.get(CONF_HOST), config.get(CONF_ACCESS_TOKEN))
+    host = config.get(CONF_HOST)
+    access_token = config.get(CONF_ACCESS_TOKEN)
+    name = config.get(CONF_NAME)
 
-    add_devices([LgTVDevice(client, config[CONF_NAME])])
+    client = LgNetCastClient(host, access_token)
+
+    add_devices([LgTVDevice(client, name)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):
@@ -69,8 +72,6 @@ class LgTVDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._sources = {}
         self._source_names = []
-
-        self.update()
 
     def send_command(self, command):
         """Send remote control commands to the TV."""

@@ -211,7 +211,7 @@ class MqttTemplate(Light):
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -323,7 +323,7 @@ class MqttTemplate(Light):
         )
 
         if self._optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -345,7 +345,7 @@ class MqttTemplate(Light):
         )
 
         if self._optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @property
     def supported_features(self):

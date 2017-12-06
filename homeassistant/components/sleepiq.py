@@ -117,7 +117,7 @@ class SleepIQSensor(Entity):
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
         # Call the API for new sleepiq data. Each sensor will re-trigger this
-        # same exact call, but thats fine. We cache results for a short period
+        # same exact call, but that's fine. We cache results for a short period
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 

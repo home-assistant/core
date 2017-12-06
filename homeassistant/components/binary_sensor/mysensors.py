@@ -4,62 +4,27 @@ Support for MySensors binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mysensors/
 """
-import logging
-
 from homeassistant.components import mysensors
-from homeassistant.components.binary_sensor import (DEVICE_CLASSES,
+from homeassistant.components.binary_sensor import (DEVICE_CLASSES, DOMAIN,
                                                     BinarySensorDevice)
 from homeassistant.const import STATE_ON
 
-_LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = []
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MySensors platform for sensors."""
-    # Only act if loaded via mysensors by discovery event.
-    # Otherwise gateway is not setup.
-    if discovery_info is None:
-        return
-
-    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
-    if not gateways:
-        return
-
-    for gateway in gateways:
-        # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states. Map them in a dict of lists.
-        pres = gateway.const.Presentation
-        set_req = gateway.const.SetReq
-        map_sv_types = {
-            pres.S_DOOR: [set_req.V_TRIPPED],
-            pres.S_MOTION: [set_req.V_TRIPPED],
-            pres.S_SMOKE: [set_req.V_TRIPPED],
-        }
-        if float(gateway.protocol_version) >= 1.5:
-            map_sv_types.update({
-                pres.S_SPRINKLER: [set_req.V_TRIPPED],
-                pres.S_WATER_LEAK: [set_req.V_TRIPPED],
-                pres.S_SOUND: [set_req.V_TRIPPED],
-                pres.S_VIBRATION: [set_req.V_TRIPPED],
-                pres.S_MOISTURE: [set_req.V_TRIPPED],
-            })
-
-        devices = {}
-        gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, MySensorsBinarySensor, add_devices))
+    """Setup the mysensors platform for binary sensors."""
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsBinarySensor,
+        add_devices=add_devices)
 
 
 class MySensorsBinarySensor(
-        mysensors.MySensorsDeviceEntity, BinarySensorDevice):
+        mysensors.MySensorsEntity, BinarySensorDevice):
     """Represent the value of a MySensors Binary Sensor child node."""
 
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
-        if self.value_type in self._values:
-            return self._values[self.value_type] == STATE_ON
-        return False
+        return self._values.get(self.value_type) == STATE_ON
 
     @property
     def device_class(self):

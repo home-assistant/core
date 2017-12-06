@@ -17,7 +17,7 @@ from homeassistant.components.notify import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.remote import JSONEncoder
 
-REQUIREMENTS = ['boto3==1.4.3']
+REQUIREMENTS = ['boto3==1.4.7']
 
 _LOGGER = logging.getLogger(__name__)
 

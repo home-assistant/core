@@ -6,7 +6,6 @@ https://home-assistant.io/components/telegram_bot.webhooks/
 """
 import asyncio
 import datetime as dt
-from functools import partial
 from ipaddress import ip_network
 import logging
 
@@ -70,9 +69,18 @@ def async_setup_platform(hass, config):
         _LOGGER.error("Invalid telegram webhook %s must be https", handler_url)
         return False
 
+    def _try_to_set_webhook():
+        retry_num = 0
+        while retry_num < 3:
+            try:
+                return bot.setWebhook(handler_url, timeout=5)
+            except telegram.error.TimedOut:
+                retry_num += 1
+                _LOGGER.warning("Timeout trying to set webhook (retry #%d)",
+                                retry_num)
+
     if current_status and current_status['url'] != handler_url:
-        result = yield from hass.async_add_job(
-            partial(bot.setWebhook, handler_url, timeout=10))
+        result = yield from hass.async_add_job(_try_to_set_webhook)
         if result:
             _LOGGER.info("Set new telegram webhook %s", handler_url)
         else:

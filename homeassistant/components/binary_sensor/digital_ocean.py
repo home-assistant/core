@@ -19,7 +19,7 @@ from homeassistant.components.digital_ocean import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Droplet'
-DEFAULT_SENSOR_CLASS = 'moving'
+DEFAULT_DEVICE_CLASS = 'moving'
 DEPENDENCIES = ['digital_ocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -69,7 +69,7 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEFAULT_SENSOR_CLASS
+        return DEFAULT_DEVICE_CLASS
 
     @property
     def device_state_attributes(self):

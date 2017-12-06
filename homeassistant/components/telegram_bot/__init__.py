@@ -15,16 +15,16 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA)
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE,
-    HTTP_DIGEST_AUTHENTICATION)
+    ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
+    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==6.1.0']
+REQUIREMENTS = ['python-telegram-bot==8.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,6 @@ ATTR_CALLBACK_QUERY_ID = 'callback_query_id'
 ATTR_CAPTION = 'caption'
 ATTR_CHAT_ID = 'chat_id'
 ATTR_CHAT_INSTANCE = 'chat_instance'
-ATTR_COMMAND = 'command'
 ATTR_DISABLE_NOTIF = 'disable_notification'
 ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
 ATTR_EDITED_MSG = 'edited_message'
@@ -59,11 +58,14 @@ ATTR_USER_ID = 'user_id'
 ATTR_USERNAME = 'username'
 
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
+CONF_PROXY_URL = 'proxy_url'
+CONF_PROXY_PARAMS = 'proxy_params'
 
 DOMAIN = 'telegram_bot'
 
 SERVICE_SEND_MESSAGE = 'send_message'
 SERVICE_SEND_PHOTO = 'send_photo'
+SERVICE_SEND_VIDEO = 'send_video'
 SERVICE_SEND_DOCUMENT = 'send_document'
 SERVICE_SEND_LOCATION = 'send_location'
 SERVICE_EDIT_MESSAGE = 'edit_message'
@@ -85,6 +87,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ALLOWED_CHAT_IDS):
         vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+    vol.Optional(CONF_PROXY_URL): cv.string,
+    vol.Optional(CONF_PROXY_PARAMS): dict,
 })
 
 BASE_SERVICE_SCHEMA = vol.Schema({
@@ -151,6 +155,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
@@ -240,7 +245,9 @@ def async_setup(hass, config):
         hass,
         p_config.get(CONF_API_KEY),
         p_config.get(CONF_ALLOWED_CHAT_IDS),
-        p_config.get(ATTR_PARSER)
+        p_config.get(ATTR_PARSER),
+        p_config.get(CONF_PROXY_URL),
+        p_config.get(CONF_PROXY_PARAMS)
     )
 
     @asyncio.coroutine
@@ -272,12 +279,11 @@ def async_setup(hass, config):
         if msgtype == SERVICE_SEND_MESSAGE:
             yield from hass.async_add_job(
                 partial(notify_service.send_message, **kwargs))
-        elif msgtype == SERVICE_SEND_PHOTO:
+        elif (msgtype == SERVICE_SEND_PHOTO or
+              msgtype == SERVICE_SEND_VIDEO or
+              msgtype == SERVICE_SEND_DOCUMENT):
             yield from hass.async_add_job(
-                partial(notify_service.send_file, True, **kwargs))
-        elif msgtype == SERVICE_SEND_DOCUMENT:
-            yield from hass.async_add_job(
-                partial(notify_service.send_file, False, **kwargs))
+                partial(notify_service.send_file, msgtype, **kwargs))
         elif msgtype == SERVICE_SEND_LOCATION:
             yield from hass.async_add_job(
                 partial(notify_service.send_location, **kwargs))
@@ -303,10 +309,12 @@ def async_setup(hass, config):
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    def __init__(self, hass, api_key, allowed_chat_ids, parser):
+    def __init__(self, hass, api_key, allowed_chat_ids, parser,
+                 proxy_url=None, proxy_params=None):
         """Initialize the service."""
         from telegram import Bot
         from telegram.parsemode import ParseMode
+        from telegram.utils.request import Request
 
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
@@ -314,7 +322,11 @@ class TelegramNotificationService:
         self._parsers = {PARSER_HTML: ParseMode.HTML,
                          PARSER_MD: ParseMode.MARKDOWN}
         self._parse_mode = self._parsers.get(parser)
-        self.bot = Bot(token=api_key)
+        request = None
+        if proxy_url is not None:
+            request = Request(proxy_url=proxy_url,
+                              urllib3_proxy_kwargs=proxy_params)
+        self.bot = Bot(token=api_key, request=request)
         self.hass = hass
 
     def _get_msg_ids(self, msg_data, chat_id):
@@ -507,11 +519,15 @@ class TelegramNotificationService:
                        callback_query_id,
                        text=message, show_alert=show_alert, **params)
 
-    def send_file(self, is_photo=True, target=None, **kwargs):
-        """Send a photo or a document."""
+    def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
+        """Send a photo, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
-        func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
+        func_send = {
+            SERVICE_SEND_PHOTO: self.bot.sendPhoto,
+            SERVICE_SEND_VIDEO: self.bot.sendVideo,
+            SERVICE_SEND_DOCUMENT: self.bot.sendDocument
+        }.get(file_type)
         file_content = load_data(
             self.hass,
             url=kwargs.get(ATTR_URL),

@@ -171,15 +171,15 @@ class Plant(Entity):
 
         reading = self._sensormap[entity_id]
         if reading == READING_MOISTURE:
-            self._moisture = int(value)
+            self._moisture = int(float(value))
         elif reading == READING_BATTERY:
-            self._battery = int(value)
+            self._battery = int(float(value))
         elif reading == READING_TEMPERATURE:
             self._temperature = float(value)
         elif reading == READING_CONDUCTIVITY:
-            self._conductivity = int(value)
+            self._conductivity = int(float(value))
         elif reading == READING_BRIGHTNESS:
-            self._brightness = int(value)
+            self._brightness = int(float(value))
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
@@ -212,7 +212,7 @@ class Plant(Entity):
             self._icon = 'mdi:thumb-up'
             self._problems = PROBLEM_NONE
         _LOGGER.debug("New data processed")
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):

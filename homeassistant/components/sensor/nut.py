@@ -170,7 +170,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                       "Cannot continue setup: %s", err)
         return False
 
-    add_entities(entities)
+    add_entities(entities, True)
 
 
 class NUTSensor(Entity):
@@ -182,7 +182,7 @@ class NUTSensor(Entity):
         self.type = sensor_type
         self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
         self._unit = SENSOR_TYPES[sensor_type][1]
-        self.update()
+        self._state = None
 
     @property
     def name(self):
@@ -207,7 +207,7 @@ class NUTSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the sensor attributes."""
-        attr = {}
+        attr = dict()
         attr[ATTR_STATE] = self.opp_state()
         return attr
 

@@ -209,7 +209,7 @@ class EightSleepUserEntity(Entity):
         @callback
         def async_eight_user_update():
             """Update callback."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
@@ -233,7 +233,7 @@ class EightSleepHeatEntity(Entity):
         @callback
         def async_eight_heat_update():
             """Update callback."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)

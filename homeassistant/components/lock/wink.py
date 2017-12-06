@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.wink import WinkDevice, DOMAIN
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, ATTR_CODE
 from homeassistant.config import load_yaml_config_file
 
 DEPENDENCIES = ['wink']
@@ -25,10 +25,12 @@ SERVICE_SET_ALARM_MODE = 'wink_set_lock_alarm_mode'
 SERVICE_SET_ALARM_SENSITIVITY = 'wink_set_lock_alarm_sensitivity'
 SERVICE_SET_ALARM_STATE = 'wink_set_lock_alarm_state'
 SERVICE_SET_BEEPER_STATE = 'wink_set_lock_beeper_state'
+SERVICE_ADD_KEY = 'wink_add_new_lock_key_code'
 
 ATTR_ENABLED = 'enabled'
 ATTR_SENSITIVITY = 'sensitivity'
 ATTR_MODE = 'mode'
+ATTR_NAME = 'name'
 
 ALARM_SENSITIVITY_MAP = {"low": 0.2, "medium_low": 0.4,
                          "medium": 0.6, "medium_high": 0.8,
@@ -51,6 +53,12 @@ SET_SENSITIVITY_SCHEMA = vol.Schema({
 SET_ALARM_MODES_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_MODE): vol.In(ALARM_MODES_MAP)
+})
+
+ADD_KEY_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_CODE): cv.positive_int,
 })
 
 
@@ -86,6 +94,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 lock.set_alarm_mode(service.data.get(ATTR_MODE))
             elif service.service == SERVICE_SET_ALARM_SENSITIVITY:
                 lock.set_alarm_sensitivity(service.data.get(ATTR_SENSITIVITY))
+            elif service.service == SERVICE_ADD_KEY:
+                name = service.data.get(ATTR_NAME)
+                code = service.data.get(ATTR_CODE)
+                lock.add_new_key(code, name)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -114,6 +126,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                            service_handle,
                            descriptions.get(SERVICE_SET_ALARM_SENSITIVITY),
                            schema=SET_SENSITIVITY_SCHEMA)
+
+    hass.services.register(DOMAIN, SERVICE_ADD_KEY,
+                           service_handle,
+                           descriptions.get(SERVICE_ADD_KEY),
+                           schema=ADD_KEY_SCHEMA)
 
 
 class WinkLockDevice(WinkDevice, LockDevice):
@@ -149,6 +166,10 @@ class WinkLockDevice(WinkDevice, LockDevice):
         """Set lock's beeper mode."""
         self.wink.set_beeper_mode(enabled)
 
+    def add_new_key(self, code, name):
+        """Add a new user key code."""
+        self.wink.add_new_key(code, name)
+
     def set_alarm_sensitivity(self, sensitivity):
         """
         Set lock's alarm sensitivity.
@@ -176,14 +197,14 @@ class WinkLockDevice(WinkDevice, LockDevice):
         super_attrs = super().device_state_attributes
         sensitivity = dict_value_to_key(ALARM_SENSITIVITY_MAP,
                                         self.wink.alarm_sensitivity())
-        super_attrs['alarm sensitivity'] = sensitivity
-        super_attrs['vacation mode'] = self.wink.vacation_mode_enabled()
-        super_attrs['beeper mode'] = self.wink.beeper_enabled()
-        super_attrs['auto lock'] = self.wink.auto_lock_enabled()
+        super_attrs['alarm_sensitivity'] = sensitivity
+        super_attrs['vacation_mode'] = self.wink.vacation_mode_enabled()
+        super_attrs['beeper_mode'] = self.wink.beeper_enabled()
+        super_attrs['auto_lock'] = self.wink.auto_lock_enabled()
         alarm_mode = dict_value_to_key(ALARM_MODES_MAP,
                                        self.wink.alarm_mode())
-        super_attrs['alarm mode'] = alarm_mode
-        super_attrs['alarm enabled'] = self.wink.alarm_enabled()
+        super_attrs['alarm_mode'] = alarm_mode
+        super_attrs['alarm_enabled'] = self.wink.alarm_enabled()
         return super_attrs
 
 

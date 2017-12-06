@@ -1,11 +1,11 @@
 """The tests for the UPC ConnextBox device tracker platform."""
 import asyncio
-import os
 from unittest.mock import patch
 import logging
 
+import pytest
+
 from homeassistant.setup import setup_component
-from homeassistant.components import device_tracker
 from homeassistant.const import (
     CONF_PLATFORM, CONF_HOST)
 from homeassistant.components.device_tracker import DOMAIN
@@ -14,7 +14,7 @@ from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture,
-    mock_component)
+    mock_component, mock_coro)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,14 @@ def async_scan_devices_mock(scanner):
     return []
 
 
+@pytest.fixture(autouse=True)
+def mock_load_config():
+    """Mock device tracker loading config."""
+    with patch('homeassistant.components.device_tracker.async_load_config',
+               return_value=mock_coro([])):
+        yield
+
+
 class TestUPCConnect(object):
     """Tests for the Ddwrt device tracker platform."""
 
@@ -32,16 +40,12 @@ class TestUPCConnect(object):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
+        mock_component(self.hass, 'group')
 
         self.host = "127.0.0.1"
 
     def teardown_method(self):
         """Stop everything that was started."""
-        try:
-            os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
-        except FileNotFoundError:
-            pass
-
         self.hass.stop()
 
     @patch('homeassistant.components.device_tracker.upc_connect.'

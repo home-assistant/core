@@ -1,6 +1,7 @@
 """Test data purging."""
 import json
 from datetime import datetime, timedelta
+from time import sleep
 import unittest
 
 from homeassistant.components import recorder
@@ -16,8 +17,9 @@ class TestRecorderPurge(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
+        config = {'purge_keep_days': 4, 'purge_interval': 2}
         self.hass = get_test_home_assistant()
-        init_recorder_component(self.hass)
+        init_recorder_component(self.hass, config)
         self.hass.start()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -104,6 +106,50 @@ class TestRecorderPurge(unittest.TestCase):
 
             # run purge_old_data()
             purge_old_data(self.hass.data[DATA_INSTANCE], 4)
+
+            # now we should only have 3 events left
+            self.assertEqual(events.count(), 3)
+
+    def test_purge_method(self):
+        """Test purge method."""
+        service_data = {'keep_days': 4}
+        self._add_test_states()
+        self._add_test_events()
+
+        # make sure we start with 5 states
+        with session_scope(hass=self.hass) as session:
+            states = session.query(States)
+            self.assertEqual(states.count(), 5)
+
+            events = session.query(Events).filter(
+                Events.event_type.like("EVENT_TEST%"))
+            self.assertEqual(events.count(), 5)
+
+            self.hass.data[DATA_INSTANCE].block_till_done()
+
+            # run purge method - no service data, should not work
+            self.hass.services.call('recorder', 'purge')
+            self.hass.async_block_till_done()
+
+            # Small wait for recorder thread
+            sleep(0.1)
+
+            # we should only have 2 states left after purging
+            self.assertEqual(states.count(), 5)
+
+            # now we should only have 3 events left
+            self.assertEqual(events.count(), 5)
+
+            # run purge method - correct service data
+            self.hass.services.call('recorder', 'purge',
+                                    service_data=service_data)
+            self.hass.async_block_till_done()
+
+            # Small wait for recorder thread
+            sleep(0.1)
+
+            # we should only have 2 states left after purging
+            self.assertEqual(states.count(), 2)
 
             # now we should only have 3 events left
             self.assertEqual(events.count(), 3)

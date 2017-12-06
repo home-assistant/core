@@ -64,7 +64,7 @@ class TestAuroraSensorSetUp(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_custom_threshold_works(self, mock_req):
-        """Test that the the config can take a custom forecast threshold."""
+        """Test that the config can take a custom forecast threshold."""
         uri = re.compile(
             "http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
         )

@@ -23,8 +23,7 @@ from homeassistant.components.light import (
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
-from homeassistant.loader import get_component
-from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
+from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE_HIDDEN
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['phue==1.0']
@@ -84,6 +83,12 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
+
+CONFIG_INSTRUCTIONS = """
+Press the button on the bridge to register Philips Hue with Home Assistant.
+
+![Location of button on bridge](/static/images/config_philips_hue.jpg)
+"""
 
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
@@ -164,9 +169,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-
-        configurator = get_component('configurator')
-
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
 
     lights = {}
@@ -250,7 +253,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # create a service for calling run_scene directly on the bridge,
     # used to simplify automation rules.
     def hue_activate_scene(call):
-        """Service to call directly directly into bridge to set scenes."""
+        """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
         bridge.run_scene(group_name, scene_name)
@@ -268,7 +271,7 @@ def request_configuration(host, hass, add_devices, filename,
                           allow_unreachable, allow_in_emulated_hue,
                           allow_hue_groups):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -284,11 +287,9 @@ def request_configuration(host, hass, add_devices, filename,
                      allow_in_emulated_hue, allow_hue_groups)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, "Philips Hue", hue_configuration_callback,
-        description=("Press the button on the bridge to register Philips Hue "
-                     "with Home Assistant."),
+        "Philips Hue", hue_configuration_callback,
+        description=CONFIG_INSTRUCTIONS,
         entity_picture="/static/images/logo_philips_hue.png",
-        description_image="/static/images/config_philips_hue.jpg",
         submit_caption="I have pressed the button"
     )
 
@@ -384,7 +385,6 @@ class HueLight(Light):
                 hue, sat = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
                 command['hue'] = hue
                 command['sat'] = sat
-                command['bri'] = self.info['bri']
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
@@ -399,13 +399,12 @@ class HueLight(Light):
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['xy'] = xyb[0], xyb[1]
                 command['bri'] = xyb[2]
+        elif ATTR_COLOR_TEMP in kwargs:
+            temp = kwargs[ATTR_COLOR_TEMP]
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_COLOR_TEMP in kwargs:
-            temp = kwargs[ATTR_COLOR_TEMP]
-            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         flash = kwargs.get(ATTR_FLASH)
 
@@ -425,9 +424,9 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif self.bridge_type == 'hue':
-            if self.info.get('manufacturername') != "OSRAM":
-                command['effect'] = 'none'
+        elif (self.bridge_type == 'hue' and
+              self.info.get('manufacturername') == 'Philips'):
+            command['effect'] = 'none'
 
         self._command_func(self.light_id, command)
 
@@ -460,7 +459,8 @@ class HueLight(Light):
         """Return the device state attributes."""
         attributes = {}
         if not self.allow_in_emulated_hue:
-            attributes[ATTR_EMULATED_HUE] = self.allow_in_emulated_hue
+            attributes[ATTR_EMULATED_HUE_HIDDEN] = \
+                not self.allow_in_emulated_hue
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
         return attributes

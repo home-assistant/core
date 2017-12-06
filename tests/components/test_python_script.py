@@ -47,7 +47,8 @@ def test_setup_fails_on_no_dir(hass, caplog):
         res = yield from async_setup_component(hass, 'python_script', {})
 
     assert not res
-    assert 'Folder python_scripts not found in config folder' in caplog.text
+    assert 'Folder python_scripts not found in configuration folder' in \
+           caplog.text
 
 
 @asyncio.coroutine
@@ -157,14 +158,17 @@ logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
 def test_accessing_forbidden_methods(hass, caplog):
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
-    source = """
-hass.stop()
-    """
 
-    hass.async_add_job(execute, hass, 'test.py', source, {})
-    yield from hass.async_block_till_done()
-
-    assert "Not allowed to access HomeAssistant.stop" in caplog.text
+    for source, name in {
+        'hass.stop()': 'HomeAssistant.stop',
+        'dt_util.set_default_time_zone()': 'module.set_default_time_zone',
+        'datetime.non_existing': 'module.non_existing',
+        'time.tzset()': 'TimeWrapper.tzset',
+    }.items():
+        caplog.records.clear()
+        hass.async_add_job(execute, hass, 'test.py', source, {})
+        yield from hass.async_block_till_done()
+        assert "Not allowed to access {}".format(name) in caplog.text
 
 
 @asyncio.coroutine
@@ -180,3 +184,118 @@ for i in [1, 2]:
 
     assert hass.states.is_state('hello.1', 'world')
     assert hass.states.is_state('hello.2', 'world')
+
+
+@asyncio.coroutine
+def test_unpacking_sequence(hass, caplog):
+    """Test compile error logs error."""
+    caplog.set_level(logging.ERROR)
+    source = """
+a,b = (1,2)
+ab_list = [(a,b) for a,b in [(1, 2), (3, 4)]]
+hass.states.set('hello.a', a)
+hass.states.set('hello.b', b)
+hass.states.set('hello.ab_list', '{}'.format(ab_list))
+"""
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('hello.a', '1')
+    assert hass.states.is_state('hello.b', '2')
+    assert hass.states.is_state('hello.ab_list', '[(1, 2), (3, 4)]')
+
+    # No errors logged = good
+    assert caplog.text == ''
+
+
+@asyncio.coroutine
+def test_execute_sorted(hass, caplog):
+    """Test sorted() function."""
+    caplog.set_level(logging.ERROR)
+    source = """
+a  = sorted([3,1,2])
+assert(a == [1,2,3])
+hass.states.set('hello.a', a[0])
+hass.states.set('hello.b', a[1])
+hass.states.set('hello.c', a[2])
+"""
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('hello.a', '1')
+    assert hass.states.is_state('hello.b', '2')
+    assert hass.states.is_state('hello.c', '3')
+    # No errors logged = good
+    assert caplog.text == ''
+
+
+@asyncio.coroutine
+def test_exposed_modules(hass, caplog):
+    """Test datetime and time modules exposed."""
+    caplog.set_level(logging.ERROR)
+    source = """
+hass.states.set('module.time', time.strftime('%Y', time.gmtime(521276400)))
+hass.states.set('module.datetime',
+                datetime.timedelta(minutes=1).total_seconds())
+"""
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('module.time', '1986')
+    assert hass.states.is_state('module.datetime', '60.0')
+
+    # No errors logged = good
+    assert caplog.text == ''
+
+
+@asyncio.coroutine
+def test_reload(hass):
+    """Test we can re-discover scripts."""
+    scripts = [
+        '/some/config/dir/python_scripts/hello.py',
+        '/some/config/dir/python_scripts/world_beer.py'
+    ]
+    with patch('homeassistant.components.python_script.os.path.isdir',
+               return_value=True), \
+            patch('homeassistant.components.python_script.glob.iglob',
+                  return_value=scripts):
+        res = yield from async_setup_component(hass, 'python_script', {})
+
+    assert res
+    assert hass.services.has_service('python_script', 'hello')
+    assert hass.services.has_service('python_script', 'world_beer')
+    assert hass.services.has_service('python_script', 'reload')
+
+    scripts = [
+        '/some/config/dir/python_scripts/hello2.py',
+        '/some/config/dir/python_scripts/world_beer.py'
+    ]
+    with patch('homeassistant.components.python_script.os.path.isdir',
+               return_value=True), \
+            patch('homeassistant.components.python_script.glob.iglob',
+                  return_value=scripts):
+        yield from hass.services.async_call(
+            'python_script', 'reload', {}, blocking=True)
+
+    assert not hass.services.has_service('python_script', 'hello')
+    assert hass.services.has_service('python_script', 'hello2')
+    assert hass.services.has_service('python_script', 'world_beer')
+    assert hass.services.has_service('python_script', 'reload')
+
+
+@asyncio.coroutine
+def test_sleep_warns_one(hass, caplog):
+    """Test time.sleep warns once."""
+    caplog.set_level(logging.WARNING)
+    source = """
+time.sleep(2)
+time.sleep(5)
+"""
+
+    with patch('homeassistant.components.python_script.time.sleep'):
+        hass.async_add_job(execute, hass, 'test.py', source, {})
+        yield from hass.async_block_till_done()
+
+    assert caplog.text.count('time.sleep') == 1

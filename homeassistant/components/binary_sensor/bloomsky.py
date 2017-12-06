@@ -37,7 +37,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device in bloomsky.BLOOMSKY.devices.values():
         for variable in sensors:
-            add_devices([BloomSkySensor(bloomsky.BLOOMSKY, device, variable)])
+            add_devices(
+                [BloomSkySensor(bloomsky.BLOOMSKY, device, variable)], True)
 
 
 class BloomSkySensor(BinarySensorDevice):
@@ -50,7 +51,7 @@ class BloomSkySensor(BinarySensorDevice):
         self._sensor_name = sensor_name
         self._name = '{} {}'.format(device['DeviceName'], sensor_name)
         self._unique_id = 'bloomsky_binary_sensor {}'.format(self._name)
-        self.update()
+        self._state = None
 
     @property
     def name(self):

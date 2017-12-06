@@ -29,7 +29,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
         devices = []
 
-        def add_dev_callback(devs):
+        def add_dev_callback(devs, update):
             """Add callback to add devices."""
             for dev in devs:
                 devices.append(dev)
@@ -38,6 +38,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
         self.assertEqual(1, len(devices))
         entity = devices[0]
+        entity.update()
         self.assertEqual('Test', entity.name)
         self.assertEqual(STATE_ON, entity.state)
 
@@ -53,19 +54,19 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
     def test_template(self):
         """Test setting the state with a template."""
-        data = command_line.CommandSensorData('echo 10')
+        data = command_line.CommandSensorData(self.hass, 'echo 10')
 
         entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', None, '1.0', '0',
             template.Template('{{ value | multiply(0.1) }}', self.hass))
-
+        entity.update()
         self.assertEqual(STATE_ON, entity.state)
 
     def test_sensor_off(self):
         """Test setting the state with a template."""
-        data = command_line.CommandSensorData('echo 0')
+        data = command_line.CommandSensorData(self.hass, 'echo 0')
 
         entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', None, '1', '0', None)
-
+        entity.update()
         self.assertEqual(STATE_OFF, entity.state)

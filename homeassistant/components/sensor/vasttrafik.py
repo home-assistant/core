@@ -7,10 +7,12 @@ https://home-assistant.io/components/sensor.vasttrafik/
 from datetime import datetime
 from datetime import timedelta
 import logging
+
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -18,13 +20,20 @@ REQUIREMENTS = ['vtjp==0.1.14']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_ACCESSIBILITY = 'accessibility'
+ATTR_DIRECTION = 'direction'
+ATTR_LINE = 'line'
+ATTR_TRACK = 'track'
+
+CONF_ATTRIBUTION = "Data provided by Västtrafik"
 CONF_DELAY = 'delay'
 CONF_DEPARTURES = 'departures'
 CONF_FROM = 'from'
 CONF_HEADING = 'heading'
 CONF_KEY = 'key'
-CONF_NAME = 'name'
 CONF_SECRET = 'secret'
+
+DEFAULT_DELAY = 0
 
 ICON = 'mdi:train'
 
@@ -35,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SECRET): cv.string,
     vol.Optional(CONF_DEPARTURES): [{
         vol.Required(CONF_FROM): cv.string,
-        vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
         vol.Optional(CONF_HEADING): cv.string,
         vol.Optional(CONF_NAME): cv.string}]
 })
@@ -50,13 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
             VasttrafikDepartureSensor(
-                vasttrafik,
-                planner,
-                departure.get(CONF_NAME),
-                departure.get(CONF_FROM),
-                departure.get(CONF_HEADING),
+                vasttrafik, planner, departure.get(CONF_NAME),
+                departure.get(CONF_FROM), departure.get(CONF_HEADING),
                 departure.get(CONF_DELAY)))
-    add_devices(sensors)
+    add_devices(sensors, True)
 
 
 class VasttrafikDepartureSensor(Entity):
@@ -72,7 +78,6 @@ class VasttrafikDepartureSensor(Entity):
                          if heading else None)
         self._delay = timedelta(minutes=delay)
         self._departureboard = None
-        self.update()
 
     @property
     def name(self):
@@ -91,10 +96,11 @@ class VasttrafikDepartureSensor(Entity):
             return
         departure = self._departureboard[0]
         params = {
-            'Line': departure.get('sname', None),
-            'Track': departure.get('track', None),
-            'Direction': departure.get('direction', None),
-            'Accessibility': departure.get('accessibility', None)
+            ATTR_ACCESSIBILITY: departure.get('accessibility', None),
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_DIRECTION: departure.get('direction', None),
+            ATTR_LINE: departure.get('sname', None),
+            ATTR_TRACK: departure.get('track', None),
             }
         return {k: v for k, v in params.items() if v}
 

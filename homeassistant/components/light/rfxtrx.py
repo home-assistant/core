@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
-    lights = rfxtrx.get_devices_from_config(config, RfxtrxLight, hass)
+    lights = rfxtrx.get_devices_from_config(config, RfxtrxLight)
     add_devices(lights)
 
     def light_update(event):
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 not event.device.known_to_be_dimmable:
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxLight, hass)
+        new_device = rfxtrx.get_new_device(event, config, RfxtrxLight)
         if new_device:
             add_devices([new_device])
 

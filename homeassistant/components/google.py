@@ -24,7 +24,7 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
-    'google-api-python-client==1.6.2',
+    'google-api-python-client==1.6.4',
     'oauth2client==4.0.0',
 ]
 
@@ -99,10 +99,10 @@ def do_authentication(hass, config):
     from oauth2client.file import Storage
 
     oauth = OAuth2WebServerFlow(
-        config[CONF_CLIENT_ID],
-        config[CONF_CLIENT_SECRET],
-        'https://www.googleapis.com/auth/calendar.readonly',
-        'Home-Assistant.io',
+        client_id=config[CONF_CLIENT_ID],
+        client_secret=config[CONF_CLIENT_SECRET],
+        scope='https://www.googleapis.com/auth/calendar.readonly',
+        redirect_uri='Home-Assistant.io',
     )
 
     try:
@@ -269,7 +269,7 @@ def load_config(path):
     calendars = {}
     try:
         with open(path) as file:
-            data = yaml.load(file)
+            data = yaml.safe_load(file)
             for calendar in data:
                 try:
                     calendars.update({calendar[CONF_CAL_ID]:

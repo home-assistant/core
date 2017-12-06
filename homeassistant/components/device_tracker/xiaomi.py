@@ -69,7 +69,7 @@ class XiaomiDeviceScanner(DeviceScanner):
         return self.mac2name.get(device.upper(), None)
 
     def _update_info(self):
-        """Ensure the informations from the router are up to date.
+        """Ensure the information from the router are up to date.
 
         Returns true if scanning successful.
         """

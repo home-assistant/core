@@ -55,12 +55,12 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
 
     @property
     def address(self):
-        """Return the the address of the node."""
+        """Return the address of the node."""
         return self._address
 
     @property
     def name(self):
-        """Return the the name of the node."""
+        """Return the name of the node."""
         return self._name
 
     @property

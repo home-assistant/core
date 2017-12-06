@@ -213,7 +213,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning("Invalid white value value received")
+                    _LOGGER.warning("Invalid white value received")
 
             if self._xy is not None:
                 try:
@@ -226,7 +226,7 @@ class MqttJson(Light):
                 except ValueError:
                     _LOGGER.warning("Invalid XY color value received")
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -373,7 +373,7 @@ class MqttJson(Light):
             should_update = True
 
         if should_update:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -393,4 +393,4 @@ class MqttJson(Light):
         if self._optimistic:
             # Optimistically assume that the light has changed state.
             self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

@@ -25,6 +25,7 @@ SENSOR_TYPES_CLASS = {
     'RemoteMotion': None,
     'WeatherSensor': None,
     'TiltSensor': None,
+    'PresenceIP': 'motion',
 }
 
 
@@ -35,8 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMBinarySensor(hass, conf)
-        new_device.link_homematic()
+        new_device = HMBinarySensor(conf)
         devices.append(new_device)
 
     add_devices(devices)

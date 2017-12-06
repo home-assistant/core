@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discover_info=None):
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
         return False
-    add_devices([cmus_remote])
+    add_devices([cmus_remote], True)
 
 
 class CmusDevice(MediaPlayerDevice):
@@ -72,7 +72,6 @@ class CmusDevice(MediaPlayerDevice):
             auto_name = 'cmus-local'
         self._name = name or auto_name
         self.status = {}
-        self.update()
 
     def update(self):
         """Get the latest data and update the state."""

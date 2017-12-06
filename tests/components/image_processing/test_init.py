@@ -24,7 +24,7 @@ class TestSetupImageProcessing(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup demo platfrom on image_process component."""
+        """Setup demo platform on image_process component."""
         config = {
             ip.DOMAIN: {
                 'platform': 'demo'
@@ -35,7 +35,7 @@ class TestSetupImageProcessing(object):
             setup_component(self.hass, ip.DOMAIN, config)
 
     def test_setup_component_with_service(self):
-        """Setup demo platfrom on image_process component test service."""
+        """Setup demo platform on image_process component test service."""
         config = {
             ip.DOMAIN: {
                 'platform': 'demo'

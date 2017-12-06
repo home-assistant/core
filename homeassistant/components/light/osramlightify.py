@@ -23,8 +23,7 @@ from homeassistant.util.color import (
     color_xy_brightness_to_RGB)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/'
-                '1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5']
+REQUIREMENTS = ['lightify==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -270,7 +269,7 @@ class OsramLightifyGroup(Luminary):
     def _get_state(self):
         """Get state of group.
 
-        The group is on, if any of the lights in on.
+        The group is on, if any of the lights is on.
         """
         lights = self._bridge.lights()
         return any(lights[light_id].on() for light_id in self._light_ids)

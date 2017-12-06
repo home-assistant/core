@@ -72,9 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 )
             )
 
-        add_devices(sensors)
-
-    return True
+        add_devices(sensors, True)
 
 
 def get_opening_type(zone):
@@ -100,7 +98,6 @@ class Concord232ZoneSensor(BinarySensorDevice):
         self._zone = zone
         self._number = zone['number']
         self._zone_type = zone_type
-        self.update()
 
     @property
     def device_class(self):
@@ -130,7 +127,7 @@ class Concord232ZoneSensor(BinarySensorDevice):
         if last_update > datetime.timedelta(seconds=1):
             self._client.zones = self._client.list_zones()
             self._client.last_zone_update = datetime.datetime.now()
-            _LOGGER.debug("Updated from Zone: %s", self._zone['name'])
+            _LOGGER.debug("Updated from zone: %s", self._zone['name'])
 
         if hasattr(self._client, 'zones'):
             self._zone = next((x for x in self._client.zones

@@ -199,7 +199,6 @@ class RachioZone(SwitchDevice):
     @property
     def is_on(self):
         """Whether the zone is currently running."""
-        self._device.update()
         schedule = self._device.current_schedule
         return self.zone_id == schedule.get('zoneId')
 

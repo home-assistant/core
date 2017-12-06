@@ -57,19 +57,19 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if message.alarm_sounding or message.fire_alarm:
             if self._state != STATE_ALARM_TRIGGERED:
                 self._state = STATE_ALARM_TRIGGERED
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
         elif message.armed_away:
             if self._state != STATE_ALARM_ARMED_AWAY:
                 self._state = STATE_ALARM_ARMED_AWAY
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
         elif message.armed_home:
             if self._state != STATE_ALARM_ARMED_HOME:
                 self._state = STATE_ALARM_ARMED_HOME
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
         else:
             if self._state != STATE_ALARM_DISARMED:
                 self._state = STATE_ALARM_DISARMED
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
 
     @property
     def name(self):

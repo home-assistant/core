@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.gpmdp/
 """
 import logging
 import json
-import os
 import socket
 import time
 
@@ -18,8 +17,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF, CONF_HOST, CONF_PORT, CONF_NAME)
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['websocket-client==0.37.0']
 
@@ -48,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def request_configuration(hass, config, url, add_devices_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if 'gpmdp' in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['gpmdp'], "Failed to register, please try again.")
@@ -87,8 +86,7 @@ def request_configuration(hass, config, url, add_devices_callback):
                 continue
             setup_gpmdp(hass, config, code,
                         add_devices_callback)
-            _save_config(hass.config.path(GPMDP_CONFIG_FILE),
-                         {"CODE": code})
+            save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
             websocket.send(json.dumps({'namespace': 'connect',
                                        'method': 'connect',
                                        'arguments': ['Home Assistant', code]}))
@@ -96,7 +94,7 @@ def request_configuration(hass, config, url, add_devices_callback):
             break
 
     _CONFIGURING['gpmdp'] = configurator.request_config(
-        hass, DEFAULT_NAME, gpmdp_configuration_callback,
+        DEFAULT_NAME, gpmdp_configuration_callback,
         description=(
             'Enter the pin that is displayed in the '
             'Google Play Music Desktop Player.'),
@@ -117,45 +115,15 @@ def setup_gpmdp(hass, config, code, add_devices):
         return
 
     if 'gpmdp' in _CONFIGURING:
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
-    add_devices([GPMDP(name, url, code)])
+    add_devices([GPMDP(name, url, code)], True)
 
 
-def _load_config(filename):
-    """Load configuration."""
-    if not os.path.isfile(filename):
-        return {}
-
-    try:
-        with open(filename, 'r') as fdesc:
-            inp = fdesc.read()
-
-        # In case empty file
-        if not inp:
-            return {}
-
-        return json.loads(inp)
-    except (IOError, ValueError) as error:
-        _LOGGER.error("Reading config file %s failed: %s", filename, error)
-        return None
-
-
-def _save_config(filename, config):
-    """Save configuration."""
-    try:
-        with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
-    except (IOError, TypeError) as error:
-        _LOGGER.error("Saving configuration file failed: %s", error)
-        return False
-    return True
-
-
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the GPMDP platform."""
-    codeconfig = _load_config(hass.config.path(GPMDP_CONFIG_FILE))
+    codeconfig = load_json(hass.config.path(GPMDP_CONFIG_FILE))
     if codeconfig:
         code = codeconfig.get('CODE')
     elif discovery_info is not None:
@@ -164,7 +132,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         code = None
     else:
         code = None
-    setup_gpmdp(hass, config, code, add_devices_callback)
+    setup_gpmdp(hass, config, code, add_devices)
 
 
 class GPMDP(MediaPlayerDevice):
@@ -186,7 +154,6 @@ class GPMDP(MediaPlayerDevice):
         self._duration = None
         self._volume = None
         self._request_id = 0
-        self.update()
 
     def get_ws(self):
         """Check if the websocket is setup and connected."""

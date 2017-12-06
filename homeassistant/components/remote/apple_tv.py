@@ -8,7 +8,6 @@ import asyncio
 
 from homeassistant.components.apple_tv import (
     ATTR_ATV, ATTR_POWER, DATA_APPLE_TV)
-from homeassistant.components.remote import ATTR_COMMAND
 from homeassistant.components import remote
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 
@@ -68,25 +67,25 @@ class AppleTVRemote(remote.RemoteDevice):
         self._power.set_power_on(True)
 
     @asyncio.coroutine
-    def async_turn_off(self):
+    def async_turn_off(self, **kwargs):
         """Turn the device off.
 
         This method is a coroutine.
         """
         self._power.set_power_on(False)
 
-    def async_send_command(self, **kwargs):
+    def async_send_command(self, command, **kwargs):
         """Send a command to one device.
 
         This method must be run in the event loop and returns a coroutine.
         """
         # Send commands in specified order but schedule only one coroutine
         @asyncio.coroutine
-        def _send_commads():
-            for command in kwargs[ATTR_COMMAND]:
-                if not hasattr(self._atv.remote_control, command):
+        def _send_commands():
+            for single_command in command:
+                if not hasattr(self._atv.remote_control, single_command):
                     continue
 
-                yield from getattr(self._atv.remote_control, command)()
+                yield from getattr(self._atv.remote_control, single_command)()
 
-        return _send_commads()
+        return _send_commands()

@@ -116,6 +116,6 @@ class AsyncHandler(object):
         return self.handler.get_name()
 
     @name.setter
-    def set_name(self, name):
+    def name(self, name):
         """Wrap property get_name to handler."""
         self.handler.name = name

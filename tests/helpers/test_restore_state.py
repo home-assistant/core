@@ -51,6 +51,85 @@ def test_caching_data(hass):
     assert DATA_RESTORE_CACHE not in hass.data
 
 
+@asyncio.coroutine
+def test_hass_running(hass):
+    """Test that cache cannot be accessed while hass is running."""
+    mock_component(hass, 'recorder')
+
+    states = [
+        State('input_boolean.b0', 'on'),
+        State('input_boolean.b1', 'on'),
+        State('input_boolean.b2', 'on'),
+    ]
+
+    with patch('homeassistant.helpers.restore_state.last_recorder_run',
+               return_value=MagicMock(end=dt_util.utcnow())), \
+            patch('homeassistant.helpers.restore_state.get_states',
+                  return_value=states), \
+            patch('homeassistant.helpers.restore_state.wait_connection_ready',
+                  return_value=mock_coro(True)):
+        state = yield from async_get_last_state(hass, 'input_boolean.b1')
+    assert state is None
+
+
+@asyncio.coroutine
+def test_not_connected(hass):
+    """Test that cache cannot be accessed if db connection times out."""
+    mock_component(hass, 'recorder')
+    hass.state = CoreState.starting
+
+    states = [State('input_boolean.b1', 'on')]
+
+    with patch('homeassistant.helpers.restore_state.last_recorder_run',
+               return_value=MagicMock(end=dt_util.utcnow())), \
+            patch('homeassistant.helpers.restore_state.get_states',
+                  return_value=states), \
+            patch('homeassistant.helpers.restore_state.wait_connection_ready',
+                  return_value=mock_coro(False)):
+        state = yield from async_get_last_state(hass, 'input_boolean.b1')
+    assert state is None
+
+
+@asyncio.coroutine
+def test_no_last_run_found(hass):
+    """Test that cache cannot be accessed if no last run found."""
+    mock_component(hass, 'recorder')
+    hass.state = CoreState.starting
+
+    states = [State('input_boolean.b1', 'on')]
+
+    with patch('homeassistant.helpers.restore_state.last_recorder_run',
+               return_value=None), \
+            patch('homeassistant.helpers.restore_state.get_states',
+                  return_value=states), \
+            patch('homeassistant.helpers.restore_state.wait_connection_ready',
+                  return_value=mock_coro(True)):
+        state = yield from async_get_last_state(hass, 'input_boolean.b1')
+    assert state is None
+
+
+@asyncio.coroutine
+def test_cache_timeout(hass):
+    """Test that cache timeout returns none."""
+    mock_component(hass, 'recorder')
+    hass.state = CoreState.starting
+
+    states = [State('input_boolean.b1', 'on')]
+
+    @asyncio.coroutine
+    def timeout_coro():
+        raise asyncio.TimeoutError()
+
+    with patch('homeassistant.helpers.restore_state.last_recorder_run',
+               return_value=MagicMock(end=dt_util.utcnow())), \
+            patch('homeassistant.helpers.restore_state.get_states',
+                  return_value=states), \
+            patch('homeassistant.helpers.restore_state.wait_connection_ready',
+                  return_value=timeout_coro()):
+        state = yield from async_get_last_state(hass, 'input_boolean.b1')
+    assert state is None
+
+
 def _add_data_in_last_run(hass, entities):
     """Add test data in the last recorder_run."""
     # pylint: disable=protected-access

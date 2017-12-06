@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/emulated_hue/
 """
 import asyncio
-import json
 import logging
 
 import voluptuous as vol
@@ -16,7 +15,10 @@ from homeassistant.const import (
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView)
@@ -66,6 +68,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
 def setup(hass, yaml_config):
@@ -74,7 +77,6 @@ def setup(hass, yaml_config):
 
     server = HomeAssistantWSGI(
         hass,
-        development=False,
         server_host=config.host_ip_addr,
         server_port=config.listen_port,
         api_password=None,
@@ -129,13 +131,13 @@ class Config(object):
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning("Alexa type is deprecated and will be removed in a"
-                            "future version")
+                            " future version")
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
         if self.host_ip_addr is None:
             self.host_ip_addr = util.get_local_ip()
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Listen IP address not specified, auto-detected address is %s",
                 self.host_ip_addr)
 
@@ -143,12 +145,12 @@ class Config(object):
         self.listen_port = conf.get(CONF_LISTEN_PORT)
         if not isinstance(self.listen_port, int):
             self.listen_port = DEFAULT_LISTEN_PORT
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Listen port not specified, defaulting to %s",
                 self.listen_port)
 
         if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning("When targetting Google Home, listening port has "
+            _LOGGER.warning("When targeting Google Home, listening port has "
                             "to be port 80")
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
@@ -186,16 +188,18 @@ class Config(object):
             return entity_id
 
         if self.numbers is None:
-            self.numbers = self._load_numbers_json()
+            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         for number, ent_id in self.numbers.items():
             if entity_id == ent_id:
                 return number
 
-        number = str(max(int(k) for k in self.numbers) + 1)
+        number = '1'
+        if self.numbers:
+            number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
-        self._save_numbers_json()
+        save_json(self.hass.config.path(NUMBERS_FILE), self.numbers)
         return number
 
     def number_to_entity_id(self, number):
@@ -204,7 +208,7 @@ class Config(object):
             return number
 
         if self.numbers is None:
-            self.numbers = self._load_numbers_json()
+            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         assert isinstance(number, str)
@@ -221,7 +225,15 @@ class Config(object):
 
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-
+        explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
+        if explicit_expose is True or explicit_hidden is False:
+            expose = True
+        elif explicit_expose is False or explicit_hidden is True:
+            expose = False
+        else:
+            expose = None
+        get_deprecated(entity.attributes, ATTR_EMULATED_HUE_HIDDEN,
+                       ATTR_EMULATED_HUE, None)
         domain_exposed_by_default = \
             self.expose_by_default and domain in self.exposed_domains
 
@@ -229,29 +241,15 @@ class Config(object):
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
         is_default_exposed = \
-            domain_exposed_by_default and explicit_expose is not False
+            domain_exposed_by_default and expose is not False
 
-        return is_default_exposed or explicit_expose
+        return is_default_exposed or expose
 
-    def _load_numbers_json(self):
-        """Set up helper method to load numbers json."""
-        try:
-            with open(self.hass.config.path(NUMBERS_FILE),
-                      encoding='utf-8') as fil:
-                return json.loads(fil.read())
-        except (OSError, ValueError) as err:
-            # OSError if file not found or unaccessible/no permissions
-            # ValueError if could not parse JSON
-            if not isinstance(err, FileNotFoundError):
-                _LOGGER.warning("Failed to open %s: %s", NUMBERS_FILE, err)
-            return {}
 
-    def _save_numbers_json(self):
-        """Set up helper method to save numbers json."""
-        try:
-            with open(self.hass.config.path(NUMBERS_FILE), 'w',
-                      encoding='utf-8') as fil:
-                fil.write(json.dumps(self.numbers))
-        except OSError as err:
-            # OSError if file write permissions
-            _LOGGER.warning("Failed to write %s: %s", NUMBERS_FILE, err)
+def _load_json(filename):
+    """Wrapper, because we actually want to handle invalid json."""
+    try:
+        return load_json(filename)
+    except HomeAssistantError:
+        pass
+    return {}

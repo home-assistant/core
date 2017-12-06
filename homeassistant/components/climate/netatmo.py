@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
@@ -35,8 +36,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_AWAY_MODE)
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
@@ -49,7 +53,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
                 if config[CONF_THERMOSTAT] != [] and \
                    module_name not in config[CONF_THERMOSTAT]:
                     continue
-            add_callback_devices([NetatmoThermostat(data, module_name)])
+            add_devices([NetatmoThermostat(data, module_name)], True)
     except lnetatmo.NoDevice:
         return None
 
@@ -64,7 +68,11 @@ class NetatmoThermostat(ClimateDevice):
         self._name = module_name
         self._target_temperature = None
         self._away = None
-        self.update()
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def name(self):

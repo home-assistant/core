@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_HOST, CONF_METHOD, CONF_PORT, ATTR_STATE)
+    CONF_HOST, CONF_METHOD, CONF_PORT, CONF_TYPE, CONF_TIMEOUT, ATTR_STATE)
 
 DOMAIN = 'modbus'
 
@@ -24,7 +24,6 @@ REQUIREMENTS = ['pymodbus==1.3.1']
 CONF_BAUDRATE = 'baudrate'
 CONF_BYTESIZE = 'bytesize'
 CONF_STOPBITS = 'stopbits'
-CONF_TYPE = 'type'
 CONF_PARITY = 'parity'
 
 SERIAL_SCHEMA = {
@@ -35,12 +34,14 @@ SERIAL_SCHEMA = {
     vol.Required(CONF_PARITY): vol.Any('E', 'O', 'N'),
     vol.Required(CONF_STOPBITS): vol.Any(1, 2),
     vol.Required(CONF_TYPE): 'serial',
+    vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
 }
 
 ETHERNET_SCHEMA = {
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.positive_int,
     vol.Required(CONF_TYPE): vol.Any('tcp', 'udp'),
+    vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
 }
 
 
@@ -89,15 +90,18 @@ def setup(hass, config):
                               baudrate=config[DOMAIN][CONF_BAUDRATE],
                               stopbits=config[DOMAIN][CONF_STOPBITS],
                               bytesize=config[DOMAIN][CONF_BYTESIZE],
-                              parity=config[DOMAIN][CONF_PARITY])
+                              parity=config[DOMAIN][CONF_PARITY],
+                              timeout=config[DOMAIN][CONF_TIMEOUT])
     elif client_type == 'tcp':
         from pymodbus.client.sync import ModbusTcpClient as ModbusClient
         client = ModbusClient(host=config[DOMAIN][CONF_HOST],
-                              port=config[DOMAIN][CONF_PORT])
+                              port=config[DOMAIN][CONF_PORT],
+                              timeout=config[DOMAIN][CONF_TIMEOUT])
     elif client_type == 'udp':
         from pymodbus.client.sync import ModbusUdpClient as ModbusClient
         client = ModbusClient(host=config[DOMAIN][CONF_HOST],
-                              port=config[DOMAIN][CONF_PORT])
+                              port=config[DOMAIN][CONF_PORT],
+                              timeout=config[DOMAIN][CONF_TIMEOUT])
     else:
         return False
 

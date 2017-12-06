@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['ha-ffmpeg==1.5']
+REQUIREMENTS = ['ha-ffmpeg==1.9']
 
 DOMAIN = 'ffmpeg'
 
@@ -242,7 +242,7 @@ class FFmpegBase(Entity):
         def async_start_handle(event):
             """Start FFmpeg process."""
             yield from self._async_start_ffmpeg(None)
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_start_handle)

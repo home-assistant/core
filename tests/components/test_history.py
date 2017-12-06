@@ -145,6 +145,48 @@ class TestComponentHistory(unittest.TestCase):
             self.hass, zero, four, filters=history.Filters())
         assert states == hist
 
+    def test_get_significant_states_with_initial(self):
+        """Test that only significant states are returned.
+
+        We should get back every thermostat change that
+        includes an attribute change, but only the state updates for
+        media player (attribute changes are not significant and not returned).
+        """
+        zero, four, states = self.record_states()
+        one = zero + timedelta(seconds=1)
+        one_and_half = zero + timedelta(seconds=1.5)
+        for entity_id in states:
+            if entity_id == 'media_player.test':
+                states[entity_id] = states[entity_id][1:]
+            for state in states[entity_id]:
+                if state.last_changed == one:
+                    state.last_changed = one_and_half
+
+        hist = history.get_significant_states(
+            self.hass, one_and_half, four, filters=history.Filters(),
+            include_start_time_state=True)
+        assert states == hist
+
+    def test_get_significant_states_without_initial(self):
+        """Test that only significant states are returned.
+
+        We should get back every thermostat change that
+        includes an attribute change, but only the state updates for
+        media player (attribute changes are not significant and not returned).
+        """
+        zero, four, states = self.record_states()
+        one = zero + timedelta(seconds=1)
+        one_and_half = zero + timedelta(seconds=1.5)
+        for entity_id in states:
+            states[entity_id] = list(filter(
+                lambda s: s.last_changed != one, states[entity_id]))
+        del states['media_player.test2']
+
+        hist = history.get_significant_states(
+            self.hass, one_and_half, four, filters=history.Filters(),
+            include_start_time_state=False)
+        assert states == hist
+
     def test_get_significant_states_entity_id(self):
         """Test that only significant states are returned for one entity."""
         zero, four, states = self.record_states()
@@ -154,7 +196,19 @@ class TestComponentHistory(unittest.TestCase):
         del states['script.can_cancel_this_one']
 
         hist = history.get_significant_states(
-            self.hass, zero, four, 'media_player.test',
+            self.hass, zero, four, ['media_player.test'],
+            filters=history.Filters())
+        assert states == hist
+
+    def test_get_significant_states_multiple_entity_ids(self):
+        """Test that only significant states are returned for one entity."""
+        zero, four, states = self.record_states()
+        del states['media_player.test2']
+        del states['thermostat.test2']
+        del states['script.can_cancel_this_one']
+
+        hist = history.get_significant_states(
+            self.hass, zero, four, ['media_player.test', 'thermostat.test'],
             filters=history.Filters())
         assert states == hist
 

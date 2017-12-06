@@ -4,18 +4,22 @@ Allows to configure custom shell commands to turn a value for a sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_line/
 """
-from datetime import timedelta
 import logging
 import subprocess
+import shlex
+
+from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers import template
+from homeassistant.exceptions import TemplateError
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +44,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(command)
+    data = CommandSensorData(hass, command)
 
-    add_devices([CommandSensor(hass, data, name, unit, value_template)])
+    add_devices([CommandSensor(hass, data, name, unit, value_template)], True)
 
 
 class CommandSensor(Entity):
@@ -53,10 +57,9 @@ class CommandSensor(Entity):
         self._hass = hass
         self.data = data
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
-        self.update()
 
     @property
     def name(self):
@@ -90,20 +93,52 @@ class CommandSensor(Entity):
 class CommandSensorData(object):
     """The class for handling the data retrieval."""
 
-    def __init__(self, command):
+    def __init__(self, hass, command):
         """Initialize the data object."""
-        self.command = command
         self.value = None
+        self.hass = hass
+        self.command = command
 
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info("Running command: %s", self.command)
+        command = self.command
+        cache = {}
 
+        if command in cache:
+            prog, args, args_compiled = cache[command]
+        elif ' ' not in command:
+            prog = command
+            args = None
+            args_compiled = None
+            cache[command] = (prog, args, args_compiled)
+        else:
+            prog, args = command.split(' ', 1)
+            args_compiled = template.Template(args, self.hass)
+            cache[command] = (prog, args, args_compiled)
+
+        if args_compiled:
+            try:
+                args_to_render = {"arguments": args}
+                rendered_args = args_compiled.render(args_to_render)
+            except TemplateError as ex:
+                _LOGGER.exception("Error rendering command template: %s", ex)
+                return
+        else:
+            rendered_args = None
+
+        if rendered_args == args:
+            # No template used. default behavior
+            shell = True
+        else:
+            # Template used. Construct the string used in the shell
+            command = str(' '.join([prog] + shlex.split(rendered_args)))
+            shell = True
         try:
+            _LOGGER.info("Running command: %s", command)
             return_value = subprocess.check_output(
-                self.command, shell=True, timeout=15)
+                command, shell=shell, timeout=15)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error("Command failed: %s", self.command)
+            _LOGGER.error("Command failed: %s", command)
         except subprocess.TimeoutExpired:
-            _LOGGER.error("Timeout for command: %s", self.command)
+            _LOGGER.error("Timeout for command: %s", command)

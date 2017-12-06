@@ -31,7 +31,7 @@ DOMAIN = 'hdmi_cec'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DISPLAY_NAME = "HomeAssistant"
+DEFAULT_DISPLAY_NAME = "HA"
 CONF_TYPES = 'types'
 
 ICON_UNKNOWN = 'mdi:help'
@@ -66,7 +66,6 @@ ATTR_TYPE_ID = 'type_id'
 ATTR_VENDOR_NAME = 'vendor_name'
 ATTR_VENDOR_ID = 'vendor_id'
 ATTR_DEVICE = 'device'
-ATTR_COMMAND = 'command'
 ATTR_TYPE = 'type'
 ATTR_KEY = 'key'
 ATTR_DUR = 'dur'
@@ -182,7 +181,7 @@ def setup(hass: HomeAssistant, base_config):
     if host:
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
-        adapter = CecAdapter(name=display_name, activate_source=False)
+        adapter = CecAdapter(name=display_name[:12], activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
 
     def _volume(call):

@@ -159,7 +159,7 @@ class EmbyDevice(MediaPlayerDevice):
             self.media_status_last_position = None
             self.media_status_received = None
 
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def hidden(self):

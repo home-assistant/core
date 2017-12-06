@@ -18,10 +18,10 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AVAILABLE = "available"
-ATTR_SENSOR_STRENGTH = "sensor reflection rate"
-ATTR_SIGNAL_STRENGTH = "wifi signal strength (dB)"
-ATTR_TIME_IN_STATE = "time in state"
+ATTR_AVAILABLE = 'available'
+ATTR_SENSOR_STRENGTH = 'sensor_reflection_rate'
+ATTR_SIGNAL_STRENGTH = 'wifi_signal_strength'
+ATTR_TIME_IN_STATE = 'time_in_state'
 
 DEFAULT_NAME = 'Garadget'
 

@@ -6,28 +6,29 @@ https://home-assistant.io/components/device_tracker.upc_connect/
 """
 import asyncio
 import logging
-import xml.etree.ElementTree as ET
 
 import aiohttp
+from aiohttp.hdrs import REFERER, USER_AGENT
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
+
+CMD_DEVICES = 123
 
 DEFAULT_IP = '192.168.0.1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
 })
-
-CMD_DEVICES = 123
 
 
 @asyncio.coroutine
@@ -51,11 +52,11 @@ class UPCDeviceScanner(DeviceScanner):
         self.token = None
 
         self.headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Referer': "http://{}/index.html".format(self.host),
-            'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
-                           "AppleWebKit/537.36 (KHTML, like Gecko) "
-                           "Chrome/47.0.2526.106 Safari/537.36")
+            HTTP_HEADER_X_REQUESTED_WITH: 'XMLHttpRequest',
+            REFERER: "http://{}/index.html".format(self.host),
+            USER_AGENT: ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
+                         "AppleWebKit/537.36 (KHTML, like Gecko) "
+                         "Chrome/47.0.2526.106 Safari/537.36")
         }
 
         self.websession = async_get_clientsession(hass)
@@ -63,6 +64,8 @@ class UPCDeviceScanner(DeviceScanner):
     @asyncio.coroutine
     def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
+        import defusedxml.ElementTree as ET
+
         if self.token is None:
             token_initialized = yield from self.async_initialize_token()
             if not token_initialized:
@@ -92,8 +95,7 @@ class UPCDeviceScanner(DeviceScanner):
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from self.websession.get(
                     "http://{}/common_page/login.html".format(self.host),
-                    headers=self.headers
-                )
+                    headers=self.headers)
 
                 yield from response.text()
 
@@ -115,17 +117,15 @@ class UPCDeviceScanner(DeviceScanner):
                 response = yield from self.websession.post(
                     "http://{}/xml/getter.xml".format(self.host),
                     data="token={}&fun={}".format(self.token, function),
-                    headers=self.headers,
-                    allow_redirects=False
-                )
+                    headers=self.headers, allow_redirects=False)
 
-                # error?
+                # Error?
                 if response.status != 200:
                     _LOGGER.warning("Receive http code %d", response.status)
                     self.token = None
                     return
 
-                # load data, store token for next request
+                # Load data, store token for next request
                 self.token = response.cookies['sessionToken'].value
                 return (yield from response.text())
 
