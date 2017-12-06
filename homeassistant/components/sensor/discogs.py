@@ -48,7 +48,7 @@ class DiscogsCollection(Entity):
 
         self._ds_user = discogs.identity()
         self._state = None
-        
+
         # Don't setup platform if token is invalid
         if self._ds_user is None:
             return False
