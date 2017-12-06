@@ -35,6 +35,11 @@ class TellstickCover(TellstickDevice, CoverDevice):
         """Return the current position of the cover is not possible."""
         return None
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the entity."""
+        return True
+
     def close_cover(self, **kwargs):
         """Close the cover."""
         self._tellcore_device.down()
@@ -57,4 +62,4 @@ class TellstickCover(TellstickDevice, CoverDevice):
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
-        self._state = new_state
+        pass
