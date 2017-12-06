@@ -126,21 +126,23 @@ class GoogleAssistantView(HomeAssistantView):
         commands = []
         for command in requested_commands:
             ent_ids = [ent.get('id') for ent in command.get('devices', [])]
-            execution = command.get('execution')[0]
-            for eid in ent_ids:
-                success = False
-                domain = eid.split('.')[0]
-                (service, service_data) = determine_service(
-                    eid, execution.get('command'), execution.get('params'),
-                    hass.config.units)
-                success = yield from hass.services.async_call(
-                    domain, service, service_data, blocking=True)
-                result = {"ids": [eid], "states": {}}
-                if success:
-                    result['status'] = 'SUCCESS'
-                else:
-                    result['status'] = 'ERROR'
-                commands.append(result)
+            for execution in command.get('execution'):
+                for eid in ent_ids:
+                    success = False
+                    domain = eid.split('.')[0]
+                    (service, service_data) = determine_service(
+                        eid, execution.get('command'), execution.get('params'),
+                        hass.config.units)
+                    if domain == "group":
+                        domain = "homeassistant"
+                    success = yield from hass.services.async_call(
+                        domain, service, service_data, blocking=True)
+                    result = {"ids": [eid], "states": {}}
+                    if success:
+                        result['status'] = 'SUCCESS'
+                    else:
+                        result['status'] = 'ERROR'
+                    commands.append(result)
 
         return self.json(
             _make_actions_response(request_id, {'commands': commands}))

@@ -51,6 +51,19 @@ STATE_HIGH_DEMAND = 'high_demand'
 STATE_HEAT_PUMP = 'heat_pump'
 STATE_GAS = 'gas'
 
+SUPPORT_TARGET_TEMPERATURE = 1
+SUPPORT_TARGET_TEMPERATURE_HIGH = 2
+SUPPORT_TARGET_TEMPERATURE_LOW = 4
+SUPPORT_TARGET_HUMIDITY = 8
+SUPPORT_TARGET_HUMIDITY_HIGH = 16
+SUPPORT_TARGET_HUMIDITY_LOW = 32
+SUPPORT_FAN_MODE = 64
+SUPPORT_OPERATION_MODE = 128
+SUPPORT_HOLD_MODE = 256
+SUPPORT_SWING_MODE = 512
+SUPPORT_AWAY_MODE = 1024
+SUPPORT_AUX_HEAT = 2048
+
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
@@ -716,6 +729,11 @@ class ClimateDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.turn_aux_heat_off)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        raise NotImplementedError()
 
     @property
     def min_temp(self):
