@@ -267,6 +267,5 @@ class DaikinHVAC(ClimateDevice):
         """Retrieve latest state."""
         import pydaikin.appliance as appliance
 
-        #Get the latest data from API
         for resource in appliance.HTTP_RESOURCES:
             self._device.values.update(self._device.get_resource(resource))
