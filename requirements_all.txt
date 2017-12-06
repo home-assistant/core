@@ -623,7 +623,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==1.0.2
+pychromecast==0.8.2
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -883,7 +883,7 @@ python-velbus==2.0.11
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.7.0
+python-wink==1.7.1
 
 # homeassistant.components.sensor.swiss_public_transport
 python_opendata_transport==0.0.3
@@ -1063,7 +1063,7 @@ tellcore-net==0.3
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.3
+tellduslive==0.10.4
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.3
