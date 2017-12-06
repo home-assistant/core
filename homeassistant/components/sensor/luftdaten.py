@@ -47,7 +47,7 @@ DEFAULT_NAME = 'Luftdaten'
 
 CONF_SENSORID = 'sensorid'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORID): cv.positive_int,
@@ -117,7 +117,7 @@ class LuftdatenSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.luftdaten is None:
+        if self.luftdaten.data.meta is None:
             return
 
         attr = {
@@ -154,4 +154,3 @@ class LuftdatenData(object):
             yield from self.data.async_get_data()
         except LuftdatenError:
             _LOGGER.error("Unable to retrieve data from luftdaten.info")
-            self.data = None
