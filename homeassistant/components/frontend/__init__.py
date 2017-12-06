@@ -583,9 +583,9 @@ def _is_latest(js_option, request):
 
     family_min_version = {
         'Chrome': 50,   # Probably can reduce this
-        'Firefox': 41,  # Destructuring added in 41
+        'Firefox': 43,  # Array.protopype.includes added in 43
         'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Maybe can reduce this
+        'Edge': 14,     # Array.protopype.includes added in 14
         'Safari': 10,   # many features not supported by 9
     }
     version = family_min_version.get(useragent.browser.family)
