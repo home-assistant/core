@@ -8,7 +8,8 @@ import logging
 
 from homeassistant.components.fritzhome import DOMAIN
 from homeassistant.components.climate import (
-    ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO)
+    ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (PRECISION_HALVES)
 from homeassistant.const import (TEMP_CELSIUS, ATTR_TEMPERATURE)
 
@@ -18,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_COMFORT = 'comfort'
 STATE_MANUAL = 'manual'
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
 OPERATION_LIST = [STATE_COMFORT, STATE_ECO, STATE_MANUAL]
 
@@ -47,6 +50,11 @@ class FritzhomeThermostat(ClimateDevice):
         self._target_temperature = self._device.target_temperature
         self._comfort_temperature = self._device.comfort_temperature
         self._eco_temperature = self._device.eco_temperature
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def available(self):
