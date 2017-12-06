@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
     SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+    SUPPORT_REPEAT_SET, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
-    SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
+    SUPPORT_PLAY_MEDIA | SUPPORT_REPEAT_SET | SUPPORT_SHUFFLE_SET
 
 SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
@@ -132,6 +132,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._current_device = None
         self._devices = {}
         self._volume = None
+        self._repeat = False
         self._shuffle = False
         self._player = None
         self._user = None
@@ -201,7 +202,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._state = STATE_PAUSED
         if current.get('is_playing'):
             self._state = STATE_PLAYING
-        self._shuffle = current.get('shuffle_state')
+        self._repeat = current.get('repeat_state')
+        self._shuffle = current.get('shuffle_state') 
+
         device = current.get('device')
         if device is None:
             self._state = STATE_IDLE
@@ -214,6 +217,10 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set the volume level."""
         self._player.volume(int(volume * 100))
+
+    def set_repeat(self, repeat):
+        """Enable/Disable repeat mode."""
+        self._player.repeat(repeat)
 
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
@@ -275,6 +282,11 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def volume_level(self):
         """Return the device volume."""
         return self._volume
+
+    @property
+    def repeat(self):
+        """Shuffling state."""
+        return self._repeat
 
     @property
     def shuffle(self):

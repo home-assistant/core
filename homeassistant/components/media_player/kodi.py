@@ -22,7 +22,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN,
-    SUPPORT_TURN_ON)
+    SUPPORT_REPEAT_SET, SUPPORT_TURN_ON)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -78,7 +78,7 @@ MEDIA_TYPES = {
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
                SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_SHUFFLE_SET | \
-               SUPPORT_PLAY | SUPPORT_VOLUME_STEP
+               SUPPORT_REPEAT_SET | SUPPORT_PLAY | SUPPORT_VOLUME_STEP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -733,6 +733,14 @@ class KodiDevice(MediaPlayerDevice):
 
         return self.server.Player.Open(
             {"item": {"file": str(media_id)}})
+
+    @asyncio.coroutine
+    def async_set_repeat(self, repeat):
+        """Set repeat mode, for the first player."""
+        if len(self._players) < 1:
+            raise RuntimeError("Error: No active player.")
+        yield from self.server.Player.SetShuffle(
+            {"playerid": self._players[0]['playerid'], "repeat": repeat})
 
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle):
