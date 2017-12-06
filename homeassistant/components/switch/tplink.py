@@ -22,9 +22,12 @@ ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_DAILY_CONSUMPTION = 'daily_consumption'
 ATTR_CURRENT = 'current'
 
+CONF_LEDS = 'enable_leds'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_LEDS, default=True): cv.boolean,
 })
 
 
@@ -34,17 +37,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from pyHS100 import SmartPlug
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
+    leds_on = config.get(CONF_LEDS)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host), name)], True)
+    add_devices([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug, name):
+    def __init__(self, smartplug, name, leds_on):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
+        self._leds_on = leds_on
         self._state = None
         self._available = True
         # Set up emeter cache
@@ -88,6 +93,8 @@ class SmartPlugSwitch(SwitchDevice):
 
             if self._name is None:
                 self._name = self.smartplug.alias
+
+            self.smartplug.led = self._leds_on
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
