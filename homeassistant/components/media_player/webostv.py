@@ -173,6 +173,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._volume = 0
         self._current_source = None
         self._current_source_id = None
+        self._current_channel = None
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
@@ -199,6 +200,10 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._source_list = {}
                 self._app_list = {}
                 conf_sources = self._customize.get(CONF_SOURCES, [])
+
+                self._current_channel = \
+                    self._client.get_current_channel()\
+                        .get('channelName', None)
 
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
@@ -280,6 +285,26 @@ class LgWebOSDevice(MediaPlayerDevice):
             return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
 
+    @property
+    def media_channel(self):
+        """Channel currently playing."""
+        return self._current_channel
+
+    @property
+    def app_id(self):
+        """ID of the current running app."""
+        return self._current_source_id
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        return self._current_source
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        return self._current_channel
+
     def turn_off(self):
         """Turn off media player."""
         from websockets.exceptions import ConnectionClosed
@@ -350,3 +375,12 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self._client.rewind()
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        self._playing = True
+        self._state = STATE_PLAYING
+        if media_type != MEDIA_TYPE_CHANNEL:
+            self._client.play()
+        else:
+            self._client.set_channel(media_id)
