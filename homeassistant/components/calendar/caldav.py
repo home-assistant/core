@@ -16,12 +16,9 @@ from homeassistant.components.calendar import (
 from homeassistant.const import (
     CONF_NAME, CONF_URL, CONF_USERNAME, CONF_PASSWORD)
 
-from homeassistant.util import dt
-from homeassistant.util import Throttle
+from homeassistant.util import dt, Throttle
 
 REQUIREMENTS = ['caldav==0.5.0']
-# and libxm2-dev + libxslt1-dev + zlib1g-dev
-DOMAIN = "caldav"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +30,13 @@ CONF_ALL_DAY = 'all_day'
 CONF_SEARCH = 'search'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): cv.string,
+    vol.Required(CONF_URL): vol.Url(),
     vol.Optional(CONF_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             cv.string
         ])),
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             vol.Schema({
