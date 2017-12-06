@@ -34,13 +34,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     try:
         api = VesyncApi(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
         _LOGGER.info("Connected to Vesync API")
-    except RuntimeException:
+    except RuntimeError:
         _LOGGER.error("Failed to connect to Vesync API")
 
     try:
         devices = api.get_devices()
         _LOGGER.info("Retrieved devices from Vesync API")
-    except RuntimeException:
+    except RuntimeError:
         _LOGGER.error("Failed to retrieve devices from Vesync API")
 
     for switch in devices:
@@ -83,19 +83,19 @@ class VesyncSwitch(SwitchDevice):
                 if (device["cid"] == self._switch["cid"]):
                     self._switch = device
                     break
-        except RuntimeException:
+        except RuntimeError:
             _LOGGER.exception("Error while fetching Vesync state")
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
         try:
             self._api.turn_on(self._switch["cid"])
-        except RuntimeException:
+        except RuntimeError:
             _LOGGER.exception("Error while turning on Vesync")
 
     def turn_off(self, **kwargs):
         """Turn the device on."""
         try:
             self._api.turn_off(self._switch["cid"])
-        except RuntimeException:
+        except RuntimeError:
             _LOGGER.exception("Error while turning off Vesync")
