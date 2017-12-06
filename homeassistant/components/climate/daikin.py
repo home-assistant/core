@@ -1,5 +1,5 @@
 """
-Support for the Daikin HVAC
+Support for the Daikin HVAC.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.daikin/
@@ -82,6 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_hvac(host, name):
+    """Setup Daikin HVAC device."""
     if host is None:
         _LOGGER.error("Missing required configuration items %s",
                       CONF_HOST)
@@ -100,6 +101,7 @@ class DaikinHVAC(ClimateDevice):
     """Representation of a Daikin HVAC."""
 
     def __init__(self, device, name):
+        """Initialize the climate device."""
         import pydaikin.appliance as appliance
 
         """Initialize the HVAC."""
@@ -202,7 +204,6 @@ class DaikinHVAC(ClimateDevice):
 
     def set_humidity(self, humidity):
         """Set new target temperature."""
-
         if humidity is not None:
             self._target_humidity = humidity
             self._device.set({"shum": humidity})
@@ -217,7 +218,6 @@ class DaikinHVAC(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Set fan mode."""
-
         if fan is not None:
             self._device.set({"f_rate": fan})
             self._current_fan_mode = fan
@@ -248,6 +248,7 @@ class DaikinHVAC(ClimateDevice):
         return self._swing_list
 
     def settings(self, key, cast_to_float=False):
+        """Retrieve device settings from API library cache."""
         value = None
         if key in self._device.values:
             value = self._device.values[key]
@@ -265,7 +266,7 @@ class DaikinHVAC(ClimateDevice):
         return value
 
     def update(self):
-        """Retrieve latest state """
+        """Retrieve latest state."""
         import pydaikin.appliance as appliance
 
         """Get the latest data."""
