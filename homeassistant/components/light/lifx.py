@@ -156,10 +156,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     return True
 
+
 def lifx_features(device):
     """Return a feature map for this device, or a default map if unknown."""
     return aiolifx().products.features_map.get(device.product) or \
-           aiolifx().products.features_map.get(1)
+        aiolifx().products.features_map.get(1)
+
 
 def find_hsbk(**kwargs):
     """Find the desired color from a number of possible inputs."""
