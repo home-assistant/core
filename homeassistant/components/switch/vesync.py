@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['Vesync==1.0.1']
+REQUIREMENTS = ['vesync==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
