@@ -94,7 +94,10 @@ class MerakiView(HomeAssistantView):
     def _handle(self, hass, data):
         for i in data["data"]["observations"]:
             data["data"]["secret"] = "hidden"
-            mac = i["clientMac"]
+            if data['type'] == 'BluetoothDevicesSeen':
+                mac = 'BLE_' + i["clientMac"]
+            else:
+                mac = i["clientMac"]
             _LOGGER.debug("clientMac: %s", mac)
             attrs = {}
             if i.get('os', False):
