@@ -94,7 +94,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                 self._current_channel = channel
                 program = yield from \
                     self._client.async_get_current_program()
-                if program:
+                if program and self._current_program != program.get('name'):
                     self._current_program = program.get('name')
                     # Media progress info
                     self._media_duration = \
