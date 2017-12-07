@@ -1,0 +1,2 @@
+request_sync:
+  description: Send a request_sync command to Google.

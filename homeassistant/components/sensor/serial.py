@@ -93,6 +93,7 @@ class SerialSensor(Entity):
                 line = self._template.async_render_with_possible_json_value(
                     line)
 
+            _LOGGER.debug("Received: %s", line)
             self._state = line
             self.async_schedule_update_ha_state()
 
@@ -113,7 +114,7 @@ class SerialSensor(Entity):
         return False
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the attributes of the entity (if any JSON present)."""
         return self._attributes
 

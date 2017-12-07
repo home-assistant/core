@@ -77,8 +77,13 @@ def setup(hass, config):
 
                 req = requests.get(url, stream=True, timeout=10)
 
-                if req.status_code == 200:
+                if req.status_code != 200:
+                    _LOGGER.warning(
+                        "downloading '%s' failed, stauts_code=%d",
+                        url,
+                        req.status_code)
 
+                else:
                     if filename is None and \
                        'content-disposition' in req.headers:
                         match = re.findall(r"filename=(\S+)",
@@ -121,13 +126,13 @@ def setup(hass, config):
 
                             final_path = "{}_{}.{}".format(path, tries, ext)
 
-                    _LOGGER.info("%s -> %s", url, final_path)
+                    _LOGGER.debug("%s -> %s", url, final_path)
 
                     with open(final_path, 'wb') as fil:
                         for chunk in req.iter_content(1024):
                             fil.write(chunk)
 
-                    _LOGGER.info("Downloading of %s done", url)
+                    _LOGGER.debug("Downloading of %s done", url)
 
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)

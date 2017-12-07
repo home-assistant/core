@@ -367,6 +367,29 @@ def async_handle_transition_message(hass, context, message):
             message['event'])
 
 
+@asyncio.coroutine
+def async_handle_waypoint(hass, name_base, waypoint):
+    """Handle a waypoint."""
+    name = waypoint['desc']
+    pretty_name = '{} - {}'.format(name_base, name)
+    lat = waypoint['lat']
+    lon = waypoint['lon']
+    rad = waypoint['rad']
+
+    # check zone exists
+    entity_id = zone_comp.ENTITY_ID_FORMAT.format(slugify(pretty_name))
+
+    # Check if state already exists
+    if hass.states.get(entity_id) is not None:
+        return
+
+    zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
+                          zone_comp.ICON_IMPORT, False)
+    zone.entity_id = entity_id
+    yield from zone.async_update_ha_state()
+
+
+@HANDLERS.register('waypoint')
 @HANDLERS.register('waypoints')
 @asyncio.coroutine
 def async_handle_waypoints_message(hass, context, message):
@@ -380,30 +403,17 @@ def async_handle_waypoints_message(hass, context, message):
         if user not in context.waypoint_whitelist:
             return
 
-    wayps = message['waypoints']
+    if 'waypoints' in message:
+        wayps = message['waypoints']
+    else:
+        wayps = [message]
 
     _LOGGER.info("Got %d waypoints from %s", len(wayps), message['topic'])
 
     name_base = ' '.join(_parse_topic(message['topic']))
 
     for wayp in wayps:
-        name = wayp['desc']
-        pretty_name = '{} - {}'.format(name_base, name)
-        lat = wayp['lat']
-        lon = wayp['lon']
-        rad = wayp['rad']
-
-        # check zone exists
-        entity_id = zone_comp.ENTITY_ID_FORMAT.format(slugify(pretty_name))
-
-        # Check if state already exists
-        if hass.states.get(entity_id) is not None:
-            continue
-
-        zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
-                              zone_comp.ICON_IMPORT, False)
-        zone.entity_id = entity_id
-        yield from zone.async_update_ha_state()
+        yield from async_handle_waypoint(hass, name_base, wayp)
 
 
 @HANDLERS.register('encrypted')
@@ -423,10 +433,22 @@ def async_handle_encrypted_message(hass, context, message):
 
 
 @HANDLERS.register('lwt')
+@HANDLERS.register('configuration')
+@HANDLERS.register('beacon')
+@HANDLERS.register('cmd')
+@HANDLERS.register('steps')
+@HANDLERS.register('card')
 @asyncio.coroutine
-def async_handle_lwt_message(hass, context, message):
-    """Handle an lwt message."""
-    _LOGGER.debug('Not handling lwt message: %s', message)
+def async_handle_not_impl_msg(hass, context, message):
+    """Handle valid but not implemented message types."""
+    _LOGGER.debug('Not handling %s message: %s', message.get("_type"), message)
+
+
+@asyncio.coroutine
+def async_handle_unsupported_msg(hass, context, message):
+    """Handle an unsupported or invalid message type."""
+    _LOGGER.warning('Received unsupported message type: %s.',
+                    message.get('_type'))
 
 
 @asyncio.coroutine
@@ -434,11 +456,6 @@ def async_handle_message(hass, context, message):
     """Handle an OwnTracks message."""
     msgtype = message.get('_type')
 
-    handler = HANDLERS.get(msgtype)
-
-    if handler is None:
-        _LOGGER.warning(
-            'Received unsupported message type: %s.', msgtype)
-        return
+    handler = HANDLERS.get(msgtype, async_handle_unsupported_msg)
 
     yield from handler(hass, context, message)

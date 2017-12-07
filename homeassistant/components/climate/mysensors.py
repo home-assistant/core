@@ -7,7 +7,9 @@ https://home-assistant.io/components/climate.mysensors/
 from homeassistant.components import mysensors
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, STATE_AUTO,
-    STATE_COOL, STATE_HEAT, STATE_OFF, ClimateDevice)
+    STATE_COOL, STATE_HEAT, STATE_OFF, ClimateDevice,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DICT_HA_TO_MYS = {
@@ -23,6 +25,10 @@ DICT_MYS_TO_HA = {
     'Off': STATE_OFF,
 }
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE |
+                 SUPPORT_OPERATION_MODE)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors climate."""
@@ -32,6 +38,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     """Representation of a MySensors HVAC."""
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def assumed_state(self):

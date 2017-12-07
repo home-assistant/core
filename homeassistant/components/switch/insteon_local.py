@@ -4,13 +4,12 @@ Support for Insteon switch devices via local hub support.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.insteon_local/
 """
-import json
 import logging
-import os
 from datetime import timedelta
 
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.util as util
+from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -28,8 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local switch platform."""
     insteonhub = hass.data['insteon_local']
 
-    conf_switches = config_from_file(hass.config.path(
-        INSTEON_LOCAL_SWITCH_CONF))
+    conf_switches = load_json(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
     if conf_switches:
         for device_id in conf_switches:
             setup_switch(
@@ -82,41 +80,14 @@ def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
         configurator.request_done(request_id)
         _LOGGER.info("Device configuration done")
 
-    conf_switch = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
+    conf_switch = load_json(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
     if device_id not in conf_switch:
         conf_switch[device_id] = name
 
-    if not config_from_file(
-            hass.config.path(INSTEON_LOCAL_SWITCH_CONF), conf_switch):
-        _LOGGER.error("Failed to save configuration file")
+    save_json(hass.config.path(INSTEON_LOCAL_SWITCH_CONF), conf_switch)
 
     device = insteonhub.switch(device_id)
     add_devices_callback([InsteonLocalSwitchDevice(device, name)])
-
-
-def config_from_file(filename, config=None):
-    """Small configuration file management function."""
-    if config:
-        # We're writing configuration
-        try:
-            with open(filename, 'w') as fdesc:
-                fdesc.write(json.dumps(config))
-        except IOError as error:
-            _LOGGER.error("Saving configuration file failed: %s", error)
-            return False
-        return True
-    else:
-        # We're reading config
-        if os.path.isfile(filename):
-            try:
-                with open(filename, 'r') as fdesc:
-                    return json.loads(fdesc.read())
-            except IOError as error:
-                _LOGGER.error("Reading config file failed: %s", error)
-                # This won't work yet
-                return False
-        else:
-            return {}
 
 
 class InsteonLocalSwitchDevice(SwitchDevice):
