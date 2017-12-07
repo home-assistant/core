@@ -219,9 +219,7 @@ class XiaomiDevice(Entity):
     def push_data(self, data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
-        is_data = self.parse_data(data)
-        is_voltage = self.parse_voltage(data)
-        if is_data or is_voltage:
+        if self.parse_data(data) or self.parse_voltage(data):
             self.schedule_update_ha_state()
 
     def parse_voltage(self, data):
