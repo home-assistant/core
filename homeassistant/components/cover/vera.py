@@ -18,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera covers."""
     add_devices(
-        VeraCover(device, VERA_CONTROLLER) for
-        device in VERA_DEVICES['cover'])
+        VeraCover(device, hass.data[VERA_CONTROLLER]) for
+        device in hass.data[VERA_DEVICES]['cover'])
 
 
 class VeraCover(VeraDevice, CoverDevice):
