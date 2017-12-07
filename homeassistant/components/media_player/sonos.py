@@ -140,7 +140,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hosts = hosts.split(',') if isinstance(hosts, str) else hosts
             players = []
             for host in hosts:
-                players.append(soco.SoCo(socket.gethostbyname(host)))
+                try:
+                    players.append(soco.SoCo(socket.gethostbyname(host)))
+                except OSError:
+                    _LOGGER.warning("Failed to initialize '%s'", host)
 
         if not players:
             players = soco.discover(
