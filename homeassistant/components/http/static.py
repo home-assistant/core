@@ -65,7 +65,8 @@ class CachingFileResponse(FileResponse):
 @asyncio.coroutine
 def staticresource_middleware(request, handler):
     """Middleware to strip out fingerprint from fingerprinted assets."""
-    if not request.path.startswith('/static/'):
+    path = request.path
+    if not path.startswith('/static/') and not path.startswith('/frontend'):
         return handler(request)
 
     fingerprinted = _FINGERPRINT.match(request.match_info['filename'])

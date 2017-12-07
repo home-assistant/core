@@ -65,12 +65,12 @@ class CloudLoginView(HomeAssistantView):
     url = '/api/cloud/login'
     name = 'api:cloud:login'
 
-    @asyncio.coroutine
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({
         vol.Required('email'): str,
         vol.Required('password'): str,
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Handle login request."""
         hass = request.app['hass']
@@ -79,8 +79,10 @@ class CloudLoginView(HomeAssistantView):
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             yield from hass.async_add_job(auth_api.login, cloud, data['email'],
                                           data['password'])
-            hass.async_add_job(cloud.iot.connect)
 
+        hass.async_add_job(cloud.iot.connect)
+        # Allow cloud to start connecting.
+        yield from asyncio.sleep(0, loop=hass.loop)
         return self.json(_account_data(cloud))
 
 
@@ -90,8 +92,8 @@ class CloudLogoutView(HomeAssistantView):
     url = '/api/cloud/logout'
     name = 'api:cloud:logout'
 
-    @asyncio.coroutine
     @_handle_cloud_errors
+    @asyncio.coroutine
     def post(self, request):
         """Handle logout request."""
         hass = request.app['hass']
@@ -127,12 +129,12 @@ class CloudRegisterView(HomeAssistantView):
     url = '/api/cloud/register'
     name = 'api:cloud:register'
 
-    @asyncio.coroutine
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({
         vol.Required('email'): str,
         vol.Required('password'): vol.All(str, vol.Length(min=6)),
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Handle registration request."""
         hass = request.app['hass']
@@ -151,12 +153,12 @@ class CloudConfirmRegisterView(HomeAssistantView):
     url = '/api/cloud/confirm_register'
     name = 'api:cloud:confirm_register'
 
-    @asyncio.coroutine
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({
         vol.Required('confirmation_code'): str,
         vol.Required('email'): str,
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Handle registration confirmation request."""
         hass = request.app['hass']
@@ -176,11 +178,11 @@ class CloudForgotPasswordView(HomeAssistantView):
     url = '/api/cloud/forgot_password'
     name = 'api:cloud:forgot_password'
 
-    @asyncio.coroutine
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({
         vol.Required('email'): str,
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Handle forgot password request."""
         hass = request.app['hass']
@@ -199,13 +201,13 @@ class CloudConfirmForgotPasswordView(HomeAssistantView):
     url = '/api/cloud/confirm_forgot_password'
     name = 'api:cloud:confirm_forgot_password'
 
-    @asyncio.coroutine
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({
         vol.Required('confirmation_code'): str,
         vol.Required('email'): str,
         vol.Required('new_password'): vol.All(str, vol.Length(min=6))
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Handle forgot password confirm request."""
         hass = request.app['hass']
@@ -222,6 +224,10 @@ class CloudConfirmForgotPasswordView(HomeAssistantView):
 
 def _account_data(cloud):
     """Generate the auth data JSON response."""
+    claims = cloud.claims
+
     return {
-        'email': cloud.email
+        'email': claims['email'],
+        'sub_exp': claims.get('custom:sub-exp'),
+        'cloud': cloud.iot.state,
     }

@@ -12,3 +12,8 @@ SERVERS = {
     #     'relayer': ''
     # }
 }
+
+MESSAGE_EXPIRATION = """
+It looks like your Home Assistant Cloud subscription has expired. Please check
+your [account page](/config/cloud/account) to continue using the service.
+"""

@@ -1,6 +1,30 @@
 """Helper class to implement include/exclude of entities and domains."""
 
+import voluptuous as vol
+
 from homeassistant.core import split_entity_id
+from homeassistant.helpers import config_validation as cv
+
+CONF_INCLUDE_DOMAINS = 'include_domains'
+CONF_INCLUDE_ENTITIES = 'include_entities'
+CONF_EXCLUDE_DOMAINS = 'exclude_domains'
+CONF_EXCLUDE_ENTITIES = 'exclude_entities'
+
+FILTER_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_INCLUDE_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
+    }),
+    lambda config: generate_filter(
+        config[CONF_INCLUDE_DOMAINS],
+        config[CONF_INCLUDE_ENTITIES],
+        config[CONF_EXCLUDE_DOMAINS],
+        config[CONF_EXCLUDE_ENTITIES],
+    ))
 
 
 def generate_filter(include_domains, include_entities,
