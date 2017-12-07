@@ -218,7 +218,6 @@ class DaikinHVAC(ClimateDevice):
             except ValueError:
                 _LOGGER.error("Invalid humidity %s", humidity)
 
-
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
