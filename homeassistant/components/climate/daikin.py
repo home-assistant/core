@@ -96,7 +96,9 @@ class DaikinHVAC(ClimateDevice):
         self._device = device
 
         self._operation_list = list(set(DAIKIN_STATE_TO_HA.values()))
-        self._fan_list = list(map(str.title, appliance.daikin_values('f_rate')))
+        self._fan_list = list(
+            map(str.title, appliance.daikin_values('f_rate'))
+        )
         self._swing_list = list(
             map(str.title, appliance.daikin_values('f_dir'))
         )
