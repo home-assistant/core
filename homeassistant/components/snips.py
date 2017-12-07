@@ -15,7 +15,7 @@ DEPENDENCIES = ['mqtt']
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'
 
-INTENT_TOPIC = 'hermes/nlu/intentParsed'
+INTENT_TOPIC = 'hermes/intent/#'
 
 _LOGGER = logging.getLogger(__name__)
 
