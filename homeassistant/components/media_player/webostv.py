@@ -178,7 +178,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
-        self.now_playing = {}
+        self._now_playing = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -205,13 +205,13 @@ class LgWebOSDevice(MediaPlayerDevice):
 
                 self._current_channel = self._client.get_current_channel()
                 for program in self._client.get_channel_info() \
-                        .get('programList',[]):
+                        .get('programList', []):
                     start_time = pytz.utc.localize(dt.datetime.strptime(
                         program.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
                     end_time = pytz.utc.localize(dt.datetime.strptime(
                         program.get('endTime'), '%Y,%m,%d,%H,%M,%S'))
                     if start_time <= dt.datetime.now(pytz.UTC) < end_time:
-                        self.now_playing = program
+                        self._now_playing = program
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
                     if app['id'] == self._current_source_id:
@@ -310,14 +310,16 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self.now_playing.get('programName')
+        return self._now_playing.get('programName')
 
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        startTime = pytz.utc.localize(dt.datetime.strptime(
-            self.now_playing.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
-        return (dt.datetime.now(pytz.UTC) - startTime).total_seconds()
+        if not self.media_title:
+            return None
+        start_time = pytz.utc.localize(dt.datetime.strptime(
+            self._now_playing.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
+        return (dt.datetime.now(pytz.UTC) - start_time).total_seconds()
 
     @property
     def media_position_updated_at(self):
@@ -327,7 +329,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        return self.now_playing.get('duration')
+        return self._now_playing.get('duration')
 
     def turn_off(self):
         """Turn off media player."""
