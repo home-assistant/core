@@ -110,17 +110,15 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
 
         self._node.controlEvents.subscribe(self._positive_node_control_handler)
 
-        try:
+        if self._negative_node is not None:
             self._negative_node.controlEvents.subscribe(
                 self._negative_node_control_handler)
-        except AttributeError:
-            # Heartbeat node doesn't exist
-            pass
 
     def _detect_device_type(self) -> str:
         try:
             device_type = self._node.type
         except AttributeError:
+            # The type attribute didn't exist in the ISY's API response
             return None
 
         split_type = device_type.split('.')
@@ -141,11 +139,8 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
 
     def _heartbeat(self) -> None:
         """Send a heartbeat to our heartbeat device, if we have one."""
-        try:
+        if self._heartbeat_device is not None:
             self._heartbeat_device.heartbeat()
-        except AttributeError:
-            # No heartbeat device exists
-            pass
 
     def add_negative_node(self, child) -> None:
         """Add a negative node to this binary sensor device.
