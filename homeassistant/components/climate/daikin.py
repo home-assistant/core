@@ -9,8 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice,
-    STATE_OFF, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_DRY, STATE_FAN_ONLY,
-    STATE_ECO, STATE_PERFORMANCE,
     ATTR_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_FAN_MODE,
