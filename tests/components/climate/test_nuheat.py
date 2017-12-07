@@ -2,7 +2,13 @@
 import unittest
 from unittest.mock import PropertyMock, Mock, patch
 
-from homeassistant.components.climate import STATE_HEAT, STATE_IDLE
+from homeassistant.components.climate import (
+    SUPPORT_AWAY_MODE,
+    SUPPORT_HOLD_MODE,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    STATE_HEAT,
+    STATE_IDLE)
 import homeassistant.components.climate.nuheat as nuheat
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
@@ -72,6 +78,12 @@ class TestNuHeat(unittest.TestCase):
     def test_icon(self):
         """Test name property."""
         self.assertEqual(self.thermostat.icon, "mdi:thermometer")
+
+    def test_supported_features(self):
+        """Test name property."""
+        features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
+                 SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE)
+        self.assertEqual(self.thermostat.supported_features, features)
 
     def test_temperature_unit(self):
         """Test temperature unit."""
