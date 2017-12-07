@@ -262,7 +262,6 @@ class HomeAssistantWSGI(object):
                 resource = CachingStaticResource
             else:
                 resource = web.StaticResource
-
             self.app.router.register_resource(resource(url_path, path))
             return
 

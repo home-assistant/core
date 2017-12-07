@@ -4,9 +4,9 @@ import unittest
 import requests_mock
 import voluptuous as vol
 
-from components.sensor import vultr
-from components import vultr as base_vultr
-from components.vultr import CONF_SUBSCRIPTION
+from homeassistant.components.sensor import vultr
+from homeassistant.components import vultr as base_vultr
+from homeassistant.components.vultr import CONF_SUBSCRIPTION
 from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_PLATFORM)
 

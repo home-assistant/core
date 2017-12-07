@@ -30,7 +30,7 @@ def test_setup_platform(hass):
         'area_name': 'House',
         'input': '0',
         'status': '0',
-        }, {
+    }, {
         'id': '3',
         'type': '0',
         'zone_name': 'Hallway PIR',
@@ -38,7 +38,7 @@ def test_setup_platform(hass):
         'area_name': 'House',
         'input': '0',
         'status': '0',
-        }, {
+    }, {
         'id': '5',
         'type': '1',
         'zone_name': 'Front door',
@@ -46,7 +46,7 @@ def test_setup_platform(hass):
         'area_name': 'House',
         'input': '1',
         'status': '0',
-        }]}
+    }]}
 
     def add_entities(entities):
         nonlocal added_entities

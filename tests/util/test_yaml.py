@@ -267,6 +267,10 @@ class TestYaml(unittest.TestCase):
         """The that the dump method returns empty None values."""
         assert yaml.dump({'a': None, 'b': 'b'}) == 'a:\nb: b\n'
 
+    def test_dump_unicode(self):
+        """The that the dump method returns empty None values."""
+        assert yaml.dump({'a': None, 'b': 'привет'}) == 'a:\nb: привет\n'
+
 
 FILES = {}
 

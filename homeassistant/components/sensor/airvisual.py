@@ -126,7 +126,7 @@ class AirVisualBaseSensor(Entity):
 
     def __init__(self, data, name, icon, locale):
         """Initialize the sensor."""
-        self._data = data
+        self.data = data
         self._icon = icon
         self._locale = locale
         self._name = name
@@ -136,20 +136,17 @@ class AirVisualBaseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attrs = {
+        attrs = merge_two_dicts({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_CITY: self._data.city,
-            ATTR_COUNTRY: self._data.country,
-            ATTR_REGION: self._data.state,
-            ATTR_TIMESTAMP: self._data.pollution_info.get('ts')
-        }
+            ATTR_TIMESTAMP: self.data.pollution_info.get('ts')
+        }, self.data.attrs)
 
-        if self._data.show_on_map:
-            attrs[ATTR_LATITUDE] = self._data.latitude
-            attrs[ATTR_LONGITUDE] = self._data.longitude
+        if self.data.show_on_map:
+            attrs[ATTR_LATITUDE] = self.data.latitude
+            attrs[ATTR_LONGITUDE] = self.data.longitude
         else:
-            attrs['lati'] = self._data.latitude
-            attrs['long'] = self._data.longitude
+            attrs['lati'] = self.data.latitude
+            attrs['long'] = self.data.longitude
 
         return attrs
 
@@ -174,9 +171,9 @@ class AirPollutionLevelSensor(AirVisualBaseSensor):
 
     def update(self):
         """Update the status of the sensor."""
-        self._data.update()
+        self.data.update()
 
-        aqi = self._data.pollution_info.get('aqi{0}'.format(self._locale))
+        aqi = self.data.pollution_info.get('aqi{0}'.format(self._locale))
         try:
             [level] = [
                 i for i in POLLUTANT_LEVEL_MAPPING
@@ -199,9 +196,9 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
 
     def update(self):
         """Update the status of the sensor."""
-        self._data.update()
+        self.data.update()
 
-        self._state = self._data.pollution_info.get(
+        self._state = self.data.pollution_info.get(
             'aqi{0}'.format(self._locale))
 
 
@@ -224,9 +221,9 @@ class MainPollutantSensor(AirVisualBaseSensor):
 
     def update(self):
         """Update the status of the sensor."""
-        self._data.update()
+        self.data.update()
 
-        symbol = self._data.pollution_info.get('main{0}'.format(self._locale))
+        symbol = self.data.pollution_info.get('main{0}'.format(self._locale))
         pollution_info = POLLUTANT_MAPPING.get(symbol, {})
         self._state = pollution_info.get('label')
         self._unit = pollution_info.get('unit')
@@ -239,6 +236,7 @@ class AirVisualData(object):
     def __init__(self, client, **kwargs):
         """Initialize the AirVisual data element."""
         self._client = client
+        self.attrs = {}
         self.pollution_info = None
 
         self.city = kwargs.get(CONF_CITY)
@@ -260,17 +258,20 @@ class AirVisualData(object):
             if self.city and self.state and self.country:
                 resp = self._client.city(
                     self.city, self.state, self.country).get('data')
+                self.longitude, self.latitude = resp.get('location').get(
+                    'coordinates')
             else:
                 resp = self._client.nearest_city(
                     self.latitude, self.longitude, self._radius).get('data')
             _LOGGER.debug("New data retrieved: %s", resp)
 
-            self.city = resp.get('city')
-            self.state = resp.get('state')
-            self.country = resp.get('country')
-            self.longitude, self.latitude = resp.get('location').get(
-                'coordinates')
             self.pollution_info = resp.get('current', {}).get('pollution', {})
+
+            self.attrs = {
+                ATTR_CITY: resp.get('city'),
+                ATTR_REGION: resp.get('state'),
+                ATTR_COUNTRY: resp.get('country')
+            }
         except exceptions.HTTPError as exc_info:
             _LOGGER.error("Unable to retrieve data on this location: %s",
                           self.__dict__)

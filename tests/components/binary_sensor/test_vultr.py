@@ -4,9 +4,9 @@ import requests_mock
 import pytest
 import voluptuous as vol
 
-from components.binary_sensor import vultr
-from components import vultr as base_vultr
-from components.vultr import (
+from homeassistant.components.binary_sensor import vultr
+from homeassistant.components import vultr as base_vultr
+from homeassistant.components.vultr import (
     ATTR_ALLOWED_BANDWIDTH, ATTR_AUTO_BACKUPS, ATTR_IPV4_ADDRESS,
     ATTR_COST_PER_MONTH, ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID,
     CONF_SUBSCRIPTION)

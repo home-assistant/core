@@ -4,6 +4,7 @@ import json
 import logging
 import random
 import re
+import math
 
 import jinja2
 from jinja2 import contextfilter
@@ -423,6 +424,14 @@ def multiply(value, amount):
         return value
 
 
+def logarithm(value, base=math.e):
+    """Filter to get logarithm of the value with a spesific base."""
+    try:
+        return math.log(float(value), float(base))
+    except (ValueError, TypeError):
+        return value
+
+
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True):
     """Filter to convert given timestamp to format."""
     try:
@@ -508,6 +517,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
+ENV.filters['log'] = logarithm
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
@@ -515,6 +525,7 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.globals['log'] = logarithm
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow

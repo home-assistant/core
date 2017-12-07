@@ -39,7 +39,7 @@ class TeslaSensor(TeslaDevice, Entity):
     def __init__(self, tesla_device, controller, sensor_type=None):
         """Initialisation of the sensor."""
         self.current_value = None
-        self._temperature_units = None
+        self._unit = None
         self.last_changed_time = None
         self.type = sensor_type
         super().__init__(tesla_device, controller)
@@ -59,7 +59,7 @@ class TeslaSensor(TeslaDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return self._temperature_units
+        return self._unit
 
     def update(self):
         """Update the state from the sensor."""
@@ -74,8 +74,9 @@ class TeslaSensor(TeslaDevice, Entity):
             tesla_temp_units = self.tesla_device.measurement
 
             if tesla_temp_units == 'F':
-                self._temperature_units = TEMP_FAHRENHEIT
+                self._unit = TEMP_FAHRENHEIT
             else:
-                self._temperature_units = TEMP_CELSIUS
+                self._unit = TEMP_CELSIUS
         else:
             self.current_value = self.tesla_device.battery_level()
+            self._unit = "%"
