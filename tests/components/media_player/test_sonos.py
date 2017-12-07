@@ -283,6 +283,20 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
+    def test_set_shuffle(self, shuffle_set_mock, *args):
+        """Ensuring soco methods called for sonos_snapshot service."""
+        sonos.setup_platform(self.hass, {}, fake_add_device, {
+            'host': '192.0.2.1'
+        })
+        device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
+
+        device.set_shuffle(True)
+        self.assertEqual(shuffle_set_mock.call_count, 1)
+        self.assertEqual(device._player.play_mode, 'SHUFFLE')
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch('socket.create_connection', side_effect=socket.error())
     @mock.patch.object(SoCoMock, 'set_sleep_timer')
     def test_sonos_set_sleep_timer(self, set_sleep_timerMock, *args):
         """Ensuring soco methods called for sonos_set_sleep_timer service."""
