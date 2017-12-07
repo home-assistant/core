@@ -63,9 +63,9 @@ def async_setup(hass, config):
         slots = {} 
         for slot in request.get('slots', []):
             if 'value' in slot['value']:
-                slots[slot['slotName']] = { 'value': slot['value']['value'] }
+                slots[slot['slotName']] = {'value': slot['value']['value']}
             elif 'rawValue' in slot['value']:
-                slots[slot['slotName']] = { 'value': slot['value']['rawValue'] }
+                slots[slot['slotName']] = {'value': slot['value']['rawValue']}
 
         try:
             yield from intent.async_handle(
