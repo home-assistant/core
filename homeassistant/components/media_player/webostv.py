@@ -204,15 +204,14 @@ class LgWebOSDevice(MediaPlayerDevice):
                 conf_sources = self._customize.get(CONF_SOURCES, [])
 
                 self._current_channel = self._client.get_current_channel()
-                programs = self._client.get_channel_info().get('programList',
-                                                               [])
-                for x in programs:
-                    startTime = pytz.utc.localize(dt.datetime.strptime(
-                        x.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
-                    endTime = pytz.utc.localize(dt.datetime.strptime(
-                        x.get('endTime'), '%Y,%m,%d,%H,%M,%S'))
-                    if startTime <= dt.datetime.now(pytz.UTC) < endTime:
-                        self.now_playing = x
+                for program in self._client.get_channel_info() \
+                        .get('programList',[]):
+                    start_time = pytz.utc.localize(dt.datetime.strptime(
+                        program.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
+                    end_time = pytz.utc.localize(dt.datetime.strptime(
+                        program.get('endTime'), '%Y,%m,%d,%H,%M,%S'))
+                    if start_time <= dt.datetime.now(pytz.UTC) < end_time:
+                        self.now_playing = program
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
                     if app['id'] == self._current_source_id:
