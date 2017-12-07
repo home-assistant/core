@@ -1,6 +1,5 @@
 """
-This is a simple platform to control **SOME** devices that use the Tuya
-cloud for control.
+Simple platform to control **SOME** Tuya devices.
 
 It uses a slightly modified version of the pytuya library
 (https://github.com/clach04/python-tuya) to directly control the device.
