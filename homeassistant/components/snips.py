@@ -32,7 +32,7 @@ INTENT_SCHEMA = vol.Schema({
         vol.Required('slotName'): str,
         vol.Required('value'): {
             vol.Required('kind'): str,
-            vol.Required('value'): cv.match_all
+            vol.Optional('value'): cv.match_all
         }
     }]
 }, extra=vol.ALLOW_EXTRA)
@@ -59,8 +59,13 @@ def async_setup(hass, config):
             return
 
         intent_type = request['intent']['intentName'].split('__')[-1]
-        slots = {slot['slotName']: {'value': slot['value']['value']}
-                 for slot in request.get('slots', [])}
+        slots = {} 
+        for slot in request.get('slots', []):
+            if 'value' in slot['value']:
+                slots[slot['slotName']] = { 'value': slot['value']['value'] }
+            elif slot['entity'] == 'snips/duration':
+                duration = "{0:02}:{1:02}:{2:02}".format( slot['value']['hours'], slot['value']['minutes'], slot['value']['seconds'] )
+                slots[slot['slotName']] = { 'value': duration }
 
         try:
             yield from intent.async_handle(
