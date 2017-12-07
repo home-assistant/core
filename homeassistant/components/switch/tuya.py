@@ -67,14 +67,22 @@ class TuyaDevice(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn Tuya switch on."""
-        device = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
+        device = self._pytuy.OutletDevice(
+            self._devid,
+            self._host,
+            self._localkey
+        )
         device.set_status(True, self._switchid)
         self._state = True
         self.async_schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn Tuya switch off."""
-        device = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
+        device = self._pytuy.OutletDevice(
+            self._devid,
+            self._host,
+            self._localkey
+        )
         device.set_status(False, self._switchid)
         self._state = False
         self.async_schedule_update_ha_state()
