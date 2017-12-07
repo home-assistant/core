@@ -9,10 +9,9 @@ import logging
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
-REQUIREMENTS = ['pyrainbird==0.1.2']
+REQUIREMENTS = ['pyrainbird==0.1.3']
 
 DATA_RAINBIRD = 'rainbird'
 DOMAIN = 'rainbird'
@@ -33,7 +32,7 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     from pyrainbird import RainbirdController
-    controller = RainbirdController(_LOGGER)
+    controller = RainbirdController()
     controller.setConfig(server, password)
 
     _LOGGER.debug("Rain Bird Controller set to " + str(server))
@@ -41,7 +40,7 @@ def setup(hass, config):
     initialstatus = controller.currentIrrigation()
     if initialstatus == -1:
         _LOGGER.error("Error getting state. Possible configuration issues")
-        raise PlatformNotReady
+        return False
     else:
         _LOGGER.debug("Initialized Rain Bird Controller")
 

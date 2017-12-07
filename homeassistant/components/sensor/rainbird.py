@@ -2,19 +2,20 @@
 Support for Rain Bird Irrigation system LNK WiFi Module.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/rainbird/
+https://home-assistant.io/components/sensor.rainbird/
 """
 import logging
 
 import voluptuous as vol
 
+from homeassistant.components.rainbird import DATA_RAINBIRD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['rainbird']
-DATA_RAINBIRD = 'rainbird'
+
 _LOGGER = logging.getLogger(__name__)
 
 # sensor_type [ description, unit, icon ]
@@ -39,7 +40,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 RainBirdSensor(controller, sensor_type))
 
     add_devices(sensors, True)
-    return True
 
 
 class RainBirdSensor(Entity):
@@ -49,8 +49,8 @@ class RainBirdSensor(Entity):
         """Initialize rain bird sensor."""
         self._sensor_type = sensor_type
         self._controller = controller
-        self._name = SENSOR_TYPES.get(self._sensor_type)[0]
-        self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[2])
+        self._name = SENSOR_TYPES[self._sensor_type][0]
+        self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type][2])
         self._state = None
 
     @property
@@ -72,7 +72,7 @@ class RainBirdSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return SENSOR_TYPES.get(self._sensor_type)[1]
+        return SENSOR_TYPES[self._sensor_type][1]
 
     @property
     def icon(self):
