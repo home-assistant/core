@@ -151,22 +151,30 @@ class DaikinHVAC(ClimateDevice):
 
         return self._target_temperature
 
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return 1
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        settings = None
+        settings = {}
 
         if kwargs.get(ATTR_OPERATION_MODE) is not None:
             operation_mode = kwargs.get(ATTR_OPERATION_MODE)
             current_operation = HA_STATE_TO_DAIKIN.get(operation_mode)
             if current_operation is not None:
-                settings.mode = current_operation
+                settings['mode'] = current_operation
 
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             temperature = kwargs.get(ATTR_TEMPERATURE)
-            self._target_temperature = temperature
-            settings.temp = temperature
+            try:
+                self._target_temperature = int(temperature)
+                settings['stemp'] = str(self._target_temperature)
+            except ValueError:
+                _LOGGER.error("Invalid temperature %s", temperature)
 
-        if settings is not None:
+        if settings:
             self._device.set(settings)
             self.schedule_update_ha_state()
 
@@ -203,9 +211,13 @@ class DaikinHVAC(ClimateDevice):
     def set_humidity(self, humidity):
         """Set new target temperature."""
         if humidity is not None:
-            self._target_humidity = humidity
-            self._device.set({"shum": humidity})
-            self.schedule_update_ha_state()
+            try:
+                self._target_humidity = int(humidity)
+                self._device.set({"shum": str(humidity)})
+                self.schedule_update_ha_state()
+            except ValueError:
+                _LOGGER.error("Invalid humidity %s", humidity)
+
 
     @property
     def current_fan_mode(self):
