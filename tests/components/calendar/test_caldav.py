@@ -1,16 +1,16 @@
 """The tests for the webdav calendar component."""
 # pylint: disable=protected-access
+import datetime
 import logging
 import unittest
 from unittest.mock import (patch, Mock, MagicMock)
-import datetime
 
 import homeassistant.components.calendar as calendar_base
 import homeassistant.components.calendar.caldav as caldav
+from caldav.objects import Event
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.util import dt
 from tests.common import get_test_home_assistant
-from caldav.objects import Event
 
 TEST_PLATFORM = {calendar_base.DOMAIN: {CONF_PLATFORM: 'test'}}
 
