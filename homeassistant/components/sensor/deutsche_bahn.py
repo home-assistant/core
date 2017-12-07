@@ -4,17 +4,17 @@ Support for information about the German train system.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.deutsche_bahn/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['schiene==0.19']
+REQUIREMENTS = ['schiene==0.18']
 
 _LOGGER = logging.getLogger(__name__)
 
