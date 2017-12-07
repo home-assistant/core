@@ -45,7 +45,7 @@ class SmartPlugSwitch(SwitchDevice):
     def __init__(self, smartplug, name):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._name = None
+        self._name = name
         self._state = None
         # Set up emeter cache
         self._emeter_params = {}

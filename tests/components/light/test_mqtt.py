@@ -677,3 +677,120 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual([1, 1], state.attributes.get('xy_color'))
+
+    def test_on_command_first(self):
+        """Test on command being sent before brightness."""
+        config = {light.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'test_light/set',
+            'brightness_command_topic': 'test_light/bright',
+            'on_command_type': 'first',
+        }}
+
+        with assert_setup_component(1, light.DOMAIN):
+            assert setup_component(self.hass, light.DOMAIN, config)
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        light.turn_on(self.hass, 'light.test', brightness=50)
+        self.hass.block_till_done()
+
+        # Should get the following MQTT messages.
+        #    test_light/set: 'ON'
+        #    test_light/bright: 50
+        self.assertEqual(('test_light/set', 'ON', 0, False),
+                         self.mock_publish.mock_calls[-4][1])
+        self.assertEqual(('test_light/bright', 50, 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+        light.turn_off(self.hass, 'light.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('test_light/set', 'OFF', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+    def test_on_command_last(self):
+        """Test on command being sent after brightness."""
+        config = {light.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'test_light/set',
+            'brightness_command_topic': 'test_light/bright',
+        }}
+
+        with assert_setup_component(1, light.DOMAIN):
+            assert setup_component(self.hass, light.DOMAIN, config)
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        light.turn_on(self.hass, 'light.test', brightness=50)
+        self.hass.block_till_done()
+
+        # Should get the following MQTT messages.
+        #    test_light/bright: 50
+        #    test_light/set: 'ON'
+        self.assertEqual(('test_light/bright', 50, 0, False),
+                         self.mock_publish.mock_calls[-4][1])
+        self.assertEqual(('test_light/set', 'ON', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+        light.turn_off(self.hass, 'light.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('test_light/set', 'OFF', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+    def test_on_command_brightness(self):
+        """Test on command being sent as only brightness."""
+        config = {light.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'test_light/set',
+            'brightness_command_topic': 'test_light/bright',
+            'rgb_command_topic': "test_light/rgb",
+            'on_command_type': 'brightness',
+        }}
+
+        with assert_setup_component(1, light.DOMAIN):
+            assert setup_component(self.hass, light.DOMAIN, config)
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        # Turn on w/ no brightness - should set to max
+        light.turn_on(self.hass, 'light.test')
+        self.hass.block_till_done()
+
+        # Should get the following MQTT messages.
+        #    test_light/bright: 255
+        self.assertEqual(('test_light/bright', 255, 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+        light.turn_off(self.hass, 'light.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('test_light/set', 'OFF', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+        # Turn on w/ brightness
+        light.turn_on(self.hass, 'light.test', brightness=50)
+        self.hass.block_till_done()
+
+        self.assertEqual(('test_light/bright', 50, 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+        light.turn_off(self.hass, 'light.test')
+        self.hass.block_till_done()
+
+        # Turn on w/ just a color to insure brightness gets
+        # added and sent.
+        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75])
+        self.hass.block_till_done()
+
+        self.assertEqual(('test_light/rgb', '75,75,75', 0, False),
+                         self.mock_publish.mock_calls[-4][1])
+        self.assertEqual(('test_light/bright', 50, 0, False),
+                         self.mock_publish.mock_calls[-2][1])

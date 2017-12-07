@@ -200,13 +200,7 @@ def async_setup(hass, config):
             yield from getattr(vacuum, method['method'])(**params)
             if not vacuum.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                vacuum.async_update_ha_state(True))
-            if hasattr(vacuum, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(vacuum.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

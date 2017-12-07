@@ -68,10 +68,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
-    if rest.data is None:
-        _LOGGER.error("Unable to fetch REST data")
-        return False
-
     add_devices([RestSensor(hass, rest, name, unit, value_template)], True)
 
 
@@ -96,6 +92,11 @@ class RestSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def available(self):
+        """Return if the sensor data are available."""
+        return self.rest.data is not None
 
     @property
     def state(self):

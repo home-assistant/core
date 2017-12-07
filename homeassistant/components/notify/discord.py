@@ -12,12 +12,11 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService, ATTR_TARGET)
+from homeassistant.const import CONF_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['discord.py==0.16.12']
-
-CONF_TOKEN = 'token'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string

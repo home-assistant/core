@@ -5,7 +5,8 @@ import unittest
 
 from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.input_number import (DOMAIN, set_value)
+from homeassistant.components.input_number import (
+    DOMAIN, set_value, increment, decrement)
 
 from tests.common import get_test_home_assistant, mock_restore_cache
 
@@ -69,6 +70,58 @@ class TestInputNumber(unittest.TestCase):
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(70, float(state.state))
+
+    def test_increment(self):
+        """Test increment method."""
+        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+            'test_2': {
+                'initial': 50,
+                'min': 0,
+                'max': 51,
+            },
+        }}))
+        entity_id = 'input_number.test_2'
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(50, float(state.state))
+
+        increment(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(51, float(state.state))
+
+        increment(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(51, float(state.state))
+
+    def test_decrement(self):
+        """Test decrement method."""
+        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+            'test_3': {
+                'initial': 50,
+                'min': 49,
+                'max': 100,
+            },
+        }}))
+        entity_id = 'input_number.test_3'
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(50, float(state.state))
+
+        decrement(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(49, float(state.state))
+
+        decrement(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(49, float(state.state))
 
     def test_mode(self):
         """Test mode settings."""

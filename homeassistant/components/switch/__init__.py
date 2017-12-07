@@ -107,6 +107,7 @@ def async_setup(hass, config):
         """Handle calls to the switch services."""
         target_switches = component.async_extract_from_service(service)
 
+        update_tasks = []
         for switch in target_switches:
             if service.service == SERVICE_TURN_ON:
                 yield from switch.async_turn_on()
@@ -115,17 +116,9 @@ def async_setup(hass, config):
             else:
                 yield from switch.async_turn_off()
 
-        update_tasks = []
-        for switch in target_switches:
             if not switch.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                switch.async_update_ha_state(True))
-            if hasattr(switch, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(switch.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

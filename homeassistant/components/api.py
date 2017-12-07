@@ -262,7 +262,11 @@ class APIEventView(HomeAssistantView):
     def post(self, request, event_type):
         """Fire events."""
         body = yield from request.text()
-        event_data = json.loads(body) if body else None
+        try:
+            event_data = json.loads(body) if body else None
+        except ValueError:
+            return self.json_message('Event data should be valid JSON',
+                                     HTTP_BAD_REQUEST)
 
         if event_data is not None and not isinstance(event_data, dict):
             return self.json_message('Event data should be a JSON object',
@@ -309,7 +313,11 @@ class APIDomainServicesView(HomeAssistantView):
         """
         hass = request.app['hass']
         body = yield from request.text()
-        data = json.loads(body) if body else None
+        try:
+            data = json.loads(body) if body else None
+        except ValueError:
+            return self.json_message('Data should be valid JSON',
+                                     HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
             yield from hass.services.async_call(domain, service, data, True)

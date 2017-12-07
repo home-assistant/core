@@ -35,8 +35,8 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup(hass, config):
     """Track states and offer events for mailboxes."""
     mailboxes = []
-    hass.components.frontend.register_built_in_panel(
-        'mailbox', 'Mailbox', 'mdi:mailbox')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'mailbox', 'mailbox', 'mdi:mailbox')
     hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
     hass.http.register_view(MailboxMediaView(mailboxes))

@@ -54,6 +54,31 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_event_extra_data(self):
+        """Test the firing of events still matches with event data."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event', {'extra_key': 'extra_data'})
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        automation.turn_off(self.hass)
+        self.hass.block_till_done()
+
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_event_with_data(self):
         """Test the firing of events with data."""
         assert setup_component(self.hass, automation.DOMAIN, {
@@ -62,6 +87,30 @@ class TestAutomationEvent(unittest.TestCase):
                     'platform': 'event',
                     'event_type': 'test_event',
                     'event_data': {'some_attr': 'some_value'}
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event', {'some_attr': 'some_value',
+                                          'another': 'value'})
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_on_event_with_empty_data_config(self):
+        """Test the firing of events with empty data config.
+
+        The frontend automation editor can produce configurations with an
+        empty dict for event_data instead of no key.
+        """
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                    'event_data': {}
                 },
                 'action': {
                     'service': 'test.automation',

@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 ARMED = 'armed'
 
 CONF_HOME_MODE_NAME = 'home_mode_name'
+CONF_AWAY_MODE_NAME = 'away_mode_name'
 
 DEPENDENCIES = ['arlo']
 
@@ -31,6 +32,7 @@ ICON = 'mdi:security'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
+    vol.Optional(CONF_AWAY_MODE_NAME, default=ARMED): cv.string,
 })
 
 
@@ -43,19 +45,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     home_mode_name = config.get(CONF_HOME_MODE_NAME)
+    away_mode_name = config.get(CONF_AWAY_MODE_NAME)
     base_stations = []
     for base_station in data.base_stations:
-        base_stations.append(ArloBaseStation(base_station, home_mode_name))
+        base_stations.append(ArloBaseStation(base_station, home_mode_name,
+                                             away_mode_name))
     async_add_devices(base_stations, True)
 
 
 class ArloBaseStation(AlarmControlPanel):
     """Representation of an Arlo Alarm Control Panel."""
 
-    def __init__(self, data, home_mode_name):
+    def __init__(self, data, home_mode_name, away_mode_name):
         """Initialize the alarm control panel."""
         self._base_station = data
         self._home_mode_name = home_mode_name
+        self._away_mode_name = away_mode_name
         self._state = None
 
     @property
@@ -89,8 +94,8 @@ class ArloBaseStation(AlarmControlPanel):
 
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        self._base_station.mode = ARMED
+        """Send arm away command. Uses custom mode."""
+        self._base_station.mode = self._away_mode_name
 
     @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
@@ -118,4 +123,6 @@ class ArloBaseStation(AlarmControlPanel):
             return STATE_ALARM_DISARMED
         elif mode == self._home_mode_name:
             return STATE_ALARM_ARMED_HOME
+        elif mode == self._away_mode_name:
+            return STATE_ALARM_ARMED_AWAY
         return None

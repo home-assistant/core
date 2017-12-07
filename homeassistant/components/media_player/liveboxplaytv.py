@@ -4,13 +4,13 @@ Support for interface with an Orange Livebox Play TV appliance.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.liveboxplaytv/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
 import requests
 import voluptuous as vol
 
-import homeassistant.util as util
 from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
@@ -18,10 +18,10 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
-    STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
+    STATE_PAUSED, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['liveboxplaytv==1.4.9']
+REQUIREMENTS = ['liveboxplaytv==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Orange Livebox Play TV platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except IOError:
         _LOGGER.error("Failed to connect to Livebox Play TV at %s:%s. "
                       "Please check your configuration", host, port)
-    add_devices(livebox_devices, True)
+    async_add_devices(livebox_devices, True)
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
@@ -72,27 +72,37 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._muted = False
         self._name = name
         self._current_source = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._channel_list = {}
         self._current_channel = None
         self._current_program = None
         self._media_image_url = None
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Retrieve the latest data."""
         try:
             self._state = self.refresh_state()
             # Update current channel
-            channel = self._client.get_current_channel()
+            channel = self._client.channel
             if channel is not None:
-                self._current_program = self._client.program
-                self._current_channel = channel.get('name', None)
-                self._media_image_url = \
-                    self._client.get_current_channel_image(img_size=300)
+                self._current_program = yield from \
+                    self._client.async_get_current_program_name()
+                self._current_channel = channel
+                # Set media image to current program if a thumbnail is
+                # available. Otherwise we'll use the channel's image.
+                img_size = 800
+                prg_img_url = yield from \
+                    self._client.async_get_current_program_image(img_size)
+                if prg_img_url:
+                    self._media_image_url = prg_img_url
+                else:
+                    chan_img_url = \
+                        self._client.get_current_channel_image(img_size)
+                    self._media_image_url = chan_img_url
                 self.refresh_channel_list()
         except requests.ConnectionError:
-            self._state = STATE_OFF
+            self._state = None
 
     @property
     def name(self):
@@ -136,8 +146,11 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     def media_title(self):
         """Title of current playing media."""
         if self._current_channel:
-            return '{}: {}'.format(self._current_channel,
-                                   self._current_program)
+            if self._current_program:
+                return '{}: {}'.format(self._current_channel,
+                                       self._current_program)
+            else:
+                return self._current_channel
 
     @property
     def supported_features(self):

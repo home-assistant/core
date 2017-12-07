@@ -1253,3 +1253,27 @@ class TestZWaveServices(unittest.TestCase):
 
         assert node.refresh_info.called
         assert len(node.refresh_info.mock_calls) == 1
+
+    def test_heal_node(self):
+        """Test zwave heal_node service."""
+        node = MockNode(node_id=19)
+        self.zwave_network.nodes = {19: node}
+        self.hass.services.call('zwave', 'heal_node', {
+            const.ATTR_NODE_ID: 19,
+        })
+        self.hass.block_till_done()
+
+        assert node.heal.called
+        assert len(node.heal.mock_calls) == 1
+
+    def test_test_node(self):
+        """Test the zwave test_node service."""
+        node = MockNode(node_id=19)
+        self.zwave_network.nodes = {19: node}
+        self.hass.services.call('zwave', 'test_node', {
+            const.ATTR_NODE_ID: 19,
+        })
+        self.hass.block_till_done()
+
+        assert node.test.called
+        assert len(node.test.mock_calls) == 1

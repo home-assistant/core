@@ -107,6 +107,19 @@ def isfile(value: Any) -> str:
     return file_in
 
 
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing dir."""
+    if value is None:
+        raise vol.Invalid('not a directory')
+    dir_in = os.path.expanduser(str(value))
+
+    if not os.path.isdir(dir_in):
+        raise vol.Invalid('not a directory')
+    if not os.access(dir_in, os.R_OK):
+        raise vol.Invalid('directory not readable')
+    return dir_in
+
+
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
     if value is None:

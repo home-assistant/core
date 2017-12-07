@@ -17,7 +17,7 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
-REQUIREMENTS = ['apns2==0.1.1']
+REQUIREMENTS = ['apns2==0.3.0']
 
 APNS_DEVICES = 'apns.yaml'
 CONF_CERTFILE = 'cert_file'

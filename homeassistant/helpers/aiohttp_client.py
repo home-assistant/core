@@ -1,5 +1,6 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
+import ssl
 import sys
 
 import aiohttp
@@ -7,6 +8,7 @@ from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
 import async_timeout
+import certifi
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
@@ -159,7 +161,11 @@ def _async_get_connector(hass, verify_ssl=True):
 
     if verify_ssl:
         if DATA_CONNECTOR not in hass.data:
-            connector = aiohttp.TCPConnector(loop=hass.loop)
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+            ssl_context.load_verify_locations(cafile=certifi.where(),
+                                              capath=None)
+            connector = aiohttp.TCPConnector(loop=hass.loop,
+                                             ssl_context=ssl_context)
             hass.data[DATA_CONNECTOR] = connector
             is_new = True
         else:

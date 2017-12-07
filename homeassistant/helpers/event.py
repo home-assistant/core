@@ -108,7 +108,8 @@ def async_track_template(hass, template, action, variables=None):
             already_triggered = False
 
     return async_track_state_change(
-        hass, template.extract_entities(), template_condition_listener)
+        hass, template.extract_entities(variables),
+        template_condition_listener)
 
 
 track_template = threaded_listener_factory(async_track_template)

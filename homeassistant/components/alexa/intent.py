@@ -3,6 +3,7 @@ Support for Alexa skill service end point.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
+
 """
 import asyncio
 import enum
@@ -13,7 +14,7 @@ from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers import intent
 from homeassistant.components import http
 
-from .const import DOMAIN
+from .const import DOMAIN, SYN_RESOLUTION_MATCH
 
 INTENTS_API_ENDPOINT = '/api/alexa'
 
@@ -123,6 +124,43 @@ class AlexaIntentsView(http.HomeAssistantView):
         return self.json(alexa_response)
 
 
+def resolve_slot_synonyms(key, request):
+    """Check slot request for synonym resolutions."""
+    # Default to the spoken slot value if more than one or none are found. For
+    # reference to the request object structure, see the Alexa docs:
+    # https://tinyurl.com/ybvm7jhs
+    resolved_value = request['value']
+
+    if ('resolutions' in request and
+            'resolutionsPerAuthority' in request['resolutions'] and
+            len(request['resolutions']['resolutionsPerAuthority']) >= 1):
+
+        # Extract all of the possible values from each authority with a
+        # successful match
+        possible_values = []
+
+        for entry in request['resolutions']['resolutionsPerAuthority']:
+            if entry['status']['code'] != SYN_RESOLUTION_MATCH:
+                continue
+
+            possible_values.extend([item['value']['name']
+                                    for item
+                                    in entry['values']])
+
+        # If there is only one match use the resolved value, otherwise the
+        # resolution cannot be determined, so use the spoken slot value
+        if len(possible_values) == 1:
+            resolved_value = possible_values[0]
+        else:
+            _LOGGER.debug(
+                'Found multiple synonym resolutions for slot value: {%s: %s}',
+                key,
+                request['value']
+            )
+
+    return resolved_value
+
+
 class AlexaResponse(object):
     """Help generating the response for Alexa."""
 
@@ -135,12 +173,17 @@ class AlexaResponse(object):
         self.session_attributes = {}
         self.should_end_session = True
         self.variables = {}
+
         # Intent is None if request was a LaunchRequest or SessionEndedRequest
         if intent_info is not None:
             for key, value in intent_info.get('slots', {}).items():
-                if 'value' in value:
-                    underscored_key = key.replace('.', '_')
-                    self.variables[underscored_key] = value['value']
+                # Only include slots with values
+                if 'value' not in value:
+                    continue
+
+                _key = key.replace('.', '_')
+
+                self.variables[_key] = resolve_slot_synonyms(key, value)
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""

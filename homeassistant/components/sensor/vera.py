@@ -53,6 +53,8 @@ class VeraSensor(VeraDevice, Entity):
             return self._temperature_units
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             return 'lux'
+        elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
+            return 'level'
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             return '%'
         elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
@@ -73,6 +75,8 @@ class VeraSensor(VeraDevice, Entity):
                 self._temperature_units = TEMP_CELSIUS
 
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
+            self.current_value = self.vera_device.light
+        elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             self.current_value = self.vera_device.light
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             self.current_value = self.vera_device.humidity

@@ -38,13 +38,14 @@ def async_trigger(hass, config, action):
     time_delta = config.get(CONF_FOR)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     async_remove_track_same = None
+    already_triggered = False
 
     if value_template is not None:
         value_template.hass = hass
 
     @callback
     def check_numeric_state(entity, from_s, to_s):
-        """Return True if they should trigger."""
+        """Return True if criteria are now met."""
         if to_s is None:
             return False
 
@@ -56,51 +57,39 @@ def async_trigger(hass, config, action):
                 'above': above,
             }
         }
-
-        # If new one doesn't match, nothing to do
-        if not condition.async_numeric_state(
-                hass, to_s, below, above, value_template, variables):
-            return False
-
-        return True
+        return condition.async_numeric_state(
+            hass, to_s, below, above, value_template, variables)
 
     @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
-        nonlocal async_remove_track_same
-
-        if not check_numeric_state(entity, from_s, to_s):
-            return
-
-        variables = {
-            'trigger': {
-                'platform': 'numeric_state',
-                'entity_id': entity,
-                'below': below,
-                'above': above,
-                'from_state': from_s,
-                'to_state': to_s,
-            }
-        }
-
-        # Only match if old didn't exist or existed but didn't match
-        # Written as: skip if old one did exist and matched
-        if from_s is not None and condition.async_numeric_state(
-                hass, from_s, below, above, value_template, variables):
-            return
+        nonlocal already_triggered, async_remove_track_same
 
         @callback
         def call_action():
             """Call action with right context."""
-            hass.async_run_job(action, variables)
+            hass.async_run_job(action, {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': entity,
+                    'below': below,
+                    'above': above,
+                    'from_state': from_s,
+                    'to_state': to_s,
+                }
+            })
 
-        if not time_delta:
-            call_action()
-            return
+        matching = check_numeric_state(entity, from_s, to_s)
 
-        async_remove_track_same = async_track_same_state(
-            hass, time_delta, call_action, entity_ids=entity_id,
-            async_check_same_func=check_numeric_state)
+        if matching and not already_triggered:
+            if time_delta:
+                async_remove_track_same = async_track_same_state(
+                    hass, time_delta, call_action, entity_ids=entity_id,
+                    async_check_same_func=check_numeric_state)
+            else:
+                call_action()
+
+        already_triggered = matching
 
     unsub = async_track_state_change(
         hass, entity_id, state_automation_listener)

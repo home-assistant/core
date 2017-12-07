@@ -11,7 +11,7 @@ from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
                                           SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
 import homeassistant.components.isy994 as isy
-from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,19 +73,16 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return self.state
+        return VALUE_TO_STATE.get(self.value)
 
     @property
-    def state(self) -> str:
-        """Get the state of the ISY994 fan device."""
-        return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
+    def is_on(self) -> str:
+        """Get if the fan is on."""
+        return self.value != 0
 
     def set_speed(self, speed: str) -> None:
         """Send the set speed command to the ISY994 fan device."""
-        if not self._node.on(val=STATE_TO_VALUE.get(speed, 0)):
-            _LOGGER.debug("Unable to set fan speed")
-        else:
-            self.speed = self.state
+        self._node.on(val=STATE_TO_VALUE.get(speed, 255))
 
     def turn_on(self, speed: str=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 fan device."""
@@ -93,10 +90,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 fan device."""
-        if not self._node.off():
-            _LOGGER.debug("Unable to set fan speed")
-        else:
-            self.speed = self.state
+        self._node.off()
 
     @property
     def speed_list(self) -> list:

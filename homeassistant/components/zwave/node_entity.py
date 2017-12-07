@@ -69,11 +69,6 @@ class ZWaveBaseEntity(Entity):
         self.hass.loop.call_later(0.1, do_update)
 
 
-def sub_status(status, stage):
-    """Format sub-status."""
-    return '{} ({})'.format(status, stage) if stage else status
-
-
 class ZWaveNodeEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node."""
 
@@ -201,17 +196,17 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         """Return the state."""
         if ATTR_READY not in self._attributes:
             return None
-        stage = ''
-        if not self._attributes[ATTR_READY]:
-            # If node is not ready use stage as sub-status.
-            stage = self._attributes[ATTR_QUERY_STAGE]
+
         if self._attributes[ATTR_FAILED]:
-            return sub_status('Dead', stage)
+            return 'dead'
+        if self._attributes[ATTR_QUERY_STAGE] != 'Complete':
+            return 'initializing'
         if not self._attributes[ATTR_AWAKE]:
-            return sub_status('Sleeping', stage)
+            return 'sleeping'
         if self._attributes[ATTR_READY]:
-            return sub_status('Ready', stage)
-        return stage
+            return 'ready'
+
+        return None
 
     @property
     def should_poll(self):

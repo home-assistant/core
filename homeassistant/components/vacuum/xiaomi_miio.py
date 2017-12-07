@@ -21,7 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mirobo==0.2.0']
+REQUIREMENTS = ['python-miio==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -363,23 +363,17 @@ class MiroboVacuum(VacuumDevice):
             self._vacuum.manual_control_once,
             velocity=velocity, rotation=rotation, duration=duration)
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Fetch state from the device."""
         from mirobo import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._vacuum.status)
-            _LOGGER.debug("Got new state from the vacuum: %s", state.data)
+            state = self._vacuum.status()
             self.vacuum_state = state
-            self.consumable_state = yield from self.hass.async_add_job(
-                self._vacuum.consumable_status)
-            self.clean_history = yield from self.hass.async_add_job(
-                self._vacuum.clean_history)
+            self.consumable_state = self._vacuum.consumable_status()
+            self.clean_history = self._vacuum.clean_history()
             self._is_on = state.is_on
             self._available = True
         except OSError as exc:
             _LOGGER.error("Got OSError while fetching the state: %s", exc)
-            # self._available = False
         except DeviceException as exc:
             _LOGGER.warning("Got exception while fetching the state: %s", exc)
-            # self._available = False

@@ -26,6 +26,8 @@ CONF_KNX_TUNNELING = "tunneling"
 CONF_KNX_LOCAL_IP = "local_ip"
 CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
+CONF_KNX_STATE_UPDATER = "state_updater"
+CONF_KNX_TIME_ADDRESS = "time_address"
 
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
@@ -35,7 +37,7 @@ ATTR_DISCOVER_DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.14']
+REQUIREMENTS = ['xknx==0.7.18']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -58,7 +60,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, 'fire_ev'):
             vol.All(
                 cv.ensure_list,
-                [cv.string])
+                [cv.string]),
+        vol.Optional(CONF_KNX_TIME_ADDRESS): cv.string,
+        vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -95,12 +99,26 @@ def async_setup(hass, config):
                 ATTR_DISCOVER_DEVICES: found_devices
             }, config))
 
+    if CONF_KNX_TIME_ADDRESS in config[DOMAIN]:
+        _add_time_device(hass, config)
+
     hass.services.async_register(
         DOMAIN, SERVICE_KNX_SEND,
         hass.data[DATA_KNX].service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA)
 
     return True
+
+
+def _add_time_device(hass, config):
+    """Create time broadcasting device and add it to xknx device queue."""
+    import xknx
+    group_address_time = config[DOMAIN][CONF_KNX_TIME_ADDRESS]
+    time = xknx.devices.Time(
+        hass.data[DATA_KNX].xknx,
+        'Time',
+        group_address=group_address_time)
+    hass.data[DATA_KNX].xknx.devices.add(time)
 
 
 def _get_devices(hass, discovery_type):
@@ -134,7 +152,7 @@ class KNXModule(object):
         """Start KNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
         yield from self.xknx.start(
-            state_updater=True,
+            state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
             connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.initialized = True
