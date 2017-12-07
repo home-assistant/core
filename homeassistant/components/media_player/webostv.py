@@ -174,7 +174,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._volume = 0
         self._current_source = None
         self._current_source_id = None
-        self._current_channel = None
+        self._current_channel_name = None
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
@@ -201,17 +201,13 @@ class LgWebOSDevice(MediaPlayerDevice):
 
                 self._source_list = {}
                 self._app_list = {}
+                self._current_channel_name = None
+                self._now_playing = {}
                 conf_sources = self._customize.get(CONF_SOURCES, [])
 
-                self._current_channel = self._client.get_current_channel()
-                for program in self._client.get_channel_info() \
-                        .get('programList', []):
-                    start_time = pytz.utc.localize(dt.datetime.strptime(
-                        program.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
-                    end_time = pytz.utc.localize(dt.datetime.strptime(
-                        program.get('endTime'), '%Y,%m,%d,%H,%M,%S'))
-                    if start_time <= dt.datetime.now(pytz.UTC) < end_time:
-                        self._now_playing = program
+                info = self._client.get_channel_info()
+                if info.get('returnValue', False):
+                    self.update_channels()
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
                     if app['id'] == self._current_source_id:
@@ -295,7 +291,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def media_channel(self):
         """Channel currently playing."""
-        return self._current_channel.get('channelName', None)
+        return self._current_channel_name
 
     @property
     def app_id(self):
@@ -410,3 +406,18 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._client.play()
         else:
             self._client.set_channel(media_id)
+            self.update_channels()
+
+    def update_channels(self, info=None):
+        """Update channels info."""
+        if not info:
+            info = self._client.get_channel_info()
+        self._current_channel_name = info.get('channel', {}) \
+            .get('channelName')
+        for program in info.get('programList', []):
+            start_time = pytz.utc.localize(dt.datetime.strptime(
+                program.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
+            end_time = pytz.utc.localize(dt.datetime.strptime(
+                program.get('endTime'), '%Y,%m,%d,%H,%M,%S'))
+            if start_time <= dt.datetime.now(pytz.UTC) < end_time:
+                self._now_playing = program
