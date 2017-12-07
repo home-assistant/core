@@ -175,6 +175,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._current_source = None
         self._current_source_id = None
         self._current_channel_name = None
+        self._current_channel_id = None
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
@@ -202,12 +203,13 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._source_list = {}
                 self._app_list = {}
                 self._current_channel_name = None
+                self._current_channel_id = None
                 self._now_playing = {}
                 conf_sources = self._customize.get(CONF_SOURCES, [])
 
                 info = self._client.get_channel_info()
                 if info.get('returnValue', False):
-                    self.update_channels()
+                    self.update_channels(info)
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
                     if app['id'] == self._current_source_id:
@@ -270,6 +272,11 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_content_type(self):
         """Content type of current playing media."""
         return MEDIA_TYPE_CHANNEL
+
+    @property
+    def media_content_id(self):
+        """Content ID of current playing media."""
+        return self._current_channel_id
 
     @property
     def media_image_url(self):
@@ -410,10 +417,11 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def update_channels(self, info=None):
         """Update channels info."""
-        if not info:
-            info = self._client.get_channel_info()
+        info = info or self._client.get_channel_info()
         self._current_channel_name = info.get('channel', {}) \
             .get('channelName')
+        self._current_channel_id = info.get('channel', {}) \
+            .get('channelId')
         for program in info.get('programList', []):
             start_time = pytz.utc.localize(dt.datetime.strptime(
                 program.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
