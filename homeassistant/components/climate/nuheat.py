@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    _LOGGER.info("Loading NuHeat thermostat climate component")
     temperature_unit = hass.config.units.temperature_unit
     api, serial_numbers, min_away_temp = hass.data[DATA_NUHEAT]
     thermostats = [
@@ -209,7 +208,7 @@ class NuHeatThermostat(ClimateDevice):
         else:
             self._thermostat.target_fahrenheit = temperature
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Setting NuHeat thermostat temperature to %s %s",
             temperature, self.temperature_unit)
 
