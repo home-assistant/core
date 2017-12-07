@@ -9,6 +9,10 @@ from datetime import timedelta
 
 from homeassistant.components.climate import (
     ClimateDevice,
+    SUPPORT_AWAY_MODE,
+    SUPPORT_HOLD_MODE,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
     STATE_HEAT,
     STATE_IDLE)
 from homeassistant.components.nuheat import DATA_NUHEAT
@@ -38,6 +42,9 @@ OPERATION_LIST = [STATE_HEAT, STATE_IDLE]
 SCHEDULE_HOLD = 3
 SCHEDULE_RUN = 1
 SCHEDULE_TEMPORARY_HOLD = 2
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
+                 SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -73,6 +80,11 @@ class NuHeatThermostat(ClimateDevice):
     def icon(self):
         """Return the icon to use in the frontend."""
         return ICON
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def temperature_unit(self):
