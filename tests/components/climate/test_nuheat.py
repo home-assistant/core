@@ -1,9 +1,8 @@
 """The test for the NuHeat thermostat module."""
 import unittest
-from unittest.mock import PropertyMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components.climate import (
-    SUPPORT_AWAY_MODE,
     SUPPORT_HOLD_MODE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -25,7 +24,6 @@ class TestNuHeat(unittest.TestCase):
     def setUp(self):
         """Set up test variables."""
         serial_number = "12345"
-        min_away_temp = None
         temperature_unit = "F"
 
         thermostat = Mock(
@@ -50,13 +48,13 @@ class TestNuHeat(unittest.TestCase):
         api.get_thermostat.return_value = thermostat
 
         self.thermostat = nuheat.NuHeatThermostat(
-            api, serial_number, min_away_temp, temperature_unit)
+            api, serial_number, temperature_unit)
 
     @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
     def test_setup_platform(self, mocked_thermostat):
         """Test setup_platform."""
         api = Mock()
-        data = {"nuheat": (api, ["12345"], 50)}
+        data = {"nuheat": (api, ["12345"])}
 
         hass = Mock()
         hass.config.units.temperature_unit.return_value = "F"
@@ -68,7 +66,7 @@ class TestNuHeat(unittest.TestCase):
         discovery_info = {}
 
         nuheat.setup_platform(hass, config, add_devices, discovery_info)
-        thermostats = [mocked_thermostat(api, "12345", 50, "F")]
+        thermostats = [mocked_thermostat(api, "12345", "F")]
         add_devices.assert_called_once_with(thermostats, True)
 
     def test_name(self):
@@ -82,7 +80,7 @@ class TestNuHeat(unittest.TestCase):
     def test_supported_features(self):
         """Test name property."""
         features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
-                 SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE)
+                    SUPPORT_OPERATION_MODE)
         self.assertEqual(self.thermostat.supported_features, features)
 
     def test_temperature_unit(self):
@@ -103,18 +101,6 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._thermostat.heating = False
         self.assertEqual(self.thermostat.current_operation, STATE_IDLE)
 
-    def test_min_away_temp(self):
-        """Test the minimum target temperature to be used in away mode."""
-        self.assertEqual(self.thermostat.min_away_temp, 41)
-
-        # User defined minimum
-        self.thermostat._min_away_temp = 60
-        self.assertEqual(self.thermostat.min_away_temp, 60)
-
-        # User defined minimum below the thermostat's supported minimum
-        self.thermostat._min_away_temp = 0
-        self.assertEqual(self.thermostat.min_away_temp, 41)
-
     def test_min_temp(self):
         """Test min temp."""
         self.assertEqual(self.thermostat.min_temp, 41)
@@ -133,19 +119,8 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._temperature_unit = "C"
         self.assertEqual(self.thermostat.target_temperature, 22)
 
-    @patch.object(
-        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
-    def test_current_hold_mode_away(self, is_away_mode_on):
-        """Test current hold mode while away."""
-        is_away_mode_on.return_value = True
-        self.assertEqual(self.thermostat.current_hold_mode, nuheat.MODE_AWAY)
-
-    @patch.object(
-        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
-    def test_current_hold_mode(self, is_away_mode_on):
+    def test_current_hold_mode(self):
         """Test current hold mode."""
-        is_away_mode_on.return_value = False
-
         self.thermostat._thermostat.schedule_mode = SCHEDULE_RUN
         self.assertEqual(self.thermostat.current_hold_mode, nuheat.MODE_AUTO)
 
@@ -156,75 +131,6 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._thermostat.schedule_mode = SCHEDULE_TEMPORARY_HOLD
         self.assertEqual(
             self.thermostat.current_hold_mode, nuheat.MODE_TEMPORARY_HOLD)
-
-    def test_is_away_mode_on(self):
-        """Test is away mode on."""
-        _thermostat = self.thermostat._thermostat
-        _thermostat.schedule_mode = SCHEDULE_HOLD
-
-        # user-defined minimum fahrenheit
-        self.thermostat._min_away_temp = 59
-        _thermostat.target_fahrenheit = 59
-        self.assertTrue(self.thermostat.is_away_mode_on)
-
-        # user-defined minimum celsius
-        self.thermostat._temperature_unit = "C"
-        self.thermostat._min_away_temp = 15
-        _thermostat.target_celsius = 15
-        self.assertTrue(self.thermostat.is_away_mode_on)
-
-        # thermostat's minimum supported temperature
-        self.thermostat._min_away_temp = None
-        _thermostat.target_celsius = _thermostat.min_celsius
-        self.assertTrue(self.thermostat.is_away_mode_on)
-
-        # thermostat held at a temperature above the minimum
-        _thermostat.target_celsius = _thermostat.min_celsius + 1
-        self.assertFalse(self.thermostat.is_away_mode_on)
-
-        # thermostat not on HOLD
-        _thermostat.target_celsius = _thermostat.min_celsius
-        _thermostat.schedule_mode = SCHEDULE_RUN
-        self.assertFalse(self.thermostat.is_away_mode_on)
-
-    @patch.object(
-        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
-    @patch.object(nuheat.NuHeatThermostat, "set_temperature")
-    def test_turn_away_mode_on_home(self, set_temp, is_away_mode_on):
-        """Test turn away mode on when not away."""
-        is_away_mode_on.return_value = False
-        self.thermostat.turn_away_mode_on()
-        set_temp.assert_called_once_with(temperature=self.thermostat.min_temp)
-        self.assertTrue(self.thermostat._force_update)
-
-    @patch.object(
-        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
-    @patch.object(nuheat.NuHeatThermostat, "set_temperature")
-    def test_turn_away_mode_on_away(self, set_temp, is_away_mode_on):
-        """Test turn away mode on when away."""
-        is_away_mode_on.return_value = True
-        self.thermostat.turn_away_mode_on()
-        set_temp.assert_not_called()
-
-    @patch.object(
-        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
-    @patch.object(nuheat.NuHeatThermostat, "resume_program")
-    def test_turn_away_mode_off_home(self, resume, is_away_mode_on):
-        """Test turn away mode off when home."""
-        is_away_mode_on.return_value = False
-        self.thermostat.turn_away_mode_off()
-        self.assertFalse(self.thermostat._force_update)
-        resume.assert_not_called()
-
-    @patch.object(
-        nuheat.NuHeatThermostat, "is_away_mode_on", new_callable=PropertyMock)
-    @patch.object(nuheat.NuHeatThermostat, "resume_program")
-    def test_turn_away_mode_off_away(self, resume, is_away_mode_on):
-        """Test turn away mode off when away."""
-        is_away_mode_on.return_value = True
-        self.thermostat.turn_away_mode_off()
-        self.assertTrue(self.thermostat._force_update)
-        resume.assert_called_once_with()
 
     def test_resume_program(self):
         """Test resume schedule."""
