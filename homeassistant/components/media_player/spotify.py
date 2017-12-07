@@ -203,7 +203,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if current.get('is_playing'):
             self._state = STATE_PLAYING
         self._repeat = current.get('repeat_state')
-        self._shuffle = current.get('shuffle_state') 
+        self._shuffle = current.get('shuffle_state')
 
         device = current.get('device')
         if device is None:
