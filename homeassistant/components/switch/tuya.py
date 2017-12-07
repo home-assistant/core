@@ -1,9 +1,12 @@
 """
-This is a simple platform to control **SOME** devices that use the Tuya cloud for control.
+This is a simple platform to control **SOME** devices that use the Tuya
+cloud for control.
 
-It uses a slightly modified version of the pytuya library (https://github.com/clach04/python-tuya) to directly control the device.
+It uses a slightly modified version of the pytuya library
+(https://github.com/clach04/python-tuya) to directly control the device.
 
-Most devices that use the Tuya cloud should work. If port 6668 is open on the device then it will work.
+Most devices that use the Tuya cloud should work. If port 6668 is open on
+the device then it will work.
 """
 import voluptuous as vol
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
@@ -42,6 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class tuya(SwitchDevice):
     """Representation of a Tuya switch."""
+
     def __init__(self, pytuy, name, host, devid, localkey, switchid):
         """Initialize the Tuya switch."""
         self._pytuy = pytuy
