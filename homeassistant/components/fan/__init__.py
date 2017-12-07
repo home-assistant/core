@@ -38,15 +38,21 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
+SUPPORT_TARGET_HUMIDITY = 8
+SUPPORT_TARGET_HUMIDITY_HIGH = 16
+SUPPORT_TARGET_HUMIDITY_LOW = 32
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
 SERVICE_SET_DIRECTION = 'set_direction'
+SERVICE_SET_HUMIDITY = 'set_humidity'
 
 SPEED_OFF = 'off'
+SPEED_MINIMUM = 'minimum'
 SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
+SPEED_MAXIMUM = 'maximum'
 
 DIRECTION_FORWARD = 'forward'
 DIRECTION_REVERSE = 'reverse'
@@ -55,12 +61,16 @@ ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
+ATTR_CURRENT_HUMIDITY = 'current_humidity'
+ATTR_HUMIDITY = 'humidity'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
+    'current_humidity': ATTR_CURRENT_HUMIDITY,
+    'humidity': ATTR_HUMIDITY
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -91,6 +101,11 @@ FAN_SET_DIRECTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
+FAN_SET_HUMIDITY_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
+})
+
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {
         'method': 'async_turn_on',
@@ -115,6 +130,10 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_DIRECTION: {
         'method': 'async_set_direction',
         'schema': FAN_SET_DIRECTION_SCHEMA,
+    },
+    SERVICE_SET_HUMIDITY: {
+        'method': 'async_set_humidity',
+        'schema': FAN_SET_HUMIDITY_SCHEMA,
     },
 }
 
@@ -196,6 +215,15 @@ def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
 
     hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
 
+@bind_hass
+def set_humidity(hass, humidity, entity_id=None):
+    """Set new target humidity."""
+    data = {ATTR_HUMIDITY: humidity}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_HUMIDITY, data)
 
 @asyncio.coroutine
 def async_setup(hass, config: dict):
@@ -291,6 +319,17 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
 
+    def set_humidity(self: ToggleEntity, humidity: int) -> None:
+        """Set the humidity of the fan."""
+        raise NotImplementedError()
+
+    def async_set_humidity(self: ToggleEntity, humidity: int):
+        """Set the humidity of the fan.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.set_humidity, humidity)
+
     @property
     def is_on(self):
         """Return true if the entity is on."""
@@ -309,6 +348,16 @@ class FanEntity(ToggleEntity):
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
+        return None
+
+    @property
+    def current_humidity(self) -> str:
+        """Return the current humidity reported by the fan."""
+        return None
+
+    @property
+    def target_humidity(self) -> str:
+        """Return the target humidity of the fan."""
         return None
 
     @property
