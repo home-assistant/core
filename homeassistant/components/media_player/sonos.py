@@ -313,7 +313,6 @@ class SonosDevice(MediaPlayerDevice):
         self._unique_id = player.uid
         self._player = player
         self._player_volume = None
-        self._shuffle = False
         self._player_volume_muted = None
         self._speaker_info = None
         self._name = None
@@ -772,7 +771,7 @@ class SonosDevice(MediaPlayerDevice):
     @property
     def shuffle(self):
         """Shuffling state."""
-        return self._shuffle
+        return True if self._player.play_mode == 'SHUFFLE' else False
 
     @property
     def media_content_id(self):
@@ -890,7 +889,6 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self._shuffle = shuffle
         self._player.play_mode = 'SHUFFLE' if shuffle else 'NORMAL'
 
     @soco_error
@@ -951,7 +949,6 @@ class SonosDevice(MediaPlayerDevice):
 
         self._player.stop()
         self._player.clear_queue()
-        self._player.play_mode = self.get_play_mode()
         self._player.add_to_queue(didl)
 
     @property
@@ -1183,7 +1180,3 @@ class SonosDevice(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_IS_COORDINATOR: self.is_coordinator}
-
-    def get_play_mode(self):
-        """Return play mode (only shuffle and normal is supported atm)."""
-        return 'SHUFFLE' if self._shuffle else 'NORMAL'

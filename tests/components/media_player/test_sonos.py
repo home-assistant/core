@@ -293,7 +293,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         device.set_shuffle(True)
         self.assertEqual(shuffle_set_mock.call_count, 1)
-        self.assertEqual(device.get_play_mode(), 'SHUFFLE')
+        self.assertEqual(device._player.play_mode, 'SHUFFLE')
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
