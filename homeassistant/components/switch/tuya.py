@@ -1,3 +1,10 @@
+"""
+This is a simple platform to control **SOME** devices that use the Tuya cloud for control.
+
+It uses a slightly modified version of the pytuya library (https://github.com/clach04/python-tuya) to directly control the device.
+
+Most devices that use the Tuya cloud should work. If port 6668 is open on the device then it will work.
+"""
 import voluptuous as vol
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_ID)
@@ -20,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-
+    """Setup the Tuya switch."""
     import pytuya
 
     add_devices([tuya(
@@ -34,8 +41,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class tuya(SwitchDevice):
-
+    """Representation of a Tuya switch."""
     def __init__(self, pytuy, name, host, devid, localkey, switchid):
+        """Initialize the Tuya switch."""
         self._pytuy = pytuy
         self._name = name
         self._state = False
@@ -46,19 +54,23 @@ class tuya(SwitchDevice):
 
     @property
     def name(self):
+        """Get name of Tuya switch."""
         return self._name
 
     @property
     def is_on(self):
+        """Check if Tuya switch is on."""
         return self._state
 
     def turn_on(self, **kwargs):
+        """Turn Tuya switch on."""
         d = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
         d.set_status(True, self._switchid)
         self._state = True
         self.async_schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
+        """Turn Tuya switch off."""
         d = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
         d.set_status(False, self._switchid)
         self._state = False
