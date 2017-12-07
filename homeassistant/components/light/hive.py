@@ -70,7 +70,7 @@ class HiveDeviceLight(Light):
         """Return the CT color value in mireds."""
         if self.light_device_type == "tuneablelight" \
                 or self.light_device_type == "colourtuneablelight":
-            return self.session.light.get_color_temp(self.node_id)
+            return self.session.light.get_colour_temp(self.node_id)
 
     @property
     def rgb_color(self) -> tuple:
