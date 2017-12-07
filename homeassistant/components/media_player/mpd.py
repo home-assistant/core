@@ -14,7 +14,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
     SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET,
+    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_REPEAT_SET, SUPPORT_SHUFFLE_SET,
     SUPPORT_SEEK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
@@ -35,8 +36,8 @@ PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE | \
-    SUPPORT_CLEAR_PLAYLIST | SUPPORT_SHUFFLE_SET | SUPPORT_SEEK | \
-    SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+    SUPPORT_CLEAR_PLAYLIST | SUPPORT_REPEAT_SET | SUPPORT_SHUFFLE_SET | \
+    SUPPORT_SEEK | SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -296,6 +297,15 @@ class MpdDevice(MediaPlayerDevice):
             self._client.clear()
             self._client.add(media_id)
             self._client.play()
+
+    @property
+    def repeat(self):
+        """Boolean if repeat is enabled."""
+        return bool(self._status['repeat'])
+
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        self._client.repeat(int(repeat))
 
     @property
     def shuffle(self):

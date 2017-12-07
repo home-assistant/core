@@ -9,7 +9,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_PLAY,
-    SUPPORT_SHUFFLE_SET, MediaPlayerDevice)
+    SUPPORT_REPEAT_SET, SUPPORT_SHUFFLE_SET, MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
@@ -32,16 +32,17 @@ YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_SHUFFLE_SET
+    SUPPORT_REPEAT_SET | SUPPORT_SHUFFLE_SET
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET
+    SUPPORT_PLAY | SUPPORT_REPEAT_SET | SUPPORT_SHUFFLE_SET
 
 NETFLIX_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_SHUFFLE_SET
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_REPEAT_SET | \
+    SUPPORT_SHUFFLE_SET
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -55,6 +56,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self._player_state = STATE_PLAYING
         self._volume_level = 1.0
         self._volume_muted = False
+        self._repeat = False
         self._shuffle = False
 
     @property
@@ -81,6 +83,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
         return self._volume_muted
+
+    @property
+    def repeat(self):
+        """Boolean if repeat is enabled."""
+        return self._repeat
 
     @property
     def shuffle(self):
@@ -115,6 +122,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def media_pause(self):
         """Send pause command."""
         self._player_state = STATE_PAUSED
+        self.schedule_update_ha_state()
+
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        self._repeat = repeat
         self.schedule_update_ha_state()
 
     def set_shuffle(self, shuffle):
