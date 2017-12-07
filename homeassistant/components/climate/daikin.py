@@ -37,7 +37,7 @@ DAIKIN_STATE_TO_HA = {
     'fan': 'Fan only',
     'dry': 'Dry',
     'cool': 'Cool',
-    'hot':'Heat',
+    'hot': 'Heat',
     'off': 'Off',
     'auto': 'Auto',
     'auto-1': 'Auto',
@@ -97,7 +97,9 @@ class DaikinHVAC(ClimateDevice):
 
         self._operation_list = list(set(DAIKIN_STATE_TO_HA.values()))
         self._fan_list = list(map(str.title, appliance.daikin_values('f_rate')))
-        self._swing_list = list(map(str.title, appliance.daikin_values('f_dir')))
+        self._swing_list = list(
+            map(str.title, appliance.daikin_values('f_dir'))
+        )
 
         self._current_temperature = None
         self._target_temperature = None
