@@ -21,6 +21,7 @@ DEPENDENCIES = [DOMAIN]
 ATTR_KEYBOARD = 'keyboard'
 ATTR_INLINE_KEYBOARD = 'inline_keyboard'
 ATTR_PHOTO = 'photo'
+ATTR_VIDEO = 'video'
 ATTR_DOCUMENT = 'document'
 
 CONF_CHAT_ID = 'chat_id'
@@ -63,7 +64,7 @@ class TelegramNotificationService(BaseNotificationService):
             keys = keys if isinstance(keys, list) else [keys]
             service_data.update(inline_keyboard=keys)
 
-        # Send a photo, a document or a location
+        # Send a photo, video, document, or location
         if data is not None and ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO, None)
             photos = photos if isinstance(photos, list) else [photos]
@@ -71,6 +72,14 @@ class TelegramNotificationService(BaseNotificationService):
                 service_data.update(photo_data)
                 self.hass.services.call(
                     DOMAIN, 'send_photo', service_data=service_data)
+            return
+        elif data is not None and ATTR_VIDEO in data:
+            videos = data.get(ATTR_VIDEO, None)
+            videos = videos if isinstance(videos, list) else [videos]
+            for video_data in videos:
+                service_data.update(video_data)
+                self.hass.services.call(
+                    DOMAIN, 'send_video', service_data=service_data)
             return
         elif data is not None and ATTR_LOCATION in data:
             service_data.update(data.get(ATTR_LOCATION))

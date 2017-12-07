@@ -37,19 +37,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
 
-    add_devices([BlinktLight(blinkt, name)])
+    add_devices([
+        BlinktLight(blinkt, name, index) for index in range(blinkt.NUM_PIXELS)
+    ])
 
 
 class BlinktLight(Light):
     """Representation of a Blinkt! Light."""
 
-    def __init__(self, blinkt, name):
+    def __init__(self, blinkt, name, index):
         """Initialize a Blinkt Light.
 
         Default brightness and white color.
         """
         self._blinkt = blinkt
-        self._name = name
+        self._name = "{}_{}".format(name, index)
+        self._index = index
         self._is_on = False
         self._brightness = 255
         self._rgb_color = [255, 255, 255]
@@ -103,10 +106,11 @@ class BlinktLight(Light):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         percent_bright = (self._brightness / 255)
-        self._blinkt.set_all(self._rgb_color[0],
-                             self._rgb_color[1],
-                             self._rgb_color[2],
-                             percent_bright)
+        self._blinkt.set_pixel(self._index,
+                               self._rgb_color[0],
+                               self._rgb_color[1],
+                               self._rgb_color[2],
+                               percent_bright)
 
         self._blinkt.show()
 
@@ -115,7 +119,7 @@ class BlinktLight(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._blinkt.set_brightness(0)
+        self._blinkt.set_pixel(self._index, 0, 0, 0, 0)
         self._blinkt.show()
         self._is_on = False
         self.schedule_update_ha_state()

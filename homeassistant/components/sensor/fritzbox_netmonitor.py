@@ -25,6 +25,8 @@ CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.
 
 ATTR_BYTES_RECEIVED = 'bytes_received'
 ATTR_BYTES_SENT = 'bytes_sent'
+ATTR_TRANSMISSION_RATE_UP = 'transmission_rate_up'
+ATTR_TRANSMISSION_RATE_DOWN = 'transmission_rate_down'
 ATTR_EXTERNAL_IP = 'external_ip'
 ATTR_IS_CONNECTED = 'is_connected'
 ATTR_IS_LINKED = 'is_linked'
@@ -78,6 +80,8 @@ class FritzboxMonitorSensor(Entity):
         self._is_linked = self._is_connected = self._wan_access_type = None
         self._external_ip = self._uptime = None
         self._bytes_sent = self._bytes_received = None
+        self._transmission_rate_up = None
+        self._transmission_rate_down = None
         self._max_byte_rate_up = self._max_byte_rate_down = None
 
     @property
@@ -109,6 +113,8 @@ class FritzboxMonitorSensor(Entity):
             ATTR_UPTIME: self._uptime,
             ATTR_BYTES_SENT: self._bytes_sent,
             ATTR_BYTES_RECEIVED: self._bytes_received,
+            ATTR_TRANSMISSION_RATE_UP: self._transmission_rate_up,
+            ATTR_TRANSMISSION_RATE_DOWN: self._transmission_rate_down,
             ATTR_MAX_BYTE_RATE_UP: self._max_byte_rate_up,
             ATTR_MAX_BYTE_RATE_DOWN: self._max_byte_rate_down,
         }
@@ -125,6 +131,9 @@ class FritzboxMonitorSensor(Entity):
             self._uptime = self._fstatus.uptime
             self._bytes_sent = self._fstatus.bytes_sent
             self._bytes_received = self._fstatus.bytes_received
+            transmission_rate = self._fstatus.transmission_rate
+            self._transmission_rate_up = transmission_rate[0]
+            self._transmission_rate_down = transmission_rate[1]
             self._max_byte_rate_up = self._fstatus.max_byte_rate[0]
             self._max_byte_rate_down = self._fstatus.max_byte_rate[1]
             self._state = STATE_ONLINE if self._is_connected else STATE_OFFLINE

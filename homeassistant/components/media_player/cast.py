@@ -20,6 +20,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
+# Do not upgrade to 1.0.2, it breaks a bunch of stuff
+# https://github.com/home-assistant/home-assistant/issues/10926
 REQUIREMENTS = ['pychromecast==0.8.2']
 
 _LOGGER = logging.getLogger(__name__)

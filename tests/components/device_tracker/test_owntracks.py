@@ -18,10 +18,13 @@ DEVICE = 'phone'
 
 LOCATION_TOPIC = 'owntracks/{}/{}'.format(USER, DEVICE)
 EVENT_TOPIC = 'owntracks/{}/{}/event'.format(USER, DEVICE)
-WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoints'.format(USER, DEVICE)
+WAYPOINTS_TOPIC = 'owntracks/{}/{}/waypoints'.format(USER, DEVICE)
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'.format(USER, DEVICE)
 USER_BLACKLIST = 'ram'
-WAYPOINT_TOPIC_BLOCKED = 'owntracks/{}/{}/waypoints'.format(
+WAYPOINTS_TOPIC_BLOCKED = 'owntracks/{}/{}/waypoints'.format(
     USER_BLACKLIST, DEVICE)
+LWT_TOPIC = 'owntracks/{}/{}/lwt'.format(USER, DEVICE)
+BAD_TOPIC = 'owntracks/{}/{}/unsupported'.format(USER, DEVICE)
 
 DEVICE_TRACKER_STATE = 'device_tracker.{}_{}'.format(USER, DEVICE)
 
@@ -232,6 +235,15 @@ WAYPOINTS_UPDATED_MESSAGE = {
     ]
 }
 
+WAYPOINT_MESSAGE = {
+    "_type": "waypoint",
+    "tst": 4,
+    "lat": 9,
+    "lon": 47,
+    "rad": 50,
+    "desc": "exp_wayp1"
+}
+
 WAYPOINT_ENTITY_NAMES = [
     'zone.greg_phone__exp_wayp1',
     'zone.greg_phone__exp_wayp2',
@@ -239,8 +251,24 @@ WAYPOINT_ENTITY_NAMES = [
     'zone.ram_phone__exp_wayp2',
 ]
 
+LWT_MESSAGE = {
+    "_type": "lwt",
+    "tst": 1
+}
+
+BAD_MESSAGE = {
+    "_type": "unsupported",
+    "tst": 1
+}
+
 BAD_JSON_PREFIX = '--$this is bad json#--'
 BAD_JSON_SUFFIX = '** and it ends here ^^'
+
+
+# def raise_on_not_implemented(hass, context, message):
+def raise_on_not_implemented():
+    """Throw NotImplemented."""
+    raise NotImplementedError("oopsie")
 
 
 class BaseMQTT(unittest.TestCase):
@@ -1056,7 +1084,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_simple(self):
         """Test a simple import of list of waypoints."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp is not None)
@@ -1066,7 +1094,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_blacklist(self):
         """Test import of list of waypoints for blacklisted user."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is None)
@@ -1088,7 +1116,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         run_coroutine_threadsafe(owntracks.async_setup_scanner(
             self.hass, test_config, mock_see), self.hass.loop).result()
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is not None)
@@ -1098,7 +1126,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_bad_json(self):
         """Test importing a bad JSON payload."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message, True)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message, True)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is None)
@@ -1108,14 +1136,39 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_existing(self):
         """Test importing a zone that exists."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         # Get the first waypoint exported
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         # Send an update
         waypoints_message = WAYPOINTS_UPDATED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         new_wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp == new_wayp)
+
+    def test_single_waypoint_import(self):
+        """Test single waypoint message."""
+        waypoint_message = WAYPOINT_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC, waypoint_message)
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
+        self.assertTrue(wayp is not None)
+
+    def test_not_implemented_message(self):
+        """Handle not implemented message type."""
+        patch_handler = patch('homeassistant.components.device_tracker.'
+                              'owntracks.async_handle_not_impl_msg',
+                              return_value=mock_coro(False))
+        patch_handler.start()
+        self.assertFalse(self.send_message(LWT_TOPIC, LWT_MESSAGE))
+        patch_handler.stop()
+
+    def test_unsupported_message(self):
+        """Handle not implemented message type."""
+        patch_handler = patch('homeassistant.components.device_tracker.'
+                              'owntracks.async_handle_unsupported_msg',
+                              return_value=mock_coro(False))
+        patch_handler.start()
+        self.assertFalse(self.send_message(BAD_TOPIC, BAD_MESSAGE))
+        patch_handler.stop()
 
 
 def generate_ciphers(secret):
@@ -1143,7 +1196,7 @@ def generate_ciphers(secret):
              json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8"))
         )
     ).decode("utf-8")
-    return (ctxt, mctxt)
+    return ctxt, mctxt
 
 
 TEST_SECRET_KEY = 's3cretkey'
@@ -1172,7 +1225,7 @@ def mock_cipher():
         if key != mkey:
             raise ValueError()
         return plaintext
-    return (len(TEST_SECRET_KEY), mock_decrypt)
+    return len(TEST_SECRET_KEY), mock_decrypt
 
 
 class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
