@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera scenes."""
     add_devices(
-        VeraScene(scene, hass.data[VERA_CONTROLLER]) for
-        scene in hass.data[VERA_SCENES])
+        [VeraScene(scene, hass.data[VERA_CONTROLLER])
+         for scene in hass.data[VERA_SCENES]], True)
 
 
 class VeraScene(Scene):
@@ -35,8 +35,6 @@ class VeraScene(Scene):
         # Append device id to prevent name clashes in HA.
         self.vera_id = VERA_ID_FORMAT.format(
             slugify(vera_scene.name), vera_scene.scene_id)
-
-        self.update()
 
     def update(self):
         """Update the scene status."""
@@ -54,18 +52,9 @@ class VeraScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the scene."""
-        attr = {}
-
-        attr['Vera Scene Id'] = self.vera_scene.vera_scene_id
-
-        return attr
+        return {'vera_scene_id': self.vera_scene.vera_scene_id}
 
     @property
     def should_poll(self):
         """Return that polling is not necessary."""
         return False
-
-    @property
-    def is_on(self):
-        """Return the state of the scene."""
-        return self.vera_scene.is_active
