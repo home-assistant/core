@@ -58,5 +58,4 @@ def setup(hass, config):
     hass.data[DATA_NUHEAT] = (api, devices, min_away_temp)
 
     discovery.load_platform(hass, "climate", DOMAIN, {}, config)
-    _LOGGER.debug("NuHeat initialized")
     return True
