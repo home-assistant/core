@@ -103,8 +103,6 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         else:
             self._rs_codes = rs_codes
 
-        self.getstatusfromsystem()
-
         if self._rs_enabled:
             self.listen_to_system_status()
 
@@ -118,12 +116,20 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._status
 
+    @property
+    def should_poll(self):
+        """Poll if no report server is enabled."""
+        if not self._rs_enabled:
+            return True
+        return False
+
     def handle_system_status_event(self, event):
         """Handle egardia_system_status_event."""
         if event.data.get('status') is not None:
             statuscode = event.data.get('status')
             status = self.lookupstatusfromcode(statuscode)
             self.parsestatus(status)
+            self.schedule_update_ha_state()
 
     def listen_to_system_status(self):
         """Subscribe to egardia_system_status event."""
@@ -163,11 +169,6 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def update(self):
         """Update the alarm status."""
-        if not self._rs_enabled:
-            self.getstatusfromsystem()
-
-    def getstatusfromsystem(self):
-        """Get status from EgardiaSystem."""
         status = self._egardiasystem.getstate()
         self.parsestatus(status)
 
