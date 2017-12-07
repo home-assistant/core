@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Tuya switch."""
     import pytuya
 
-    add_devices([tuya(
+    add_devices([TuyaDevice(
         pytuya,
         config.get(CONF_NAME),
         config.get(CONF_HOST),
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )])
 
 
-class tuya(SwitchDevice):
+class TuyaDevice(SwitchDevice):
     """Representation of a Tuya switch."""
 
     def __init__(self, pytuy, name, host, devid, localkey, switchid):
@@ -67,14 +67,14 @@ class tuya(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn Tuya switch on."""
-        d = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
-        d.set_status(True, self._switchid)
+        device = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
+        device.set_status(True, self._switchid)
         self._state = True
         self.async_schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn Tuya switch off."""
-        d = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
-        d.set_status(False, self._switchid)
+        device = self._pytuy.OutletDevice(self._devid, self._host, self._localkey)
+        device.set_status(False, self._switchid)
         self._state = False
         self.async_schedule_update_ha_state()
