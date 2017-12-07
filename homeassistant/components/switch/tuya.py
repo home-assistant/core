@@ -18,6 +18,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ID, default=DEFAULT_ID): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
 
     import pytuya
@@ -30,6 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_LOCKEY),
         config.get(CONF_ID)
     )])
+
 
 class tuya(SwitchDevice):
 
