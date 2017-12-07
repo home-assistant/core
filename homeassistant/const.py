@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 59
+MINOR_VERSION = 60
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -52,6 +52,7 @@ CONF_CURRENCY = 'currency'
 CONF_CUSTOMIZE = 'customize'
 CONF_CUSTOMIZE_DOMAIN = 'customize_domain'
 CONF_CUSTOMIZE_GLOB = 'customize_glob'
+CONF_DELAY_TIME = 'delay_time'
 CONF_DEVICE = 'device'
 CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'

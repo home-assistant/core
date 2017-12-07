@@ -27,7 +27,6 @@ CONF_KNX_LOCAL_IP = "local_ip"
 CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_KNX_STATE_UPDATER = "state_updater"
-CONF_KNX_TIME_ADDRESS = "time_address"
 
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
@@ -61,7 +60,6 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(
                 cv.ensure_list,
                 [cv.string]),
-        vol.Optional(CONF_KNX_TIME_ADDRESS): cv.string,
         vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -99,26 +97,12 @@ def async_setup(hass, config):
                 ATTR_DISCOVER_DEVICES: found_devices
             }, config))
 
-    if CONF_KNX_TIME_ADDRESS in config[DOMAIN]:
-        _add_time_device(hass, config)
-
     hass.services.async_register(
         DOMAIN, SERVICE_KNX_SEND,
         hass.data[DATA_KNX].service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA)
 
     return True
-
-
-def _add_time_device(hass, config):
-    """Create time broadcasting device and add it to xknx device queue."""
-    import xknx
-    group_address_time = config[DOMAIN][CONF_KNX_TIME_ADDRESS]
-    time = xknx.devices.Time(
-        hass.data[DATA_KNX].xknx,
-        'Time',
-        group_address=group_address_time)
-    hass.data[DATA_KNX].xknx.devices.add(time)
 
 
 def _get_devices(hass, discovery_type):
