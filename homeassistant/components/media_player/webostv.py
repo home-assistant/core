@@ -313,7 +313,9 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._now_playing.get('programName')
+        if self.media_channel:
+            return "{}: {}".format(self.media_channel,
+                                   self._now_playing.get('programName'))
 
     @property
     def media_position(self):
