@@ -12,7 +12,6 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10
@@ -52,13 +51,17 @@ class Life360Scanner(object):
 
         # get bearer token
         url = 'https://api.life360.com/v3/oauth2/token.json'
-        payload = {'grant_type': 'password', 'username': self.username, 'password': self.password}
-        headers = {'Authorization': 'Basic cFJFcXVnYWJSZXRyZTRFc3RldGhlcnVmcmVQdW1hbUV4dWNyRUh1YzptM2ZydXBSZXRSZXN3ZXJFQ2hBUHJFOTZxYWtFZHI0Vg=='}
-        r = requests.post(url, data=payload , headers=headers, timeout=DEFAULT_TIMEOUT)
+        payload = {'grant_type': 'password', 'username': self.username,
+                    'password': self.password}
+        headers = {'Authorization': 'Basic cFJFcXVnYWJSZXRyZTRFc3RldGhlcnVmc'
+        'mVQdW1hbUV4dWNyRUh1YzptM2ZydXBSZXRSZXN3ZXJFQ2hBUHJFOTZxYWtFZHI0Vg=='}
+        r = requests.post(url, data=payload, headers=headers,
+                                timeout=DEFAULT_TIMEOUT)
 
         # check if we have valid response
         if r.status_code != 200:
-            _LOGGER.error("Didn't get a good http response while logging in: %s", r.status_code)
+            _LOGGER.error("Incorrect http response while logging in: %s",
+                            r.status_code)
             return None
 
         # hopefully this is working
@@ -77,12 +80,14 @@ class Life360Scanner(object):
         """
         # first retrieve the circles
         url = "https://api.life360.com/v3/circles.json"
-        headers = {'Content-Type': 'application/json','Authorization': 'Bearer ' + self.access_token}
+        headers = {'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + self.access_token}
         r = requests.get(url, headers=headers, timeout=DEFAULT_TIMEOUT)
 
         # check if we have valid response
         if r.status_code != 200:
-            _LOGGER.error("Didn't get a good http response while getting circles: %s", r.status_code)
+            _LOGGER.error("Incorrect http response while getting circles: %s",
+                            r.status_code)
             return None
 
         # hopefully this is working
@@ -102,7 +107,7 @@ class Life360Scanner(object):
                 # check if we have valid response
                 if r.status_code != 200:
                     _LOGGER.error("Didn't get a good http response"
-				  "while getting members: %s", r.status_code)
+                                    "while getting members: %s", r.status_code)
                     return None
 
                 # trying to parse this
