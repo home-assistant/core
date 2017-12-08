@@ -7,7 +7,8 @@ https://home-assistant.io/components/climate.tado/
 import logging
 
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import (
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO
 
@@ -43,6 +44,8 @@ OPERATION_LIST = {
     CONST_MODE_OFF: 'Off',
 }
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tado climate platform."""
@@ -56,8 +59,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     climate_devices = []
     for zone in zones:
-        climate_devices.append(create_climate_device(
-            tado, hass, zone, zone['name'], zone['id']))
+        device = create_climate_device(
+            tado, hass, zone, zone['name'], zone['id'])
+        if not device:
+            continue
+        climate_devices.append(device)
 
     if climate_devices:
         add_devices(climate_devices, True)
@@ -72,8 +78,11 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     if ac_mode:
         temperatures = capabilities['HEAT']['temperatures']
-    else:
+    elif 'temperatures' in capabilities:
         temperatures = capabilities['temperatures']
+    else:
+        _LOGGER.debug("Received zone %s has no temperature; not adding", name)
+        return
 
     min_temp = float(temperatures['celsius']['min'])
     max_temp = float(temperatures['celsius']['max'])
@@ -126,6 +135,11 @@ class TadoClimate(ClimateDevice):
         self._current_fan = CONST_MODE_OFF
         self._current_operation = CONST_MODE_SMART_SCHEDULE
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def name(self):

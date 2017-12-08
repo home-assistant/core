@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP,
-    SUPPORT_PLAY)
+    SUPPORT_PLAY, SUPPORT_SHUFFLE_SET)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
     CONF_HOSTS, ATTR_TIME)
@@ -43,7 +43,7 @@ _REQUESTS_LOGGER.setLevel(logging.ERROR)
 SUPPORT_SONOS = SUPPORT_STOP | SUPPORT_PAUSE | SUPPORT_VOLUME_SET |\
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_SHUFFLE_SET
 
 SERVICE_JOIN = 'sonos_join'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -140,7 +140,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hosts = hosts.split(',') if isinstance(hosts, str) else hosts
             players = []
             for host in hosts:
-                players.append(soco.SoCo(socket.gethostbyname(host)))
+                try:
+                    players.append(soco.SoCo(socket.gethostbyname(host)))
+                except OSError:
+                    _LOGGER.warning("Failed to initialize '%s'", host)
 
         if not players:
             players = soco.discover(
@@ -331,6 +334,7 @@ class SonosDevice(MediaPlayerDevice):
         self._support_previous_track = False
         self._support_next_track = False
         self._support_play = False
+        self._support_shuffle_set = True
         self._support_stop = False
         self._support_pause = False
         self._current_track_uri = None
@@ -450,6 +454,7 @@ class SonosDevice(MediaPlayerDevice):
             self._support_previous_track = False
             self._support_next_track = False
             self._support_play = False
+            self._support_shuffle_set = False
             self._support_stop = False
             self._support_pause = False
             self._is_playing_tv = False
@@ -536,6 +541,7 @@ class SonosDevice(MediaPlayerDevice):
             support_play = False
             support_stop = True
             support_pause = False
+            support_shuffle_set = False
 
             if is_playing_tv:
                 media_artist = SUPPORT_SOURCE_TV
@@ -558,6 +564,7 @@ class SonosDevice(MediaPlayerDevice):
             support_play = True
             support_stop = True
             support_pause = False
+            support_shuffle_set = False
 
             source_name = 'Radio'
             # Check if currently playing radio station is in favorites
@@ -622,6 +629,7 @@ class SonosDevice(MediaPlayerDevice):
             support_play = True
             support_stop = True
             support_pause = True
+            support_shuffle_set = True
 
             position_info = self._player.avTransport.GetPositionInfo(
                 [('InstanceID', 0),
@@ -694,6 +702,7 @@ class SonosDevice(MediaPlayerDevice):
         self._support_previous_track = support_previous_track
         self._support_next_track = support_next_track
         self._support_play = support_play
+        self._support_shuffle_set = support_shuffle_set
         self._support_stop = support_stop
         self._support_pause = support_pause
         self._is_playing_tv = is_playing_tv
@@ -761,6 +770,11 @@ class SonosDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Return true if volume is muted."""
         return self._player_volume_muted
+
+    @property
+    def shuffle(self):
+        """Shuffling state."""
+        return True if self._player.play_mode == 'SHUFFLE' else False
 
     @property
     def media_content_id(self):
@@ -850,7 +864,8 @@ class SonosDevice(MediaPlayerDevice):
 
         if not self._support_play:
             supported = supported ^ SUPPORT_PLAY
-
+        if not self._support_shuffle_set:
+            supported = supported ^ SUPPORT_SHUFFLE_SET
         if not self._support_stop:
             supported = supported ^ SUPPORT_STOP
 
@@ -873,6 +888,11 @@ class SonosDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._player.volume = str(int(volume * 100))
+
+    @soco_error
+    def set_shuffle(self, shuffle):
+        """Enable/Disable shuffle mode."""
+        self._player.play_mode = 'SHUFFLE' if shuffle else 'NORMAL'
 
     @soco_error
     def mute_volume(self, mute):
@@ -932,7 +952,6 @@ class SonosDevice(MediaPlayerDevice):
 
         self._player.stop()
         self._player.clear_queue()
-        self._player.play_mode = 'NORMAL'
         self._player.add_to_queue(didl)
 
     @property

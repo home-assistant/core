@@ -357,7 +357,7 @@ def color_rgbw_to_rgb(r, g, b, w):
 
 def color_rgb_to_hex(r, g, b):
     """Return a RGB color from a hex color string."""
-    return '{0:02x}{1:02x}{2:02x}'.format(r, g, b)
+    return '{0:02x}{1:02x}{2:02x}'.format(round(r), round(g), round(b))
 
 
 def rgb_hex_to_rgb_list(hex_string):

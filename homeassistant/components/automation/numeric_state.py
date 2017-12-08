@@ -37,8 +37,8 @@ def async_trigger(hass, config, action):
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-    async_remove_track_same = None
-    already_triggered = False
+    unsub_track_same = {}
+    entities_triggered = set()
 
     if value_template is not None:
         value_template.hass = hass
@@ -63,8 +63,6 @@ def async_trigger(hass, config, action):
     @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
-        nonlocal already_triggered, async_remove_track_same
-
         @callback
         def call_action():
             """Call action with right context."""
@@ -81,15 +79,17 @@ def async_trigger(hass, config, action):
 
         matching = check_numeric_state(entity, from_s, to_s)
 
-        if matching and not already_triggered:
+        if not matching:
+            entities_triggered.discard(entity)
+        elif entity not in entities_triggered:
+            entities_triggered.add(entity)
+
             if time_delta:
-                async_remove_track_same = async_track_same_state(
+                unsub_track_same[entity] = async_track_same_state(
                     hass, time_delta, call_action, entity_ids=entity_id,
                     async_check_same_func=check_numeric_state)
             else:
                 call_action()
-
-        already_triggered = matching
 
     unsub = async_track_state_change(
         hass, entity_id, state_automation_listener)
@@ -98,7 +98,8 @@ def async_trigger(hass, config, action):
     def async_remove():
         """Remove state listeners async."""
         unsub()
-        if async_remove_track_same:
-            async_remove_track_same()  # pylint: disable=not-callable
+        for async_remove in unsub_track_same.values():
+            async_remove()
+        unsub_track_same.clear()
 
     return async_remove

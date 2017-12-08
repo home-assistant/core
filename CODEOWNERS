@@ -46,6 +46,7 @@ homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
+homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
@@ -53,6 +54,7 @@ homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/media_player/monoprice.py @etsinko
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
 homeassistant/components/sensor/airvisual.py @bachya
+homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen
 homeassistant/components/sensor/sytadin.py @gautric
@@ -63,13 +65,19 @@ homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/broadlink.py @danielhiversen
+homeassistant/components/hive.py @Rendili @KJonline
+homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/*/rfxtrx.py @danielhiversen
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
+homeassistant/components/tahoma.py @philklei
+homeassistant/components/*/tahoma.py @philklei
 homeassistant/components/tesla.py @zabuldon
 homeassistant/components/*/tesla.py @zabuldon
+homeassistant/components/tellduslive.py @molobrakos @fredrike
+homeassistant/components/*/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tradfri.py @ggravlingen
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
 homeassistant/components/*/xiaomi_miio.py @rytilahti @syssi

@@ -97,6 +97,7 @@ class EntityComponent(object):
             expand_group
         ).result()
 
+    @callback
     def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
 
