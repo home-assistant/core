@@ -35,7 +35,7 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
-JS_DEFAULT_OPTION = 'es5'
+JS_DEFAULT_OPTION = 'auto'
 JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
