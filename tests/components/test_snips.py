@@ -34,7 +34,7 @@ def test_snips_call_action(hass, mqtt_mock):
 
     intents = async_mock_intent(hass, 'Lights')
 
-    async_fire_mqtt_message(hass, 'hermes/nlu/intentParsed',
+    async_fire_mqtt_message(hass, 'hermes/intent/activateLights',
                             EXAMPLE_MSG)
     yield from hass.async_block_till_done()
     assert len(intents) == 1
