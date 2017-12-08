@@ -20,6 +20,7 @@ class TestMinMaxSensor(unittest.TestCase):
         self.mean = round(sum(self.values) / self.count, 2)
         self.mean_1_digit = round(sum(self.values) / self.count, 1)
         self.mean_4_digits = round(sum(self.values) / self.count, 4)
+        self.last = self.values[-1]
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -53,6 +54,7 @@ class TestMinMaxSensor(unittest.TestCase):
         self.assertEqual(str(float(self.min)), state.state)
         self.assertEqual(self.max, state.attributes.get('max_value'))
         self.assertEqual(self.mean, state.attributes.get('mean'))
+        self.assertEqual(self.last, state.attributes.get('last'))
 
     def test_max_sensor(self):
         """Test the max sensor."""
@@ -82,6 +84,7 @@ class TestMinMaxSensor(unittest.TestCase):
         self.assertEqual(str(float(self.max)), state.state)
         self.assertEqual(self.min, state.attributes.get('min_value'))
         self.assertEqual(self.mean, state.attributes.get('mean'))
+        self.assertEqual(self.last, state.attributes.get('last'))
 
     def test_mean_sensor(self):
         """Test the mean sensor."""
@@ -111,6 +114,7 @@ class TestMinMaxSensor(unittest.TestCase):
         self.assertEqual(str(float(self.mean)), state.state)
         self.assertEqual(self.min, state.attributes.get('min_value'))
         self.assertEqual(self.max, state.attributes.get('max_value'))
+        self.assertEqual(self.last, state.attributes.get('last'))
 
     def test_mean_1_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -141,6 +145,7 @@ class TestMinMaxSensor(unittest.TestCase):
         self.assertEqual(str(float(self.mean_1_digit)), state.state)
         self.assertEqual(self.min, state.attributes.get('min_value'))
         self.assertEqual(self.max, state.attributes.get('max_value'))
+        self.assertEqual(self.last, state.attributes.get('last'))
 
     def test_mean_4_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -171,6 +176,7 @@ class TestMinMaxSensor(unittest.TestCase):
         self.assertEqual(str(float(self.mean_4_digits)), state.state)
         self.assertEqual(self.min, state.attributes.get('min_value'))
         self.assertEqual(self.max, state.attributes.get('max_value'))
+        self.assertEqual(self.last, state.attributes.get('last'))
 
     def test_not_enough_sensor_value(self):
         """Test that there is nothing done if not enough values available."""
@@ -260,3 +266,33 @@ class TestMinMaxSensor(unittest.TestCase):
 
         self.assertEqual(STATE_UNKNOWN, state.state)
         self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))
+
+    def test_last_sensor(self):
+        """Test the last sensor."""
+        config = {
+            'sensor': {
+                'platform': 'min_max',
+                'name': 'test_last',
+                'type': 'last',
+                'entity_ids': [
+                    'sensor.test_1',
+                    'sensor.test_2',
+                    'sensor.test_3',
+                ]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        entity_ids = config['sensor']['entity_ids']
+
+        for entity_id, value in dict(zip(entity_ids, self.values)).items():
+            self.hass.states.set(entity_id, value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_last')
+
+        self.assertEqual(str(float(self.last)), state.state)
+        self.assertEqual(self.min, state.attributes.get('min_value'))
+        self.assertEqual(self.max, state.attributes.get('max_value'))
+        self.assertEqual(self.mean, state.attributes.get('mean'))
