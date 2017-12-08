@@ -88,10 +88,11 @@ class UERadioDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
+        # pylint: disable=bad-continuation
         request = send_request({"method": "slim.request", "params":
                                 [self._player_id, ["status", "-", 1,
-                                                   "tags:cgABbehldiqtyrSuoKLN"]
-                                ]}, self._session)
+                                                   "tags:cgABbehldiqtyrSuoKLN"
+                                                   ]]}, self._session)
 
         if request["error"] is not None:
             self._state = STATE_UNKNOWN
