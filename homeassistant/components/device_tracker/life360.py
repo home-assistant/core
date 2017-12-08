@@ -5,10 +5,7 @@ For more details about this platform, please refer to the documentation at
 TODO
 """
 import logging
-
-#making http requests happening
 import requests
-
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -18,6 +15,7 @@ from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -47,23 +45,23 @@ class Life360Scanner(object):
 
         track_utc_time_change(
             self.hass, self._update_info, second=range(0, 60, 30))
-    
+
     def get_members(self):
-        #reset member to nothing
+        # reset member to nothing
         self.members = []
 
-        #get bearer token
+        # get bearer token
         url = 'https://api.life360.com/v3/oauth2/token.json'
-        payload = payload = {'grant_type': 'password', 'username': self.username, 'password': self.password}
+        payload = {'grant_type': 'password', 'username': self.username, 'password': self.password}
         headers = {'Authorization': 'Basic cFJFcXVnYWJSZXRyZTRFc3RldGhlcnVmcmVQdW1hbUV4dWNyRUh1YzptM2ZydXBSZXRSZXN3ZXJFQ2hBUHJFOTZxYWtFZHI0Vg=='}
-        r = requests.post(url, data=payload , headers=headers)
+        r = requests.post(url, data=payload , headers=headers, timeout=DEFAULT_TIMEOUT)
 
-        #check if we have valid response
+        # check if we have valid response
         if r.status_code != 200:
             _LOGGER.error("Didn't get a good http response while logging in: %s", r.status_code)
             return None
 
-        #hopefully this is working
+        # hopefully this is working
         try:
             data = r.json()
             self.access_token = data['access_token']
@@ -77,57 +75,58 @@ class Life360Scanner(object):
         Life360 has the following hierarchy to list devices
         Account -> Circles -> Members enrolled in Circle
         """
-        #first retrieve the circles
+        # first retrieve the circles
         url = "https://api.life360.com/v3/circles.json"
         headers = {'Content-Type': 'application/json','Authorization': 'Bearer ' + self.access_token}
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=headers, timeout=DEFAULT_TIMEOUT)
 
-        #check if we have valid response
+        # check if we have valid response
         if r.status_code != 200:
             _LOGGER.error("Didn't get a good http response while getting circles: %s", r.status_code)
             return None
 
-        #hopefully this is working
+        # hopefully this is working
         try:
-            #put data in json form
+            # put data in json form
             self.circles = r.json()
         except:
             _LOGGER.warning("Cannot get the Life360 Circles")
 
         if self.circles is not None:
-            #yeah! something in the array
+            # yeah! something in the array
             for circle in self.circles['circles']:
-                #now get all members per circle
+                # now get all members per circle
                 url = "https://api.life360.com/v3/circles/" + circle['id']
-                r = requests.get(url, headers=headers)
+                r = requests.get(url, headers=headers, timeout=DEFAULT_TIMEOUT)
 
-                #check if we have valid response
+                # check if we have valid response
                 if r.status_code != 200:
-                    _LOGGER.error("Didn't get a good http response while getting members: %s", r.status_code)
+                    _LOGGER.error("Didn't get a good http response"
+				  "while getting members: %s", r.status_code)
                     return None
-                    
-                #trying to parse this
+
+                # trying to parse this
                 try:
                     data = r.json()
                     for member in data['members']:
                         self.members.append(member)
                 except:
                     _LOGGER.warning("Cannot get the Life360 Member")
-        
+
         if self.members is None:
             _LOGGER.warning("Error using Life360 API")
 
     def _update_info(self, now=None) -> None:
         """Update the device info."""
         _LOGGER.debug("Updating members %s", now)
-        
-        #update members
+
+        # update members
         self.get_members()
-        
-        #now notify service that the members are updated
+
+        # now notify service that the members are updated
         try:
             for member in self.members:
-                #filter members with a location
+                # filter members with a location
                 if member['features']['device'] == "1":
                     id = member['id']
                     name = member['firstName'] + ' ' + member['lastName']
@@ -135,8 +134,8 @@ class Life360Scanner(object):
                     lon = float(member['location']['longitude'])
                     acc = float(member['location']['accuracy'])
                     batt = member['location']['battery']
-                    
-                    #call function!
+
+                    # call function!
                     self.see(
                         mac=id, host_name=name,
                         gps=(lat, lon), gps_accuracy=acc, battery=batt
