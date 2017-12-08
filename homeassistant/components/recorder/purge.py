@@ -18,6 +18,9 @@ def purge_old_data(instance, purge_days):
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
 
     with session_scope(session=instance.get_session()) as session:
+        # For each entity, the most recent state is protected from deletion
+        # s.t. we can properly restore state even if the entity has not been
+        # updated in a long time
         protected_states = session.query(States.state_id, States.event_id,
                                          func.max(States.last_updated)) \
                               .group_by(States.entity_id).subquery()
@@ -33,6 +36,10 @@ def purge_old_data(instance, purge_days):
                               .delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s states", deleted_rows)
 
+        # We also need to protect the events belonging to the protected states.
+        # Otherwise, if the SQL server has "ON DELETE CASCADE" as default, it
+        # will delete the protected state when deleting its associated
+        # event. Also, we would be producing NULLed foreign keys otherwise.
         aliased_events = aliased(Events)
         deleted_rows = session.query(Events) \
             .filter((Events.time_fired < purge_before)) \
