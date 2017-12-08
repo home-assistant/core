@@ -8,7 +8,7 @@ from unittest.mock import call, MagicMock, patch
 from homeassistant.components import hue
 import homeassistant.components.light.hue as hue_light
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, MockDependency
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +114,8 @@ class TestSetup(unittest.TestCase):
                 call(self.hass, mock_bridge2, mock_add_devices),
             ])
 
-    def test_update_lights_with_no_lights(self):
+    @MockDependency('phue')
+    def test_update_lights_with_no_lights(self, mock_phue):
         """Test the update_lights function when no lights are found."""
         self.setup_mocks_for_update_lights()
 
@@ -134,7 +135,8 @@ class TestSetup(unittest.TestCase):
                     mock_process_groups.assert_not_called()
                     self.mock_add_devices.assert_not_called()
 
-    def test_update_lights_with_some_lights(self):
+    @MockDependency('phue')
+    def test_update_lights_with_some_lights(self, mock_phue):
         """Test the update_lights function with some lights."""
         self.setup_mocks_for_update_lights()
         self.mock_lights = ['some', 'light']
@@ -156,7 +158,8 @@ class TestSetup(unittest.TestCase):
                     self.mock_add_devices.assert_called_once_with(
                         self.mock_lights)
 
-    def test_update_lights_no_groups(self):
+    @MockDependency('phue')
+    def test_update_lights_no_groups(self, mock_phue):
         """Test the update_lights function when no groups are found."""
         self.setup_mocks_for_update_lights()
         self.mock_bridge.allow_hue_groups = True
@@ -181,7 +184,8 @@ class TestSetup(unittest.TestCase):
                     self.mock_add_devices.assert_called_once_with(
                         self.mock_lights)
 
-    def test_update_lights_with_lights_and_groups(self):
+    @MockDependency('phue')
+    def test_update_lights_with_lights_and_groups(self, mock_phue):
         """Test the update_lights function with both lights and groups."""
         self.setup_mocks_for_update_lights()
         self.mock_bridge.allow_hue_groups = True
