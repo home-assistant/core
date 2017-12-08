@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, Dict  # noqa
 
-REQUIREMENTS = ['PyISY==1.0.8']
+REQUIREMENTS = ['PyISY==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
