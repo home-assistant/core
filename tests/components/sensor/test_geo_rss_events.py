@@ -19,6 +19,50 @@ VALID_CONFIG_WITHOUT_CATEGORIES = {
     'platform': 'geo_rss_events',
     geo_rss_events.CONF_URL: URL
 }
+VALID_CONFIG_WITH_CUSTOM_ATTRIBUTE = {
+    'platform': 'geo_rss_events',
+    geo_rss_events.CONF_URL: URL,
+    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
+        {
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
+                ' (?P<custom_attribute>\d+)'
+        }
+    ]
+}
+INVALID_CONFIG_WITH_CUSTOM_ATTRIBUTE_MISSING_NAME = {
+    'platform': 'geo_rss_events',
+    geo_rss_events.CONF_URL: URL,
+    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
+        {
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
+                ' (?P<custom_attribute>\d+)'
+        }
+    ]
+}
+INVALID_CONFIG_WITH_CUSTOM_ATTRIBUTE_MISSING_SOURCE = {
+    'platform': 'geo_rss_events',
+    geo_rss_events.CONF_URL: URL,
+    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
+        {
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
+                ' (?P<custom_attribute>\d+)'
+        }
+    ]
+}
+INVALID_CONFIG_WITH_CUSTOM_ATTRIBUTE_MISSING_REGEXP = {
+    'platform': 'geo_rss_events',
+    geo_rss_events.CONF_URL: URL,
+    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
+        {
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title'
+        }
+    ]
+}
 
 
 class TestGeoRssServiceUpdater(unittest.TestCase):
@@ -49,14 +93,19 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
             setup_component(self.hass, 'sensor', {'sensor': self.config}))
         self.assertIsNotNone(self.hass.states.get('sensor.event_service_any'))
 
-    def setup_data(self, url='url'):
+    def setup_data(self, url='url', custom_attributes_definition=None,
+                   custom_filters_definition=None):
         """Set up data object for use by sensors."""
+        if custom_attributes_definition is None:
+            custom_attributes_definition = []
         home_latitude = -33.865
         home_longitude = 151.209444
         radius_in_km = 500
         data = geo_rss_events.GeoRssServiceData(home_latitude,
                                                 home_longitude, url,
-                                                radius_in_km)
+                                                radius_in_km,
+                                                custom_attributes_definition,
+                                                custom_filters_definition)
         return data
 
     def test_update_sensor_with_category(self):
@@ -70,10 +119,12 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         name = "Name 1"
         unit_of_measurement = "Unit 1"
         sort_reverse = False
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement, None,
-                                                    sort_reverse)
+                                                    sort_reverse,
+                                                    publish_events)
 
         sensor.update()
         assert sensor.name == "Name 1 Category 1"
@@ -97,10 +148,12 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         name = "Name 2"
         unit_of_measurement = "Unit 2"
         sort_reverse = False
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement, None,
-                                                    sort_reverse)
+                                                    sort_reverse,
+                                                    publish_events)
 
         sensor.update()
         assert sensor.name == "Name 2 Any"
@@ -120,10 +173,12 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         name = "Name 3"
         unit_of_measurement = "Unit 3"
         sort_reverse = False
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement, None,
-                                                    sort_reverse)
+                                                    sort_reverse,
+                                                    publish_events)
 
         sensor.update()
         assert sensor.name == "Name 3 Any"
@@ -140,10 +195,12 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         name = "Name 4"
         unit_of_measurement = "Unit 4"
         sort_reverse = False
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement, None,
-                                                    sort_reverse)
+                                                    sort_reverse,
+                                                    publish_events)
 
         sensor.update()
         assert sensor.name == "Name 4 Any"
@@ -159,25 +216,25 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         unit_of_measurement = "Unit 2"
         sort_by = "distance"
         sort_reverse = False
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement,
-                                                    sort_by, sort_reverse)
-
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
         sensor.update()
         assert sensor.state == 4
         assert str(sensor.device_state_attributes) == str({'Title 6': "48km",
                                                            'Title 1': "117km",
                                                            'Title 3': "204km",
                                                            'Title 2': "302km"})
-
         # Test reverse sort order
         sort_reverse = True
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement,
-                                                    sort_by, sort_reverse)
-
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
         sensor.update()
         assert sensor.state == 4
         assert str(sensor.device_state_attributes) == str({'Title 2': "302km",
@@ -194,25 +251,25 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         unit_of_measurement = "Unit 2"
         sort_by = "date_published"
         sort_reverse = False
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement,
-                                                    sort_by, sort_reverse)
-
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
         sensor.update()
         assert sensor.state == 4
         assert str(sensor.device_state_attributes) == str({'Title 6': "48km",
                                                            'Title 1': "117km",
                                                            'Title 2': "302km",
                                                            'Title 3': "204km"})
-
         # Test reverse sort order
         sort_reverse = True
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement,
-                                                    sort_by, sort_reverse)
-
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
         sensor.update()
         assert sensor.state == 4
         assert str(sensor.device_state_attributes) == str({'Title 3': "204km",
@@ -229,28 +286,152 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         unit_of_measurement = "Unit 2"
         sort_by = "date_updated"
         sort_reverse = False
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement,
-                                                    sort_by, sort_reverse)
-
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
         sensor.update()
         assert sensor.state == 4
         assert str(sensor.device_state_attributes) == str({'Title 2': "302km",
                                                            'Title 3': "204km",
                                                            'Title 1': "117km",
                                                            'Title 6': "48km"})
-
         # Test reverse sort order
         sort_reverse = True
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
                                                     data, name,
                                                     unit_of_measurement,
-                                                    sort_by, sort_reverse)
-
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
         sensor.update()
         assert sensor.state == 4
         assert str(sensor.device_state_attributes) == str({'Title 6': "48km",
                                                            'Title 1': "117km",
                                                            'Title 3': "204km",
                                                            'Title 2': "302km"})
+
+    def test_custom_attributes(self):
+        """Test extracting a custom attribute."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        custom_attributes_definition = [{
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
+                '(?P<custom_attribute>\d+)'
+        }]
+        data = self.setup_data(raw_data, custom_attributes_definition)
+        data.update()
+        assert data.events[0]['title_index'] == '1'
+        assert data.events[1]['title_index'] == '2'
+        assert data.events[2]['title_index'] == '3'
+        assert data.events[3]['title_index'] == '6'
+
+    def test_custom_attributes_nonexistent_source(self):
+        """Test extracting a custom attribute from a nonexistent source."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        custom_attributes_definition = [{
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'nonexistent',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
+                '(?P<custom_attribute>\d+)'
+        }]
+        data = self.setup_data(raw_data, custom_attributes_definition)
+        data.update()
+        assert data.events[0]['title_index'] is None
+        assert data.events[1]['title_index'] is None
+        assert data.events[2]['title_index'] is None
+        assert data.events[3]['title_index'] is None
+
+    def test_sort_by_custom_attributes(self):
+        """Extract a custom attribute and sort events by that attribute."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        custom_attributes_definition = [{
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title',
+            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
+                '(?P<custom_attribute>\d+)'
+        }]
+        data = self.setup_data(raw_data, custom_attributes_definition)
+        category = None
+        name = "Name 2"
+        unit_of_measurement = "Unit 2"
+        sort_by = "title_index"
+        sort_reverse = False
+        publish_events = False
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
+                                                    data, name,
+                                                    unit_of_measurement,
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
+        sensor.update()
+        assert sensor.state == 4
+        assert str(sensor.device_state_attributes) == str({'Title 1': "117km",
+                                                           'Title 2': "302km",
+                                                           'Title 3': "204km",
+                                                           'Title 6': "48km"})
+        # Test reverse sort order
+        sort_reverse = True
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
+                                                    data, name,
+                                                    unit_of_measurement,
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
+        sensor.update()
+        assert sensor.state == 4
+        assert str(sensor.device_state_attributes) == str({'Title 6': "48km",
+                                                           'Title 3': "204km",
+                                                           'Title 2': "302km",
+                                                           'Title 1': "117km"})
+
+    def test_custom_filter(self):
+        """Test a custom filter."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        custom_filter_definition = [{
+            geo_rss_events.CONF_CUSTOM_FILTERS_ATTRIBUTE: 'title',
+            geo_rss_events.CONF_CUSTOM_FILTERS_REGEXP:
+                'Title [3-9]{1}'
+        }]
+        data = self.setup_data(raw_data, None, custom_filter_definition)
+        data.update()
+        assert data.events[0]['title'] == 'Title 3'
+        assert data.events[1]['title'] == 'Title 6'
+
+    def test_send_events(self):
+        """Test sending events to the event bus."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        data = self.setup_data(raw_data)
+        category = None
+        name = "Name 1"
+        unit_of_measurement = "Unit 1"
+        sort_by = None
+        sort_reverse = False
+        publish_events = True
+        sensor = geo_rss_events.GeoRssServiceSensor(self.hass, category,
+                                                    data, name,
+                                                    unit_of_measurement,
+                                                    sort_by, sort_reverse,
+                                                    publish_events)
+        # Set up event listener
+        events = []
+
+        def listener(event):
+            events.append(event)
+
+        self.hass.bus.async_listen(sensor._event_type_id, listener)
+        # Update sensor and this trigger publishing events.
+        sensor.update()
+        self.hass.block_till_done()
+
+        assert len(events) == 4
+
+        # Read second event file with updated events.
+        raw_data = load_fixture('geo_rss_events2.xml')
+        data = self.setup_data(raw_data)
+        sensor._data = data
+        events = []
+        sensor.update()
+        self.hass.block_till_done()
+
+        assert len(events) == 3

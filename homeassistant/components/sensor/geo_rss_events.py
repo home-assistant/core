@@ -213,7 +213,7 @@ class GeoRssServiceSensor(Entity):
                 my_events = sorted(my_events,
                                    key=lambda event:
                                    min_object if self._sort_by not in event or
-                                                 event[self._sort_by] is None
+                                   event[self._sort_by] is None
                                    else event[self._sort_by],
                                    reverse=self._sort_reverse)
             # And now compute the attributes from the filtered events.
@@ -242,9 +242,8 @@ class GeoRssServiceSensor(Entity):
                 for previous_event in self._previous_events:
                     if event[ATTR_ID] == previous_event[ATTR_ID]:
                         # Check the update date.
-                        if hasattr(event, ATTR_DATE_UPDATED):
-                            if hasattr(previous_event,
-                                       ATTR_DATE_UPDATED):
+                        if event[ATTR_DATE_UPDATED] is not None:
+                            if previous_event[ATTR_DATE_UPDATED] is not None:
                                 if event[ATTR_DATE_UPDATED] <= \
                                         previous_event[ATTR_DATE_UPDATED]:
                                     # Event has not been updated.
@@ -325,11 +324,12 @@ class GeoRssServiceData(object):
         }
         # Compute custom attributes.
         for definition in self._custom_attributes_definition:
-            if hasattr(entry,
-                       definition[CONF_CUSTOM_ATTRIBUTES_SOURCE]):
-                match = re.match(definition[CONF_CUSTOM_ATTRIBUTES_REGEXP],
-                                 entry[definition[
-                                     CONF_CUSTOM_ATTRIBUTES_SOURCE]])
+            if hasattr(entry, definition[CONF_CUSTOM_ATTRIBUTES_SOURCE]):
+                # Use 'search' to allow for matching anywhere in the source
+                # attribute.
+                match = re.search(definition[CONF_CUSTOM_ATTRIBUTES_REGEXP],
+                                  entry[definition[
+                                      CONF_CUSTOM_ATTRIBUTES_SOURCE]])
                 event[definition[
                     CONF_CUSTOM_ATTRIBUTES_NAME]] = None if not match \
                     else match.group('custom_attribute')
