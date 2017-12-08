@@ -4,7 +4,6 @@ import logging
 
 import homeassistant.util.dt as dt_util
 
-from sqlalchemy import func
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -13,10 +12,13 @@ _LOGGER = logging.getLogger(__name__)
 def purge_old_data(instance, purge_days):
     """Purge events and states older than purge_days ago."""
     from .models import States, Events
+    from sqlalchemy import func
+    from sqlalchemy.orm import aliased
+
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
 
     with session_scope(session=instance.get_session()) as session:
-        protected_states = session.query(States.state_id,
+        protected_states = session.query(States.state_id, States.event_id,
                                          func.max(States.last_updated)) \
                               .group_by(States.entity_id).subquery()
 
@@ -31,9 +33,16 @@ def purge_old_data(instance, purge_days):
                               .delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s states", deleted_rows)
 
+        aliased_events = aliased(Events)
         deleted_rows = session.query(Events) \
-                              .filter((Events.time_fired < purge_before)) \
-                              .delete(synchronize_session=False)
+            .filter((Events.time_fired < purge_before)) \
+            .filter(~session.query(aliased_events.event_id)
+                    .filter(aliased_events.event_id == Events.event_id)
+                    .join(protected_states,
+                          aliased_events.event_id ==
+                          protected_states.c.event_id)
+                    .exists()) \
+            .delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s events", deleted_rows)
 
     # Execute sqlite vacuum command to free up space on disk
