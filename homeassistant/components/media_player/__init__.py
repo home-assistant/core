@@ -376,7 +376,6 @@ def async_setup(hass, config):
         load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
-
     @asyncio.coroutine
     def async_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
