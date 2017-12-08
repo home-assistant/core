@@ -62,7 +62,8 @@ class MochadLight(Light):
 
     def _get_device_status(self):
         """Get the status of the light from mochad."""
-        status = self.device.get_status().rstrip()
+        with mochad.REQ_LOCK:
+            status = self.device.get_status().rstrip()
         return status == 'on'
 
     @property
@@ -88,12 +89,14 @@ class MochadLight(Light):
     def turn_on(self, **kwargs):
         """Send the command to turn the light on."""
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self.device.send_cmd("xdim {}".format(self._brightness))
-        self._controller.read_data()
+        with mochad.REQ_LOCK:
+            self.device.send_cmd("xdim {}".format(self._brightness))
+            self._controller.read_data()
         self._state = True
 
     def turn_off(self, **kwargs):
         """Send the command to turn the light on."""
-        self.device.send_cmd('off')
-        self._controller.read_data()
+        with mochad.REQ_LOCK:
+            self.device.send_cmd('off')
+            self._controller.read_data()
         self._state = False
