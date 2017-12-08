@@ -12,7 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_DATA, BaseNotificationService, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_FILENAME, CONF_HOST, CONF_ICON)
+from homeassistant.const import (CONF_FILENAME, CONF_HOST, CONF_ICON,
+                                 CONF_TIMEOUT)
 
 REQUIREMENTS = ['pylgtv==0.1.7']
 
@@ -26,7 +27,8 @@ HOME_ASSISTANT_ICON_PATH = os.path.join(os.path.dirname(__file__), '..',
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH): cv.string
+    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int
 })
 
 
@@ -36,7 +38,8 @@ def get_service(hass, config, discovery_info=None):
     from pylgtv import PyLGTVPairException
 
     path = hass.config.path(config.get(CONF_FILENAME))
-    client = WebOsClient(config.get(CONF_HOST), key_file_path=path)
+    client = WebOsClient(config.get(CONF_HOST), key_file_path=path,
+                         timeout_connect=config.get(CONF_TIMEOUT))
 
     if not client.is_registered():
         try:
