@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
 HOME_ASSISTANT_ICON_PATH = os.path.join(os.path.dirname(__file__), '..',
                                         'frontend', 'www_static', 'icons',
-                                        'favicon-1024x1024.png')
+                                        'favicon-192x192.png')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
