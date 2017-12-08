@@ -46,22 +46,25 @@ class Life360Scanner(object):
             self.hass, self._update_info, second=range(0, 60, 30))
 
     def get_members(self):
+        """build members array"""
+
         # reset member to nothing
         self.members = []
 
         # get bearer token
         url = 'https://api.life360.com/v3/oauth2/token.json'
         payload = {'grant_type': 'password', 'username': self.username,
-                    'password': self.password}
+                   'password': self.password}
         headers = {'Authorization': 'Basic cFJFcXVnYWJSZXRyZTRFc3RldGhlcnVmc'
-        'mVQdW1hbUV4dWNyRUh1YzptM2ZydXBSZXRSZXN3ZXJFQ2hBUHJFOTZxYWtFZHI0Vg=='}
+                   'mVQdW1hbUV4dWNyRUh1YzptM2ZydXBSZXRSZXN3ZXJFQ2hBUHJFOTZxYW'
+                   'tFZHI0Vg=='}
         r = requests.post(url, data=payload, headers=headers,
-                                timeout=DEFAULT_TIMEOUT)
+                          timeout=DEFAULT_TIMEOUT)
 
         # check if we have valid response
         if r.status_code != 200:
             _LOGGER.error("Incorrect http response while logging in: %s",
-                            r.status_code)
+                          r.status_code)
             return None
 
         # hopefully this is working
@@ -81,13 +84,13 @@ class Life360Scanner(object):
         # first retrieve the circles
         url = "https://api.life360.com/v3/circles.json"
         headers = {'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + self.access_token}
+                   'Authorization': 'Bearer ' + self.access_token}
         r = requests.get(url, headers=headers, timeout=DEFAULT_TIMEOUT)
 
         # check if we have valid response
         if r.status_code != 200:
             _LOGGER.error("Incorrect http response while getting circles: %s",
-                            r.status_code)
+                          r.status_code)
             return None
 
         # hopefully this is working
@@ -107,7 +110,7 @@ class Life360Scanner(object):
                 # check if we have valid response
                 if r.status_code != 200:
                     _LOGGER.error("Didn't get a good http response"
-                                    "while getting members: %s", r.status_code)
+                                  "while getting members: %s", r.status_code)
                     return None
 
                 # trying to parse this
