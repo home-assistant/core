@@ -50,6 +50,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/coinbase.py
+    homeassistant/components/sensor/coinbase.py
+
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
 
