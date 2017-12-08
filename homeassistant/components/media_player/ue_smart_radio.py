@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.ue_smart_radio/
 """
 
 import logging
-from json import dumps
 import voluptuous as vol
 import requests
 
@@ -16,27 +15,43 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_MUTE)
 from homeassistant.const import (
-    CONF_EMAIL, CONF_PASSWORD, STATE_OFF, STATE_IDLE, STATE_PLAYING,
+    CONF_USERNAME, CONF_PASSWORD, STATE_OFF, STATE_IDLE, STATE_PLAYING,
     STATE_PAUSED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:radio"
+URL = "http://decibel.logitechmusic.com/jsonrpc.js"
 
 SUPPORT_UE_SMART_RADIO = SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_TURN_ON | \
     SUPPORT_TURN_OFF | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
 })
 
 
+def send_request(payload, session):
+    """Send request to radio."""
+    try:
+        request = requests.post(URL,
+                                cookies={"sdi_squeezenetwork_session":
+                                         session},
+                                json=payload, timeout=5)
+    except requests.exceptions.Timeout:
+        _LOGGER.error("Timed out when sending request")
+    except requests.exceptions.ConnectionError:
+        _LOGGER.error("An error occurred while connecting")
+    else:
+        return request.json()
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Logitech UE Smart Radio platform."""
-    email = config.get(CONF_EMAIL)
+    email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     session_request = requests.post("https://www.uesmartradio.com/user/login",
@@ -44,11 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                           password})
     session = session_request.cookies["sdi_squeezenetwork_session"]
 
-    player_request = requests.post("http://decibel.logitechmusic.com/jsonrpc \
-                                   .js", cookies={"sdi_squeezenetwork_session":
-                                                  session},
-                                   data="{\"params\":[\"\", \
-                                        [\"serverstatus\"]]}").json()
+    player_request = send_request({"params": ["", ["serverstatus"]]}, session)
     player_id = player_request["result"]["players_loop"][0]["playerid"]
     player_name = player_request["result"]["players_loop"][0]["name"]
 
@@ -63,7 +74,7 @@ class UERadioDevice(MediaPlayerDevice):
         self._session = session
         self._player_id = player_id
         self._name = player_name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._volume = 0
         self._last_volume = 0
         self._media_title = None
@@ -71,31 +82,16 @@ class UERadioDevice(MediaPlayerDevice):
         self._media_artwork_url = None
 
     def send_command(self, command):
-        """Send request to radio."""
-        payload = ("{{\"method\":\"slim.request\",\"params\":[\"{}\",{}]}}"
-                   .format(self._player_id, dumps(command)))
-        try:
-            requests.post("http://decibel.logitechmusic.com/jsonrpc.js",
-                          cookies={"sdi_squeezenetwork_session":
-                                   self._session},
-                          data=payload, timeout=5)
-        except requests.exceptions.Timeout:
-            _LOGGER.error("Timed out when sending command to UE Smart Radio")
+        """Send command to radio."""
+        send_request({"method": "slim.request", "params":
+                      [self._player_id, command]}, self._session)
 
     def update(self):
         """Get the latest details from the device."""
-        payload = ("{{\"method\":\"slim.request\",\"params\":[\"{}\", \
-                   [\"status\",\"-\",1,\"tags:cgABbehldiqtyrSuoKLN\"]]}}"
-                   .format(self._player_id))
-        try:
-            request = (requests.post("http://decibel.logitechmusic.com/ \
-                                     jsonrpc.js",
-                                     cookies={"sdi_squeezenetwork_session":
-                                              self._session}, data=payload,
-                                     timeout=5).json())
-        except requests.exceptions.Timeout:
-            _LOGGER.error("Timed out when retrieving status of UE Smart Radio")
-            return
+        request = send_request({"method": "slim.request", "params":
+                                [self._player_id, ["status", "-", 1,
+                                                   "tags:cgABbehldiqtyrSuoKLN"]
+                                ]}, self._session)
 
         if request["error"] is not None:
             self._state = STATE_UNKNOWN
@@ -163,7 +159,7 @@ class UERadioDevice(MediaPlayerDevice):
 
     @property
     def media_image_url(self):
-        """Image url of current playing media."""
+        """Image URL of current playing media."""
         return self._media_artwork_url
 
     @property
