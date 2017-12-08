@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.hive/
 import colorsys
 from homeassistant.components.hive import DATA_HIVE
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
+                                            ATTR_RGB_COLOR,
                                             SUPPORT_BRIGHTNESS,
                                             SUPPORT_COLOR_TEMP,
                                             SUPPORT_RGB_COLOR, Light)
