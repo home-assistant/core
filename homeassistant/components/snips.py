@@ -60,6 +60,7 @@ def async_setup(hass, config):
             return
 
         intent_type = request['intent']['intentName'].split('__')[-1]
+        slots = {}
         for slot in request.get('slots', []):
             if 'value' in slot['value']:
                 slots[slot['slotName']] = {'value': slot['value']['value']}
