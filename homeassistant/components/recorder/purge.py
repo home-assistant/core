@@ -4,6 +4,7 @@ import logging
 
 import homeassistant.util.dt as dt_util
 
+from sqlalchemy import func
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,8 +16,18 @@ def purge_old_data(instance, purge_days):
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
 
     with session_scope(session=instance.get_session()) as session:
+        protected_states = session.query(States.state_id,
+                                         func.max(States.last_updated)) \
+                              .group_by(States.entity_id).subquery()
+
+        protected_state_ids = session.query(States.state_id).join(
+            protected_states, States.state_id == protected_states.c.state_id)\
+            .subquery()
+
         deleted_rows = session.query(States) \
                               .filter((States.last_updated < purge_before)) \
+                              .filter(~States.state_id.in_(
+                                  protected_state_ids)) \
                               .delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s states", deleted_rows)
 

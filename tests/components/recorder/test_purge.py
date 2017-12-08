@@ -55,6 +55,19 @@ class TestRecorderPurge(unittest.TestCase):
                     event_id=event_id + 1000
                 ))
 
+            # add a state that is old but the only state of its entity and
+            # should be protected
+            session.add(States(
+                entity_id='test.rarely_updated_entity',
+                domain='sensor',
+                state='iamprotected',
+                attributes=json.dumps(attributes),
+                last_changed=five_days_ago,
+                last_updated=five_days_ago,
+                created=five_days_ago,
+                event_id=2000
+            ))
+
     def _add_test_events(self):
         """Add a few events for testing."""
         now = datetime.now()
@@ -84,16 +97,16 @@ class TestRecorderPurge(unittest.TestCase):
     def test_purge_old_states(self):
         """Test deleting old states."""
         self._add_test_states()
-        # make sure we start with 5 states
+        # make sure we start with 6 states
         with session_scope(hass=self.hass) as session:
             states = session.query(States)
-            self.assertEqual(states.count(), 5)
+            self.assertEqual(states.count(), 6)
 
             # run purge_old_data()
             purge_old_data(self.hass.data[DATA_INSTANCE], 4)
 
-            # we should only have 2 states left after purging
-            self.assertEqual(states.count(), 2)
+            # we should only have 3 states left after purging
+            self.assertEqual(states.count(), 3)
 
     def test_purge_old_events(self):
         """Test deleting old events."""
@@ -116,10 +129,10 @@ class TestRecorderPurge(unittest.TestCase):
         self._add_test_states()
         self._add_test_events()
 
-        # make sure we start with 5 states
+        # make sure we start with 6 states
         with session_scope(hass=self.hass) as session:
             states = session.query(States)
-            self.assertEqual(states.count(), 5)
+            self.assertEqual(states.count(), 6)
 
             events = session.query(Events).filter(
                 Events.event_type.like("EVENT_TEST%"))
@@ -134,10 +147,8 @@ class TestRecorderPurge(unittest.TestCase):
             # Small wait for recorder thread
             sleep(0.1)
 
-            # we should only have 2 states left after purging
-            self.assertEqual(states.count(), 5)
-
-            # now we should only have 3 events left
+            # we should still have everything from before
+            self.assertEqual(states.count(), 6)
             self.assertEqual(events.count(), 5)
 
             # run purge method - correct service data
@@ -148,8 +159,12 @@ class TestRecorderPurge(unittest.TestCase):
             # Small wait for recorder thread
             sleep(0.1)
 
-            # we should only have 2 states left after purging
-            self.assertEqual(states.count(), 2)
+            # we should only have 3 states left after purging
+            self.assertEqual(states.count(), 3)
+
+            # the protected state is among them
+            self.assertTrue('iamprotected' in (
+                state.state for state in states))
 
             # now we should only have 3 events left
             self.assertEqual(events.count(), 3)
