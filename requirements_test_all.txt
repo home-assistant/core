@@ -115,6 +115,9 @@ pmsensor==0.4
 # homeassistant.components.prometheus
 prometheus_client==0.0.21
 
+# homeassistant.components.canary
+py-canary==0.2.3
+
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 

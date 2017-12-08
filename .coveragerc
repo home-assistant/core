@@ -264,6 +264,7 @@ omit =
     homeassistant/components/*/zoneminder.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
+    homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/egardia.py
     homeassistant/components/alarm_control_panel/ialarm.py
@@ -285,6 +286,7 @@ omit =
     homeassistant/components/browser.py
     homeassistant/components/calendar/todoist.py
     homeassistant/components/camera/bloomsky.py
+    homeassistant/components/camera/canary.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
