@@ -72,7 +72,7 @@ aiohttp_cors==0.5.3
 aioimaplib==0.7.13
 
 # homeassistant.components.light.lifx
-aiolifx==0.6.0
+aiolifx==0.6.1
 
 # homeassistant.components.light.lifx
 aiolifx_effects==0.1.2
