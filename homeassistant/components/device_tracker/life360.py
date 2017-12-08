@@ -22,7 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config: dict, see, discovery_info=None):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Validate the configuration and return a Life360 scanner."""
     Life360Scanner(hass, config, see)
     return True
@@ -31,7 +31,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
 class Life360Scanner(object):
     """A class representing a Life360 scanner."""
 
-    def __init__(self, hass, config: dict, see) -> None:
+    def __init__(self, hass, config, see):
         """Initialize the Life360 scanner."""
         self.hass = hass
         self.see = see
@@ -122,7 +122,7 @@ class Life360Scanner(object):
         if self.members is None:
             _LOGGER.warning("Error using Life360 API")
 
-    def _update_info(self, now=None) -> None:
+    def _update_info(self, now=None):
         """Update the device info."""
         _LOGGER.debug("Updating members %s", now)
 
