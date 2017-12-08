@@ -6,13 +6,14 @@ https://home-assistant.io/components/device_tracker.swisscom/
 """
 import logging
 
+from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class SwisscomDeviceScanner(DeviceScanner):
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
         url = 'http://{}/ws'.format(self.host)
-        headers = {'Content-Type': 'application/x-sah-ws-4-call+json'}
+        headers = {CONTENT_TYPE: 'application/x-sah-ws-4-call+json'}
         data = """
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""

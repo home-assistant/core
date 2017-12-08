@@ -5,10 +5,6 @@
 set -e
 
 cd "$(dirname "$0")/.."
-script/bootstrap_server
 
-if command -v yarn >/dev/null ; then
-  script/bootstrap_frontend
-else
-  echo "Frontend development not possible without Node/yarn"
-fi
+echo "Installing test dependencies..."
+python3 -m pip install tox colorlog

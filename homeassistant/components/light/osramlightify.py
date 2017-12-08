@@ -269,7 +269,7 @@ class OsramLightifyGroup(Luminary):
     def _get_state(self):
         """Get state of group.
 
-        The group is on, if any of the lights in on.
+        The group is on, if any of the lights is on.
         """
         lights = self._bridge.lights()
         return any(lights[light_id].on() for light_id in self._light_ids)

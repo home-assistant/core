@@ -78,7 +78,7 @@ class TemperatureSensor(Sensor):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement of this entityy."""
+        """Return the unit of measurement of this entity."""
         return self.hass.config.units.temperature_unit
 
     @property

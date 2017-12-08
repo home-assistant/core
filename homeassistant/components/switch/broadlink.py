@@ -117,6 +117,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for packet in packets:
             for retry in range(DEFAULT_RETRY):
                 try:
+                    extra = len(packet) % 4
+                    if extra > 0:
+                        packet = packet + ('=' * (4 - extra))
                     payload = b64decode(packet)
                     yield from hass.async_add_job(
                         broadlink_device.send_data, payload)

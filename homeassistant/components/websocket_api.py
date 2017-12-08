@@ -202,15 +202,16 @@ class WebsocketAPIView(HomeAssistantView):
     def get(self, request):
         """Handle an incoming websocket connection."""
         # pylint: disable=no-self-use
-        return ActiveConnection(request.app['hass']).handle(request)
+        return ActiveConnection(request.app['hass'], request).handle()
 
 
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, request):
         """Initialize an active connection."""
         self.hass = hass
+        self.request = request
         self.wsock = None
         self.event_listeners = {}
         self.to_write = asyncio.Queue(maxsize=MAX_PENDING_MSG, loop=hass.loop)
@@ -259,8 +260,9 @@ class ActiveConnection:
         self._writer_task.cancel()
 
     @asyncio.coroutine
-    def handle(self, request):
+    def handle(self):
         """Handle the websocket connection."""
+        request = self.request
         wsock = self.wsock = web.WebSocketResponse()
         yield from wsock.prepare(request)
         self.debug("Connected")
@@ -350,7 +352,7 @@ class ActiveConnection:
             if wsock.closed:
                 self.debug("Connection closed by client")
             else:
-                self.log_error("Unexpected TypeError", msg)
+                _LOGGER.exception("Unexpected TypeError: %s", msg)
 
         except ValueError as err:
             msg = "Received invalid JSON"
@@ -483,9 +485,14 @@ class ActiveConnection:
         Async friendly.
         """
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
+        panels = {
+            panel:
+            self.hass.data[frontend.DATA_PANELS][panel].to_response(
+                self.hass, self.request)
+            for panel in self.hass.data[frontend.DATA_PANELS]}
 
         self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.data[frontend.DATA_PANELS]))
+            msg['id'], panels))
 
     def handle_ping(self, msg):
         """Handle ping command.

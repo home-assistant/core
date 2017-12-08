@@ -20,6 +20,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 DEVICE_CLASSES = [
+    'battery',       # On means low, Off means normal
     'cold',          # On means cold (or too cold)
     'connectivity',  # On means connection present, Off = no connection
     'gas',           # CO, CO2, etc.
@@ -30,7 +31,9 @@ DEVICE_CLASSES = [
     'moving',        # On means moving, Off means stopped
     'occupancy',     # On means occupied, Off means not occupied
     'opening',       # Door, window, etc.
+    'plug',          # On means plugged in, Off means unplugged
     'power',         # Power, over-current, etc
+    'presence',      # On means home, Off means away
     'safety',        # Generic on=unsafe, off=safe
     'smoke',         # Smoke detector
     'sound',         # On means sound detected, Off means no sound

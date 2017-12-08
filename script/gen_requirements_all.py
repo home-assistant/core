@@ -30,13 +30,16 @@ COMMENT_REQUIREMENTS = (
     'smbus-cffi',
     'envirophat',
     'i2csense',
-    'credstash'
+    'credstash',
+    'pytradfri',
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'apns2',
+    'coinmarketcap',
+    'defusedxml',
     'dsmr_parser',
     'ephem',
     'evohomeclient',
@@ -47,15 +50,18 @@ TEST_REQUIREMENTS = (
     'haversine',
     'hbmqtt',
     'holidays',
+    'home-assistant-frontend',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
     'mficlient',
+    'numpy',
     'paho-mqtt',
     'pexpect',
     'pilight',
     'pmsensor',
     'prometheus_client',
+    'py-canary',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
@@ -75,6 +81,9 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'warrant',
     'yahoo-finance',
+    'pythonwhois',
+    'wakeonlan',
+    'vultr'
 )
 
 IGNORE_PACKAGES = (

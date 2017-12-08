@@ -115,8 +115,9 @@ class YiCamera(Camera):
         url = yield from self.hass.async_add_job(self.get_latest_video_url)
         if url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
-            self._last_image = yield from ffmpeg.get_image(
-                url, output_format=IMAGE_JPEG, extra_cmd=self._extra_arguments)
+            self._last_image = yield from asyncio.shield(ffmpeg.get_image(
+                url, output_format=IMAGE_JPEG,
+                extra_cmd=self._extra_arguments), loop=self.hass.loop)
             self._last_url = url
 
         return self._last_image

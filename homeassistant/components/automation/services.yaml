@@ -1,6 +1,7 @@
+# Describes the format for available automation services
+
 turn_on:
   description: Enable an automation.
-
   fields:
     entity_id:
       description: Name of the automation to turn on.
@@ -8,7 +9,6 @@ turn_on:
 
 turn_off:
   description: Disable an automation.
-
   fields:
     entity_id:
       description: Name of the automation to turn off.
@@ -16,7 +16,6 @@ turn_off:
 
 toggle:
   description: Toggle an automation.
-
   fields:
     entity_id:
       description: Name of the automation to toggle on/off.
@@ -24,7 +23,6 @@ toggle:
 
 trigger:
   description: Trigger the action of an automation.
-
   fields:
     entity_id:
       description: Name of the automation to trigger.

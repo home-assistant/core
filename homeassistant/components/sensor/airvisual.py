@@ -4,7 +4,6 @@ Support for AirVisual air quality sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.airvisual/
 """
-import asyncio
 from logging import getLogger
 from datetime import timedelta
 
@@ -15,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_STATE,
-    CONF_SHOW_ON_MAP)
+    CONF_SHOW_ON_MAP, CONF_RADIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -32,7 +31,6 @@ ATTR_TIMESTAMP = 'timestamp'
 
 CONF_CITY = 'city'
 CONF_COUNTRY = 'country'
-CONF_RADIUS = 'radius'
 CONF_ATTRIBUTION = "Data provided by AirVisual"
 
 MASS_PARTS_PER_MILLION = 'ppm'
@@ -80,8 +78,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
     import pyairvisual as pav
 
@@ -108,12 +105,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             pav.Client(api_key), latitude=latitude, longitude=longitude,
             radius=radius, show_on_map=show_on_map)
 
+    data.update()
     sensors = []
     for locale in monitored_locales:
         for sensor_class, name, icon in SENSOR_TYPES:
             sensors.append(globals()[sensor_class](data, name, icon, locale))
 
-    async_add_devices(sensors, True)
+    add_devices(sensors, True)
 
 
 def merge_two_dicts(dict1, dict2):
@@ -128,7 +126,7 @@ class AirVisualBaseSensor(Entity):
 
     def __init__(self, data, name, icon, locale):
         """Initialize the sensor."""
-        self._data = data
+        self.data = data
         self._icon = icon
         self._locale = locale
         self._name = name
@@ -138,20 +136,17 @@ class AirVisualBaseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attrs = {
+        attrs = merge_two_dicts({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_CITY: self._data.city,
-            ATTR_COUNTRY: self._data.country,
-            ATTR_REGION: self._data.state,
-            ATTR_TIMESTAMP: self._data.pollution_info.get('ts')
-        }
+            ATTR_TIMESTAMP: self.data.pollution_info.get('ts')
+        }, self.data.attrs)
 
-        if self._data.show_on_map:
-            attrs[ATTR_LATITUDE] = self._data.latitude
-            attrs[ATTR_LONGITUDE] = self._data.longitude
+        if self.data.show_on_map:
+            attrs[ATTR_LATITUDE] = self.data.latitude
+            attrs[ATTR_LONGITUDE] = self.data.longitude
         else:
-            attrs['lati'] = self._data.latitude
-            attrs['long'] = self._data.longitude
+            attrs['lati'] = self.data.latitude
+            attrs['long'] = self.data.longitude
 
         return attrs
 
@@ -170,21 +165,15 @@ class AirVisualBaseSensor(Entity):
         """Return the state."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
-        """Update the status of the sensor."""
-        _LOGGER.debug("Updating sensor: %s", self._name)
-        self._data.update()
-
 
 class AirPollutionLevelSensor(AirVisualBaseSensor):
     """Define a sensor to measure air pollution level."""
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Update the status of the sensor."""
-        yield from super().async_update()
-        aqi = self._data.pollution_info.get('aqi{0}'.format(self._locale))
+        self.data.update()
+
+        aqi = self.data.pollution_info.get('aqi{0}'.format(self._locale))
         try:
             [level] = [
                 i for i in POLLUTANT_LEVEL_MAPPING
@@ -205,12 +194,11 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
         """Return the unit the value is expressed in."""
         return 'PSI'
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Update the status of the sensor."""
-        yield from super().async_update()
+        self.data.update()
 
-        self._state = self._data.pollution_info.get(
+        self._state = self.data.pollution_info.get(
             'aqi{0}'.format(self._locale))
 
 
@@ -231,11 +219,11 @@ class MainPollutantSensor(AirVisualBaseSensor):
             ATTR_POLLUTANT_UNIT: self._unit
         })
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Update the status of the sensor."""
-        yield from super().async_update()
-        symbol = self._data.pollution_info.get('main{0}'.format(self._locale))
+        self.data.update()
+
+        symbol = self.data.pollution_info.get('main{0}'.format(self._locale))
         pollution_info = POLLUTANT_MAPPING.get(symbol, {})
         self._state = pollution_info.get('label')
         self._unit = pollution_info.get('unit')
@@ -248,6 +236,7 @@ class AirVisualData(object):
     def __init__(self, client, **kwargs):
         """Initialize the AirVisual data element."""
         self._client = client
+        self.attrs = {}
         self.pollution_info = None
 
         self.city = kwargs.get(CONF_CITY)
@@ -269,17 +258,20 @@ class AirVisualData(object):
             if self.city and self.state and self.country:
                 resp = self._client.city(
                     self.city, self.state, self.country).get('data')
+                self.longitude, self.latitude = resp.get('location').get(
+                    'coordinates')
             else:
                 resp = self._client.nearest_city(
                     self.latitude, self.longitude, self._radius).get('data')
             _LOGGER.debug("New data retrieved: %s", resp)
 
-            self.city = resp.get('city')
-            self.state = resp.get('state')
-            self.country = resp.get('country')
-            self.longitude, self.latitude = resp.get('location').get(
-                'coordinates')
             self.pollution_info = resp.get('current', {}).get('pollution', {})
+
+            self.attrs = {
+                ATTR_CITY: resp.get('city'),
+                ATTR_REGION: resp.get('state'),
+                ATTR_COUNTRY: resp.get('country')
+            }
         except exceptions.HTTPError as exc_info:
             _LOGGER.error("Unable to retrieve data on this location: %s",
                           self.__dict__)

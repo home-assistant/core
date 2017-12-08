@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.6.3']
+REQUIREMENTS = ['aioautomatic==0.6.4']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ CONF_CURRENT_LOCATION = 'current_location'
 
 DEFAULT_TIMEOUT = 5
 
-DEFAULT_SCOPE = ['location', 'vehicle:profile', 'trip']
+DEFAULT_SCOPE = ['location', 'trip', 'vehicle:events', 'vehicle:profile']
 FULL_SCOPE = DEFAULT_SCOPE + ['current_location']
 
 ATTR_FUEL_LEVEL = 'fuel_level'

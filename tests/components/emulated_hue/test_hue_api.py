@@ -1,33 +1,32 @@
 """The tests for the emulated Hue component."""
 import asyncio
 import json
-
 from unittest.mock import patch
-import pytest
 
-from homeassistant import setup, const, core
+from aiohttp.hdrs import CONTENT_TYPE
+import pytest
+from tests.common import get_test_instance_port
+
+from homeassistant import core, const, setup
 import homeassistant.components as core_components
 from homeassistant.components import (
-    emulated_hue, http, light, script, media_player, fan
-)
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.emulated_hue.hue_api import (
-    HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView,
-    HueAllLightsStateView, HueOneLightStateView, HueOneLightChangeView)
+    fan, http, light, script, emulated_hue, media_player)
 from homeassistant.components.emulated_hue import Config
-
-from tests.common import get_test_instance_port
+from homeassistant.components.emulated_hue.hue_api import (
+    HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
+    HueAllLightsStateView, HueOneLightChangeView)
+from homeassistant.const import STATE_ON, STATE_OFF
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
 BRIDGE_URL_BASE = 'http://127.0.0.1:{}'.format(BRIDGE_SERVER_PORT) + '{}'
-JSON_HEADERS = {const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON}
+JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
 @pytest.fixture
 def hass_hue(loop, hass):
-    """Setup a hass instance for these tests."""
+    """Setup a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(
         core_components.async_setup(hass, {core.DOMAIN: {}}))

@@ -29,7 +29,8 @@ class TestPersistentNotification:
         assert len(entity_ids) == 1
 
         state = self.hass.states.get(entity_ids[0])
-        assert state.state == 'Hello World 2'
+        assert state.state == pn.STATE
+        assert state.attributes.get('message') == 'Hello World 2'
         assert state.attributes.get('title') == '2 beers'
 
     def test_create_notification_id(self):
@@ -41,7 +42,7 @@ class TestPersistentNotification:
 
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('persistent_notification.beer_2')
-        assert state.state == 'test'
+        assert state.attributes.get('message') == 'test'
 
         pn.create(self.hass, 'test 2', notification_id='Beer 2')
         self.hass.block_till_done()
@@ -49,7 +50,7 @@ class TestPersistentNotification:
         # We should have overwritten old one
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('persistent_notification.beer_2')
-        assert state.state == 'test 2'
+        assert state.attributes.get('message') == 'test 2'
 
     def test_create_template_error(self):
         """Ensure we output templates if contain error."""
@@ -62,7 +63,7 @@ class TestPersistentNotification:
         assert len(entity_ids) == 1
 
         state = self.hass.states.get(entity_ids[0])
-        assert state.state == '{{ message + 1 }}'
+        assert state.attributes.get('message') == '{{ message + 1 }}'
         assert state.attributes.get('title') == '{{ title + 1 }}'
 
     def test_dismiss_notification(self):

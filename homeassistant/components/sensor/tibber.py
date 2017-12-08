@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['pyTibber==0.1.1']
+REQUIREMENTS = ['pyTibber==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 

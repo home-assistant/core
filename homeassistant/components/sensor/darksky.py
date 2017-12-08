@@ -14,7 +14,7 @@ from requests.exceptions import ConnectionError as ConnectError, \
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION,
-    CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_LATITUDE, CONF_LONGITUDE, UNIT_UV_INDEX)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,7 @@ SENSOR_TYPES = {
     'apparent_temperature': ['Apparent Temperature',
                              '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                              ['currently', 'hourly']],
-    'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C',
+    'dew_point': ['Dew Point', '°C', '°F', '°C', '°C', '°C',
                   'mdi:thermometer', ['currently', 'hourly', 'daily']],
     'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph',
                    'mdi:weather-windy', ['currently', 'hourly', 'daily']],
@@ -96,6 +96,10 @@ SENSOR_TYPES = {
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
+    'uv_index': ['UV Index',
+                 UNIT_UV_INDEX, UNIT_UV_INDEX, UNIT_UV_INDEX,
+                 UNIT_UV_INDEX, UNIT_UV_INDEX, 'mdi:weather-sunny',
+                 ['currently', 'hourly', 'daily']],
 }
 
 CONDITION_PICTURES = {
@@ -305,7 +309,7 @@ class DarkSkySensor(Entity):
                             'temperature_min', 'temperature_max',
                             'apparent_temperature_min',
                             'apparent_temperature_max',
-                            'pressure', 'ozone']):
+                            'pressure', 'ozone', 'uvIndex']):
             return round(state, 1)
         return state
 

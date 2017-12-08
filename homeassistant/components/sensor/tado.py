@@ -9,12 +9,12 @@ import logging
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.tado import (DATA_TADO)
+from homeassistant.const import (ATTR_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DATA_ID = 'data_id'
 ATTR_DEVICE = 'device'
-ATTR_ID = 'id'
 ATTR_NAME = 'name'
 ATTR_ZONE = 'zone'
 
