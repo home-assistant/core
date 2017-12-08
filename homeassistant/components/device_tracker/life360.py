@@ -33,7 +33,6 @@ class Life360Scanner(object):
 
     def __init__(self, hass, config: dict, see) -> None:
         """Initialize the Life360 scanner."""
-
         self.hass = hass
         self.see = see
 
@@ -46,8 +45,7 @@ class Life360Scanner(object):
             self.hass, self._update_info, second=range(0, 60, 30))
 
     def get_members(self):
-        """build members array"""
-
+        """Build members array."""
         # reset member to nothing
         self.members = []
 
@@ -78,8 +76,8 @@ class Life360Scanner(object):
         _LOGGER.info("Scanning")
 
         """
-        Life360 has the following hierarchy to list devices
-        Account -> Circles -> Members enrolled in Circle
+        Life360 has the following hierarchy to list devices:
+        Account -> Circles -> Members enrolled in Circle.
         """
         # first retrieve the circles
         url = "https://api.life360.com/v3/circles.json"
