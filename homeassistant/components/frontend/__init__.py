@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171206.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20171127.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -303,7 +303,7 @@ def async_setup(hass, config):
             "/home-assistant-polymer", repo_path, False)
         hass.http.register_static_path(
             "/static/translations",
-            os.path.join(repo_path, "build-translations/output"), False)
+            os.path.join(repo_path, "build-translations"), False)
         sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
         sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
@@ -476,8 +476,7 @@ class IndexView(HomeAssistantView):
     def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
-        latest = self.repo_path is not None or \
-            _is_latest(self.js_option, request)
+        latest = _is_latest(self.js_option, request)
 
         if request.path == '/':
             panel = 'states'
@@ -583,9 +582,9 @@ def _is_latest(js_option, request):
 
     family_min_version = {
         'Chrome': 50,   # Probably can reduce this
-        'Firefox': 43,  # Array.protopype.includes added in 43
+        'Firefox': 41,  # Destructuring added in 41
         'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Array.protopype.includes added in 14
+        'Edge': 14,     # Maybe can reduce this
         'Safari': 10,   # many features not supported by 9
     }
     version = family_min_version.get(useragent.browser.family)

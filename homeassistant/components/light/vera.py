@@ -21,8 +21,7 @@ DEPENDENCIES = ['vera']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera lights."""
     add_devices(
-        VeraLight(device, hass.data[VERA_CONTROLLER]) for
-        device in hass.data[VERA_DEVICES]['light'])
+        VeraLight(device, VERA_CONTROLLER) for device in VERA_DEVICES['light'])
 
 
 class VeraLight(VeraDevice, Light):

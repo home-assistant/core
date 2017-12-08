@@ -11,8 +11,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
 
@@ -39,7 +38,7 @@ def get_scanner(hass, config):
         return None
 
 
-class LinksysAPDeviceScanner(DeviceScanner):
+class LinksysAPDeviceScanner(object):
     """This class queries a Linksys Access Point."""
 
     def __init__(self, config):
