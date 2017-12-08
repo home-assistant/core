@@ -32,7 +32,7 @@ INTENT_SCHEMA = vol.Schema({
         vol.Required('slotName'): str,
         vol.Required('value'): {
             vol.Required('kind'): str,
-            vol.Optional('value'): cv.match_all
+            vol.Optional('value'): cv.match_all,
             vol.Optional('rawValue'): cv.match_all
         }
     }]
