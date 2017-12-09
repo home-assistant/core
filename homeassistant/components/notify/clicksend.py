@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_USERNAME, CONF_RECIPIENT, CONTENT_TYPE_JSON)
+    CONF_API_KEY, CONF_USERNAME, CONF_RECIPIENT, CONF_SENDER, CONTENT_TYPE_JSON)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_RECIPIENT): cv.string,
+    vol.Optional(CONF_SENDER, default=""): cv.string,
 })
 
 
@@ -47,10 +48,14 @@ class ClicksendNotificationService(BaseNotificationService):
         self.username = config.get(CONF_USERNAME)
         self.api_key = config.get(CONF_API_KEY)
         self.recipient = config.get(CONF_RECIPIENT)
+        self.sender = config.get(CONF_SENDER)
+        if (self.sender == ""):
+            self.sender = self.recipient
+
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = ({'messages': [{'source': 'hass.notify', 'from': self.recipient,
+        data = ({'messages': [{'source': 'hass.notify', 'from': self.sender,
                                'to': self.recipient, 'body': message}]})
 
         api_url = "{}/sms/send".format(BASE_API_URL)
