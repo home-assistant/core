@@ -73,7 +73,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
-    devices = []
     try:
         light = Device(host, token)
         device_info = light.info()
@@ -86,30 +85,26 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             from miio import PhilipsEyecare
             light = PhilipsEyecare(host, token)
             device = XiaomiPhilipsEyecareLamp(name, light, device_info)
-            devices.append(device)
-            hass.data[PLATFORM][host] = device
         elif device_info.model == 'philips.light.ceiling':
             from miio import Ceil
             light = Ceil(host, token)
             device = XiaomiPhilipsCeilingLamp(name, light, device_info)
-            devices.append(device)
-            hass.data[PLATFORM][host] = device
         elif device_info.model == 'philips.light.bulb':
             from miio import PhilipsBulb
             light = PhilipsBulb(host, token)
             device = XiaomiPhilipsLightBall(name, light, device_info)
-            devices.append(device)
-            hass.data[PLATFORM][host] = device
         else:
             _LOGGER.error(
                 'Unsupported device found! Please create an issue at '
                 'https://github.com/rytilahti/python-miio/issues '
                 'and provide the following data: %s', device_info.model)
+            return False
 
     except DeviceException:
         raise PlatformNotReady
 
-    async_add_devices(devices, update_before_add=True)
+    hass.data[PLATFORM][host] = device
+    async_add_devices([device], update_before_add=True)
 
     @asyncio.coroutine
     def async_service_handler(service):
