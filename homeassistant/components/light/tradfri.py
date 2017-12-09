@@ -229,8 +229,7 @@ class TradfriLight(Light):
         if ATTR_XY_COLOR in kwargs:
             yield from self._api(
                 self._light_control.set_xy_color(*kwargs[ATTR_XY_COLOR],
-                                                 **keys)
-
+                                                 **keys))
         elif ATTR_COLOR_TEMP in kwargs:
             yield from self._api(
                 self._light_control.set_color_temp(kwargs[ATTR_COLOR_TEMP],
