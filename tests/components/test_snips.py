@@ -42,6 +42,7 @@ def test_snips_call_action(hass, mqtt_mock):
     assert intent.platform == 'snips'
     assert intent.intent_type == 'Lights'
     assert intent.slots == {'slots': {'light_color': {'slotName':
-                        'light_color', 'value': {'kind': 'Custom', 'value':
-                        'green'}}}, 'light_color': {'value': 'green'}}
+                            'light_color', 'value': {'kind': 'Custom',
+                            'value': 'green'}}}, 'light_color':
+                            {'value': 'green'}}
     assert intent.text_input == 'turn the lights green'
