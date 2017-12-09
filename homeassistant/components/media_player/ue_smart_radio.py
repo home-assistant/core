@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE)
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, STATE_OFF, STATE_IDLE, STATE_PLAYING,
-    STATE_PAUSED, STATE_UNKNOWN)
+    STATE_PAUSED)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +27,10 @@ URL = "http://decibel.logitechmusic.com/jsonrpc.js"
 SUPPORT_UE_SMART_RADIO = SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_TURN_ON | \
     SUPPORT_TURN_OFF | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
+
+PLAYBACK_DICT = {"play": STATE_PLAYING,
+                 "pause": STATE_PAUSED,
+                 "stop": STATE_IDLE}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -88,24 +92,19 @@ class UERadioDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        # pylint: disable=bad-continuation
-        request = send_request({"method": "slim.request", "params":
-                                [self._player_id, ["status", "-", 1,
-                                                   "tags:cgABbehldiqtyrSuoKLN"
-                                                   ]]}, self._session)
+        request = send_request({
+            "method": "slim.request", "params":
+            [self._player_id, ["status", "-", 1,
+                               "tags:cgABbehldiqtyrSuoKLN"]]}, self._session)
 
         if request["error"] is not None:
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
 
         if request["result"]["power"] == 0:
             self._state = STATE_OFF
         else:
-            self._state = {
-                "play": STATE_PLAYING,
-                "pause": STATE_PAUSED,
-                "stop": STATE_IDLE
-            }.get(request["result"]["mode"])
+            self._state = PLAYBACK_DICT[request["result"]["mode"]]
 
         media_info = request["result"]["playlist_loop"][0]
 
@@ -115,8 +114,7 @@ class UERadioDevice(MediaPlayerDevice):
         if "artist" in media_info:
             self._media_artist = media_info["artist"]
         else:
-            self._media_artist = (media_info["remote_title"] if "remote_title"
-                                  in media_info else None)
+            self._media_artist = media_info.get("remote_title")
 
     @property
     def name(self):
@@ -132,11 +130,6 @@ class UERadioDevice(MediaPlayerDevice):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
-
-    @property
-    def should_poll(self):
-        """Push an update after each command."""
-        return True
 
     @property
     def is_volume_muted(self):
