@@ -29,7 +29,7 @@ from homeassistant.util import ensure_unique_string
 
 REQUIREMENTS = ['pywebpush==1.3.0', 'PyJWT==1.5.3']
 
-DEPENDENCIES = ['frontend']
+DEPENDENCIES = ['frontend', 'config']
 
 _LOGGER = logging.getLogger(__name__)
 
