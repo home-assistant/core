@@ -16,7 +16,9 @@ HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
 HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
                       STATE_ON: 'ON', STATE_OFF: 'OFF'}
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
+                 SUPPORT_OPERATION_MODE |
+                 SUPPORT_AUX_HEAT)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -138,15 +140,17 @@ class HiveClimateEntity(ClimateDevice):
     def is_aux_heat_on(self):
         """Return true if aux heater."""
         boost_status = None
+        boost_status_return = False
         if self.device_type == "Heating":
             boost_status = self.session.heating.get_boost(self.node_id)
         elif self.device_type == "HotWater":
             boost_status = self.session.hotwater.get_boost(self.node_id)
 
         if boost_status == "ON":
-            return True
+            boost_status_return = True
         else:
-            return False
+            boost_status_return = False
+        return boost_status_return
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
@@ -156,8 +160,8 @@ class HiveClimateEntity(ClimateDevice):
             curtemp = round(curtemp * 2) / 2
             target_boost_temperature = curtemp + 0.5
             self.session.heating.turn_boost_on(self.node_id,
-                                                target_boost_time,
-                                                target_boost_temperature)
+                                               target_boost_time,
+                                               target_boost_temperature)
         elif self.device_type == "HotWater":
             self.session.hotwater.turn_boost_on(self.node_id,
                                                 target_boost_time)
