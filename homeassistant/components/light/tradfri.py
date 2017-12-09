@@ -162,14 +162,12 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self._light_control.can_set_mireds:
-            return self._light_control.min_mireds
+        return self._light_control.min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self._light_control.can_set_mireds:
-            return self._light_control.max_mireds
+        return self._light_control.max_mireds
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -244,7 +242,7 @@ class TradfriLight(Light):
                 brightness = 254
 
             yield from self._api(
-                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
+                self._light_control.set_dimmer(brightness,
                                                **params))
         else:
             yield from self._api(
