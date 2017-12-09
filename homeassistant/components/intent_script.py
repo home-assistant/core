@@ -76,8 +76,12 @@ class ScriptIntentHandler(intent.IntentHandler):
         card = self.config.get(CONF_CARD)
         action = self.config.get(CONF_ACTION)
         is_async_action = self.config.get(CONF_ASYNC_ACTION)
-        slots = {key: value['value'] for key, value
-                 in intent_obj.slots.items()}
+        slots = {}
+        for key, value in intent_obj.slots.items():
+            if value.get('value') is not None:
+                slots[key] = value['value']
+            elif key == 'slots':
+                slots[key] = value
 
         if action is not None:
             if is_async_action:

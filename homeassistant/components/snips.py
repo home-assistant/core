@@ -61,11 +61,14 @@ def async_setup(hass, config):
 
         intent_type = request['intent']['intentName'].split('__')[-1]
         slots = {}
+        slots['slots'] = {}
         for slot in request.get('slots', []):
             if 'value' in slot['value']:
                 slots[slot['slotName']] = {'value': slot['value']['value']}
             else:
                 slots[slot['slotName']] = {'value': slot['rawValue']}
+            slots['slots'][slot['slotName']] = slot
+        _LOGGER.debug("slots: %s", slots)
 
         try:
             yield from intent.async_handle(
