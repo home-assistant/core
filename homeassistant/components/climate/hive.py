@@ -148,8 +148,7 @@ class HiveClimateEntity(ClimateDevice):
 
         if boost_status == "ON":
             boost_status_return = True
-        else:
-            boost_status_return = False
+
         return boost_status_return
 
     def turn_aux_heat_on(self):
