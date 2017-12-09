@@ -33,9 +33,8 @@ def setup_platform(hass, config: ConfigType,
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
 
-    async_add_devices(
-        [SesameDevice(sesame) for sesame in pysesame.get_sesames(email, password)],
-        update_before_add=true)
+    async_add_devices([SesameDevice(sesame) for sesame
+        in pysesame.get_sesames(email, password)], update_before_add=true)
 
 
 class SesameDevice(LockDevice):
