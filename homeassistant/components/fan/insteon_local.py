@@ -40,10 +40,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class InsteonLocalFanDevice(FanEntity):
     """An abstract Class for an Insteon node."""
 
-    def __init__(self, node, name):
+    def __init__(self, node):
         """Initialize the device."""
         self.node = node
-        self.node.deviceName = name
         self._speed = SPEED_OFF
 
     @property
