@@ -34,7 +34,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-# GOALFEED_HOST = 'goalfeed.local'
 GOALFEED_HOST = 'feed.goalfeed.ca'
 GOALFEED_AUTH_ENDPOINT = 'http://goalfeed.local/feed/auth'
 
@@ -48,7 +47,6 @@ def setup(hass, config):
     def goal_handler(data):
         goal = json.loads(json.loads(data))
 
-        # Fire event my_cool_event with event data answer=42
         hass.bus.async_fire('goal', event_data={'team': goal['team_hash']})
 
     def connect_handler(data):
@@ -68,5 +66,3 @@ def setup(hass, config):
     pusher.connect()
 
     return True
-
-
