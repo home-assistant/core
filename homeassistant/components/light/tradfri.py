@@ -8,16 +8,14 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_XY_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
     SUPPORT_XY_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
     KEY_API
-from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,9 +217,7 @@ class TradfriLight(Light):
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
-        """
-        Instruct the light to turn on.
-        """
+        """Instruct the light to turn on."""
         keys = {}
         if ATTR_TRANSITION in kwargs:
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
