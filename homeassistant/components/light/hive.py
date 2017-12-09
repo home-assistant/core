@@ -104,10 +104,10 @@ class HiveDeviceLight(Light):
             tmp_new_colour = colorsys.rgb_to_hsv(get_new_colour[0],
                                                  get_new_colour[1],
                                                  get_new_colour[2])
-            h = int(round(tmp_new_colour[0] * 360))
-            s = int(round(tmp_new_colour[1] * 100))
-            v = int(round((tmp_new_colour[2] / 255) * 100))
-            new_colour = (h, s, v)
+            hue = int(round(tmp_new_colour[0] * 360))
+            saturation = int(round(tmp_new_colour[1] * 100))
+            value = int(round((tmp_new_colour[2] / 255) * 100))
+            new_colour = (hue, saturation, value)
 
         if new_brightness is not None:
             self.session.light.set_brightness(self.node_id, new_brightness)
