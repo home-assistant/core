@@ -29,14 +29,13 @@ SUPPORT_INSTEON_LOCAL = SUPPORT_SET_SPEED
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local fan platform."""
     insteonhub = hass.data['insteon_local']
-    linked = discovery_info['linked']
+    linked = insteonhub.get_linked()
 
     for device_id in linked:
         if (linked[device_id]['cat_type'] == 'dimmer' and
                 linked[device_id]['sku'] == '2475F'):
-            _LOGGER.info("Adding fan device " + device_id)
-            device = insteonhub.fan(device_id)
-            add_devices([InsteonLocalFanDevice(device, device_id)])
+            device = insteonhub.fan(name)
+            add_devices([InsteonLocalFanDevice(device, name)])
 
 class InsteonLocalFanDevice(FanEntity):
     """An abstract Class for an Insteon node."""
@@ -50,7 +49,7 @@ class InsteonLocalFanDevice(FanEntity):
     @property
     def name(self):
         """Return the name of the node."""
-        return self.node.deviceName
+        return self.node.device_id
 
     @property
     def unique_id(self):

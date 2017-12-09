@@ -7,6 +7,7 @@ https://home-assistant.io/components/insteon_local/
 
 import logging
 import os
+
 import requests
 import voluptuous as vol
 
@@ -23,7 +24,7 @@ DEFAULT_PORT = 25105
 DEFAULT_TIMEOUT = 10
 DOMAIN = 'insteon_local'
 
-INSTEON_CACHE = '.insteon_local.cache'
+INSTEON_CACHE = '.insteon_local_cache'
 
 INSTEON_PLATFORMS = [
     'light',
@@ -52,8 +53,6 @@ def setup(hass, config):
     port = conf.get(CONF_PORT)
     timeout = conf.get(CONF_TIMEOUT)
 
-    _LOGGER.info("Initializing Insteon Local")
-
     try:
         if not os.path.exists(hass.config.path(INSTEON_CACHE)):
             os.makedirs(hass.config.path(INSTEON_CACHE))
@@ -65,12 +64,12 @@ def setup(hass, config):
         insteonhub.get_buffer_status()
     except requests.exceptions.ConnectTimeout:
         _LOGGER.error(
-            "Error on insteon_local. Could not connect. Check config",
+            "Could not connect. Check config",
             exc_info=True)
         return False
     except requests.exceptions.ConnectionError:
         _LOGGER.error(
-            "Error on insteon_local. Could not connect. Check config",
+            "Could not connect. Check config",
             exc_info=True)
         return False
     except requests.exceptions.RequestException:
@@ -80,12 +79,9 @@ def setup(hass, config):
             _LOGGER.error("Error on insteon_local hub check", exc_info=True)
         return False
 
-    linked = insteonhub.get_linked()
-
     hass.data['insteon_local'] = insteonhub
 
     for insteon_platform in INSTEON_PLATFORMS:
-        _LOGGER.info("Load platform " + insteon_platform)
-        load_platform(hass, insteon_platform, DOMAIN, {'linked': linked})
+        load_platform(hass, insteon_platform, DOMAIN)
 
     return True
