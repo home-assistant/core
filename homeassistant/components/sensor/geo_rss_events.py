@@ -33,8 +33,6 @@ ATTR_DATE_UPDATED = 'date_updated'
 ATTR_DISTANCE = 'distance'
 ATTR_ID = 'id'
 ATTR_TITLE = 'title'
-VALID_SORT_BY = [ATTR_DATE_PUBLISHED, ATTR_DATE_UPDATED, ATTR_DISTANCE,
-                 ATTR_TITLE]
 
 CONF_CATEGORIES = 'categories'
 CONF_CUSTOM_ATTRIBUTES = 'custom_attributes'
