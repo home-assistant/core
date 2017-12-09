@@ -19,50 +19,6 @@ VALID_CONFIG_WITHOUT_CATEGORIES = {
     'platform': 'geo_rss_events',
     geo_rss_events.CONF_URL: URL
 }
-VALID_CONFIG_WITH_CUSTOM_ATTRIBUTE = {
-    'platform': 'geo_rss_events',
-    geo_rss_events.CONF_URL: URL,
-    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
-        {
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title',
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
-                ' (?P<custom_attribute>\d+)'
-        }
-    ]
-}
-INVALID_CONFIG_WITH_CUSTOM_ATTRIBUTE_MISSING_NAME = {
-    'platform': 'geo_rss_events',
-    geo_rss_events.CONF_URL: URL,
-    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
-        {
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title',
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
-                ' (?P<custom_attribute>\d+)'
-        }
-    ]
-}
-INVALID_CONFIG_WITH_CUSTOM_ATTRIBUTE_MISSING_SOURCE = {
-    'platform': 'geo_rss_events',
-    geo_rss_events.CONF_URL: URL,
-    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
-        {
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_REGEXP:
-                ' (?P<custom_attribute>\d+)'
-        }
-    ]
-}
-INVALID_CONFIG_WITH_CUSTOM_ATTRIBUTE_MISSING_REGEXP = {
-    'platform': 'geo_rss_events',
-    geo_rss_events.CONF_URL: URL,
-    geo_rss_events.CONF_CUSTOM_ATTRIBUTES: [
-        {
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_NAME: 'title_index',
-            geo_rss_events.CONF_CUSTOM_ATTRIBUTES_SOURCE: 'title'
-        }
-    ]
-}
 
 
 class TestGeoRssServiceUpdater(unittest.TestCase):
