@@ -14,7 +14,8 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_USERNAME, CONF_RECIPIENT, CONF_SENDER, CONTENT_TYPE_JSON)
+    CONF_API_KEY, CONF_USERNAME, CONF_RECIPIENT, CONF_SENDER,
+    CONTENT_TYPE_JSON)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +52,6 @@ class ClicksendNotificationService(BaseNotificationService):
         self.sender = config.get(CONF_SENDER)
         if (self.sender == ""):
             self.sender = self.recipient
-
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
