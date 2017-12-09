@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_RGB_COLOR, Light)
+    SUPPORT_XY_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -26,7 +26,6 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
-ALLOWED_TEMPERATURES = {IKEA}
 
 
 @asyncio.coroutine
@@ -157,39 +156,21 @@ class TradfriLight(Light):
         self._light_control = None
         self._light_data = None
         self._name = None
-        self._rgb_color = None
         self._features = SUPPORTED_FEATURES
-        self._temp_supported = False
 
         self._refresh(light)
 
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self._light_control.max_kelvin is not None:
-            return color_util.color_temperature_kelvin_to_mired(
-                self._light_control.max_kelvin
-            )
+        if self._light_control.can_set_mireds:
+            return self._light_control.min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self._light_control.min_kelvin is not None:
-            return color_util.color_temperature_kelvin_to_mired(
-                self._light_control.min_kelvin
-            )
-
-    @property
-    def device_state_attributes(self):
-        """Return the devices' state attributes."""
-        info = self._light.device_info
-
-        attrs = {}
-
-        if info.battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = info.battery_level
-
-        return attrs
+        if self._light_control.can_set_mireds:
+            return self._light_control.max_mireds
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -224,16 +205,12 @@ class TradfriLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        kelvin_color = self._light_data.kelvin_color_inferred
-        if kelvin_color is not None:
-            return color_util.color_temperature_kelvin_to_mired(
-                kelvin_color
-            )
+        return self._light_data.color_temp
 
     @property
-    def rgb_color(self):
-        """RGB color of the light."""
-        return self._rgb_color
+    def xy_color(self):
+        """XY color of the light."""
+        return self._light_data.xy_color
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -244,26 +221,20 @@ class TradfriLight(Light):
     def async_turn_on(self, **kwargs):
         """
         Instruct the light to turn on.
-
-        After adding "self._light_data.hexcolor is not None"
-        for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
-        if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
-            yield from self._api(
-                self._light.light_control.set_rgb_color(
-                    *kwargs[ATTR_RGB_COLOR]))
-
-        elif ATTR_COLOR_TEMP in kwargs and \
-                self._light_data.hex_color is not None and \
-                self._temp_supported:
-            kelvin = color_util.color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP])
-            yield from self._api(
-                self._light_control.set_kelvin_color(kelvin))
-
         keys = {}
         if ATTR_TRANSITION in kwargs:
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
+
+        if ATTR_XY_COLOR in kwargs:
+            yield from self._api(
+                self._light_control.set_xy_color(*kwargs[ATTR_XY_COLOR],
+                                                 **keys)
+
+        elif ATTR_COLOR_TEMP in kwargs:
+            yield from self._api(
+                self._light_control.set_color_temp(kwargs[ATTR_COLOR_TEMP],
+                                                   **keys))
 
         if ATTR_BRIGHTNESS in kwargs:
             if kwargs[ATTR_BRIGHTNESS] == 255:
@@ -302,26 +273,15 @@ class TradfriLight(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
-        self._rgb_color = None
         self._features = SUPPORTED_FEATURES
 
-        if self._light.device_info.manufacturer == IKEA:
-            if self._light_control.can_set_kelvin:
-                self._features |= SUPPORT_COLOR_TEMP
-            if self._light_control.can_set_color:
-                self._features |= SUPPORT_RGB_COLOR
-        else:
-            if self._light_data.hex_color is not None:
-                self._features |= SUPPORT_RGB_COLOR
-
-        self._temp_supported = self._light.device_info.manufacturer \
-            in ALLOWED_TEMPERATURES
+        if self._light_control.can_set_mireds:
+            self._features |= SUPPORT_COLOR_TEMP
+        if self._light_control.can_set_color:
+            self._features |= SUPPORT_XY_COLOR
 
     @callback
     def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
-        self._rgb_color = color_util.rgb_hex_to_rgb_list(
-            self._light_data.hex_color_inferred
-        )
         self.async_schedule_update_ha_state()
