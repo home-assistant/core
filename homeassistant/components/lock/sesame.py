@@ -4,6 +4,7 @@ Support for Sesame, by CANDY HOUSE.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.sesame/
 """
+import asyncio
 from typing import Callable  # noqa
 import voluptuous as vol
 
@@ -36,8 +37,8 @@ def async_setup_platform(
     password = config.get(CONF_PASSWORD)
 
     async_add_devices(
-        [SesameDevice(sesame) for sesame in 
-            pysesame.get_sesames(email, password)], 
+        [SesameDevice(sesame) for sesame in
+            pysesame.get_sesames(email, password)],
         update_before_add=True)
 
 
