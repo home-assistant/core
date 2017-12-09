@@ -16,7 +16,9 @@ HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
 HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
                       STATE_ON: 'ON', STATE_OFF: 'OFF'}
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
+                 SUPPORT_OPERATION_MODE |
+                 SUPPORT_AUX_HEAT)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -156,8 +158,8 @@ class HiveClimateEntity(ClimateDevice):
             curtemp = round(curtemp * 2) / 2
             target_boost_temperature = curtemp + 0.5
             self.session.heating.turn_boost_on(self.node_id,
-                                                target_boost_time,
-                                                target_boost_temperature)
+                                               target_boost_time,
+                                               target_boost_temperature)
         elif self.device_type == "HotWater":
             self.session.hotwater.turn_boost_on(self.node_id,
                                                 target_boost_time)
