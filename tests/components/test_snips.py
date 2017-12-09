@@ -51,8 +51,8 @@ def test_snips_call_action(hass, mqtt_mock):
                 }
             }
         },
-            'light_color': {
-                'value': 'green'
-            }
+        'light_color': {
+            'value': 'green'
+        }
     }
     assert intent.text_input == 'turn the lights green'
