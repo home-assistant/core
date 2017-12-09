@@ -89,8 +89,6 @@ class TotalConnect(alarm.AlarmControlPanel):
 
         self._state = state
 
-        _LOGGER.info("Alarm State: " + state)
-
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._client.disarm()
