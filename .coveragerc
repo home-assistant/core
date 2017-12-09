@@ -427,6 +427,7 @@ omit =
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/spotify.py
     homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/ue_smart_radio.py
     homeassistant/components/media_player/vizio.py
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
