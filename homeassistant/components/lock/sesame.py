@@ -25,16 +25,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(
+        hass, config: ConfigType,
+        async_add_devices: Callable[[list], None], discovery_info=None):
     """Set up the Sesame platform."""
     import pysesame
 
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
 
-    async_add_devices([SesameDevice(sesame) for sesame
-        in pysesame.get_sesames(email, password)], update_before_add=true)
+    async_add_devices(
+        [SesameDevice(sesame) for sesame in 
+            pysesame.get_sesames(email, password)], 
+        update_before_add=True)
 
 
 class SesameDevice(LockDevice):
