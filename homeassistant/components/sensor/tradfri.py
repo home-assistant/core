@@ -91,7 +91,7 @@ class TradfriDevice(Entity):
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
         # pylint: disable=import-error
-        from pytradfri.error import PyTradFriError
+        from pytradfri.error import PytradfriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
@@ -101,7 +101,7 @@ class TradfriDevice(Entity):
                                        err_callback=self._async_start_observe,
                                        duration=0)
             self.hass.async_add_job(self._api(cmd))
-        except PyTradFriError as err:
+        except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
