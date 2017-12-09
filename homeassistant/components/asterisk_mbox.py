@@ -19,6 +19,7 @@ REQUIREMENTS = ['asterisk_mbox==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+SIGNAL_DISCOVER_PLATFORM = "asterisk_mbox.discover_platform"
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 SIGNAL_CDR_UPDATE = 'asterisk_mbox.message_updated'
@@ -43,10 +44,7 @@ def setup(hass, config):
     port = conf.get(CONF_PORT)
     password = conf.get(CONF_PASSWORD)
 
-    hass.data[DOMAIN] = AsteriskData(hass, host, port, password)
-
-    discovery.load_platform(hass, "mailbox", DOMAIN, {}, config)
-    discovery.load_platform(hass, "mailbox", "asterisk_cdr", {}, config)
+    hass.data[DOMAIN] = AsteriskData(hass, host, port, password, config)
 
     return True
 
@@ -54,19 +52,27 @@ def setup(hass, config):
 class AsteriskData(object):
     """Store Asterisk mailbox data."""
 
-    def __init__(self, hass, host, port, password):
+    def __init__(self, hass, host, port, password, config):
         """Init the Asterisk data object."""
         from asterisk_mbox import Client as asteriskClient
 
         self.hass = hass
+        self.config = config
         self.client = asteriskClient(host, port, password, self.handle_data)
-        self.messages = []
-        self.cdr = []
+        self.messages = None
+        self.cdr = None
 
         async_dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_REQUEST, self._request_messages)
         async_dispatcher_connect(
             self.hass, SIGNAL_CDR_REQUEST, self._request_cdr)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_DISCOVER_PLATFORM, self._discover_platform)
+
+    @callback
+    def _discover_platform(self, component):
+        discovery.load_platform(self.hass, "mailbox",
+                                component, {}, self.config)
 
     @callback
     def handle_data(self, command, msg):
@@ -77,6 +83,11 @@ class AsteriskData(object):
 
         if command == CMD_MESSAGE_LIST:
             _LOGGER.debug("AsteriskVM sent updated message list")
+            if not isinstance(self.messages, list):
+                self.messages = []
+                async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
+                                      DOMAIN)
+
             self.messages = sorted(
                 msg, key=lambda item: item['info']['origtime'], reverse=True)
             async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE,
@@ -87,6 +98,10 @@ class AsteriskData(object):
             async_dispatcher_send(self.hass, SIGNAL_CDR_UPDATE,
                                   self.cdr)
         elif command == CMD_MESSAGE_CDR_AVAILABLE:
+            if not isinstance(self.cdr, list):
+                self.cdr = []
+                async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
+                                      "asterisk_cdr")
             async_dispatcher_send(self.hass, SIGNAL_CDR_REQUEST)
 
     @callback
