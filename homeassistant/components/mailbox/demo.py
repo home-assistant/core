@@ -50,6 +50,16 @@ class DemoMailbox(Mailbox):
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG
 
+    @property
+    def can_delete(self):
+        """Return if messages can be deleted."""
+        return True
+
+    @property
+    def has_media(self):
+        """Return if messages have attached media files."""
+        return True
+
     @asyncio.coroutine
     def async_get_media(self, msgid):
         """Return the media blob for the msgid."""
