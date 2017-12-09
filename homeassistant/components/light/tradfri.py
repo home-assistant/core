@@ -19,6 +19,7 @@ from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_TRANSITION_TIME = 'transition_time'
 DEPENDENCIES = ['tradfri']
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
@@ -218,26 +219,33 @@ class TradfriLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        keys = {}
+        params = {}
         if ATTR_TRANSITION in kwargs:
-            keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
+            params[ATTR_TRANSITION_TIME] = int(kwargs[ATTR_TRANSITION]) * 10
+
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if ATTR_XY_COLOR in kwargs:
+            if brightness:
+                params.pop(ATTR_TRANSITION_TIME, None)
             yield from self._api(
                 self._light_control.set_xy_color(*kwargs[ATTR_XY_COLOR],
-                                                 **keys))
-        elif ATTR_COLOR_TEMP in kwargs:
+                                                 **params))
+
+        if ATTR_COLOR_TEMP in kwargs:
+            if brightness:
+                params.pop(ATTR_TRANSITION_TIME, None)
             yield from self._api(
                 self._light_control.set_color_temp(kwargs[ATTR_COLOR_TEMP],
-                                                   **keys))
+                                                   **params))
 
-        if ATTR_BRIGHTNESS in kwargs:
-            if kwargs[ATTR_BRIGHTNESS] == 255:
-                kwargs[ATTR_BRIGHTNESS] = 254
+        if brightness:
+            if brightness == 255:
+                brightness = 254
 
             yield from self._api(
                 self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                                               **keys))
+                                               **params))
         else:
             yield from self._api(
                 self._light_control.set_state(True))
