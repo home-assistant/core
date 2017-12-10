@@ -169,7 +169,12 @@ class DaikinHVAC(ClimateDevice):
 
         # Daikin can return also internal states auto-1 or auto-7
         # and we need to translate them as AUTO
-        current_operation = re.sub('[^a-z]', '', self._device.represent('mode')[1])
+        current_operation = re.sub(
+            '[^a-z]',
+            '',
+            self._device.represent('mode')[1]
+        )
+        
         return current_operation.title()
 
     @property
