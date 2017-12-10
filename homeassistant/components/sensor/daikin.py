@@ -96,4 +96,3 @@ class DaikinClimateSensor(Entity):
     def update(self):
         """Retrieve latest state."""
         self._device.update()
-
