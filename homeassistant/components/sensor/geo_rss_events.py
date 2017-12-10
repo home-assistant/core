@@ -134,7 +134,7 @@ class MinType(object):
     """Represents an object type that is smaller than another when sorting."""
 
     def __le__(self, other):
-        """This object is always lower than or equal to the other."""
+        """Compare this objet to the other. Always true."""
         return True
 
     def __eq__(self, other):
@@ -242,9 +242,8 @@ class GeoRssServiceSensor(Entity):
                 if event[ATTR_ID] == previous_event[ATTR_ID]:
                     # Check the update date.
                     if event[ATTR_DATE_UPDATED] is not None:
-                        if previous_event[
-                            ATTR_DATE_UPDATED] is not None and event[
-                            ATTR_DATE_UPDATED] <= \
+                        if previous_event[ATTR_DATE_UPDATED] is not None \
+                                and event[ATTR_DATE_UPDATED] <= \
                                 previous_event[ATTR_DATE_UPDATED]:
                             # Event has not been updated.
                             include_event = False
