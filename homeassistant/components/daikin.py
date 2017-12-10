@@ -78,7 +78,6 @@ KNOWN_DEVICES = []
 
 def setup(hass, config):
     """Establish connection with Daikin."""
-
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for Daikin discovery events."""
         host = discovery_info.get('ip')
@@ -207,7 +206,7 @@ class DaikinEntity(object):
         return value
 
     def set(self, settings):
-        """Set device settings using API"""
+        """Set device settings using API."""
         values = {}
 
         for attr in [ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE,
@@ -252,6 +251,7 @@ class DaikinEntity(object):
 
     @property
     def operation_list(self):
+        """Return the list of available operation modes."""
         return self._operation_list
 
     @property
@@ -271,7 +271,6 @@ class DaikinEntity(object):
 
     def update(self, force_refresh=False):
         """Pull the latest data from Daikin."""
-
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
             # don't update too often
