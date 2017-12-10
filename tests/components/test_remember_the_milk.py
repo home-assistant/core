@@ -25,10 +25,10 @@ class TestConfiguration(unittest.TestCase):
                 "token": "mytoken",
                 "id_map": {"1234": {
                     "list_id": "0",
-                    "timeseries_id" : "1",
-                    "task_id" : "2"
+                    "timeseries_id": "1",
+                    "task_id": "2"
                 }}
-                }
+            }
             })
 
     def tearDown(self):
@@ -69,7 +69,8 @@ class TestConfiguration(unittest.TestCase):
             config = rtm.RememberTheMilkConfiguration(self.hass)
 
         self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
-        config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id, rtm_id)
+        config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id,
+                          rtm_id)
         self.assertEqual((list_id, timeseries_id, rtm_id),
                          config.get_rtm_id(self.profile, hass_id))
         config.delete_rtm_id(self.profile, hass_id)
