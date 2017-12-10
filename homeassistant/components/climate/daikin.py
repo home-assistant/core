@@ -167,7 +167,8 @@ class DaikinHVAC(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         import re
 
-        # Daikin can return also internal states auto-1 or auto-7 and we need to translate them as AUTO
+        # Daikin can return also internal states auto-1 or auto-7
+        # and we need to translate them as AUTO
         current_operation = re.sub('[^a-z]', '', self._device.represent('mode')[1])
         return current_operation.title()
 
