@@ -38,6 +38,7 @@ SERVICE_XIAOMI_GW = 'xiaomi_gw'
 SERVICE_TELLDUSLIVE = 'tellstick'
 SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
+SERVICE_DAIKIN = 'daikin'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -52,6 +53,7 @@ SERVICE_HANDLERS = {
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
     SERVICE_HUE: ('hue', None),
     SERVICE_DECONZ: ('deconz', None),
+    SERVICE_DAIKIN: ('daikin', None),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
@@ -69,7 +71,6 @@ SERVICE_HANDLERS = {
     'sabnzbd': ('sensor', 'sabnzbd'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
     'bluesound': ('media_player', 'bluesound'),
-    'daikin': ('climate', 'daikin'),
 }
 
 CONF_IGNORE = 'ignore'
