@@ -26,11 +26,13 @@ REQUIREMENTS = ['volvooncall==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_UPDATE_INTERVAL = 'update_interval'
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+
+CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_REGION = 'region'
 CONF_SERVICE_URL = 'service_url'
+CONF_SCANDINAVIAN_MILES = 'scandinavian_miles'
 
 SIGNAL_VEHICLE_SEEN = '{}.vehicle_seen'.format(DOMAIN)
 
@@ -41,6 +43,8 @@ RESOURCES = {'position': ('device_tracker',),
              'fuel_amount': ('sensor', 'Fuel amount', 'mdi:gas-station', 'L'),
              'fuel_amount_level': (
                  'sensor', 'Fuel level', 'mdi:water-percent', '%'),
+             'average_fuel_consumption': (
+                 'sensor', 'Fuel consumption', 'mdi:gas-station', 'L/100 km'),
              'distance_to_empty': ('sensor', 'Range', 'mdi:ruler', 'km'),
              'washer_fluid_level': ('binary_sensor', 'Washer fluid'),
              'brake_fluid': ('binary_sensor', 'Brake Fluid'),
@@ -61,6 +65,7 @@ CONFIG_SCHEMA = vol.Schema({
             cv.ensure_list, [vol.In(RESOURCES)]),
         vol.Optional(CONF_REGION): cv.string,
         vol.Optional(CONF_SERVICE_URL): cv.string,
+        vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -123,7 +128,8 @@ class VolvoData:
         """Initialize the component state."""
         self.entities = {}
         self.vehicles = {}
-        self.names = config[DOMAIN].get(CONF_NAME)
+        self.config = config[DOMAIN]
+        self.names = self.config.get(CONF_NAME)
 
     def vehicle_name(self, vehicle):
         """Provide a friendly name for a vehicle."""
