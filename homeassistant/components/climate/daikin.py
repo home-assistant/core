@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Added Daikin AC %s", host)
 
     devices.append(setup_hvac(host, name))
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 def setup_hvac(host, name):
@@ -174,7 +174,6 @@ class DaikinHVAC(ClimateDevice):
             '',
             self._device.represent('mode')[1]
         )
-        
         return current_operation.title()
 
     @property
