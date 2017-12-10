@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ClimateDevice,
     ATTR_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
     PLATFORM_SCHEMA)
@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_FAN_MODE |
                  SUPPORT_OPERATION_MODE |
                  SUPPORT_SWING_MODE)
@@ -105,8 +105,6 @@ class DaikinHVAC(ClimateDevice):
 
         self._current_temperature = None
         self._target_temperature = None
-        self._current_humidity = None
-        self._target_humidity = None
         self._current_fan_mode = None
         self._current_swing_mode = None
 
@@ -193,23 +191,6 @@ class DaikinHVAC(ClimateDevice):
             self.schedule_update_ha_state()
         else:
             _LOGGER.error("Invalid operation mode %s", operation_mode)
-
-    @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        self._current_humidity = self._device.represent('shum')[1]
-
-        return self._current_humidity
-
-    def set_humidity(self, humidity):
-        """Set new target temperature."""
-        if humidity is not None:
-            try:
-                self._target_humidity = int(humidity)
-                self._device.set({"shum": str(humidity)})
-                self.schedule_update_ha_state()
-            except ValueError:
-                _LOGGER.error("Invalid humidity %s", humidity)
 
     @property
     def current_fan_mode(self):
