@@ -232,26 +232,26 @@ class GeoRssServiceSensor(Entity):
         if not self._previous_events:
             # Publish all events.
             return events
-        else:
-            # Find new or changed events
-            new_events = []
-            for event in events:
-                include_event = True
-                for previous_event in self._previous_events:
-                    if event[ATTR_ID] == previous_event[ATTR_ID]:
-                        # Check the update date.
-                        if event[ATTR_DATE_UPDATED] is not None:
-                            if previous_event[ATTR_DATE_UPDATED] is not None:
-                                if event[ATTR_DATE_UPDATED] <= \
-                                        previous_event[ATTR_DATE_UPDATED]:
-                                    # Event has not been updated.
-                                    include_event = False
-                        else:
-                            # Event with same id but not updated found.
+        # Find new or changed events
+        new_events = []
+        for event in events:
+            include_event = True
+            for previous_event in self._previous_events:
+                if event[ATTR_ID] == previous_event[ATTR_ID]:
+                    # Check the update date.
+                    if event[ATTR_DATE_UPDATED] is not None:
+                        if previous_event[
+                            ATTR_DATE_UPDATED] is not None and event[
+                            ATTR_DATE_UPDATED] <= \
+                                previous_event[ATTR_DATE_UPDATED]:
+                            # Event has not been updated.
                             include_event = False
-                if include_event:
-                    new_events.append(event)
-            return new_events
+                    else:
+                        # Event with same id but not updated found.
+                        include_event = False
+            if include_event:
+                new_events.append(event)
+        return new_events
 
     def publish_events(self, events):
         """Publish the provided events as HA events to the bus."""
@@ -306,7 +306,7 @@ class GeoRssServiceData(object):
         return events
 
     def create_event(self, entry, distance):
-        # Create the event with attributes.
+        """Create the event with attributes."""
         event = {
             ATTR_CATEGORY: None if not hasattr(
                 entry, 'category') else entry.category,
