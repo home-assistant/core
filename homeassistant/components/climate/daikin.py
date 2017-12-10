@@ -10,6 +10,10 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ClimateDevice,
     ATTR_OPERATION_MODE,
+
+    STATE_OFF,
+    STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
+
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
@@ -33,23 +37,14 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_OPERATION_MODE |
                  SUPPORT_SWING_MODE)
 
-DAIKIN_STATE_TO_HA = {
-    'fan': 'Fan only',
-    'dry': 'Dry',
-    'cool': 'Cool',
-    'hot': 'Heat',
-    'off': 'Off',
-    'auto': 'Auto',
-    'auto-1': 'Auto',
-    'auto-7': 'Auto'
+HA_STATE_TO_DAIKIN = {
+    STATE_FAN_ONLY: 'fan',
+    STATE_DRY: 'dry',
+    STATE_COOL: 'cool',
+    STATE_HEAT: 'hot',
+    STATE_AUTO: 'auto',
+    STATE_OFF: 'off',
 }
-
-HA_STATE_TO_DAIKIN = {value: key for key, value in DAIKIN_STATE_TO_HA.items()}
-
-# Description of how the platform is defined
-# climate:
-#   platform: daikin
-#   host: 192.168.10.26
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -62,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         host = discovery_info['ip']
         _LOGGER.info("Discovered a Daikin AC %s", host)
     else:
-        host = config.get(CONF_HOST, None)
+        host = config.get(CONF_HOST)
         _LOGGER.info("Added Daikin AC %s", host)
 
     devices.append(setup_hvac(host, name))
@@ -71,11 +66,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def setup_hvac(host, name):
     """Setup Daikin HVAC device."""
-    if host is None:
-        _LOGGER.error("Missing required configuration items %s",
-                      CONF_HOST)
-        return False
-
     import pydaikin.appliance as appliance
     device = appliance.Appliance(host)
 
@@ -95,7 +85,10 @@ class DaikinHVAC(ClimateDevice):
         self._name = name
         self._device = device
 
-        self._operation_list = list(set(DAIKIN_STATE_TO_HA.values()))
+        self._operation_list = list(
+            map(str.title, set(HA_STATE_TO_DAIKIN.values()))
+        )
+
         self._fan_list = list(
             map(str.title, appliance.daikin_values('f_rate'))
         )
@@ -153,7 +146,7 @@ class DaikinHVAC(ClimateDevice):
 
         if kwargs.get(ATTR_OPERATION_MODE) is not None:
             operation_mode = kwargs.get(ATTR_OPERATION_MODE)
-            current_operation = HA_STATE_TO_DAIKIN.get(operation_mode)
+            current_operation = operation_mode.lower()
             if current_operation is not None:
                 settings['mode'] = current_operation
 
@@ -172,10 +165,11 @@ class DaikinHVAC(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        operation_mode = self._device.represent('mode')[1]
-        current_operation = DAIKIN_STATE_TO_HA.get(operation_mode)
+        import re
 
-        return current_operation
+        # Daikin can return also internal states auto-1 or auto-7 and we need to translate them as AUTO
+        current_operation = re.sub('[^a-z]', '', self._device.represent('mode')[1])
+        return current_operation.title()
 
     @property
     def operation_list(self):
@@ -183,8 +177,8 @@ class DaikinHVAC(ClimateDevice):
         return self._operation_list
 
     def set_operation_mode(self, operation_mode):
-        """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
-        current_operation = HA_STATE_TO_DAIKIN.get(operation_mode)
+        """Set HVAC mode."""
+        current_operation = operation_mode.lower()
 
         if current_operation is not None:
             self._device.set({"mode": current_operation})
@@ -201,10 +195,12 @@ class DaikinHVAC(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Set fan mode."""
-        if fan is not None:
+        if fan in self._fan_list:
             self._device.set({"f_rate": fan.lower()})
             self._current_fan_mode = fan
             self.schedule_update_ha_state()
+        else:
+            _LOGGER.error("Invalid fan mode %s", fan)
 
     @property
     def fan_list(self):
@@ -220,10 +216,12 @@ class DaikinHVAC(ClimateDevice):
 
     def set_swing_mode(self, swing_mode):
         """Set new target temperature."""
-        if swing_mode is not None:
+        if swing_mode in self._swing_list:
             self._device.set({"f_dir": swing_mode.lower()})
             self._current_swing_mode = swing_mode
             self.schedule_update_ha_state()
+        else:
+            _LOGGER.error("Invalid swing mode %s", swing_mode)
 
     @property
     def swing_list(self):
