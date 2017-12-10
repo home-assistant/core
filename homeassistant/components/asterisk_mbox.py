@@ -12,8 +12,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.dispatcher import (dispatcher_connect,
+                                              async_dispatcher_send)
 
 REQUIREMENTS = ['asterisk_mbox==0.5.0']
 
@@ -62,11 +62,11 @@ class AsteriskData(object):
         self.messages = None
         self.cdr = None
 
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_REQUEST, self._request_messages)
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.hass, SIGNAL_CDR_REQUEST, self._request_cdr)
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.hass, SIGNAL_DISCOVER_PLATFORM, self._discover_platform)
 
     @callback
