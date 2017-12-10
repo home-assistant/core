@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (dispatcher_connect,
-                                              async_dispatcher_send)
+                                              dispatcher_send)
 
 REQUIREMENTS = ['asterisk_mbox==0.5.0']
 
@@ -71,8 +71,8 @@ class AsteriskData(object):
 
     @callback
     def _discover_platform(self, component):
-        discovery.load_platform(self.hass, "mailbox",
-                                component, {}, self.config)
+        self.hass.async_add_job(discovery.async_load_platform(
+            self.hass, "mailbox", component, {}, self.config))
 
     @callback
     def handle_data(self, command, msg):
@@ -85,24 +85,22 @@ class AsteriskData(object):
             _LOGGER.debug("AsteriskVM sent updated message list")
             if not isinstance(self.messages, list):
                 self.messages = []
-                async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
-                                      DOMAIN)
+                dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
+                                DOMAIN)
 
             self.messages = sorted(
                 msg, key=lambda item: item['info']['origtime'], reverse=True)
-            async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE,
-                                  self.messages)
+            dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE, self.messages)
         elif command == CMD_MESSAGE_CDR:
             _LOGGER.info("AsteriskVM sent updated CDR list")
             self.cdr = msg['entries']
-            async_dispatcher_send(self.hass, SIGNAL_CDR_UPDATE,
-                                  self.cdr)
+            dispatcher_send(self.hass, SIGNAL_CDR_UPDATE, self.cdr)
         elif command == CMD_MESSAGE_CDR_AVAILABLE:
             if not isinstance(self.cdr, list):
                 self.cdr = []
-                async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
-                                      "asterisk_cdr")
-            async_dispatcher_send(self.hass, SIGNAL_CDR_REQUEST)
+                dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
+                                "asterisk_cdr")
+            dispatcher_send(self.hass, SIGNAL_CDR_REQUEST)
 
     @callback
     def _request_messages(self):
