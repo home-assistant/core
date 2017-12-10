@@ -193,7 +193,7 @@ class Script():
                     """Recursive template creator helper function."""
                     if isinstance(value, list):
                         return [_data_template_creator(item)
-                                    for item in value]
+                                for item in value]
                     elif isinstance(value, dict):
                         return {key: _data_template_creator(item)
                                 for key, item in value.items()}
