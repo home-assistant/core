@@ -35,7 +35,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         host = discovery_info.get('ip')
         name = None
-        monitored_conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES.keys()))
+        monitored_conditions = discovery_info.get(
+            CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES.keys())
+        )
         _LOGGER.info("Discovered a Daikin AC sensor on %s", host)
     else:
         host = config.get(CONF_HOST)

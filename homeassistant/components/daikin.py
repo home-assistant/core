@@ -210,7 +210,8 @@ class DaikinEntity(object):
         """Set device settings using API"""
         values = {}
 
-        for attr in [ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE, ATTR_OPERATION_MODE, ATTR_OPERATION_MODE]:
+        for attr in [ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE,
+                     ATTR_OPERATION_MODE, ATTR_OPERATION_MODE]:
             if attr in settings and settings[attr] is not None:
 
                 # operation mode
@@ -218,28 +219,32 @@ class DaikinEntity(object):
                     if settings[attr].title() in self._operation_list:
                         values['mode'] = settings[attr].lower()
                     else:
-                        _LOGGER.error("Invalid operation mode %s", settings[attr])
+                        _LOGGER.error("Invalid operation mode %s",
+                                      settings[attr])
 
                 # swing mode
                 elif attr == ATTR_FAN_MODE:
                     if settings[attr].title() in self._fan_list:
                         values['f_rate'] = settings[attr].lower()
                     else:
-                        _LOGGER.error("Invalid fan mode %s", settings[attr])
+                        _LOGGER.error("Invalid fan mode %s",
+                                      settings[attr])
 
                 # swing mode
                 elif attr == ATTR_SWING_MODE:
                     if settings[attr].title() in self._swing_list:
                         values['f_dir'] = settings[attr].lower()
                     else:
-                        _LOGGER.error("Invalid swing mode %s", settings[attr])
+                        _LOGGER.error("Invalid swing mode %s",
+                                      settings[attr])
 
                 # temperature
                 elif attr == ATTR_TEMPERATURE:
                     try:
                         values['stemp'] = str(int(settings[attr]))
                     except ValueError:
-                        _LOGGER.error("Invalid temperature %s", settings[attr])
+                        _LOGGER.error("Invalid temperature %s",
+                                      settings[attr])
 
         if settings:
             self.device.set(values)
@@ -276,12 +281,14 @@ class DaikinEntity(object):
 
                 try:
                     for resource in appliance.HTTP_RESOURCES:
-                        self.device.values.update(self.device.get_resource(resource))
-
-                    _LOGGER.debug("Daikin updated for %s", self.ip)
+                        self.device.values.update(
+                            self.device.get_resource(resource)
+                        )
                 except timeout:
-                    _LOGGER.warning("Daikin connection failed for %s,"
-                                    " we'll retry in %d seconds", self.ip, self._scan_interval)
+                    _LOGGER.warning(
+                        "Connection failed for %s, retying in %d seconds",
+                        self.ip, self._scan_interval
+                    )
                     return False
 
                 self._last_update = time.time()
