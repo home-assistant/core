@@ -58,8 +58,9 @@ SENSOR_TYPES = {
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOSTS, default=[]): vol.Schema([cv.string]),
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES.keys())):
-            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.Optional(CONF_MONITORED_CONDITIONS,
+                     default=list(SENSOR_TYPES.keys())
+                     ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -82,7 +83,7 @@ def setup(hass, config):
         """Dispatcher for Daikin discovery events."""
         host = discovery_info.get('ip')
 
-        if manual_device_setup(hass, config, host) is None:
+        if manual_device_setup(hass, host) is None:
             return
 
         for component in COMPONENT_TYPES:
@@ -100,17 +101,18 @@ def setup(hass, config):
     )
 
     for host, device in devices:
-        if manual_device_setup(hass, config, host) is not None:
+        if manual_device_setup(hass, host) is not None:
             discovery_info = {
                 'ip': host,
-                CONF_MONITORED_CONDITIONS: config.get(DOMAIN, {}).get(CONF_MONITORED_CONDITIONS)
+                CONF_MONITORED_CONDITIONS:
+                    config.get(DOMAIN, {}).get(CONF_MONITORED_CONDITIONS)
             }
             load_platform(hass, 'sensor', DOMAIN, discovery_info, config)
 
     return True
 
 
-def manual_device_setup(hass, config, host, name=None):
+def manual_device_setup(hass, host, name=None):
     """Create a Daikin instance only once."""
     if DOMAIN not in hass.data:
             hass.data[DOMAIN] = {}
@@ -164,7 +166,8 @@ class DaikinEntity(object):
         value = None
         cast_to_float = False
 
-        if key in [ATTR_TEMPERATURE, ATTR_INSIDE_TEMPERATURE, ATTR_CURRENT_TEMPERATURE]:
+        if key in [ATTR_TEMPERATURE, ATTR_INSIDE_TEMPERATURE,
+                   ATTR_CURRENT_TEMPERATURE]:
             value = self.device.values.get('htemp')
             cast_to_float = True
         if key == ATTR_TARGET_TEMPERATURE:
@@ -268,7 +271,7 @@ class DaikinEntity(object):
         with self.mutex:
             # don't update too often
             if force_refresh or \
-                    ((time.time() - self._last_update) >= self._scan_interval):
+                    (time.time() - self._last_update) >= self._scan_interval:
                 import pydaikin.appliance as appliance
 
                 try:

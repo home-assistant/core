@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
         _LOGGER.info("Added Daikin AC sensor on %s", host)
 
-    device = manual_device_setup(hass, config, host, name)
+    device = manual_device_setup(hass, host, name)
 
     sensors = []
     for monitored_state in monitored_conditions:

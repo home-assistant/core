@@ -40,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=None): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Daikin HVAC platform."""
     if discovery_info is not None:
@@ -51,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         _LOGGER.info("Added Daikin AC on %s", host)
 
-    device = manual_device_setup(hass, config, host, name)
+    device = manual_device_setup(hass, host, name)
     add_devices([DaikinClimate(device)], True)
 
 
