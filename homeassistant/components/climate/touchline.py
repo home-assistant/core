@@ -14,9 +14,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import CONF_HOST, TEMP_CELSIUS, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
 
 REQUIREMENTS = ['pytouchline==0.6']
 
@@ -36,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for device_id in range(0, number_of_devices):
         devices.append(Touchline(PyTouchline(device_id)))
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class Touchline(ClimateDevice):
@@ -45,10 +48,14 @@ class Touchline(ClimateDevice):
     def __init__(self, touchline_thermostat):
         """Initialize the climate device."""
         self.unit = touchline_thermostat
-        self.unit.update()
-        self._name = self.unit.get_name()
-        self._current_temperature = self.unit.get_current_temperature()
-        self._target_temperature = self.unit.get_target_temperature()
+        self._name = None
+        self._current_temperature = None
+        self._target_temperature = None
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     def update(self):
         """Update unit attributes."""
