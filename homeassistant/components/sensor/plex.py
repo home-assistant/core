@@ -6,13 +6,13 @@ https://home-assistant.io/components/sensor.plex/
 """
 from datetime import timedelta
 import logging
-
 import requests
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL)
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN,
+    CONF_SSL, CONF_VERIFY_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -88,7 +88,8 @@ class PlexSensor(Entity):
                 self._server = PlexServer(plex_url, plex_token, cert_session)
             elif plex_user and plex_password:
                 user = MyPlexAccount(plex_user, plex_password)
-                server = plex_server if plex_server else user.resources()[0].name
+                server = plex_server if plex_server \
+                    else user.resources()[0].name
                 self._server = user.resource(server).connect()
             else:
                 self._server = PlexServer(plex_url)
