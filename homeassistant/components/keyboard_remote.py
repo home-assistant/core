@@ -21,8 +21,9 @@ REQUIREMENTS = ['evdev==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DESCRIPTOR = 'device_descriptor'
-DEVICE_ID_GROUP = 'Device descriptor or name'
+DEVICE_ID_GROUP = 'Device description'
 DEVICE_NAME = 'device_name'
+DEVICES = 'devices'
 DOMAIN = 'keyboard_remote'
 
 ICON = 'mdi:remote'
@@ -40,7 +41,15 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
         vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
         vol.Optional(TYPE, default='key_up'):
-        vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
+            vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
+        vol.Exclusive(DEVICES, DEVICE_ID_GROUP): vol.All(cv.ensure_list, [
+            vol.Schema({
+                vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
+                vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
+                vol.Optional(TYPE, default='key_up'):
+                vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold'))
+            })
+        ]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -50,8 +59,9 @@ def setup(hass, config):
     config = config.get(DOMAIN)
 
     if not config.get(DEVICE_DESCRIPTOR) and\
-       not config.get(DEVICE_NAME):
-        _LOGGER.error("No device_descriptor or device_name found")
+       not config.get(DEVICE_NAME) and\
+       not config.get(DEVICES):
+        _LOGGER.error("No device_descriptor, device_name, or dev block found")
         return
 
     keyboard_remote = KeyboardRemote(
@@ -63,7 +73,7 @@ def setup(hass, config):
         keyboard_remote.run()
 
     def _stop_keyboard_remote(_event):
-        keyboard_remote.stopped.set()
+        keyboard_remote.stop()
 
     hass.bus.listen_once(
         EVENT_HOMEASSISTANT_START,
@@ -77,19 +87,21 @@ def setup(hass, config):
     return True
 
 
-class KeyboardRemote(threading.Thread):
+class KeyboardRemoteThread(threading.Thread):
     """This interfaces with the inputdevice using evdev."""
 
-    def __init__(self, hass, config):
-        """Construct a KeyboardRemote interface object."""
-        from evdev import InputDevice, list_devices
+    def __init__(self, hass, device_name, device_descriptor, key_value):
+        """Construct a thread listening for events on one device."""
+        self.hass = hass
+        self.device_name = device_name
+        self.device_descriptor = device_descriptor
+        self.key_value = key_value
 
-        self.device_descriptor = config.get(DEVICE_DESCRIPTOR)
-        self.device_name = config.get(DEVICE_NAME)
         if self.device_descriptor:
             self.device_id = self.device_descriptor
         else:
             self.device_id = self.device_name
+
         self.dev = self._get_keyboard_device()
         if self.dev is not None:
             _LOGGER.debug("Keyboard connected, %s", self.device_id)
@@ -103,6 +115,7 @@ class KeyboardRemote(threading.Thread):
             id_folder = '/dev/input/by-id/'
 
             if os.path.isdir(id_folder):
+                from evdev import InputDevice, list_devices
                 device_names = [InputDevice(file_name).name
                                 for file_name in list_devices()]
                 _LOGGER.debug(
@@ -116,7 +129,6 @@ class KeyboardRemote(threading.Thread):
         threading.Thread.__init__(self)
         self.stopped = threading.Event()
         self.hass = hass
-        self.key_value = KEY_VALUE.get(config.get(TYPE, 'key_up'))
 
     def _get_keyboard_device(self):
         """Get the keyboard device."""
@@ -145,7 +157,7 @@ class KeyboardRemote(threading.Thread):
 
         while not self.stopped.isSet():
             # Sleeps to ease load on processor
-            time.sleep(.1)
+            time.sleep(.05)
 
             if self.dev is None:
                 self.dev = self._get_keyboard_device()
@@ -178,3 +190,32 @@ class KeyboardRemote(threading.Thread):
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
                     {KEY_CODE: event.code}
                 )
+
+
+class KeyboardRemote(object):
+    """Sets up one thread per device."""
+
+    def __init__(self, hass, config):
+        """Construct a KeyboardRemote interface object."""
+        self.threads = []
+        for dev_block in config.get(DEVICES, []) + [config]:
+            device_descriptor = dev_block.get(DEVICE_DESCRIPTOR)
+            device_name = dev_block.get(DEVICE_NAME)
+            key_value = KEY_VALUE.get(dev_block.get(TYPE, 'key_up'))
+
+            if device_descriptor is not None\
+                    or device_name is not None:
+                thread = KeyboardRemoteThread(hass, device_name,
+                                              device_descriptor,
+                                              key_value)
+                self.threads.append(thread)
+
+    def run(self):
+        """Run all event listener threads."""
+        for thread in self.threads:
+            thread.start()
+
+    def stop(self):
+        """Stop all event listener threads."""
+        for thread in self.threads:
+            thread.stopped.set()
