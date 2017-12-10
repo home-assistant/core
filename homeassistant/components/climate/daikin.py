@@ -66,7 +66,7 @@ class DaikinClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return the ID of this AC."""
-        return "{}.{}".format(self.__class__, self._device.ip)
+        return "{}.{}".format(self.__class__, self._device.ip_address)
 
     @property
     def supported_features(self):

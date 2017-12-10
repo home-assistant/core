@@ -34,6 +34,7 @@ REQUIREMENTS = ['pydaikin==0.4']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'daikin'
+HTTP_RESOURCES = ['aircon/get_sensor_info', 'aircon/get_control_info']
 
 ATTR_TARGET_TEMPERATURE = 'target_temperature'
 ATTR_INSIDE_TEMPERATURE = 'inside_temperature'
@@ -58,9 +59,10 @@ SENSOR_TYPES = {
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOSTS, default=[]): vol.Schema([cv.string]),
-        vol.Optional(CONF_MONITORED_CONDITIONS,
-                     default=list(SENSOR_TYPES.keys())
-                     ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS,
+            default=list(SENSOR_TYPES.keys())
+        ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -99,7 +101,7 @@ def setup(hass, config):
         for host in config.get(DOMAIN, {}).get(CONF_HOSTS, [])
     )
 
-    for host, device in devices:
+    for host in devices:
         if manual_device_setup(hass, host) is not None:
             discovery_info = {
                 'ip': host,
@@ -114,7 +116,7 @@ def setup(hass, config):
 def manual_device_setup(hass, host, name=None):
     """Create a Daikin instance only once."""
     if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = {}
+        hass.data[DOMAIN] = {}
 
     if hass.data[DOMAIN].get(host) is None:
         from pydaikin import appliance
@@ -142,7 +144,7 @@ class DaikinEntity(object):
 
         self.device = device
         self.name = name
-        self.ip = device.ip
+        self.ip_address = device.ip
 
         self.mutex = Lock()
         self._scan_interval = DEFAULT_SCAN_INTERVAL
@@ -276,17 +278,16 @@ class DaikinEntity(object):
             # don't update too often
             if force_refresh or \
                     (time.time() - self._last_update) >= self._scan_interval:
-                import pydaikin.appliance as appliance
 
                 try:
-                    for resource in appliance.HTTP_RESOURCES:
+                    for resource in HTTP_RESOURCES:
                         self.device.values.update(
                             self.device.get_resource(resource)
                         )
                 except timeout:
                     _LOGGER.warning(
                         "Connection failed for %s, retying in %d seconds",
-                        self.ip, self._scan_interval
+                        self.ip_address, self._scan_interval
                     )
                     return False
 
