@@ -134,9 +134,11 @@ class MinType(object):
     """Represents an object type that is smaller than another when sorting."""
 
     def __le__(self, other):
+        """This object is always lower than or equal to the other."""
         return True
 
     def __eq__(self, other):
+        """Compare this object to the other."""
         return self is other
 
 
@@ -306,7 +308,7 @@ class GeoRssServiceData(object):
         return events
 
     def create_event(self, entry, distance):
-        """Create the event with attributes."""
+        """Create the event with standard and custom attributes."""
         event = {
             ATTR_CATEGORY: None if not hasattr(
                 entry, 'category') else entry.category,
@@ -349,7 +351,6 @@ class GeoRssServiceData(object):
                         _LOGGER.debug("Event %s does not match filter %s",
                                       event, definition)
                         return None
-        _LOGGER.debug("Keeping event %s", event)
         return event
 
     def calculate_distance_to_geometry(self, geometry):
