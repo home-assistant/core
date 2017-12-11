@@ -167,6 +167,7 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
             'thermostatHumidityAmbient':
             entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
         }
+
         return {k: v for k, v in response.items() if v is not None}
 
     final_state = entity.state != STATE_OFF
