@@ -17,7 +17,8 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.daikin import (
     SENSOR_TYPES,
-    manual_device_setup
+    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE,
+    daikin_api_setup
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -45,11 +46,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
         _LOGGER.info("Added Daikin AC sensor on %s", host)
 
-    device = manual_device_setup(hass, host, name)
+    api = daikin_api_setup(hass, host, name)
 
     sensors = []
     for monitored_state in monitored_conditions:
-        sensors.append(DaikinClimateSensor(device, name, monitored_state))
+        sensors.append(DaikinClimateSensor(api, name, monitored_state))
 
     add_devices(sensors, True)
 
@@ -57,20 +58,44 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DaikinClimateSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, device, name=None, monitored_state=SENSOR_TYPES.keys()):
+    def __init__(self, api, name=None, monitored_state=SENSOR_TYPES.keys()):
         """Initialize the sensor."""
-        self._device = device
+        self._api = api
         if name is None:
             name = SENSOR_TYPES.get(monitored_state).get(CONF_NAME) \
-                + ' ' + device.name
+                + ' ' + api.name
 
         self._name = name
         self._state = monitored_state
 
+    def get(self, key):
+        """Retrieve device settings from API library cache."""
+        value = None
+        cast_to_float = False
+
+        if key == ATTR_INSIDE_TEMPERATURE:
+            value = self._api.device.values.get('htemp')
+            cast_to_float = True
+        elif key == ATTR_OUTSIDE_TEMPERATURE:
+            value = self._api.device.values.get('otemp')
+
+        if value is None:
+            _LOGGER.warning("Invalid value requested for key %s", key)
+        else:
+            if value == "-" or value == "--":
+                value = None
+            elif cast_to_float:
+                try:
+                    value = float(value)
+                except ValueError:
+                    value = None
+
+        return value
+
     @property
     def unique_id(self):
         """Return the ID of this AC."""
-        return "{}.{}".format(self.__class__, self._device.ip_address)
+        return "{}.{}".format(self.__class__, self._api.ip_address)
 
     @property
     def icon(self):
@@ -86,7 +111,7 @@ class DaikinClimateSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.get(self._state)
+        return self.get(self._state)
 
     @property
     def unit_of_measurement(self):
@@ -95,4 +120,4 @@ class DaikinClimateSensor(Entity):
 
     def update(self):
         """Retrieve latest state."""
-        self._device.update()
+        self._api.update()
