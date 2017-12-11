@@ -37,6 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = insteonhub.fan(device_id)
             add_devices([InsteonLocalFanDevice(device)])
 
+
 class InsteonLocalFanDevice(FanEntity):
     """An abstract Class for an Insteon node."""
 

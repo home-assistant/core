@@ -31,6 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = insteonhub.switch(device_id)
             add_devices([InsteonLocalSwitchDevice(device)])
 
+
 class InsteonLocalSwitchDevice(SwitchDevice):
     """An abstract Class for an Insteon node."""
 

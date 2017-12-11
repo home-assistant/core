@@ -35,6 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = insteonhub.dimmer(device_id)
             add_devices([InsteonLocalDimmerDevice(device)])
 
+
 class InsteonLocalDimmerDevice(Light):
     """An abstract Class for an Insteon node."""
 
