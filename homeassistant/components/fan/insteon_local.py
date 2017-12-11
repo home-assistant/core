@@ -34,8 +34,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device_id in linked:
         if (linked[device_id]['cat_type'] == 'dimmer' and
                 linked[device_id]['sku'] == '2475F'):
-            device = insteonhub.fan(name)
-            add_devices([InsteonLocalFanDevice(device, name)])
+            device = insteonhub.fan(device_id)
+            add_devices([InsteonLocalFanDevice(device)])
 
 class InsteonLocalFanDevice(FanEntity):
     """An abstract Class for an Insteon node."""

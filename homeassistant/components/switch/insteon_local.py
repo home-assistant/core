@@ -29,21 +29,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'switch':
             device = insteonhub.switch(device_id)
-            add_devices([InsteonLocalSwitchDevice(device, device_id)])
+            add_devices([InsteonLocalSwitchDevice(device)])
 
 class InsteonLocalSwitchDevice(SwitchDevice):
     """An abstract Class for an Insteon node."""
 
-    def __init__(self, node, name):
+    def __init__(self, node):
         """Initialize the device."""
         self.node = node
-        self.node.deviceName = name
         self._state = False
 
     @property
     def name(self):
         """Return the name of the node."""
-        return self.node.deviceName
+        return self.node.devic_id
 
     @property
     def unique_id(self):
