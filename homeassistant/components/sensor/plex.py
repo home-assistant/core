@@ -53,8 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_ssl = config.get(CONF_SSL)
     plex_verify_ssl = config.get(CONF_VERIFY_SSL)
 
-    http_prefix = 'https' if plex_ssl else 'http'
-    plex_url = '{}://{}:{}'.format(http_prefix, plex_host, plex_port)
+    plex_url = '{}://{}:{}'.format('https' if plex_ssl else 'http',
+                                   plex_host, plex_port)
 
     add_devices([PlexSensor(
         name, plex_url, plex_user, plex_password, plex_server,
