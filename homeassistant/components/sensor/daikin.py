@@ -66,7 +66,7 @@ class DaikinClimateSensor(Entity):
                 + ' ' + api.name
 
         self._name = name
-        self._state = monitored_state
+        self._device_attribute = monitored_state
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -100,7 +100,7 @@ class DaikinClimateSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        sensor = SENSOR_TYPES.get(self._state)
+        sensor = SENSOR_TYPES.get(self._device_attribute)
         return sensor[CONF_ICON]
 
     @property
@@ -111,12 +111,12 @@ class DaikinClimateSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.get(self._state)
+        return self.get(self._device_attribute)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return SENSOR_TYPES.get(self._state).get(CONF_TEMPERATURE_UNIT)
+        return SENSOR_TYPES.get(self._device_attribute).get(CONF_TEMPERATURE_UNIT)
 
     def update(self):
         """Retrieve latest state."""
