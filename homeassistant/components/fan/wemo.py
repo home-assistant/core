@@ -5,12 +5,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan.wemo/
 """
 import logging
-from datetime import datetime, timedelta
 
-from homeassistant.components.fan import (SPEED_MINIMUM, SPEED_LOW, SPEED_MEDIUM,
-                                          SPEED_HIGH, SPEED_MAXIMUM, FanEntity,
-                                          SUPPORT_SET_SPEED, SUPPORT_TARGET_HUMIDITY)
-from homeassistant.util import convert
+from homeassistant.components.fan import (SPEED_OFF, SPEED_MINIMUM, SPEED_LOW,
+                                          SPEED_MEDIUM, SPEED_HIGH, SPEED_MAXIMUM,
+                                          FanEntity, SUPPORT_SET_SPEED,
+                                          SUPPORT_TARGET_HUMIDITY, SUPPORT_FILTER_LIFE,
+                                          SUPPORT_FILTER_EXPIRED, STATE_UNKNOWN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
@@ -20,18 +20,25 @@ DEPENDENCIES = ['wemo']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SENSOR_STATE = 'sensor_state'
-ATTR_SWITCH_MODE = 'switch_mode'
-ATTR_CURRENT_STATE_DETAIL = 'state_detail'
-ATTR_COFFEMAKER_MODE = 'coffeemaker_mode'
-
-MAKER_SWITCH_MOMENTARY = 'momentary'
-MAKER_SWITCH_TOGGLE = 'toggle'
-
 WEMO_ON = 1
 WEMO_OFF = 0
-WEMO_STANDBY = 8
 
+WEMO_HUMIDITY_45 = 0
+WEMO_HUMIDITY_50 = 1
+WEMO_HUMIDITY_55 = 2
+WEMO_HUMIDITY_60 = 3
+WEMO_HUMIDITY_100 = 4
+
+WEMO_FAN_OFF = 0
+WEMO_FAN_MINIMUM = 1
+WEMO_FAN_Low = 2
+WEMO_FAN_MEDIUM = 3
+WEMO_FAN_HIGH = 4
+WEMO_FAN_MAXIMUM = 5
+
+WEMO_WATER_EMPTY = 0
+WEMO_WATER_LOW = 1
+WEMO_WATER_GOOD = 2
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -53,7 +60,17 @@ class WemoHumidifier(FanEntity):
     def __init__(self, device):
         """Initialize the WeMo humidifier."""
         self.wemo = device
+
         self._state = None
+		self._fan_mode = None
+		self._target_humidity = None
+		self._current_humidity = None
+		self._water_level = None
+		self._filter_life = None
+		self._filter_expired = None
+
+		self._last_fan_on_mode = WEMO_FAN_MEDIUM
+
         # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
 
@@ -71,11 +88,31 @@ class WemoHumidifier(FanEntity):
             return
         self.schedule_update_ha_state()
 
+    def _update(self, force_update=True):
+        """Update the device state."""
+        try:
+            self._state = self.wemo.get_state(force_update)
+
+            self._fan_mode = self.wemo.fan_mode
+            self._target_humidity = self.wemo.desired_humidity_percent
+            self._current_humidity = self.wemo.current_humidity_percent
+            self._water_level = self.wemo.water_level_string
+            self._filter_life = self.wemo.filter_life_percent
+            self._filter_expired = self.wemo.filter_expired
+
+            if self.wemo.fan_mode != WEMO_FAN_OFF:
+                self._last_fan_on_mode = self.wemo.fan_mode
+        except AttributeError as err:
+            _LOGGER.warning("Could not update status for %s (%s)",
+                            self.name, err)
+
+    def update(self):
+        """Update WeMo state."""
+        self._update(force_update=True)
+
     @property
     def should_poll(self):
         """No polling needed with subscriptions."""
-        if self._model_name == 'Humidifier':
-            return True
         return False
 
     @property
@@ -89,132 +126,100 @@ class WemoHumidifier(FanEntity):
         return self.wemo.name
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        if self.maker_params:
-            # Is the maker sensor on or off.
-            if self.maker_params['hassensor']:
-                # Note a state of 1 matches the WeMo app 'not triggered'!
-                if self.maker_params['sensorstate']:
-                    attr[ATTR_SENSOR_STATE] = STATE_OFF
-                else:
-                    attr[ATTR_SENSOR_STATE] = STATE_ON
-
-            # Is the maker switch configured as toggle(0) or momentary (1).
-            if self.maker_params['switchmode']:
-                attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
-            else:
-                attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
-
-        if self.insight_params or (self.coffeemaker_mode is not None):
-            attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
-
-        if self.insight_params:
-            attr['on_latest_time'] = \
-                WemoSwitch.as_uptime(self.insight_params['onfor'])
-            attr['on_today_time'] = \
-                WemoSwitch.as_uptime(self.insight_params['ontoday'])
-            attr['on_total_time'] = \
-                WemoSwitch.as_uptime(self.insight_params['ontotal'])
-            attr['power_threshold_w'] = \
-                convert(
-                    self.insight_params['powerthreshold'], float, 0.0
-                ) / 1000.0
-
-        if self.coffeemaker_mode is not None:
-            attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
-
-        return attr
-
-    @staticmethod
-    def as_uptime(_seconds):
-        """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
-        uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
-        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(
-            uptime.day-1, uptime.hour, uptime.minute, uptime.second)
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if self.insight_params:
-            return convert(
-                self.insight_params['currentpower'], float, 0.0
-                ) / 1000.0
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if self.insight_params:
-            miliwatts = convert(self.insight_params['todaymw'], float, 0.0)
-            return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
-
-    @property
-    def detail_state(self):
-        """Return the state of the device."""
-        if self.coffeemaker_mode is not None:
-            return self.wemo.mode_string
-        if self.insight_params:
-            standby_state = int(self.insight_params['state'])
-            if standby_state == WEMO_ON:
-                return STATE_ON
-            elif standby_state == WEMO_OFF:
-                return STATE_OFF
-            elif standby_state == WEMO_STANDBY:
-                return STATE_STANDBY
-            return STATE_UNKNOWN
-
-    @property
     def is_on(self):
         """Return true if switch is on. Standby is on."""
         return self._state
 
     @property
-    def available(self):
-        """Return true if switch is available."""
-        if self._model_name == 'Insight' and self.insight_params is None:
-            return False
-        if self._model_name == 'Maker' and self.maker_params is None:
-            return False
-        if self._model_name == 'CoffeeMaker' and self.coffeemaker_mode is None:
-            return False
-        return True
-
-    @property
     def icon(self):
         """Return the icon of device based on its type."""
-        if self._model_name == 'CoffeeMaker':
-            return 'mdi:coffee'
-        return None
+        return 'mdi:water-percent'
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._state = WEMO_ON
-        self.wemo.on()
+        self.wemo.set_state(self._last_fan_on_mode)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._state = WEMO_OFF
-        self.wemo.off()
+        self.wemo.set_state(WEMO_FAN_OFF)
         self.schedule_update_ha_state()
 
-    def update(self):
-        """Update WeMo state."""
-        self._update(force_update=True)
+    def set_speed(self: ToggleEntity, speed: str) -> None:
+        """Set the fan_mode of the Humidifier."""
+        if speed == SPEED_OFF:
+            self.wemo.set_state(WEMO_FAN_OFF)
+        elif speed == SPEED_MINIMUM:
+            self.wemo.set_state(WEMO_FAN_MINIMUM)
+        elif speed == SPEED_LOW:
+            self.wemo.set_state(WEMO_FAN_LOW)
+        elif speed == SPEED_MEDIUM:
+            self.wemo.set_state(WEMO_FAN_MEDIUM)
+        elif speed == SPEED_HIGH:
+            self.wemo.set_state(WEMO_FAN_HIGH)
+        elif speed == SPEED_MAXIMUM:
+            self.wemo.set_state(WEMO_FAN_MAXIMUM)
 
-    def _update(self, force_update=True):
-        """Update the device state."""
-        try:
-            self._state = self.wemo.get_state(force_update)
-            if self._model_name == 'Insight':
-                self.insight_params = self.wemo.insight_params
-                self.insight_params['standby_state'] = (
-                    self.wemo.get_standby_state)
-            elif self._model_name == 'Maker':
-                self.maker_params = self.wemo.maker_params
-            elif self._model_name == 'CoffeeMaker':
-                self.coffeemaker_mode = self.wemo.mode
-        except AttributeError as err:
-            _LOGGER.warning("Could not update status for %s (%s)",
-                            self.name, err)
+    def set_humidity(self: ToggleEntity, humidity: int) -> None:
+        """Set the fan_mode of the Humidifier."""
+        if humidity <= 45:
+            self.wemo.set_humidity(WEMO_HUMIDITY_45)
+        elif ((humidity > 45) && (humidity <= 50)):
+            self.wemo.set_humidity(WEMO_HUMIDITY_50)
+        elif ((humidity > 50) && (humidity <= 55)):
+            self.wemo.set_humidity(WEMO_HUMIDITY_55)
+        elif ((humidity > 55) && (humidity <= 60)):
+            self.wemo.set_humidity(WEMO_HUMIDITY_60)
+        elif humidity > 60:
+            self.wemo.set_humidity(WEMO_HUMIDITY_100)
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {
+            "current_humidity": self._current_humidity,
+			"target_humidity": self._target_humidity,
+            "fan_mode": self._fan_mode,
+            "water_level": self._water_level,
+            "filter_life": self._filter_life,
+            "filter_expired": self._filter_expired
+        }
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        current_wemo_speed = self.wemo.fan_mode
+        if WEMO_FAN_OFF == current_wemo_speed:
+            return SPEED_OFF
+        elif WEMO_FAN_MINIMUM == current_wemo_speed:
+            return SPEED_MINIMUM
+        elif WEMO_FAN_LOW == current_wemo_speed:
+            return SPEED_LOW
+        elif WEMO_FAN_MEDIUM == current_wemo_speed:
+            return SPEED_MEDIUM
+        elif WEMO_FAN_HIGH == current_wemo_speed:
+            return SPEED_HIGH
+        elif WEMO_FAN_MAXIMUM == current_wemo_speed:
+            return SPEED_MAXIMUM
+        else:
+            return STATE_UNKNOWN
+
+    @property
+    def speed_list(self: ToggleEntity) -> list:
+        """Get the list of available speeds."""
+        supported_speeds = []
+        supported_speeds.append(SPEED_OFF)
+		supported_speeds.append(SPEED_MINIMUM)
+		supported_speeds.append(SPEED_LOW)
+		supported_speeds.append(SPEED_MEDIUM)
+		supported_speeds.append(SPEED_HIGH)
+		supported_speeds.append(SPEED_MAXIMUM)
+        return supported_speeds
+
+    @property
+    def supported_features(self: ToggleEntity) -> int:
+        """Flag supported features."""
+        return SUPPORT_SET_SPEED | SUPPORT_TARGET_HUMIDITY |
+                     SUPPORT_FILTER_LIFE | SUPPORT_FILTER_EXPIRED

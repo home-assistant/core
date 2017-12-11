@@ -39,6 +39,8 @@ SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
 SUPPORT_TARGET_HUMIDITY = 8
+SUPPORT_FILTER_LIFE = 16
+SUPPORT_FILTER_EXPIRED = 32
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
@@ -61,6 +63,8 @@ ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
 ATTR_CURRENT_HUMIDITY = 'current_humidity'
 ATTR_HUMIDITY = 'humidity'
+ATTR_FILTER_LIFE = 'filter_life'
+ATTR_FILTER_EXPIRED = 'filter_expired'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
@@ -68,7 +72,9 @@ PROP_TO_ATTR = {
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
     'current_humidity': ATTR_CURRENT_HUMIDITY,
-    'humidity': ATTR_HUMIDITY
+    'humidity': ATTR_HUMIDITY,
+	'filter_life': ATTR_FILTER_LIFE,
+	'filter_expired': ATTR_FILTER_EXPIRED
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -356,6 +362,16 @@ class FanEntity(ToggleEntity):
     @property
     def target_humidity(self) -> str:
         """Return the target humidity of the fan."""
+        return None
+
+    @property
+    def filter_life(self) -> str:
+        """Return the filter life remaining percent reported by the fan."""
+        return None
+
+    @property
+    def filter_expired(self) -> bool:
+        """Return true/false if filter is end of life."""
         return None
 
     @property
