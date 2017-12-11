@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.3']
+REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
