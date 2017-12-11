@@ -73,8 +73,8 @@ PROP_TO_ATTR = {
     'direction': ATTR_DIRECTION,
     'current_humidity': ATTR_CURRENT_HUMIDITY,
     'humidity': ATTR_HUMIDITY,
-	'filter_life': ATTR_FILTER_LIFE,
-	'filter_expired': ATTR_FILTER_EXPIRED
+    'filter_life': ATTR_FILTER_LIFE,
+    'filter_expired': ATTR_FILTER_EXPIRED
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -107,7 +107,7 @@ FAN_SET_DIRECTION_SCHEMA = vol.Schema({
 
 FAN_SET_HUMIDITY_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_HUMIDITY): vol.Coerce(int),
+    vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
 })
 
 SERVICE_TO_METHOD = {
@@ -323,11 +323,11 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
 
-    def set_humidity(self: ToggleEntity, humidity: int) -> None:
+    def set_humidity(self: ToggleEntity, humidity: float) -> None:
         """Set the humidity of the fan."""
         raise NotImplementedError()
 
-    def async_set_humidity(self: ToggleEntity, humidity: int):
+    def async_set_humidity(self: ToggleEntity, humidity: float):
         """Set the humidity of the fan.
 
         This method must be run in the event loop and returns a coroutine.
@@ -355,17 +355,17 @@ class FanEntity(ToggleEntity):
         return None
 
     @property
-    def current_humidity(self) -> str:
+    def current_humidity(self) -> float:
         """Return the current humidity reported by the fan."""
         return None
 
     @property
-    def target_humidity(self) -> str:
+    def target_humidity(self) -> float:
         """Return the target humidity of the fan."""
         return None
 
     @property
-    def filter_life(self) -> str:
+    def filter_life(self) -> float:
         """Return the filter life remaining percent reported by the fan."""
         return None
 

@@ -181,17 +181,17 @@ class WemoHumidifier(FanEntity):
 
         self.schedule_update_ha_state()
 
-    def set_humidity(self: ToggleEntity, humidity: int) -> None:
+    def set_humidity(self: ToggleEntity, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
-        if humidity <= 45:
+        if humidity < 50:
             self.wemo.set_humidity(WEMO_HUMIDITY_45)
-        elif ((humidity > 45) and (humidity <= 50)):
+        elif ((humidity >= 50) and (humidity < 55)):
             self.wemo.set_humidity(WEMO_HUMIDITY_50)
-        elif ((humidity > 50) and (humidity <= 55)):
+        elif ((humidity >= 55) and (humidity < 60)):
             self.wemo.set_humidity(WEMO_HUMIDITY_55)
-        elif ((humidity > 55) and (humidity <= 60)):
+        elif ((humidity >= 60) and (humidity < 100)):
             self.wemo.set_humidity(WEMO_HUMIDITY_60)
-        elif humidity > 60:
+        elif humidity >= 100:
             self.wemo.set_humidity(WEMO_HUMIDITY_100)
 
         self.schedule_update_ha_state()
