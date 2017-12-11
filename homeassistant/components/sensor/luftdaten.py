@@ -47,7 +47,7 @@ DEFAULT_NAME = 'Luftdaten'
 
 CONF_SENSORID = 'sensorid'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORID): cv.positive_int,
@@ -68,7 +68,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     session = async_get_clientsession(hass)
     luftdaten = LuftdatenData(Luftdaten(sensor_id, hass.loop, session))
 
-    yield from luftdaten.async_get()
+    yield from luftdaten.async_update()
 
     if luftdaten.data is None:
         _LOGGER.error("Sensor is not available: %s", sensor_id)
@@ -132,7 +132,7 @@ class LuftdatenSensor(Entity):
     def async_update(self):
         """Get the latest data from luftdaten.info and update the state."""
         try:
-            yield from self.luftdaten.async_get()
+            yield from self.luftdaten.async_update()
         except TypeError:
             pass
 
@@ -146,7 +146,7 @@ class LuftdatenData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     @asyncio.coroutine
-    def async_get(self):
+    def async_update(self):
         """Get the latest data from luftdaten.info."""
         from luftdaten.exceptions import LuftdatenError
 
