@@ -20,7 +20,8 @@ from homeassistant.const import (
     CONF_NAME, CONF_TYPE
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene, script, climate
+    switch, light, cover, media_player, group, fan, scene, script, climate,
+    sensor
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -148,6 +149,7 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
         if deg is None:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+
     if entity.domain == climate.DOMAIN:
         mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
         if mode not in CLIMATE_SUPPORTED_MODES:
