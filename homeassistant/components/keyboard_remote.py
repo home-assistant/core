@@ -50,12 +50,6 @@ def setup(hass, config):
     """Set up the keyboard_remote."""
     config = config.get(DOMAIN)
 
-    if not config.get(DEVICE_DESCRIPTOR) and\
-       not config.get(DEVICE_NAME) and\
-       not config.get(DEVICES):
-        _LOGGER.error("No device_descriptor, device_name, or dev block found")
-        return
-
     keyboard_remote = KeyboardRemote(
         hass,
         config
