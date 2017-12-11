@@ -51,6 +51,7 @@ CONF_VERSION = 'version'
 
 CONF_NODES = 'nodes'
 CONF_NODE_NAME = 'name'
+CONF_NODE_VALUE_TYPE_IN_NAME = 'value_type_in_name'
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
@@ -137,7 +138,9 @@ def deprecated(key):
 
 NODE_SCHEMA = vol.Schema({
     cv.positive_int: {
-        vol.Required(CONF_NODE_NAME): cv.string
+        vol.Optional(CONF_NODE_NAME): cv.string,
+        vol.Optional(
+            CONF_NODE_VALUE_TYPE_IN_NAME, default=False): cv.boolean
     }
 })
 
@@ -506,14 +509,17 @@ def gw_callback_factory(hass):
     return mysensors_callback
 
 
-def get_mysensors_name(gateway, node_id, child_id):
+def get_mysensors_name(gateway, node_id, child_id, value_type):
     """Return a name for a node child."""
     node_name = '{} {}'.format(
         gateway.sensors[node_id].sketch_name, node_id)
-    node_name = next(
-        (node[CONF_NODE_NAME] for conf_id, node in gateway.nodes_config.items()
-         if node.get(CONF_NODE_NAME) is not None and conf_id == node_id),
-        node_name)
+    node = next(
+        (node for conf_id, node in gateway.nodes_config.items()
+         if conf_id == node_id), None)
+    if node and node.get(CONF_NODE_NAME) is not None:
+        node_name = node[CONF_NODE_NAME]
+    if node and node.get(CONF_NODE_VALUE_TYPE_IN_NAME, False):
+        return '{} {} {}'.format(node_name, child_id, value_type)
     return '{} {}'.format(node_name, child_id)
 
 
@@ -550,7 +556,7 @@ def setup_mysensors_platform(
             child = gateway.sensors[node_id].children[child_id]
             s_type = gateway.const.Presentation(child.type).name
             device_class_copy = device_class[s_type]
-        name = get_mysensors_name(gateway, node_id, child_id)
+        name = get_mysensors_name(gateway, node_id, child_id, value_type)
 
         # python 3.4 cannot unpack inside tuple, but combining tuples works
         args_copy = device_args + (
