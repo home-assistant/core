@@ -100,7 +100,6 @@ class SnmpSwitch(SwitchDevice):
         else:
             self._commandoid = baseoid
 
-        """Same for the payloads"""
         if command_payload_on:
             self._command_payload_on = command_payload_on
         else:
