@@ -245,4 +245,4 @@ class WemoHumidifier(FanEntity):
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
         return SUPPORT_SET_SPEED | SUPPORT_TARGET_HUMIDITY |
-               SUPPORT_FILTER_LIFE | SUPPORT_FILTER_EXPIRED
+                SUPPORT_FILTER_LIFE | SUPPORT_FILTER_EXPIRED
