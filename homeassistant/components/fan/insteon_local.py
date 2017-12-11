@@ -12,7 +12,6 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.util as util
-from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

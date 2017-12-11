@@ -9,7 +9,6 @@ from datetime import timedelta
 
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.util as util
-from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
