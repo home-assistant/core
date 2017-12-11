@@ -31,22 +31,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'dimmer':
             device = insteonhub.dimmer(device_id)
-            add_devices([InsteonLocalDimmerDevice(device, device_id)])
+            add_devices([InsteonLocalDimmerDevice(device)])
 
 
 class InsteonLocalDimmerDevice(Light):
     """An abstract Class for an Insteon node."""
 
-    def __init__(self, node, name):
+    def __init__(self, node):
         """Initialize the device."""
         self.node = node
-        self.node.deviceName = name
         self._value = 0
 
     @property
     def name(self):
         """Return the name of the node."""
-        return self.node.deviceName
+        return self.node.device_id
 
     @property
     def unique_id(self):

@@ -4,7 +4,6 @@ Local support for Insteon.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_local/
 """
-
 import logging
 import os
 
