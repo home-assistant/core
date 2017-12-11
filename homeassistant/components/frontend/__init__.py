@@ -584,16 +584,19 @@ def _is_latest(js_option, request):
         from user_agents import parse
         useragent = parse(useragent)
 
-    # on iOS every browser is a Safari which we support from version 10.
-    if useragent.os.family == 'iOS':
-        return useragent.os.version[0] >= 10
+        # on iOS every browser is a Safari which we support from version 10.
+        if useragent.os.family == 'iOS':
+            return useragent.os.version[0] >= 10
 
-    family_min_version = {
-        'Chrome': 50,   # Probably can reduce this
-        'Firefox': 43,  # Array.protopype.includes added in 43
-        'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Array.protopype.includes added in 14
-        'Safari': 10,   # many features not supported by 9
-    }
-    version = family_min_version.get(useragent.browser.family)
-    return version and useragent.browser.version[0] >= version
+        family_min_version = {
+            'Chrome': 50,   # Probably can reduce this
+            'Firefox': 43,  # Array.protopype.includes added in 43
+            'Opera': 40,    # Probably can reduce this
+            'Edge': 14,     # Array.protopype.includes added in 14
+            'Safari': 10,   # many features not supported by 9
+        }
+        version = family_min_version.get(useragent.browser.family)
+        return version and useragent.browser.version[0] >= version
+
+    # last resort
+    return True
