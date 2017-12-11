@@ -61,9 +61,9 @@ class DaikinClimateSensor(Entity):
     def __init__(self, api, name=None, monitored_state=SENSOR_TYPES.keys()):
         """Initialize the sensor."""
         self._api = api
+        self._sensor = SENSOR_TYPES.get(monitored_state)
         if name is None:
-            name = SENSOR_TYPES.get(monitored_state).get(CONF_NAME) \
-                + ' ' + api.name
+            name = self._sensor.get(CONF_NAME) + ' ' + api.name
 
         self._name = name
         self._device_attribute = monitored_state
@@ -100,8 +100,7 @@ class DaikinClimateSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        sensor = SENSOR_TYPES.get(self._device_attribute)
-        return sensor[CONF_ICON]
+        return self._sensor.get(CONF_ICON)
 
     @property
     def name(self):
@@ -116,7 +115,7 @@ class DaikinClimateSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return SENSOR_TYPES.get(self._device_attribute).get(CONF_TEMPERATURE_UNIT)
+        return self._sensor.get(CONF_TEMPERATURE_UNIT)
 
     def update(self):
         """Retrieve latest state."""
