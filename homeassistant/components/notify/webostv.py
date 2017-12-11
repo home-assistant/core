@@ -21,7 +21,8 @@ WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
+    vol.Optional(CONF_ICON): cv.string
 })
 
 
@@ -60,7 +61,9 @@ class LgWebOSNotificationService(BaseNotificationService):
         from pylgtv import PyLGTVPairException
 
         try:
-            icon_path = kwargs.get(ATTR_DATA, {}).get(CONF_ICON)
+            data = kwargs.get(ATTR_DATA)
+            icon_path = data.get(CONF_ICON, self._icon_path) if data else \
+                self._icon_path
             self._client.send_message(message, icon_path=icon_path)
         except PyLGTVPairException:
             _LOGGER.error("Pairing with TV failed")
