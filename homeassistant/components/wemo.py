@@ -101,7 +101,7 @@ def setup(hass, config):
             'model_name': device.model_name,
             'serial': device.serialnumber,
             'mac_address': device.mac,
-            'ssdp_description': url,
+            'ssdp_description': url
         }
 
         discovery.discover(hass, SERVICE_WEMO, discovery_info)

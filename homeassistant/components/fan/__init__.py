@@ -107,7 +107,7 @@ FAN_SET_DIRECTION_SCHEMA = vol.Schema({
 
 FAN_SET_HUMIDITY_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
+    vol.Required(ATTR_HUMIDITY): vol.Coerce(int),
 })
 
 SERVICE_TO_METHOD = {
