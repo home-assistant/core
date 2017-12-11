@@ -415,7 +415,6 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._client.play()
         else:
             self._client.set_channel(media_id)
-            self.update_channels()
 
     def update_channels(self, info=None):
         """Update channels info."""
