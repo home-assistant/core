@@ -160,6 +160,7 @@ class TradfriLight(Light):
         self._rgb_color = None
         self._features = SUPPORTED_FEATURES
         self._temp_supported = False
+        self._available = True
 
         self._refresh(light)
 
@@ -195,6 +196,11 @@ class TradfriLight(Light):
     def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def should_poll(self):
@@ -299,6 +305,7 @@ class TradfriLight(Light):
         self._light = light
 
         # Caching of LightControl and light object
+        self._available = light.reachable
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
