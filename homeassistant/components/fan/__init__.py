@@ -219,6 +219,7 @@ def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
 
     hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
 
+
 @bind_hass
 def set_humidity(hass, humidity, entity_id=None):
     """Set new target humidity."""

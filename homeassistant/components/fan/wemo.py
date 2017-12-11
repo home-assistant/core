@@ -7,13 +7,14 @@ https://home-assistant.io/components/fan.wemo/
 import logging
 
 from homeassistant.components.fan import (SPEED_OFF, SPEED_MINIMUM, SPEED_LOW,
-                                          SPEED_MEDIUM, SPEED_HIGH, SPEED_MAXIMUM,
-                                          FanEntity, SUPPORT_SET_SPEED,
-                                          SUPPORT_TARGET_HUMIDITY, SUPPORT_FILTER_LIFE,
-                                          SUPPORT_FILTER_EXPIRED, STATE_UNKNOWN)
+                                          SPEED_MEDIUM, SPEED_HIGH,
+                                          SPEED_MAXIMUM, FanEntity,
+                                          SUPPORT_SET_SPEED,
+                                          SUPPORT_TARGET_HUMIDITY,
+                                          SUPPORT_FILTER_LIFE,
+                                          SUPPORT_FILTER_EXPIRED,
+                                          STATE_UNKNOWN)
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
@@ -39,6 +40,7 @@ WEMO_FAN_MAXIMUM = 5
 WEMO_WATER_EMPTY = 0
 WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
+
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -242,4 +244,5 @@ class WemoHumidifier(FanEntity):
     @property
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
-        return SUPPORT_SET_SPEED | SUPPORT_TARGET_HUMIDITY | SUPPORT_FILTER_LIFE | SUPPORT_FILTER_EXPIRED
+        return SUPPORT_SET_SPEED | SUPPORT_TARGET_HUMIDITY |
+               SUPPORT_FILTER_LIFE | SUPPORT_FILTER_EXPIRED
