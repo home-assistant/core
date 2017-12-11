@@ -12,7 +12,8 @@ import time
 from homeassistant.components import zha
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate import (
-    DOMAIN, STATE_ECO, ATTR_OPERATION_MODE)
+    DOMAIN, STATE_ECO, ATTR_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE)
 
@@ -33,6 +34,7 @@ COMFORT_CODE = 0x04
 ECO_CODE = 0x05
 NO_ERROR_ANSWER_CODE = 0x00
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 @asyncio.coroutine
 def safe_read(cluster, attributes, raw=False):
@@ -50,8 +52,7 @@ def safe_read(cluster, attributes, raw=False):
             raw=raw,
         )
         return result
-    except OSError:  # pylint: disable=broad-except
-        _LOGGER.error("Can not read attributes %s", attributes)
+    except Exception:  # pylint: disable=broad-except
         return {}
 
 
@@ -133,7 +134,7 @@ class ClimateST218(zha.Entity, ClimateDevice):
     def _wait_for_clean_communication(self):
         """Ensure that we not request the device more than time by second."""
         if time.time() - self.last_request < CLEAN_TIME_ZONE:
-            yield from asyncio.sleep(time.time() - self.last_request)
+            yield from asyncio.sleep(CLEAN_TIME_ZONE)
         self.last_request = time.time()
 
     @asyncio.coroutine
@@ -161,8 +162,7 @@ class ClimateST218(zha.Entity, ClimateDevice):
         if raw_mode not in OPERATIONS:
             _LOGGER.warning("Mode %s not found in known modes %s",
                             raw_mode, OPERATIONS)
-        else:
-            self._current_operation = OPERATIONS[raw_mode]
+        self._current_operation = OPERATIONS[raw_mode]
 
         raw_temp = result.get('occupied_heating_setpoint')
         if raw_temp:
@@ -170,6 +170,11 @@ class ClimateST218(zha.Entity, ClimateDevice):
         raw_temp = result.get('local_temp')
         if raw_temp:
             self._current_temperature = raw_temp / 100.0
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def temperature_unit(self):
@@ -194,6 +199,8 @@ class ClimateST218(zha.Entity, ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        if self._target_temperature is None or self._target_temperature < 0:
+            return None
         return self._target_temperature
 
     @asyncio.coroutine
