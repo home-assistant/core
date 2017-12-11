@@ -23,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_DESCRIPTOR = 'device_descriptor'
 DEVICE_ID_GROUP = 'Device description'
 DEVICE_NAME = 'device_name'
-DEVICES = 'devices'
 DOMAIN = 'keyboard_remote'
 
 ICON = 'mdi:remote'
@@ -37,20 +36,13 @@ KEYBOARD_REMOTE_DISCONNECTED = 'keyboard_remote_disconnected'
 TYPE = 'type'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
-        vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
-        vol.Optional(TYPE, default='key_up'):
-            vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
-        vol.Exclusive(DEVICES, DEVICE_ID_GROUP): vol.All(cv.ensure_list, [
-            vol.Schema({
-                vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
-                vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
-                vol.Optional(TYPE, default='key_up'):
+    DOMAIN:
+        vol.All(cv.ensure_list, [vol.Schema({
+            vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
+            vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
+            vol.Optional(TYPE, default='key_up'):
                 vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold'))
-            })
-        ]),
-    }),
+        })])
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -198,7 +190,7 @@ class KeyboardRemote(object):
     def __init__(self, hass, config):
         """Construct a KeyboardRemote interface object."""
         self.threads = []
-        for dev_block in config.get(DEVICES, []) + [config]:
+        for dev_block in config:
             device_descriptor = dev_block.get(DEVICE_DESCRIPTOR)
             device_name = dev_block.get(DEVICE_NAME)
             key_value = KEY_VALUE.get(dev_block.get(TYPE, 'key_up'))
