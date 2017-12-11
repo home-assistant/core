@@ -1016,7 +1016,7 @@ sense-hat==2.2.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.7.5
+shodan==1.7.7
 
 # homeassistant.components.notify.simplepush
 simplepush==1.1.4
