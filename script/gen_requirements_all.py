@@ -38,6 +38,7 @@ TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'apns2',
+    'caldav',
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
