@@ -1075,7 +1075,7 @@ tank_utility==1.4.0
 tapsaff==0.1.3
 
 # homeassistant.components.tellstick
-tellcore-net==0.3
+tellcore-net==0.4
 
 # homeassistant.components.tellstick
 tellcore-py==1.1.2
