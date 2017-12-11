@@ -39,15 +39,18 @@ SNMP_VERSIONS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BASEOID): cv.string,
-    vol.Optional(CONF_COMMAND_OID, default=None): vol.Any(
-                                                          cv.string,
-                                                          None),
-    vol.Optional(CONF_COMMAND_PAYLOAD_ON, default=None): vol.Any(
-                                                          cv.string,
-                                                          None),
-    vol.Optional(CONF_COMMAND_PAYLOAD_OFF, default=None): vol.Any(
-                                                          cv.string,
-                                                          None),
+    vol.Optional(CONF_COMMAND_OID, default=None):
+        vol.Any(
+            cv.string,
+            None),
+    vol.Optional(CONF_COMMAND_PAYLOAD_ON, default=None):
+        vol.Any(
+            cv.string,
+            None),
+    vol.Optional(CONF_COMMAND_PAYLOAD_OFF, default=None):
+        vol.Any(
+            cv.string,
+            None),
     vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -92,18 +95,18 @@ class SnmpSwitch(SwitchDevice):
         self._baseoid = baseoid
 
         """Set the command OID to the base OID if command OID is unset"""
-        if(commandoid):
+        if commandoid:
             self._commandoid = commandoid
         else:
             self._commandoid = baseoid
 
         """Same for the payloads"""
-        if(command_payload_on):
+        if command_payload_on:
             self._command_payload_on = command_payload_on
         else:
             self._command_payload_on = payload_on
 
-        if(command_payload_off):
+        if command_payload_off:
             self._command_payload_off = command_payload_off
         else:
             self._command_payload_off = payload_off
