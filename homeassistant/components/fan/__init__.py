@@ -230,6 +230,7 @@ def set_humidity(hass, humidity, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_SET_HUMIDITY, data)
 
+
 @asyncio.coroutine
 def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
