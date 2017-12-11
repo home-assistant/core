@@ -72,7 +72,7 @@ class TestScriptHelper(unittest.TestCase):
             'event': event,
             'event_data_template': {
                 'hello': """
-                    {% if True %}
+                    {% if is_world == 'yes' %}
                         world
                     {% else %}
                         Not world
@@ -81,7 +81,7 @@ class TestScriptHelper(unittest.TestCase):
             }
         }))
 
-        script_obj.run()
+        script_obj.run({'is_world': 'yes'})
 
         self.hass.block_till_done()
 
@@ -132,14 +132,14 @@ class TestScriptHelper(unittest.TestCase):
                 {% endif %}""",
             'data_template': {
                 'hello': """
-                    {% if True %}
+                    {% if is_world == 'yes' %}
                         world
                     {% else %}
                         Not world
                     {% endif %}
                 """
             }
-        })
+        }, {'is_world': 'yes'})
 
         self.hass.block_till_done()
 
