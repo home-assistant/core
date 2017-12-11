@@ -5,30 +5,23 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.webostv/
 """
 import logging
-import os
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_DATA, BaseNotificationService, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_FILENAME, CONF_HOST, CONF_ICON,
-                                 CONF_TIMEOUT)
+from homeassistant.const import (CONF_FILENAME, CONF_HOST, CONF_ICON)
 
 REQUIREMENTS = ['pylgtv==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
-HOME_ASSISTANT_ICON_PATH = os.path.join(os.path.dirname(__file__), '..',
-                                        'frontend', 'www_static', 'icons',
-                                        'favicon-192x192.png')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string
 })
 
 
@@ -39,7 +32,7 @@ def get_service(hass, config, discovery_info=None):
 
     path = hass.config.path(config.get(CONF_FILENAME))
     client = WebOsClient(config.get(CONF_HOST), key_file_path=path,
-                         timeout_connect=config.get(CONF_TIMEOUT))
+                         timeout_connect=8)
 
     if not client.is_registered():
         try:
@@ -67,9 +60,7 @@ class LgWebOSNotificationService(BaseNotificationService):
         from pylgtv import PyLGTVPairException
 
         try:
-            data = kwargs.get(ATTR_DATA)
-            icon_path = data.get(CONF_ICON, self._icon_path) if data else \
-                self._icon_path
+            icon_path = kwargs.get(ATTR_DATA, {}).get(CONF_ICON)
             self._client.send_message(message, icon_path=icon_path)
         except PyLGTVPairException:
             _LOGGER.error("Pairing with TV failed")
