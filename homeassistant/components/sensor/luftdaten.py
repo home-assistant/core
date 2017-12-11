@@ -104,10 +104,7 @@ class LuftdatenSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        try:
-            return self.luftdaten.data.values[self.sensor_type]
-        except AttributeError:
-            pass
+        return self.luftdaten.data.values[self.sensor_type]
 
     @property
     def unit_of_measurement(self):
