@@ -54,7 +54,7 @@ REQUIRES = [
     'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.3.6',   # If updated, check if yarl also needs an update!
-    'yarl==0.15.0',
+    'yarl==0.16.0',
     'async_timeout==2.0.0',
     'chardet==3.0.4',
     'astral==1.4',
