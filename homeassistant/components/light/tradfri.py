@@ -185,10 +185,7 @@ class TradfriLight(Light):
         """Return the devices' state attributes."""
         info = self._light.device_info
 
-        attrs = {
-            'manufacturer': info.manufacturer,
-            'power_source': info.power_source_str,
-        }
+        attrs = {}
 
         if info.battery_level is not None:
             attrs[ATTR_BATTERY_LEVEL] = info.battery_level
