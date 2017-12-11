@@ -599,4 +599,4 @@ def _is_latest(js_option, request):
         return version and useragent.browser.version[0] >= version
 
     # last resort
-    return True
+    return False
