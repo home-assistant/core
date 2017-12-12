@@ -14,11 +14,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-root = logging.getLogger()
-root.setLevel(logging.INFO)
-ch = logging.StreamHandler(sys.stdout)
-root.addHandler(ch)
-
 DOMAIN = 'goalfeed'
 
 REQUIREMENTS = ['pysher==0.2.0']
