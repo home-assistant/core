@@ -6,14 +6,13 @@ https://home-assistant.io/components/goalfeed/
 import json
 import logging
 import sys
-from io import StringIO
 
 import pysher
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 root = logging.getLogger()
 root.setLevel(logging.INFO)
