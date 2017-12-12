@@ -39,6 +39,9 @@ PyMata==2.14
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.6.0
 
+# homeassistant.components.goalfeed
+Pysher==0.2.0
+
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
@@ -762,9 +765,6 @@ pyserial==3.1.1
 
 # homeassistant.components.lock.sesame
 pysesame==0.1.0
-
-# homeassistant.components.goalfeed
-pysher==0.2.0
 
 # homeassistant.components.sensor.sma
 pysma==0.1.3
