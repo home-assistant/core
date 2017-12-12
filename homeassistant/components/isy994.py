@@ -93,16 +93,31 @@ def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
 
 
 def _is_node_a_sensor(node, path: str, sensor_identifier: str) -> bool:
+    """Determine if the given node is a sensor."""
     if not isinstance(node, PYISY.Nodes.Node):
         return False
 
     if sensor_identifier in path or sensor_identifier in node.name:
         return True
 
+    # This method is most reliable but only works on 5.x firmware
     try:
-        return node.node_def_id == 'BinaryAlarm'
+        if node.node_def_id == 'BinaryAlarm':
+            return True
     except AttributeError:
-        return False
+        pass
+
+    # This method works on all firmwares, but only for Insteon devices
+    try:
+        device_type = node.type
+    except AttributeError:
+        # Node has no type; most likely not an Insteon device
+        pass
+    else:
+        split_type = device_type.split('.')
+        return split_type[0] == '16'  # 16 represents Insteon binary sensors
+
+    return False
 
 
 def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
