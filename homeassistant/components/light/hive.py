@@ -58,27 +58,27 @@ class HiveDeviceLight(Light):
         """Return the coldest color_temp that this light supports."""
         if self.light_device_type == "tuneablelight" \
                 or self.light_device_type == "colourtuneablelight":
-            return self.session.light.get_min_colour_temp(self.node_id)
+            return self.session.light.get_min_color_temp(self.node_id)
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         if self.light_device_type == "tuneablelight" \
                 or self.light_device_type == "colourtuneablelight":
-            return self.session.light.get_max_colour_temp(self.node_id)
+            return self.session.light.get_max_color_temp(self.node_id)
 
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
         if self.light_device_type == "tuneablelight" \
                 or self.light_device_type == "colourtuneablelight":
-            return self.session.light.get_colour_temp(self.node_id)
+            return self.session.light.get_color_temp(self.node_id)
 
     @property
     def rgb_color(self) -> tuple:
         """Return the RBG color value."""
         if self.light_device_type == "colourtuneablelight":
-            return self.session.light.get_colour(self.node_id)
+            return self.session.light.get_color(self.node_id)
 
     @property
     def is_on(self):
@@ -88,8 +88,8 @@ class HiveDeviceLight(Light):
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         new_brightness = None
-        new_colour_temp = None
-        new_colour = None
+        new_color_temp = None
+        new_color = None
         if ATTR_BRIGHTNESS in kwargs:
             tmp_new_brightness = kwargs.get(ATTR_BRIGHTNESS)
             percentage_brightness = ((tmp_new_brightness / 255) * 100)
@@ -97,26 +97,26 @@ class HiveDeviceLight(Light):
             if new_brightness == 0:
                 new_brightness = 5
         if ATTR_COLOR_TEMP in kwargs:
-            tmp_new_colour_temp = kwargs.get(ATTR_COLOR_TEMP)
-            new_colour_temp = round(1000000 / tmp_new_colour_temp)
+            tmp_new_color_temp = kwargs.get(ATTR_COLOR_TEMP)
+            new_color_temp = round(1000000 / tmp_new_color_temp)
         if ATTR_RGB_COLOR in kwargs:
-            get_new_colour = kwargs.get(ATTR_RGB_COLOR)
-            tmp_new_colour = colorsys.rgb_to_hsv(get_new_colour[0],
-                                                 get_new_colour[1],
-                                                 get_new_colour[2])
-            hue = int(round(tmp_new_colour[0] * 360))
-            saturation = int(round(tmp_new_colour[1] * 100))
-            value = int(round((tmp_new_colour[2] / 255) * 100))
-            new_colour = (hue, saturation, value)
+            get_new_color = kwargs.get(ATTR_RGB_COLOR)
+            tmp_new_color = colorsys.rgb_to_hsv(get_new_color[0],
+                                                 get_new_color[1],
+                                                 get_new_color[2])
+            hue = int(round(tmp_new_color[0] * 360))
+            saturation = int(round(tmp_new_color[1] * 100))
+            value = int(round((tmp_new_color[2] / 255) * 100))
+            new_color = (hue, saturation, value)
 
         if new_brightness is not None:
             self.session.light.set_brightness(self.node_id, new_brightness)
-        elif new_colour_temp is not None:
-            self.session.light.set_colour_temp(self.node_id,
+        elif new_color_temp is not None:
+            self.session.light.set_color_temp(self.node_id,
                                                self.light_device_type,
-                                               new_colour_temp)
-        elif new_colour is not None:
-            self.session.light.set_colour(self.node_id, new_colour)
+                                               new_color_temp)
+        elif new_color is not None:
+            self.session.light.set_color(self.node_id, new_color)
         else:
             self.session.light.turn_on(self.node_id)
 
