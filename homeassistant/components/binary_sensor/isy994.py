@@ -100,7 +100,7 @@ def _detect_device_type(node) -> str:
 
     split_type = device_type.split('.')
     for device_class, ids in ISY_DEVICE_TYPES.items():
-        if split_type[0] + '.' + split_type[1] in ids:
+        if '{}.{}'.format(split_type[0], split_type[1]) in ids:
             return device_class
 
     return None
