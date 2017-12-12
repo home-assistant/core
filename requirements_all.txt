@@ -444,6 +444,9 @@ liveboxplaytv==2.0.0
 # homeassistant.components.notify.lametric
 lmnotify==0.0.4
 
+# homeassistant.components.sensor.luftdaten
+luftdaten==0.1.1
+
 # homeassistant.components.sensor.lyft
 lyft_rides==0.2
 
