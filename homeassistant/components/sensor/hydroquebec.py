@@ -11,7 +11,6 @@ import asyncio
 import logging
 from datetime import timedelta
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -109,7 +108,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         contracts = yield from hydroquebec_data.get_contract_list()
         _LOGGER.info("Contract list: %s",
                      ", ".join(contracts))
-    except requests.exceptions.HTTPError as error:
+    except BaseException as error:
         _LOGGER.error("Login failed: %s", error)
         return False
 
