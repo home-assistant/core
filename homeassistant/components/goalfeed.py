@@ -23,7 +23,7 @@ global pusher
 
 DOMAIN = 'goalfeed'
 
-REQUIREMENTS = ['Pysher==0.2.0']
+REQUIREMENTS = ['pysher==0.2.0']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
