@@ -19,8 +19,6 @@ root.setLevel(logging.INFO)
 ch = logging.StreamHandler(sys.stdout)
 root.addHandler(ch)
 
-global pusher
-
 DOMAIN = 'goalfeed'
 
 REQUIREMENTS = ['pysher==0.2.0']
@@ -44,11 +42,13 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     def goal_handler(data):
+        """Handle goal events."""
         goal = json.loads(json.loads(data))
 
-        hass.bus.async_fire('goal', event_data={'team': goal['team_hash']})
+        hass.bus.async_fire('goal', event_data=goal)
 
     def connect_handler(data):
+        """Handle connection."""
         post_data = {
             'username': username,
             'password': password,
