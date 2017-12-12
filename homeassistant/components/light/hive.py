@@ -102,8 +102,8 @@ class HiveDeviceLight(Light):
         if ATTR_RGB_COLOR in kwargs:
             get_new_color = kwargs.get(ATTR_RGB_COLOR)
             tmp_new_color = colorsys.rgb_to_hsv(get_new_color[0],
-                                                 get_new_color[1],
-                                                 get_new_color[2])
+                                                get_new_color[1],
+                                                get_new_color[2])
             hue = int(round(tmp_new_color[0] * 360))
             saturation = int(round(tmp_new_color[1] * 100))
             value = int(round((tmp_new_color[2] / 255) * 100))
@@ -113,8 +113,8 @@ class HiveDeviceLight(Light):
             self.session.light.set_brightness(self.node_id, new_brightness)
         elif new_color_temp is not None:
             self.session.light.set_color_temp(self.node_id,
-                                               self.light_device_type,
-                                               new_color_temp)
+                                              self.light_device_type,
+                                              new_color_temp)
         elif new_color is not None:
             self.session.light.set_color(self.node_id, new_color)
         else:
