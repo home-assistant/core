@@ -4,7 +4,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/goalfeed/
 """
 import json
-# Add a logging handler so we can see the raw communication data
 import logging
 import sys
 from io import StringIO
@@ -25,7 +24,7 @@ global pusher
 
 DOMAIN = 'goalfeed'
 
-REQUIREMENTS = ['pysher==0.1.2']
+REQUIREMENTS = ['pysher==0.2.0']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -35,7 +34,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 GOALFEED_HOST = 'feed.goalfeed.ca'
-GOALFEED_AUTH_ENDPOINT = 'http://goalfeed.local/feed/auth'
+GOALFEED_AUTH_ENDPOINT = 'https://goalfeed.ca/feed/auth'
+GOALFEED_APP_ID = 'bfd4ed98c1ff22c04074'
 
 
 def setup(hass, config):
@@ -59,7 +59,7 @@ def setup(hass, config):
         channel = pusher.subscribe('private-goals', resp['auth'])
         channel.bind('goal', goal_handler)
 
-    pusher = pysher.Pusher('bfd4ed98c1ff22c04074', secure=False, port=8080,
+    pusher = pysher.Pusher(GOALFEED_APP_ID, secure=False, port=8080,
                            custom_host=GOALFEED_HOST)
 
     pusher.connection.bind('pusher:connection_established', connect_handler)
