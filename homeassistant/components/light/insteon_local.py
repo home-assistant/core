@@ -26,7 +26,7 @@ SUPPORT_INSTEON_LOCAL = SUPPORT_BRIGHTNESS
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local light platform."""
     insteonhub = hass.data['insteon_local']
-    linked = insteonhub.get_linked()
+    linked = discovery_info['linked']
 
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'dimmer':

@@ -23,7 +23,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local switch platform."""
     insteonhub = hass.data['insteon_local']
-    linked = insteonhub.get_linked()
+    linked = discovery_info['linked']
 
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'switch':
