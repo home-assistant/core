@@ -42,7 +42,7 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     @property
     def name(self):
         """Return the name of the node."""
-        return self.node.devic_id
+        return self.node.device_id
 
     @property
     def unique_id(self):
