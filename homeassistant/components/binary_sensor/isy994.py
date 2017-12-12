@@ -61,15 +61,24 @@ def setup_platform(hass, config: ConfigType,
                           "was created for the parent. Skipping.",
                           node.nid, node.parent_nid)
         else:
-            subnode_id = int(node.nid[-1])
-            if subnode_id == 4:
-                # Subnode 4 is the heartbeat node, which we will represent
-                # as a separate binary_sensor
-                device = ISYBinarySensorHeartbeat(node, parent_device)
-                parent_device.add_heartbeat_device(device)
+            device_type = _detect_device_type(node)
+            if device_type in ['moisture', 'opening']:
+                subnode_id = int(node.nid[-1])
+                # Leak and door/window sensors work the same way with negative
+                # nodes and heartbeat nodes
+                if subnode_id == 4:
+                    # Subnode 4 is the heartbeat node, which we will represent
+                    # as a separate binary_sensor
+                    device = ISYBinarySensorHeartbeat(node, parent_device)
+                    parent_device.add_heartbeat_device(device)
+                    devices.append(device)
+                elif subnode_id == 2:
+                    parent_device.add_negative_node(node)
+            else:
+                # We don't yet have any special logic for other sensor types,
+                # so add the nodes as individual devices
+                device = ISYBinarySensorDevice(node)
                 devices.append(device)
-            elif subnode_id == 2:
-                parent_device.add_negative_node(node)
 
     for program in isy.PROGRAMS.get(DOMAIN, []):
         try:
@@ -80,6 +89,26 @@ def setup_platform(hass, config: ConfigType,
             devices.append(ISYBinarySensorProgram(program.name, status))
 
     add_devices(devices)
+
+
+def _detect_device_type(node) -> str:
+    try:
+        device_type = node.type
+    except AttributeError:
+        # The type attribute didn't exist in the ISY's API response
+        return None
+
+    split_type = device_type.split('.')
+    for device_class, ids in ISY_DEVICE_TYPES.items():
+        if split_type[0] + '.' + split_type[1] in ids:
+            return device_class
+
+    return None
+
+
+def _is_val_unknown(val):
+    """Determine if a number value represents UNKNOWN from PyISY."""
+    return val == -1*float('inf')
 
 
 class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
@@ -96,9 +125,9 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         super().__init__(node)
         self._negative_node = None
         self._heartbeat_device = None
-        self._device_class_from_type = self._detect_device_type()
+        self._device_class_from_type = _detect_device_type(self._node)
         # pylint: disable=protected-access
-        if self._node.status._val == -1*float('inf'):
+        if _is_val_unknown(self._node.status._val):
             self._computed_state = None
         else:
             self._computed_state = bool(self._node.status._val)
@@ -113,20 +142,6 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         if self._negative_node is not None:
             self._negative_node.controlEvents.subscribe(
                 self._negative_node_control_handler)
-
-    def _detect_device_type(self) -> str:
-        try:
-            device_type = self._node.type
-        except AttributeError:
-            # The type attribute didn't exist in the ISY's API response
-            return None
-
-        split_type = device_type.split('.')
-        for device_class, ids in ISY_DEVICE_TYPES.items():
-            if split_type[0] + '.' + split_type[1] in ids:
-                return device_class
-
-        return None
 
     def add_heartbeat_device(self, device) -> None:
         """Register a heartbeat device for this sensor.
@@ -149,6 +164,12 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         for the sensor, depending on device configuration and type.
         """
         self._negative_node = child
+
+        if not _is_val_unknown(self._negative_node):
+            # If the negative node has a value, it means the negative node is
+            # in use for this device. Therefore, we cannot determine the state
+            # of the sensor until we receive our first ON event.
+            self._computed_state = None
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""
