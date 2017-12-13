@@ -33,20 +33,22 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     try:
         api = VesyncApi(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-        _LOGGER.info("Connected to Vesync API")
+        _LOGGER.debug("Connected to Vesync API")
     except RuntimeError:
         _LOGGER.error("Failed to connect to Vesync API")
+        return False
 
     try:
         devices = api.get_devices()
-        _LOGGER.info("Retrieved devices from Vesync API")
+        _LOGGER.debug("Retrieved devices from Vesync API")
     except RuntimeError:
         _LOGGER.error("Failed to retrieve devices from Vesync API")
+        return False
 
     for switch in devices:
         switches.append(VesyncSwitch(switch, api))
 
-    add_devices_callback(switches)
+    add_devices_callback(switches, True)
 
 
 class VesyncSwitch(SwitchDevice):
@@ -58,11 +60,6 @@ class VesyncSwitch(SwitchDevice):
         self._api = api
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the switch."""
         return self._switch["deviceName"]
@@ -70,10 +67,7 @@ class VesyncSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if device is on."""
-        if (self._switch["deviceStatus"] == "on"):
-            return True
-        else:
-            return False
+        return self._switch["deviceStatus"] == "on"
 
     def update(self):
         """Update device state."""
@@ -84,18 +78,18 @@ class VesyncSwitch(SwitchDevice):
                     self._switch = device
                     break
         except RuntimeError:
-            _LOGGER.exception("Error while fetching Vesync state")
+            _LOGGER.error("Error while fetching Vesync state")
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
         try:
             self._api.turn_on(self._switch["cid"])
         except RuntimeError:
-            _LOGGER.exception("Error while turning on Vesync")
+            _LOGGER.error("Error while turning on Vesync")
 
     def turn_off(self, **kwargs):
         """Turn the device on."""
         try:
             self._api.turn_off(self._switch["cid"])
         except RuntimeError:
-            _LOGGER.exception("Error while turning off Vesync")
+            _LOGGER.error("Error while turning off Vesync")
