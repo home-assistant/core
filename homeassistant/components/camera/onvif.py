@@ -62,7 +62,7 @@ class ONVIFCameraHASS(Camera):
         self._ffmpeg_arguments = '-q:v 2'
         self._input = None
         try:
-            _LOGGER.debug("Attempting to communicate with ONVIF Camera: %s on port %s",
+            _LOGGER.debug("Connecting with ONVIF Camera: %s on port %s",
                           config.get(CONF_HOST), config.get(CONF_PORT))
             media_service = ONVIFCamera(
                 config.get(CONF_HOST), config.get(CONF_PORT),
@@ -75,10 +75,12 @@ class ONVIFCameraHASS(Camera):
                     }, 'ProfileToken': profiles[0]._token}
                 )
             self._input = stream_uri.Uri.replace(
-                'rtsp://', 'rtsp://{}:{}@'.format(config.get(
-                CONF_USERNAME), config.get(CONF_PASSWORD)), 1)
-            _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
-                      self._name, self._input)
+                'rtsp://', 'rtsp://{}:{}@'.format(
+                    config.get(CONF_USERNAME),
+                    config.get(CONF_PASSWORD)), 1)
+            _LOGGER.debug(
+                "ONVIF Camera Using the following URL for %s: %s",
+                self._name, self._input)
         except Exception as err:
             _LOGGER.error("Unable to communicate with ONVIF Camera: %s", err)
             raise
