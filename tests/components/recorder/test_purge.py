@@ -55,12 +55,12 @@ class TestRecorderPurge(unittest.TestCase):
                     event_id=event_id + 1000
                 ))
 
+            # if self._add_test_events was called, we added a special event
+            # that should be protected from deletion, too
+            protected_event_id = getattr(self, "_protected_event_id", 2000)
+
             # add a state that is old but the only state of its entity and
             # should be protected
-            if hasattr(self, "_protected_event_id"):
-                protected_event_id = self._protected_event_id
-            else:
-                protected_event_id = 2000
             session.add(States(
                 entity_id='test.rarely_updated_entity',
                 domain='sensor',
@@ -107,6 +107,7 @@ class TestRecorderPurge(unittest.TestCase):
                 time_fired=five_days_ago,
             )
             session.add(protected_event)
+            session.flush()
 
             self._protected_event_id = protected_event.event_id
 
@@ -182,5 +183,11 @@ class TestRecorderPurge(unittest.TestCase):
             self.assertTrue('iamprotected' in (
                 state.state for state in states))
 
-            # now we should only have 3 events left
-            self.assertEqual(events.count(), 3)
+            # now we should only have 4 events left
+            self.assertEqual(events.count(), 4)
+
+            # and the protected event is among them
+            self.assertTrue('EVENT_TEST_FOR_PROTECTED' in (
+                event.event_type for event in events.all()))
+            self.assertFalse('EVENT_TEST_PURGE' in (
+                event.event_type for event in events.all()))

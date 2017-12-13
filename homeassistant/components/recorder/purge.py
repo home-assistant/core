@@ -13,7 +13,6 @@ def purge_old_data(instance, purge_days):
     """Purge events and states older than purge_days ago."""
     from .models import States, Events
     from sqlalchemy import func
-    from sqlalchemy.orm import aliased
 
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
 
@@ -40,15 +39,16 @@ def purge_old_data(instance, purge_days):
         # Otherwise, if the SQL server has "ON DELETE CASCADE" as default, it
         # will delete the protected state when deleting its associated
         # event. Also, we would be producing NULLed foreign keys otherwise.
-        aliased_events = aliased(Events)
+
+        protected_event_ids = session.query(States.event_id).join(
+            protected_states, States.state_id == protected_states.c.state_id)\
+            .filter(~States.event_id is not None).subquery()
+
         deleted_rows = session.query(Events) \
             .filter((Events.time_fired < purge_before)) \
-            .filter(~session.query(aliased_events.event_id)
-                    .filter(aliased_events.event_id == Events.event_id)
-                    .join(protected_states,
-                          aliased_events.event_id ==
-                          protected_states.c.event_id)
-                    .exists()) \
+            .filter(~Events.event_id.in_(
+                protected_event_ids
+            )) \
             .delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s events", deleted_rows)
 
