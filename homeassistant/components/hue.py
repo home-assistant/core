@@ -107,6 +107,9 @@ def setup(hass, config):
 
 def bridge_discovered(hass, service, discovery_info):
     """Dispatcher for Hue discovery events."""
+    if "HASS Bridge" in discovery_info.get('name', ''):
+        return
+
     host = discovery_info.get('host')
     serial = discovery_info.get('serial')
 
