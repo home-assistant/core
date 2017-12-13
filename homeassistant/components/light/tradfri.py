@@ -242,7 +242,7 @@ class TradfriLight(Light):
         if ATTR_RGB_COLOR in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
-            xy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR]))
+            xy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
             yield from self._api(
                 self._light_control.set_xy_color(xy[0], xy[1]
                                                  **params))
