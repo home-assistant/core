@@ -8,10 +8,11 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_XY_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_XY_COLOR, Light)
+    SUPPORT_XY_COLOR, ATTR_RGB_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -156,6 +157,7 @@ class TradfriLight(Light):
         self._light_data = None
         self._name = None
         self._features = SUPPORTED_FEATURES
+        self._available = True
 
         self._refresh(light)
 
@@ -173,6 +175,11 @@ class TradfriLight(Light):
     def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def should_poll(self):
@@ -223,11 +230,21 @@ class TradfriLight(Light):
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
+        action = False
+
         if ATTR_XY_COLOR in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
             yield from self._api(
                 self._light_control.set_xy_color(*kwargs[ATTR_XY_COLOR],
+                                                 **params))
+
+        if ATTR_RGB_COLOR in kwargs:
+            if brightness is not None:
+                params.pop(ATTR_TRANSITION_TIME, None)
+            xy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR]))
+            yield from self._api(
+                self._light_control.set_xy_color(xy[0], xy[1]
                                                  **params))
 
         if ATTR_COLOR_TEMP in kwargs:
@@ -271,6 +288,7 @@ class TradfriLight(Light):
         self._light = light
 
         # Caching of LightControl and light object
+        self._available = light.reachable
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
@@ -280,6 +298,7 @@ class TradfriLight(Light):
             self._features |= SUPPORT_COLOR_TEMP
         if self._light_control.can_set_color:
             self._features |= SUPPORT_XY_COLOR
+            self._features |= SUPPORT_RGB_COLOR
 
     @callback
     def _observe_update(self, tradfri_device):

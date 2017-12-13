@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.4.1']
+REQUIREMENTS = ['psutil==5.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
