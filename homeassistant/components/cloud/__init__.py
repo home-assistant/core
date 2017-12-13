@@ -16,7 +16,7 @@ from homeassistant.components.alexa import smart_home
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
-REQUIREMENTS = ['warrant==0.5.0']
+REQUIREMENTS = ['warrant==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
