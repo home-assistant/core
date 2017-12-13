@@ -4,13 +4,15 @@ Support for the IKEA Tradfri platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tradfri/
 """
+import asyncio
 import logging
 
 from homeassistant.core import callback
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_XY_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_COLOR, Light)
+    SUPPORT_XY_COLOR, SUPPORT_RGB_COLOR, ATTR_RGB_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -26,8 +28,8 @@ TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 
 
-async def async_setup_platform(hass, config,
-                               async_add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the IKEA Tradfri Light platform."""
     if discovery_info is None:
         return
@@ -37,8 +39,8 @@ async def async_setup_platform(hass, config,
     gateway = hass.data[KEY_GATEWAY][gateway_id]
 
     devices_command = gateway.get_devices()
-    devices_commands = await api(devices_command)
-    devices = await api(devices_commands)
+    devices_commands = yield from api(devices_command)
+    devices = yield from api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
         async_add_devices(TradfriLight(light, api) for light in lights)
@@ -46,8 +48,8 @@ async def async_setup_platform(hass, config,
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
         groups_command = gateway.get_groups()
-        groups_commands = await api(groups_command)
-        groups = await api(groups_commands)
+        groups_commands = yield from api(groups_command)
+        groups = yield from api(groups_commands)
         if groups:
             async_add_devices(TradfriGroup(group, api) for group in groups)
 
@@ -63,7 +65,8 @@ class TradfriGroup(Light):
 
         self._refresh(light)
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
 
@@ -92,11 +95,13 @@ class TradfriGroup(Light):
         """Return the brightness of the group lights."""
         return self._group.dimmer
 
-    async def async_turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Instruct the group lights to turn off."""
-        await self._api(self._group.set_state(0))
+        yield from self._api(self._group.set_state(0))
 
-    async def async_turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
         keys = {}
         if ATTR_TRANSITION in kwargs:
@@ -106,10 +111,10 @@ class TradfriGroup(Light):
             if kwargs[ATTR_BRIGHTNESS] == 255:
                 kwargs[ATTR_BRIGHTNESS] = 254
 
-            await self._api(
+            yield from self._api(
                 self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys))
         else:
-            await self._api(self._group.set_state(1))
+            yield from self._api(self._group.set_state(1))
 
     @callback
     def _async_start_observe(self, exc=None):
@@ -151,7 +156,6 @@ class TradfriLight(Light):
         self._light_control = None
         self._light_data = None
         self._name = None
-        self._hs_color = None
         self._features = SUPPORTED_FEATURES
         self._available = True
 
@@ -167,7 +171,8 @@ class TradfriLight(Light):
         """Return the warmest color_temp that this light supports."""
         return self._light_control.max_mireds
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
 
@@ -203,66 +208,61 @@ class TradfriLight(Light):
 
     @property
     def color_temp(self):
-        """Return the color temp value in mireds."""
+        """Return the CT color value in mireds."""
         return self._light_data.color_temp
 
     @property
-    def hs_color(self):
-        """HS color of the light."""
-        if self._light_control.can_set_color:
-            hsbxy = self._light_data.hsb_xy_color
-            hue = hsbxy[0] / (65535 / 360)
-            sat = hsbxy[1] / (65279 / 100)
-            if hue is not None and sat is not None:
-                return hue, sat
+    def xy_color(self):
+        """XY color of the light."""
+        return self._light_data.xy_color
 
-    async def async_turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        await self._api(self._light_control.set_state(False))
+        yield from self._api(self._light_control.set_state(False))
 
-    async def async_turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         params = {}
-        transition_time = None
         if ATTR_TRANSITION in kwargs:
-            transition_time = int(kwargs[ATTR_TRANSITION]) * 10
+            params[ATTR_TRANSITION_TIME] = int(kwargs[ATTR_TRANSITION]) * 10
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if brightness is not None:
-            if brightness > 254:
-                brightness = 254
-            elif brightness < 0:
-                brightness = 0
+        action = False
 
-        if ATTR_HS_COLOR in kwargs and self._light_control.can_set_color:
-            params[ATTR_BRIGHTNESS] = brightness
-            hue = int(kwargs[ATTR_HS_COLOR][0] * (65535 / 360))
-            sat = int(kwargs[ATTR_HS_COLOR][1] * (65279 / 100))
-            await self._api(
-                self._light_control.set_hsb(hue, sat, **params))
-            return
+        if ATTR_XY_COLOR in kwargs:
+            if brightness is not None:
+                params.pop(ATTR_TRANSITION_TIME, None)
+            yield from self._api(
+                self._light_control.set_xy_color(*kwargs[ATTR_XY_COLOR],
+                                                 **params))
 
-        if ATTR_COLOR_TEMP in kwargs and self._light_control.can_set_temp:
-            temp = kwargs[ATTR_COLOR_TEMP]
-            if temp > self.max_mireds:
-                temp = self.max_mireds
-            elif temp < self.min_mireds:
-                temp = self.min_mireds
+        if ATTR_RGB_COLOR in kwargs:
+            if brightness is not None:
+                params.pop(ATTR_TRANSITION_TIME, None)
+            xy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
+            yield from self._api(
+                self._light_control.set_xy_color(xy[0], xy[1]
+                                                 **params))
 
-            if brightness is None:
-                params[ATTR_TRANSITION_TIME] = transition_time
-            await self._api(
-                self._light_control.set_color_temp(temp,
+        if ATTR_COLOR_TEMP in kwargs:
+            if brightness is not None:
+                params.pop(ATTR_TRANSITION_TIME, None)
+            yield from self._api(
+                self._light_control.set_color_temp(kwargs[ATTR_COLOR_TEMP],
                                                    **params))
 
         if brightness is not None:
-            params[ATTR_TRANSITION_TIME] = transition_time
-            await self._api(
+            if brightness == 255:
+                brightness = 254
+
+            yield from self._api(
                 self._light_control.set_dimmer(brightness,
                                                **params))
         else:
-            await self._api(
+            yield from self._api(
                 self._light_control.set_state(True))
 
     @callback
@@ -294,10 +294,11 @@ class TradfriLight(Light):
         self._name = light.name
         self._features = SUPPORTED_FEATURES
 
-        if light.light_control.can_set_color:
-            self._features |= SUPPORT_COLOR
-        if light.light_control.can_set_temp:
+        if self._light_control.can_set_mireds:
             self._features |= SUPPORT_COLOR_TEMP
+        if self._light_control.can_set_color:
+            self._features |= SUPPORT_XY_COLOR
+            self._features |= SUPPORT_RGB_COLOR
 
     @callback
     def _observe_update(self, tradfri_device):
