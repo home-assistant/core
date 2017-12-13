@@ -41,8 +41,6 @@ def setup(hass, config):
     if initialstatus == -1:
         _LOGGER.error("Error getting state. Possible configuration issues")
         return False
-    else:
-        _LOGGER.debug("Initialized Rain Bird Controller")
 
     hass.data[DATA_RAINBIRD] = controller
     return True

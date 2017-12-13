@@ -20,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
-    'rainsensor': ['Rainsensor', None, 'water']
+    'rainsensor': ['Rainsensor', None, 'mdi:water']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
@@ -35,9 +35,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        if sensor_type == 'rainsensor':
-            sensors.append(
-                RainBirdSensor(controller, sensor_type))
+        sensors.append(
+            RainBirdSensor(controller, sensor_type))
 
     add_devices(sensors, True)
 
@@ -50,7 +49,8 @@ class RainBirdSensor(Entity):
         self._sensor_type = sensor_type
         self._controller = controller
         self._name = SENSOR_TYPES[self._sensor_type][0]
-        self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type][2])
+        self._icon = SENSOR_TYPES[self._sensor_type][2]
+        self._unit_of_measurement = SENSOR_TYPES[self._sensor_type][1]
         self._state = None
 
     @property
@@ -72,10 +72,9 @@ class RainBirdSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return SENSOR_TYPES[self._sensor_type][1]
+        return self._unit_of_measurement
 
     @property
     def icon(self):
-        """Icon to use in the frontend."""
-        if self._sensor_type == 'rainsensor':
-            return 'mdi:water'
+        """Return icon."""
+        return self._icon
