@@ -116,12 +116,14 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         """List of available input sources."""
         return list(self._sources.values())
 
+    @asyncio.coroutine
     def turn_on(self):
         """Turn on media player."""
         self._state = STATE_ON
         if CONF_ON_ACTION in self._actions:
             self._actions[CONF_ON_ACTION].async_run()
 
+    @asyncio.coroutine
     def turn_off(self):
         """Turn off media player."""
         self._state = STATE_OFF
