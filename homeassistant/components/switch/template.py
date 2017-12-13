@@ -50,6 +50,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     switches = []
 
     for device, device_config in config[CONF_SWITCHES].items():
+        if device_config.get(ATTR_ENTITY_ID):
+            _LOGGER.warning(
+                "Unneeded 'entity_id' in %s template '%s' is deprecated.",
+                "switch", device)
+
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
