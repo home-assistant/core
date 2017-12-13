@@ -46,30 +46,42 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
-    async_add_devices([ONVIFCamera(hass, config)])
+    async_add_devices([ONVIFCameraHASS(hass, config)])
 
 
-class ONVIFCamera(Camera):
+class ONVIFCameraHASS(Camera):
     """An implementation of an ONVIF camera."""
 
     def __init__(self, hass, config):
         """Initialize a ONVIF camera."""
-        from onvif import ONVIFService
+        from onvif import ONVIFCamera
         import onvif
         super().__init__()
 
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = '-q:v 2'
-        media = ONVIFService(
-            'http://{}:{}/onvif/device_service'.format(
-                config.get(CONF_HOST), config.get(CONF_PORT)),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            '{}/wsdl/media.wsdl'.format(os.path.dirname(onvif.__file__))
-        )
-        self._input = media.GetStreamUri().Uri
-        _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
+        self._input = None
+        try:
+            _LOGGER.debug("Attempting to communicate with ONVIF Camera: %s on port %s",
+                          config.get(CONF_HOST), config.get(CONF_PORT))
+            media_service = ONVIFCamera(
+                config.get(CONF_HOST), config.get(CONF_PORT),
+                config.get(CONF_USERNAME), config.get(CONF_PASSWORD)
+            ).create_media_service()
+            profiles = media_service.GetProfiles()
+            stream_uri = media_service.GetStreamUri(
+                {'StreamSetup': {
+                    'Stream': 'RTP-Unicast', 'Transport': 'RTSP'
+                    }, 'ProfileToken': profiles[0]._token}
+                )
+            self._input = stream_uri.Uri.replace(
+                'rtsp://', 'rtsp://{}:{}@'.format(config.get(
+                CONF_USERNAME), config.get(CONF_PASSWORD)), 1)
+            _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
+        except Exception as err:
+            _LOGGER.error("Unable to communicate with ONVIF Camera: %s", err)
+            raise
 
     @asyncio.coroutine
     def async_camera_image(self):
