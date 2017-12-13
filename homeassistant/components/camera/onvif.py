@@ -66,11 +66,11 @@ class ONVIFCameraHASS(Camera):
                 config.get(CONF_HOST), config.get(CONF_PORT),
                 config.get(CONF_USERNAME), config.get(CONF_PASSWORD)
             ).create_media_service()
-            profiles = media_service.GetProfiles()
+            profiletoken = (media_service.GetProfiles())[0]._token
             stream_uri = media_service.GetStreamUri(
                 {'StreamSetup': {
                     'Stream': 'RTP-Unicast', 'Transport': 'RTSP'
-                    }, 'ProfileToken': profiles[0]._token}
+                    }, 'ProfileToken': profiletoken}
                 )
             self._input = stream_uri.Uri.replace(
                 'rtsp://', 'rtsp://{}:{}@'.format(
