@@ -43,6 +43,7 @@ def attach(hass, obj):
     elif isinstance(obj, Template):
         obj.hass = hass
 
+
 def render_complex(value, variables=None):
     """Recursive template creator helper function."""
     if isinstance(value, list):
@@ -52,7 +53,6 @@ def render_complex(value, variables=None):
         return {key: render_complex(item, variables)
                 for key, item in value.items()}
     return value.async_render(variables)
-
 
 def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
