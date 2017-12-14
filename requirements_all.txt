@@ -23,7 +23,7 @@ certifi>=2017.4.17
 DoorBirdPy==0.1.0
 
 # homeassistant.components.isy994
-PyISY==1.0.8
+PyISY==1.1.0
 
 # homeassistant.components.notify.html5
 PyJWT==1.5.3
