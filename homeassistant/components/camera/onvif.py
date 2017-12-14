@@ -67,9 +67,7 @@ class ONVIFCameraHASS(Camera):
                 config.get(CONF_USERNAME), config.get(CONF_PASSWORD)
             ).create_media_service()
             stream_uri = media_service.GetStreamUri(
-                {'StreamSetup': {
-                    'Stream': 'RTP-Unicast', 'Transport': 'RTSP'
-                    }}
+                {'StreamSetup': {'Stream': 'RTP-Unicast', 'Transport': 'RTSP'}}
                 )
             self._input = stream_uri.Uri.replace(
                 'rtsp://', 'rtsp://{}:{}@'.format(
