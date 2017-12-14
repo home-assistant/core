@@ -27,7 +27,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Plex'
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
-DEFAULT_SSL_VERIFY = True
+DEFAULT_VERIFY_SSL = True
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 
