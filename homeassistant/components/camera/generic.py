@@ -27,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CONTENT_TYPE = 'content_type'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
+CONF_REFERER = 'referer'
 CONF_STILL_IMAGE_URL = 'still_image_url'
 
 DEFAULT_NAME = 'Generic Camera'
@@ -40,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
+    vol.Optional(CONF_REFERER): cv.string
 })
 
 
@@ -75,6 +77,12 @@ class GenericCamera(Camera):
         else:
             self._auth = None
 
+        referer = device_info.get(CONF_REFERER)
+        if referer:
+            self._headers = {'Referer': referer}
+        else:
+            self._headers = None
+
         self._last_url = None
         self._last_image = None
 
@@ -101,7 +109,9 @@ class GenericCamera(Camera):
             def fetch():
                 """Read image from a URL."""
                 try:
-                    response = requests.get(url, timeout=10, auth=self._auth)
+                    response = requests.get(url, timeout=10,
+                                            headers=self._headers,
+                                            auth=self._auth)
                     return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error("Error getting camera image: %s", error)
@@ -115,7 +125,7 @@ class GenericCamera(Camera):
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
                     response = yield from websession.get(
-                        url, auth=self._auth)
+                        url, headers=self._headers, auth=self._auth)
                 self._last_image = yield from response.read()
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout getting camera image")
