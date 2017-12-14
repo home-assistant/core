@@ -44,9 +44,9 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
-SENSOR_SCHEMA = vol.All(
+LIGHT_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
-    SENSOR_SCHEMA,
+    LIGHT_SCHEMA,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

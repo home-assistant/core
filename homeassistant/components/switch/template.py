@@ -38,9 +38,9 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
-SENSOR_SCHEMA = vol.All(
+SWITCH_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
-    SENSOR_SCHEMA,
+    SWITCH_SCHEMA,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
