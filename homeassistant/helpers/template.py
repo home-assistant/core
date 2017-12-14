@@ -55,6 +55,7 @@ def render_complex(value, variables=None):
                 for key, item in value.items()}
     return value.async_render(variables)
 
+
 def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_NONE_ENTITIES.search(template):
@@ -77,6 +78,7 @@ def extract_entities(template, variables=None):
     if extraction_final:
         return list(set(extraction_final))
     return MATCH_ALL
+
 
 class Template(object):
     """Class to hold a template and manage caching and rendering."""
