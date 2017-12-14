@@ -44,6 +44,11 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
+SENSOR_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    SENSOR_SCHEMA,
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
 })
@@ -55,11 +60,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     lights = []
 
     for device, device_config in config[CONF_LIGHTS].items():
-        if device_config.get(CONF_ENTITY_ID):
-            _LOGGER.warning(
-                "Unneeded 'entity_id' in %s template '%s' is deprecated.",
-                "light", device)
-
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)

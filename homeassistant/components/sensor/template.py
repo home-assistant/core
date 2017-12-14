@@ -31,6 +31,11 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
+SENSOR_SCHEMA = vol.All(
+    cv.deprecated(ATTR_ENTITY_ID),
+    SENSOR_SCHEMA,
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
 })
@@ -43,11 +48,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
-        if device_config.get(ATTR_ENTITY_ID):
-            _LOGGER.warning(
-                "Unneeded 'entity_id' in %s template '%s' is deprecated.",
-                "sensor", device)
-
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
