@@ -78,7 +78,6 @@ def extract_entities(template, variables=None):
         return list(set(extraction_final))
     return MATCH_ALL
 
-
 class Template(object):
     """Class to hold a template and manage caching and rendering."""
 
