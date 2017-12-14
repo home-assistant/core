@@ -7,8 +7,7 @@ https://home-assistant.io/components/weather.ecobee/
 from homeassistant.components import ecobee
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_FAHRENHEIT)
-
+from homeassistant.const import (TEMP_FAHRENHEIT, LENGTH_MILES)
 
 DEPENDENCIES = ['ecobee']
 
@@ -32,19 +31,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if 'weather' in thermostat:
-            dev.append(EcobeeWeather(thermostat['name'], index))
-
+            dev.append(EcobeeWeather(hass, thermostat['name'], index))
     add_devices(dev, True)
 
 
 class EcobeeWeather(WeatherEntity):
     """Representation of Ecobee weather data."""
 
-    def __init__(self, name, index):
+    def __init__(self, hass, name, index):
         """Initialize the sensor."""
         self._name = name
         self._index = index
         self.weather = None
+        self.units = hass.config.units
 
     def get_forecast(self, index, param):
         """Retrieve forecast parameter."""
@@ -100,7 +99,10 @@ class EcobeeWeather(WeatherEntity):
     def visibility(self):
         """Return the visibility."""
         try:
-            return int(self.get_forecast(0, 'visibility'))
+            # Visibility is in miles * 1000
+            return self.units.length(
+                float(self.get_forecast(0, 'visibility')) / 1000,
+                LENGTH_MILES)
         except ValueError:
             return None
 
@@ -108,7 +110,10 @@ class EcobeeWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         try:
-            return int(self.get_forecast(0, 'windSpeed'))
+            # Speed is in mph * 1000
+            return self.units.length(
+                float(self.get_forecast(0, 'windSpeed')) / 1000,
+                LENGTH_MILES)
         except ValueError:
             return None
 
@@ -148,9 +153,11 @@ class EcobeeWeather(WeatherEntity):
                 if day['pressure'] != MISSING_DATA:
                     forecast[ATTR_FORECAST_PRESSURE] = int(day['pressure'])
                 if day['windSpeed'] != MISSING_DATA:
-                    forecast[ATTR_FORECAST_WIND_SPEED] = int(day['windSpeed'])
+                    forecast[ATTR_FORECAST_WIND_SPEED] = self.units.length(
+                        float(day['windSpeed']) / 1000, LENGTH_MILES)
                 if day['visibility'] != MISSING_DATA:
-                    forecast[ATTR_FORECAST_WIND_SPEED] = int(day['visibility'])
+                    forecast[ATTR_FORECAST_WIND_SPEED] = self.units.length(
+                        float(day['visibility']) / 1000, LENGTH_MILES)
                 if day['relativeHumidity'] != MISSING_DATA:
                     forecast[ATTR_FORECAST_HUMIDITY] = \
                         int(day['relativeHumidity'])
