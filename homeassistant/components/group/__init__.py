@@ -8,6 +8,8 @@ import asyncio
 import logging
 import os
 
+from functools import reduce
+
 import voluptuous as vol
 
 from homeassistant import config as conf_util, core as ha
@@ -508,6 +510,15 @@ class Group(Entity):
             data[ATTR_VIEW] = True
         if self.control:
             data[ATTR_CONTROL] = self.control
+
+        try:
+          sub_entities = [self.hass.states.get(eid) for eid in data[ATTR_ENTITY_ID]]
+          attributes = [e.attributes for e in sub_entities if e is not None]
+          features = [a[ATTR_SUPPORTED_FEATURES] for a in attributes if a is not None]
+          data[ATTR_SUPPORTED_FEATURES] = reduce(lambda f1,f2: f1 & f2, features)
+        except:
+          pass
+            
         return data
 
     @property
