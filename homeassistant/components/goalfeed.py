@@ -5,7 +5,6 @@ https://home-assistant.io/components/goalfeed/
 """
 import json
 
-import pysher
 import requests
 import voluptuous as vol
 
@@ -29,6 +28,7 @@ GOALFEED_APP_ID = 'bfd4ed98c1ff22c04074'
 
 
 def setup(hass, config):
+    import pysher
     """Set up is called when Home Assistant is loading our component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
