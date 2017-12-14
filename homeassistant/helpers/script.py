@@ -192,6 +192,7 @@ class Script():
             try:
                 event_data.update(template.render_complex(
                     action[CONF_EVENT_DATA_TEMPLATE], variables))
+                _LOGGER.error('event data: %s' % event_data)
             except TemplateError as ex:
                 _LOGGER.error('Error rendering event data template: %s', ex)
 

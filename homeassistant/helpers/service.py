@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
 from homeassistant.loader import get_component, bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
@@ -64,17 +65,9 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
 
     if CONF_SERVICE_DATA_TEMPLATE in config:
         try:
-            def _data_template_creator(value):
-                """Recursive template creator helper function."""
-                if isinstance(value, list):
-                    return [_data_template_creator(item) for item in value]
-                elif isinstance(value, dict):
-                    return {key: _data_template_creator(item)
-                            for key, item in value.items()}
-                value.hass = hass
-                return value.async_render(variables)
-            service_data.update(_data_template_creator(
-                config[CONF_SERVICE_DATA_TEMPLATE]))
+            template.attach(hass, config[CONF_SERVICE_DATA_TEMPLATE])
+            service_data.update(template.render_complex(
+                config[CONF_SERVICE_DATA_TEMPLATE], variables))
         except TemplateError as ex:
             _LOGGER.error('Error rendering data template: %s', ex)
 

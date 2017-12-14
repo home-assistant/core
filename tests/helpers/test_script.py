@@ -75,7 +75,7 @@ class TestScriptHelper(unittest.TestCase):
                     {% if is_world == 'yes' %}
                         world
                     {% else %}
-                        Not world
+                        not world
                     {% endif %}
                 """
             }
@@ -135,7 +135,7 @@ class TestScriptHelper(unittest.TestCase):
                     {% if is_world == 'yes' %}
                         world
                     {% else %}
-                        Not world
+                        not world
                     {% endif %}
                 """
             }
@@ -180,7 +180,7 @@ class TestScriptHelper(unittest.TestCase):
 
     def test_delay_template(self):
         """Test the delay as a template."""
-        event = 'test_evnt'
+        event = 'test_event'
         events = []
 
         @callback

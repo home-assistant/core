@@ -43,15 +43,13 @@ def attach(hass, obj):
     elif isinstance(obj, Template):
         obj.hass = hass
 
-
-@bind_hass
 def render_complex(value, variables=None):
     """Recursive template creator helper function."""
     if isinstance(value, list):
-        return [render_complex(item)
+        return [render_complex(item, variables)
                 for item in value]
     elif isinstance(value, dict):
-        return {key: render_complex(item)
+        return {key: render_complex(item, variables)
                 for key, item in value.items()}
     return value.async_render(variables)
 
