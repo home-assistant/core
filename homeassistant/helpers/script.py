@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
-    service, condition, template, config_validation as cv)
+    service, condition, template as template,
+    config_validation as cv)
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_template)
 from homeassistant.helpers.typing import ConfigType
@@ -189,18 +190,8 @@ class Script():
         event_data = dict(action.get(CONF_EVENT_DATA, {}))
         if CONF_EVENT_DATA_TEMPLATE in action:
             try:
-                def _data_template_creator(value):
-                    """Recursive template creator helper function."""
-                    if isinstance(value, list):
-                        return [_data_template_creator(item)
-                                for item in value]
-                    elif isinstance(value, dict):
-                        return {key: _data_template_creator(item)
-                                for key, item in value.items()}
-                    value.hass = self.hass
-                    return value.async_render(variables)
-                event_data.update(_data_template_creator(
-                    action[CONF_EVENT_DATA_TEMPLATE]))
+                event_data.update(template.render_complex(
+                    action[CONF_EVENT_DATA_TEMPLATE], variables))
             except TemplateError as ex:
                 _LOGGER.error('Error rendering event data template: %s', ex)
 
