@@ -28,8 +28,8 @@ GOALFEED_APP_ID = 'bfd4ed98c1ff22c04074'
 
 
 def setup(hass, config):
-    import pysher
     """Set up is called when Home Assistant is loading our component."""
+    import pysher
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
