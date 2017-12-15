@@ -16,7 +16,7 @@ from homeassistant.components.alarmdecoder import (DATA_AD,
 
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
+    STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +44,16 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         self._name = name
         self._state = STATE_UNKNOWN
 
+        self._ac_power = STATE_UNKNOWN
+        self._backlight_on = STATE_UNKNOWN
+        self._battery_low = STATE_UNKNOWN
+        self._check_zone = STATE_UNKNOWN
+        self._chime = STATE_UNKNOWN
+        self._entry_delay_off = STATE_UNKNOWN
+        self._programming_mode = STATE_UNKNOWN
+        self._ready = STATE_UNKNOWN
+        self._zone_bypassed = STATE_UNKNOWN
+
         _LOGGER.debug("Setting up panel")
 
     @asyncio.coroutine
@@ -54,22 +64,63 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
 
     @callback
     def _message_callback(self, message):
+        do_update = False
+
         if message.alarm_sounding or message.fire_alarm:
             if self._state != STATE_ALARM_TRIGGERED:
                 self._state = STATE_ALARM_TRIGGERED
-                self.async_schedule_update_ha_state()
+                do_update = True
         elif message.armed_away:
             if self._state != STATE_ALARM_ARMED_AWAY:
                 self._state = STATE_ALARM_ARMED_AWAY
-                self.async_schedule_update_ha_state()
+                do_update = True
         elif message.armed_home:
             if self._state != STATE_ALARM_ARMED_HOME:
                 self._state = STATE_ALARM_ARMED_HOME
-                self.async_schedule_update_ha_state()
+                do_update = True
         else:
             if self._state != STATE_ALARM_DISARMED:
                 self._state = STATE_ALARM_DISARMED
-                self.async_schedule_update_ha_state()
+                do_update = True
+                
+        if self._ac_power != message.ac_power:
+            self._ac_power = message.ac_power
+            do_update = True
+
+        if self._backlight_on != message.backlight_on:
+            self._backlight_on = message.backlight_on
+            do_update = True
+
+        if self._battery_low != message.battery_low:
+            self._battery_low = message.battery_low
+            do_update = True
+
+        if self._check_zone != message.check_zone:
+            self._check_zone = message.check_zone
+            do_update = True
+
+        if self._chime != message.chime_on:
+            self._chime = message.chime_on
+            do_update = True
+
+        if self._entry_delay_off != message.entry_delay_off:
+            self._entry_delay_off = message.entry_delay_off
+            do_update = True
+
+        if self._programming_mode != message.programming_mode:
+            self._programming_mode = message.programming_mode
+            do_update = True
+
+        if self._ready != message.ready:
+            self._ready = message.ready
+            do_update = True
+
+        if self._zone_bypassed != message.zone_bypassed:
+            self._zone_bypassed = message.zone_bypassed
+            do_update = True
+            
+        if do_update is True:
+            self.async_schedule_update_ha_state()
 
     @property
     def name(self):
@@ -90,6 +141,21 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'ac_power': self._ac_power,
+            'backlight_on': self._backlight_on,
+            'battery_low': self._battery_low,
+            'check_zone': self._check_zone,
+            'chime': self._chime,
+            'entry_delay_off': self._entry_delay_off,
+            'programming_mode': self._programming_mode,
+            'ready': self._ready,
+            'zone_bypassed': self._zone_bypassed
+        }
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
