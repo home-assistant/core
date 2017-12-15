@@ -268,9 +268,10 @@ def setup(hass, config):
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
             'ip': sconfig.get(CONF_HOST),
+            'port': DEFAULT_PORT,
             'username': sconfig.get(CONF_USERNAME),
             'password': sconfig.get(CONF_PASSWORD),
-            'connect': True,
+            'connect': False,
         }
 
     # Create server thread
@@ -580,11 +581,11 @@ class HMHub(Entity):
         self._state = None
 
         # Load data
-        self.hass.helpers.track_time_interval(
+        self.hass.helpers.event.track_time_interval(
             self._update_hub, SCAN_INTERVAL_HUB)
         self.hass.add_job(self._update_hub, None)
 
-        self.hass.helpers.track_time_interval(
+        self.hass.helpers.event.track_time_interval(
             self._update_variables, SCAN_INTERVAL_VARIABLES)
         self.hass.add_job(self._update_variables, None)
 
