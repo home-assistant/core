@@ -523,7 +523,6 @@ class Group(Entity):
             data[ATTR_VIEW] = True
         if self.control:
             data[ATTR_CONTROL] = self.control
-            
         return data
 
     @property
