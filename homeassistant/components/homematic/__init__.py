@@ -90,12 +90,14 @@ HM_ATTRIBUTE_SUPPORT = {
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'BATTERY_STATE': ['battery', {}],
-    'CONTROL_MODE': ['mode', {0: 'Auto',
-                              1: 'Manual',
-                              2: 'Away',
-                              3: 'Boost',
-                              4: 'Comfort',
-                              5: 'Lowering'}],
+    'CONTROL_MODE': ['mode', {
+        0: 'Auto',
+        1: 'Manual',
+        2: 'Away',
+        3: 'Boost',
+        4: 'Comfort',
+        5: 'Lowering'
+    }],
     'POWER': ['power', {}],
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
@@ -146,8 +148,6 @@ DEFAULT_PORT = 2001
 DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
 DEFAULT_PASSWORD = ''
-DEFAULT_VARIABLES = False
-DEFAULT_DEVICES = True
 
 
 DEVICE_SCHEMA = vol.Schema({
@@ -167,14 +167,11 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
-            vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.boolean,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
         vol.Optional(CONF_HOSTS, default={}): {cv.match_all: {
             vol.Required(CONF_IP): cv.string,
-            vol.Optional(CONF_VARIABLES, default=DEFAULT_VARIABLES):
-                cv.boolean,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
         }},
