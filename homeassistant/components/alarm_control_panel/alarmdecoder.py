@@ -82,7 +82,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             if self._state != STATE_ALARM_DISARMED:
                 self._state = STATE_ALARM_DISARMED
                 do_update = True
-                
+
         if self._ac_power != message.ac_power:
             self._ac_power = message.ac_power
             do_update = True
@@ -118,7 +118,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if self._zone_bypassed != message.zone_bypassed:
             self._zone_bypassed = message.zone_bypassed
             do_update = True
-            
+
         if do_update is True:
             self.async_schedule_update_ha_state()
 
