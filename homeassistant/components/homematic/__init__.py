@@ -378,7 +378,7 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_DEVICE_VALUE, _service_handle_device,
-        descriptions[SCHEMA_SERVICE_SET_DEVICE_VALUE],
+        descriptions[SERVICE_SET_DEVICE_VALUE],
         schema=SCHEMA_SERVICE_SET_DEVICE_VALUE)
 
     return True
