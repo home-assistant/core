@@ -158,7 +158,7 @@ class HydroQuebecSensor(Entity):
     def async_update(self):
         """Get the latest data from Hydroquebec and update the state."""
         yield from self.hydroquebec_data.async_update()
-        if self.type in self.hydroquebec_data.data:
+        if self.hydroquebec_data.data.get(self.type) is not None:
             self._state = round(self.hydroquebec_data.data[self.type], 2)
 
 
@@ -184,10 +184,9 @@ class HydroquebecData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _fetch_data(self):
         """Fetch latest data from HydroQuebec."""
-        from pyhydroquebec.client import PyHydroQuebecError
         try:
             yield from self.client.fetch_data()
-        except PyHydroQuebecError as exp:
+        except BaseException as exp:
             _LOGGER.error("Error on receive last Hydroquebec data: %s", exp)
             return
 

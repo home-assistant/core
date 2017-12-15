@@ -3,7 +3,6 @@ import asyncio
 import sys
 from unittest.mock import MagicMock
 
-
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor import hydroquebec
 from tests.common import assert_setup_component
@@ -12,7 +11,7 @@ from tests.common import assert_setup_component
 CONTRACT = "123456789"
 
 
-class HydroQuebecClientMock(MagicMock):
+class HydroQuebecClientMock():
     """Fake Hydroquebec client."""
 
     def __init__(self, username, password, contract=None):
@@ -33,7 +32,7 @@ class HydroQuebecClientMock(MagicMock):
         pass
 
 
-class HydroQuebecClientMockError(MagicMock):
+class HydroQuebecClientMockError():
     """Fake Hydroquebec client error."""
 
     def get_data(self, contract):
@@ -48,13 +47,28 @@ class HydroQuebecClientMockError(MagicMock):
     @asyncio.coroutine
     def fetch_data(self):
         """Return fake fetching data."""
-        if hasattr(self, 'data_fetched'):
-            raise PyHydroQuebecErrorMock("Fake Error")
-        self.data_fetched = True
+        raise PyHydroQuebecErrorMock("Fake Error")
 
 
-class PyHydroQuebecError(BaseException):
-    """Fake PyHydroquebec Error."""
+class HydroQuebecClientMockError2():
+    """Fake Hydroquebec client error."""
+
+    def __init__(self, username, password, contract=None):
+        """Fake Hydroquebec client init."""
+        pass
+
+    def get_data(self, contract):
+        """Return fake hydroquebec data."""
+        return {CONTRACT: {"balance": 160.12}}
+
+    def get_contracts(self):
+        """Return fake hydroquebec contracts."""
+        return [CONTRACT]
+
+    @asyncio.coroutine
+    def fetch_data(self):
+        """Return fake fetching data."""
+        raise hydroquebec.PyHydroQuebecError("Fake Error")
 
 
 class PyHydroQuebecErrorMock(BaseException):
@@ -86,13 +100,12 @@ def test_hydroquebec_sensor(loop, hass):
     with assert_setup_component(1):
         yield from async_setup_component(hass, 'sensor', config)
     state = hass.states.get('sensor.hydro_balance')
-    yield from hass.async_block_till_done()
     assert state.state == "160.12"
     assert state.attributes.get('unit_of_measurement') == "CAD"
 
 
 @asyncio.coroutine
-def test_hydroquebec_sensor_2(hass):
+def test_error_1(hass):
     """Test the Hydroquebec sensor errors."""
     sys.modules['pyhydroquebec'] = MagicMock()
     sys.modules['pyhydroquebec.client'] = MagicMock()
@@ -116,5 +129,14 @@ def test_hydroquebec_sensor_2(hass):
                                                       MagicMock())
     assert ret is False
 
-    with assert_setup_component(1):
-        yield from async_setup_component(hass, 'sensor', config)
+
+@asyncio.coroutine
+def test_error_2(hass):
+    """Test the Hydroquebec sensor errors."""
+    sys.modules['pyhydroquebec'] = MagicMock()
+    sys.modules['pyhydroquebec.client'] = MagicMock()
+    import pyhydroquebec.client
+    pyhydroquebec.HydroQuebecClient = HydroQuebecClientMockError2
+    pyhydroquebec.client.PyHydroQuebecError = BaseException
+    hydro_data = hydroquebec.HydroquebecData('username', 'password')
+    yield from hydro_data._fetch_data()
