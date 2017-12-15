@@ -258,7 +258,7 @@ def get_common_supported_features(hass, entity_ids):
                 if e is not None and hasattr(e, 'attributes')]
 
     # Return merged supported features in a "common features only" manner
-    return reduce(lambda f1,f2: f1 & f2, features) if len(features) > 0 else 0
+    return reduce(operator.and_, features) if len(features) > 0 else 0
 
 @asyncio.coroutine
 def async_setup(hass, config):
