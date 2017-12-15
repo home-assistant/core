@@ -16,7 +16,7 @@ from homeassistant.core import CoreState
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
-    CONF_HOSTS, ATTR_ENTITY_ID)
+    CONF_HOSTS, ATTR_ENTITY_ID, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
