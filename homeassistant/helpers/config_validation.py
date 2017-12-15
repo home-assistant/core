@@ -440,8 +440,8 @@ def deprecated(key):
         """Check if key is in config and log warning."""
         if key in config:
             logging.getLogger(module_name).warning(
-                "The '%s' option is deprecated, please remove it from your "
-                "configuration.", key)
+                "The '%s' option (with value '%s') is deprecated, please "
+                "remove it from your configuration.", key, config[key])
 
         return config
 
