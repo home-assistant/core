@@ -16,7 +16,7 @@ from homeassistant.components.alarmdecoder import (DATA_AD,
 
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
+    STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
