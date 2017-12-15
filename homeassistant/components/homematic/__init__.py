@@ -128,7 +128,7 @@ CONF_RESOLVENAMES_OPTIONS = [
 DATA_HOMEMATIC = 'homematic'
 DATA_STORE = 'homematic_store'
 
-CONF_INTERFACE = 'interface'
+CONF_INTERFACES = 'interfaces'
 CONF_LOCAL_IP = 'local_ip'
 CONF_LOCAL_PORT = 'local_port'
 CONF_IP = 'ip'
@@ -161,7 +161,7 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_INTERFACE, default={}): {cv.match_all: {
+        vol.Optional(CONF_INTERFACES, default={}): {cv.match_all: {
             vol.Required(CONF_IP): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
