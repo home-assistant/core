@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONTROLLER = None
 
 CONF_COMM_TYPE = 'comm_type'
+CONF_MAX_XDIM_VALUE = 'max_xdim_value'
 
 DOMAIN = 'mochad'
 
