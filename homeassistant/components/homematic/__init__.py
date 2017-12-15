@@ -693,11 +693,6 @@ class HMDevice(Entity):
         return self._name
 
     @property
-    def assumed_state(self):
-        """Return true if unable to access real state of the device."""
-        return not self._available
-
-    @property
     def available(self):
         """Return true if device is available."""
         return self._available
