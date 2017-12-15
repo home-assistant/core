@@ -161,7 +161,7 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_INTERFACE): {cv.match_all: {
+        vol.Optional(CONF_INTERFACE, default={}): {cv.match_all: {
             vol.Required(CONF_IP): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
@@ -171,7 +171,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_CALLBACK_IP): cv.string,
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
-        vol.Required(CONF_HOSTS): {cv.match_all: {
+        vol.Optional(CONF_HOSTS, default={}): {cv.match_all: {
             vol.Required(CONF_IP): cv.string,
             vol.Optional(CONF_VARIABLES, default=DEFAULT_VARIABLES):
                 cv.boolean,
@@ -251,11 +251,11 @@ def setup(hass, config):
     """Set up the Homematic component."""
     from pyhomematic import HMConnection
 
-    hass.data[DATA_STORE] = set()
     conf = config[DOMAIN]
+    remotes = {}
+    hass.data[DATA_STORE] = set()
 
     # Create hosts-dictionary for pyhomematic
-    remotes = {}
     for rname, rconfig in conf[CONF_INTERFACE].items():
         remotes[rname] = {
             'ip': rconfig.get(CONF_IP),
@@ -269,9 +269,7 @@ def setup(hass, config):
             'connect': True,
         }
 
-    hosts = set()
     for sname, sconfig in conf[CONF_HOSTS].items():
-        hosts.add(sname)
         remotes[sname] = {
             'ip': sconfig.get(CONF_IP),
             'username': sconfig.get(CONF_USERNAME),
@@ -298,7 +296,7 @@ def setup(hass, config):
 
     # Init homematic hubs
     entity_hubs = []
-    for hub_name in hosts:
+    for hub_name in conf[CONF_HOSTS].keys():
         entity_hubs.append(HMHub(hass, homematic, hub_name))
 
     # Register HomeMatic services
