@@ -16,7 +16,7 @@ from homeassistant.core import CoreState
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
-    CONF_HOSTS, ATTR_ENTITY_ID, STATE_UNKNOWN)
+    CONF_HOSTS, CONF_HOST, ATTR_ENTITY_ID, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -131,7 +131,6 @@ DATA_STORE = 'homematic_store'
 CONF_INTERFACES = 'interfaces'
 CONF_LOCAL_IP = 'local_ip'
 CONF_LOCAL_PORT = 'local_port'
-CONF_IP = 'ip'
 CONF_PORT = 'port'
 CONF_PATH = 'path'
 CONF_CALLBACK_IP = 'callback_ip'
@@ -162,7 +161,7 @@ DEVICE_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_INTERFACES, default={}): {cv.match_all: {
-            vol.Required(CONF_IP): cv.string,
+            vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
@@ -171,7 +170,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
         vol.Optional(CONF_HOSTS, default={}): {cv.match_all: {
-            vol.Required(CONF_IP): cv.string,
+            vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
         }},
@@ -255,7 +254,7 @@ def setup(hass, config):
     # Create hosts-dictionary for pyhomematic
     for rname, rconfig in conf[CONF_INTERFACES].items():
         remotes[rname] = {
-            'ip': rconfig.get(CONF_IP),
+            'ip': rconfig.get(CONF_HOST),
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
@@ -268,7 +267,7 @@ def setup(hass, config):
 
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
-            'ip': sconfig.get(CONF_IP),
+            'ip': sconfig.get(CONF_HOST),
             'username': sconfig.get(CONF_USERNAME),
             'password': sconfig.get(CONF_PASSWORD),
             'connect': True,
