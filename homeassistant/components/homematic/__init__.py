@@ -253,7 +253,7 @@ def setup(hass, config):
     hass.data[DATA_STORE] = set()
 
     # Create hosts-dictionary for pyhomematic
-    for rname, rconfig in conf[CONF_INTERFACE].items():
+    for rname, rconfig in conf[CONF_INTERFACES].items():
         remotes[rname] = {
             'ip': rconfig.get(CONF_IP),
             'port': rconfig.get(CONF_PORT),
