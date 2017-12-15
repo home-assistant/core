@@ -127,6 +127,7 @@ CONF_RESOLVENAMES_OPTIONS = [
 
 DATA_HOMEMATIC = 'homematic'
 DATA_STORE = 'homematic_store'
+DATA_CONF = 'homematic_conf'
 
 CONF_INTERFACES = 'interfaces'
 CONF_LOCAL_IP = 'local_ip'
@@ -248,7 +249,7 @@ def setup(hass, config):
     from pyhomematic import HMConnection
 
     conf = config[DOMAIN]
-    remotes = {}
+    hass.data[DATA_CONF] = remotes = {}
     hass.data[DATA_STORE] = set()
 
     # Create hosts-dictionary for pyhomematic
@@ -392,7 +393,7 @@ def _system_callback_handler(hass, config, src, *args):
         interface = interface_id.split('-')[-1]
 
         # Device support active?
-        if not hass.state == CoreState.running:
+        if not hass.data[DATA_CONF][interface]['connect']:
             return
 
         addresses = []
