@@ -12,7 +12,6 @@ from functools import partial
 
 import voluptuous as vol
 
-from homeassistant.core import CoreState
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
