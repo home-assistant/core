@@ -5,10 +5,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
 import asyncio
-import os
-import logging
 from datetime import timedelta
 from functools import partial
+import logging
+import os
+import socket
 
 import voluptuous as vol
 
@@ -254,7 +255,7 @@ def setup(hass, config):
     # Create hosts-dictionary for pyhomematic
     for rname, rconfig in conf[CONF_INTERFACES].items():
         remotes[rname] = {
-            'ip': rconfig.get(CONF_HOST),
+            'ip': socket.gethostbyname(rconfig.get(CONF_HOST)),
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
@@ -267,7 +268,7 @@ def setup(hass, config):
 
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
-            'ip': sconfig.get(CONF_HOST),
+            'ip': socket.gethostbyname(sconfig.get(CONF_HOST)),
             'port': DEFAULT_PORT,
             'username': sconfig.get(CONF_USERNAME),
             'password': sconfig.get(CONF_PASSWORD),
