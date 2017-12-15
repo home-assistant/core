@@ -13,19 +13,16 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import MediaPlayerDevice, \
     SUPPORT_TURN_ON, PLATFORM_SCHEMA, SUPPORT_TURN_OFF, \
-    SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE
+    SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, \
+    SUPPORT_VOLUME_STEP
 from homeassistant.const import CONF_NAME, STATE_ON, STATE_OFF
 from homeassistant.helpers.script import Script
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ON_ACTION = 'turn_on_action'
 CONF_OFF_ACTION = 'turn_off_action'
 CONF_VOLUME_UP_ACTION = 'volume_up_action'
 CONF_VOLUME_DOWN_ACTION = 'volume_down_action'
 CONF_INITIAL_VOLUME = 'initial_volume'
-CONF_VOLUME_STEP = 'volume_step'
-CONF_VOLUME_STEP_DELAY = 'volume_step_delay'
 CONF_VOLUME_SET_ACTION = 'volume_set_action'
 CONF_VOLUME_MUTE_ACTION = 'volume_mute_action'
 CONF_VOLUME_UNMUTE_ACTION = 'volume_unmute_action'
@@ -40,8 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VOLUME_UP_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_VOLUME_DOWN_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_INITIAL_VOLUME, default=50): cv.positive_int,
-    vol.Optional(CONF_VOLUME_STEP, default=5): cv.positive_int,
-    vol.Optional(CONF_VOLUME_STEP_DELAY, default=0.5): cv.positive_int,
     vol.Optional(CONF_VOLUME_SET_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_VOLUME_MUTE_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_VOLUME_UNMUTE_ACTION): cv.SCRIPT_SCHEMA,
@@ -77,8 +72,6 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         self._selected_source = None
         self._state = STATE_OFF
         self._volume = config.get(CONF_INITIAL_VOLUME)
-        self._volume_step = config.get(CONF_VOLUME_STEP)
-        self._volume_step_delay = config.get(CONF_VOLUME_STEP_DELAY)
         self._is_muted = False
 
         self._supported_features = 0
@@ -87,8 +80,9 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         if CONF_OFF_ACTION in self._actions:
             self._supported_features |= SUPPORT_TURN_OFF
         if (CONF_VOLUME_UP_ACTION in self._actions and
-            CONF_VOLUME_DOWN_ACTION in self._actions) or \
-            CONF_VOLUME_SET_ACTION in self._actions:
+            CONF_VOLUME_DOWN_ACTION in self._actions):
+            self._supported_features |= SUPPORT_VOLUME_STEP
+        if CONF_VOLUME_SET_ACTION in self._actions:
             self._supported_features |= SUPPORT_VOLUME_SET
         if CONF_VOLUME_MUTE_ACTION in self._actions and \
            CONF_VOLUME_UNMUTE_ACTION in self._actions:
@@ -121,14 +115,14 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         """Turn on media player."""
         self._state = STATE_ON
         if CONF_ON_ACTION in self._actions:
-            self._actions[CONF_ON_ACTION].async_run()
+            yield from self._actions[CONF_ON_ACTION].async_run()
 
     @asyncio.coroutine
     def turn_off(self):
         """Turn off media player."""
         self._state = STATE_OFF
         if CONF_OFF_ACTION in self._actions:
-            self._actions[CONF_OFF_ACTION].async_run()
+            yield from self._actions[CONF_OFF_ACTION].async_run()
 
     @property
     def volume_level(self):
@@ -140,56 +134,54 @@ class TemplateMediaPlayerDevice(MediaPlayerDevice):
         """Boolean if volume is currently muted."""
         return self._is_muted
 
+    @asyncio.coroutine
     def set_volume_level(self, volume):
         volume = volume * 100
         volume = int(math.ceil(volume / 10.0)) * 10
         if CONF_VOLUME_SET_ACTION in self._actions:
             self._volume = volume
-            self._actions[CONF_VOLUME_SET_ACTION].async_run(
+            yield from self._actions[CONF_VOLUME_SET_ACTION].async_run(
                 {'volume:': volume})
-        elif CONF_VOLUME_UP_ACTION in self._actions and \
-                        CONF_VOLUME_UP_ACTION in self._actions:
-            adjustment_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(adjustment_loop)
-            adjustment_loop.run_until_complete(asyncio.ensure_future(
-                self.adjust_volume(volume)
-            ))
-            adjustment_loop.close()
 
     @asyncio.coroutine
-    def adjust_volume(self, volume):
-        if volume < self._volume:
-            while volume < self._volume:
-                self._volume -= self._volume_step
-                self._actions[CONF_VOLUME_DOWN_ACTION].async_run()
-                yield from asyncio.sleep(self._volume_step_delay)
-        else:
-            while volume > self._volume:
-                self._volume += self._volume_step
-                self._actions[CONF_VOLUME_UP_ACTION].async_run()
-                yield from asyncio.sleep(self._volume_step_delay)
+    def volume_up(self):
+        if CONF_VOLUME_UP_ACTION in self._actions:
+            yield from self._actions[CONF_VOLUME_UP_ACTION].async_run()
 
+    @asyncio.coroutine
+    def volume_down(self):
+        if CONF_VOLUME_DOWN_ACTION in self._actions:
+            yield from self._actions[CONF_VOLUME_DOWN_ACTION].async_run()
+
+
+    @asyncio.coroutine
     def mute_volume(self, mute):
         """Mute or unmute the media player"""
         if mute:
             self._is_muted = True
-            self._actions[CONF_VOLUME_MUTE_ACTION].async_run({'mute': True})
+            yield from self._actions[CONF_VOLUME_MUTE_ACTION].async_run(
+                {'mute': True}
+            )
         else:
             self._is_muted = False
-            self._actions[CONF_VOLUME_UNMUTE_ACTION].async_run({'mute': False})
+            yield from self._actions[CONF_VOLUME_UNMUTE_ACTION].async_run(
+                {'mute': False}
+            )
 
     @property
     def source(self):
         """Return the current input source."""
         return self._selected_source
 
+    @asyncio.coroutine
     def select_source(self, requested_source_name):
         """Select input source."""
         if CONF_SELECT_SOURCE_ACTION in self._actions:
             for source_key, source_name in self._sources.items():
                 if source_name == requested_source_name:
-                    self._actions[CONF_SELECT_SOURCE_ACTION].async_run(
-                        {'source_key': source_key, 'source_name': source_name})
+                    yield from self._actions[CONF_SELECT_SOURCE_ACTION].async_run(
+                        {'source_key': source_key, 'source_name': source_name}
+                    )
                     self._selected_source = source_name
                     return
 
