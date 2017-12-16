@@ -4,17 +4,15 @@ Support for AlarmDecoder zone states- represented as binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.alarmdecoder/
 """
+import asyncio
 import logging
 
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from homeassistant.components.alarmdecoder import (ZONE_SCHEMA,
-                                                   CONF_ZONES,
-                                                   CONF_ZONE_NAME,
-                                                   CONF_ZONE_TYPE,
-                                                   SIGNAL_ZONE_FAULT,
-                                                   SIGNAL_ZONE_RESTORE)
+from homeassistant.components.alarmdecoder import (
+  ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE, SIGNAL_ZONE_FAULT,
+  SIGNAL_ZONE_RESTORE)
 
 
 DEPENDENCIES = ['alarmdecoder']
@@ -32,8 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
-        device = AlarmDecoderBinarySensor(
-            hass, zone_num, zone_name, zone_type)
+        device = AlarmDecoderBinarySensor(zone_num, zone_name, zone_type)
         devices.append(device)
 
     add_devices(devices)
@@ -52,13 +49,14 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._name = zone_name
         self._type = zone_type
 
-        dispatcher_connect(
-            hass, SIGNAL_ZONE_FAULT, self._fault_callback)
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_ZONE_FAULT, self._fault_callback)
 
-        dispatcher_connect(
-            hass, SIGNAL_ZONE_RESTORE, self._restore_callback)
-
-        _LOGGER.debug("Setup up zone: %s", self._name)
+        hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_ZONE_RESTORE, self._restore_callback)
 
     @property
     def name(self):
