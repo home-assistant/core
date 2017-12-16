@@ -27,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CONTENT_TYPE = 'content_type'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
-CONF_REFERER = 'referer'
 CONF_STILL_IMAGE_URL = 'still_image_url'
 
 DEFAULT_NAME = 'Generic Camera'
