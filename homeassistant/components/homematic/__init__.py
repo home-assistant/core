@@ -20,10 +20,11 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
 
 REQUIREMENTS = ['pyhomematic==0.1.36']
-
 DOMAIN = 'homematic'
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -44,6 +45,8 @@ ATTR_VALUE = 'value'
 ATTR_INTERFACE = 'interface'
 ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
+ATTR_MODE = 'mode'
+ATTR_TIME = 'time'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -53,6 +56,7 @@ SERVICE_VIRTUALKEY = 'virtualkey'
 SERVICE_RECONNECT = 'reconnect'
 SERVICE_SET_VARIABLE_VALUE = 'set_variable_value'
 SERVICE_SET_DEVICE_VALUE = 'set_device_value'
+SERVICE_SET_INSTALL_MODE = 'set_install_mode'
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
@@ -115,8 +119,6 @@ HM_PRESS_EVENTS = [
 HM_IMPULSE_EVENTS = [
     'SEQUENCE_OK',
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_RESOLVENAMES_OPTIONS = [
     'metadata',
@@ -203,7 +205,16 @@ SCHEMA_SERVICE_SET_DEVICE_VALUE = vol.Schema({
 
 SCHEMA_SERVICE_RECONNECT = vol.Schema({})
 
+SCHEMA_SERVICE_SET_INSTALL_MODE = vol.Schema({
+    vol.Required(ATTR_INTERFACE): cv.string,
+    vol.Optional(ATTR_TIME, default=60): cv.positive_int,
+    vol.Optional(ATTR_MODE, default=1):
+        vol.All(vol.Coerce(int), vol.In([1, 2])),
+    vol.Optional(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
+})
 
+
+@bind_hass
 def virtualkey(hass, address, channel, param, interface=None):
     """Send virtual keypress to homematic controlller."""
     data = {
@@ -216,7 +227,8 @@ def virtualkey(hass, address, channel, param, interface=None):
     hass.services.call(DOMAIN, SERVICE_VIRTUALKEY, data)
 
 
-def set_var_value(hass, entity_id, value):
+@bind_hass
+def set_variable_value(hass, entity_id, value):
     """Change value of a Homematic system variable."""
     data = {
         ATTR_ENTITY_ID: entity_id,
@@ -226,7 +238,8 @@ def set_var_value(hass, entity_id, value):
     hass.services.call(DOMAIN, SERVICE_SET_VARIABLE_VALUE, data)
 
 
-def set_dev_value(hass, address, channel, param, value, interface=None):
+@bind_hass
+def set_device_value(hass, address, channel, param, value, interface=None):
     """Call setValue XML-RPC method of supplied interface."""
     data = {
         ATTR_ADDRESS: address,
@@ -239,6 +252,22 @@ def set_dev_value(hass, address, channel, param, value, interface=None):
     hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
 
 
+@bind_hass
+def set_install_mode(hass, interface, mode=None, time=None, address=None):
+    """Call setInstallMode XML-RPC method of supplied inteface."""
+    data = {
+        key: value for key, value in (
+            (ATTR_INTERFACE, interface),
+            (ATTR_MODE, mode),
+            (ATTR_TIME, time),
+            (ATTR_ADDRESS, address)
+        ) if value
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_INSTALL_MODE, data)
+
+
+@bind_hass
 def reconnect(hass):
     """Reconnect to CCU/Homegear."""
     hass.services.call(DOMAIN, SERVICE_RECONNECT, {})
@@ -382,6 +411,20 @@ def setup(hass, config):
         DOMAIN, SERVICE_SET_DEVICE_VALUE, _service_handle_device,
         descriptions[SERVICE_SET_DEVICE_VALUE],
         schema=SCHEMA_SERVICE_SET_DEVICE_VALUE)
+
+    def _service_handle_install_mode(service):
+        """Service to set interface into install mode."""
+        interface = service.data.get(ATTR_INTERFACE)
+        mode = service.data.get(ATTR_MODE)
+        time = service.data.get(ATTR_TIME)
+        address = service.data.get(ATTR_ADDRESS)
+
+        homematic.setInstallMode(interface, t=time, mode=mode, address=address)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_INSTALL_MODE, _service_handle_install_mode,
+        descriptions[SERVICE_SET_INSTALL_MODE],
+        schema=SCHEMA_SERVICE_SET_INSTALL_MODE)
 
     return True
 
