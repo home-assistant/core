@@ -19,6 +19,8 @@ from homeassistant.helpers import config_validation as cv
 DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
 
+CONF_BRIGHTNESS_LEVELS = 'brightness_levels'
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): mochad.DOMAIN,
@@ -26,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.x10_address,
         vol.Optional(mochad.CONF_COMM_TYPE): cv.string,
-        vol.Optional('brightness_levels', default=32): 
+        vol.Optional(CONF_BRIGHTNESS_LEVELS, default=32): 
             vol.All(vol.Coerce(int), vol.In([32, 64, 256])),
     }]
 })
@@ -56,7 +58,7 @@ class MochadLight(Light):
                                     comm_type=self._comm_type)
         self._brightness = 0
         self._state = self._get_device_status()
-        self._brightness_levels = dev.get('brightness_levels', 32) - 1
+        self._brightness_levels = dev.get(CONF_BRIGHTNESS_LEVELS) - 1
 
     @property
     def brightness(self):
