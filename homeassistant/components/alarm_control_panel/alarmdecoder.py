@@ -7,7 +7,6 @@ https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 import asyncio
 import logging
 
-from homeassistant.helpers.dispatcher import dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarmdecoder import (
     DATA_AD, SIGNAL_PANEL_MESSAGE)
