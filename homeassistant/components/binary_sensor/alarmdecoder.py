@@ -9,8 +9,8 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.alarmdecoder import (
-  ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE, SIGNAL_ZONE_FAULT,
-  SIGNAL_ZONE_RESTORE)
+    ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE, 
+    SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE)
 
 DEPENDENCIES = ['alarmdecoder']
 
