@@ -4,7 +4,6 @@ Support for AlarmDecoder devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alarmdecoder/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -13,7 +12,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.util.async import run_callback_threadsafe
 
 REQUIREMENTS = ['alarmdecoder==0.12.3']
 
@@ -81,8 +81,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up for the AlarmDecoder devices."""
     from alarmdecoder import AlarmDecoder
     from alarmdecoder.devices import (SocketDevice, SerialDevice, USBDevice)
@@ -99,13 +98,10 @@ def async_setup(hass, config):
     path = DEFAULT_DEVICE_PATH
     baud = DEFAULT_DEVICE_BAUD
 
-    sync_connect = asyncio.Future(loop=hass.loop)
-
     def handle_open(device):
         """Handle the successful connection."""
         _LOGGER.info("Established a connection with the alarmdecoder")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
-        sync_connect.set_result(True)
+        run_callback_threadsafe(hass.loop, handle_connect)
 
     @callback
     def stop_alarmdecoder(event):
@@ -116,15 +112,33 @@ def async_setup(hass, config):
     @callback
     def handle_message(sender, message):
         """Handle message from AlarmDecoder."""
-        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
+        dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
 
     def zone_fault_callback(sender, zone):
         """Handle zone fault from AlarmDecoder."""
-        async_dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
+        dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
 
     def zone_restore_callback(sender, zone):
         """Handle zone restore from AlarmDecoder."""
-        async_dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
+        dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
+
+    @callback
+    def handle_connect():
+        """Execute connection in event loop."""
+        _LOGGER.info("Connected")
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
+
+        hass.async_add_job(
+            async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf,
+                                config))
+
+        if zones:
+            hass.async_add_job(async_load_platform(
+                hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config))
+
+        if display:
+            hass.async_add_job(async_load_platform(
+                hass, 'sensor', DOMAIN, conf, config))
 
     controller = False
     if device_type == 'socket':
@@ -147,22 +161,5 @@ def async_setup(hass, config):
     hass.data[DATA_AD] = controller
 
     controller.open(baud)
-
-    result = yield from sync_connect
-
-    if not result:
-        return False
-
-    hass.async_add_job(
-        async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf,
-                            config))
-
-    if zones:
-        hass.async_add_job(async_load_platform(
-            hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config))
-
-    if display:
-        hass.async_add_job(async_load_platform(
-            hass, 'sensor', DOMAIN, conf, config))
 
     return True
