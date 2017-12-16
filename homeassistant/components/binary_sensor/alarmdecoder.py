@@ -4,11 +4,9 @@ Support for AlarmDecoder zone states- represented as binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.alarmdecoder/
 """
-import asyncio
 import logging
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from homeassistant.components.alarmdecoder import (ZONE_SCHEMA,
@@ -24,8 +22,7 @@ DEPENDENCIES = ['alarmdecoder']
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the AlarmDecoder binary sensor devices."""
     configured_zones = discovery_info[CONF_ZONES]
 
@@ -39,7 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass, zone_num, zone_name, zone_type)
         devices.append(device)
 
-    async_add_devices(devices)
+    add_devices(devices)
 
     return True
 
@@ -55,16 +52,13 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._name = zone_name
         self._type = zone_type
 
+        dispatcher_connect(
+            hass, SIGNAL_ZONE_FAULT, self._fault_callback)
+
+        dispatcher_connect(
+            hass, SIGNAL_ZONE_RESTORE, self._restore_callback)
+
         _LOGGER.debug("Setup up zone: %s", self._name)
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_FAULT, self._fault_callback)
-
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_RESTORE, self._restore_callback)
 
     @property
     def name(self):
@@ -97,16 +91,14 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
-    @callback
     def _fault_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
             self._state = 1
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
-    @callback
     def _restore_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
             self._state = 0
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()

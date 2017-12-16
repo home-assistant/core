@@ -9,11 +9,9 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.util.async import run_callback_threadsafe
 
 REQUIREMENTS = ['alarmdecoder==0.12.3']
 
@@ -98,18 +96,11 @@ def setup(hass, config):
     path = DEFAULT_DEVICE_PATH
     baud = DEFAULT_DEVICE_BAUD
 
-    def handle_open(device):
-        """Handle the successful connection."""
-        _LOGGER.info("Established a connection with the alarmdecoder")
-        run_callback_threadsafe(hass.loop, handle_connect)
-
-    @callback
     def stop_alarmdecoder(event):
         """Handle the shutdown of AlarmDecoder."""
         _LOGGER.debug("Shutting down alarmdecoder")
         controller.close()
 
-    @callback
     def handle_message(sender, message):
         """Handle message from AlarmDecoder."""
         dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
@@ -121,24 +112,6 @@ def setup(hass, config):
     def zone_restore_callback(sender, zone):
         """Handle zone restore from AlarmDecoder."""
         dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
-
-    @callback
-    def handle_connect():
-        """Execute connection in event loop."""
-        _LOGGER.info("Connected")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
-
-        hass.async_add_job(
-            async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf,
-                                config))
-
-        if zones:
-            hass.async_add_job(async_load_platform(
-                hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config))
-
-        if display:
-            hass.async_add_job(async_load_platform(
-                hass, 'sensor', DOMAIN, conf, config))
 
     controller = False
     if device_type == 'socket':
@@ -153,7 +126,6 @@ def setup(hass, config):
         AlarmDecoder(USBDevice.find())
         return False
 
-    controller.on_open += handle_open
     controller.on_message += handle_message
     controller.on_zone_fault += zone_fault_callback
     controller.on_zone_restore += zone_restore_callback
@@ -161,5 +133,17 @@ def setup(hass, config):
     hass.data[DATA_AD] = controller
 
     controller.open(baud)
+
+    _LOGGER.info("Established a connection with the alarmdecoder")
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
+
+    load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config)
+
+    if zones:
+        load_platform(hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones},
+                      config)
+
+    if display:
+        load_platform(hass, 'sensor', DOMAIN, conf, config)
 
     return True

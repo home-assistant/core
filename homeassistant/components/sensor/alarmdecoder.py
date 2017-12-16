@@ -4,11 +4,10 @@ Support for AlarmDecoder Sensors (Shows Panel Display).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.alarmdecoder/
 """
-import asyncio
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.alarmdecoder import (SIGNAL_PANEL_MESSAGE)
 from homeassistant.const import (STATE_UNKNOWN)
@@ -18,14 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['alarmdecoder']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up for AlarmDecoder sensor devices."""
-    _LOGGER.debug("AlarmDecoderSensor: async_setup_platform")
+    _LOGGER.debug("AlarmDecoderSensor: setup_platform")
 
     device = AlarmDecoderSensor(hass)
 
-    async_add_devices([device])
+    add_devices([device])
 
 
 class AlarmDecoderSensor(Entity):
@@ -38,19 +36,16 @@ class AlarmDecoderSensor(Entity):
         self._icon = 'mdi:alarm-check'
         self._name = 'Alarm Panel Display'
 
-        _LOGGER.debug("Setting up panel")
+        dispatcher_connect(
+            hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
+        _LOGGER.debug("Setting up panel")
 
     @callback
     def _message_callback(self, message):
         if self._display != message.text:
             self._display = message.text
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     @property
     def icon(self):
