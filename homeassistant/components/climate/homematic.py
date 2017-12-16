@@ -73,7 +73,8 @@ class HMThermostat(HMDevice, ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if HM_CONTROL_MODE not in self._data and HM_IP_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
+        if HM_CONTROL_MODE not in self._data \
+                and HM_IP_CONTROL_MODE not in self._hmdevice.ATTRIBUTENODE:
             return None
 
         # read state and search
