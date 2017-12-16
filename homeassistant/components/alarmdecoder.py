@@ -11,7 +11,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import dispatcher_send
 
 REQUIREMENTS = ['alarmdecoder==0.12.3']
 
@@ -69,9 +68,9 @@ ZONE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): vol.Any(DEVICE_SOCKET_SCHEMA,
-                                           DEVICE_SERIAL_SCHEMA,
-                                           DEVICE_USB_SCHEMA),
+        vol.Required(CONF_DEVICE): 
+            vol.Any(DEVICE_SOCKET_SCHEMA, DEVICE_SERIAL_SCHEMA, 
+                    DEVICE_USB_SCHEMA),
         vol.Optional(CONF_PANEL_DISPLAY,
                      default=DEFAULT_PANEL_DISPLAY): cv.boolean,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
@@ -103,15 +102,18 @@ def setup(hass, config):
 
     def handle_message(sender, message):
         """Handle message from AlarmDecoder."""
-        dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_PANEL_MESSAGE, message)
 
     def zone_fault_callback(sender, zone):
         """Handle zone fault from AlarmDecoder."""
-        dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_ZONE_FAULT, zone)
 
     def zone_restore_callback(sender, zone):
         """Handle zone restore from AlarmDecoder."""
-        dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_ZONE_RESTORE, zone)
 
     controller = False
     if device_type == 'socket':
@@ -134,14 +136,14 @@ def setup(hass, config):
 
     controller.open(baud)
 
-    _LOGGER.info("Established a connection with the alarmdecoder")
+    _LOGGER.debug("Established a connection with the alarmdecoder")
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
 
     load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config)
 
     if zones:
-        load_platform(hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones},
-                      config)
+        load_platform(
+            hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config)
 
     if display:
         load_platform(hass, 'sensor', DOMAIN, conf, config)
