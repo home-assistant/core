@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AlarmDecoderBinarySensor(BinarySensorDevice):
     """Representation of an AlarmDecoder binary sensor."""
 
-    def __init__(self, hass, zone_number, zone_name, zone_type):
+    def __init__(self, zone_number, zone_name, zone_type):
         """Initialize the binary_sensor."""
         self._zone_number = zone_number
         self._zone_type = zone_type
