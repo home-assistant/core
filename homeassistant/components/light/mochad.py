@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 from homeassistant.components import mochad
-from homeassistant.const import (CONF_NAME, CONF_PLATFORM, CONF_DEVICES,
-                                 CONF_ADDRESS)
+from homeassistant.const import (
+    CONF_NAME, CONF_PLATFORM, CONF_DEVICES, CONF_ADDRESS)
 from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ['mochad']
@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.x10_address,
         vol.Optional(mochad.CONF_COMM_TYPE): cv.string,
-        vol.Optional(CONF_BRIGHTNESS_LEVELS, default=32): 
+        vol.Optional(CONF_BRIGHTNESS_LEVELS, default=32):
             vol.All(vol.Coerce(int), vol.In([32, 64, 256])),
     }]
 })
