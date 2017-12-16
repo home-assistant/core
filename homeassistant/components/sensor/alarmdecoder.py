@@ -4,13 +4,11 @@ Support for AlarmDecoder Sensors (Shows Panel Display).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.alarmdecoder/
 """
+import asyncio
 import logging
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.alarmdecoder import (SIGNAL_PANEL_MESSAGE)
-from homeassistant.const import (STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,16 +30,16 @@ class AlarmDecoderSensor(Entity):
     def __init__(self, hass):
         """Initialize the alarm panel."""
         self._display = ""
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._icon = 'mdi:alarm-check'
         self._name = 'Alarm Panel Display'
 
-        dispatcher_connect(
-            hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_PANEL_MESSAGE, self._message_callback)
 
-        _LOGGER.debug("Setting up panel")
-
-    @callback
     def _message_callback(self, message):
         if self._display != message.text:
             self._display = message.text
