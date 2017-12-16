@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
+    CONF_HEADERS, HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, Camera)
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
-    vol.Optional(CONF_REFERER): cv.string
+    vol.Optional(CONF_HEADERS): {cv.string: cv.string}
 })
 
 
@@ -77,11 +77,7 @@ class GenericCamera(Camera):
         else:
             self._auth = None
 
-        referer = device_info.get(CONF_REFERER)
-        if referer:
-            self._headers = {'Referer': referer}
-        else:
-            self._headers = None
+        self._headers = device_info.get(CONF_HEADERS)
 
         self._last_url = None
         self._last_image = None
