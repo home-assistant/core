@@ -7,13 +7,10 @@ https://home-assistant.io/components/binary_sensor.alarmdecoder/
 import asyncio
 import logging
 
-from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.components.binary_sensor import BinarySensorDevice
-
 from homeassistant.components.alarmdecoder import (
   ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE, SIGNAL_ZONE_FAULT,
   SIGNAL_ZONE_RESTORE)
-
 
 DEPENDENCIES = ['alarmdecoder']
 
@@ -25,7 +22,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     configured_zones = discovery_info[CONF_ZONES]
 
     devices = []
-
     for zone_num in configured_zones:
         device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
         zone_type = device_config_data[CONF_ZONE_TYPE]
