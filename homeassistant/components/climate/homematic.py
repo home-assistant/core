@@ -39,6 +39,7 @@ HM_HUMI_MAP = [
 ]
 
 HM_CONTROL_MODE = 'CONTROL_MODE'
+HM_IP_CONTROL_MODE = 'SET_POINT_MODE'
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
@@ -76,9 +77,10 @@ class HMThermostat(HMDevice, ClimateDevice):
             return None
 
         # read state and search
+        hm_code = getattr(self._hmdevice, "MODE", 0)
         for mode, state in HM_STATE_MAP.items():
             code = getattr(self._hmdevice, mode, 0)
-            if self._data.get('CONTROL_MODE') == code:
+            if hm_code == code:
                 return state
 
     @property
@@ -141,7 +143,8 @@ class HMThermostat(HMDevice, ClimateDevice):
         self._state = next(iter(self._hmdevice.WRITENODE.keys()))
         self._data[self._state] = STATE_UNKNOWN
 
-        if HM_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
+        if HM_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE \
+          or HM_IP_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
             self._data[HM_CONTROL_MODE] = STATE_UNKNOWN
 
         for node in self._hmdevice.SENSORNODE.keys():
