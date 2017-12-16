@@ -23,8 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 10  # seconds
 
 CONF_SHOW_LAST_VISITOR = 'last_visitor'
+CONF_SHOW_LIVE_VIEW = 'live_view'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_SHOW_LIVE_VIEW, default=True): cv.boolean,
     vol.Optional(CONF_SHOW_LAST_VISITOR, default=False): cv.boolean
 })
 
@@ -33,10 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the DoorBird camera platform."""
     device = hass.data.get(DOORBIRD_DOMAIN)
+    entities = []
 
-    _LOGGER.debug("Adding DoorBird camera %s", _CAMERA_LIVE)
-    entities = [DoorBirdCamera(device.live_image_url, _CAMERA_LIVE,
-                               _LIVE_INTERVAL)]
+    if config.get(CONF_SHOW_LIVE_VIEW):
+        _LOGGER.debug("Adding DoorBird camera %s", _CAMERA_LIVE)
+        entities.append(DoorBirdCamera(device.live_image_url,
+                                       _CAMERA_LIVE, _LIVE_INTERVAL))
 
     if config.get(CONF_SHOW_LAST_VISITOR):
         _LOGGER.debug("Adding DoorBird camera %s", _CAMERA_LAST_VISITOR)
