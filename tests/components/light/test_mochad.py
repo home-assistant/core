@@ -60,7 +60,8 @@ class TestMochadLight(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
-        dev_dict = {'address': 'a1', 'name': 'fake_light'}
+        dev_dict = {'address': 'a1', 'name': 'fake_light',
+                    'brightness_levels': 32}
         self.light = mochad.MochadLight(self.hass, controller_mock,
                                         dev_dict)
 
