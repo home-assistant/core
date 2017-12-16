@@ -26,9 +26,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.x10_address,
         vol.Optional(mochad.CONF_COMM_TYPE): cv.string,
-        vol.Optional('brightness_levels',
-                     default=32): vol.All(vol.Coerce(int),
-                                          vol.In([32, 64, 256])),
+        vol.Optional('brightness_levels', default=32): 
+            vol.All(vol.Coerce(int), vol.In([32, 64, 256])),
     }]
 })
 
