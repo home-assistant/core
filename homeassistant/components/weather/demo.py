@@ -8,7 +8,10 @@ from datetime import datetime, timedelta
 
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, SPEED_MILES_PER_HOUR,
+    SPEED_KILOMETERS_PER_HOUR,
+    )
 
 CONDITION_CLASSES = {
     'cloudy': [],
@@ -32,8 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo weather."""
     add_devices([
         DemoWeather('South', 'Sunshine', 21.6414, 92, 1099, 0.5, TEMP_CELSIUS,
+                    SPEED_KILOMETERS_PER_HOUR,
                     [22, 19, 15, 12, 14, 18, 21]),
         DemoWeather('North', 'Shower rain', -12, 54, 987, 4.8, TEMP_FAHRENHEIT,
+                    SPEED_MILES_PER_HOUR,
                     [-10, -13, -18, -23, -19, -14, -9])
     ])
 
@@ -42,7 +47,7 @@ class DemoWeather(WeatherEntity):
     """Representation of a weather condition."""
 
     def __init__(self, name, condition, temperature, humidity, pressure,
-                 wind_speed, temperature_unit, forecast):
+                 wind_speed, temperature_unit, wind_speed_unit, forecast):
         """Initialize the Demo weather."""
         self._name = name
         self._condition = condition
@@ -51,6 +56,7 @@ class DemoWeather(WeatherEntity):
         self._humidity = humidity
         self._pressure = pressure
         self._wind_speed = wind_speed
+        self._wind_speed_unit = wind_speed_unit
         self._forecast = forecast
 
     @property
@@ -82,6 +88,11 @@ class DemoWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         return self._wind_speed
+
+    @property
+    def wind_speed_unit(self):
+        """Return the wind speed units."""
+        return self._wind_speed_unit
 
     @property
     def pressure(self):
