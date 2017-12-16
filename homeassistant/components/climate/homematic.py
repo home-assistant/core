@@ -39,6 +39,7 @@ HM_HUMI_MAP = [
 ]
 
 HM_CONTROL_MODE = 'CONTROL_MODE'
+HM_IP_CONTROL_MODE = 'SET_POINT_MODE'
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
@@ -72,13 +73,14 @@ class HMThermostat(HMDevice, ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if HM_CONTROL_MODE not in self._data:
+        if HM_CONTROL_MODE not in self._data and HM_IP_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
             return None
 
         # read state and search
+        hm_code = getattr(self._hmdevice, "MODE", 0)
         for mode, state in HM_STATE_MAP.items():
             code = getattr(self._hmdevice, mode, 0)
-            if self._data.get('CONTROL_MODE') == code:
+            if hm_code == code:
                 return state
 
     @property
