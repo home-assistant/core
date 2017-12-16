@@ -13,8 +13,8 @@ virtualkey:
       description: Event to send i.e. PRESS_LONG, PRESS_SHORT.
       example: PRESS_LONG
     interface:
-      description: (Optional) for set a hosts value.
-      example: Hosts name from config
+      description: (Optional) for set a interface value.
+      example: Interfaces name from config
 
 set_variable_value:
   description: Set the name of a node.
@@ -42,11 +42,27 @@ set_device_value:
       description: Event to send i.e. PRESS_LONG, PRESS_SHORT
       example: PRESS_LONG
     interface:
-      description: (Optional) for set a hosts value
-      example: Hosts name from config
+      description: (Optional) for set a interface value
+      example: Interfaces name from config
     value:
       description: New value
       example: 1
 
 reconnect:
   description: Reconnect to all Homematic Hubs.
+
+set_install_mode:
+  description: Set a RPC XML interface into installation mode.
+  fields:
+    interface:
+      description: Select the given interface into install mode
+      example: Interfaces name from config
+    mode:
+      description: (Default 1) 1= Normal mode / 2= Remove exists old links
+      example: 1
+    time:
+      description: (Default 60) Time in seconds to run in install mode
+      example: 1
+    address:
+      description: (Optional) Address of homematic device or BidCoS-RF to learn
+      example: LEQ3948571
