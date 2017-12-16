@@ -68,9 +68,9 @@ ZONE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): 
-            vol.Any(DEVICE_SOCKET_SCHEMA, DEVICE_SERIAL_SCHEMA, 
-                    DEVICE_USB_SCHEMA),
+        vol.Required(CONF_DEVICE): vol.Any(
+            DEVICE_SOCKET_SCHEMA, DEVICE_SERIAL_SCHEMA,
+            DEVICE_USB_SCHEMA),
         vol.Optional(CONF_PANEL_DISPLAY,
                      default=DEFAULT_PANEL_DISPLAY): cv.boolean,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
