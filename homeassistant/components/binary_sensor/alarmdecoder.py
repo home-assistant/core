@@ -48,10 +48,10 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        hass.helpers.dispatcher.async_dispatcher_connect(
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_ZONE_FAULT, self._fault_callback)
 
-        hass.helpers.dispatcher.async_dispatcher_connect(
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_ZONE_RESTORE, self._restore_callback)
 
     @property
