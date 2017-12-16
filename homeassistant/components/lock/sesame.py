@@ -4,7 +4,6 @@ Support for Sesame, by CANDY HOUSE.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.sesame/
 """
-import asyncio
 from typing import Callable  # noqa
 import voluptuous as vol
 
@@ -26,26 +25,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
-def async_setup_platform(
+def setup_platform(
         hass, config: ConfigType,
-        async_add_devices: Callable[[list], None], discovery_info=None):
+        add_devices: Callable[[list], None], discovery_info=None):
     """Set up the Sesame platform."""
     import pysesame
 
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
 
-    async_add_devices(
-        [SesameDevice(sesame) for sesame in
-            pysesame.get_sesames(email, password)],
-        update_before_add=True)
+    add_devices([SesameDevice(sesame) for sesame in
+                 pysesame.get_sesames(email, password)],
+                update_before_add=True)
 
 
 class SesameDevice(LockDevice):
     """Representation of a Sesame device."""
 
     _sesame = None
+
+    # Cached sesame properties
+    _device_id = None
+    _nickname = None
+    _is_unlocked = False
+    _api_enabled = False
+    _battery = -1
 
     def __init__(self, sesame: object) -> None:
         """Initialize the Sesame device."""
@@ -54,22 +58,22 @@ class SesameDevice(LockDevice):
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self._sesame.nickname
+        return self._nickname
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._sesame.api_enabled
+        return self._api_enabled
 
     @property
     def is_locked(self) -> bool:
         """Return True if the device is currently locked, else False."""
-        return not self._sesame.is_unlocked
+        return not self._is_unlocked
 
     @property
     def state(self) -> str:
         """Get the state of the device."""
-        if self._sesame.is_unlocked:
+        if self._is_unlocked:
             return STATE_UNLOCKED
         return STATE_LOCKED
 
@@ -84,11 +88,16 @@ class SesameDevice(LockDevice):
     def update(self) -> None:
         """Update the internal state of the device."""
         self._sesame.update_state()
+        self._nickname = self._sesame.nickname
+        self._api_enabled = self._sesame.api_enabled
+        self._is_unlocked = self._sesame.is_unlocked
+        self._device_id = self._sesame.device_id
+        self._battery = self._sesame.battery
 
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         attributes = {}
-        attributes[ATTR_DEVICE_ID] = self._sesame.device_id
-        attributes[ATTR_BATTERY_LEVEL] = self._sesame.battery
+        attributes[ATTR_DEVICE_ID] = self._device_id
+        attributes[ATTR_BATTERY_LEVEL] = self._battery
         return attributes
