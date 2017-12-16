@@ -133,15 +133,6 @@ def test_write_user_info():
 
 
 @asyncio.coroutine
-def test_subscription_not_expired_without_sub_in_claim():
-    """Test that we do not enforce subscriptions yet."""
-    cl = cloud.Cloud(None, cloud.MODE_DEV)
-    cl.id_token = jwt.encode({}, 'test')
-
-    assert not cl.subscription_expired
-
-
-@asyncio.coroutine
 def test_subscription_expired():
     """Test subscription being expired."""
     cl = cloud.Cloud(None, cloud.MODE_DEV)
