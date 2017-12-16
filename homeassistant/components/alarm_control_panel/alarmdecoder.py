@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, name, hass):
+    def __init__(self):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = "Alarm Panel"
