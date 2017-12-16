@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     Light, PLATFORM_SCHEMA
 )
 
@@ -30,12 +30,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the iGlo lighs."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
     add_devices([IGloLamp(name, host, port)])
+
 
 class IGloLamp(Light):
     """Representation of an iGlo light."""
@@ -109,7 +111,6 @@ class IGloLamp(Light):
             self._color_temp = 255 - kwargs[ATTR_COLOR_TEMP]
             self._lamp.white(self._color_temp)
             return
-
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
