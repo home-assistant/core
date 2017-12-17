@@ -38,35 +38,35 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
     kph = value
 
     if unit_1 == SPEED_MILES_PER_HOUR:
-        kph = __miles_per_hour_to_kilometers_per_hour(value)
+        kph = __mph_to_km_per_hour(value)
     elif unit_1 == SPEED_METERS_PER_SECOND:
-        kph = __meters_per_second_to_kilometers_per_hour(value)
+        kph = __m_per_sec_to_km_per_hour(value)
 
     result = kph
 
     if unit_2 == SPEED_MILES_PER_HOUR:
-        result = __kilometers_per_hour_to_miles_per_hour(kph)
+        result = __km_per_hour_to_mph(kph)
     elif unit_2 == SPEED_METERS_PER_SECOND:
-        result = __kilometers_per_hour_to_meters_per_second(kph)
+        result = __km_per_hour_to_m_per_sec(kph)
 
     return result
 
 
-def __miles_per_hour_to_kilometers_per_hour(mph: float) -> float:
+def __mph_to_km_per_hour(mph: float) -> float:
     """Convert miles-per-hour to kilometers-per-hour."""
     return mph * 1.60934
 
 
-def __meters_per_second_to_kilometers_per_hour(mps: float) -> float:
+def __m_per_sec_to_km_per_hour(mps: float) -> float:
     """Convert meters-per-second to kilometers-per-hour."""
     return mps * 3.6
 
 
-def __kilometers_per_hour_to_miles_per_hour(kph: float) -> float:
+def __km_per_hour_to_mph(kph: float) -> float:
     """Convert kilometers-per-hour to miles-per-hour."""
     return kph * 0.621371
 
 
-def __kilometers_per_hour_to_meters_per_second(kph: float) -> float:
+def __km_per_hour_to_m_per_sec(kph: float) -> float:
     """Convert kilometers-per-hour to meters-per-second."""
     return kph * 0.277778
