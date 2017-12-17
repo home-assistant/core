@@ -149,7 +149,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        if not self.last_results or entry not in self.last_results:
+        if device not in self.last_results:
             return None
         return self.last_results[device].name
 
