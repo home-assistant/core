@@ -103,14 +103,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     contract = config.get(CONF_CONTRACT)
 
-    try:
-        hydroquebec_data = HydroquebecData(username, password, contract)
-        contracts = yield from hydroquebec_data.get_contract_list()
-        _LOGGER.info("Contract list: %s",
-                     ", ".join(contracts))
-    except BaseException as error:
-        _LOGGER.error("Login failed: %s", error)
-        return False
+    hydroquebec_data = HydroquebecData(username, password, contract)
+    contracts = yield from hydroquebec_data.get_contract_list()
+    _LOGGER.info("Contract list: %s",
+                 ", ".join(contracts))
 
     name = config.get(CONF_NAME)
 
@@ -188,7 +184,6 @@ class HydroquebecData(object):
             yield from self.client.fetch_data()
         except BaseException as exp:
             _LOGGER.error("Error on receive last Hydroquebec data: %s", exp)
-            return
 
     @asyncio.coroutine
     def async_update(self):
