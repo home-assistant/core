@@ -21,6 +21,7 @@ CONF_ACCOUNTS = 'accounts'
 
 ICON = 'mdi:steam'
 
+STATE_OFFLINE = 'Offline'
 STATE_ONLINE = 'Online'
 STATE_BUSY = 'Busy'
 STATE_AWAY = 'Away'
@@ -86,7 +87,7 @@ class SteamSensor(Entity):
                 4: STATE_SNOOZE,
                 5: STATE_TRADE,
                 6: STATE_PLAY,
-            }.get(self._profile.status, 'Offline')
+            }.get(self._profile.status, STATE_OFFLINE)
             self._name = self._profile.persona
             self._avatar = self._profile.avatar_medium
         except self._steamod.api.HTTPTimeoutError as error:
