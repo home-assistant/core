@@ -24,7 +24,7 @@ freezegun>=0.3.8
 PyJWT==1.5.3
 
 # homeassistant.components.media_player.sonos
-SoCo==0.12
+SoCo==0.13
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.4
@@ -35,6 +35,9 @@ aiohttp_cors==0.5.3
 
 # homeassistant.components.notify.apns
 apns2==0.3.0
+
+# homeassistant.components.calendar.caldav
+caldav==0.5.0
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==4.1.1
@@ -74,7 +77,7 @@ hbmqtt==0.9.1
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171204.0
+home-assistant-frontend==20171216.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -113,7 +116,10 @@ pilight==0.1.1
 pmsensor==0.4
 
 # homeassistant.components.prometheus
-prometheus_client==0.0.19
+prometheus_client==0.0.21
+
+# homeassistant.components.canary
+py-canary==0.2.3
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -176,7 +182,7 @@ vultr==0.1.2
 wakeonlan==0.2.2
 
 # homeassistant.components.cloud
-warrant==0.5.0
+warrant==0.6.1
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0

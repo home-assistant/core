@@ -282,6 +282,9 @@ class ISYSensorDevice(isy.ISYDevice):
     @property
     def state(self) -> str:
         """Get the state of the ISY994 sensor device."""
+        if self.is_unknown():
+            return None
+
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_TO_STATES:
                 states = UOM_TO_STATES.get(self._node.uom[0])
