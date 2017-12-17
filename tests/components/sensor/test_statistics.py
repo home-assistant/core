@@ -108,7 +108,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.assertEqual(14, state.attributes.get('max_value'))
 
     def test_sampling_size_1(self):
-        """Test validity of stats requiring only one sample. """
+        """Test validity of stats requiring only one sample."""
         assert setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'statistics',
