@@ -78,18 +78,7 @@ class SteamSensor(Entity):
         """Update device state."""
         try:
             self._profile = self._steamod.user.profile(self._account)
-            if self._profile.current_game[2] is None:
-                game_id = self._profile.current_game[0]
-
-                # Initialize app list before usage to benefit from internal caching
-                app_list = self._steamod.apps.app_list()
-                if game_id and game_id in app_list:
-                    # The app list always returns a tuble with the game id and the game name
-                    self._game = app_list[game_id][1]
-                else:
-                    self._game = NO_GAME
-            else:
-                self._game = self._profile.current_game[2]
+            self._game = self._get_current_game()
             self._state = {
                 1: STATE_ONLINE,
                 2: STATE_BUSY,
@@ -103,6 +92,23 @@ class SteamSensor(Entity):
         except self._steamod.api.HTTPTimeoutError as error:
             _LOGGER.warning(error)
             self._game = self._state = self._name = self._avatar = None
+
+    def _get_current_game(self):
+        game_id = self._profile.current_game[0]
+        game_extra_info = self._profile.current_game[2]
+
+        if game_extra_info:
+            return game_extra_info
+
+        if game_id:
+            # Initialize app list before usage to benefit from internal caching
+            app_list = self._steamod.apps.app_list()
+            if game_id in app_list:
+                # The app list always returns a tuple
+                # with the game id and the game name
+                return app_list[game_id][1]
+
+        return NO_GAME
 
     @property
     def device_state_attributes(self):
