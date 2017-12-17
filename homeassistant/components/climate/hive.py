@@ -138,7 +138,7 @@ class HiveClimateEntity(ClimateDevice):
 
     @property
     def is_aux_heat_on(self):
-        """Return true if aux heater."""
+        """Return true if aux heater is on."""
         boost_status = None
         boost_status_return = False
         if self.device_type == "Heating":
