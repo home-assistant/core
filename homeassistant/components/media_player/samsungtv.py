@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.samsungtv/
 """
 import logging
 import socket
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -17,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT,
     CONF_MAC)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['samsungctl==0.6.0', 'wakeonlan==0.2.2']
 
@@ -100,6 +102,9 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._playing = True
         self._state = STATE_UNKNOWN
         self._remote = None
+        # Mark the end of a shutdown command (need to wait 15 seconds before
+        # sending the next command to avoid turning the TV back ON).
+        self._end_of_power_off = None
         # Generate a configuration for the Samsung library
         self._config = {
             'name': 'HomeAssistant',
@@ -118,7 +123,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def update(self):
         """Retrieve the latest data."""
         # Send an empty key to see if we are still connected
-        return self.send_key('KEY')
+        self.send_key('KEY')
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -130,6 +135,10 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
+        if self._power_off_in_progress() \
+                and not (key == 'KEY_POWER' or key == 'KEY_POWEROFF'):
+            _LOGGER.info("TV is powering off, not sending command: %s", key)
+            return
         try:
             self.get_remote().control(key)
             self._state = STATE_ON
@@ -139,13 +148,16 @@ class SamsungTVDevice(MediaPlayerDevice):
             # BrokenPipe can occur when the commands is sent to fast
             self._state = STATE_ON
             self._remote = None
-            return False
+            return
         except (self._exceptions_class.ConnectionClosed, OSError):
             self._state = STATE_OFF
             self._remote = None
-            return False
+        if self._power_off_in_progress():
+            self._state = STATE_OFF
 
-        return True
+    def _power_off_in_progress(self):
+        return self._end_of_power_off is not None and \
+               self._end_of_power_off > dt_util.utcnow()
 
     @property
     def name(self):
@@ -171,12 +183,17 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
+        self._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
+
         if self._config['method'] == 'websocket':
             self.send_key('KEY_POWER')
         else:
             self.send_key('KEY_POWEROFF')
         # Force closing of remote session to provide instant UI feedback
-        self.get_remote().close()
+        try:
+            self.get_remote().close()
+        except OSError:
+            _LOGGER.debug("Could not establish connection.")
 
     def volume_up(self):
         """Volume up the media player."""

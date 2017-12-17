@@ -34,6 +34,7 @@ DEVICE_CLASSES = [
     'plug',          # On means plugged in, Off means unplugged
     'power',         # Power, over-current, etc
     'presence',      # On means home, Off means away
+    'problem',       # On means there is a problem, Off means the status is OK
     'safety',        # Generic on=unsafe, off=safe
     'smoke',         # Smoke detector
     'sound',         # On means sound detected, Off means no sound
