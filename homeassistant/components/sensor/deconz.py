@@ -109,7 +109,7 @@ class DeconzBattery(Entity):
         """Register dispatcher callback for update of battery state."""
         self._device = device
         self._battery = device.battery
-        self._name = self._device.name + ' battery level'
+        self._name = self._device.name + ' Battery Level'
         self._device_class = 'battery'
         self._unit_of_measurement = "%"
         self._device.register_async_callback(self.async_update_callback)
