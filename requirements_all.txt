@@ -698,7 +698,7 @@ pyhiveapi==0.2.5
 pyhomematic==0.1.36
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==1.3.1
+pyhydroquebec==2.0.2
 
 # homeassistant.components.alarm_control_panel.ialarm
 pyialarm==0.2
