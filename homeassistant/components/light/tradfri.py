@@ -28,14 +28,14 @@ TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 
 
-def normalize_xy(x, y, brightness=None):
+def normalize_xy(argx, argy, brightness=None):
     """Normalise XY to Tradfri scaling."""
-    return (int(x*65535+0.5), int(y*65535+0.5))
+    return (int(argx*65535+0.5), int(argy*65535+0.5))
 
 
-def denormalize_xy(x, y, brightness=None):
+def denormalize_xy(argx, argy, brightness=None):
     """Denormalise XY from Tradfri scaling."""
-    return (int(x/65535-0.5), int(y/65535-0.5))
+    return (int(argx/65535-0.5), int(argy/65535-0.5))
 
 
 @asyncio.coroutine
@@ -245,14 +245,14 @@ class TradfriLight(Light):
                 params.pop(ATTR_TRANSITION_TIME, None)
             yield from self._api(
                 self._light_control.set_xy_color(*normalize_xy(
-                                                    *kwargs[ATTR_XY_COLOR]),
-                                                 **params))
+                    *kwargs[ATTR_XY_COLOR]), **params))
         elif ATTR_RGB_COLOR in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
-            xy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
+            argxy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
             yield from self._api(
-                self._light_control.set_xy_color(*normalize_xy(xy[0], xy[1]),
+                self._light_control.set_xy_color(*normalize_xy(argxy[0],
+                                                               argxy[1]),
                                                  **params))
         elif ATTR_COLOR_TEMP in kwargs:
             if brightness is not None:
