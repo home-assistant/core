@@ -149,12 +149,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        if not self.last_results:
+        if not self.last_results or entry not in self.last_results:
             return None
-        entry = self.last_results.get(device)
-        if not entry:
-            return None
-        return entry.name
+        return self.last_results[device].name
 
     def _update_info(self):
         """Ensure the information from the ASUSWRT router is up to date.
