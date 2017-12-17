@@ -224,7 +224,8 @@ class TradfriLight(Light):
     @property
     def xy_color(self):
         """XY colour of the light."""
-        return denormalize_xy(*self._light_data.xy_color)
+        if self._light_data.xy_color:
+            return denormalize_xy(*self._light_data.xy_color)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
