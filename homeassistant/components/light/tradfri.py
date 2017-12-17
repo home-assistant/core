@@ -28,6 +28,16 @@ TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 
 
+def normalize_xy(x, y, brightness=None):
+    """Normalise XY to Tradfri scaling."""
+    return (int(x*65535+0.5), int(y*65535+0.5))
+
+
+def denormalize_xy(x, y, brightness=None):
+    """Denormalise XY from Tradfri scaling."""
+    return (int(x/65535-0.5), int(y/65535-0.5))
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the IKEA Tradfri Light platform."""
@@ -213,17 +223,13 @@ class TradfriLight(Light):
 
     @property
     def xy_color(self):
-        """XY color of the light."""
-        return self._light_data.xy_color
+        """XY colour of the light."""
+        return denormalize_xy(*self._light_data.xy_color)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         yield from self._api(self._light_control.set_state(False))
-
-    def normalize_xy(x, y):
-        """Normalise XY to Tradfri scaling."""
-        return (int(x*65535+0.5), int(y*65535+0.5))
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
