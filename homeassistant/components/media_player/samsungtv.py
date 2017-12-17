@@ -8,6 +8,7 @@ import logging
 import socket
 from datetime import timedelta
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -16,15 +17,13 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT,
-    CONF_MAC)
+    CONF_MAC, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['samsungctl==0.6.0', 'wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_TIMEOUT = 'timeout'
 
 DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
@@ -36,11 +35,14 @@ SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_PLAY
 
+CONF_STATUS_VIA_REST = 'get_status_via_rest'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_STATUS_VIA_REST, default=False): cv.boolean
 })
 
 
@@ -59,6 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         mac = config.get(CONF_MAC)
         timeout = config.get(CONF_TIMEOUT)
+        status_via_rest = config.get(CONF_STATUS_VIA_REST)
     elif discovery_info is not None:
         tv_name = discovery_info.get('name')
         model = discovery_info.get('model_name')
@@ -67,6 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         port = DEFAULT_PORT
         timeout = DEFAULT_TIMEOUT
         mac = None
+        status_via_rest = False
     else:
         _LOGGER.warning("Cannot determine device")
         return
@@ -76,7 +80,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
-        add_devices([SamsungTVDevice(host, port, name, timeout, mac)])
+        add_devices([
+            SamsungTVDevice(host, port, name, timeout, mac, status_via_rest)
+        ])
         _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
     else:
         _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
@@ -85,7 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac):
+    def __init__(self, host, port, name, timeout, mac, status_via_rest):
         """Initialize the Samsung device."""
         from samsungctl import exceptions
         from samsungctl import Remote
@@ -96,6 +102,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._name = name
         self._mac = mac
         self._wol = wol
+        self._status_via_rest = status_via_rest
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -122,8 +129,28 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Retrieve the latest data."""
-        # Send an empty key to see if we are still connected
-        self.send_key('KEY')
+        if self._config['method'] == 'websocket' and self._status_via_rest:
+            # Check if the TV Rest Server is active
+            self._update_status_via_rest_endpoint()
+        else:
+            # Send an empty key to see if we are still connected
+            self.send_key('KEY')
+
+    def _update_status_via_rest_endpoint(self, **kwargs):
+        url = "http://{}:{}/api/v2/"
+        url = url.format(self._config['host'], self._config['port'])
+        try:
+            res = requests.get(url, timeout=5, **kwargs)
+        except (requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError,
+                requests.exceptions.ReadTimeout):
+            self._state = STATE_OFF
+            return
+        if res is not None and res.status_code == 200:
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
 
     def get_remote(self):
         """Create or return a remote control instance."""
