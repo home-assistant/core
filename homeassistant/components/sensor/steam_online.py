@@ -26,8 +26,8 @@ STATE_ONLINE = 'Online'
 STATE_BUSY = 'Busy'
 STATE_AWAY = 'Away'
 STATE_SNOOZE = 'Snooze'
-STATE_TRADE = 'Trade'
-STATE_PLAY = 'Play'
+STATE_LOOKING_TO_TRADE = 'Looking to trade'
+STATE_LOOKING_TO_PLAY = 'Looking to play'
 
 NO_GAME = 'None'
 
@@ -87,8 +87,8 @@ class SteamSensor(Entity):
                 2: STATE_BUSY,
                 3: STATE_AWAY,
                 4: STATE_SNOOZE,
-                5: STATE_TRADE,
-                6: STATE_PLAY,
+                5: STATE_LOOKING_TO_TRADE,
+                6: STATE_LOOKING_TO_PLAY,
             }.get(self._profile.status, STATE_OFFLINE)
             self._name = self._profile.persona
             self._avatar = self._profile.avatar_medium
