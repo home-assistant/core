@@ -27,7 +27,7 @@ from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['SoCo==0.12']
+REQUIREMENTS = ['SoCo==0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ SERVICE_RESTORE = 'sonos_restore'
 SERVICE_SET_TIMER = 'sonos_set_sleep_timer'
 SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
+SERVICE_SET_OPTION = 'sonos_set_option'
 
 DATA_SONOS = 'sonos'
 
@@ -69,6 +70,8 @@ ATTR_ENABLED = 'enabled'
 ATTR_INCLUDE_LINKED_ZONES = 'include_linked_zones'
 ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
+ATTR_NIGHT_SOUND = 'night_sound'
+ATTR_SPEECH_ENHANCE = 'speech_enhance'
 
 ATTR_IS_COORDINATOR = 'is_coordinator'
 
@@ -103,6 +106,11 @@ SONOS_UPDATE_ALARM_SCHEMA = SONOS_SCHEMA.extend({
     vol.Optional(ATTR_VOLUME): cv.small_float,
     vol.Optional(ATTR_ENABLED): cv.boolean,
     vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+})
+
+SONOS_SET_OPTION_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
+    vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
 })
 
 
@@ -192,6 +200,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device.clear_sleep_timer()
             elif service.service == SERVICE_UPDATE_ALARM:
                 device.update_alarm(**service.data)
+            elif service.service == SERVICE_SET_OPTION:
+                device.update_option(**service.data)
 
             device.schedule_update_ha_state(True)
 
@@ -223,6 +233,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DOMAIN, SERVICE_UPDATE_ALARM, service_handle,
         descriptions.get(SERVICE_UPDATE_ALARM),
         schema=SONOS_UPDATE_ALARM_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_OPTION, service_handle,
+        descriptions.get(SERVICE_SET_OPTION),
+        schema=SONOS_SET_OPTION_SCHEMA)
 
 
 def _parse_timespan(timespan):
@@ -337,6 +352,8 @@ class SonosDevice(MediaPlayerDevice):
         self._support_shuffle_set = True
         self._support_stop = False
         self._support_pause = False
+        self._night_sound = None
+        self._speech_enhance = None
         self._current_track_uri = None
         self._current_track_is_radio_stream = False
         self._queue = None
@@ -457,6 +474,8 @@ class SonosDevice(MediaPlayerDevice):
             self._support_shuffle_set = False
             self._support_stop = False
             self._support_pause = False
+            self._night_sound = None
+            self._speech_enhance = None
             self._is_playing_tv = False
             self._is_playing_line_in = False
             self._source_name = None
@@ -528,6 +547,9 @@ class SonosDevice(MediaPlayerDevice):
         media_position = None
         media_position_updated_at = None
         source_name = None
+
+        night_sound = self._player.night_mode
+        speech_enhance = self._player.dialog_mode
 
         is_radio_stream = \
             current_media_uri.startswith('x-sonosapi-stream:') or \
@@ -705,6 +727,8 @@ class SonosDevice(MediaPlayerDevice):
         self._support_shuffle_set = support_shuffle_set
         self._support_stop = support_stop
         self._support_pause = support_pause
+        self._night_sound = night_sound
+        self._speech_enhance = speech_enhance
         self._is_playing_tv = is_playing_tv
         self._is_playing_line_in = is_playing_line_in
         self._source_name = source_name
@@ -847,6 +871,16 @@ class SonosDevice(MediaPlayerDevice):
             return self._coordinator.media_title
 
         return self._media_title
+
+    @property
+    def night_sound(self):
+        """Get status of Night Sound."""
+        return self._night_sound
+
+    @property
+    def speech_enhance(self):
+        """Get status of Speech Enhancement."""
+        return self._speech_enhance
 
     @property
     def supported_features(self):
@@ -1179,7 +1213,24 @@ class SonosDevice(MediaPlayerDevice):
             a.include_linked_zones = data[ATTR_INCLUDE_LINKED_ZONES]
         a.save()
 
+    @soco_error
+    def update_option(self, **data):
+        """Modify playback options."""
+        if ATTR_NIGHT_SOUND in data and self.night_sound is not None:
+            self.soco.night_mode = data[ATTR_NIGHT_SOUND]
+
+        if ATTR_SPEECH_ENHANCE in data and self.speech_enhance is not None:
+            self.soco.dialog_mode = data[ATTR_SPEECH_ENHANCE]
+
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {ATTR_IS_COORDINATOR: self.is_coordinator}
+        attributes = {ATTR_IS_COORDINATOR: self.is_coordinator}
+
+        if self.night_sound is not None:
+            attributes[ATTR_NIGHT_SOUND] = self.night_sound
+
+        if self.speech_enhance is not None:
+            attributes[ATTR_SPEECH_ENHANCE] = self.speech_enhance
+
+        return attributes
