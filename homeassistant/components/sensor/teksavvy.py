@@ -144,20 +144,20 @@ class TekSavvyData(object):
         req = '/web/Usage/UsageSummaryRecords?$filter=IsCurrent%20eq%20true'
         conn.request('GET', req, '', headers)
         response = conn.getresponse()
-        jsonData = response.read().decode("utf-8")
-        data = json.loads(jsonData)
-        for (Api, Ha) in API_HA_MAP:
-            self.data[Ha] = float(data["value"][0][Api])
-        OnPeakDownload = self.data["onpeak_download"]
-        OnPeakUpload = self.data["onpeak_upload"]
-        OffPeakDownload = self.data["offpeak_download"]
-        OffPeakUpload = self.data["offpeak_upload"]
-        Limit = self.data["limit"]
-        self.data["usage"] = 100*OnPeakDownload/self.bandwidth_cap
-        self.data["usage_gb"] = OnPeakDownload
-        self.data["onpeak_total"] = OnPeakDownload + OnPeakUpload
-        self.data["offpeak_total"] = OffPeakDownload + OffPeakUpload
-        self.data["onpeak_remaining"] = Limit - OnPeakUpload
+        json_data = response.read().decode("utf-8")
+        data = json.loads(json_data)
+        for (api, ha_name) in API_HA_MAP:
+            self.data[ha_name] = float(data["value"][0][api])
+        on_peak_download = self.data["onpeak_download"]
+        on_peak_upload = self.data["onpeak_upload"]
+        off_peak_download = self.data["offpeak_download"]
+        off_peak_upload = self.data["offpeak_upload"]
+        limit = self.data["limit"]
+        self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+        self.data["usage_gb"] = on_peak_download
+        self.data["onpeak_total"] = on_peak_download + on_peak_upload
+        self.data["offpeak_total"] = off_peak_download + off_peak_upload
+        self.data["onpeak_remaining"] = limit - on_peak_upload
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
