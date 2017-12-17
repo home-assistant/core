@@ -66,7 +66,10 @@ class ISYLockDevice(isy.ISYDevice, LockDevice):
     @property
     def state(self) -> str:
         """Get the state of the lock."""
-        return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
+        if self.is_unknown():
+            return None
+        else:
+            return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
 
     def lock(self, **kwargs) -> None:
         """Send the lock command to the ISY994 device."""

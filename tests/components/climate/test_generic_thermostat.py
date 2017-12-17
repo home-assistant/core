@@ -205,6 +205,10 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
         self.assertEqual(30.0, state.attributes.get('temperature'))
+        climate.set_temperature(self.hass, None)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY)
+        self.assertEqual(30.0, state.attributes.get('temperature'))
 
     def test_sensor_bad_unit(self):
         """Test sensor that have bad unit."""
@@ -888,19 +892,22 @@ def test_custom_setup_params(hass):
             'min_temp': MIN_TEMP,
             'max_temp': MAX_TEMP,
             'target_temp': TARGET_TEMP,
+            'initial_operation_mode': STATE_OFF,
         }})
     assert result
     state = hass.states.get(ENTITY)
     assert state.attributes.get('min_temp') == MIN_TEMP
     assert state.attributes.get('max_temp') == MAX_TEMP
     assert state.attributes.get('temperature') == TARGET_TEMP
+    assert state.attributes.get(climate.ATTR_OPERATION_MODE) == STATE_OFF
 
 
 @asyncio.coroutine
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
-        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20"}),
+        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
+              climate.ATTR_OPERATION_MODE: "off"}),
     ))
 
     hass.state = CoreState.starting
@@ -915,3 +922,29 @@ def test_restore_state(hass):
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
+    assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
+
+
+@asyncio.coroutine
+def test_no_restore_state(hass):
+    """Ensure states are not restored on startup if not needed."""
+    mock_restore_cache(hass, (
+        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
+              climate.ATTR_OPERATION_MODE: "off"}),
+    ))
+
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(
+        hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test_thermostat',
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'target_temp': 22,
+            'initial_operation_mode': 'auto',
+        }})
+
+    state = hass.states.get('climate.test_thermostat')
+    assert(state.attributes[ATTR_TEMPERATURE] == 22)
+    assert(state.attributes[climate.ATTR_OPERATION_MODE] != "off")

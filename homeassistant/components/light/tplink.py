@@ -72,6 +72,7 @@ class TPLinkSmartBulb(Light):
         if name is not None:
             self._name = name
         self._state = None
+        self._available = True
         self._color_temp = None
         self._brightness = None
         self._rgb = None
@@ -82,6 +83,11 @@ class TPLinkSmartBulb(Light):
     def name(self):
         """Return the name of the Smart Bulb, if any."""
         return self._name
+
+    @property
+    def available(self) -> bool:
+        """Return if bulb is available."""
+        return self._available
 
     @property
     def device_state_attributes(self):
@@ -132,6 +138,7 @@ class TPLinkSmartBulb(Light):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartDeviceException
         try:
+            self._available = True
             if self._supported_features == 0:
                 self.get_features()
             self._state = (
@@ -163,8 +170,10 @@ class TPLinkSmartBulb(Light):
                 except KeyError:
                     # device returned no daily/monthly history
                     pass
+
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning('Could not read state for %s: %s', self._name, ex)
+            _LOGGER.warning("Could not read state for %s: %s", self._name, ex)
+            self._available = False
 
     @property
     def supported_features(self):

@@ -68,11 +68,14 @@ def register(cloud, email, password):
     from botocore.exceptions import ClientError
 
     cognito = _cognito(cloud)
+    # Workaround for bug in Warrant. PR with fix:
+    # https://github.com/capless/warrant/pull/82
+    cognito.add_base_attributes()
     try:
         if cloud.cognito_email_based:
-            cognito.register(email, password, email=email)
+            cognito.register(email, password)
         else:
-            cognito.register(_generate_username(email), password, email=email)
+            cognito.register(_generate_username(email), password)
     except ClientError as err:
         raise _map_aws_exception(err)
 
