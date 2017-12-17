@@ -109,16 +109,9 @@ class HiveDeviceLight(Light):
             value = int(round((tmp_new_color[2] / 255) * 100))
             new_color = (hue, saturation, value)
 
-        if new_brightness is not None:
-            self.session.light.set_brightness(self.node_id, new_brightness)
-        elif new_color_temp is not None:
-            self.session.light.set_color_temp(self.node_id,
-                                              self.light_device_type,
-                                              new_color_temp)
-        elif new_color is not None:
-            self.session.light.set_color(self.node_id, new_color)
-        else:
-            self.session.light.turn_on(self.node_id)
+        self.session.light.turn_on(self.node_id, self.light_device_type,
+                                   new_brightness, new_color_temp,
+                                   new_color)
 
         for entity in self.session.entities:
             entity.handle_update(self.data_updatesource)
