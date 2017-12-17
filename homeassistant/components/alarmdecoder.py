@@ -67,7 +67,7 @@ DEVICE_USB_SCHEMA = vol.Schema({
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_NAME): cv.string,
     vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string,
-    vol.Optional(CONF_ZONE_RFID, default=None): cv.string})
+    vol.Optional(CONF_ZONE_RFID): cv.string})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -110,7 +110,8 @@ def setup(hass, config):
 
     def handle_rfx_message(sender, message):
         """Handle RFX message from AlarmDecoder."""
-        async_dispatcher_send(hass, SIGNAL_RFX_MESSAGE, message)
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_RFX_MESSAGE, message)
 
     def zone_fault_callback(sender, zone):
         """Handle zone fault from AlarmDecoder."""

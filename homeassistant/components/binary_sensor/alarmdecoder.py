@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
-        zone_rfid = device_config_data[CONF_ZONE_RFID]
+        zone_rfid = device_config_data.get(CONF_ZONE_RFID)
         device = AlarmDecoderBinarySensor(
             zone_num, zone_name, zone_type, zone_rfid)
         devices.append(device)
@@ -66,7 +66,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
             SIGNAL_ZONE_RESTORE, self._restore_callback)
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.hass, SIGNAL_RFX_MESSAGE, self._rfx_message_callback)
+            SIGNAL_RFX_MESSAGE, self._rfx_message_callback)
 
     @property
     def name(self):
