@@ -29,7 +29,8 @@ CONF_ALL_DAY = 'all_day'
 CONF_SEARCH = 'search'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): vol.Url,
+    # pylint: disable=no-value-for-parameter
+    vol.Required(CONF_URL): vol.Url(),
     vol.Optional(CONF_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             cv.string
