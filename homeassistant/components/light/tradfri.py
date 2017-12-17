@@ -221,6 +221,10 @@ class TradfriLight(Light):
         """Instruct the light to turn off."""
         yield from self._api(self._light_control.set_state(False))
 
+    def normalize_xy(x, y):
+        """Normalise XY to Tradfri scaling."""
+        return (int(x*65535+0.5), int(y*65535+0.5))
+
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
@@ -234,18 +238,17 @@ class TradfriLight(Light):
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
             yield from self._api(
-                self._light_control.set_xy_color(*kwargs[ATTR_XY_COLOR],
+                self._light_control.set_xy_color(*normalize_xy(
+                                                    *kwargs[ATTR_XY_COLOR]),
                                                  **params))
-
-        if ATTR_RGB_COLOR in kwargs:
+        elif ATTR_RGB_COLOR in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
             xy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
             yield from self._api(
-                self._light_control.set_xy_color(xy[0], xy[1],
+                self._light_control.set_xy_color(*normalize_xy(xy[0], xy[1]),
                                                  **params))
-
-        if ATTR_COLOR_TEMP in kwargs:
+        elif ATTR_COLOR_TEMP in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
             yield from self._api(
