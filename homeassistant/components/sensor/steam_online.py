@@ -29,6 +29,8 @@ STATE_SNOOZE = 'Snooze'
 STATE_TRADE = 'Trade'
 STATE_PLAY = 'Play'
 
+NO_GAME = 'None'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_ACCOUNTS, default=[]):
@@ -77,7 +79,7 @@ class SteamSensor(Entity):
         try:
             self._profile = self._steamod.user.profile(self._account)
             if self._profile.current_game[2] is None:
-                self._game = 'None'
+                self._game = NO_GAME
             else:
                 self._game = self._profile.current_game[2]
             self._state = {
