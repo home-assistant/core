@@ -79,7 +79,15 @@ class SteamSensor(Entity):
         try:
             self._profile = self._steamod.user.profile(self._account)
             if self._profile.current_game[2] is None:
-                self._game = NO_GAME
+                game_id = self._profile.current_game[0]
+
+                # Initialize app list before usage to benefit from internal caching
+                app_list = self._steamod.apps.app_list()
+                if game_id and game_id in app_list:
+                    # The app list always returns a tuble with the game id and the game name
+                    self._game = app_list[game_id][1]
+                else:
+                    self._game = NO_GAME
             else:
                 self._game = self._profile.current_game[2]
             self._state = {
