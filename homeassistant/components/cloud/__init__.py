@@ -16,7 +16,7 @@ from homeassistant.components.alexa import smart_home
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
-REQUIREMENTS = ['warrant==0.5.0']
+REQUIREMENTS = ['warrant==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
 
 MODE_DEV = 'development'
-DEFAULT_MODE = MODE_DEV
+DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
 
 ALEXA_SCHEMA = vol.Schema({
@@ -42,10 +42,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_MODE, default=DEFAULT_MODE):
             vol.In([MODE_DEV] + list(SERVERS)),
         # Change to optional when we include real servers
-        vol.Required(CONF_COGNITO_CLIENT_ID): str,
-        vol.Required(CONF_USER_POOL_ID): str,
-        vol.Required(CONF_REGION): str,
-        vol.Required(CONF_RELAYER): str,
+        vol.Optional(CONF_COGNITO_CLIENT_ID): str,
+        vol.Optional(CONF_USER_POOL_ID): str,
+        vol.Optional(CONF_REGION): str,
+        vol.Optional(CONF_RELAYER): str,
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -117,10 +117,6 @@ class Cloud:
     @property
     def subscription_expired(self):
         """Return a boolen if the subscription has expired."""
-        # For now, don't enforce subscriptions to exist
-        if 'custom:sub-exp' not in self.claims:
-            return False
-
         return dt_util.utcnow() > self.expiration_date
 
     @property

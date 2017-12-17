@@ -12,7 +12,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC)
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
+)
 
 REQUIREMENTS = ['miflora==0.1.16']
 
@@ -20,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ADAPTER = 'adapter'
 CONF_CACHE = 'cache_value'
-CONF_FORCE_UPDATE = 'force_update'
 CONF_MEDIAN = 'median'
 CONF_RETRIES = 'retries'
 CONF_TIMEOUT = 'timeout'
