@@ -66,6 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(error)
         return
 
+
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
@@ -75,23 +76,19 @@ class PlexSensor(Entity):
         from plexapi.myplex import MyPlexAccount
         from plexapi.server import PlexServer
 
-        cert_session = None
-
         self._name = name
         self._state = 0
         self._now_playing = []
 
         if plex_token:
-            self._server = PlexServer(plex_url, plex_token, cert_session)
+            self._server = PlexServer(plex_url, plex_token)
         elif plex_user and plex_password:
             user = MyPlexAccount(plex_user, plex_password)
-            server = plex_server if plex_server \
-                else user.resources()[0].name
+            server = plex_server if plex_server else user.resources()[0].name
             self._server = user.resource(server).connect()
         else:
             self._server = PlexServer(plex_url)
 
-        _LOGGER.info("Plex Sensor Configuration done")
 
     @property
     def name(self):
