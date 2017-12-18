@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, CONF_RESOURCE, CONF_MONITORED_CONDITIONS,
     TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +37,6 @@ SENSOR_TYPES = {
 
 DEFAULT_NAME = 'Luftdaten Sensor'
 DEFAULT_RESOURCE = 'https://api.luftdaten.info/v1/sensor/'
-DEFAULT_VERIFY_SSL = True
 
 CONF_SENSORID = 'sensorid'
 
@@ -49,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_RESOURCE, default=DEFAULT_RESOURCE): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
 })
 
 
@@ -58,11 +56,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Luftdaten sensor."""
     name = config.get(CONF_NAME)
     sensorid = config.get(CONF_SENSORID)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
+
 
     resource = '{}{}/'.format(config.get(CONF_RESOURCE), sensorid)
 
-    rest_client = LuftdatenData(resource, verify_ssl)
+    rest_client = LuftdatenData(resource)
     rest_client.update()
 
     if rest_client.data is None:
@@ -123,10 +121,9 @@ class LuftdatenSensor(Entity):
 class LuftdatenData(object):
     """Class for handling the data retrieval."""
 
-    def __init__(self, resource, verify_ssl):
+    def __init__(self, resource):
         """Initialize the data object."""
         self._request = requests.Request('GET', resource).prepare()
-        self._verify_ssl = verify_ssl
         self.data = None
 
     def update(self):
@@ -134,7 +131,7 @@ class LuftdatenData(object):
         try:
             with requests.Session() as sess:
                 response = sess.send(
-                    self._request, timeout=10, verify=self._verify_ssl)
+                    self._request, timeout=10, verify=True)
 
             self.data = response.text
         except requests.exceptions.RequestException:
