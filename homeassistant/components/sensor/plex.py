@@ -26,6 +26,7 @@ CONF_SERVER = 'server'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Plex'
 DEFAULT_PORT = 32400
+DEFAULT_SSL = False
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -37,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
