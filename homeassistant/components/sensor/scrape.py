@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_USERNAME,
+    CONF_VALUE_TEMPLATE, CONF_USERNAME,
     CONF_PASSWORD, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.entity import Entity
@@ -27,7 +27,6 @@ CONF_SELECT = 'select'
 CONF_ATTR = 'attribute'
 
 DEFAULT_NAME = 'Web scrape'
-DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.string,
@@ -40,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 
@@ -50,7 +48,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     method = 'GET'
     payload = headers = None
-    verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
     attr = config.get(CONF_ATTR)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -67,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, payload)
     rest.update()
 
     if rest.data is None:
