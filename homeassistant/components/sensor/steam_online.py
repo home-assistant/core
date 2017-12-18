@@ -41,17 +41,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Steam platform."""
     import steam as steamod
     steamod.api.key.set(config.get(CONF_API_KEY))
+    # Initialize steammods app list before creating sensors
+    # to benefit from internal caching of the list.
+    steam_app_list = steamod.apps.app_list()
     add_devices(
         [SteamSensor(account,
-                     steamod) for account in config.get(CONF_ACCOUNTS)], True)
+                     steamod,
+                     steam_app_list)
+         for account in config.get(CONF_ACCOUNTS)], True)
 
 
 class SteamSensor(Entity):
     """A class for the Steam account."""
 
-    def __init__(self, account, steamod):
+    def __init__(self, account, steamod, steam_app_list):
         """Initialize the sensor."""
         self._steamod = steamod
+        self._steam_app_list = steam_app_list
         self._account = account
         self._profile = None
         self._game = self._state = self._name = self._avatar = None
@@ -98,13 +104,10 @@ class SteamSensor(Entity):
         if game_extra_info:
             return game_extra_info
 
-        if game_id:
-            # Initialize app list before usage to benefit from internal caching
-            app_list = self._steamod.apps.app_list()
-            if game_id in app_list:
-                # The app list always returns a tuple
-                # with the game id and the game name
-                return app_list[game_id][1]
+        if game_id and game_id in self._steam_app_list:
+            # The app list always returns a tuple
+            # with the game id and the game name
+            return self._steam_app_list[game_id][1]
 
         return None
 
