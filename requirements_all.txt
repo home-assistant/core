@@ -208,6 +208,9 @@ denonavr==0.5.5
 # homeassistant.components.media_player.directv
 directpy==0.2
 
+# homeassistant.components.sensor.discogs
+discogs_client==2.2.1
+
 # homeassistant.components.notify.discord
 discord.py==0.16.12
 
