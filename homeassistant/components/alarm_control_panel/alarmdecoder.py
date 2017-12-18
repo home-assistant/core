@@ -35,6 +35,16 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         self._name = "Alarm Panel"
         self._state = None
 
+        self._ac_power = None
+        self._backlight_on = None
+        self._battery_low = None
+        self._check_zone = None
+        self._chime = None
+        self._entry_delay_off = None
+        self._programming_mode = None
+        self._ready = None
+        self._zone_bypassed = None
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
@@ -42,22 +52,63 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             SIGNAL_PANEL_MESSAGE, self._message_callback)
 
     def _message_callback(self, message):
+        do_update = False
+
         if message.alarm_sounding or message.fire_alarm:
             if self._state != STATE_ALARM_TRIGGERED:
                 self._state = STATE_ALARM_TRIGGERED
-                self.schedule_update_ha_state()
+                do_update = True
         elif message.armed_away:
             if self._state != STATE_ALARM_ARMED_AWAY:
                 self._state = STATE_ALARM_ARMED_AWAY
-                self.schedule_update_ha_state()
+                do_update = True
         elif message.armed_home:
             if self._state != STATE_ALARM_ARMED_HOME:
                 self._state = STATE_ALARM_ARMED_HOME
-                self.schedule_update_ha_state()
+                do_update = True
         else:
             if self._state != STATE_ALARM_DISARMED:
                 self._state = STATE_ALARM_DISARMED
-                self.schedule_update_ha_state()
+                do_update = True
+                
+        if self._ac_power != message.ac_power:
+            self._ac_power = message.ac_power
+            do_update = True
+
+        if self._backlight_on != message.backlight_on:
+            self._backlight_on = message.backlight_on
+            do_update = True
+
+        if self._battery_low != message.battery_low:
+            self._battery_low = message.battery_low
+            do_update = True
+
+        if self._check_zone != message.check_zone:
+            self._check_zone = message.check_zone
+            do_update = True
+
+        if self._chime != message.chime_on:
+            self._chime = message.chime_on
+            do_update = True
+
+        if self._entry_delay_off != message.entry_delay_off:
+            self._entry_delay_off = message.entry_delay_off
+            do_update = True
+
+        if self._programming_mode != message.programming_mode:
+            self._programming_mode = message.programming_mode
+            do_update = True
+
+        if self._ready != message.ready:
+            self._ready = message.ready
+            do_update = True
+
+        if self._zone_bypassed != message.zone_bypassed:
+            self._zone_bypassed = message.zone_bypassed
+            do_update = True
+            
+        if do_update is True:
+            self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -78,6 +129,21 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'ac_power': self._ac_power,
+            'backlight_on': self._backlight_on,
+            'battery_low': self._battery_low,
+            'check_zone': self._check_zone,
+            'chime': self._chime,
+            'entry_delay_off': self._entry_delay_off,
+            'programming_mode': self._programming_mode,
+            'ready': self._ready,
+            'zone_bypassed': self._zone_bypassed
+        }
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
