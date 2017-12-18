@@ -160,9 +160,7 @@ class LimitlessLEDGroup(Light):
     def __init__(self, group, config):
         """Initialize a group."""
         self.group = group
-        self.repeating = False
         self._is_on = False
-        self._brightness = None
         self.config = config
 
     @staticmethod
@@ -213,13 +211,8 @@ class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
     def __init__(self, group, config):
         """Initialize White group."""
         super().__init__(group, config)
-        # Initialize group with known values.
-        self.group.on = True
-        self.group.temperature = 1.0
-        self.group.brightness = 0.0
-        self._brightness = _to_hass_brightness(1.0)
-        self._temperature = _to_hass_temperature(self.group.temperature)
-        self.group.on = False
+        self.group.white()
+        self._is_on = False
 
     @property
     def color_temp(self):
@@ -253,13 +246,8 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
     def __init__(self, group, config):
         """Initialize RGBW group."""
         super().__init__(group, config)
-        # Initialize group with known values.
-        self.group.on = True
         self.group.white()
-        self._color = WHITE
-        self.group.brightness = 0.0
-        self._brightness = _to_hass_brightness(1.0)
-        self.group.on = False
+        self._is_on = False
 
     @property
     def rgb_color(self):
@@ -312,15 +300,8 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
     def __init__(self, group, config):
         """Initialize RGBWW group."""
         super().__init__(group, config)
-        # Initialize group with known values.
-        self.group.on = True
         self.group.white()
-        self.group.temperature = 0.0
-        self._color = WHITE
-        self.group.brightness = 0.0
-        self._brightness = _to_hass_brightness(1.0)
-        self._temperature = _to_hass_temperature(self.group.temperature)
-        self.group.on = False
+        self._is_on = False
 
     @property
     def rgb_color(self):
