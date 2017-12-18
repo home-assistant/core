@@ -232,7 +232,7 @@ class TradfriLight(Light):
         """RGB colour of the light."""
         if self._light_data.xy_color:
             dimmer = self._light_data.dimmer
-            xyb = denormalize_xy(*self._light_data.xy_color) + dimmer
+            xyb = denormalize_xy(*self._light_data.xy_color) + tuple(dimmer)
             return color_util.color_xy_brightness_to_RGB(*xyb)
 
     @asyncio.coroutine
