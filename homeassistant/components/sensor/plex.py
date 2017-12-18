@@ -55,10 +55,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_url = '{}://{}:{}'.format('https' if config.get(CONF_SSL) else 'http',
                                    plex_host, plex_port)
 
-    add_devices([PlexSensor(
-        name, plex_url, plex_user, plex_password, plex_server,
-        plex_token)], True)
+    import plexapi.exceptions
 
+    try:
+        add_devices([PlexSensor(
+            name, plex_url, plex_user, plex_password, plex_server,
+            plex_token)], True)
+    except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
+            plexapi.exceptions.NotFound) as error:
+        _LOGGER.error(error)
+        return
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
@@ -68,7 +74,6 @@ class PlexSensor(Entity):
         """Initialize the sensor."""
         from plexapi.myplex import MyPlexAccount
         from plexapi.server import PlexServer
-        import plexapi.exceptions
 
         cert_session = None
 
@@ -76,22 +81,17 @@ class PlexSensor(Entity):
         self._state = 0
         self._now_playing = []
 
-        try:
-            if plex_token:
-                self._server = PlexServer(plex_url, plex_token, cert_session)
-            elif plex_user and plex_password:
-                user = MyPlexAccount(plex_user, plex_password)
-                server = plex_server if plex_server \
-                    else user.resources()[0].name
-                self._server = user.resource(server).connect()
-            else:
-                self._server = PlexServer(plex_url)
+        if plex_token:
+            self._server = PlexServer(plex_url, plex_token, cert_session)
+        elif plex_user and plex_password:
+            user = MyPlexAccount(plex_user, plex_password)
+            server = plex_server if plex_server \
+                else user.resources()[0].name
+            self._server = user.resource(server).connect()
+        else:
+            self._server = PlexServer(plex_url)
 
-            _LOGGER.info("Plex Sensor Configuration done")
-        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
-                plexapi.exceptions.NotFound) as error:
-            _LOGGER.info(error)
-            return
+        _LOGGER.info("Plex Sensor Configuration done")
 
     @property
     def name(self):
