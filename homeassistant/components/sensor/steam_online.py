@@ -29,8 +29,6 @@ STATE_SNOOZE = 'snooze'
 STATE_LOOKING_TO_TRADE = 'looking_to_trade'
 STATE_LOOKING_TO_PLAY = 'looking_to_play'
 
-NO_GAME = 'None'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_ACCOUNTS, default=[]):
@@ -108,7 +106,7 @@ class SteamSensor(Entity):
                 # with the game id and the game name
                 return app_list[game_id][1]
 
-        return NO_GAME
+        return None
 
     @property
     def device_state_attributes(self):
