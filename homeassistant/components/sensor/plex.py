@@ -38,7 +38,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
 
@@ -52,32 +51,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
     plex_token = config.get(CONF_TOKEN)
-    plex_ssl = config.get(CONF_SSL)
-    plex_verify_ssl = config.get(CONF_VERIFY_SSL)
 
-    plex_url = '{}://{}:{}'.format('https' if plex_ssl else 'http',
+    plex_url = '{}://{}:{}'.format('https' if config.get(CONF_SSL) else 'http',
                                    plex_host, plex_port)
 
     add_devices([PlexSensor(
         name, plex_url, plex_user, plex_password, plex_server,
-        plex_token, plex_ssl, plex_verify_ssl)], True)
+        plex_token)], True)
 
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
     def __init__(self, name, plex_url, plex_user, plex_password,
-                 plex_server, plex_token, plex_ssl, plex_verify_ssl):
+                 plex_server, plex_token):
         """Initialize the sensor."""
         from plexapi.myplex import MyPlexAccount
         from plexapi.server import PlexServer
         import plexapi.exceptions
 
         cert_session = None
-        if plex_ssl and (plex_verify_ssl is False):
-            _LOGGER.info("Ignoring SSL verification")
-            cert_session = requests.Session()
-            cert_session.verify = False
 
         self._name = name
         self._state = 0
