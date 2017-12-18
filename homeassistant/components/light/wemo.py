@@ -233,10 +233,8 @@ class WemoDimmer(Light):
         else:
             brightness = 255
         self.wemo.set_brightness(brightness)
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
         self._state = WEMO_OFF
         self.wemo.off()
-        self.schedule_update_ha_state()
