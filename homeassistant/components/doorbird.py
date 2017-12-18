@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['DoorBirdPy==0.1.0']
+REQUIREMENTS = ['DoorBirdPy==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

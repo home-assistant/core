@@ -1,24 +1,30 @@
 """Support for reading binary states from a DoorBird video doorbell."""
-from datetime import timedelta
+import asyncio
+import datetime
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
-from homeassistant.util import Throttle
+from homeassistant.components.http import HomeAssistantView
 
 DEPENDENCIES = ['doorbird']
 
 _LOGGER = logging.getLogger(__name__)
-_MIN_UPDATE_INTERVAL = timedelta(milliseconds=250)
+
+API_URL = "/api/" + DOORBIRD_DOMAIN
+
+SENSOR_DOORBELL = "doorbell"
 
 SENSOR_TYPES = {
-    "doorbell": {
+    SENSOR_DOORBELL: {
         "name": "Doorbell Ringing",
         "icon": {
             True: "bell-ring",
             False: "bell",
             None: "bell-outline"
-        }
+        },
+        "time": datetime.timedelta(seconds=5),
+        "instance": None
     }
 }
 
@@ -26,7 +32,21 @@ SENSOR_TYPES = {
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DoorBird binary sensor component."""
     device = hass.data.get(DOORBIRD_DOMAIN)
-    add_devices([DoorBirdBinarySensor(device, "doorbell")], True)
+
+    # Provide an endpoint for the device to call to trigger events
+    hass.http.register_view(DoorbirdRequestView())
+    _LOGGER.debug("Registered DoorBird request view")
+
+    # This will make HA the only service that gets doorbell events
+    url = hass.config.api.base_url + API_URL + "/" + SENSOR_DOORBELL
+    device.reset_notifications()
+    device.subscribe_notification(SENSOR_DOORBELL, url)
+    _LOGGER.debug("Configured DoorBird notifications")
+
+    doorbell = DoorBirdBinarySensor(device, SENSOR_DOORBELL)
+    SENSOR_TYPES[SENSOR_DOORBELL]["instance"] = doorbell
+    add_devices([doorbell], True)
+    _LOGGER.info("Added DoorBird binary sensor")
 
 
 class DoorBirdBinarySensor(BinarySensorDevice):
@@ -36,7 +56,13 @@ class DoorBirdBinarySensor(BinarySensorDevice):
         """Initialize a binary sensor on a DoorBird device."""
         self._device = device
         self._sensor_type = sensor_type
-        self._state = None
+        self._assume_off = datetime.datetime.now()
+
+    def push(self):
+        """Handle a message from the device."""
+        now = datetime.datetime.now()
+        time = SENSOR_TYPES[self._sensor_type]["time"]
+        self._assume_off = now + time
 
     @property
     def name(self):
@@ -46,15 +72,35 @@ class DoorBirdBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Get an icon to display."""
-        state_icon = SENSOR_TYPES[self._sensor_type]["icon"][self._state]
+        state_icon = SENSOR_TYPES[self._sensor_type]["icon"][self.is_on]
         return "mdi:{}".format(state_icon)
 
     @property
     def is_on(self):
         """Get the state of the binary sensor."""
-        return self._state
+        return self._assume_off > datetime.datetime.now()
 
-    @Throttle(_MIN_UPDATE_INTERVAL)
-    def update(self):
-        """Pull the latest value from the device."""
-        self._state = self._device.doorbell_state()
+
+class DoorbirdRequestView(HomeAssistantView):
+    """Provide a page for the device to call."""
+
+    url = API_URL
+    name = API_URL[1:].replace("/", ":")
+    extra_urls = [API_URL + "/{sensor}"]
+
+    @asyncio.coroutine
+    def get(self, request, sensor):
+        try:
+            sensor_type = SENSOR_TYPES[sensor]
+        except KeyError:
+            _LOGGER.warning("DoorBird requested invalid sensor '{}'", sensor)
+            return "ERROR"
+
+        try:
+            sensor_instance = sensor_type["instance"]
+        except KeyError:
+            _LOGGER.warning("DoorBird sensor '{}' does not exist", sensor)
+            return "ERROR"
+
+        sensor_instance.push()
+        return "OK"
