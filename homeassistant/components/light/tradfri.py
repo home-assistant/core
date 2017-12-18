@@ -35,7 +35,7 @@ def normalize_xy(argx, argy, brightness=None):
 
 def denormalize_xy(argx, argy, brightness=None):
     """Denormalise XY from Tradfri scaling."""
-    return (int(argx/65535-0.5), int(argy/65535-0.5))
+    return (argx/65535-0.5, argy/65535-0.5)
 
 
 @asyncio.coroutine
@@ -226,6 +226,14 @@ class TradfriLight(Light):
         """XY colour of the light."""
         if self._light_data.xy_color:
             return denormalize_xy(*self._light_data.xy_color)
+
+    @property
+    def rgb_color(self):
+        """RGB colour of the light."""
+        if self._light_data.xy_color:
+            dimmer = self._light_data.dimmer
+            xyb = denormalize_xy(*self._light_data.xy_color).append(dimmer)
+            return color_util.color_xy_brightness_to_RGB(*xyb)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
