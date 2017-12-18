@@ -21,13 +21,13 @@ CONF_ACCOUNTS = 'accounts'
 
 ICON = 'mdi:steam'
 
-STATE_OFFLINE = 'Offline'
-STATE_ONLINE = 'Online'
-STATE_BUSY = 'Busy'
-STATE_AWAY = 'Away'
-STATE_SNOOZE = 'Snooze'
-STATE_LOOKING_TO_TRADE = 'Looking to trade'
-STATE_LOOKING_TO_PLAY = 'Looking to play'
+STATE_OFFLINE = 'offline'
+STATE_ONLINE = 'online'
+STATE_BUSY = 'busy'
+STATE_AWAY = 'away'
+STATE_SNOOZE = 'snooze'
+STATE_LOOKING_TO_TRADE = 'looking_to_trade'
+STATE_LOOKING_TO_PLAY = 'looking_to_play'
 
 NO_GAME = 'None'
 
