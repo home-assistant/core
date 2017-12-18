@@ -215,6 +215,18 @@ sonos_clear_sleep_timer:
       description: Name(s) of entities that will have the timer cleared.
       example: 'media_player.living_room_sonos'
 
+sonos_set_option:
+  description: Set Sonos sound options.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have options set.
+      example: 'media_player.living_room_sonos'
+    night_sound:
+      description: Enable Night Sound mode
+      example: 'true'
+    speech_enhance:
+      description: Enable Speech Enhancement mode
+      example: 'true'
 
 soundtouch_play_everywhere:
   description: Play on all Bose Soundtouch devices.
