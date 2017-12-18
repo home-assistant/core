@@ -144,7 +144,7 @@ class PiHoleAPI(object):
         uri_scheme = 'https://' if use_ssl else 'http://'
         resource = "{}{}{}".format(uri_scheme, host, _ENDPOINT)
 
-        self._rest = RestData('GET', resource, None, None, None, True)
+        self._rest = RestData('GET', resource, None, None, None)
         self.data = None
         self.available = True
         self.update()
