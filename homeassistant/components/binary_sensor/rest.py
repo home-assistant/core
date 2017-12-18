@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         auth = None
 
-    rest = RestData(method, resource, auth, headers, payload, True)
+    rest = RestData(method, resource, auth, headers, payload)
     rest.update()
 
     if rest.data is None:
