@@ -9,23 +9,23 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
+    DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN, ATTR_ENTITY_ID,
-    CONF_DEVICE_CLASS)
+    ATTR_ENTITY_ID, CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_NAME,
+    STATE_UNKNOWN)
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_HYSTERESIS = 'hysteresis'
-ATTR_POSITION = "position"
-ATTR_SENSOR_VALUE = 'sensor_value'
 ATTR_LOWER = 'lower'
-ATTR_UPPER = 'upper'
+ATTR_POSITION = 'position'
+ATTR_SENSOR_VALUE = 'sensor_value'
 ATTR_TYPE = 'type'
+ATTR_UPPER = 'upper'
 
 CONF_HYSTERESIS = 'hysteresis'
 CONF_LOWER = 'lower'
@@ -34,23 +34,23 @@ CONF_UPPER = 'upper'
 DEFAULT_NAME = 'Threshold'
 DEFAULT_HYSTERESIS = 0.0
 
-POSITION_SENSOR_UNKNOWN = "sensor value unknown"
-POSITION_BELOW = "below"
-POSITION_IN_RANGE = "in range"
-POSITION_ABOVE = "above"
+POSITION_ABOVE = 'above'
+POSITION_BELOW = 'below'
+POSITION_IN_RANGE = 'in_range'
+POSITION_UNKNOWN = 'unknown'
 
-TYPE_UPPER = 'upper'
-TYPE_RANGE = 'range'
 TYPE_LOWER = 'lower'
+TYPE_RANGE = 'range'
+TYPE_UPPER = 'upper'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_LOWER): vol.Coerce(float),
-    vol.Optional(CONF_UPPER): vol.Coerce(float),
-    vol.Optional(
-        CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS):
+        vol.Coerce(float),
+    vol.Optional(CONF_LOWER): vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UPPER): vol.Coerce(float),
 })
 
 
@@ -66,8 +66,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices([ThresholdSensor(
         hass, entity_id, name, lower, upper, hysteresis, device_class)], True)
-
-    return True
 
 
 class ThresholdSensor(BinarySensorDevice):
@@ -88,8 +86,8 @@ class ThresholdSensor(BinarySensorDevice):
         self._state = False
         self.sensor_value = None
 
-        @callback
         # pylint: disable=invalid-name
+        @callback
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
             """Handle sensor state changes."""
@@ -140,12 +138,12 @@ class ThresholdSensor(BinarySensorDevice):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
-            ATTR_SENSOR_VALUE: self.sensor_value,
-            ATTR_POSITION: self._state_position,
-            ATTR_LOWER: self._threshold_lower,
-            ATTR_UPPER: self._threshold_upper,
             ATTR_HYSTERESIS: self._hysteresis,
-            ATTR_TYPE: self.threshold_type
+            ATTR_LOWER: self._threshold_lower,
+            ATTR_POSITION: self._state_position,
+            ATTR_SENSOR_VALUE: self.sensor_value,
+            ATTR_TYPE: self.threshold_type,
+            ATTR_UPPER: self._threshold_upper,
         }
 
     @asyncio.coroutine
@@ -160,7 +158,7 @@ class ThresholdSensor(BinarySensorDevice):
             return self.sensor_value > (threshold + self._hysteresis)
 
         if self.sensor_value is None:
-            self._state_position = POSITION_SENSOR_UNKNOWN
+            self._state_position = POSITION_UNKNOWN
             self._state = False
 
         elif self.threshold_type == TYPE_LOWER:
