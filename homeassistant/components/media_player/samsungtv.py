@@ -131,16 +131,16 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Retrieve the latest data."""
         if self._config['method'] == 'websocket' and self._status_via_rest:
             # Check if the TV Rest Server is active
-            self._update_status_via_rest_endpoint()
+            self._update_status_via_rest()
         else:
             # Send an empty key to see if we are still connected
             self.send_key('KEY')
 
-    def _update_status_via_rest_endpoint(self, **kwargs):
+    def _update_status_via_rest(self):
         url = "http://{}:{}/api/v2/"
         url = url.format(self._config['host'], self._config['port'])
         try:
-            res = requests.get(url, timeout=5, **kwargs)
+            res = requests.get(url, timeout=5)
         except (requests.exceptions.Timeout,
                 requests.exceptions.ConnectionError,
                 requests.exceptions.HTTPError,
