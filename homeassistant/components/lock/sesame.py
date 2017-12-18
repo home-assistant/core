@@ -42,18 +42,16 @@ def setup_platform(
 class SesameDevice(LockDevice):
     """Representation of a Sesame device."""
 
-    _sesame = None
-
-    # Cached sesame properties
-    _device_id = None
-    _nickname = None
-    _is_unlocked = False
-    _api_enabled = False
-    _battery = -1
-
     def __init__(self, sesame: object) -> None:
         """Initialize the Sesame device."""
         self._sesame = sesame
+
+        # Cached properties from pysesame object.
+        self._device_id = None
+        self._nickname = None
+        self._is_unlocked = False
+        self._api_enabled = False
+        self._battery = -1
 
     @property
     def name(self) -> str:
