@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_FORCE_UPDATE, CONF_HEADERS, CONF_NAME,
     CONF_METHOD, CONF_PASSWORD, CONF_PAYLOAD, CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
-    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL,
+    CONF_VALUE_TEMPLATE,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
-DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 
 CONF_JSON_ATTRS = 'json_attributes'
@@ -44,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 })
 
@@ -55,7 +53,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
@@ -74,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, payload)
     rest.update()
 
     add_devices([RestSensor(
@@ -159,11 +156,10 @@ class RestSensor(Entity):
 class RestData(object):
     """Class for handling the data retrieval."""
 
-    def __init__(self, method, resource, auth, headers, data, verify_ssl):
+    def __init__(self, method, resource, auth, headers, data):
         """Initialize the data object."""
         self._request = requests.Request(
             method, resource, headers=headers, auth=auth, data=data).prepare()
-        self._verify_ssl = verify_ssl
         self.data = None
 
     def update(self):
@@ -171,7 +167,7 @@ class RestData(object):
         try:
             with requests.Session() as sess:
                 response = sess.send(
-                    self._request, timeout=10, verify=self._verify_ssl)
+                    self._request, timeout=10, verify=True)
 
             self.data = response.text
         except requests.exceptions.RequestException:
