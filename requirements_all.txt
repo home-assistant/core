@@ -692,7 +692,7 @@ pyharmony==1.0.18
 pyhik==0.1.4
 
 # homeassistant.components.hive
-pyhiveapi==0.2.5
+pyhiveapi==0.2.10
 
 # homeassistant.components.homematic
 pyhomematic==0.1.36
