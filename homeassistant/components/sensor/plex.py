@@ -89,7 +89,6 @@ class PlexSensor(Entity):
         else:
             self._server = PlexServer(plex_url)
 
-
     @property
     def name(self):
         """Return the name of the sensor."""
