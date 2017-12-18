@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'TekSavvy'
 CONF_TOTAL_BANDWIDTH = 'total_bandwidth'
 
-GIGABITS = 'Gb'  # type: str
+GIGABYTES = 'GB'  # type: str
 PERCENT = '%'  # type: str
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
@@ -38,15 +38,15 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 SENSOR_TYPES = {
     'usage': ['Usage', PERCENT, 'mdi:percent'],
-    'usage_gb': ['Usage', GIGABITS, 'mdi:download'],
-    'limit': ['Data limit', GIGABITS, 'mdi:download'],
-    'onpeak_download': ['On Peak Download', GIGABITS, 'mdi:download'],
-    'onpeak_upload': ['On Peak Upload ', GIGABITS, 'mdi:upload'],
-    'onpeak_total': ['On Peak Total', GIGABITS, 'mdi:download'],
-    'offpeak_download': ['Off Peak download', GIGABITS, 'mdi:download'],
-    'offpeak_upload': ['Off Peak Upload', GIGABITS, 'mdi:upload'],
-    'offpeak_total': ['Off Peak Total', GIGABITS, 'mdi:download'],
-    'onpeak_remaining': ['Remaining', GIGABITS, 'mdi:download']
+    'usage_gb': ['Usage', GIGABYTES, 'mdi:download'],
+    'limit': ['Data limit', GIGABYTES, 'mdi:download'],
+    'onpeak_download': ['On Peak Download', GIGABYTES, 'mdi:download'],
+    'onpeak_upload': ['On Peak Upload ', GIGABYTES, 'mdi:upload'],
+    'onpeak_total': ['On Peak Total', GIGABYTES, 'mdi:download'],
+    'offpeak_download': ['Off Peak download', GIGABYTES, 'mdi:download'],
+    'offpeak_upload': ['Off Peak Upload', GIGABYTES, 'mdi:upload'],
+    'offpeak_total': ['Off Peak Total', GIGABYTES, 'mdi:download'],
+    'onpeak_remaining': ['Remaining', GIGABYTES, 'mdi:download']
 }
 
 API_HA_MAP = (
