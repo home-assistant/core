@@ -35,15 +35,15 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         self._name = "Alarm Panel"
         self._state = None
 
-        self._ac_power = STATE_UNKNOWN
-        self._backlight_on = STATE_UNKNOWN
-        self._battery_low = STATE_UNKNOWN
-        self._check_zone = STATE_UNKNOWN
-        self._chime = STATE_UNKNOWN
-        self._entry_delay_off = STATE_UNKNOWN
-        self._programming_mode = STATE_UNKNOWN
-        self._ready = STATE_UNKNOWN
-        self._zone_bypassed = STATE_UNKNOWN
+        self._ac_power = None
+        self._backlight_on = None
+        self._battery_low = None
+        self._check_zone = None
+        self._chime = None
+        self._entry_delay_off = None
+        self._programming_mode = None
+        self._ready = None
+        self._zone_bypassed = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
