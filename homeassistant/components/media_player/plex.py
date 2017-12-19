@@ -227,7 +227,7 @@ def request_configuration(host, hass, config, add_devices_callback):
     _CONFIGURING[host] = configurator.request_config(
         'Plex Media Server',
         plex_configuration_callback,
-        description=('Enter the X-Plex-Token'),
+        description='Enter the X-Plex-Token',
         entity_picture='/static/images/logo_plex_mediaserver.png',
         submit_caption='Confirm',
         fields=[{
@@ -273,8 +273,23 @@ class PlexClient(MediaPlayerDevice):
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
-
-        self._clear_media()
+        ####
+        self._media_content_id = None
+        self._media_content_rating = None
+        self._media_content_type = None
+        self._media_duration = None
+        self._media_image_url = None
+        self._media_title = None
+        self._media_position = None
+        # Music
+        self._media_album_artist = None
+        self._media_album_name = None
+        self._media_artist = None
+        self._media_track = None
+        # TV Show
+        self._media_episode = None
+        self._media_season = None
+        self._media_series_title = None
 
         self.refresh(device, session)
 
@@ -299,22 +314,8 @@ class PlexClient(MediaPlayerDevice):
     def _clear_media(self):
         """Set all Media Items to None."""
         # General
-        self._media_content_id = None
-        self._media_content_rating = None
-        self._media_content_type = None
-        self._media_duration = None
-        self._media_image_url = None
-        self._media_title = None
-        self._media_position = None
-        # Music
-        self._media_album_artist = None
-        self._media_album_name = None
-        self._media_artist = None
-        self._media_track = None
-        # TV Show
-        self._media_episode = None
-        self._media_season = None
-        self._media_series_title = None
+        for media_var in filter(lambda x: x.startswith('_media_'), dir(self)):
+            setattr(self, media_var, None)
 
     def refresh(self, device, session):
         """Refresh key device data."""
@@ -792,9 +793,10 @@ class PlexClient(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        attr = {}
-        attr['media_content_rating'] = self._media_content_rating
-        attr['session_username'] = self._session_username
-        attr['media_library_name'] = self._app_name
+        attr = {
+            'media_content_rating': self._media_content_rating,
+            'session_username': self._session_username,
+            'media_library_name': self._app_name
+        }
 
         return attr
