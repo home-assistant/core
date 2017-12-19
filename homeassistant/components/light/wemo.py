@@ -206,10 +206,6 @@ class WemoDimmer(Light):
         """Return true if dimmer is on. Standby is on."""
         return self._state
 
-    def update(self):
-        """Update WeMo state."""
-        self._update(force_update=True)
-
     def _update(self, force_update=True):
         """Update the device state."""
         try:
