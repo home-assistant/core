@@ -1,5 +1,4 @@
 import unittest
-import os
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 from threading import Thread
@@ -31,8 +30,10 @@ class TestSnmp(unittest.TestCase):
     def tearDown(self):
         if self.snmpEngine is not None:
             self.snmpEngine.transportDispatcher.jobFinished(1)
-            self.snmpEngine.transportDispatcher.unregisterRecvCbFun(recvId=None)
-            self.snmpEngine.transportDispatcher.unregisterTransport(udp.domainName)
+            self.snmpEngine.transportDispatcher.unregisterRecvCbFun(
+                recvId=None)
+            self.snmpEngine.transportDispatcher.unregisterTransport(
+                udp.domainName)
         if self._agent_thread is not None:
             self._agent_thread.join(0.01)
         self.hass.stop()
@@ -45,7 +46,8 @@ class TestSnmp(unittest.TestCase):
             udp.UdpTransport().openServerMode(('127.0.0.1', _PORT))
         )
         config.addV1System(self.snmpEngine, 'my-area', 'public')
-        config.addVacmUser(self.snmpEngine, 2, 'my-area', 'noAuthNoPriv', _BASE_OID)
+        config.addVacmUser(self.snmpEngine, 2, 'my-area', 'noAuthNoPriv',
+                           _BASE_OID)
         snmpContext = context.SnmpContext(self.snmpEngine)
         mibBuilder = snmpContext.getMibInstrum().getMibBuilder()
 
