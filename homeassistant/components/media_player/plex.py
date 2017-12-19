@@ -311,15 +311,18 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
-    def _clear_media(self):
+    def _clear_media_details(self):
         """Set all Media Items to None."""
         for media_var in filter(lambda x: x.startswith('_media_'), dir(self)):
             setattr(self, media_var, None)
+        # Clear library Name
+        self._app_name = ''
+
 
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh
-        self._clear_media()
+        self._clear_media_details()
 
         if session:  # Not being triggered by Chrome or FireTablet Plex App
             self._session = session
@@ -360,11 +363,10 @@ class PlexClient(MediaPlayerDevice):
         if self._is_player_active and self._session is not None:
             self._session_type = self._session.type
             self._media_duration = self._session.duration
+            # media type
+            self._set_media_type()
         else:
             self._session_type = None
-
-        # media type
-        self._set_media_type()
 
         # title (movie name, tv episode name, music song name)
         if self._session and self._is_player_active:
@@ -402,27 +404,25 @@ class PlexClient(MediaPlayerDevice):
                               "was not found: %s", self.entity_id)
                 self._media_artist = self._media_album_artist
 
-        # set app name to library name
-        if (self._session is not None
-                and self._session.section() is not None):
-            self._app_name = self._session.section().title
-        else:
-            self._app_name = ''
-
-        # media image url
         if self._session is not None:
-            thumb_url = self._session.thumbUrl
-            if (self.media_content_type is MEDIA_TYPE_TVSHOW
-                    and not self.config.get(CONF_USE_EPISODE_ART)):
-                thumb_url = self._server.url(
-                    self._session.grandparentThumb)
+            self._app_name = self._session.section().title \
+                if self._session.section() is not None else ''
+            self._set_media_image()
 
-            if thumb_url is None:
-                _LOGGER.debug("Using media art because media thumb "
-                              "was not found: %s", self.entity_id)
-                thumb_url = self._server.url(self._session.art)
 
-            self._media_image_url = thumb_url
+    def _set_media_image(self):
+        thumb_url = self._session.thumbUrl
+        if (self.media_content_type is MEDIA_TYPE_TVSHOW
+                and not self.config.get(CONF_USE_EPISODE_ART)):
+            thumb_url = self._server.url(
+                self._session.grandparentThumb)
+
+        if thumb_url is None:
+            _LOGGER.debug("Using media art because media thumb "
+                          "was not found: %s", self.entity_id)
+            thumb_url = self._server.url(self._session.art)
+
+        self._media_image_url = thumb_url
 
     def _set_player_state(self):
         if self._player_state == 'playing':
@@ -454,7 +454,7 @@ class PlexClient(MediaPlayerDevice):
         """Force client to idle."""
         self._state = STATE_IDLE
         self._session = None
-        self._clear_media()
+        self._clear_media_details()
 
     @property
     def unique_id(self):
