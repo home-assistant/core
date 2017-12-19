@@ -151,6 +151,10 @@ class SnmpData(object):
         from pysnmp.hlapi import (
             getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
             ObjectType, ObjectIdentity)
+        from pysnmp.proto.rfc1905 import NoSuchObject
+        from pysnmp.proto.rfc1902 import Opaque
+        from pyasn1.codec.ber import decoder
+
         errindication, errstatus, errindex, restable = next(
             getCmd(SnmpEngine(),
                    CommunityData(self._community, mpModel=self._version),
@@ -168,4 +172,15 @@ class SnmpData(object):
             self.value = self._default_value
         else:
             for resrow in restable:
-                self.value = str(resrow[-1])
+                result = resrow[-1]
+                if type(result) == NoSuchObject:
+                    _LOGGER.error(
+                        "SNMP error for OID %s: "
+                        "No Such Object currently exists at this OID",
+                        self._baseoid)
+                    self.value = self._default_value
+                if type(result) == Opaque:
+                    value, _ = decoder.decode(bytes(resrow[-1]))
+                    self.value = str(value)
+                else:
+                    self.value = str(resrow[-1])
