@@ -170,7 +170,7 @@ class TestThresholdSensor(unittest.TestCase):
         self.assertEqual('sensor.test_monitored',
                          state.attributes.get('entity_id'))
         self.assertEqual(16, state.attributes.get('sensor_value'))
-        self.assertEqual('in range', state.attributes.get('position'))
+        self.assertEqual('in_range', state.attributes.get('position'))
         self.assertEqual(float(config['binary_sensor']['lower']),
                          state.attributes.get('lower'))
         self.assertEqual(float(config['binary_sensor']['upper']),
@@ -219,7 +219,7 @@ class TestThresholdSensor(unittest.TestCase):
         self.assertEqual('sensor.test_monitored',
                          state.attributes.get('entity_id'))
         self.assertEqual(16, state.attributes.get('sensor_value'))
-        self.assertEqual('in range', state.attributes.get('position'))
+        self.assertEqual('in_range', state.attributes.get('position'))
         self.assertEqual(float(config['binary_sensor']['lower']),
                          state.attributes.get('lower'))
         self.assertEqual(float(config['binary_sensor']['upper']),
@@ -235,7 +235,7 @@ class TestThresholdSensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.threshold')
 
-        self.assertEqual('in range', state.attributes.get('position'))
+        self.assertEqual('in_range', state.attributes.get('position'))
         assert state.state == 'on'
 
         self.hass.states.set('sensor.test_monitored', 7)
@@ -259,7 +259,7 @@ class TestThresholdSensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.threshold')
 
-        self.assertEqual('in range', state.attributes.get('position'))
+        self.assertEqual('in_range', state.attributes.get('position'))
         assert state.state == 'on'
 
         self.hass.states.set('sensor.test_monitored', 22)
@@ -267,7 +267,7 @@ class TestThresholdSensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.threshold')
 
-        self.assertEqual('in range', state.attributes.get('position'))
+        self.assertEqual('in_range', state.attributes.get('position'))
         assert state.state == 'on'
 
         self.hass.states.set('sensor.test_monitored', 23)
@@ -291,7 +291,7 @@ class TestThresholdSensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.threshold')
 
-        self.assertEqual('in range', state.attributes.get('position'))
+        self.assertEqual('in_range', state.attributes.get('position'))
         assert state.state == 'on'
 
     def test_sensor_in_range_unknown_state(self):
@@ -316,7 +316,7 @@ class TestThresholdSensor(unittest.TestCase):
         self.assertEqual('sensor.test_monitored',
                          state.attributes.get('entity_id'))
         self.assertEqual(16, state.attributes.get('sensor_value'))
-        self.assertEqual('in range', state.attributes.get('position'))
+        self.assertEqual('in_range', state.attributes.get('position'))
         self.assertEqual(float(config['binary_sensor']['lower']),
                          state.attributes.get('lower'))
         self.assertEqual(float(config['binary_sensor']['upper']),
