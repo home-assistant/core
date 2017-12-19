@@ -97,6 +97,10 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def new_service_found(service, info):
         """Handle a new service if one is found."""
+        # Fix bytearray to utf-8.
+        if isinstance(info, dict):
+            info = {a: str(b, 'utf-8') if isinstance(b,
+                    (bytes, bytearray)) else b for a, b in info.items()}
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
             return
