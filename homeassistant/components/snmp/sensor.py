@@ -236,6 +236,9 @@ class SnmpData:
 
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
+        from pysnmp.proto.rfc1905 import NoSuchObject
+        from pysnmp.proto.rfc1902 import Opaque
+        from pyasn1.codec.ber import decoder
 
         get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
@@ -254,4 +257,15 @@ class SnmpData:
             self.value = self._default_value
         else:
             for resrow in restable:
-                self.value = resrow[-1].prettyPrint()
+                result = resrow[-1]
+                if type(result) == NoSuchObject:
+                    _LOGGER.error(
+                        "SNMP error for OID %s: "
+                        "No Such Object currently exists at this OID",
+                        self._baseoid)
+                    self.value = self._default_value
+                if type(result) == Opaque:
+                    value, _ = decoder.decode(bytes(resrow[-1]))
+                    self.value = str(value)
+                else:
+                    self.value = str(resrow[-1])
