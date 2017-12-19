@@ -318,7 +318,6 @@ class PlexClient(MediaPlayerDevice):
         # Clear library Name
         self._app_name = ''
 
-
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh
