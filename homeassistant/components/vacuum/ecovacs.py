@@ -1,5 +1,5 @@
 """
-Support for Ecovacs Deebot Vaccums.
+Support for Ecovacs Ecovacs Vaccums.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/vacuum.neato/
@@ -18,26 +18,28 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ecovacs']
 
-SUPPORT_DEEBOT = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
+SUPPORT_ECOVACS = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
                  SUPPORT_STATUS
+
+ECOVACS_FAN_SPEED_LIST = ['standard', 'strong']
 
 ICON = "mdi:roomba"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Deebot vacuums."""
+    """Set up the Ecovacs vacuums."""
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
-        vacuums.append(DeebotVacuum(device))
-    _LOGGER.debug("Adding Deebot Vacuums to Hass: %s", vacuums)
+        vacuums.append(EcovacsVacuum(device))
+    _LOGGER.debug("Adding Ecovacs Vacuums to Hass: %s", vacuums)
     add_devices(vacuums, True)
 
 
-class DeebotVacuum(VacuumDevice):
-    """Neato Connected Vacuums."""
+class EcovacsVacuum(VacuumDevice):
+    """Ecovacs Vacuums such as Deebot."""
 
     def __init__(self, device):
-        """Initialize the Neato Connected Vacuums."""
+        """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
         try:
@@ -82,11 +84,11 @@ class DeebotVacuum(VacuumDevice):
 
     @property
     def is_charging(self):
-        """Return true if vacuum is currently cleaning."""
+        """Return true if vacuum is currently charging."""
         if self._charge_status is None:
             return False
         else:
-            return self._charge_status != 'charging'
+            return self._charge_status == 'charging'
 
     @property
     def name(self):
@@ -101,7 +103,7 @@ class DeebotVacuum(VacuumDevice):
     @property
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_DEEBOT
+        return SUPPORT_ECOVACS
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
@@ -128,24 +130,21 @@ class DeebotVacuum(VacuumDevice):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        # TODO: Implement
-        raise NotImplementedError()
+        return ECOVACS_FAN_SPEED_LIST
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""
-        # TODO: Implement
-        raise NotImplementedError()
+        from sucks import Clean
+        self.device.run(Clean(False))
 
     def turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home."""
-        # TODO: Implement
-        raise NotImplementedError()
+        self.return_to_base()
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        # TODO: Implement
-        raise NotImplementedError()
-
+        from sucks import VacBotCommand
+        self.device.run(VacBotCommand('Move', {'action': 'stop'}))
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""

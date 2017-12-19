@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
     CONF_DEVICES, EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['sucks==0.8.1']
+REQUIREMENTS = ['sucks==0.8.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ def setup(hass, config):
     from sucks import EcoVacsAPI, VacBot
 
     # Convenient hack for debugging to pipe sucks logging to the Hass logger
+    # TODO: Comment out before commit
     import sucks
     sucks.logging = _LOGGER
 
