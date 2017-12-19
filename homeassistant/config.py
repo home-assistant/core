@@ -233,12 +233,13 @@ def create_default_config(config_dir, detect_location=True):
 
             config_file.write(DEFAULT_CONFIG)
 
+        timestamp = date_util.now().strftime('%Y%m%dT%H%M%S')
         # Check for existing secrets file.
         # If it exists, back it up before recreating it.
         if os.path.isfile(secret_path):
             backup_secret_path = "{}.{}.bak".format(
                 secret_path,
-                int(date_util.as_timestamp(date_util.now()))
+                timestamp
             )
             print("Found existing secrets file. Backing up and re-creating.")
             os.rename(secret_path, backup_secret_path)
@@ -253,7 +254,7 @@ def create_default_config(config_dir, detect_location=True):
         if os.path.isfile(group_yaml_path):
             backup_group_path = "{}.{}.bak".format(
                 group_yaml_path,
-                int(date_util.as_timestamp(date_util.now()))
+                timestamp
             )
             print("Found existing group file. Backing up and re-creating.")
             os.rename(group_yaml_path, backup_group_path)
@@ -265,7 +266,7 @@ def create_default_config(config_dir, detect_location=True):
         if os.path.isfile(automation_yaml_path):
             backup_automation_path = "{}.{}.bak".format(
                 automation_yaml_path,
-                int(date_util.as_timestamp(date_util.now()))
+                timestamp
             )
             print("Found existing automation file. Backing up and",
                   "re-creating.")
@@ -278,7 +279,7 @@ def create_default_config(config_dir, detect_location=True):
         if os.path.isfile(script_yaml_path):
             backup_script_path = "{}.{}.bak".format(
                 script_yaml_path,
-                int(date_util.as_timestamp(date_util.now()))
+                timestamp
             )
             print("Found existing script file. Backing up and re-creating.")
             os.rename(script_yaml_path, backup_script_path)
@@ -290,7 +291,7 @@ def create_default_config(config_dir, detect_location=True):
         if os.path.isfile(customize_yaml_path):
             backup_customize_path = "{}.{}.bak".format(
                 customize_yaml_path,
-                int(date_util.as_timestamp(date_util.now()))
+                timestamp
             )
             print("Found existing customize file. Backing up and re-creating.")
             os.rename(customize_yaml_path, backup_customize_path)
