@@ -363,46 +363,12 @@ class PlexClient(MediaPlayerDevice):
         if self._is_player_active and self._session is not None:
             self._session_type = self._session.type
             self._media_duration = self._session.duration
+            #  title (movie name, tv episode name, music song name)
+            self._media_title = self._session.title
             # media type
             self._set_media_type()
         else:
             self._session_type = None
-
-        # title (movie name, tv episode name, music song name)
-        if self._session and self._is_player_active:
-            self._media_title = self._session.title
-
-        # Movies
-        if (self.media_content_type == MEDIA_TYPE_VIDEO and
-                self._session.year is not None):
-            self._media_title += ' (' + str(self._session.year) + ')'
-
-        # TV Show
-        if self._media_content_type is MEDIA_TYPE_TVSHOW:
-            # season number (00)
-            if callable(self._session.seasons):
-                self._media_season = self._session.seasons()[0].index.zfill(2)
-            elif self._session.parentIndex is not None:
-                self._media_season = self._session.parentIndex.zfill(2)
-            else:
-                self._media_season = None
-            # show name
-            self._media_series_title = self._session.grandparentTitle
-            # episode number (00)
-            if self._session.index is not None:
-                self._media_episode = str(self._session.index).zfill(2)
-
-        # Music
-        if self._media_content_type == MEDIA_TYPE_MUSIC:
-            self._media_album_name = self._session.parentTitle
-            self._media_album_artist = self._session.grandparentTitle
-            self._media_track = self._session.index
-            self._media_artist = self._session.originalTitle
-            # use album artist if track artist is missing
-            if self._media_artist is None:
-                _LOGGER.debug("Using album artist because track artist "
-                              "was not found: %s", self.entity_id)
-                self._media_artist = self._media_album_artist
 
         if self._session is not None:
             self._app_name = self._session.section().title \
@@ -439,16 +405,44 @@ class PlexClient(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def _set_media_type(self):
+        def _tvshow_info():
+            # season number (00)
+            if callable(self._session.seasons):
+                self._media_season = self._session.seasons()[0].index.zfill(2)
+            elif self._session.parentIndex is not None:
+                self._media_season = self._session.parentIndex.zfill(2)
+            else:
+                self._media_season = None
+            # show name
+            self._media_series_title = self._session.grandparentTitle
+            # episode number (00)
+            if self._session.index is not None:
+                self._media_episode = str(self._session.index).zfill(2)
+
         if self._session_type == 'clip':
             _LOGGER.debug("Clip content type detected, compatibility may "
                           "vary: %s", self.entity_id)
             self._media_content_type = MEDIA_TYPE_TVSHOW
+            _tvshow_info()
         elif self._session_type == 'episode':
             self._media_content_type = MEDIA_TYPE_TVSHOW
+            _tvshow_info()
         elif self._session_type == 'movie':
             self._media_content_type = MEDIA_TYPE_VIDEO
+            if self._session.year is not None and \
+                    self._media_title is not None:
+                self._media_title += ' (' + str(self._session.year) + ')'
         elif self._session_type == 'track':
             self._media_content_type = MEDIA_TYPE_MUSIC
+            self._media_album_name = self._session.parentTitle
+            self._media_album_artist = self._session.grandparentTitle
+            self._media_track = self._session.index
+            self._media_artist = self._session.originalTitle
+            # use album artist if track artist is missing
+            if self._media_artist is None:
+                _LOGGER.debug("Using album artist because track artist "
+                              "was not found: %s", self.entity_id)
+                self._media_artist = self._media_album_artist
 
     def force_idle(self):
         """Force client to idle."""
