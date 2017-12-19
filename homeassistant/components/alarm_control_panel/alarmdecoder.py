@@ -12,7 +12,7 @@ from homeassistant.components.alarmdecoder import (
     DATA_AD, SIGNAL_PANEL_MESSAGE)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_CUSTOM_BYPASS, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,3 +96,9 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if code:
             _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
             self.hass.data[DATA_AD].send("{!s}3".format(code))
+
+    def alarm_arm_custom_bypass(self, code=None):
+        """Send custom bypass command."""
+        if code:
+            _LOGGER.debug("alarm_arm_custom_bypass: sending %s", str(code))
+            self.hass.data[DATA_AD].send("{!s}".format(code))
