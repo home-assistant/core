@@ -90,16 +90,17 @@ class DoorbirdRequestView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request, sensor):
+        """Handle the incoming message from the device."""
         try:
             sensor_type = SENSOR_TYPES[sensor]
         except KeyError:
-            _LOGGER.warning("DoorBird requested invalid sensor '{}'", sensor)
+            _LOGGER.warning("DoorBird requested invalid sensor %s", sensor)
             return "ERROR"
 
         try:
             sensor_instance = sensor_type["instance"]
         except KeyError:
-            _LOGGER.warning("DoorBird sensor '{}' does not exist", sensor)
+            _LOGGER.warning("DoorBird sensor %s does not exist", sensor)
             return "ERROR"
 
         sensor_instance.push()
