@@ -331,6 +331,5 @@ class TestThresholdSensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.threshold')
 
-        self.assertEqual('sensor value unknown',
-                         state.attributes.get('position'))
+        self.assertEqual('unknown', state.attributes.get('position'))
         assert state.state == 'off'
