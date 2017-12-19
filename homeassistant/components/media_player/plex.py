@@ -273,7 +273,7 @@ class PlexClient(MediaPlayerDevice):
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
-        ####
+        # General
         self._media_content_id = None
         self._media_content_rating = None
         self._media_content_type = None
@@ -313,7 +313,6 @@ class PlexClient(MediaPlayerDevice):
 
     def _clear_media(self):
         """Set all Media Items to None."""
-        # General
         for media_var in filter(lambda x: x.startswith('_media_'), dir(self)):
             setattr(self, media_var, None)
 
@@ -356,18 +355,7 @@ class PlexClient(MediaPlayerDevice):
             self._media_content_id = self._session.ratingKey
             self._media_content_rating = self._session.contentRating
 
-        if self._player_state == 'playing':
-            self._is_player_active = True
-            self._state = STATE_PLAYING
-        elif self._player_state == 'paused':
-            self._is_player_active = True
-            self._state = STATE_PAUSED
-        elif self.device:
-            self._is_player_active = False
-            self._state = STATE_IDLE
-        else:
-            self._is_player_active = False
-            self._state = STATE_OFF
+        self._set_player_state()
 
         if self._is_player_active and self._session is not None:
             self._session_type = self._session.type
@@ -376,16 +364,7 @@ class PlexClient(MediaPlayerDevice):
             self._session_type = None
 
         # media type
-        if self._session_type == 'clip':
-            _LOGGER.debug("Clip content type detected, compatibility may "
-                          "vary: %s", self.entity_id)
-            self._media_content_type = MEDIA_TYPE_TVSHOW
-        elif self._session_type == 'episode':
-            self._media_content_type = MEDIA_TYPE_TVSHOW
-        elif self._session_type == 'movie':
-            self._media_content_type = MEDIA_TYPE_VIDEO
-        elif self._session_type == 'track':
-            self._media_content_type = MEDIA_TYPE_MUSIC
+        self._set_media_type()
 
         # title (movie name, tv episode name, music song name)
         if self._session and self._is_player_active:
@@ -444,6 +423,32 @@ class PlexClient(MediaPlayerDevice):
                 thumb_url = self._server.url(self._session.art)
 
             self._media_image_url = thumb_url
+
+    def _set_player_state(self):
+        if self._player_state == 'playing':
+            self._is_player_active = True
+            self._state = STATE_PLAYING
+        elif self._player_state == 'paused':
+            self._is_player_active = True
+            self._state = STATE_PAUSED
+        elif self.device:
+            self._is_player_active = False
+            self._state = STATE_IDLE
+        else:
+            self._is_player_active = False
+            self._state = STATE_OFF
+
+    def _set_media_type(self):
+        if self._session_type == 'clip':
+            _LOGGER.debug("Clip content type detected, compatibility may "
+                          "vary: %s", self.entity_id)
+            self._media_content_type = MEDIA_TYPE_TVSHOW
+        elif self._session_type == 'episode':
+            self._media_content_type = MEDIA_TYPE_TVSHOW
+        elif self._session_type == 'movie':
+            self._media_content_type = MEDIA_TYPE_VIDEO
+        elif self._session_type == 'track':
+            self._media_content_type = MEDIA_TYPE_MUSIC
 
     def force_idle(self):
         """Force client to idle."""
