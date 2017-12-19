@@ -367,14 +367,11 @@ class PlexClient(MediaPlayerDevice):
             self._media_title = self._session.title
             # media type
             self._set_media_type()
-        else:
-            self._session_type = None
-
-        if self._session is not None:
             self._app_name = self._session.section().title \
                 if self._session.section() is not None else ''
             self._set_media_image()
-
+        else:
+            self._session_type = None
 
     def _set_media_image(self):
         thumb_url = self._session.thumbUrl
