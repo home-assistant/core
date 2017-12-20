@@ -197,6 +197,7 @@ class XiaomiDevice(Entity):
     def __init__(self, device, name, hass, xiaomi_hub):
         """Initialize the xiaomi device."""
         self._state = None
+        self._hass = hass
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
@@ -207,7 +208,7 @@ class XiaomiDevice(Entity):
         xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self.parse_data(device['data'])
         self.parse_voltage(device['data'])
-        
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -234,7 +235,7 @@ class XiaomiDevice(Entity):
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
         self._remove_unavailability_tracker = async_track_point_in_utc_time(
-            self.hass, self._set_unavailable, utcnow() + TIME_TILL_UNAVAILABLE)
+            self._hass, self._set_unavailable, utcnow() + TIME_TILL_UNAVAILABLE)
 
     def push_data(self, data):
         """Push from Hub."""
