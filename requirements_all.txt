@@ -467,7 +467,7 @@ messagebird==1.2.0
 mficlient==0.3.0
 
 # homeassistant.components.sensor.miflora
-miflora==0.1.16
+miflora==0.2.0
 
 # homeassistant.components.upnp
 miniupnpc==2.0.2
