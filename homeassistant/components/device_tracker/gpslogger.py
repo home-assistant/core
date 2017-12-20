@@ -4,24 +4,37 @@ Support for the GPSLogger platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.gpslogger/
 """
+from aiohttp.web import Request, HTTPUnauthorized  # NOQA
 import asyncio
 from functools import partial
 import logging
 
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY
-from homeassistant.components.http import HomeAssistantView
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_PASSWORD, HTTP_UNPROCESSABLE_ENTITY
+)
+from homeassistant.components.http import (
+    CONF_API_PASSWORD, HomeAssistantView
+)
 # pylint: disable=unused-import
 from homeassistant.components.device_tracker import (  # NOQA
-    DOMAIN, PLATFORM_SCHEMA)
+    DOMAIN, PLATFORM_SCHEMA
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_PASSWORD): cv.string,
+})
 
-def setup_scanner(hass, config, see, discovery_info=None):
+
+def setup_scanner(hass, config, see, _discovery_info=None):
     """Set up an endpoint for the GPSLogger application."""
-    hass.http.register_view(GPSLoggerView(see))
+    hass.http.register_view(GPSLoggerView(see, config))
 
     return True
 
@@ -32,26 +45,43 @@ class GPSLoggerView(HomeAssistantView):
     url = '/api/gpslogger'
     name = 'api:gpslogger'
 
-    def __init__(self, see):
+    def __init__(self, see, config):
         """Initialize GPSLogger url endpoints."""
         self.see = see
+        self._password = config.get(CONF_PASSWORD)
+        # this component does not require external authentication if
+        # password is set
+        self.requires_auth = self._password is None
 
     @asyncio.coroutine
-    def get(self, request):
+    def get(self, request: Request):
         """Handle for GPSLogger message received as GET."""
-        res = yield from self._handle(request.app['hass'], request.query)
+        res = yield from self._handle(request.app['hass'], request)
         return res
 
     @asyncio.coroutine
-    def _handle(self, hass, data):
+    def _handle(self, hass, request: Request):
         """Handle GPSLogger requests."""
+
+        data = request.query
+
+        if self._password is not None:
+            from hmac import compare_digest
+            authenticated = CONF_API_PASSWORD in data and compare_digest(
+                self._password,
+                data[CONF_API_PASSWORD]
+            )
+            if not authenticated:
+                raise HTTPUnauthorized()
+
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
 
         if 'device' not in data:
             _LOGGER.error("Device id not specified")
-            return ('Device id not specified.', HTTP_UNPROCESSABLE_ENTITY)
+            return ('Device id not specified.',
+                    HTTP_UNPROCESSABLE_ENTITY)
 
         device = data['device'].replace('-', '')
         gps_location = (data['latitude'], data['longitude'])
