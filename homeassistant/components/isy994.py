@@ -130,7 +130,7 @@ ISY994_PROGRAMS = "isy994_programs"
 WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
 
 
-def _check_for_node_def(node, hass: HomeAssistant,
+def _check_for_node_def(hass: HomeAssistant, node,
                         single_domain: str=None) -> bool:
     """Check if the node matches the node_def_id for any domains.
 
@@ -152,7 +152,7 @@ def _check_for_node_def(node, hass: HomeAssistant,
     return False
 
 
-def _check_for_insteon_type(node, hass: HomeAssistant,
+def _check_for_insteon_type(hass: HomeAssistant, node,
                             single_domain: str=None) -> bool:
     """Check if the node matches the Insteon type for any domains.
 
@@ -176,7 +176,7 @@ def _check_for_insteon_type(node, hass: HomeAssistant,
     return False
 
 
-def _check_for_uom_id(node, hass: HomeAssistant,
+def _check_for_uom_id(hass: HomeAssistant, node,
                       single_domain: str=None, uom_list: list=None) -> bool:
     """Check if a node's uom matches any of the domains uom filter.
 
@@ -203,7 +203,7 @@ def _check_for_uom_id(node, hass: HomeAssistant,
     return False
 
 
-def _check_for_states_in_uom(node, hass: HomeAssistant,
+def _check_for_states_in_uom(hass: HomeAssistant, node,
                              single_domain: str=None,
                              states_list: list=None) -> bool:
     """Check if a list of uoms matches two possible filters.
@@ -232,28 +232,28 @@ def _check_for_states_in_uom(node, hass: HomeAssistant,
     return False
 
 
-def _is_sensor_a_binary_sensor(node, hass: HomeAssistant) -> bool:
+def _is_sensor_a_binary_sensor(hass: HomeAssistant, node) -> bool:
     """Determine if the given sensor node should be a binary_sensor."""
-    if _check_for_node_def(node, hass, single_domain='binary_sensor'):
+    if _check_for_node_def(hass, node, single_domain='binary_sensor'):
         return True
-    if _check_for_insteon_type(node, hass, single_domain='binary_sensor'):
+    if _check_for_insteon_type(hass, node, single_domain='binary_sensor'):
         return True
 
     # For the next two checks, we're providing our own set of uoms that
     # represent on/off devices. This is because we can only depend on these
     # checks in the context of already knowing that this is definitely a
     # sensor device.
-    if _check_for_uom_id(node, hass, single_domain='binary_sensor',
+    if _check_for_uom_id(hass, node, single_domain='binary_sensor',
                          uom_list=['2', '78']):
         return True
-    if _check_for_states_in_uom(node, hass, single_domain='binary_sensor',
+    if _check_for_states_in_uom(hass, node, single_domain='binary_sensor',
                                 states_list=['on', 'off']):
         return True
 
     return False
 
 
-def _categorize_nodes(nodes, hass: HomeAssistant, ignore_identifier: str,
+def _categorize_nodes(hass: HomeAssistant, nodes, ignore_identifier: str,
                       sensor_identifier: str)-> None:
     """Sort the nodes to their proper domains."""
     # pylint: disable=no-member
@@ -271,7 +271,7 @@ def _categorize_nodes(nodes, hass: HomeAssistant, ignore_identifier: str,
         if sensor_identifier in path or sensor_identifier in node.name:
             # User has specified to treat this as a sensor. First we need to
             # determine if it should be a binary_sensor.
-            if _is_sensor_a_binary_sensor(node, hass):
+            if _is_sensor_a_binary_sensor(hass, node):
                 continue
             else:
                 hass.data[ISY994_NODES]['sensor'].append(node)
@@ -280,17 +280,17 @@ def _categorize_nodes(nodes, hass: HomeAssistant, ignore_identifier: str,
         # We have a bunch of different methods for determining the device type,
         # each of which works with different ISY firmware versions or device
         # family. The order here is important, from most reliable to least.
-        if _check_for_node_def(node, hass):
+        if _check_for_node_def(hass, node):
             continue
-        if _check_for_insteon_type(node, hass):
+        if _check_for_insteon_type(hass, node):
             continue
-        if _check_for_uom_id(node, hass):
+        if _check_for_uom_id(hass, node):
             continue
-        if _check_for_states_in_uom(node, hass):
+        if _check_for_states_in_uom(hass, node):
             continue
 
 
-def _categorize_programs(programs: dict, hass: HomeAssistant) -> None:
+def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
     """Categorize the ISY994 programs."""
     for domain in SUPPORTED_DOMAINS:
         try:
@@ -310,7 +310,7 @@ def _categorize_programs(programs: dict, hass: HomeAssistant) -> None:
                         hass.data[ISY994_PROGRAMS][domain].append(program)
 
 
-def _categorize_weather(climate, hass: HomeAssistant) -> None:
+def _categorize_weather(hass: HomeAssistant, climate) -> None:
     """Categorize the ISY994 weather data."""
     climate_attrs = dir(climate)
     weather_nodes = [WeatherNode(getattr(climate, attr), attr,
@@ -363,11 +363,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not isy.connected:
         return False
 
-    _categorize_nodes(isy.nodes, hass, ignore_identifier, sensor_identifier)
-    _categorize_programs(isy.programs, hass)
+    _categorize_nodes(hass, isy.nodes, ignore_identifier, sensor_identifier)
+    _categorize_programs(hass, isy.programs)
 
     if isy.configuration.get('Weather Information'):
-        _categorize_weather(isy.climate, hass)
+        _categorize_weather(hass, isy.climate)
 
     def stop(event: object) -> None:
         """Stop ISY auto updates."""
