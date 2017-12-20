@@ -165,7 +165,7 @@ async def async_setup_platform(
     errindication, _, _, _ = get_result
 
     if errindication and not accept_errors:
-        _LOGGER.error("Please check the details in the configuration file")
+        _LOGGER.error(f"Please check the details in the configuration file: {errindication}")
         return
 
     name = config.get(CONF_NAME, Template(DEFAULT_NAME, hass))
@@ -236,9 +236,6 @@ class SnmpData:
 
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
-        from pysnmp.proto.rfc1905 import NoSuchObject
-        from pysnmp.proto.rfc1902 import Opaque
-        from pyasn1.codec.ber import decoder
 
         get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
@@ -257,15 +254,26 @@ class SnmpData:
             self.value = self._default_value
         else:
             for resrow in restable:
-                result = resrow[-1]
-                if type(result) == NoSuchObject:
-                    _LOGGER.error(
-                        "SNMP error for OID %s: "
-                        "No Such Object currently exists at this OID",
-                        self._baseoid)
-                    self.value = self._default_value
-                if type(result) == Opaque:
-                    value, _ = decoder.decode(bytes(resrow[-1]))
-                    self.value = str(value)
-                else:
-                    self.value = str(resrow[-1])
+                self.value = self._decode_value(resrow[-1])
+
+    def _decode_value(self, value):
+        from pysnmp.proto.rfc1905 import NoSuchObject
+        from pysnmp.proto.rfc1902 import Opaque
+        from pyasn1.codec.ber import decoder
+        
+        _LOGGER.debug(f"SNMP OID {self._baseoid} received type={type(value)} and data {bytes(value)}")
+        if type(value) == NoSuchObject:
+            _LOGGER.error(
+                f"SNMP error for OID {self._baseoid}: "
+                "No Such Object currently exists at this OID"
+            )
+            return self._default_value
+
+        if type(value) == Opaque:
+            try:
+                decoded_value, _ = decoder.decode(bytes(value))
+                return str(decoded_value)
+            except Exception as e:
+                _LOGGER.error(f'SNMP error in decoding opaque type: {e}')
+                return self._default_value
+        return str(value)
