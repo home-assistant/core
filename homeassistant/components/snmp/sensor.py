@@ -264,14 +264,14 @@ class SnmpData:
         from struct import unpack
         
         _LOGGER.debug(f"SNMP OID {self._baseoid} received type={type(value)} and data {bytes(value)}")
-        if type(value) == NoSuchObject:
+        if isinstance(value, NoSuchObject):
             _LOGGER.error(
                 f"SNMP error for OID {self._baseoid}: "
                 "No Such Object currently exists at this OID"
             )
             return self._default_value
 
-        if type(value) == Opaque:
+        if isinstance(value, Opaque):
             # Float data type is not supported by the pyasn1 library,
             # so we need to decode this type ourselves based on:
             # https://tools.ietf.org/html/draft-perkins-opaque-01
@@ -281,7 +281,8 @@ class SnmpData:
             try:
                 decoded_value, _ = decoder.decode(bytes(value))
                 return str(decoded_value)
-            except Exception as e:
-                _LOGGER.error(f'SNMP error in decoding opaque type: {e}')
+            # pylint: disable=broad-except
+            except Exception as decode_exception:
+                _LOGGER.error(f'SNMP error in decoding opaque type: {decode_exception}')
                 return self._default_value
         return str(value)
