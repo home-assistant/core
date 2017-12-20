@@ -9,6 +9,7 @@ from pysnmp.carrier.asyncore.dgram import udp
 from pysnmp.proto.api import v2c
 from pyasn1.codec.ber import encoder
 from pyasn1.type import univ
+from pysnmp.proto.rfc1902 import Opaque
 
 import time
 
@@ -68,8 +69,8 @@ class TestSnmp(unittest.TestCase):
         class MyStaticMibScalarInstance3(MibScalarInstance):
             # noinspection PyUnusedLocal,PyUnusedLocal
             def getValue(self, name, idx):
-                encoded_value = encoder.encode(univ.Real(1.17))
-                return self.getSyntax().clone(encoded_value)
+                return self.getSyntax().clone(
+                    Opaque(value=b'\x9fx\x04=\xa4\x00\x00'))
 
         mibBuilder.exportSymbols(
             '__MY_MIB', MibScalar(_OID1, v2c.OctetString()),
@@ -143,4 +144,4 @@ class TestSnmp(unittest.TestCase):
         self.assertEquals('1234', int_state.state)
 
         int_state = self.hass.states.get('sensor.floatvar')
-        self.assertEquals('1.17', int_state.state)
+        self.assertEquals('0.080078125', int_state.state)

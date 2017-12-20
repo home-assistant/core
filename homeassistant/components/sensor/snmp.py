@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_VALUE_TEMPLATE)
+from struct import unpack
 
 REQUIREMENTS = ['pysnmp==4.4.2']
 
@@ -81,7 +82,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                ObjectType(ObjectIdentity(baseoid))))
 
     if errindication and not accept_errors:
-        _LOGGER.error("Please check the details in the configuration file")
+        _LOGGER.error("Please check the details in the configuration file: %s",
+                      errindication)
         return False
     else:
         data = SnmpData(
@@ -151,9 +153,6 @@ class SnmpData(object):
         from pysnmp.hlapi import (
             getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
             ObjectType, ObjectIdentity)
-        from pysnmp.proto.rfc1905 import NoSuchObject
-        from pysnmp.proto.rfc1902 import Opaque
-        from pyasn1.codec.ber import decoder
 
         errindication, errstatus, errindex, restable = next(
             getCmd(SnmpEngine(),
@@ -172,15 +171,34 @@ class SnmpData(object):
             self.value = self._default_value
         else:
             for resrow in restable:
-                result = resrow[-1]
-                if type(result) == NoSuchObject:
-                    _LOGGER.error(
-                        "SNMP error for OID %s: "
-                        "No Such Object currently exists at this OID",
-                        self._baseoid)
-                    self.value = self._default_value
-                if type(result) == Opaque:
-                    value, _ = decoder.decode(bytes(resrow[-1]))
-                    self.value = str(value)
-                else:
-                    self.value = str(resrow[-1])
+                self.value = self._decode_value(resrow[-1])
+
+    def _decode_value(self, value):
+        from pysnmp.proto.rfc1905 import NoSuchObject
+        from pysnmp.proto.rfc1902 import Opaque
+        from pyasn1.codec.ber import decoder
+
+        _LOGGER.debug("SNMP OID %s received type=%s and data %s",
+                      self._baseoid, type(value), bytes(value))
+        if type(value) == NoSuchObject:
+            _LOGGER.error(
+                "SNMP error for OID %s: "
+                "No Such Object currently exists at this OID",
+                self._baseoid)
+            return self._default_value
+
+        if type(value) == Opaque:
+            # Float data type is not supported by the pyasn1 library,
+            # so we need to decode this type ourselves based on:
+            # https://tools.ietf.org/html/draft-perkins-opaque-01
+            if bytes(value).startswith(b'\x9f\x78'):
+                return unpack("!f", bytes(value)[3:])[0]
+            # Otherwise Opaque types should be asn1 encoded
+            try:
+                decoded_value, _ = decoder.decode(bytes(value))
+                return str(decoded_value)
+            except Exception as e:
+                _LOGGER.error('SNMP error in decoding opaque type: %s',
+                              str(e))
+                return self._default_value
+        return str(value)
