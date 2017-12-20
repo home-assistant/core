@@ -260,6 +260,7 @@ class SnmpData:
         from pysnmp.proto.rfc1905 import NoSuchObject
         from pysnmp.proto.rfc1902 import Opaque
         from pyasn1.codec.ber import decoder
+        from struct import unpack
         
         _LOGGER.debug(f"SNMP OID {self._baseoid} received type={type(value)} and data {bytes(value)}")
         if type(value) == NoSuchObject:
@@ -270,6 +271,12 @@ class SnmpData:
             return self._default_value
 
         if type(value) == Opaque:
+            # Float data type is not supported by the pyasn1 library,
+            # so we need to decode this type ourselves based on:
+            # https://tools.ietf.org/html/draft-perkins-opaque-01
+            if bytes(value).startswith(b'\x9f\x78'):
+                return unpack("!f", bytes(value)[3:])[0]
+            # Otherwise Opaque types should be asn1 encoded
             try:
                 decoded_value, _ = decoder.decode(bytes(value))
                 return str(decoded_value)
