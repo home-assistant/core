@@ -352,7 +352,7 @@ SERVICE_ALARM_ARM_AWAY = 'alarm_arm_away'
 SERVICE_ALARM_ARM_NIGHT = 'alarm_arm_night'
 SERVICE_ALARM_ARM_CUSTOM_BYPASS = 'alarm_arm_custom_bypass'
 SERVICE_ALARM_TRIGGER = 'alarm_trigger'
-
+SERVICE_ALARM_TOGGLE_CHIME = 'alarm_toggle_chime'
 
 SERVICE_LOCK = 'lock'
 SERVICE_UNLOCK = 'unlock'

@@ -97,8 +97,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
             self.hass.data[DATA_AD].send("{!s}3".format(code))
 
-    def alarm_arm_custom_bypass(self, code=None):
-        """Send custom bypass command."""
+    def alarm_toggle_chime(self, code=None):
+        """Send toggle chime command."""
         if code:
-            _LOGGER.debug("alarm_arm_custom_bypass: sending %s", str(code))
-            self.hass.data[DATA_AD].send("{!s}".format(code))
+            _LOGGER.debug("alarm_toggle_chime: sending %s9", str(code))
+            self.hass.data[DATA_AD].send("{!s}9".format(code))

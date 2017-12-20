@@ -50,6 +50,16 @@ alarm_trigger:
       description: An optional code to trigger the alarm control panel with.
       example: 1234
 
+alarm_toggle_chime:
+  description: Send the alarm the command to toggle the chime.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to trigger.
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to toggle the alarm control panel chime with.
+      example: 1234
+
 envisalink_alarm_keypress:
   description: Send custom keypresses to the alarm.
   fields:
