@@ -53,7 +53,7 @@ class ISYCoverDevice(ISYDevice, CoverDevice):
 
     def __init__(self, node: object):
         """Initialize the ISY994 cover device."""
-        ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def current_cover_position(self) -> int:
@@ -89,7 +89,7 @@ class ISYCoverProgram(ISYCoverDevice):
 
     def __init__(self, name: str, node: object, actions: object) -> None:
         """Initialize the ISY994 cover program."""
-        ISYCoverDevice.__init__(self, node)
+        super().__init__(node)
         self._name = name
         self._actions = actions
 

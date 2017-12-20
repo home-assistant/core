@@ -8,8 +8,8 @@ import logging
 from typing import Callable  # noqa
 
 from homeassistant.components.sensor import DOMAIN
-import homeassistant.components.isy994 as isy
-from homeassistant.components.isy994 import ISY994_NODES, ISY994_WEATHER
+from homeassistant.components.isy994 import (ISY994_NODES, ISY994_WEATHER,
+                                             ISYDevice)
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
 from homeassistant.helpers.typing import ConfigType
@@ -251,12 +251,12 @@ def setup_platform(hass, config: ConfigType,
     add_devices(devices)
 
 
-class ISYSensorDevice(isy.ISYDevice):
+class ISYSensorDevice(ISYDevice):
     """Representation of an ISY994 sensor device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 sensor device."""
-        isy.ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def raw_unit_of_measurement(self) -> str:
@@ -310,12 +310,12 @@ class ISYSensorDevice(isy.ISYDevice):
         return raw_units
 
 
-class ISYWeatherDevice(isy.ISYDevice):
+class ISYWeatherDevice(ISYDevice):
     """Representation of an ISY994 weather device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 weather device."""
-        isy.ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def unique_id(self) -> str:

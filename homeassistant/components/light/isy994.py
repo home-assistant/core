@@ -31,7 +31,7 @@ class ISYLightDevice(ISYDevice, Light):
 
     def __init__(self, node: object) -> None:
         """Initialize the ISY994 light device."""
-        ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def is_on(self) -> bool:

@@ -59,7 +59,7 @@ class ISYFanDevice(ISYDevice, FanEntity):
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 fan device."""
-        ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def speed(self) -> str:
@@ -99,7 +99,7 @@ class ISYFanProgram(ISYFanDevice):
 
     def __init__(self, name: str, node, actions) -> None:
         """Initialize the ISY994 fan program."""
-        ISYFanDevice.__init__(self, node)
+        super().__init__(node)
         self._name = name
         self._actions = actions
 

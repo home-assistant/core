@@ -49,7 +49,7 @@ class ISYLockDevice(ISYDevice, LockDevice):
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 lock device."""
-        ISYDevice.__init__(self, node)
+        super().__init__(node)
         self._conn = node.parent.parent.conn
 
     @property
@@ -95,7 +95,7 @@ class ISYLockProgram(ISYLockDevice):
 
     def __init__(self, name: str, node, actions) -> None:
         """Initialize the lock."""
-        ISYLockDevice.__init__(self, node)
+        super().__init__(node)
         self._name = name
         self._actions = actions
 

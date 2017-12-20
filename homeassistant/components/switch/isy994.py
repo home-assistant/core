@@ -44,7 +44,7 @@ class ISYSwitchDevice(ISYDevice, SwitchDevice):
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 switch device."""
-        ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def is_on(self) -> bool:
@@ -67,7 +67,7 @@ class ISYSwitchProgram(ISYSwitchDevice):
 
     def __init__(self, name: str, node, actions) -> None:
         """Initialize the ISY994 switch program."""
-        ISYSwitchDevice.__init__(self, node)
+        super().__init__(node)
         self._name = name
         self._actions = actions
 
