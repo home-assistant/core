@@ -4,11 +4,11 @@ Support for the GPSLogger platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.gpslogger/
 """
-from aiohttp.web import Request, HTTPUnauthorized  # NOQA
 import asyncio
 from functools import partial
 import logging
 
+from aiohttp.web import Request, HTTPUnauthorized  # NOQA
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,6 @@ class GPSLoggerView(HomeAssistantView):
     @asyncio.coroutine
     def _handle(self, hass, request: Request):
         """Handle GPSLogger requests."""
-
         data = request.query
 
         if self._password is not None:
