@@ -121,6 +121,7 @@ def alarm_arm_custom_bypass(hass, code=None, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_CUSTOM_BYPASS, data)
 
+
 @bind_hass
 def alarm_toggle_chime(hass, code=None, entity_id=None):
     """Send the alarm the command to toggle the chime."""
