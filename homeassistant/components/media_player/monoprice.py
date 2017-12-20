@@ -40,8 +40,8 @@ CONF_SOURCES = 'sources'
 
 DATA_MONOPRICE = 'monoprice'
 
-SERVICE_SNAPSHOT = 'monoprice_snapshot'
-SERVICE_RESTORE = 'monoprice_restore'
+SERVICE_SNAPSHOT = 'snapshot'
+SERVICE_RESTORE = 'restore'
 
 # Valid zone ids: 11-16 or 21-26 or 31-36
 ZONE_IDS = vol.All(vol.Coerce(int), vol.Any(vol.Range(min=11, max=16),
