@@ -150,6 +150,8 @@ class TestSnmp(unittest.TestCase):
                 },
             ]
             })
+        self.hass.block_till_done()
+
         str_state = self.hass.states.get('sensor.stringvar')
         self.assertEquals('test string', str_state.state)
 
