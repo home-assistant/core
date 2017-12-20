@@ -1,4 +1,5 @@
-"""Tests for sensor.snmp."""
+"""Tests for sensor_snmp."""
+
 import unittest
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
