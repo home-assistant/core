@@ -8,6 +8,9 @@ import logging
 
 import voluptuous as vol
 
+import urllib.request
+import json
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
@@ -75,10 +78,17 @@ class SteamSensor(Entity):
         """Update device state."""
         try:
             self._profile = self._steamod.user.profile(self._account)
-            if self._profile.current_game[2] is None:
+            if self._profile.current_game[0] is None:
                 self._game = 'None'
             else:
-                self._game = self._profile.current_game[2]
+                if self._profile.current_game[2] is None:
+                    game_id = self._profile.current_game[0]
+                    url = 'http://store.steampowered.com/api/appdetails?appids=' + str(game_id)
+                    with urllib.request.urlopen(url) as url:
+                        data = json.loads(url.read().decode())
+                        self._game = data[str(game_id)]['data']['name']
+                else:
+                    self._game = self._profile.current_game[2]
             self._state = {
                 1: STATE_ONLINE,
                 2: STATE_BUSY,
