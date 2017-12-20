@@ -165,6 +165,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         """
         self._negative_node = child
 
+        # pylint: disable=protected-access
         if not _is_val_unknown(self._negative_node.status._val):
             # If the negative node has a value, it means the negative node is
             # in use for this device. Therefore, we cannot determine the state
