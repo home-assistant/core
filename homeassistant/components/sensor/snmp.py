@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.snmp/
 """
 import logging
 from datetime import timedelta
+from struct import unpack
 
 import voluptuous as vol
 
@@ -15,7 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_VALUE_TEMPLATE)
-from struct import unpack
 
 REQUIREMENTS = ['pysnmp==4.4.2']
 
@@ -181,14 +181,14 @@ class SnmpData(object):
 
         _LOGGER.debug("SNMP OID %s received type=%s and data %s",
                       self._baseoid, type(value), bytes(value))
-        if type(value) == NoSuchObject:
+        if isinstance(value, NoSuchObject):
             _LOGGER.error(
                 "SNMP error for OID %s: "
                 "No Such Object currently exists at this OID",
                 self._baseoid)
             return self._default_value
 
-        if type(value) == Opaque:
+        if isinstance(value, Opaque):
             # Float data type is not supported by the pyasn1 library,
             # so we need to decode this type ourselves based on:
             # https://tools.ietf.org/html/draft-perkins-opaque-01
@@ -198,8 +198,9 @@ class SnmpData(object):
             try:
                 decoded_value, _ = decoder.decode(bytes(value))
                 return str(decoded_value)
-            except Exception as e:
+            # pylint: disable=broad-except
+            except Exception as decode_exception:
                 _LOGGER.error('SNMP error in decoding opaque type: %s',
-                              str(e))
+                              str(decode_exception))
                 return self._default_value
         return str(value)
