@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-import urllib.request, json
+import urllib.request
+import json
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
