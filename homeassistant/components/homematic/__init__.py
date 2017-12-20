@@ -749,10 +749,6 @@ class HMDevice(Entity):
         """Return device specific state attributes."""
         attr = {}
 
-        # No data available
-        if not self.available:
-            return attr
-
         # Generate a dictionary with attributes
         for node, data in HM_ATTRIBUTE_SUPPORT.items():
             # Is an attribute and exists for this object
@@ -807,6 +803,9 @@ class HMDevice(Entity):
         # Availability has changed
         if attribute == 'UNREACH':
             self._available = bool(value)
+            has_changed = True
+        elif not self.available:
+            self._available = False
             has_changed = True
 
         # If it has changed data point, update HASS
