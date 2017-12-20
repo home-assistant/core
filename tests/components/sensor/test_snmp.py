@@ -1,3 +1,4 @@
+"""Tests for sensor.snmp."""
 import unittest
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
@@ -7,8 +8,6 @@ from pysnmp.entity import engine, config
 from pysnmp.entity.rfc3413 import cmdrsp, context
 from pysnmp.carrier.asyncore.dgram import udp
 from pysnmp.proto.api import v2c
-from pyasn1.codec.ber import encoder
-from pyasn1.type import univ
 from pysnmp.proto.rfc1902 import Opaque
 
 import time
@@ -21,14 +20,20 @@ _OID3 = _BASE_OID + (3, 1, 1)
 
 
 class TestSnmp(unittest.TestCase):
+    """Test basic functionality of sensor.snmp"""
 
     def setUp(self):
+        """Setup a hoss instance for testing."""
         self.hass = get_test_home_assistant()
         self.hass.start()
         self.snmpEngine = None
         self._agent_thread = None
 
     def tearDown(self):
+        """Clean up after the tests.
+
+        Especially take care of the snmpEngine.
+        """
         if self.snmpEngine is not None:
             self.snmpEngine.transportDispatcher.jobFinished(1)
             self.snmpEngine.transportDispatcher.unregisterRecvCbFun(
@@ -40,6 +45,10 @@ class TestSnmp(unittest.TestCase):
         self.hass.stop()
 
     def _run_agent(self):
+        """Run a snmp thread so that we can get data from it.
+
+        This is based on the examples from the pysnmp library.
+        """
         self.snmpEngine = engine.SnmpEngine()
         config.addTransport(
             self.snmpEngine,
@@ -100,6 +109,10 @@ class TestSnmp(unittest.TestCase):
             raise
 
     def test_read_values(self):
+        """Test reading data from the sensor.snmp.
+
+        Testing with different data types as they have different encodings.
+        """
         self._agent_thread = Thread(target=self._run_agent)
         self._agent_thread.start()
         time.sleep(1)

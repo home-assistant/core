@@ -174,6 +174,7 @@ class SnmpData(object):
                 self.value = self._decode_value(resrow[-1])
 
     def _decode_value(self, value):
+        """Decode the different results we could get into strings."""
         from pysnmp.proto.rfc1905 import NoSuchObject
         from pysnmp.proto.rfc1902 import Opaque
         from pyasn1.codec.ber import decoder
