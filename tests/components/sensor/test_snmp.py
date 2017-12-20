@@ -1,4 +1,4 @@
-"""Tests for sensor_snmp."""
+"""Tests for sensor.snmp."""
 
 import unittest
 from homeassistant.setup import setup_component
@@ -21,7 +21,7 @@ _OID3 = _BASE_OID + (3, 1, 1)
 
 
 class TestSnmp(unittest.TestCase):
-    """Test basic functionality of sensor.snmp"""
+    """Test basic functionality of sensor.snmp."""
 
     def setUp(self):
         """Setup a hoss instance for testing."""
