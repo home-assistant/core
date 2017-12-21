@@ -118,7 +118,7 @@ class Concord232ZoneSensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
-        return bool(self._zone['state'] == 'Normal')
+        return bool(self._zone['state'] != 'Normal')
 
     def update(self):
         """Get updated stats from API."""
