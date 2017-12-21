@@ -167,6 +167,11 @@ class HueBridge(object):
 
         hass.data[DOMAIN][socket.gethostbyname(host)] = self
 
+    @property
+    def bridge_id(self):
+        """Return a unique identifier for the bridge."""
+        return socket.gethostbyname(self.host)
+
     def setup(self):
         """Set up a phue bridge based on host parameter."""
         import phue
@@ -196,7 +201,7 @@ class HueBridge(object):
 
         discovery.load_platform(
             self.hass, 'light', DOMAIN,
-            {'bridge_id': socket.gethostbyname(self.host)})
+            {'bridge_id': self.bridge_id})
 
         # create a service for calling run_scene directly on the bridge,
         # used to simplify automation rules.
