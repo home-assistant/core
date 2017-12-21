@@ -29,7 +29,6 @@ ATTR_ALTITUDE = 'altitude'
 ATTR_CONNECTION_STATE = 'connection_state'
 ATTR_IS_DEAD = 'is_dead'
 ATTR_IS_LOST = 'is_lost'
-ATTR_LAST_SEEN = 'last_seen'
 ATTR_LAST_UPDATED = 'last_updated'
 ATTR_RING_STATE = 'ring_state'
 ATTR_VOIP_STATE = 'voip_state'
@@ -112,7 +111,6 @@ class TileDeviceScanner(DeviceScanner):
                 ATTR_CONNECTION_STATE: dev['tileState']['connection_state'],
                 ATTR_IS_DEAD: dev['is_dead'],
                 ATTR_IS_LOST: dev['tileState']['is_lost'],
-                ATTR_LAST_SEEN: dev['tileState']['timestamp'],
                 ATTR_LAST_UPDATED: dev['tileState']['last_owner_update'],
                 ATTR_RING_STATE: dev['tileState']['ring_state'],
                 ATTR_VOIP_STATE: dev['tileState']['voip_state'],
