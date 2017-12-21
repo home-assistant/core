@@ -30,12 +30,12 @@ SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 
 def normalize_xy(argx, argy, brightness=None):
     """Normalise XY to Tradfri scaling."""
-    return (int(argx*65535+0.5), int(argy*65535+0.5))
+    return (int(argx*65535+0.56), int(argy*65535+0.56))
 
 
 def denormalize_xy(argx, argy, brightness=None):
     """Denormalise XY from Tradfri scaling."""
-    return (argx/65535-0.5, argy/65535-0.5)
+    return (argx/65535-0.56, argy/65535-0.56)
 
 
 @asyncio.coroutine
@@ -224,7 +224,7 @@ class TradfriLight(Light):
     @property
     def xy_color(self):
         """XY colour of the light."""
-        if self._light_data.xy_color:
+        if self._light_data.xy_color and self._light_control.can_set_color:
             return denormalize_xy(*self._light_data.xy_color)
 
     @property
