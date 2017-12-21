@@ -103,6 +103,7 @@ def test_error(hass, caplog):
     sys.modules['pyfido.client'] = PyFidoClientFakeModule()
 
     config = {}
-    ret = yield from fido.async_setup_platform(hass, config,
-                                               fake_async_add_devices)
-    assert ret is None
+    fake_async_add_devices = MagicMock()
+    yield from fido.async_setup_platform(hass, config,
+                                         fake_async_add_devices)
+    assert fake_async_add_devices.called is False
