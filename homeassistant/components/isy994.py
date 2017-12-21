@@ -303,7 +303,7 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
             pass
         else:
             for dtype, _, node_id in folder.children:
-                if dtype is KEY_FOLDER:
+                if dtype == KEY_FOLDER:
                     entity_folder = folder[node_id]
                     try:
                         status = entity_folder[KEY_STATUS]
