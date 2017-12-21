@@ -11,7 +11,6 @@ from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
                                           SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH, SUPPORT_SET_SPEED)
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             KEY_STATUS, KEY_ACTIONS,
                                              ISYDevice)
 from homeassistant.helpers.typing import ConfigType
 
@@ -40,16 +39,8 @@ def setup_platform(hass, config: ConfigType,
     for node in hass.data[ISY994_NODES][DOMAIN]:
         devices.append(ISYFanDevice(node))
 
-    for program in hass.data[ISY994_PROGRAMS].get(DOMAIN, []):
-        try:
-            status = program[KEY_STATUS]
-            actions = program[KEY_ACTIONS]
-            assert actions.dtype == 'program', 'Not a program'
-        except (AttributeError, KeyError, AssertionError):
-            _LOGGER.warning("Program entity '%s' not loaded due to"
-                            "incompatible folder structure.", program.name)
-        else:
-            devices.append(ISYFanProgram(program.name, status, actions))
+    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+        devices.append(ISYFanProgram(name, status, actions))
 
     add_devices(devices)
 

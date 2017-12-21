@@ -13,7 +13,7 @@ from typing import Callable  # noqa
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             KEY_STATUS, ISYDevice)
+                                             ISYDevice)
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -73,14 +73,8 @@ def setup_platform(hass, config: ConfigType,
                 device = ISYBinarySensorDevice(node)
                 devices.append(device)
 
-    for program in hass.data[ISY994_PROGRAMS][DOMAIN]:
-        try:
-            status = program[KEY_STATUS]
-        except (AttributeError, KeyError, AssertionError):
-            _LOGGER.warning("Program entity '%s' not loaded due to"
-                            "incompatible folder structure.", program.name)
-        else:
-            devices.append(ISYBinarySensorProgram(program.name, status))
+    for name, status, _ in hass.data[ISY994_PROGRAMS][DOMAIN]:
+        devices.append(ISYBinarySensorProgram(name, status))
 
     add_devices(devices)
 

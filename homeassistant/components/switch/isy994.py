@@ -9,7 +9,6 @@ from typing import Callable  # noqa
 
 from homeassistant.components.switch import SwitchDevice, DOMAIN
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             KEY_ACTIONS, KEY_STATUS,
                                              ISYDevice)
 from homeassistant.helpers.typing import ConfigType  # noqa
 
@@ -25,16 +24,8 @@ def setup_platform(hass, config: ConfigType,
         if not node.dimmable:
             devices.append(ISYSwitchDevice(node))
 
-    for program in hass.data[ISY994_PROGRAMS].get(DOMAIN, []):
-        try:
-            status = program[KEY_STATUS]
-            actions = program[KEY_ACTIONS]
-            assert actions.dtype == 'program', 'Not a program'
-        except (AttributeError, KeyError, AssertionError):
-            _LOGGER.warning("Program '%s' failed to load due to "
-                            "incompatible folder structure.", program.name)
-        else:
-            devices.append(ISYSwitchProgram(program.name, status, actions))
+    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+        devices.append(ISYSwitchProgram(name, status, actions))
 
     add_devices(devices)
 

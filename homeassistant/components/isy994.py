@@ -118,6 +118,7 @@ NODE_FILTERS = {
 
 SUPPORTED_DOMAINS = ['binary_sensor', 'sensor', 'lock', 'fan', 'cover',
                      'light', 'switch']
+SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
 
 # ISY Scenes are more like Swithes than Hass Scenes
 # (they can turn off, and report their state)
@@ -292,7 +293,7 @@ def _categorize_nodes(hass: HomeAssistant, nodes, ignore_identifier: str,
 
 def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
     """Categorize the ISY994 programs."""
-    for domain in SUPPORTED_DOMAINS:
+    for domain in SUPPORTED_PROGRAM_DOMAINS:
         try:
             folder = programs[KEY_MY_PROGRAMS]['HA.{}'.format(domain)]
         except KeyError:
@@ -300,14 +301,23 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
         else:
             for dtype, _, node_id in folder.children:
                 if dtype is KEY_FOLDER:
-                    program = folder[node_id]
+                    entity_folder = folder[node_id]
                     try:
-                        node = program[KEY_STATUS].leaf
-                        assert node.dtype == 'program', 'Not a program'
-                    except (KeyError, AssertionError):
-                        pass
-                    else:
-                        hass.data[ISY994_PROGRAMS][domain].append(program)
+                        status = entity_folder[KEY_STATUS]
+                        assert status.dtype == 'program', 'Not a program'
+                        if domain != 'binary_sensor':
+                            actions = entity_folder[KEY_ACTIONS]
+                            assert actions.dtype == 'program', 'Not a program'
+                        else:
+                            actions = None
+                    except (AttributeError, KeyError, AssertionError):
+                        _LOGGER.warning("Program entity '%s' not loaded due"
+                                        "to invalid folder structure.",
+                                        entity_folder.name)
+                        continue
+
+                    entity = (entity_folder.name, status, actions)
+                    hass.data[ISY994_PROGRAMS][domain].append(entity)
 
 
 def _categorize_weather(hass: HomeAssistant, climate) -> None:

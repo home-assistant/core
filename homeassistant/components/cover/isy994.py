@@ -9,7 +9,6 @@ from typing import Callable  # noqa
 
 from homeassistant.components.cover import CoverDevice, DOMAIN
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             KEY_STATUS, KEY_ACTIONS,
                                              ISYDevice)
 from homeassistant.const import (
     STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN)
@@ -34,16 +33,8 @@ def setup_platform(hass, config: ConfigType,
     for node in hass.data[ISY994_NODES][DOMAIN]:
         devices.append(ISYCoverDevice(node))
 
-    for program in hass.data[ISY994_PROGRAMS].get(DOMAIN, []):
-        try:
-            status = program[KEY_STATUS]
-            actions = program[KEY_ACTIONS]
-            assert actions.dtype == 'program', 'Not a program'
-        except (AttributeError, KeyError, AssertionError):
-            _LOGGER.warning("Program entity '%s' not loaded due to"
-                            "incompatible folder structure.", program.name)
-        else:
-            devices.append(ISYCoverProgram(program.name, status, actions))
+    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+        devices.append(ISYCoverProgram(name, status, actions))
 
     add_devices(devices)
 
