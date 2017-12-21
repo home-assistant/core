@@ -77,9 +77,9 @@ HM_DEVICE_TYPES = {
         'ThermostatGroup'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
-        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
-        'HMWIOSwitch', 'MaxShutterContact', 'Rain', 'WiredSensor',
-        'PresenceIP'],
+        'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
+        'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
+        'WiredSensor', 'PresenceIP'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
