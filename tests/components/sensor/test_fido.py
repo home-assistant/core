@@ -43,7 +43,7 @@ class FidoClientMockError(FidoClientMock):
         raise PyFidoErrorMock("Fake Error")
 
 
-class PyFidoErrorMock(BaseException):
+class PyFidoErrorMock(Exception):
     """Fake PyFido Error."""
 
 
@@ -105,8 +105,4 @@ def test_error(hass, caplog):
     config = {}
     ret = yield from fido.async_setup_platform(hass, config,
                                                fake_async_add_devices)
-    assert ret is False
-
-    fido_data = fido.FidoData('username', 'password')
-    ret = yield from fido_data.async_update()
-    assert ret is False
+    assert ret is None

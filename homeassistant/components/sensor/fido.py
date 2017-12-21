@@ -79,7 +79,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     fido_data = FidoData(username, password)
     ret = yield from fido_data.async_update()
     if ret is False:
-        return False
+        return
 
     name = config.get(CONF_NAME)
 
