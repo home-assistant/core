@@ -230,7 +230,7 @@ class TradfriLight(Light):
     @property
     def rgb_color(self):
         """RGB colour of the light."""
-        if self._light_data.xy_color:
+        if self._light_data.xy_color and self._light_control.can_set_color:
             dimmer = self._light_data.dimmer,
             xyb = denormalize_xy(*self._light_data.xy_color) + dimmer
             return color_util.color_xy_brightness_to_RGB(*xyb)
