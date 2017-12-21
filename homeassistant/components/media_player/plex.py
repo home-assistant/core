@@ -313,8 +313,24 @@ class PlexClient(MediaPlayerDevice):
 
     def _clear_media_details(self):
         """Set all Media Items to None."""
-        for media_var in filter(lambda x: x.startswith('_media_'), dir(self)):
-            setattr(self, media_var, None)
+        # General
+        self._media_content_id = None
+        self._media_content_rating = None
+        self._media_content_type = None
+        self._media_duration = None
+        self._media_image_url = None
+        self._media_title = None
+        self._media_position = None
+        # Music
+        self._media_album_artist = None
+        self._media_album_name = None
+        self._media_artist = None
+        self._media_track = None
+        # TV Show
+        self._media_episode = None
+        self._media_season = None
+        self._media_series_title = None
+
         # Clear library Name
         self._app_name = ''
 
@@ -401,7 +417,9 @@ class PlexClient(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def _set_media_type(self):
-        def _tvshow_info():
+        if self._session_type in ['clip', 'episode']:
+            self._media_content_type = MEDIA_TYPE_TVSHOW
+
             # season number (00)
             if callable(self._session.seasons):
                 self._media_season = self._session.seasons()[0].index.zfill(2)
@@ -415,19 +433,12 @@ class PlexClient(MediaPlayerDevice):
             if self._session.index is not None:
                 self._media_episode = str(self._session.index).zfill(2)
 
-        if self._session_type == 'clip':
-            _LOGGER.debug("Clip content type detected, compatibility may "
-                          "vary: %s", self.entity_id)
-            self._media_content_type = MEDIA_TYPE_TVSHOW
-            _tvshow_info()
-        elif self._session_type == 'episode':
-            self._media_content_type = MEDIA_TYPE_TVSHOW
-            _tvshow_info()
         elif self._session_type == 'movie':
             self._media_content_type = MEDIA_TYPE_VIDEO
             if self._session.year is not None and \
                     self._media_title is not None:
                 self._media_title += ' (' + str(self._session.year) + ')'
+
         elif self._session_type == 'track':
             self._media_content_type = MEDIA_TYPE_MUSIC
             self._media_album_name = self._session.parentTitle
