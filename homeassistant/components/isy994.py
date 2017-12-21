@@ -314,7 +314,7 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
                         else:
                             actions = None
                     except (AttributeError, KeyError, AssertionError):
-                        _LOGGER.warning("Program entity '%s' not loaded due"
+                        _LOGGER.warning("Program entity '%s' not loaded due "
                                         "to invalid folder structure.",
                                         entity_folder.name)
                         continue
