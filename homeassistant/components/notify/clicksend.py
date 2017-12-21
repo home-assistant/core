@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_RECIPIENT): cv.string,
-    vol.Optional(CONF_SENDER, default=""): cv.string,
+    vol.Optional(CONF_SENDER): cv.string,
 })
 
 
@@ -49,9 +49,7 @@ class ClicksendNotificationService(BaseNotificationService):
         self.username = config.get(CONF_USERNAME)
         self.api_key = config.get(CONF_API_KEY)
         self.recipient = config.get(CONF_RECIPIENT)
-        self.sender = config.get(CONF_SENDER)
-        if (self.sender == ""):
-            self.sender = self.recipient
+        self.sender = config.get(CONF_SENDER, CONF_RECIPIENT)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
