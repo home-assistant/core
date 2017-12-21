@@ -26,6 +26,7 @@ DOMAIN = 'isy994'
 
 CONF_IGNORE_STRING = 'ignore_string'
 CONF_SENSOR_STRING = 'sensor_string'
+CONF_ENABLE_CLIMATE = 'enable_climate'
 CONF_TLS_VER = 'tls'
 
 DEFAULT_IGNORE_STRING = '{IGNORE ME}'
@@ -45,7 +46,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_IGNORE_STRING,
                      default=DEFAULT_IGNORE_STRING): cv.string,
         vol.Optional(CONF_SENSOR_STRING,
-                     default=DEFAULT_SENSOR_STRING): cv.string
+                     default=DEFAULT_SENSOR_STRING): cv.string,
+        vol.Optional(CONF_ENABLE_CLIMATE,
+                     default=True): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -323,11 +326,14 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
 def _categorize_weather(hass: HomeAssistant, climate) -> None:
     """Categorize the ISY994 weather data."""
     climate_attrs = dir(climate)
-    weather_nodes = [WeatherNode(getattr(climate, attr), attr,
+    _LOGGER.debug(climate)
+    _LOGGER.debug(climate_attrs)
+    weather_nodes = [WeatherNode(getattr(climate, attr),
+                                 attr.replace('_', ' '),
                                  getattr(climate, '{}_units'.format(attr)))
                      for attr in climate_attrs
                      if '{}_units'.format(attr) in climate_attrs]
-    hass.data[ISY994_WEATHER].append(weather_nodes)
+    hass.data[ISY994_WEATHER].extend(weather_nodes)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -339,7 +345,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.data[ISY994_NODES][domain] = []
 
     if ISY994_WEATHER not in hass.data:
-        hass.data[ISY994_WEATHER] = {}
+        hass.data[ISY994_WEATHER] = []
 
     if ISY994_PROGRAMS not in hass.data:
         hass.data[ISY994_PROGRAMS] = {}
@@ -355,6 +361,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     host = urlparse(isy_config.get(CONF_HOST))
     ignore_identifier = isy_config.get(CONF_IGNORE_STRING)
     sensor_identifier = isy_config.get(CONF_SENSOR_STRING)
+    enable_climate = isy_config.get(CONF_ENABLE_CLIMATE)
 
     if host.scheme == 'http':
         https = False
@@ -376,7 +383,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _categorize_nodes(hass, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass, isy.programs)
 
-    if isy.configuration.get('Weather Information'):
+    if enable_climate and isy.configuration.get('Weather Information'):
         _categorize_weather(hass, isy.climate)
 
     def stop(event: object) -> None:
