@@ -76,9 +76,9 @@ HM_DEVICE_TYPES = {
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
         'ThermostatGroup'],
     DISCOVER_BINARY_SENSORS: [
-        'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2', 
-        'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor', 
-        'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain', 
+        'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
+        'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
+        'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
