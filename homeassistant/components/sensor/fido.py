@@ -77,7 +77,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     fido_data = FidoData(username, password)
-    yield from fido_data.update()
+    ret = yield from fido_data.async_update()
+    if ret is False:
+        return False
 
     name = config.get(CONF_NAME)
 
@@ -133,7 +135,7 @@ class FidoSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data from Fido and update the state."""
-        yield from self.fido_data.update()
+        yield from self.fido_data.async_update()
         if self.type == 'balance':
             if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
@@ -155,12 +157,14 @@ class FidoData(object):
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def async_update(self):
         """Get the latest data from Fido."""
+        from pyfido.client import PyFidoError
         try:
             yield from self.client.fetch_data()
-        except BaseException as exp:
+        except PyFidoError as exp:
             _LOGGER.error("Error on receive last Fido data: %s", exp)
-            return
+            return False
         # Update data
         self.data = self.client.get_data()
+        return True

@@ -40,11 +40,28 @@ class FidoClientMockError(FidoClientMock):
     @asyncio.coroutine
     def fetch_data(self):
         """Return fake fetching data."""
-        raise fido.PyFidoError("Fake Error")
+        raise PyFidoErrorMock("Fake Error")
 
 
 class PyFidoErrorMock(BaseException):
     """Fake PyFido Error."""
+
+
+class PyFidoClientFakeModule():
+    """Fake pyfido.client module."""
+
+    PyFidoError = PyFidoErrorMock
+
+
+class PyFidoFakeModule():
+    """Fake pyfido module."""
+
+    FidoClient = FidoClientMockError
+
+
+def fake_async_add_devices(component, update_before_add=False):
+    """Fake async_add_devices function."""
+    pass
 
 
 @asyncio.coroutine
@@ -82,11 +99,14 @@ def test_fido_sensor(loop, hass):
 def test_error(hass, caplog):
     """Test the Fido sensor errors."""
     caplog.set_level(logging.ERROR)
-    sys.modules['pyfido'] = MagicMock()
-    sys.modules['pyfido.client'] = MagicMock()
-    import pyfido.client
-    pyfido.FidoClient = FidoClientMockError
-    pyfido.client.PyFidoError = BaseException
+    sys.modules['pyfido'] = PyFidoFakeModule()
+    sys.modules['pyfido.client'] = PyFidoClientFakeModule()
+
+    config = {}
+    ret = yield from fido.async_setup_platform(hass, config,
+                                               fake_async_add_devices)
+    assert ret is False
+
     fido_data = fido.FidoData('username', 'password')
-    yield from fido_data.update()
-    assert "Error on receive last Fido data: " in caplog.text
+    ret = yield from fido_data.async_update()
+    assert ret is False
