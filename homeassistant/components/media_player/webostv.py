@@ -322,17 +322,17 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        source = self._source_list.get(source)
-        if source is None:
+        source_dict = self._source_list.get(source)
+        if source_dict is None:
             _LOGGER.warning("Source %s not found for %s", source, self.name)
             return
-        self._current_source_id = self._source_list[source]['id']
-        if source.get('title'):
-            self._current_source = self._source_list[source]['title']
-            self._client.launch_app(self._source_list[source]['id'])
-        elif source.get('label'):
-            self._current_source = self._source_list[source]['label']
-            self._client.set_input(self._source_list[source]['id'])
+        self._current_source_id = source_dict['id']
+        if source_dict.get('title'):
+            self._current_source = source_dict['title']
+            self._client.launch_app(source_dict['id'])
+        elif source_dict.get('label'):
+            self._current_source = source_dict['label']
+            self._client.set_input(source_dict['id'])
 
     def media_play(self):
         """Send play command."""
