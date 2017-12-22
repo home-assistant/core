@@ -15,8 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarmdecoder import (
     DATA_AD, SIGNAL_PANEL_MESSAGE)
 from homeassistant.const import (
-    ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED)
+    ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
