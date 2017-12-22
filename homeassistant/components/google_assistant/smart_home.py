@@ -135,6 +135,9 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
                                 entity.attributes.get(light.ATTR_MIN_MIREDS))))
 
     if entity.domain == climate.DOMAIN:
+        unit_of_measurement = entity.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT
+        )
         modes = ','.join(
             m.lower() for m in entity.attributes.get(
                 climate.ATTR_OPERATION_LIST, [])
@@ -142,7 +145,7 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
         device['attributes'] = {
             'availableThermostatModes': modes,
             'thermostatTemperatureUnit':
-            'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
+            'F' if unit_of_measurement == TEMP_FAHRENHEIT else 'C',
         }
         _LOGGER.debug('Thermostat attributes %s', device['attributes'])
     return device
