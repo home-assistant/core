@@ -153,10 +153,9 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
 
 def query_device(entity: Entity, units: UnitSystem) -> dict:
     """Take an entity and return a properly formatted device object."""
-    def celsius(
-        deg: Optional[float],
-        unit_of_measurement: Optional[str]
-    ) -> Optional[float]:
+    unit_of_measurement = entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    def celsius(deg: Optional[float]) -> Optional[float]:
         """Convert a float to Celsius and rounds to one decimal place."""
         if deg is None:
             return None
