@@ -96,3 +96,9 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if code:
             _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
             self.hass.data[DATA_AD].send("{!s}3".format(code))
+
+    def alarm_toggle_chime(self, code=None):
+        """Send toggle chime command."""
+        if code:
+            _LOGGER.debug("alarm_toggle_chime: sending %s9", str(code))
+            self.hass.data[DATA_AD].send("{!s}9".format(code))
