@@ -121,8 +121,10 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             assert len(devices) == 2
             assert devices[0].name == "First"
             assert devices[0].dev_id == "First"
+            self.assertFalse(devices[0].data.include_all_day)
             assert devices[1].name == "Second"
             assert devices[1].dev_id == "Second"
+            self.assertFalse(devices[1].data.include_all_day)
 
         caldav.setup_platform(self.hass,
                               {
@@ -167,6 +169,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             assert len(devices) == 1
             assert devices[0].name == "HomeOffice"
             assert devices[0].dev_id == "Second HomeOffice"
+            self.assertTrue(devices[0].data.include_all_day)
 
         caldav.setup_platform(self.hass,
                               {
