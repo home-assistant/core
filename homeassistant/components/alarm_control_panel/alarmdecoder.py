@@ -7,21 +7,40 @@ https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 import asyncio
 import logging
 
+import voluptuous as vol
+
+from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarmdecoder import (
     DATA_AD, SIGNAL_PANEL_MESSAGE)
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['alarmdecoder']
 
+SERVICE_ALARM_TOGGLE_CHIME = 'alarm_toggle_chime'
+ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_CODE): cv.string,
+})
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
-    add_devices([AlarmDecoderAlarmPanel()])
+    device = AlarmDecoderAlarmPanel()
+    add_devices([device])
+
+    @callback
+    def alarm_toggle_chime_handler(service):
+        """Register toggle chime handler."""
+        code = service.data.get(ATTR_CODE)
+        device.alarm_toggle_chime(code)
+
+    hass.services.register(
+        alarm.DOMAIN, SERVICE_ALARM_TOGGLE_CHIME, alarm_toggle_chime_handler,
+        description=None, schema=ALARM_TOGGLE_CHIME_SCHEMA)
 
     return True
 
@@ -161,3 +180,9 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if code:
             _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
             self.hass.data[DATA_AD].send("{!s}3".format(code))
+
+    def alarm_toggle_chime(self, code=None):
+        """Send toggle chime command."""
+        if code:
+            _LOGGER.debug("alarm_toggle_chime: sending %s9", str(code))
+            self.hass.data[DATA_AD].send("{!s}9".format(code))
