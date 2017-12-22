@@ -27,6 +27,7 @@ ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_CODE): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
     device = AlarmDecoderAlarmPanel()
