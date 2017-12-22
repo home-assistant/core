@@ -153,11 +153,14 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
 
 def query_device(entity: Entity, units: UnitSystem) -> dict:
     """Take an entity and return a properly formatted device object."""
-    def celsius(deg: Optional[float]) -> Optional[float]:
+    def celsius(
+            deg: Optional[float],
+            unit_of_measurement: Optional[str]
+    ) -> Optional[float]:
         """Convert a float to Celsius and rounds to one decimal place."""
         if deg is None:
             return None
-        return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+        return round(METRIC_SYSTEM.temperature(deg, unit_of_measurement), 1)
 
     if entity.domain == climate.DOMAIN:
         mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
