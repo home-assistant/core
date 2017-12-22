@@ -14,8 +14,14 @@ from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
+<<<<<<< 4bec91531b2fc2da94ce889455c5cf916109488e
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
     STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+=======
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_FRIENDLY_NAME, STATE_OFF,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON,
+>>>>>>> Handled correctly unit of measurement to fix humidity
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
     CONF_NAME, CONF_TYPE
 )
