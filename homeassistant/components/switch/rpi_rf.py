@@ -61,8 +61,7 @@ class RFDeviceWrapper:
         self._tx_sender.start()
         
     def send_code(self, code_list, protocol, pulselength, repetitions):
-        for i in range(0, repetitions):
-            self._tx_queue.put((code_list, protocol, pulselength))
+        self._tx_queue.put((code_list, protocol, pulselength, repetitions))
             
     def enable_tx(self):
         self._rfdevice.enable_tx()
@@ -135,7 +134,7 @@ class RPiRFSwitch(SwitchDevice):
     def _send_code(self, code_list, protocol, pulselength):
         """Send the code(s) with a specified pulselength."""
         _LOGGER.info("Sending code(s): %s", code_list)
-        self._rfdevice.send_code(code_list, protocol, pulselength)
+        self._rfdevice.send_code(code_list, protocol, pulselength, self._repetitions)
         return True
 
     def turn_on(self):
