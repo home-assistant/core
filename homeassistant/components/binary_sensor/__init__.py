@@ -23,6 +23,8 @@ DEVICE_CLASSES = [
     'battery',       # On means low, Off means normal
     'cold',          # On means cold (or too cold)
     'connectivity',  # On means connection present, Off = no connection
+    'door',          # On means open, Off means closed
+    'garage_door',   # On means open, Off means closed
     'gas',           # CO, CO2, etc.
     'heat',          # On means hot (or too hot)
     'light',         # Lightness threshold
@@ -30,7 +32,7 @@ DEVICE_CLASSES = [
     'motion',        # Motion sensor
     'moving',        # On means moving, Off means stopped
     'occupancy',     # On means occupied, Off means not occupied
-    'opening',       # Door, window, etc.
+    'opening',       # Generic contact sensor, On means open, Off means closed
     'plug',          # On means plugged in, Off means unplugged
     'power',         # Power, over-current, etc
     'presence',      # On means home, Off means away
@@ -39,6 +41,7 @@ DEVICE_CLASSES = [
     'smoke',         # Smoke detector
     'sound',         # On means sound detected, Off means no sound
     'vibration',     # On means vibration detected, Off means no vibration
+    'window',        # On means open, Off means closed
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
