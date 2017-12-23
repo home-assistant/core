@@ -2,7 +2,7 @@
 Support for Greenwave Reality (TCP Connected) lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tcpbulbs/
+https://home-assistant.io/components/light.greenwave/
 """
 import logging
 import voluptuous as vol
@@ -21,7 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup TCP Connected Platform."""
+    """Setup Greenwave Reality Platform."""
     import greenwavereality as greenwave
     import os
     host = config.get(CONF_HOST)
@@ -39,14 +39,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         token = None
     doc = greenwave.grab_xml(host, token)
-    add_devices(TcpLights(device, host, token) for device in doc)
+    add_devices(GreenwaveLight(device, host, token) for device in doc)
 
 
 class GreenwaveLight(Light):
-    """Representation of an TCP Connected Light."""
+    """Representation of an Greenwave Reality Light."""
 
     def __init__(self, light, host, token):
-        """Initialize a TCP Connected Light."""
+        """Initialize a Greenwave Reality Light."""
         import greenwavereality as greenwave
         self._did = light['did']
         self._name = light['name']
