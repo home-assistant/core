@@ -60,14 +60,14 @@ class RFDeviceWrapper:
         self._tx_sender = threading.Thread(target=txsender, daemon=True)
         self._tx_sender.start()
         
-    def send_code(code_list, protocol, pulselength, repetitions):
+    def send_code(self, code_list, protocol, pulselength, repetitions):
         for i in range(0, repetitions):
             self._tx_queue.put((code_list, protocol, pulselength))
             
-    def enable_tx():
+    def enable_tx(self):
         self._rfdevice.enable_tx()
         
-    def cleanup():
+    def cleanup(self):
         self._rfdevice.cleanup()
 
 # pylint: disable=unused-argument, import-error
