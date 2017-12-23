@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import greenwavereality as greenwave
     import os
     host = config.get(CONF_HOST)
-    tokenfile = hass.config.path('greenwave.token')
+    tokenfile = hass.config.path('.greenwave')
     if config.get("version") == 3:
         if os.path.exists(tokenfile):
             tokenfile = open(tokenfile)
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(TcpLights(device, host, token) for device in doc)
 
 
-class TcpLights(Light):
+class GreenwaveLight(Light):
     """Representation of an TCP Connected Light."""
 
     def __init__(self, light, host, token):
