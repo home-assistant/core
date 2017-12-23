@@ -45,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 class RFDeviceWrapper:
     def __init__(self, gpio):
+        import rpi_rf
         self._rfdevice = rpi_rf.RFDevice(gpio)
         self._tx_queue = queue.Queue()
         def txsender():
@@ -69,7 +70,6 @@ class RFDeviceWrapper:
 # pylint: disable=unused-argument, import-error
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return switches controlled by a generic RF device via GPIO."""
-    import rpi_rf
 
     gpio = config.get(CONF_GPIO)
     rfdevice = RFDeviceWrapper(gpio)
