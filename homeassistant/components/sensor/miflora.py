@@ -8,7 +8,6 @@ Unfortunately there is no universal bluetooth library available. So depending
 on the platform different backends are used. On most linux systems bluepy
 should cause the least problems.
 """
-
 import logging
 import sys
 from enum import Enum
@@ -80,16 +79,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
+    backend = None
     if _BACKEND == _BACKENDS.BLUEPY:
-        # TODO
-        pass
+        from miflora.backends.bluepy import BluepyBackend
+        backend = BluepyBackend
     else:
         from miflora.backends.gatttool import GatttoolBackend
+        backend = GatttoolBackend
+    _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(
         config.get(CONF_MAC), cache_timeout=cache,
-        adapter=config.get(CONF_ADAPTER), backend=GatttoolBackend)
+        adapter=config.get(CONF_ADAPTER), backend=backend)
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)
