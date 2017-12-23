@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS)
-REQUIREMENTS = ['greenwavereality']
+REQUIREMENTS = ['greenwavereality==0.2.9']
 _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
