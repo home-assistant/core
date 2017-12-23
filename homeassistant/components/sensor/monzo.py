@@ -132,7 +132,7 @@ class oAuthClient():
                 f.close()
                 token_info = json.loads(token_info_string)
 
-                if self.is_token_expired(token_info):
+                if is_token_expired(token_info):
                     token_info = self.refresh_access_token(
                                  token_info['refresh_token'])
 
@@ -259,7 +259,7 @@ class MonzoSensor(Entity):
         import monzo.monzo
         token_refreshed = False
         need_token = (self._token_info is None or
-                      self._oauth.is_token_expired(self._token_info))
+                      is_token_expired(self._token_info))
         if need_token:
             new_token = \
                 self._oauth.refresh_access_token(
@@ -311,7 +311,7 @@ class MonzoSensor(Entity):
         """
         self.refresh_monzo_instance()
 
-        if self._oauth.is_token_expired(self._token_info):
+        if is_token_expired(self._token_info):
             _LOGGER.warning("Monzo failed to update, token expired.")
             return
 
