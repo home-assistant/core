@@ -32,9 +32,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config, see, _discovery_info=None):
+@asyncio.coroutine
+def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an endpoint for the GPSLogger application."""
-    hass.http.register_view(GPSLoggerView(see, config))
+    hass.http.register_view(GPSLoggerView(async_see, config))
 
     return True
 
@@ -45,9 +46,9 @@ class GPSLoggerView(HomeAssistantView):
     url = '/api/gpslogger'
     name = 'api:gpslogger'
 
-    def __init__(self, see, config):
+    def __init__(self, async_see, config):
         """Initialize GPSLogger url endpoints."""
-        self.see = see
+        self.async_see = async_see
         self._password = config.get(CONF_PASSWORD)
         # this component does not require external authentication if
         # password is set
@@ -56,12 +57,7 @@ class GPSLoggerView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request: Request):
         """Handle for GPSLogger message received as GET."""
-        res = yield from self._handle(request.app['hass'], request)
-        return res
-
-    @asyncio.coroutine
-    def _handle(self, hass, request: Request):
-        """Handle GPSLogger requests."""
+        hass = request.app['hass']
         data = request.query
 
         if self._password is not None:
@@ -104,10 +100,11 @@ class GPSLoggerView(HomeAssistantView):
         if 'activity' in data:
             attrs['activity'] = data['activity']
 
-        yield from hass.async_add_job(
-            partial(self.see, dev_id=device,
-                    gps=gps_location, battery=battery,
-                    gps_accuracy=accuracy,
-                    attributes=attrs))
+        hass.async_add_job(self.async_see(
+            dev_id=device,
+            gps=gps_location, battery=battery,
+            gps_accuracy=accuracy,
+            attributes=attrs
+        ))
 
         return 'Setting location for {}'.format(device)
