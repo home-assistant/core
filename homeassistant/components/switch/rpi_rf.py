@@ -53,7 +53,7 @@ class RFDeviceWrapper:
         self._tx_queue = queue.Queue()
         def txsender():
             while True:
-                code_list, protocol, pulselength, repetitions = queue.get()
+                code_list, protocol, pulselength, repetitions = self._tx_queue.get()
                 self._rfdevice._tx_repeat = repetitions
                 for code in code_list:
                     self._rfdevice.tx_code(code, protocol, pulselength)
