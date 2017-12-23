@@ -28,12 +28,12 @@ DEVICE_CLASSES = [
     'gas',           # On means gas detected, Off means no gas (clear)
     'heat',          # On means hot, Off means normal
     'light',         # On means light detected, Off means no light
-    'moisture',      # On means moisture detected (wet), Off means no moisture (dry)
+    'moisture',      # On means wet, Off means dry
     'motion',        # On means motion detected, Off means no motion (clear)
     'moving',        # On means moving, Off means not moving (stopped)
     'occupancy',     # On means occupied, Off means not occupied (clear)
     'opening',       # On means open, Off means closed
-    'plug',          # On means device is plugged in, Off means device is unplugged
+    'plug',          # On means plugged in, Off means unplugged
     'power',         # On means power detected, Off means no power
     'presence',      # On means home, Off means away
     'problem',       # On means problem detected, Off means no problem (OK)
