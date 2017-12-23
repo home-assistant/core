@@ -244,7 +244,7 @@ class TestSetup(unittest.TestCase):
 
         with patch('homeassistant.components.light.hue.get_bridge_type',
                    return_value=self.mock_bridge_type):
-            with patch('homeassistant.components.light.hue.HueLight.' +
+            with patch('homeassistant.components.light.hue.HueLight.'
                        'schedule_update_ha_state'):
                 mock_api = MagicMock()
                 mock_api.get.return_value = mock_bridge_one_lights
