@@ -3,8 +3,15 @@ Support for Xiaomi Mi Flora BLE plant sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.miflora/
+
+Unfortunately there is no universal bluetooth library available. So depending
+on the platform different backends are used. On most linux systems bluepy
+should cause the least problems.
 """
+
 import logging
+import sys
+from enum import Enum
 
 import voluptuous as vol
 
@@ -15,7 +22,20 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
 )
 
+
+class _BACKENDS(Enum):
+    """Symbolic constants for the different bluetooth backends."""
+    GATTTOOL = 0
+    BLUEPY = 1
+
 REQUIREMENTS = ['miflora==0.2.0']
+# normally use gatttool as this is what people are used to
+_BACKEND = _BACKENDS.GATTTOOL
+# on linux use bluepy
+if sys.platform == "linux" or sys.platform == "linux2":
+    REQUIREMENTS.append('bluepy==1.1.4')
+    _BACKEND = _BACKENDS.BLUEPY
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +80,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
-    from miflora.backends.gatttool import GatttoolBackend
+    if _BACKEND == _BACKENDS.BLUEPY:
+        # TODO
+        pass
+    else:
+        from miflora.backends.gatttool import GatttoolBackend
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(
