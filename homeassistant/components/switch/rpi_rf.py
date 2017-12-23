@@ -46,6 +46,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 class RFDeviceWrapper:
     def __init__(self, gpio):
         import rpi_rf
+        import queue
+        import threading
+        
         self._rfdevice = rpi_rf.RFDevice(gpio)
         self._tx_queue = queue.Queue()
         def txsender():
