@@ -14,14 +14,8 @@ from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
-<<<<<<< 4bec91531b2fc2da94ce889455c5cf916109488e
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
-    STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-=======
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_FRIENDLY_NAME, STATE_OFF,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON,
->>>>>>> Handled correctly unit of measurement to fix humidity
+    STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
     CONF_NAME, CONF_TYPE
 )
@@ -87,8 +81,9 @@ class Config:
 def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     """Convert a hass entity into an google actions device."""
     entity_config = config.entity_config.get(entity.entity_id, {})
+    google_domain = entity_config.get(CONF_TYPE)
     class_data = MAPPING_COMPONENT.get(
-        entity_config.get(CONF_TYPE) or entity.domain)
+        google_domain or entity.domain)
 
     if class_data is None:
         return None
@@ -145,6 +140,20 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
             'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
         _LOGGER.debug('Thermostat attributes %s', device['attributes'])
+
+    if entity.domain == sensor.DOMAIN:
+        if google_domain == climate.DOMAIN:
+            unit_of_measurement = entity.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT,
+                units.temperature_unit
+            )
+
+            device['attributes'] = {
+                'thermostatTemperatureUnit':
+                'F' if unit_of_measurement == TEMP_FAHRENHEIT else 'C',
+            }
+            _LOGGER.debug('Sensor attributes %s', device['attributes'])
+
     return device
 
 
