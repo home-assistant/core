@@ -363,3 +363,40 @@ class TestTTSYandexPlatform(object):
 
         assert len(aioclient_mock.mock_calls) == 1
         assert len(calls) == 1
+
+    def test_service_say_specified_options(self, aioclient_mock):
+        """Test service call say with options."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        url_param = {
+            'text': 'HomeAssistant',
+            'lang': 'en-US',
+            'key': '1234567xx',
+            'speaker': 'zahar',
+            'format': 'mp3',
+            'emotion': 'evil',
+            'speed': 2
+        }
+        aioclient_mock.get(
+            self._base_url, status=200, content=b'test', params=url_param)
+        config = {
+            tts.DOMAIN: {
+                'platform': 'yandextts',
+                'api_key': '1234567xx',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'yandextts_say', {
+            tts.ATTR_MESSAGE: "HomeAssistant",
+            'options': {
+                'emotion': 'evil',
+                'speed': 2,
+            }
+        })
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert len(calls) == 1

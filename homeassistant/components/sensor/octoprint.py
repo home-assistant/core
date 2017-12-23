@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
     tools = octoprint_api.get_tools()
-    _LOGGER.error(str(tools))
 
     if "Temperatures" in monitored_conditions:
         if not tools:

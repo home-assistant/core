@@ -31,14 +31,14 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'aiocoap',  # Temp, will be removed when Python 3.4 is no longer supported.
-    'DTLSSocket'  # Requires cython.
+    'pytradfri',
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'apns2',
+    'caldav',
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
@@ -62,9 +62,11 @@ TEST_REQUIREMENTS = (
     'pilight',
     'pmsensor',
     'prometheus_client',
+    'py-canary',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
+    'pymonoprice',
     'pynx584',
     'python-forecastio',
     'pyunifi',

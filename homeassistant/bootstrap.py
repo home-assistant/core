@@ -30,8 +30,8 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 DATA_LOGGING = 'logging'
 
 FIRST_INIT_COMPONENT = set((
-    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
-    'frontend', 'history'))
+    'system_log', 'recorder', 'mqtt', 'mqtt_eventstream', 'logger',
+    'introduction', 'frontend', 'history'))
 
 
 def from_config_dict(config: Dict[str, Any],

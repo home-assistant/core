@@ -23,18 +23,19 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171111.0']
+REQUIREMENTS = ['home-assistant-frontend==20171223.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api', 'http']
+DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
 
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
+CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
-JS_DEFAULT_OPTION = 'es5'
+JS_DEFAULT_OPTION = 'auto'
 JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
@@ -48,7 +49,7 @@ MANIFEST_JSON = {
     'lang': 'en-US',
     'name': 'Home Assistant',
     'short_name': 'Assistant',
-    'start_url': '/',
+    'start_url': '/states',
     'theme_color': DEFAULT_THEME_COLOR
 }
 
@@ -63,6 +64,7 @@ DATA_FINALIZE_PANEL = 'frontend_finalize_panel'
 DATA_PANELS = 'frontend_panels'
 DATA_JS_VERSION = 'frontend_js_version'
 DATA_EXTRA_HTML_URL = 'frontend_extra_html_url'
+DATA_EXTRA_HTML_URL_ES5 = 'frontend_extra_html_url_es5'
 DATA_THEMES = 'frontend_themes'
 DATA_DEFAULT_THEME = 'frontend_default_theme'
 DEFAULT_THEME = 'default'
@@ -78,6 +80,8 @@ CONFIG_SCHEMA = vol.Schema({
             cv.string: {cv.string: cv.string}
         }),
         vol.Optional(CONF_EXTRA_HTML_URL):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EXTRA_HTML_URL_ES5):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_JS_VERSION, default=JS_DEFAULT_OPTION):
             vol.In(JS_OPTIONS)
@@ -269,11 +273,12 @@ def async_register_panel(hass, component_name, path, md5=None,
 
 @bind_hass
 @callback
-def add_extra_html_url(hass, url):
+def add_extra_html_url(hass, url, es5=False):
     """Register extra html url to load."""
-    url_set = hass.data.get(DATA_EXTRA_HTML_URL)
+    key = DATA_EXTRA_HTML_URL_ES5 if es5 else DATA_EXTRA_HTML_URL
+    url_set = hass.data.get(key)
     if url_set is None:
-        url_set = hass.data[DATA_EXTRA_HTML_URL] = set()
+        url_set = hass.data[key] = set()
     url_set.add(url)
 
 
@@ -294,11 +299,16 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        hass.http.register_static_path(
-            "/home-assistant-polymer", repo_path, False)
+        for subpath in ["src", "build-translations", "build-temp", "build",
+                        "hass_frontend", "bower_components", "panels"]:
+            hass.http.register_static_path(
+                "/home-assistant-polymer/{}".format(subpath),
+                os.path.join(repo_path, subpath),
+                False)
+
         hass.http.register_static_path(
             "/static/translations",
-            os.path.join(repo_path, "build-translations"), False)
+            os.path.join(repo_path, "build-translations/output"), False)
         sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
         sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
@@ -358,9 +368,13 @@ def async_setup(hass, config):
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
+    if DATA_EXTRA_HTML_URL_ES5 not in hass.data:
+        hass.data[DATA_EXTRA_HTML_URL_ES5] = set()
 
     for url in conf.get(CONF_EXTRA_HTML_URL, []):
-        add_extra_html_url(hass, url)
+        add_extra_html_url(hass, url, False)
+    for url in conf.get(CONF_EXTRA_HTML_URL_ES5, []):
+        add_extra_html_url(hass, url, True)
 
     yield from async_setup_themes(hass, conf.get(CONF_THEMES))
 
@@ -467,7 +481,8 @@ class IndexView(HomeAssistantView):
     def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
-        latest = _is_latest(self.js_option, request)
+        latest = self.repo_path is not None or \
+            _is_latest(self.js_option, request)
 
         if request.path == '/':
             panel = 'states'
@@ -481,21 +496,21 @@ class IndexView(HomeAssistantView):
         else:
             panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
-        no_auth = 'true'
+        no_auth = '1'
         if hass.config.api.api_password and not is_trusted_ip(request):
             # do not try to auto connect on load
-            no_auth = 'false'
+            no_auth = '0'
 
         template = yield from hass.async_add_job(self.get_template, latest)
+
+        extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
 
         resp = template.render(
             no_auth=no_auth,
             panel_url=panel_url,
             panels=hass.data[DATA_PANELS],
-            dev_mode=self.repo_path is not None,
             theme_color=MANIFEST_JSON['theme_color'],
-            extra_urls=hass.data[DATA_EXTRA_HTML_URL],
-            latest=latest,
+            extra_urls=hass.data[extra_key],
         )
 
         return web.Response(text=resp, content_type='text/html')
@@ -547,10 +562,36 @@ def _is_latest(js_option, request):
     """
     if request is None:
         return js_option == 'latest'
-    latest_in_query = 'latest' in request.query or (
-        request.headers.get('Referer') and
-        'latest' in urlparse(request.headers['Referer']).query)
-    es5_in_query = 'es5' in request.query or (
-        request.headers.get('Referer') and
-        'es5' in urlparse(request.headers['Referer']).query)
-    return latest_in_query or (not es5_in_query and js_option == 'latest')
+
+    # latest in query
+    if 'latest' in request.query or (
+            request.headers.get('Referer') and
+            'latest' in urlparse(request.headers['Referer']).query):
+        return True
+
+    # es5 in query
+    if 'es5' in request.query or (
+            request.headers.get('Referer') and
+            'es5' in urlparse(request.headers['Referer']).query):
+        return False
+
+    # non-auto option in config
+    if js_option != 'auto':
+        return js_option == 'latest'
+
+    from user_agents import parse
+    useragent = parse(request.headers.get('User-Agent'))
+
+    # on iOS every browser is a Safari which we support from version 10.
+    if useragent.os.family == 'iOS':
+        return useragent.os.version[0] >= 10
+
+    family_min_version = {
+        'Chrome': 50,   # Probably can reduce this
+        'Firefox': 43,  # Array.protopype.includes added in 43
+        'Opera': 40,    # Probably can reduce this
+        'Edge': 14,     # Array.protopype.includes added in 14
+        'Safari': 10,   # many features not supported by 9
+    }
+    version = family_min_version.get(useragent.browser.family)
+    return version and useragent.browser.version[0] >= version

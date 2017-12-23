@@ -20,7 +20,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['snapcast==2.0.7']
+REQUIREMENTS = ['snapcast==2.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     try:
         server = yield from snapcast.control.create_server(
-            hass.loop, host, port)
+            hass.loop, host, port, reconnect=True)
     except socket.gaierror:
         _LOGGER.error('Could not connect to Snapcast server at %s:%d',
                       host, port)

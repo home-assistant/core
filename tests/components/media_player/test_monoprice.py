@@ -1,27 +1,30 @@
 """The tests for Monoprice Media player platform."""
 import unittest
+from unittest import mock
 import voluptuous as vol
 
 from collections import defaultdict
-
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
+    DOMAIN, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import STATE_ON, STATE_OFF
 
+import tests.common
 from homeassistant.components.media_player.monoprice import (
-    MonopriceZone, PLATFORM_SCHEMA)
+    DATA_MONOPRICE, PLATFORM_SCHEMA, SERVICE_SNAPSHOT,
+    SERVICE_RESTORE, setup_platform)
 
 
-class MockState(object):
-    """Mock for zone state object."""
+class AttrDict(dict):
+    """Helper class for mocking attributes."""
 
-    def __init__(self):
-        """Init zone state."""
-        self.power = True
-        self.volume = 0
-        self.mute = True
-        self.source = 1
+    def __setattr__(self, name, value):
+        """Set attribute."""
+        self[name] = value
+
+    def __getattr__(self, item):
+        """Get attribute."""
+        return self[item]
 
 
 class MockMonoprice(object):
@@ -29,11 +32,16 @@ class MockMonoprice(object):
 
     def __init__(self):
         """Init mock object."""
-        self.zones = defaultdict(lambda *a: MockState())
+        self.zones = defaultdict(lambda: AttrDict(power=True,
+                                                  volume=0,
+                                                  mute=True,
+                                                  source=1))
 
     def zone_status(self, zone_id):
         """Get zone status."""
-        return self.zones[zone_id]
+        status = self.zones[zone_id]
+        status.zone = zone_id
+        return AttrDict(status)
 
     def set_source(self, zone_id, source_idx):
         """Set source for zone."""
@@ -50,6 +58,10 @@ class MockMonoprice(object):
     def set_volume(self, zone_id, volume):
         """Set volume for zone."""
         self.zones[zone_id].volume = volume
+
+    def restore_zone(self, zone):
+        """Restore zone status."""
+        self.zones[zone.zone] = AttrDict(zone)
 
 
 class TestMonopriceSchema(unittest.TestCase):
@@ -147,11 +159,144 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
     def setUp(self):
         """Set up the test case."""
         self.monoprice = MockMonoprice()
+        self.hass = tests.common.get_test_home_assistant()
+        self.hass.start()
         # Note, source dictionary is unsorted!
-        self.media_player = MonopriceZone(self.monoprice, {1: 'one',
-                                                           3: 'three',
-                                                           2: 'two'},
-                                          12, 'Zone name')
+        with mock.patch('pymonoprice.get_monoprice',
+                        new=lambda *a: self.monoprice):
+            setup_platform(self.hass, {
+                'platform': 'monoprice',
+                'port': '/dev/ttyS0',
+                'name': 'Name',
+                'zones': {12: {'name': 'Zone name'}},
+                'sources': {1: {'name': 'one'},
+                            3: {'name': 'three'},
+                            2: {'name': 'two'}},
+            }, lambda *args, **kwargs: None, {})
+            self.hass.block_till_done()
+        self.media_player = self.hass.data[DATA_MONOPRICE][0]
+        self.media_player.hass = self.hass
+        self.media_player.entity_id = 'media_player.zone_1'
+
+    def tearDown(self):
+        """Tear down the test case."""
+        self.hass.stop()
+
+    def test_setup_platform(self, *args):
+        """Test setting up platform."""
+        # Two services must be registered
+        self.assertTrue(self.hass.services.has_service(DOMAIN,
+                                                       SERVICE_RESTORE))
+        self.assertTrue(self.hass.services.has_service(DOMAIN,
+                                                       SERVICE_SNAPSHOT))
+        self.assertEqual(len(self.hass.data[DATA_MONOPRICE]), 1)
+        self.assertEqual(self.hass.data[DATA_MONOPRICE][0].name, 'Zone name')
+
+    def test_service_calls_with_entity_id(self):
+        """Test snapshot save/restore service calls."""
+        self.media_player.update()
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_ON, self.media_player.state)
+        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
+        self.assertTrue(self.media_player.is_volume_muted)
+        self.assertEqual('one', self.media_player.source)
+
+        # Saving default values
+        self.hass.services.call(DOMAIN, SERVICE_SNAPSHOT,
+                                {'entity_id': 'media_player.zone_1'},
+                                blocking=True)
+        # self.hass.block_till_done()
+
+        # Changing media player to new state
+        self.media_player.set_volume_level(1)
+        self.media_player.select_source('two')
+        self.media_player.mute_volume(False)
+        self.media_player.turn_off()
+
+        # Checking that values were indeed changed
+        self.media_player.update()
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_OFF, self.media_player.state)
+        self.assertEqual(1.0, self.media_player.volume_level, 0.0001)
+        self.assertFalse(self.media_player.is_volume_muted)
+        self.assertEqual('two', self.media_player.source)
+
+        # Restoring wrong media player to its previous state
+        # Nothing should be done
+        self.hass.services.call(DOMAIN, SERVICE_RESTORE,
+                                {'entity_id': 'not_existing'},
+                                blocking=True)
+        # self.hass.block_till_done()
+
+        # Checking that values were not (!) restored
+        self.media_player.update()
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_OFF, self.media_player.state)
+        self.assertEqual(1.0, self.media_player.volume_level, 0.0001)
+        self.assertFalse(self.media_player.is_volume_muted)
+        self.assertEqual('two', self.media_player.source)
+
+        # Restoring media player to its previous state
+        self.hass.services.call(DOMAIN, SERVICE_RESTORE,
+                                {'entity_id': 'media_player.zone_1'},
+                                blocking=True)
+        self.hass.block_till_done()
+
+        # Checking that values were restored
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_ON, self.media_player.state)
+        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
+        self.assertTrue(self.media_player.is_volume_muted)
+        self.assertEqual('one', self.media_player.source)
+
+    def test_service_calls_without_entity_id(self):
+        """Test snapshot save/restore service calls."""
+        self.media_player.update()
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_ON, self.media_player.state)
+        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
+        self.assertTrue(self.media_player.is_volume_muted)
+        self.assertEqual('one', self.media_player.source)
+
+        # Restoring media player
+        # since there is no snapshot, nothing should be done
+        self.hass.services.call(DOMAIN, SERVICE_RESTORE, blocking=True)
+        self.hass.block_till_done()
+        self.media_player.update()
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_ON, self.media_player.state)
+        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
+        self.assertTrue(self.media_player.is_volume_muted)
+        self.assertEqual('one', self.media_player.source)
+
+        # Saving default values
+        self.hass.services.call(DOMAIN, SERVICE_SNAPSHOT, blocking=True)
+        self.hass.block_till_done()
+
+        # Changing media player to new state
+        self.media_player.set_volume_level(1)
+        self.media_player.select_source('two')
+        self.media_player.mute_volume(False)
+        self.media_player.turn_off()
+
+        # Checking that values were indeed changed
+        self.media_player.update()
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_OFF, self.media_player.state)
+        self.assertEqual(1.0, self.media_player.volume_level, 0.0001)
+        self.assertFalse(self.media_player.is_volume_muted)
+        self.assertEqual('two', self.media_player.source)
+
+        # Restoring media player to its previous state
+        self.hass.services.call(DOMAIN, SERVICE_RESTORE, blocking=True)
+        self.hass.block_till_done()
+
+        # Checking that values were restored
+        self.assertEqual('Zone name', self.media_player.name)
+        self.assertEqual(STATE_ON, self.media_player.state)
+        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
+        self.assertTrue(self.media_player.is_volume_muted)
+        self.assertEqual('one', self.media_player.source)
 
     def test_update(self):
         """Test updating values from monoprice."""

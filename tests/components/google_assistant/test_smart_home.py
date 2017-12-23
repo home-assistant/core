@@ -5,6 +5,7 @@ import asyncio
 from homeassistant import const
 from homeassistant.components import climate
 from homeassistant.components import google_assistant as ga
+from homeassistant.util.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
 
 DETERMINE_SERVICE_TESTS = [{  # Test light brightness
     'entity_id': 'light.test',
@@ -15,6 +16,57 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
     'expected': (
         const.SERVICE_TURN_ON,
         {'entity_id': 'light.test', 'brightness': 242}
+    )
+}, {  # Test light color temperature
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'temperature': 2300,
+            'name': 'warm white'
+        }
+    },
+    'expected': (
+        const.SERVICE_TURN_ON,
+        {'entity_id': 'light.test', 'kelvin': 2300}
+    )
+}, {  # Test light color blue
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'spectrumRGB': 255,
+            'name': 'blue'
+        }
+    },
+    'expected': (
+        const.SERVICE_TURN_ON,
+        {'entity_id': 'light.test', 'rgb_color': [0, 0, 255]}
+    )
+}, {  # Test light color yellow
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'spectrumRGB': 16776960,
+            'name': 'yellow'
+        }
+    },
+    'expected': (
+        const.SERVICE_TURN_ON,
+        {'entity_id': 'light.test', 'rgb_color': [255, 255, 0]}
+    )
+}, {  # Test unhandled action/service
+    'entity_id': 'light.test',
+    'command': ga.const.COMMAND_COLOR,
+    'params': {
+        'color': {
+            'unhandled': 2300
+        }
+    },
+    'expected': (
+        None,
+        {'entity_id': 'light.test'}
     )
 }, {  # Test switch to light custom type
     'entity_id': 'switch.decorative_lights',
@@ -82,6 +134,15 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         climate.SERVICE_SET_TEMPERATURE,
         {'entity_id': 'climate.living_room', 'temperature': 24.5}
     ),
+}, {  # Test climate temperature Fahrenheit
+    'entity_id': 'climate.living_room',
+    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
+    'params': {'thermostatTemperatureSetpoint': 24.5},
+    'units': IMPERIAL_SYSTEM,
+    'expected': (
+        climate.SERVICE_SET_TEMPERATURE,
+        {'entity_id': 'climate.living_room', 'temperature': 76.1}
+    ),
 }, {  # Test climate temperature range
     'entity_id': 'climate.living_room',
     'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
@@ -93,6 +154,19 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
         climate.SERVICE_SET_TEMPERATURE,
         {'entity_id': 'climate.living_room',
          'target_temp_high': 24.5, 'target_temp_low': 20.5}
+    ),
+}, {  # Test climate temperature range Fahrenheit
+    'entity_id': 'climate.living_room',
+    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
+    'params': {
+        'thermostatTemperatureSetpointHigh': 24.5,
+        'thermostatTemperatureSetpointLow': 20.5,
+    },
+    'units': IMPERIAL_SYSTEM,
+    'expected': (
+        climate.SERVICE_SET_TEMPERATURE,
+        {'entity_id': 'climate.living_room',
+         'target_temp_high': 76.1, 'target_temp_low': 68.9}
     ),
 }, {  # Test climate operation mode
     'entity_id': 'climate.living_room',
@@ -122,5 +196,6 @@ def test_determine_service():
         result = ga.smart_home.determine_service(
             test['entity_id'],
             test['command'],
-            test['params'])
+            test['params'],
+            test.get('units', METRIC_SYSTEM))
         assert result == test['expected']

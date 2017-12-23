@@ -9,7 +9,8 @@ import voluptuous as vol
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
-    CONF_CONSIDER_HOME, CONF_TRACK_NEW)
+    CONF_CONSIDER_HOME, CONF_TRACK_NEW, CONF_NEW_DEVICE_DEFAULTS,
+    CONF_AWAY_HIDE)
 from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN,
     CONF_PORT, PLATFORM_SCHEMA)
@@ -78,7 +79,11 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_USERNAME: 'fake_user',
                 CONF_PASSWORD: 'fake_pass',
                 CONF_TRACK_NEW: True,
-                CONF_CONSIDER_HOME: timedelta(seconds=180)
+                CONF_CONSIDER_HOME: timedelta(seconds=180),
+                CONF_NEW_DEVICE_DEFAULTS: {
+                    CONF_TRACK_NEW: True,
+                    CONF_AWAY_HIDE: False
+                }
             }
         }
 
@@ -104,7 +109,11 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_USERNAME: 'fake_user',
                 CONF_PUB_KEY: FAKEFILE,
                 CONF_TRACK_NEW: True,
-                CONF_CONSIDER_HOME: timedelta(seconds=180)
+                CONF_CONSIDER_HOME: timedelta(seconds=180),
+                CONF_NEW_DEVICE_DEFAULTS: {
+                    CONF_TRACK_NEW: True,
+                    CONF_AWAY_HIDE: False
+                }
             }
         }
 
@@ -135,7 +144,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
-        asuswrt.connection.get_result()
+        asuswrt.connection.run_command('ls')
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
@@ -161,7 +170,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
-        asuswrt.connection.get_result()
+        asuswrt.connection.run_command('ls')
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
@@ -216,9 +225,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
-        asuswrt.connection.get_result()
-        self.assertEqual(telnet.read_until.call_count, 5)
-        self.assertEqual(telnet.write.call_count, 4)
+        asuswrt.connection.run_command('ls')
+        self.assertEqual(telnet.read_until.call_count, 4)
+        self.assertEqual(telnet.write.call_count, 3)
         self.assertEqual(
             telnet.read_until.call_args_list[0],
             mock.call(b'login: ')
