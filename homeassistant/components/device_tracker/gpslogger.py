@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker.gpslogger/
 """
 import asyncio
 import logging
+from hmac import compare_digest
 
 from aiohttp.web import Request, HTTPUnauthorized  # NOQA
 import voluptuous as vol
@@ -60,7 +61,6 @@ class GPSLoggerView(HomeAssistantView):
         data = request.query
 
         if self._password is not None:
-            from hmac import compare_digest
             authenticated = CONF_API_PASSWORD in data and compare_digest(
                 self._password,
                 data[CONF_API_PASSWORD]
