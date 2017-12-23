@@ -84,8 +84,10 @@ class TcpLights(Light):
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         import greenwavereality as greenwave
-        temp_brightness = int((kwargs.get(ATTR_BRIGHTNESS, 255) / 255) * 100)
-        greenwave.set_brightness(self._host, self._did, temp_brightness, self.token)
+        temp_brightness = int((kwargs.get(ATTR_BRIGHTNESS, 255)
+                               / 255) * 100)
+        greenwave.set_brightness(self._host, self._did,
+                                 temp_brightness, self.token)
         greenwave.turn_on(self._host, self._did, self.token)
 
     def turn_off(self, **kwargs):
