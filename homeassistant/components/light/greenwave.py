@@ -5,15 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.greenwave/
 """
 import logging
+
 import voluptuous as vol
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS)
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS)
+
 REQUIREMENTS = ['greenwavereality==0.2.9']
 _LOGGER = logging.getLogger(__name__)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required("version"): cv.positive_int,
