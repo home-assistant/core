@@ -24,8 +24,10 @@ from homeassistant.const import (
 
 class _BACKENDS(Enum):
     """Symbolic constants for the different bluetooth backends."""
+
     GATTTOOL = 0
     BLUEPY = 1
+
 
 REQUIREMENTS = ['miflora==0.2.0']
 # normally use gatttool as this is what people are used to
