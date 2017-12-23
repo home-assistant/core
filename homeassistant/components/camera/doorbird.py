@@ -44,7 +44,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     if config.get(CONF_SHOW_LAST_VISITOR):
         _LOGGER.debug("Adding DoorBird camera %s", _CAMERA_LAST_VISITOR)
-        entities.append(DoorBirdCamera(device.history_image_url(1),
+        entities.append(DoorBirdCamera(device.history_image_url(1, "doorbell"),
                                        _CAMERA_LAST_VISITOR,
                                        _LAST_VISITOR_INTERVAL))
 

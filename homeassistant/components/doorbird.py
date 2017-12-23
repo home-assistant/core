@@ -1,24 +1,33 @@
 """Support for a DoorBird video doorbell."""
 
+import asyncio
 import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['DoorBirdPy==0.1.1']
+REQUIREMENTS = ['DoorBirdPy==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'doorbird'
 
+API_URL = "/api/" + DOMAIN
+
+CONF_DOORBELL_EVENTS = 'doorbell_events'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
+
+SENSOR_DOORBELL = 'doorbell'
 
 
 def setup(hass, config):
@@ -34,7 +43,6 @@ def setup(hass, config):
     if status[0]:
         _LOGGER.info("Connected to DoorBird at %s as %s", device_ip, username)
         hass.data[DOMAIN] = device
-        return True
     elif status[1] == 401:
         _LOGGER.error("Authorization rejected by DoorBird at %s", device_ip)
         return False
@@ -42,3 +50,36 @@ def setup(hass, config):
         _LOGGER.error("Could not connect to DoorBird at %s: Error %s",
                       device_ip, str(status[1]))
         return False
+
+    if config[DOMAIN].get(CONF_DOORBELL_EVENTS):
+        DoorbirdRequestView.setup_notifications(hass, device)
+
+    return True
+
+
+class DoorbirdRequestView(HomeAssistantView):
+    """Provide a page for the device to call."""
+
+    @staticmethod
+    def setup_notifications(hass, device):
+        """Register the endpoint with the device."""
+        # Provide an endpoint for the device to call to trigger events
+        hass.http.register_view(DoorbirdRequestView(hass))
+
+        # This will make HA the only service that gets doorbell events
+        url = hass.config.api.base_url + API_URL + "/" + SENSOR_DOORBELL
+        device.reset_notifications()
+        device.subscribe_notification(SENSOR_DOORBELL, url)
+
+    def __init__(self, hass):
+        """Initialize the page with access to hass data."""
+        self._hass = hass
+
+    url = API_URL
+    name = API_URL[1:].replace("/", ":")
+    extra_urls = [API_URL + "/{sensor}"]
+
+    @asyncio.coroutine
+    def get(self, request, sensor):
+        self._hass.bus.fire(DOMAIN + '_' + sensor)
+        return "OK"
