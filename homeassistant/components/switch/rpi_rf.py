@@ -43,6 +43,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SWITCHES): vol.Schema({cv.string: SWITCH_SCHEMA}),
 })
 
+class RFDeviceWrapper:
+    def __init__(self, gpio):
+        self._rfdevice = rpi_rf.RFDevice(gpio)
+        self._tx_queue = queue.Queue()
+        def txsender():
+            while True:
+                code_list, protocol, pulselength, repetitions = queue.get()
+                self._rfdevice._tx_repeat = repetitions
+                for code in code_list:
+                    self._rfdevice.tx_code(code, protocol, pulselength)
+        self._tx_sender = threading.Thread(target=txsender, daemon=True)
+        self._tx_sender.start()
+        
+    def send_code(code_list, protocol, pulselength, repetitions):
+        for i in range(0, repetitions):
+            self._tx_queue.put((code_list, protocol, pulselength))
+            
+    def enable_tx():
+        self._rfdevice.enable_tx()
+        
+    def cleanup():
+        self._rfdevice.cleanup()
 
 # pylint: disable=unused-argument, import-error
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import rpi_rf
 
     gpio = config.get(CONF_GPIO)
-    rfdevice = rpi_rf.RFDevice(gpio)
+    rfdevice = RFDeviceWrapper(gpio)
     switches = config.get(CONF_SWITCHES)
 
     devices = []
@@ -90,7 +112,7 @@ class RPiRFSwitch(SwitchDevice):
         self._pulselength = pulselength
         self._code_on = code_on
         self._code_off = code_off
-        self._rfdevice.tx_repeat = signal_repetitions
+        self._repetitions = signal_repetitions
 
     @property
     def should_poll(self):
@@ -110,8 +132,7 @@ class RPiRFSwitch(SwitchDevice):
     def _send_code(self, code_list, protocol, pulselength):
         """Send the code(s) with a specified pulselength."""
         _LOGGER.info("Sending code(s): %s", code_list)
-        for code in code_list:
-            self._rfdevice.tx_code(code, protocol, pulselength)
+        self._rfdevice.send_code(code_list, protocol, pulselength)
         return True
 
     def turn_on(self):
