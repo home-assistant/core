@@ -21,7 +21,14 @@ DEPENDENCIES = ['alarmdecoder']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_RF_STATE = 'rfstate'
+ATTR_RF_BIT0 = 'rf_bit0'
+ATTR_RF_LOW_BAT = 'rf_low_battery'
+ATTR_RF_SUPERVISED = 'rf_supervised'
+ATTR_RF_BIT3 = 'rf_bit3'
+ATTR_RF_LOOP3 = 'rf_loop3'
+ATTR_RF_LOOP2 = 'rf_loop2'
+ATTR_RF_LOOP4 = 'rf_loop4'
+ATTR_RF_LOOP1 = 'rf_loop1'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,11 +57,11 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """Initialize the binary_sensor."""
         self._zone_number = zone_number
         self._zone_type = zone_type
-        self._state = 0
+        self._state = None
         self._name = zone_name
         self._type = zone_type
         self._rfid = zone_rfid
-        self._rfstate = 0
+        self._rfstate = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -93,8 +100,15 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        if self._rfid:
-            attr[ATTR_RF_STATE] = self._rfstate
+        if self._rfid and self._rfstate is not None:
+            attr[ATTR_RF_BIT0] = True if self._rfstate & 0x01 else False
+            attr[ATTR_RF_LOW_BAT] = True if self._rfstate & 0x02 else False
+            attr[ATTR_RF_SUPERVISED] = True if self._rfstate & 0x04 else False
+            attr[ATTR_RF_BIT3] = True if self._rfstate & 0x08 else False
+            attr[ATTR_RF_LOOP3] = True if self._rfstate & 0x10 else False
+            attr[ATTR_RF_LOOP2] = True if self._rfstate & 0x20 else False
+            attr[ATTR_RF_LOOP4] = True if self._rfstate & 0x40 else False
+            attr[ATTR_RF_LOOP1] = True if self._rfstate & 0x80 else False
         return attr
 
     @property
