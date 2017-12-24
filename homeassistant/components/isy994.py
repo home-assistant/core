@@ -141,11 +141,11 @@ def _check_for_node_def(hass: HomeAssistant, node,
     This is only present on the 5.0 ISY firmware, and is the most reliable
     way to determine a device's type.
     """
-    try:
-        node_def_id = node.node_def_id
-    except AttributeError:
-        # Node doesn't have a node_def
+    if not hasattr(node, 'node_def_id') or node.node_def_id is None:
+        # Node doesn't have a node_def (pre 5.0 firmware most likely)
         return False
+
+    node_def_id = node.node_def_id
 
     domains = SUPPORTED_DOMAINS if not single_domain else [single_domain]
     for domain in domains:
@@ -164,12 +164,11 @@ def _check_for_insteon_type(hass: HomeAssistant, node,
     works for Insteon device. "Node Server" (v5+) and Z-Wave and others will
     not have a type.
     """
-    try:
-        device_type = node.type
-    except AttributeError:
+    if not hasattr(node, 'type') or node.type is None:
         # Node doesn't have a type (non-Insteon device most likely)
         return False
 
+    device_type = node.type
     domains = SUPPORTED_DOMAINS if not single_domain else [single_domain]
     for domain in domains:
         if any([device_type.startswith(t) for t in
@@ -187,11 +186,11 @@ def _check_for_uom_id(hass: HomeAssistant, node,
     This is used for versions of the ISY firmware that report uoms as a single
     ID. We can often infer what type of device it is by that ID.
     """
-    try:
-        node_uom = set(node.uom)
-    except AttributeError:
+    if not hasattr(node, 'uom') or node.uom is None:
         # Node doesn't have a uom (Scenes for example)
         return False
+
+    node_uom = set(map(str.lower, node.uom))
 
     if uom_list:
         if node_uom.intersection(NODE_FILTERS[single_domain]['uom']):
@@ -216,11 +215,11 @@ def _check_for_states_in_uom(hass: HomeAssistant, node,
     possible "human readable" states. This filter passes if all of the possible
     states fit inside the given filter.
     """
-    try:
-        node_uom = set(map(str.lower, node.uom))
-    except AttributeError:
-        # Node doesn't have a uom
+    if not hasattr(node, 'uom') or node.uom is None:
+        # Node doesn't have a uom (Scenes for example)
         return False
+
+    node_uom = set(map(str.lower, node.uom))
 
     if states_list:
         if node_uom == set(states_list):
@@ -326,8 +325,6 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
 def _categorize_weather(hass: HomeAssistant, climate) -> None:
     """Categorize the ISY994 weather data."""
     climate_attrs = dir(climate)
-    _LOGGER.debug(climate)
-    _LOGGER.debug(climate_attrs)
     weather_nodes = [WeatherNode(getattr(climate, attr),
                                  attr.replace('_', ' '),
                                  getattr(climate, '{}_units'.format(attr)))
