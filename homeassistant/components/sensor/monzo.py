@@ -12,9 +12,9 @@ import random
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
-from requests import post
 from homeassistant.const import (
     CONF_NAME)
+from requests import post
 
 REQUIREMENTS = ['monzo==0.5.3']
 
@@ -63,10 +63,10 @@ def setup_platform(hass, config, add_devices, device_discovery=None):
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
     current_account = config.get(CONF_CURRENT_ACCOUNT, False)
-    oauth = oauth_Client(client_id,
-                        client_secret,
-                        callback_url,
-                        cache_path=cache)
+    oauth = AuthClient(client_id,
+                       client_secret,
+                       callback_url,
+                       cache_path=cache)
 
     token_info = oauth.get_cached_token()
     if not token_info:
@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_devices, device_discovery=None):
     add_devices([sensor])
 
 
-class oauth_Client():
+class AuthClient():
     """Used to authenticate with Monzo."""
 
     REQUEST_TOKEN_URL = 'https://auth.getmondo.co.uk'
@@ -105,7 +105,7 @@ class oauth_Client():
         self.redirect_uri = redirect_uri
         self.state = state
         if state is None:
-            self.state = self._generate_nonce(8)
+            self.state = self.__generate_nonce(8)
         self.cache_path = cache_path
         self.token_info = None
 
@@ -149,16 +149,16 @@ class oauth_Client():
                    'client_id': self.client_id}
         response = post(self.ACCESS_TOKEN_URL, data=payload)
         if response.status_code != 200:
-            _LOGGER.warning("couldn't refresh token: code:" 
-                + str(response.status_code) 
-                + " reason:" 
-                + response.reason)
+            _LOGGER.warning("couldn't refresh token: code:"
+                            + str(response.status_code)
+                            + " reason:"
+                            + response.reason)
             return None
         token_info = response.json()
-        token_info = self.add_custom_values_to_token_info(token_info)
+        token_info = self.__add_custom_values_to_token(token_info)
         if 'refresh_token' not in token_info:
             token_info['refresh_token'] = refresh_token
-        self._save_token_info(token_info)
+        self.__save_token_info(token_info)
         return token_info
 
     def get_access_token(self, state, code):
@@ -180,18 +180,19 @@ class oauth_Client():
             raise MonzoOauthError(response.reason)
 
         token_info = response.json()
-        token_info = self.add_custom_values_to_token_info(token_info)
+        token_info = self.__add_custom_values_to_token(token_info)
 
-        self._save_token_info(token_info)
+        self.__save_token_info(token_info)
 
         return token_info
 
-    def add_custom_values_to_token_info(self, token_info):
+    @staticmethod
+    def __add_custom_values_to_token(token_info):
         """Store some values that aren't directly provided by the response."""
         token_info['expires_at'] = int(time.time()) + token_info['expires_in']
         return token_info
 
-    def _save_token_info(self, token_info):
+    def __save_token_info(self, token_info):
         if self.cache_path:
             try:
                 file = open(self.cache_path, 'w')
@@ -199,9 +200,10 @@ class oauth_Client():
                 file.close()
             except IOError:
                 _LOGGER.warning("couldn't write token cache to "
-                             + self.cache_path)
+                                + self.cache_path)
 
-    def _generate_nonce(self, length=8):
+    @staticmethod
+    def __generate_nonce(length=8):
         """Generate pseudorandom number."""
         return ''.join([str(random.randint(0, 9)) for i in range(length)])
 
