@@ -290,4 +290,4 @@ squeezebox_call_method:
       example: 'media_player.squeezebox_radio'
     method:
       description: Squeezebox JSON/RPC method call, in the form of an array of positional parameters. See 'Command Line Interface' official help page from Logitech for details.
-      example: '["playlist", "loadtracks", "track.titlesearch=you''re welcome"]'
+      example: '["playlist", "loadtracks", "track.titlesearch=highway to hell"]'
