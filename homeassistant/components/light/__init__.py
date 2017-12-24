@@ -241,6 +241,27 @@ def preprocess_turn_on_alternatives(params):
         params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
 
+def process_entity_turn_on_params(entity, params):
+    """Process parameters to ensure proper format for entity."""
+    if ATTR_RGB_COLOR in params and \
+            entity.supported_features & SUPPORT_XY_COLOR and not \
+            entity.supported_features & SUPPORT_RGB_COLOR:
+        rgb = params.pop(ATTR_RGB_COLOR)
+        xyb = color_util.color_RGB_to_xy(*rgb)
+        params[ATTR_XY_COLOR] = xyb[:2]
+
+    if ATTR_XY_COLOR in params and \
+            entity.supported_features & SUPPORT_RGB_COLOR and not \
+            entity.supported_features & SUPPORT_XY_COLOR:
+        color_xy = params.pop(ATTR_XY_COLOR)
+        brightness = params.get(
+            ATTR_BRIGHTNESS, entity.state_attributes.get(ATTR_BRIGHTNESS, 255))
+        params[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
+            color_xy[0], color_xy[1], brightness)
+
+    return params
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Expose light control via statemachine and services."""
@@ -268,7 +289,8 @@ def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
-                yield from light.async_turn_on(**params)
+                entity_params = process_entity_turn_on_params(light, params)
+                yield from light.async_turn_on(**entity_params)
             elif service.service == SERVICE_TURN_OFF:
                 yield from light.async_turn_off(**params)
             else:
@@ -415,6 +437,10 @@ class Light(ToggleEntity):
                 data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
                     data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
                     data[ATTR_BRIGHTNESS])
+
+            if ATTR_XY_COLOR not in data and ATTR_RGB_COLOR in data:
+                data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(
+                    *data[ATTR_RGB_COLOR])
 
         return data
 

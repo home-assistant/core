@@ -302,3 +302,105 @@ class TestLight(unittest.TestCase):
         self.assertEqual(
             {light.ATTR_XY_COLOR: (.4, .6), light.ATTR_BRIGHTNESS: 100},
             data)
+
+    def test_light_process_rgb(self):
+        """Test light profiles."""
+        platform = loader.get_component('light.test')
+
+        platform.init()
+        self.assertTrue(
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        dev1 = platform.DEVICES[0]
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      rgb_color=[255, 128, 0])
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_RGB_COLOR: (255, 128, 0)},
+            data)
+
+        dev1._supported_features = light.SUPPORT_RGB_COLOR
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      rgb_color=[255, 128, 0])
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_RGB_COLOR: (255, 128, 0)},
+            data)
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      xy_color=[0.5, 0.25])
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_RGB_COLOR: (255, 93, 164)},
+            data)
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      xy_color=[0.5, 0.25], brightness=128)
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_RGB_COLOR: (255, 91, 163),
+             light.ATTR_BRIGHTNESS: 128},
+            data)
+
+        dev1._state_attributes = {light.ATTR_BRIGHTNESS: 64}
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      xy_color=[0.5, 0.25])
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_RGB_COLOR: (214, 74, 136)},
+            data)
+
+    def test_light_process_xy(self):
+        """Test light profiles."""
+        platform = loader.get_component('light.test')
+
+        platform.init()
+        self.assertTrue(
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        dev1 = platform.DEVICES[0]
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      xy_color=[0.5, 0.25])
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_XY_COLOR: (0.5, 0.25)},
+            data)
+
+        dev1._supported_features = light.SUPPORT_XY_COLOR
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      xy_color=[0.5, 0.25])
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_XY_COLOR: (0.5, 0.25)},
+            data)
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      rgb_color=[255, 128, 0])
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_XY_COLOR: (0.596, 0.391)},
+            data)
+
+        light.turn_on(self.hass, dev1.entity_id,
+                      rgb_color=[255, 128, 0], brightness=128)
+        self.hass.block_till_done()
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_XY_COLOR: (0.596, 0.391),
+             light.ATTR_BRIGHTNESS: 128},
+            data)
