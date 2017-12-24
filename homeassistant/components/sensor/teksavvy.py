@@ -12,8 +12,6 @@ https://home-assistant.io/components/sensor.teksavvy/
 """
 import logging
 from datetime import timedelta
-import http.client
-import json
 import asyncio
 import async_timeout
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -65,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
@@ -77,7 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         ret = yield from ts_data.async_update()
     except ValueError as error:
         _LOGGER.error("Failed conversion %s %s", CONF_TOTAL_BANDWIDTH, error)
-    if ret == False:
+    if ret is False:
         return
 
     name = config.get(CONF_NAME)
@@ -85,6 +84,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(TekSavvySensor(ts_data, variable, name))
     async_add_devices(sensors, True)
+
 
 class TekSavvySensor(Entity):
     """TekSavvy Bandwidth sensor."""
@@ -126,6 +126,7 @@ class TekSavvySensor(Entity):
         if self.type in self.teksavvydata.data:
             self._state = round(self.teksavvydata.data[self.type], 2)
 
+
 class TekSavvyData(object):
     """Get data from TekSavvy API."""
 
@@ -147,7 +148,7 @@ class TekSavvyData(object):
         url = "https://api.teksavvy.com/"\
               "web/Usage/UsageSummaryRecords?$filter=IsCurrent%20eq%20true"
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
-            req = yield from self.websession.get(url, headers = headers)
+            req = yield from self.websession.get(url, headers=headers)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
