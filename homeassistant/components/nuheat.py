@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_DEVICES
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["nuheat==0.2.0"]
+REQUIREMENTS = ["nuheat==0.3.0"]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -501,7 +501,7 @@ neurio==0.3.1
 nsapi==2.7.4
 
 # homeassistant.components.nuheat
-nuheat==0.2.0
+nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
