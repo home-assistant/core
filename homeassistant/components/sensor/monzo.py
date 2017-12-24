@@ -3,17 +3,18 @@
 Used to create a sensor in Home Assistant that will return
 the current balance of a specified monzo account.
 """
+import logging
+import json
+import time
+import urllib.parse
+import random
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from requests import post
 from homeassistant.const import (
     CONF_NAME)
-import logging
-import json
-import time
-import urllib.parse
-import random
 
 REQUIREMENTS = ['monzo==0.5.3']
 
@@ -62,7 +63,7 @@ def setup_platform(hass, config, add_devices, device_discovery=None):
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
     current_account = config.get(CONF_CURRENT_ACCOUNT, False)
-    oauth = oAuthClient(client_id,
+    oauth = oauth_Client(client_id,
                         client_secret,
                         callback_url,
                         cache_path=cache)
@@ -70,7 +71,7 @@ def setup_platform(hass, config, add_devices, device_discovery=None):
     token_info = oauth.get_cached_token()
     if not token_info:
         hass.http.register_view(MonzoAuthCallbackView(
-                config, add_devices, oauth))
+            config, add_devices, oauth))
         request_configuration(hass,
                               config,
                               add_devices,
@@ -86,7 +87,7 @@ def setup_platform(hass, config, add_devices, device_discovery=None):
     add_devices([sensor])
 
 
-class oAuthClient():
+class oauth_Client():
     """Used to authenticate with Monzo."""
 
     REQUEST_TOKEN_URL = 'https://auth.getmondo.co.uk'
@@ -127,14 +128,14 @@ class oAuthClient():
         token_info = None
         if self.cache_path:
             try:
-                f = open(self.cache_path)
-                token_info_string = f.read()
-                f.close()
+                file = open(self.cache_path)
+                token_info_string = file.read()
+                file.close()
                 token_info = json.loads(token_info_string)
 
                 if is_token_expired(token_info):
                     token_info = self.refresh_access_token(
-                                 token_info['refresh_token'])
+                        token_info['refresh_token'])
 
             except IOError:
                 pass
@@ -148,11 +149,13 @@ class oAuthClient():
                    'client_id': self.client_id}
         response = post(self.ACCESS_TOKEN_URL, data=payload)
         if response.status_code != 200:
-            _LOGGER.warn("couldn't refresh token: code:%d reason:%s"
-                         % (response.status_code, response.reason))
+            _LOGGER.warning("couldn't refresh token: code:" 
+                + str(response.status_code) 
+                + " reason:" 
+                + response.reason)
             return None
         token_info = response.json()
-        token_info = self._add_custom_values_to_token_info(token_info)
+        token_info = self.add_custom_values_to_token_info(token_info)
         if 'refresh_token' not in token_info:
             token_info['refresh_token'] = refresh_token
         self._save_token_info(token_info)
@@ -177,13 +180,13 @@ class oAuthClient():
             raise MonzoOauthError(response.reason)
 
         token_info = response.json()
-        token_info = self._add_custom_values_to_token_info(token_info)
+        token_info = self.add_custom_values_to_token_info(token_info)
 
         self._save_token_info(token_info)
 
         return token_info
 
-    def _add_custom_values_to_token_info(self, token_info):
+    def add_custom_values_to_token_info(self, token_info):
         """Store some values that aren't directly provided by the response."""
         token_info['expires_at'] = int(time.time()) + token_info['expires_in']
         return token_info
@@ -191,11 +194,11 @@ class oAuthClient():
     def _save_token_info(self, token_info):
         if self.cache_path:
             try:
-                f = open(self.cache_path, 'w')
-                f.write(json.dumps(token_info))
-                f.close()
+                file = open(self.cache_path, 'w')
+                file.write(json.dumps(token_info))
+                file.close()
             except IOError:
-                _LOGGER.warn("couldn't write token cache to "
+                _LOGGER.warning("couldn't write token cache to "
                              + self.cache_path)
 
     def _generate_nonce(self, length=8):
