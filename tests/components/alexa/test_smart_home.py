@@ -419,7 +419,7 @@ def test_api_function_not_implemented(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['alert', 'automation', 'group',
+@pytest.mark.parametrize("domain", ['alert', 'automation', 'cover', 'group',
                                     'input_boolean', 'light', 'script',
                                     'switch'])
 def test_api_turn_on(hass, domain):
@@ -438,7 +438,10 @@ def test_api_turn_on(hass, domain):
     if domain == 'group':
         call_domain = 'homeassistant'
 
-    call = async_mock_service(hass, call_domain, 'turn_on')
+    if domain == 'cover':
+        call = async_mock_service(hass, call_domain, 'open_cover')
+    else:
+        call = async_mock_service(hass, call_domain, 'turn_on')
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
@@ -452,7 +455,7 @@ def test_api_turn_on(hass, domain):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['alert', 'automation', 'group',
+@pytest.mark.parametrize("domain", ['alert', 'automation', 'cover', 'group',
                                     'input_boolean', 'light', 'script',
                                     'switch'])
 def test_api_turn_off(hass, domain):
@@ -471,7 +474,10 @@ def test_api_turn_off(hass, domain):
     if domain == 'group':
         call_domain = 'homeassistant'
 
-    call = async_mock_service(hass, call_domain, 'turn_off')
+    if domain == 'cover':
+        call = async_mock_service(hass, call_domain, 'close_cover')
+    else:
+        call = async_mock_service(hass, call_domain, 'turn_off')
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
