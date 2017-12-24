@@ -160,6 +160,8 @@ class HueBridge(object):
         self.allow_hue_groups = allow_hue_groups
 
         self.bridge = None
+        self.lights = {}
+        self.lightgroups = {}
 
         self.configured = False
         self.config_request_id = None
