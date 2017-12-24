@@ -32,13 +32,28 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
     from bellows.zigbee.zcl.clusters.measurement import TemperatureMeasurement
+    from bellows.zigbee.zcl.clusters.measurement import IlluminanceMeasurement
+    from bellows.zigbee.zcl.clusters.measurement import RelativeHumidity
+    from bellows.zigbee.zcl.clusters.general import PowerConfiguration
+    from bellows.zigbee.zcl.clusters.smartenergy import Metering
+
     in_clusters = discovery_info['in_clusters']
+
     if TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)
+    elif PowerConfiguration.cluster_id in in_clusters and discovery_info['manufacturer'] == 'CentraLite':
+        sensor = CentraliteBatterySensor(**discovery_info)
+    elif Metering.cluster_id in in_clusters:
+        sensor = MeteringSensor(**discovery_info)
+    elif IlluminanceMeasurement.cluster_id in in_clusters:
+        sensor = IlluminanceMeasurementSensor(**discovery_info)
+    elif RelativeHumidity.cluster_id in in_clusters:
+        sensor = RelativeHumiditySensor(**discovery_info)
     else:
         sensor = Sensor(**discovery_info)
 
     attr = sensor.value_attribute
+
     if discovery_info['new_join']:
         cluster = list(in_clusters.values())[0]
         yield from cluster.bind()
@@ -89,3 +104,90 @@ class TemperatureSensor(Sensor):
         celsius = round(float(self._state) / 100, 1)
         return convert_temperature(
             celsius, TEMP_CELSIUS, self.unit_of_measurement)
+
+class CentraliteBatterySensor(Sensor):
+    """ZHA battery sensor."""
+
+    #currently restricted to centralite sensors because the value conversion
+    #is specific to centralite sensors
+
+    value_attribute = 32
+    minVolts = 15
+    maxVolts = 28
+    values = {
+        28:100,
+        27:100,
+        26:100,
+        25:90,
+        24:90,
+        23:70,
+        22:70,
+        21:50,
+        20:50,
+        19:30,
+        18:30,
+        17:15,
+        16:1,
+        15:0
+    }
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return '%'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+
+        if self._state == 'unknown':
+            return 'unknown'
+
+        if self._state < self.minVolts:
+            self._state = self.minVolts
+        elif self._state > self.maxVolts:
+            self._state = self.maxVolts
+
+        return self.values.get(self._state, 'unknown')
+
+class MeteringSensor(Sensor):
+    """ZHA Metering sensor."""
+
+    value_attribute = 1024
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return 'W'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state == 'unknown':
+            return 'unknown'
+
+        return self._state
+
+class IlluminanceMeasurementSensor(Sensor):
+    """ZHA lux sensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return 'LUX'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state == 'unknown':
+            return 'unknown'
+
+        return self._state
+
+class RelativeHumiditySensor(Sensor):
+    """ZHA humidity sensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return '%'
