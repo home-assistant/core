@@ -138,6 +138,20 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._thermostat.resume_schedule.assert_called_once_with()
         self.assertTrue(self.thermostat._force_update)
 
+    def test_set_hold_mode(self):
+        """Test set hold mode."""
+        self.thermostat.set_hold_mode("temperature")
+        self.assertEqual(self.thermostat._thermostat.schedule_mode, SCHEDULE_HOLD)
+        self.assertTrue(self.thermostat._force_update)
+
+        self.thermostat.set_hold_mode("temporary_temperature")
+        self.assertEqual(self.thermostat._thermostat.schedule_mode, SCHEDULE_TEMPORARY_HOLD)
+        self.assertTrue(self.thermostat._force_update)
+
+        self.thermostat.set_hold_mode("auto")
+        self.assertEqual(self.thermostat._thermostat.schedule_mode, SCHEDULE_RUN)
+        self.assertTrue(self.thermostat._force_update)
+
     def test_set_temperature(self):
         """Test set temperature."""
         self.thermostat.set_temperature(temperature=85)
