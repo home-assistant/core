@@ -272,9 +272,9 @@ class PlexClient(MediaPlayerDevice):
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
-
+        
         self._clear_media_details()
-
+        
         self.refresh(device, session)
 
         # Assign custom entity ID if desired
