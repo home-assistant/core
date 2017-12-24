@@ -36,7 +36,7 @@ def setup(hass, config):
     controller = RainbirdController()
     controller.setConfig(server, password)
 
-    _LOGGER.debug("Rain Bird Controller set to: ", server)
+    _LOGGER.debug("Rain Bird Controller set to: %s", server)
 
     initialstatus = controller.currentIrrigation()
     if initialstatus == -1:
