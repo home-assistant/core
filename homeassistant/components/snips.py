@@ -15,7 +15,7 @@ DEPENDENCIES = ['mqtt']
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'
 
-INTENT_TOPIC = 'hermes/nlu/intentParsed'
+INTENT_TOPIC = 'hermes/intent/#'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,8 @@ INTENT_SCHEMA = vol.Schema({
         vol.Required('slotName'): str,
         vol.Required('value'): {
             vol.Required('kind'): str,
-            vol.Required('value'): cv.match_all
+            vol.Optional('value'): cv.match_all,
+            vol.Optional('rawValue'): cv.match_all
         }
     }]
 }, extra=vol.ALLOW_EXTRA)
@@ -59,8 +60,12 @@ def async_setup(hass, config):
             return
 
         intent_type = request['intent']['intentName'].split('__')[-1]
-        slots = {slot['slotName']: {'value': slot['value']['value']}
-                 for slot in request.get('slots', [])}
+        slots = {}
+        for slot in request.get('slots', []):
+            if 'value' in slot['value']:
+                slots[slot['slotName']] = {'value': slot['value']['value']}
+            else:
+                slots[slot['slotName']] = {'value': slot['rawValue']}
 
         try:
             yield from intent.async_handle(

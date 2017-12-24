@@ -88,7 +88,7 @@ omit =
     homeassistant/components/hive.py
     homeassistant/components/*/hive.py
 
-    homeassistant/components/homematic.py
+    homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
     homeassistant/components/insteon_local.py
@@ -264,6 +264,7 @@ omit =
     homeassistant/components/*/zoneminder.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
+    homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/egardia.py
     homeassistant/components/alarm_control_panel/ialarm.py
@@ -283,8 +284,10 @@ omit =
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/binary_sensor/tapsaff.py
     homeassistant/components/browser.py
+    homeassistant/components/calendar/caldav.py
     homeassistant/components/calendar/todoist.py
     homeassistant/components/camera/bloomsky.py
+    homeassistant/components/camera/canary.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
@@ -362,6 +365,7 @@ omit =
     homeassistant/components/light/decora.py
     homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/flux_led.py
+    homeassistant/components/light/greenwave.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/lifx.py
@@ -425,6 +429,7 @@ omit =
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/spotify.py
     homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/ue_smart_radio.py
     homeassistant/components/media_player/vizio.py
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
@@ -500,6 +505,7 @@ omit =
     homeassistant/components/sensor/deluge.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/discogs.py
     homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
@@ -528,7 +534,6 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
-    homeassistant/components/sensor/hydroquebec.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py

@@ -190,7 +190,10 @@ class SamsungTVDevice(MediaPlayerDevice):
         else:
             self.send_key('KEY_POWEROFF')
         # Force closing of remote session to provide instant UI feedback
-        self.get_remote().close()
+        try:
+            self.get_remote().close()
+        except OSError:
+            _LOGGER.debug("Could not establish connection.")
 
     def volume_up(self):
         """Volume up the media player."""

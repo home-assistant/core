@@ -141,10 +141,17 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         self._verify_register = (
             verify_register if verify_register else self._register)
         self._register_type = register_type
-        self._state_on = (
-            state_on if state_on else self._command_on)
-        self._state_off = (
-            state_off if state_off else self._command_off)
+
+        if state_on is not None:
+            self._state_on = state_on
+        else:
+            self._state_on = self._command_on
+
+        if state_off is not None:
+            self._state_off = state_off
+        else:
+            self._state_off = self._command_off
+
         self._is_on = None
 
     def turn_on(self, **kwargs):

@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 60
+MINOR_VERSION = 61
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -75,6 +75,7 @@ CONF_EXCLUDE = 'exclude'
 CONF_FILE_PATH = 'file_path'
 CONF_FILENAME = 'filename'
 CONF_FOR = 'for'
+CONF_FORCE_UPDATE = 'force_update'
 CONF_FRIENDLY_NAME = 'friendly_name'
 CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
