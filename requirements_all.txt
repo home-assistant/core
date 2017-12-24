@@ -475,6 +475,9 @@ miflora==0.2.0
 # homeassistant.components.upnp
 miniupnpc==2.0.2
 
+# homeassistant.components.sensor.monzo
+monzo==0.5.3
+
 # homeassistant.components.sensor.mopar
 motorparts==1.0.2
 
