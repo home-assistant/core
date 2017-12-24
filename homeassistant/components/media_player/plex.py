@@ -251,6 +251,7 @@ class PlexClient(MediaPlayerDevice):
     def __init__(self, config, device, session, plex_sessions,
                  update_devices, update_sessions, plex_server):
         """Initialize the Plex device."""
+        self._app_name = ''
         self._server = plex_server
         self._device = None
         self._device_protocol_capabilities = None
@@ -272,9 +273,24 @@ class PlexClient(MediaPlayerDevice):
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
-        
-        self._clear_media_details()
-        
+        # General
+        self._media_content_id = None
+        self._media_content_rating = None
+        self._media_content_type = None
+        self._media_duration = None
+        self._media_image_url = None
+        self._media_title = None
+        self._media_position = None
+        # Music
+        self._media_album_artist = None
+        self._media_album_name = None
+        self._media_artist = None
+        self._media_track = None
+        # TV Show
+        self._media_episode = None
+        self._media_season = None
+        self._media_series_title = None
+
         self.refresh(device, session)
 
         # Assign custom entity ID if desired
