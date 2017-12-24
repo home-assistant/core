@@ -13,8 +13,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, STATE_OFF, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
