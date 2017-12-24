@@ -230,7 +230,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
 
 def cmdline() -> List[str]:
     """Collect path and arguments to re-execute the current hass instance."""
-    if sys.argv[0].endswith(os.path.sep + '__main__.py'):
+    if os.path.basename(sys.argv[0]) == '__main__.py':
         modulepath = os.path.dirname(sys.argv[0])
         os.environ['PYTHONPATH'] = os.path.dirname(modulepath)
         return [sys.executable] + [arg for arg in sys.argv if

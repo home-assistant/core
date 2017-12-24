@@ -53,10 +53,11 @@ homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/media_player/monoprice.py @etsinko
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
+homeassistant/components/plant.py @ChristianKuehnel
 homeassistant/components/sensor/airvisual.py @bachya
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
-homeassistant/components/sensor/miflora.py @danielhiversen
+homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/tibber.py @danielhiversen
 homeassistant/components/sensor/waqi.py @andrey-git

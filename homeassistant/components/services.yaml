@@ -32,55 +32,6 @@ foursquare:
         description: Vertical accuracy of the user's location, in meters.
         example: 1
 
-homematic:
-  virtualkey:
-    description: Press a virtual key from CCU/Homegear or simulate keypress.
-    fields:
-      address:
-        description: Address of homematic device or BidCoS-RF for virtual remote.
-        example: BidCoS-RF
-      channel:
-        description: Channel for calling a keypress.
-        example: 1
-      param:
-        description: Event to send i.e. PRESS_LONG, PRESS_SHORT.
-        example: PRESS_LONG
-      proxy:
-        description: (Optional) for set a hosts value.
-        example: Hosts name from config
-  set_var_value:
-    description: Set the name of a node.
-    fields:
-      entity_id:
-        description: Name(s) of homematic central to set value.
-        example: 'homematic.ccu2'
-      name:
-        description: Name of the variable to set.
-        example: 'testvariable'
-      value:
-        description: New value
-        example: 1
-  set_dev_value:
-    description: Set a device property on RPC XML interface.
-    fields:
-      address:
-        description: Address of homematic device or BidCoS-RF for virtual remote
-        example: BidCoS-RF
-      channel:
-        description: Channel for calling a keypress
-        example: 1
-      param:
-        description: Event to send i.e. PRESS_LONG, PRESS_SHORT
-        example: PRESS_LONG
-      proxy:
-        description: (Optional) for set a hosts value
-        example: Hosts name from config
-      value:
-        description: New value
-        example: 1
-  reconnect:
-    description: Reconnect to all Homematic Hubs.
-
 microsoft_face:
   create_group:
     description: Create a new person group.
