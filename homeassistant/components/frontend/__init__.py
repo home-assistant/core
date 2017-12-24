@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171206.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20171223.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -35,7 +35,7 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
-JS_DEFAULT_OPTION = 'es5'
+JS_DEFAULT_OPTION = 'auto'
 JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
@@ -49,7 +49,7 @@ MANIFEST_JSON = {
     'lang': 'en-US',
     'name': 'Home Assistant',
     'short_name': 'Assistant',
-    'start_url': '/',
+    'start_url': '/states',
     'theme_color': DEFAULT_THEME_COLOR
 }
 
@@ -299,8 +299,13 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        hass.http.register_static_path(
-            "/home-assistant-polymer", repo_path, False)
+        for subpath in ["src", "build-translations", "build-temp", "build",
+                        "hass_frontend", "bower_components", "panels"]:
+            hass.http.register_static_path(
+                "/home-assistant-polymer/{}".format(subpath),
+                os.path.join(repo_path, subpath),
+                False)
+
         hass.http.register_static_path(
             "/static/translations",
             os.path.join(repo_path, "build-translations/output"), False)
