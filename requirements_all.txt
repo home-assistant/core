@@ -803,7 +803,7 @@ pyqwikswitch==0.4
 pyrainbird==0.1.0
 
 # homeassistant.components.climate.sensibo
-pysensibo==1.0.1
+pysensibo==1.0.2
 
 # homeassistant.components.sensor.serial
 pyserial-asyncio==0.4

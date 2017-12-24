@@ -18,14 +18,14 @@ from homeassistant.const import (
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_AUX_HEAT)
+    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_AUX_HEAT, SUPPORT_ON_OFF,
+    SUPPORT_SET_ASSUMED_STATE)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
-REQUIREMENTS = ['pysensibo==1.0.1']
+REQUIREMENTS = ['pysensibo==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ FIELD_TO_FLAG = {
     'mode': SUPPORT_OPERATION_MODE,
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
-    'on': SUPPORT_AUX_HEAT,
+    'on': SUPPORT_AUX_HEAT | SUPPORT_ON_OFF,
 }
 
 
@@ -92,13 +92,6 @@ class SensiboClimate(ClimateDevice):
         """Return the list of supported features."""
         return self._supported_features
 
-    @property
-    def state(self):
-        """Return the current state."""
-        if not self.is_aux_heat_on:
-            return STATE_OFF
-        return super().state
-
     def _do_update(self, data):
         self._name = data['room']['name']
         self._measurements = data['measurements']
@@ -118,7 +111,7 @@ class SensiboClimate(ClimateDevice):
         else:
             self._temperature_unit = self.unit_of_measurement
             self._temperatures_list = []
-        self._supported_features = 0
+        self._supported_features = SUPPORT_SET_ASSUMED_STATE
         for key in self._ac_states:
             if key in FIELD_TO_FLAG:
                 self._supported_features |= FIELD_TO_FLAG[key]
@@ -208,6 +201,8 @@ class SensiboClimate(ClimateDevice):
         """Return true if AC is on."""
         return self._ac_states['on']
 
+    is_on = is_aux_heat_on
+
     @property
     def min_temp(self):
         """Return the minimum temperature."""
@@ -278,6 +273,23 @@ class SensiboClimate(ClimateDevice):
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
                 self._id, 'on', False)
+
+    async_on = async_turn_aux_heat_on
+    async_off = async_turn_aux_heat_off
+
+    @asyncio.coroutine
+    def async_assume_on(self):
+        """Tell Sensibo it is on."""
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'on', True, assumed_state=True)
+
+    @asyncio.coroutine
+    def async_assume_off(self):
+        """Tell Sensibo it is off."""
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'on', False, assumed_state=True)
 
     @asyncio.coroutine
     def async_update(self):
