@@ -41,7 +41,8 @@ def make_sensor(discovery_info):
 
     if TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)
-    elif PowerConfiguration.cluster_id in in_clusters and discovery_info['manufacturer'] == 'CentraLite':
+    elif PowerConfiguration.cluster_id in in_clusters \
+            and discovery_info['manufacturer'] == 'CentraLite':
         sensor = CentraliteBatterySensor(**discovery_info)
     elif Metering.cluster_id in in_clusters:
         sensor = MeteringSensor(**discovery_info)
@@ -108,8 +109,8 @@ class TemperatureSensor(Sensor):
 class CentraliteBatterySensor(Sensor):
     """ZHA battery sensor."""
 
-    #currently restricted to centralite sensors because the value conversion
-    #is specific to centralite sensors
+    #currently restricted to centralite sensors because the value
+    #conversion is specific to centralite sensors.
 
     value_attribute = 32
     minVolts = 15
