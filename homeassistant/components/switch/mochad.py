@@ -60,18 +60,21 @@ class MochadSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._state = True
-        self.device.send_cmd('on')
-        self._controller.read_data()
+        with mochad.REQ_LOCK:
+            self.device.send_cmd('on')
+            self._controller.read_data()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._state = False
-        self.device.send_cmd('off')
-        self._controller.read_data()
+        with mochad.REQ_LOCK:
+            self.device.send_cmd('off')
+            self._controller.read_data()
 
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
-        status = self.device.get_status().rstrip()
+        with mochad.REQ_LOCK:
+            status = self.device.get_status().rstrip()
         return status == 'on'
 
     @property

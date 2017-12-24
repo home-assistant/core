@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
+    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
+    CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +23,6 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FORCE_UPDATE = 'force_update'
 CONF_EXPIRE_AFTER = 'expire_after'
 
 DEFAULT_NAME = 'MQTT Sensor'

@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.3']
+REQUIREMENTS = ['tellcore-py==1.1.2', 'tellcore-net==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def _discover(hass, config, component_name, found_tellcore_devices):
 
 def setup(hass, config):
     """Set up the Tellstick component."""
-    from tellcore.constants import TELLSTICK_DIM
+    from tellcore.constants import (TELLSTICK_DIM, TELLSTICK_UP)
     from tellcore.telldus import AsyncioCallbackDispatcher
     from tellcore.telldus import TelldusCore
     from tellcorenet import TellCoreClient
@@ -102,15 +102,21 @@ def setup(hass, config):
     hass.data[DATA_TELLSTICK] = {device.id: device for
                                  device in tellcore_devices}
 
-    # Discover the switches
-    _discover(hass, config, 'switch',
-              [device.id for device in tellcore_devices
-               if not device.methods(TELLSTICK_DIM)])
-
     # Discover the lights
     _discover(hass, config, 'light',
               [device.id for device in tellcore_devices
                if device.methods(TELLSTICK_DIM)])
+
+    # Discover the cover
+    _discover(hass, config, 'cover',
+              [device.id for device in tellcore_devices
+               if device.methods(TELLSTICK_UP)])
+
+    # Discover the switches
+    _discover(hass, config, 'switch',
+              [device.id for device in tellcore_devices
+               if (not device.methods(TELLSTICK_UP) and
+                   not device.methods(TELLSTICK_DIM))])
 
     @callback
     def async_handle_callback(tellcore_id, tellcore_command,

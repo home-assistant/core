@@ -132,10 +132,12 @@ class TestRestSensor(unittest.TestCase):
         self.unit_of_measurement = 'MB'
         self.value_template = template('{{ value_json.key }}')
         self.value_template.hass = self.hass
+        self.force_update = False
 
-        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement,
-                                      self.value_template, [])
+        self.sensor = rest.RestSensor(
+            self.hass, self.rest, self.name, self.unit_of_measurement,
+            self.value_template, [], self.force_update
+        )
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -153,6 +155,11 @@ class TestRestSensor(unittest.TestCase):
         """Test the unit of measurement."""
         self.assertEqual(
             self.unit_of_measurement, self.sensor.unit_of_measurement)
+
+    def test_force_update(self):
+        """Test the unit of measurement."""
+        self.assertEqual(
+            self.force_update, self.sensor.force_update)
 
     def test_state(self):
         """Test the initial state."""
@@ -182,7 +189,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     'plain_state'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, [])
+                                      self.unit_of_measurement, None, [],
+                                      self.force_update)
         self.sensor.update()
         self.assertEqual('plain_state', self.sensor.state)
         self.assertTrue(self.sensor.available)
@@ -193,7 +201,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     '{ "key": "some_json_value" }'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, ['key'])
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
         self.sensor.update()
         self.assertEqual('some_json_value',
                          self.sensor.device_state_attributes['key'])
@@ -205,7 +214,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     '["list", "of", "things"]'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, ['key'])
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
         self.sensor.update()
         self.assertEqual({}, self.sensor.device_state_attributes)
         self.assertTrue(mock_logger.warning.called)
@@ -217,7 +227,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     'This is text rather than JSON data.'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, ['key'])
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
         self.sensor.update()
         self.assertEqual({}, self.sensor.device_state_attributes)
         self.assertTrue(mock_logger.warning.called)
@@ -230,12 +241,14 @@ class TestRestSensor(unittest.TestCase):
                                     '{ "key": "json_state_updated_value" }'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
-                                      self.value_template, ['key'])
+                                      self.value_template, ['key'],
+                                      self.force_update)
         self.sensor.update()
 
         self.assertEqual('json_state_updated_value', self.sensor.state)
         self.assertEqual('json_state_updated_value',
-                         self.sensor.device_state_attributes['key'])
+                         self.sensor.device_state_attributes['key'],
+                         self.force_update)
 
 
 class TestRestData(unittest.TestCase):
