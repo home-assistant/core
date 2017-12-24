@@ -14,16 +14,15 @@ import logging
 from datetime import timedelta
 import asyncio
 import async_timeout
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
 import voluptuous as vol
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_MONITORED_VARIABLES)
 
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
