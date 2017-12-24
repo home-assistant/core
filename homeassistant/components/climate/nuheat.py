@@ -95,7 +95,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         schema=RESUME_PROGRAM_SCHEMA)
 
 
-
 class NuHeatThermostat(ClimateDevice):
     """Representation of a NuHeat Thermostat."""
 
