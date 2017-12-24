@@ -74,15 +74,7 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_DAIKIN, discovery_dispatch)
 
-    devices = []
-
-    # Add static devices from the config file.
-    devices.extend(
-        (host, None)
-        for host in config.get(DOMAIN, {}).get(CONF_HOSTS, [])
-    )
-
-    for host in devices:
+    for host in config.get(DOMAIN, {}).get(CONF_HOSTS, []):
         if daikin_api_setup(hass, host) is not None:
             discovery_info = {
                 'ip': host,
