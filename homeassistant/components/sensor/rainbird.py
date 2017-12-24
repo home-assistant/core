@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a sensor for a raincloud device."""
+    """Set up a Rain Bird sensor."""
     controller = hass.data[DATA_RAINBIRD]
 
     sensors = []
@@ -42,10 +42,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class RainBirdSensor(Entity):
-    """A sensor implementation for rain bird device."""
+    """A sensor implementation for Rain Bird device."""
 
     def __init__(self, controller, sensor_type):
-        """Initialize rain bird sensor."""
+        """Initialize the Rain Bird sensor."""
         self._sensor_type = sensor_type
         self._controller = controller
         self._name = SENSOR_TYPES[self._sensor_type][0]
@@ -60,7 +60,7 @@ class RainBirdSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating RainBird sensor: %s", self._name)
+        _LOGGER.debug("Updating sensor: %s", self._name)
         if self._sensor_type == 'rainsensor':
             self._state = self._controller.currentRainSensorState()
 
