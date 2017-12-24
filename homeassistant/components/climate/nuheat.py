@@ -12,12 +12,12 @@ from homeassistant.components.climate import (
     SUPPORT_HOLD_MODE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
+    STATE_AUTO,
     STATE_HEAT,
     STATE_IDLE)
 from homeassistant.components.nuheat import DATA_NUHEAT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    STATE_HOME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 from homeassistant.util import Throttle
@@ -31,7 +31,7 @@ ICON = "mdi:thermometer"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Hold modes
-MODE_AUTO = STATE_HOME  # Run device schedule
+MODE_AUTO = STATE_AUTO  # Run device schedule
 MODE_HOLD_TEMPERATURE = "temperature"
 MODE_TEMPORARY_HOLD = "temporary_temperature"
 
@@ -154,6 +154,20 @@ class NuHeatThermostat(ClimateDevice):
     def resume_program(self):
         """Resume the thermostat's programmed schedule."""
         self._thermostat.resume_schedule()
+        self._force_update = True
+
+    def set_hold_mode(self, hold_mode, **kwargs):
+        """Update the hold mode of the thermostat."""
+        if hold_mode == MODE_AUTO:
+            schedule_mode = SCHEDULE_RUN
+
+        if hold_mode == MODE_HOLD_TEMPERATURE:
+            schedule_mode = SCHEDULE_HOLD
+
+        if hold_mode == MODE_TEMPORARY_HOLD:
+            schedule_mode = SCHEDULE_TEMPORARY_HOLD
+
+        self._thermostat.schedule_mode = schedule_mode
         self._force_update = True
 
     def set_temperature(self, **kwargs):
