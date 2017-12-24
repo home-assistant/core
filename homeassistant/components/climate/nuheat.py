@@ -6,9 +6,13 @@ https://home-assistant.io/components/climate.nuheat/
 """
 import logging
 from datetime import timedelta
+from os import path
+
+import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice,
+    DOMAIN,
     SUPPORT_HOLD_MODE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -16,10 +20,13 @@ from homeassistant.components.climate import (
     STATE_HEAT,
     STATE_IDLE)
 from homeassistant.components.nuheat import DATA_NUHEAT
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ["nuheat"]
@@ -41,6 +48,12 @@ SCHEDULE_HOLD = 3
 SCHEDULE_RUN = 1
 SCHEDULE_TEMPORARY_HOLD = 2
 
+SERVICE_RESUME_PROGRAM = "nuheat_resume_program"
+
+RESUME_PROGRAM_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+})
+
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
                  SUPPORT_OPERATION_MODE)
 
@@ -57,6 +70,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for serial_number in serial_numbers
     ]
     add_devices(thermostats, True)
+
+    def resume_program_set_service(service):
+        """Resume the program on the target thermostats."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+
+        if entity_id:
+            target_thermostats = [device for device in thermostats
+                                  if device.entity_id in entity_id]
+        else:
+            target_thermostats = thermostats
+
+        for thermostat in target_thermostats:
+            thermostat.resume_program()
+
+            thermostat.schedule_update_ha_state(True)
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), "services.yaml"))
+
+    hass.services.register(
+        DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
+        descriptions.get(SERVICE_RESUME_PROGRAM),
+        schema=RESUME_PROGRAM_SCHEMA)
+
 
 
 class NuHeatThermostat(ClimateDevice):
