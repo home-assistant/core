@@ -243,7 +243,11 @@ def async_api_turn_on(hass, config, request, entity):
     if entity.domain == group.DOMAIN:
         domain = ha.DOMAIN
 
-    yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
+    service = SERVICE_TURN_ON
+    if entity.domain == cover.DOMAIN:
+        service = cover.SERVICE_OPEN_COVER
+
+    yield from hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
@@ -259,7 +263,11 @@ def async_api_turn_off(hass, config, request, entity):
     if entity.domain == group.DOMAIN:
         domain = ha.DOMAIN
 
-    yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
+    service = SERVICE_TURN_OFF
+    if entity.domain == cover.DOMAIN:
+        service = cover.SERVICE_CLOSE_COVER
+
+    yield from hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
