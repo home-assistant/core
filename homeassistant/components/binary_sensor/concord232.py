@@ -62,6 +62,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
         return False
 
+    # The order of zones returned by client.list_zones() can vary.
+    # When the zones are not named, this can result in the same entity
+    # name mapping to different sensors in an unpredictable way.  Sort
+    # the zones by zone number to prevent this.
+
+    client.zones.sort(key=lambda zone: zone['number'])
+
     for zone in client.zones:
         _LOGGER.info("Loading Zone found: %s", zone['name'])
         if zone['number'] not in exclude:
