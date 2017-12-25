@@ -6,7 +6,7 @@ https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 """
 import asyncio
 import logging
-import os
+from os import path
 
 import voluptuous as vol
 
@@ -39,9 +39,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         code = service.data.get(ATTR_CODE)
         device.alarm_toggle_chime(code)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(
         alarm.DOMAIN, SERVICE_ALARM_TOGGLE_CHIME, alarm_toggle_chime_handler,
