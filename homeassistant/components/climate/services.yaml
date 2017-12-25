@@ -112,13 +112,13 @@ turn_off:
     entity_id:
       description: Name(s) of entities to change.
       example: 'climate.kitchen'
-assume_on:
+sensibo_assume_on:
   description: Make climate device assume it is on.
   fields:
     entity_id:
       description: Name(s) of entities to change.
       example: 'climate.kitchen'
-assume_off:
+sensibo_assume_off:
   description: Make climate device assume it is off.
   fields:
     entity_id:

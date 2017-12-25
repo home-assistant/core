@@ -485,6 +485,8 @@ class ClimateDevice(Entity):
             return STATE_OFF
         if self.current_operation:
             return self.current_operation
+        if self.is_on:
+            return STATE_ON
         return STATE_UNKNOWN
 
     @property
