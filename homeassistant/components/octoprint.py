@@ -69,7 +69,6 @@ class OctoPrintAPI(object):
         self.job_error_logged = False
         self.bed = bed
         self.number_of_tools = number_of_tools
-        _LOGGER.error(str(bed) + " " + str(number_of_tools))
 
     def get_tools(self):
         """Get the list of tools that temperature is monitored on."""
