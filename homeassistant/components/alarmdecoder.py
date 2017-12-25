@@ -29,6 +29,7 @@ CONF_DEVICE_TYPE = 'type'
 CONF_PANEL_DISPLAY = 'panel_display'
 CONF_ZONE_NAME = 'name'
 CONF_ZONE_TYPE = 'type'
+CONF_ZONE_RFID = 'rfid'
 CONF_ZONES = 'zones'
 
 DEFAULT_DEVICE_TYPE = 'socket'
@@ -48,6 +49,7 @@ SIGNAL_PANEL_DISARM = 'alarmdecoder.panel_disarm'
 
 SIGNAL_ZONE_FAULT = 'alarmdecoder.zone_fault'
 SIGNAL_ZONE_RESTORE = 'alarmdecoder.zone_restore'
+SIGNAL_RFX_MESSAGE = 'alarmdecoder.rfx_message'
 
 DEVICE_SOCKET_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_TYPE): 'socket',
@@ -64,7 +66,8 @@ DEVICE_USB_SCHEMA = vol.Schema({
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_NAME): cv.string,
-    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string})
+    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string,
+    vol.Optional(CONF_ZONE_RFID): cv.string})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -105,6 +108,11 @@ def setup(hass, config):
         hass.helpers.dispatcher.dispatcher_send(
             SIGNAL_PANEL_MESSAGE, message)
 
+    def handle_rfx_message(sender, message):
+        """Handle RFX message from AlarmDecoder."""
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_RFX_MESSAGE, message)
+
     def zone_fault_callback(sender, zone):
         """Handle zone fault from AlarmDecoder."""
         hass.helpers.dispatcher.dispatcher_send(
@@ -129,6 +137,7 @@ def setup(hass, config):
         return False
 
     controller.on_message += handle_message
+    controller.on_rfx_message += handle_rfx_message
     controller.on_zone_fault += zone_fault_callback
     controller.on_zone_restore += zone_restore_callback
 
