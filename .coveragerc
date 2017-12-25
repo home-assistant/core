@@ -477,6 +477,7 @@ omit =
     homeassistant/components/notify/yessssms.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/prometheus.py
+    homeassistant/components/rainbird.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
@@ -571,6 +572,7 @@ omit =
     homeassistant/components/sensor/pyload.py
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
+    homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
