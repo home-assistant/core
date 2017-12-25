@@ -39,6 +39,8 @@ DEFAULT_NAME = 'LG webOS Smart TV'
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
+ATTR_CHANNEL = 'channel'
+
 SUPPORT_WEBOSTV = SUPPORT_TURN_OFF | \
     SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
@@ -176,6 +178,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
+        self._channel = None
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -191,10 +194,17 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._state = STATE_OFF
                 self._current_source = None
                 self._current_source_id = None
+                self._channel = None
 
             if self._state is not STATE_OFF:
                 self._muted = self._client.get_muted()
                 self._volume = self._client.get_volume()
+
+                ch = self._client.get_current_channel()
+                if 'channelName' in ch:
+                   self._channel = ch['channelName']
+                else:
+                   self._channel = None
 
                 self._source_list = {}
                 self._app_list = {}
@@ -227,6 +237,7 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._state = STATE_OFF
             self._current_source = None
             self._current_source_id = None
+            self._channel = None
 
     @property
     def name(self):
@@ -353,3 +364,15 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self._client.rewind()
+
+    @property 
+    def channel(self):
+        """Return current TV channel"""
+        return self._channel
+
+    @property
+    def device_state_attributes(self):
+        if self._state is not STATE_OFF:
+           return { ATTR_CHANNEL: self.channel }
+        else:
+           return None
