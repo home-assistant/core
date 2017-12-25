@@ -10,15 +10,14 @@ from homeassistant.components.climate import (
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_AUX_HEAT, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_ON_OFF, SUPPORT_SET_ASSUMED_STATE)
+    SUPPORT_ON_OFF)
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
                  SUPPORT_AWAY_MODE | SUPPORT_HOLD_MODE | SUPPORT_FAN_MODE |
                  SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT |
                  SUPPORT_SWING_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_ON_OFF |
-                 SUPPORT_SET_ASSUMED_STATE)
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_ON_OFF)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -222,15 +221,5 @@ class DemoClimate(ClimateDevice):
 
     def turn_off(self):
         """Turn off."""
-        self._on = False
-        self.schedule_update_ha_state()
-
-    def assume_on(self):
-        """Assume on."""
-        self._on = True
-        self.schedule_update_ha_state()
-
-    def assume_off(self):
-        """Assume off."""
         self._on = False
         self.schedule_update_ha_state()

@@ -7,29 +7,33 @@ https://home-assistant.io/components/climate.sensibo/
 
 import asyncio
 import logging
+import os
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_AUX_HEAT, SUPPORT_ON_OFF,
-    SUPPORT_SET_ASSUMED_STATE)
+    ATTR_CURRENT_HUMIDITY, ClimateDevice, DOMAIN, ON_OFF_SERVICE_SCHEMA,
+    PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_AUX_HEAT, SUPPORT_ON_OFF)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
-
 REQUIREMENTS = ['pysensibo==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 ALL = 'all'
 TIMEOUT = 10
+
+SERVICE_ASSUME_ON = 'sensibo_assume_on'
+SERVICE_ASSUME_OFF = 'sensibo_assume_off'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -72,6 +76,41 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if devices:
         async_add_devices(devices)
 
+        @asyncio.coroutine
+        def async_on_off_service(service):
+            """Handle on/off calls."""
+            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            if entity_ids:
+                target_climate = [device for device in devices
+                                  if device.entity_id in entity_ids]
+            else:
+                target_climate = devices
+
+            update_tasks = []
+            for climate in target_climate:
+                if service.service == SERVICE_ASSUME_ON:
+                    yield from climate.async_assume_on()
+                elif service.service == SERVICE_ASSUME_OFF:
+                    yield from climate.async_assume_off()
+
+                if not climate.should_poll:
+                    continue
+                update_tasks.append(climate.async_update_ha_state(True))
+
+            if update_tasks:
+                yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+        descriptions = yield from hass.async_add_job(
+            load_yaml_config_file,
+            os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_ASSUME_OFF, async_on_off_service,
+            descriptions.get(SERVICE_ASSUME_OFF), schema=ON_OFF_SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, SERVICE_ASSUME_ON, async_on_off_service,
+            descriptions.get(SERVICE_ASSUME_ON), schema=ON_OFF_SERVICE_SCHEMA)
+
 
 class SensiboClimate(ClimateDevice):
     """Representation of a Sensibo device."""
@@ -110,7 +149,7 @@ class SensiboClimate(ClimateDevice):
         else:
             self._temperature_unit = self.unit_of_measurement
             self._temperatures_list = []
-        self._supported_features = SUPPORT_SET_ASSUMED_STATE
+        self._supported_features = 0
         for key in self._ac_states:
             if key in FIELD_TO_FLAG:
                 self._supported_features |= FIELD_TO_FLAG[key]

@@ -38,8 +38,6 @@ SERVICE_SET_HOLD_MODE = 'set_hold_mode'
 SERVICE_SET_OPERATION_MODE = 'set_operation_mode'
 SERVICE_SET_SWING_MODE = 'set_swing_mode'
 SERVICE_SET_HUMIDITY = 'set_humidity'
-SERVICE_ASSUME_ON = 'assume_on'
-SERVICE_ASSUME_OFF = 'assume_off'
 
 STATE_HEAT = 'heat'
 STATE_COOL = 'cool'
@@ -67,7 +65,6 @@ SUPPORT_SWING_MODE = 512
 SUPPORT_AWAY_MODE = 1024
 SUPPORT_AUX_HEAT = 2048
 SUPPORT_ON_OFF = 4096
-SUPPORT_SET_ASSUMED_STATE = 8192
 
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
@@ -459,10 +456,6 @@ def async_setup(hass, config):
                 yield from climate.async_turn_on()
             elif service.service == SERVICE_TURN_OFF:
                 yield from climate.async_turn_off()
-            elif service.service == SERVICE_ASSUME_ON:
-                yield from climate.async_assume_on()
-            elif service.service == SERVICE_ASSUME_OFF:
-                yield from climate.async_assume_off()
 
             if not climate.should_poll:
                 continue
@@ -477,12 +470,6 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_on_off_service,
         descriptions.get(SERVICE_TURN_ON), schema=ON_OFF_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_ASSUME_OFF, async_on_off_service,
-        descriptions.get(SERVICE_ASSUME_OFF), schema=ON_OFF_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_ASSUME_ON, async_on_off_service,
-        descriptions.get(SERVICE_ASSUME_ON), schema=ON_OFF_SERVICE_SCHEMA)
 
     return True
 
@@ -803,28 +790,6 @@ class ClimateDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.turn_off)
-
-    def assume_on(self):
-        """Tell the device to assume on state."""
-        raise NotImplementedError()
-
-    def async_assume_on(self):
-        """Tell the device to assume on state.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.assume_on)
-
-    def assume_off(self):
-        """Tell the device to assume off state."""
-        raise NotImplementedError()
-
-    def async_assume_off(self):
-        """Tell the device to assume off state.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.assume_off)
 
     @property
     def supported_features(self):
