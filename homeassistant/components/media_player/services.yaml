@@ -288,6 +288,9 @@ squeezebox_call_method:
     entity_id:
       description: Name(s) of the Squeexebox entities where to run the API method.
       example: 'media_player.squeezebox_radio'
-    method:
-      description: Squeezebox JSON/RPC method call, in the form of an array of positional parameters. See 'Command Line Interface' official help page from Logitech for details.
-      example: '["playlist", "loadtracks", "track.titlesearch=highway to hell"]'
+    command:
+      description: Name of the Squeezebox command.
+      example: 'playlist'
+    parameters:
+      description: Optional array of parameters to be appended to the command. See 'Command Line Interface' official help page from Logitech for details.
+      example: '["loadtracks", "track.titlesearch=highway to hell"]'

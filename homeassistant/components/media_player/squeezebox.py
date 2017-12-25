@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
     MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_SHUFFLE_SET, SUPPORT_CLEAR_PLAYLIST)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
+    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT, ATTR_COMMAND)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
@@ -49,10 +49,11 @@ SERVICE_CALL_METHOD = 'squeezebox_call_method'
 
 DATA_SQUEEZEBOX = 'squeexebox'
 
-ATTR_METHOD = 'method'
+ATTR_PARAMETERS = 'parameters'
 
 SQUEEZEBOX_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_METHOD):
+    vol.Required(ATTR_COMMAND): cv.string,
+    vol.Optional(ATTR_PARAMETERS):
         vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
 })
 
@@ -489,12 +490,14 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Send the media player the command for clear playlist."""
         return self.async_query('playlist', 'clear')
 
-    def async_call_method(self, method):
+    def async_call_method(self, command, parameters=[]):
         """
         Call Squeezebox JSON/RPC method.
 
-        Parameter 'method' should be the list of positional parameters (p0, p1,
-        pN) to be passed to JSON/RPC server.
+        Escaped optional parameters are added to the command to form the list
+        of positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
         """
-        return self.async_query(
-            *[urllib.parse.quote(element, safe=':=') for element in method])
+        all_params = [command]
+        for parameter in parameters:
+            all_params.append(urllib.parse.quote(parameter, safe=':='))
+        return self.async_query(*all_params)
