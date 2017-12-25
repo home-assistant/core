@@ -490,7 +490,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Send the media player the command for clear playlist."""
         return self.async_query('playlist', 'clear')
 
-    def async_call_method(self, command, parameters=[]):
+    def async_call_method(self, command, parameters=None):
         """
         Call Squeezebox JSON/RPC method.
 
@@ -498,6 +498,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         of positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
         """
         all_params = [command]
-        for parameter in parameters:
-            all_params.append(urllib.parse.quote(parameter, safe=':='))
+        if parameters:
+            for parameter in parameters:
+                all_params.append(urllib.parse.quote(parameter, safe=':='))
         return self.async_query(*all_params)
