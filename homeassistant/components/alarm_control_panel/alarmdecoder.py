@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config import load_yaml_config_file
 from homeassistant.components.alarmdecoder import (
     DATA_AD, SIGNAL_PANEL_MESSAGE)
 from homeassistant.const import (
@@ -22,9 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['alarmdecoder']
 
-SERVICE_ALARM_TOGGLE_CHIME = 'alarm_toggle_chime'
+SERVICE_ALARM_TOGGLE_CHIME = 'alarmdecoder_alarm_toggle_chime'
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_CODE): cv.string,
+    vol.Required(ATTR_CODE): cv.string,
 })
 
 
@@ -33,17 +34,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device = AlarmDecoderAlarmPanel()
     add_devices([device])
 
-    @callback
     def alarm_toggle_chime_handler(service):
         """Register toggle chime handler."""
         code = service.data.get(ATTR_CODE)
         device.alarm_toggle_chime(code)
 
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
     hass.services.register(
         alarm.DOMAIN, SERVICE_ALARM_TOGGLE_CHIME, alarm_toggle_chime_handler,
-        description=None, schema=ALARM_TOGGLE_CHIME_SCHEMA)
-
-    return True
+        descriptions.get(SERVICE_ALARM_TOGGLE_CHIME), schema=ALARM_TOGGLE_CHIME_SCHEMA)
 
 
 class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
@@ -71,63 +73,26 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             SIGNAL_PANEL_MESSAGE, self._message_callback)
 
     def _message_callback(self, message):
-        do_update = False
-
         if message.alarm_sounding or message.fire_alarm:
-            if self._state != STATE_ALARM_TRIGGERED:
-                self._state = STATE_ALARM_TRIGGERED
-                do_update = True
+            self._state = STATE_ALARM_TRIGGERED
         elif message.armed_away:
-            if self._state != STATE_ALARM_ARMED_AWAY:
-                self._state = STATE_ALARM_ARMED_AWAY
-                do_update = True
+            self._state = STATE_ALARM_ARMED_AWAY
         elif message.armed_home:
-            if self._state != STATE_ALARM_ARMED_HOME:
-                self._state = STATE_ALARM_ARMED_HOME
-                do_update = True
+            self._state = STATE_ALARM_ARMED_HOME
         else:
-            if self._state != STATE_ALARM_DISARMED:
-                self._state = STATE_ALARM_DISARMED
-                do_update = True
+            self._state = STATE_ALARM_DISARMED
 
-        if self._ac_power != message.ac_power:
-            self._ac_power = message.ac_power
-            do_update = True
+        self._ac_power = message.ac_power
+        self._backlight_on = message.backlight_on
+        self._battery_low = message.battery_low
+        self._check_zone = message.check_zone
+        self._chime = message.chime_on
+        self._entry_delay_off = message.entry_delay_off
+        self._programming_mode = message.programming_mode
+        self._ready = message.ready
+        self._zone_bypassed = message.zone_bypassed
 
-        if self._backlight_on != message.backlight_on:
-            self._backlight_on = message.backlight_on
-            do_update = True
-
-        if self._battery_low != message.battery_low:
-            self._battery_low = message.battery_low
-            do_update = True
-
-        if self._check_zone != message.check_zone:
-            self._check_zone = message.check_zone
-            do_update = True
-
-        if self._chime != message.chime_on:
-            self._chime = message.chime_on
-            do_update = True
-
-        if self._entry_delay_off != message.entry_delay_off:
-            self._entry_delay_off = message.entry_delay_off
-            do_update = True
-
-        if self._programming_mode != message.programming_mode:
-            self._programming_mode = message.programming_mode
-            do_update = True
-
-        if self._ready != message.ready:
-            self._ready = message.ready
-            do_update = True
-
-        if self._zone_bypassed != message.zone_bypassed:
-            self._zone_bypassed = message.zone_bypassed
-            do_update = True
-
-        if do_update is True:
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -167,23 +132,19 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if code:
-            _LOGGER.debug("alarm_disarm: sending %s1", str(code))
             self.hass.data[DATA_AD].send("{!s}1".format(code))
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if code:
-            _LOGGER.debug("alarm_arm_away: sending %s2", str(code))
             self.hass.data[DATA_AD].send("{!s}2".format(code))
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if code:
-            _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
             self.hass.data[DATA_AD].send("{!s}3".format(code))
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
         if code:
-            _LOGGER.debug("alarm_toggle_chime: sending %s9", str(code))
             self.hass.data[DATA_AD].send("{!s}9".format(code))
