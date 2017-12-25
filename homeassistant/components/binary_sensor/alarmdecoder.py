@@ -8,14 +8,10 @@ import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.alarmdecoder import (ZONE_SCHEMA,
-                                                   CONF_ZONES,
-                                                   CONF_ZONE_NAME,
-                                                   CONF_ZONE_TYPE,
-                                                   CONF_ZONE_RFID,
-                                                   SIGNAL_RFX_MESSAGE,
-                                                   SIGNAL_ZONE_FAULT,
-                                                   SIGNAL_ZONE_RESTORE)
+from homeassistant.components.alarmdecoder import (
+    ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE,
+    CONF_ZONE_RFID, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE,
+    SIGNAL_RFX_MESSAGE)
 
 DEPENDENCIES = ['alarmdecoder']
 
