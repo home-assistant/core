@@ -6,10 +6,10 @@ https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 """
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
@@ -45,7 +45,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.services.register(
         alarm.DOMAIN, SERVICE_ALARM_TOGGLE_CHIME, alarm_toggle_chime_handler,
-        descriptions.get(SERVICE_ALARM_TOGGLE_CHIME), schema=ALARM_TOGGLE_CHIME_SCHEMA)
+        descriptions.get(SERVICE_ALARM_TOGGLE_CHIME),
+        schema=ALARM_TOGGLE_CHIME_SCHEMA)
 
 
 class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
