@@ -42,6 +42,7 @@ class TestNuHeat(unittest.TestCase):
             target_celsius=22,
             target_fahrenheit=72)
 
+        thermostat.get_data = Mock()
         thermostat.resume_schedule = Mock()
 
         api = Mock()
@@ -132,6 +133,17 @@ class TestNuHeat(unittest.TestCase):
         self.assertEqual(
             self.thermostat.current_hold_mode, nuheat.MODE_TEMPORARY_HOLD)
 
+        self.thermostat._thermostat.schedule_mode = None
+        self.assertEqual(
+            self.thermostat.current_hold_mode, nuheat.MODE_AUTO)
+
+    def test_operation_list(self):
+        """Test the operation list."""
+        self.assertEqual(
+            self.thermostat.operation_list,
+            [STATE_HEAT, STATE_IDLE]
+        )
+
     def test_resume_program(self):
         """Test resume schedule."""
         self.thermostat.resume_program()
@@ -167,7 +179,7 @@ class TestNuHeat(unittest.TestCase):
         self.assertTrue(self.thermostat._force_update)
 
     @patch.object(nuheat.NuHeatThermostat, "_throttled_update")
-    def test_forced_update(self, throttled_update):
+    def test_update_without_throttle(self, throttled_update):
         """Test update without throttle."""
         self.thermostat._force_update = True
         self.thermostat.update()
@@ -175,9 +187,14 @@ class TestNuHeat(unittest.TestCase):
         self.assertFalse(self.thermostat._force_update)
 
     @patch.object(nuheat.NuHeatThermostat, "_throttled_update")
-    def test_throttled_update(self, throttled_update):
+    def test_update_with_throttle(self, throttled_update):
         """Test update with throttle."""
         self.thermostat._force_update = False
         self.thermostat.update()
         throttled_update.assert_called_once_with()
         self.assertFalse(self.thermostat._force_update)
+
+    def test_throttled_update(self):
+        """Test update with throttle."""
+        self.thermostat._throttled_update()
+        self.thermostat._thermostat.get_data.assert_called_once_with()

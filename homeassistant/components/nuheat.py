@@ -16,8 +16,6 @@ REQUIREMENTS = ["nuheat==0.3.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_NUHEAT = "nuheat"
-
 DOMAIN = "nuheat"
 
 CONFIG_SCHEMA = vol.Schema({
@@ -41,7 +39,7 @@ def setup(hass, config):
 
     api = nuheat.NuHeat(username, password)
     api.authenticate()
-    hass.data[DATA_NUHEAT] = (api, devices)
+    hass.data[DOMAIN] = (api, devices)
 
     discovery.load_platform(hass, "climate", DOMAIN, {}, config)
     return True
