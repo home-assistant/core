@@ -67,7 +67,7 @@ def make_sensor(discovery_info):
 
 class Sensor(zha.Entity):
     """Base ZHA sensor."""
-    
+
     _domain = DOMAIN
     value_attribute = 0
     min_reportable_change = 1
@@ -89,7 +89,7 @@ class Sensor(zha.Entity):
 
 class TemperatureSensor(Sensor):
     """ZHA temperature sensor."""
-    
+
     min_reportable_change = 50  # 0.5'C
 
     @property
@@ -109,7 +109,7 @@ class TemperatureSensor(Sensor):
 
 class CentraliteBatterySensor(Sensor):
     """ZHA battery sensor."""
-    
+
     # currently restricted to centralite sensors because the value
     # conversion is specific to centralite sensors.
 
@@ -154,7 +154,7 @@ class CentraliteBatterySensor(Sensor):
 
 class MeteringSensor(Sensor):
     """ZHA Metering sensor."""
-    
+
     value_attribute = 1024
 
     @property
@@ -173,7 +173,7 @@ class MeteringSensor(Sensor):
 
 class IlluminanceMeasurementSensor(Sensor):
     """ZHA lux sensor."""
-    
+
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
@@ -190,7 +190,7 @@ class IlluminanceMeasurementSensor(Sensor):
 
 class RelativeHumiditySensor(Sensor):
     """ZHA humidity sensor."""
-    
+
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
