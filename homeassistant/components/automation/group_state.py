@@ -46,7 +46,7 @@ def async_trigger(hass, config, action):
         if not group.startswith('group'):
             _LOGGER.error("%s is not a group", group)
             return
-        
+
         entity_ids = hass.states.get(group).attributes.get(ATTR_ENTITY_ID)
 
     @callback
