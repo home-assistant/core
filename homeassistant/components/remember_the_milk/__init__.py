@@ -315,9 +315,6 @@ class RememberTheMilk(Entity):
         import rtmapi
 
         hass_id = call.data.get(CONF_ID)
-        if hass_id is None:
-            _LOGGER.error('Id must not be None!')
-            return False
         rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
         if rtm_id is None:
             _LOGGER.error('Could not find task with id %s in account %s. '
