@@ -170,7 +170,7 @@ class ApplicationListener:
                 # These may be manufacturer specific profiles and they
                 # will need special handling if they are to be supported
                 # correctly.
-                _LOGGER.info("Skipping endpoint with profile_id: %s", 
+                _LOGGER.info("Skipping endpoint with profile_id: %s",
                              endpoint.profile_id)
                 continue
 

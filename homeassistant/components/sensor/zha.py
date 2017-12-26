@@ -110,8 +110,8 @@ class TemperatureSensor(Sensor):
 class CentraliteBatterySensor(Sensor):
     """ZHA battery sensor."""
 
-    #currently restricted to centralite sensors because the value
-    #conversion is specific to centralite sensors.
+    # currently restricted to centralite sensors because the value
+    # conversion is specific to centralite sensors.
 
     value_attribute = 32
     minVolts = 15
