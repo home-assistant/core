@@ -4,24 +4,24 @@ Support for Rheem EcoNet water heaters.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.econet/
 """
+import datetime
 import logging
 from os import path
-import datetime
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
     STATE_ECO, STATE_GAS, STATE_ELECTRIC,
     STATE_HEAT_PUMP, STATE_HIGH_DEMAND,
-    STATE_OFF, STATE_UNKNOWN,
+    STATE_OFF, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE,
     ClimateDevice)
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE)
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import (ATTR_ENTITY_ID,
+                                 CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT,
+                                 ATTR_TEMPERATURE)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyeconet==0.0.3']
 
@@ -36,6 +36,8 @@ ATTR_IN_USE = 'in_use'
 ATTR_START_DATE = 'start_date'
 ATTR_END_DATE = 'end_date'
 
+SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+
 SERVICE_ADD_VACATION = 'econet_add_vacation'
 SERVICE_DELETE_VACATION = 'econet_delete_vacation'
 
@@ -49,7 +51,7 @@ DELETE_VACATION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-DOMAIN = 'econet'
+ECONET_DATA = 'econet'
 
 HA_STATE_TO_ECONET = {
     STATE_ECO: 'Energy Saver',
@@ -72,54 +74,48 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the EcoNet water heaters."""
     from pyeconet.api import PyEcoNet
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]['water_heaters'] = []
+    hass.data[ECONET_DATA] = {}
+    hass.data[ECONET_DATA]['water_heaters'] = []
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     econet = PyEcoNet(username, password)
     water_heaters = econet.get_water_heaters()
+    hass_water_heaters = []
     for water_heater in water_heaters:
         _temp_water_heater = EcoNetWaterHeater(water_heater)
-        add_devices([_temp_water_heater])
-        hass.data[DOMAIN]['water_heaters'].append(_temp_water_heater)
+        hass_water_heaters.append(_temp_water_heater)
+    add_devices(hass_water_heaters)
+    hass.data[ECONET_DATA]['water_heaters'].extend(hass_water_heaters)
 
     def service_handle(service):
         """Handler for services."""
         entity_ids = service.data.get('entity_id')
-        all_water_heaters = hass.data[DOMAIN]['water_heaters']
-        _water_heaters = []
+        all_heaters = hass.data[ECONET_DATA]['water_heaters']
+        _heaters = []
         if entity_ids is None:
-            _water_heaters = all_water_heaters
-        else:
-            for _water_heater in all_water_heaters:
-                if _water_heater.entity_id in entity_ids:
-                    _water_heaters.append(_water_heater)
+            _heaters = all_heaters
+        _heaters.extend([x for x in all_heaters if x.entity_id in entity_ids])
 
-        for _water_heater in _water_heaters:
+        for _water_heater in _heaters:
             if service.service == SERVICE_ADD_VACATION:
                 start = service.data.get(ATTR_START_DATE)
                 end = service.data.get(ATTR_END_DATE)
                 _water_heater.add_vacation(start, end)
             if service.service == SERVICE_DELETE_VACATION:
-                # As far as I can tell you can only have 1 vacation at a time
-                # This logic should maybe be moved into pyeconet?
-                try:
-                    _water_heater.water_heater.vacations[0].delete()
-                except IndexError:
-                    _LOGGER.error("Failed to delete vacation. "
-                                  "Are you sure there is one set?")
+                for vacation in _water_heater.water_heater.vacations:
+                    vacation.delete()
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_ADD_VACATION,
+    hass.services.register(ECONET_DATA, SERVICE_ADD_VACATION,
                            service_handle,
                            descriptions.get(SERVICE_ADD_VACATION),
                            schema=ADD_VACATION_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_DELETE_VACATION,
+    hass.services.register(ECONET_DATA, SERVICE_DELETE_VACATION,
                            service_handle,
                            descriptions.get(SERVICE_DELETE_VACATION),
                            schema=DELETE_VACATION_SCHEMA)
@@ -134,7 +130,7 @@ class EcoNetWaterHeater(ClimateDevice):
 
     @property
     def name(self):
-        """Return the devices name."""
+        """Return the device name."""
         return self.water_heater.name
 
     @property
@@ -152,7 +148,7 @@ class EcoNetWaterHeater(ClimateDevice):
         """Return the optional state attributes."""
         data = {}
         vacations = self.water_heater.get_vacations()
-        if len(vacations) > 0:
+        if vacations:
             data[ATTR_VACATION_START] = vacations[0].start_date
             data[ATTR_VACATION_END] = vacations[0].end_date
         data[ATTR_ON_VACATION] = self.water_heater.is_on_vacation
@@ -165,14 +161,12 @@ class EcoNetWaterHeater(ClimateDevice):
     @property
     def current_operation(self):
         """
-        Return current operation one of the following.
+        Return current operation as one of the following.
 
         ["eco", "heat_pump",
         "high_demand", "electric_only"]
         """
         current_op = ECONET_STATE_TO_HA.get(self.water_heater.mode)
-        if current_op is None:
-            current_op = STATE_UNKNOWN
         return current_op
 
     @property
@@ -190,15 +184,22 @@ class EcoNetWaterHeater(ClimateDevice):
                 _LOGGER.error(error)
         return op_list
 
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS_HEATER
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
-        self.water_heater.set_target_set_point(target_temp)
+        if target_temp is not None:
+            self.water_heater.set_target_set_point(target_temp)
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode)
-        self.water_heater.set_mode(op_mode_to_set)
+        if op_mode_to_set is not None:
+            self.water_heater.set_mode(op_mode_to_set)
 
     def add_vacation(self, start, end):
         """Add a vacation to this water heater."""
@@ -212,11 +213,6 @@ class EcoNetWaterHeater(ClimateDevice):
     def update(self):
         """Get the latest date."""
         self.water_heater.update_state()
-
-    @property
-    def should_poll(self):
-        """Econet should always poll."""
-        return True
 
     @property
     def target_temperature(self):
