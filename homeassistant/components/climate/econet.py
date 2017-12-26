@@ -194,12 +194,16 @@ class EcoNetWaterHeater(ClimateDevice):
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         if target_temp is not None:
             self.water_heater.set_target_set_point(target_temp)
+        else:
+            _LOGGER.error("A target temperature must be provided.")
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode)
         if op_mode_to_set is not None:
             self.water_heater.set_mode(op_mode_to_set)
+        else:
+            _LOGGER.error("An operation mode must be provided.")
 
     def add_vacation(self, start, end):
         """Add a vacation to this water heater."""
