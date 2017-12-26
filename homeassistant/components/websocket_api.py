@@ -263,7 +263,7 @@ class ActiveConnection:
     def handle(self):
         """Handle the websocket connection."""
         request = self.request
-        wsock = self.wsock = web.WebSocketResponse()
+        wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
         yield from wsock.prepare(request)
         self.debug("Connected")
 

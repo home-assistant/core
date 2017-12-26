@@ -78,7 +78,7 @@ class CloudIoT:
             yield from hass.async_add_job(auth_api.check_token, self.cloud)
 
             self.client = client = yield from session.ws_connect(
-                self.cloud.relayer, headers={
+                self.cloud.relayer, heartbeat=55, headers={
                     hdrs.AUTHORIZATION:
                         'Bearer {}'.format(self.cloud.id_token)
                 })
