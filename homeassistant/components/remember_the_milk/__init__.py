@@ -95,11 +95,11 @@ def _create_instance(hass, account_name, api_key, shared_secret,
     entity = RememberTheMilk(account_name, api_key, shared_secret,
                              token, stored_rtm_config)
     component.add_entity(entity)
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, '{}_create_task'.format(account_name), entity.create_task,
         description=descriptions.get(SERVICE_CREATE_TASK),
         schema=SERVICE_SCHEMA_CREATE_TASK)
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, '{}_complete_task'.format(account_name), entity.complete_task,
         description=descriptions.get(SERVICE_COMPLETE_TASK),
         schema=SERVICE_SCHEMA_COMPLETE_TASK)
@@ -321,7 +321,7 @@ class RememberTheMilk(Entity):
         rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
         if rtm_id is None:
             _LOGGER.error('Could not find task with id %s in account %s. '
-                          'Did you create the tasks with this id?',
+                          'So task could not be closed.',
                           hass_id, self._name)
             return False
         try:
