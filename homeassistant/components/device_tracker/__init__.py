@@ -133,8 +133,9 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
 
     defaults = conf.get(CONF_NEW_DEVICE_DEFAULTS, {})
-    track_new = conf.get(CONF_TRACK_NEW) if conf.get(CONF_TRACK_NEW) \
-        is not None else defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+    track_new = conf.get(CONF_TRACK_NEW)
+    if track_new is None:
+        track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
     tracker = DeviceTracker(
