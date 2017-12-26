@@ -88,7 +88,7 @@ NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
 }))
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-    vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+    vol.Optional(CONF_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
                  default=DEFAULT_CONSIDER_HOME): vol.All(
                      cv.time_period, cv.positive_timedelta),
@@ -131,8 +131,11 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf = config.get(DOMAIN, [])
     conf = conf[0] if conf else {}
     consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
-    track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+
     defaults = conf.get(CONF_NEW_DEVICE_DEFAULTS, {})
+    track_new = conf.get(CONF_TRACK_NEW)
+    if track_new is None:
+        track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
     tracker = DeviceTracker(
@@ -227,7 +230,8 @@ class DeviceTracker(object):
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = consider_home
-        self.track_new = defaults.get(CONF_TRACK_NEW, track_new)
+        self.track_new = track_new if track_new is not None \
+            else defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
         self.defaults = defaults
         self.group = None
         self._is_updating = asyncio.Lock(loop=hass.loop)
