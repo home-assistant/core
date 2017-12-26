@@ -11,6 +11,7 @@ from os import path
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    DOMAIN,
     PLATFORM_SCHEMA,
     STATE_ECO, STATE_GAS, STATE_ELECTRIC,
     STATE_HEAT_PUMP, STATE_HIGH_DEMAND,
@@ -93,10 +94,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Handler for services."""
         entity_ids = service.data.get('entity_id')
         all_heaters = hass.data[ECONET_DATA]['water_heaters']
-        _heaters = []
-        if entity_ids is None:
-            _heaters = all_heaters
-        _heaters.extend([x for x in all_heaters if x.entity_id in entity_ids])
+        _heaters = [
+            x for x in all_heaters
+            if not entity_ids or x.entity_id in entity_ids]
 
         for _water_heater in _heaters:
             if service.service == SERVICE_ADD_VACATION:
@@ -107,15 +107,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 for vacation in _water_heater.water_heater.vacations:
                     vacation.delete()
 
+            _water_heater.schedule_update_ha_state(True)
+
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(ECONET_DATA, SERVICE_ADD_VACATION,
+    hass.services.register(DOMAIN, SERVICE_ADD_VACATION,
                            service_handle,
                            descriptions.get(SERVICE_ADD_VACATION),
                            schema=ADD_VACATION_SCHEMA)
 
-    hass.services.register(ECONET_DATA, SERVICE_DELETE_VACATION,
+    hass.services.register(DOMAIN, SERVICE_DELETE_VACATION,
                            service_handle,
                            descriptions.get(SERVICE_DELETE_VACATION),
                            schema=DELETE_VACATION_SCHEMA)
