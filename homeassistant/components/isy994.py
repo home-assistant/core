@@ -335,20 +335,15 @@ def _categorize_weather(hass: HomeAssistant, climate) -> None:
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ISY 994 platform."""
-    if ISY994_NODES not in hass.data:
-        hass.data[ISY994_NODES] = {}
+    hass.data[ISY994_NODES] = {}
     for domain in SUPPORTED_DOMAINS:
-        if domain not in hass.data[ISY994_NODES]:
-            hass.data[ISY994_NODES][domain] = []
+        hass.data[ISY994_NODES][domain] = []
 
-    if ISY994_WEATHER not in hass.data:
-        hass.data[ISY994_WEATHER] = []
+    hass.data[ISY994_WEATHER] = []
 
-    if ISY994_PROGRAMS not in hass.data:
-        hass.data[ISY994_PROGRAMS] = {}
-        for domain in SUPPORTED_DOMAINS:
-            if domain not in hass.data[ISY994_PROGRAMS]:
-                hass.data[ISY994_PROGRAMS][domain] = []
+    hass.data[ISY994_PROGRAMS] = {}
+    for domain in SUPPORTED_DOMAINS:
+        hass.data[ISY994_PROGRAMS][domain] = []
 
     isy_config = config.get(DOMAIN)
 
