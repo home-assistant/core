@@ -106,6 +106,7 @@ class TemperatureSensor(Sensor):
         return convert_temperature(
             celsius, TEMP_CELSIUS, self.unit_of_measurement)
 
+
 class CentraliteBatterySensor(Sensor):
     """ZHA battery sensor."""
 
@@ -116,20 +117,20 @@ class CentraliteBatterySensor(Sensor):
     minVolts = 15
     maxVolts = 28
     values = {
-        28:100,
-        27:100,
-        26:100,
-        25:90,
-        24:90,
-        23:70,
-        22:70,
-        21:50,
-        20:50,
-        19:30,
-        18:30,
-        17:15,
-        16:1,
-        15:0
+        28: 100,
+        27: 100,
+        26: 100,
+        25: 90,
+        24: 90,
+        23: 70,
+        22: 70,
+        21: 50,
+        20: 50,
+        19: 30,
+        18: 30,
+        17: 15,
+        16: 1,
+        15: 0
     }
 
     @property
@@ -151,6 +152,7 @@ class CentraliteBatterySensor(Sensor):
 
         return self.values.get(self._state, 'unknown')
 
+
 class MeteringSensor(Sensor):
     """ZHA Metering sensor."""
 
@@ -169,6 +171,7 @@ class MeteringSensor(Sensor):
 
         return self._state
 
+
 class IlluminanceMeasurementSensor(Sensor):
     """ZHA lux sensor."""
 
@@ -184,6 +187,7 @@ class IlluminanceMeasurementSensor(Sensor):
             return 'unknown'
 
         return self._state
+
 
 class RelativeHumiditySensor(Sensor):
     """ZHA humidity sensor."""

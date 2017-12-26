@@ -170,7 +170,8 @@ class ApplicationListener:
                 # These may be manufacturer specific profiles and they
                 # will need special handling if they are to be supported
                 # correctly.
-                _LOGGER.info("Skipping endpoint with profile_id: %s", endpoint.profile_id)
+                _LOGGER.info("Skipping endpoint with profile_id: %s", 
+                             endpoint.profile_id)
                 continue
 
             if ha_const.CONF_TYPE in node_config:
