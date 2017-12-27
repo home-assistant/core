@@ -1,6 +1,7 @@
 """The test for the NuHeat thermostat module."""
 import unittest
 from unittest.mock import Mock, patch
+from tests.common import get_test_home_assistant
 
 from homeassistant.components.climate import (
     SUPPORT_HOLD_MODE,
@@ -21,7 +22,7 @@ class TestNuHeat(unittest.TestCase):
 
     # pylint: disable=protected-access, no-self-use
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Set up test variables."""
         serial_number = "12345"
         temperature_unit = "F"
@@ -45,30 +46,61 @@ class TestNuHeat(unittest.TestCase):
         thermostat.get_data = Mock()
         thermostat.resume_schedule = Mock()
 
-        api = Mock()
-        api.get_thermostat.return_value = thermostat
+        self.api = Mock()
+        self.api.get_thermostat.return_value = thermostat
 
+        self.hass = get_test_home_assistant()
         self.thermostat = nuheat.NuHeatThermostat(
-            api, serial_number, temperature_unit)
+            self.api, serial_number, temperature_unit)
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop hass."""
+        self.hass.stop()
 
     @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
     def test_setup_platform(self, mocked_thermostat):
         """Test setup_platform."""
-        api = Mock()
-        data = {"nuheat": (api, ["12345"])}
+        mocked_thermostat.return_value = self.thermostat
+        thermostat = mocked_thermostat(self.api, "12345", "F")
+        thermostats = [thermostat]
 
-        hass = Mock()
-        hass.config.units.temperature_unit.return_value = "F"
-        hass.data = Mock()
-        hass.data.__getitem__ = Mock(side_effect=data.__getitem__)
+        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
 
         config = {}
         add_devices = Mock()
         discovery_info = {}
 
-        nuheat.setup_platform(hass, config, add_devices, discovery_info)
-        thermostats = [mocked_thermostat(api, "12345", "F")]
+        nuheat.setup_platform(self.hass, config, add_devices, discovery_info)
         add_devices.assert_called_once_with(thermostats, True)
+
+    @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
+    def test_resume_program_service(self, mocked_thermostat):
+        """Test resume program service."""
+        mocked_thermostat.return_value = self.thermostat
+        thermostat = mocked_thermostat(self.api, "12345", "F")
+        thermostat.resume_program = Mock()
+        thermostat.schedule_update_ha_state = Mock()
+        thermostat.entity_id = "climate.master_bathroom"
+
+        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
+        nuheat.setup_platform(self.hass, {}, Mock(), {})
+
+        # Explicit entity
+        self.hass.services.call(nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM,
+                                {"entity_id": "climate.master_bathroom"}, True)
+
+        thermostat.resume_program.assert_called_with()
+        thermostat.schedule_update_ha_state.assert_called_with(True)
+
+        thermostat.resume_program.reset_mock()
+        thermostat.schedule_update_ha_state.reset_mock()
+
+        # All entities
+        self.hass.services.call(
+            nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True)
+
+        thermostat.resume_program.assert_called_with()
+        thermostat.schedule_update_ha_state.assert_called_with(True)
 
     def test_name(self):
         """Test name property."""
