@@ -54,9 +54,11 @@ def run_pwm(hass, port, frequency, duty_cycle, duration):
     from homeassistant.helpers.event import track_point_in_time
     p = GPIO.PWM(port, frequency)
     p.start(duty_cycle)
+
     def stop(*args):
         """Call stop."""
         p.stop()
+
     track_point_in_time(hass, stop, duration)
 
 
