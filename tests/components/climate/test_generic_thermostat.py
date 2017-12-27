@@ -29,6 +29,8 @@ from tests.common import (assert_setup_component, get_test_home_assistant,
 ENTITY = 'climate.test'
 ENT_SENSOR = 'sensor.test'
 ENT_SWITCH = 'switch.test'
+AWAY_TEMP_HEAT = 16
+AWAY_TEMP_COOL = 30
 MIN_TEMP = 3.0
 MAX_TEMP = 65.0
 TARGET_TEMP = 42.0
@@ -184,7 +186,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_setup_defaults_to_unknown(self):
         """Test the setting of defaults to unknown."""
-        self.assertEqual('idle', self.hass.states.get(ENTITY).state)
+        self.assertEqual('heat', self.hass.states.get(ENTITY).state)
 
     def test_default_setup_params(self):
         """Test the setup with default parameters."""
@@ -197,7 +199,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Test that the operation list returns the correct modes."""
         state = self.hass.states.get(ENTITY)
         modes = state.attributes.get('operation_list')
-        self.assertEqual([climate.STATE_AUTO, STATE_OFF], modes)
+        self.assertEqual([climate.STATE_HEAT, STATE_OFF], modes)
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
@@ -337,8 +339,8 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(log_mock.call_count, 1)
 
-    def test_operating_mode_auto(self):
-        """Test change mode from OFF to AUTO.
+    def test_operating_mode_heat(self):
+        """Test change mode from OFF to HEAT.
 
         Switch turns on when temp below setpoint and mode changes.
         """
@@ -347,7 +349,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self._setup_sensor(25)
         self.hass.block_till_done()
         self._setup_switch(False)
-        climate.set_operation_mode(self.hass, climate.STATE_AUTO)
+        climate.set_operation_mode(self.hass, climate.STATE_HEAT)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
@@ -891,16 +893,13 @@ def test_custom_setup_params(hass):
             'target_sensor': ENT_SENSOR,
             'min_temp': MIN_TEMP,
             'max_temp': MAX_TEMP,
-            'target_temp': TARGET_TEMP,
-            'initial_operation_mode': STATE_OFF,
+            'target_temp': TARGET_TEMP
         }})
     assert result
     state = hass.states.get(ENTITY)
     assert state.attributes.get('min_temp') == MIN_TEMP
     assert state.attributes.get('max_temp') == MAX_TEMP
     assert state.attributes.get('temperature') == TARGET_TEMP
-    assert state.attributes.get(climate.ATTR_OPERATION_MODE) == STATE_OFF
-
 
 @asyncio.coroutine
 def test_restore_state(hass):
@@ -927,7 +926,7 @@ def test_restore_state(hass):
 
 @asyncio.coroutine
 def test_no_restore_state(hass):
-    """Ensure states are not restored on startup if not needed."""
+    """Ensure states are restored on startup if they exist. Allows for graceful reboot."""
     mock_restore_cache(hass, (
         State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
               climate.ATTR_OPERATION_MODE: "off"}),
@@ -941,10 +940,8 @@ def test_no_restore_state(hass):
             'name': 'test_thermostat',
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
-            'target_temp': 22,
-            'initial_operation_mode': 'auto',
+            'target_temp': 22
         }})
 
     state = hass.states.get('climate.test_thermostat')
-    assert(state.attributes[ATTR_TEMPERATURE] == 22)
-    assert(state.attributes[climate.ATTR_OPERATION_MODE] != "off")
+    assert(state.attributes[ATTR_TEMPERATURE] == 20)
