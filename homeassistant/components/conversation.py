@@ -12,20 +12,27 @@ import warnings
 import voluptuous as vol
 
 from homeassistant import core
-from homeassistant.loader import bind_hass
+from homeassistant.components import http
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-from homeassistant.helpers import intent, config_validation as cv
-from homeassistant.components import http
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import intent
+from homeassistant.loader import bind_hass
 
+REQUIREMENTS = ['fuzzywuzzy==0.16.0']
 
-REQUIREMENTS = ['fuzzywuzzy==0.15.1']
-DEPENDENCIES = ['http']
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_TEXT = 'text'
+
+DEPENDENCIES = ['http']
 DOMAIN = 'conversation'
 
+INTENT_TURN_OFF = 'HassTurnOff'
+INTENT_TURN_ON = 'HassTurnOn'
+
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
+REGEX_TYPE = type(re.compile(''))
 
 SERVICE_PROCESS = 'process'
 
@@ -38,12 +45,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
         cv.string: vol.All(cv.ensure_list, [cv.string])
     })
 })}, extra=vol.ALLOW_EXTRA)
-
-INTENT_TURN_ON = 'HassTurnOn'
-INTENT_TURN_OFF = 'HassTurnOff'
-REGEX_TYPE = type(re.compile(''))
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @core.callback

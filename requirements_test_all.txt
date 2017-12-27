@@ -59,7 +59,7 @@ evohomeclient==0.2.5
 feedparser==5.2.1
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.15.1
+fuzzywuzzy==0.16.0
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
