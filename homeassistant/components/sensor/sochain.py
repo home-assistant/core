@@ -1,5 +1,5 @@
 """
-Support for sochain sensors. (LTC, DOGE, DASH, BTC)
+Support for watching multiple cryptocurrencies.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sochain/
