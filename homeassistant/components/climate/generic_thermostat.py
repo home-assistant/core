@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, ClimateDevice, PLATFORM_SCHEMA,
+    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice,
     ATTR_OPERATION_MODE, ATTR_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -153,6 +153,17 @@ class GenericThermostat(ClimateDevice):
             if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
                 self._current_operation = STATE_OFF
                 self._enabled = False
+
+    @property
+    def state(self):
+        """Return the current state."""
+        if self._is_device_active:
+            return self.current_operation
+        else:
+            if self._enabled:
+                return STATE_IDLE
+            else:
+                return STATE_OFF
 
     @property
     def should_poll(self):
