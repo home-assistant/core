@@ -18,12 +18,12 @@ VALID_CONFIG = {
 class TestNuHeat(unittest.TestCase):
     """Test the NuHeat component."""
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Initialize the values for this test class."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         """Teardown this test class. Stop hass."""
         self.hass.stop()
 
