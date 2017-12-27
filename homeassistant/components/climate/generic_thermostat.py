@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
-    STATE_AUTO, ATTR_OPERATION_MODE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    STATE_HEAT, STATE_COOL, ClimateDevice, PLATFORM_SCHEMA,
+    ATTR_OPERATION_MODE, ATTR_AWAY_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -45,7 +45,8 @@ CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 CONF_AWAY_TEMP_COOL = 'away_temp_cool'
 CONF_AWAY_TEMP_HEAT = 'away_temp_heat'
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
+                 SUPPORT_OPERATION_MODE)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
@@ -63,9 +64,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_AWAY_TEMP_HEAT,
-        default=DEFAULT_AWAY_TEMP_HEAT): vol.Coerce(float),
+                 default=DEFAULT_AWAY_TEMP_HEAT): vol.Coerce(float),
     vol.Optional(CONF_AWAY_TEMP_COOL,
-        default=DEFAULT_AWAY_TEMP_COOL): vol.Coerce(float)
+                 default=DEFAULT_AWAY_TEMP_COOL): vol.Coerce(float)
 })
 
 
@@ -97,7 +98,8 @@ class GenericThermostat(ClimateDevice):
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
-                 cold_tolerance, hot_tolerance, keep_alive, away_temp_heat, away_temp_cool):
+                 cold_tolerance, hot_tolerance, keep_alive,
+                 away_temp_heat, away_temp_cool):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
@@ -110,9 +112,13 @@ class GenericThermostat(ClimateDevice):
         if self.ac_mode:
             self._current_operation = STATE_COOL
             self._operation_list = [STATE_COOL, STATE_OFF]
+            self._saved_target_temp = target_temp if target_temp is not None \
+                else away_temp_cool
         else:
             self._current_operation = STATE_HEAT
             self._operation_list = [STATE_HEAT, STATE_OFF]
+            self._saved_target_temp = target_temp if target_temp is not None \
+                else away_temp_heat
         self._enabled = True
         self._active = False
         self._cur_temp = None
@@ -123,7 +129,6 @@ class GenericThermostat(ClimateDevice):
         self._away_temp_heat = away_temp_heat
         self._away_temp_cool = away_temp_cool
         self._is_away = False
-        self._saved_target_temp = target_temp
 
         async_track_state_change(
             hass, sensor_entity_id, self._async_sensor_changed)
@@ -134,10 +139,6 @@ class GenericThermostat(ClimateDevice):
             async_track_time_interval(
                 hass, self._async_keep_alive, self._keep_alive)
 
-        sensor_state = hass.states.get(sensor_entity_id)
-        if sensor_state:
-            self._async_update_temp(sensor_state)
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -147,7 +148,8 @@ class GenericThermostat(ClimateDevice):
         if old_state is not None:
             self._target_temp = float(
                 old_state.attributes[ATTR_TEMPERATURE])
-
+            self._is_away = True if str(
+                old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON else False
             if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
                 self._current_operation = STATE_OFF
                 self._enabled = False
@@ -174,7 +176,7 @@ class GenericThermostat(ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation"""
+        """Return current operation."""
         return self._current_operation
 
     @property
@@ -367,7 +369,6 @@ class GenericThermostat(ClimateDevice):
             self._target_temp = self._away_temp_cool
         else:
             self._target_temp = self._away_temp_heat
-        
         self._async_control_heating()
         self.schedule_update_ha_state()
 
