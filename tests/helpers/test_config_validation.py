@@ -453,9 +453,11 @@ def test_deprecated(caplog):
     )
 
     deprecated_schema({'venus': True})
-    assert "venus" not in caplog.text
+    assert len(caplog.records) == 0
 
     deprecated_schema({'mars': True})
+    assert len(caplog.records) == 1
+    assert caplog.records[0].name == __name__
     assert ("The 'mars' option (with value 'True') is deprecated, "
             "please remove it from your configuration.") in caplog.text
 
