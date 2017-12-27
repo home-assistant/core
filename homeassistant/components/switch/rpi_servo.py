@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.rpi_gpio/
 import logging
 
 import voluptuous as vol
-import homeassistant.components.rpi_gpio as GPIO
+import homeassistant.components.rpi_gpio as gpio
+from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import ToggleEntity
@@ -54,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
-        switches.append(RPiGPIOServo(name, port, inactive_position,
+        switches.append(RPiGPIOServo(hass, name, port, inactive_position,
                                      position_on, position_off,
                                      enabled_duration))
     add_devices(switches)
@@ -63,9 +64,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RPiGPIOServo(ToggleEntity):
     """Representation of a  Raspberry Pi GPIO Servo."""
 
-    def __init__(self, name, port, inactive_position, position_on,
+    def __init__(self, hass, name, port, inactive_position, position_on,
                  position_off, enabled_duration):
         """Initialize the servo."""
+        self._hass = hass
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._state = False
@@ -73,7 +75,7 @@ class RPiGPIOServo(ToggleEntity):
         self._position_on = position_on
         self._position_off = position_off
         self._enabled_duration = enabled_duration
-        GPIO.setup_output(port)
+        gpio.setup_output(port)
 
     @property
     def name(self):
@@ -107,11 +109,17 @@ class RPiGPIOServo(ToggleEntity):
     def _run_with_duty(self, duty):
         """Turn the servo to the given duty."""
         if self._enabled_duration == 0:
-            GPIO.run_pwm(self._port, 50, duty, 2)
+            gpio.run_pwm(self._hass, self._port, 50, duty, 2)
         else:
-            GPIO.run_pwm(self._port, 50, duty, self._enabled_duration)
+            gpio.run_pwm(self._hass, self._port, 50, duty,
+                         self._enabled_duration)
             duty = get_duty(self._inactive_position)
-            GPIO.run_pwm(self._port, 50, duty, self._enabled_duration)
+
+            def inactivate(*args):
+                """Return the servo to inactive position."""
+                gpio.run_pwm(self._port, 50, duty, self._enabled_duration)
+
+            track_point_in_time(self._hass, inactivate, self._enabled_duration)
 
 
 def get_duty(degrees):

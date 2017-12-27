@@ -48,14 +48,16 @@ def setup_input(port, pull_mode):
                GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)
 
 
-def run_pwm(port, frequency, duty_cycle, duration):
+def run_pwm(hass, port, frequency, duty_cycle, duration):
     """Run GPIO as PWM."""
     import RPi.GPIO as GPIO
-    import time
+    from homeassistant.helpers.event import track_point_in_time
     p = GPIO.PWM(port, frequency)
     p.start(duty_cycle)
-    time.sleep(duration)
-    p.stop()
+    def stop(*args):
+        """Call stop."""
+        p.stop()
+    track_point_in_time(hass, stop, duration)
 
 
 def write_output(port, value):
