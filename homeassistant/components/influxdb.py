@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
-    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_EXCLUDE, CONF_INCLUDE, CONF_DOMAINS, CONF_ENTITIES)
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
@@ -37,7 +37,6 @@ CONF_RETRY_COUNT = 'max_retries'
 CONF_RETRY_QUEUE = 'retry_queue_limit'
 
 DEFAULT_DATABASE = 'home_assistant'
-DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
 TIMEOUT = 5
 
@@ -71,7 +70,6 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_COMPONENT_CONFIG, default={}):
             vol.Schema({cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}):
@@ -93,7 +91,7 @@ def setup(hass, config):
 
     kwargs = {
         'database': conf[CONF_DB_NAME],
-        'verify_ssl': conf[CONF_VERIFY_SSL],
+        'verify_ssl': True,
         'timeout': TIMEOUT
     }
 

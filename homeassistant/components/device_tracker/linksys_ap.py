@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
 
@@ -47,7 +46,6 @@ class LinksysAPDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.verify_ssl = config[CONF_VERIFY_SSL]
         self.last_results = []
 
         # Check if the access point is accessible
@@ -95,5 +93,5 @@ class LinksysAPDeviceScanner(DeviceScanner):
         url = 'https://{}/StatusClients.htm&&unit={}&vap=0'.format(
             self.host, unit)
         return requests.get(
-            url, timeout=DEFAULT_TIMEOUT, verify=self.verify_ssl,
+            url, timeout=DEFAULT_TIMEOUT, verify=True,
             cookies={'LoginName': login, 'LoginPWD': pwd})

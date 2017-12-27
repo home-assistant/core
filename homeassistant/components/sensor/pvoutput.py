@@ -30,7 +30,6 @@ ATTR_EFFICIENCY = 'efficiency'
 CONF_SYSTEM_ID = 'system_id'
 
 DEFAULT_NAME = 'PVOutput'
-DEFAULT_VERIFY_SSL = True
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
@@ -48,13 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     system_id = config.get(CONF_SYSTEM_ID)
     method = 'GET'
     payload = auth = None
-    verify_ssl = DEFAULT_VERIFY_SSL
     headers = {
         'X-Pvoutput-Apikey': api_key,
         'X-Pvoutput-SystemId': system_id,
     }
 
-    rest = RestData(method, _ENDPOINT, auth, headers, payload, verify_ssl)
+    rest = RestData(method, _ENDPOINT, auth, headers, payload)
     rest.update()
 
     if rest.data is None:

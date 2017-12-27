@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT)
+    CONF_URL, CONF_WHITELIST, CONF_TIMEOUT)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers.aiohttp_client import (
@@ -34,14 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_WHITELIST, default=[]): cv.ensure_list,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a Synology IP Camera."""
-    verify_ssl = config.get(CONF_VERIFY_SSL)
+    verify_ssl = True
     timeout = config.get(CONF_TIMEOUT)
 
     try:

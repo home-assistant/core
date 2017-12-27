@@ -12,7 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.const import CONF_VERIFY_SSL
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pyunifi==2.13']
@@ -36,8 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): vol.Any(
-        cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta)
 })
@@ -52,12 +49,11 @@ def get_scanner(hass, config):
     password = config[DOMAIN].get(CONF_PASSWORD)
     site_id = config[DOMAIN].get(CONF_SITE_ID)
     port = config[DOMAIN].get(CONF_PORT)
-    verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
     detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
 
     try:
         ctrl = Controller(host, username, password, port, version='v4',
-                          site_id=site_id, ssl_verify=verify_ssl)
+                          site_id=site_id, ssl_verify=True)
     except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
         hass.components.persistent_notification.create(

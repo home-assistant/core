@@ -9,7 +9,6 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.components.netatmo import CameraData
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
@@ -23,7 +22,6 @@ CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Optional(CONF_HOME): cv.string,
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
@@ -35,7 +33,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up access to Netatmo cameras."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME)
-    verify_ssl = config.get(CONF_VERIFY_SSL, True)
     import lnetatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
@@ -46,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    camera_name not in config[CONF_CAMERAS]:
                     continue
             add_devices([NetatmoCamera(data, camera_name, home,
-                                       camera_type, verify_ssl)])
+                                       camera_type)])
     except lnetatmo.NoDevice:
         return None
 
@@ -54,12 +51,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
-    def __init__(self, data, camera_name, home, camera_type, verify_ssl):
+    def __init__(self, data, camera_name, home, camera_type):
         """Set up for access to the Netatmo camera images."""
         super(NetatmoCamera, self).__init__()
         self._data = data
         self._camera_name = camera_name
-        self._verify_ssl = verify_ssl
         if home:
             self._name = home + ' / ' + camera_name
         else:
@@ -81,7 +77,7 @@ class NetatmoCamera(Camera):
                     self._localurl), timeout=10)
             elif self._vpnurl:
                 response = requests.get('{0}/live/snapshot_720.jpg'.format(
-                    self._vpnurl), timeout=10, verify=self._verify_ssl)
+                    self._vpnurl), timeout=10, verify=True)
             else:
                 _LOGGER.error("Welcome VPN URL is None")
                 self._data.update()

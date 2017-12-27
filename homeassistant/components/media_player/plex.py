@@ -61,10 +61,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             has_ssl = host_config['ssl']
         except KeyError:
             has_ssl = False
-        try:
-            verify_ssl = host_config['verify']
-        except KeyError:
-            verify_ssl = True
 
     # Via discovery
     elif discovery_info is not None:
@@ -78,28 +74,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             return
         token = None
         has_ssl = False
-        verify_ssl = True
     else:
         return
 
-    setup_plexserver(
-        host, token, has_ssl, verify_ssl,
-        hass, config, add_devices_callback
-    )
+    setup_plexserver(host, token, has_ssl, hass, config, add_devices_callback)
 
 
 def setup_plexserver(
-        host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
+        host, token, has_ssl, hass, config, add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
 
     cert_session = None
     http_prefix = 'https' if has_ssl else 'http'
-    if has_ssl and (verify_ssl is False):
-        _LOGGER.info("Ignoring SSL verification")
-        cert_session = requests.Session()
-        cert_session.verify = False
     try:
         plexserver = plexapi.server.PlexServer(
             '%s://%s' % (http_prefix, host),
@@ -125,7 +113,6 @@ def setup_plexserver(
         hass.config.path(PLEX_CONFIG_FILE), {host: {
             'token': token,
             'ssl': has_ssl,
-            'verify': verify_ssl,
         }})
 
     _LOGGER.info('Connected to: %s://%s', http_prefix, host)
@@ -220,7 +207,6 @@ def request_configuration(host, hass, config, add_devices_callback):
         setup_plexserver(
             host, data.get('token'),
             cv.boolean(data.get('has_ssl')),
-            cv.boolean(data.get('do_not_verify')),
             hass, config, add_devices_callback
         )
 
@@ -237,10 +223,6 @@ def request_configuration(host, hass, config, add_devices_callback):
         }, {
             'id': 'has_ssl',
             'name': 'Use SSL',
-            'type': ''
-        }, {
-            'id': 'do_not_verify_ssl',
-            'name': 'Do not verify SSL',
             'type': ''
         }])
 

@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
-                                 CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL,
+                                 CONF_PASSWORD, CONF_SSL,
                                  CONF_NAME, CONF_UNIT_OF_MEASUREMENT,
                                  CONF_VALUE_TEMPLATE)
 from homeassistant.const import STATE_UNKNOWN
@@ -28,7 +28,6 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = False
 DEFAULT_GROUP_FUNCTION = 'mean'
 DEFAULT_FIELD = 'value'
 
@@ -59,7 +58,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
 })
 
 # Return cached results if last scan was less then this time ago
@@ -74,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'port': config.get(CONF_PORT),
         'ssl': config.get(CONF_SSL),
         'username': config.get(CONF_USERNAME),
-        'verify_ssl': config.get(CONF_VERIFY_SSL),
     }
 
     dev = []
@@ -112,7 +109,7 @@ class InfluxSensor(Entity):
             host=influx_conf['host'], port=influx_conf['port'],
             username=influx_conf['username'], password=influx_conf['password'],
             database=database, ssl=influx_conf['ssl'],
-            verify_ssl=influx_conf['verify_ssl'])
+            verify_ssl=True)
         try:
             influx.query("select * from /.*/ LIMIT 1;")
             self.connected = True

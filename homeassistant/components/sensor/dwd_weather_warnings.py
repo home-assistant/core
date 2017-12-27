@@ -176,7 +176,7 @@ class DwdWeatherWarningsAPI(object):
             'jsonp=loadWarnings'
         )
 
-        self._rest = RestData('GET', resource, None, None, None, True)
+        self._rest = RestData('GET', resource, None, None, None)
         self.region_name = region_name
         self.region_id = None
         self.region_state = None
