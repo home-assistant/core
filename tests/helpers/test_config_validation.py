@@ -441,6 +441,25 @@ def test_datetime():
     schema('2016-11-23T18:59:08')
 
 
+def test_deprecated(caplog):
+    """Test deprecation log."""
+    schema = vol.Schema({
+        'venus': cv.boolean,
+        'mars': cv.boolean
+    })
+    deprecated_schema = vol.All(
+        cv.deprecated('mars'),
+        schema
+    )
+
+    deprecated_schema({'venus': True})
+    assert "venus" not in caplog.text
+
+    deprecated_schema({'mars': True})
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration.") in caplog.text
+
+
 def test_key_dependency():
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency('beer', 'soda'))
