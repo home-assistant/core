@@ -14,6 +14,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (CONF_NAME, CONF_DEVICES,
                                  CONF_PLATFORM, CONF_ADDRESS)
 from homeassistant.helpers import config_validation as cv
+from pymochad.exceptions import MochadException 
 
 DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
@@ -66,33 +67,33 @@ class MochadSwitch(SwitchDevice):
         """Turn the switch on."""
         with mochad.REQ_LOCK:
             try:
-                self._state = True
                 # Recycle socket on new command to recover mochad connection
                 _LOGGER.debug("Reconnect %s:%s", self._controller.server,
-                                self._controller.port)
+                              self._controller.port)
                 self._controller.reconnect()
                 self.device.send_cmd('on')
                 # No read data on CM19A which is rf only
                 if (self._comm_type == 'pl'):
                     self._controller.read_data()
-            except Exception as e:
-                _LOGGER.error("Error with mochad communication: %s", e)
+                self._state = True
+            except (MochadException, OSError) as exc:
+                _LOGGER.error("Error with mochad communication: %s", exc)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         with mochad.REQ_LOCK:
             try:
-                self._state = False
                 # Recycle socket on new command to recover mochad connection
                 _LOGGER.debug("Reconnect %s:%s", self._controller.server,
-                                self._controller.port)
+                              self._controller.port)
                 self._controller.reconnect()
                 self.device.send_cmd('off')
                 # No read data on CM19A which is rf only
                 if (self._comm_type == 'pl'):
                     self._controller.read_data()
-            except Exception as e:
-                _LOGGER.error("Error with mochad communication: %s", e)
+                self._state = False
+            except (MochadException, OSError) as exc:
+                _LOGGER.error("Error with mochad communication: %s", exc)
 
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
