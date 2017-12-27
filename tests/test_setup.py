@@ -461,6 +461,6 @@ def test_component_warn_slow_setup(hass):
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
         assert timeout == setup.SLOW_SETUP_WARNING
-        assert logger_method == setup._LOGGER.warning
+        assert logger_method == setup._LOGGER.info
 
         assert mock_call().cancel.called
