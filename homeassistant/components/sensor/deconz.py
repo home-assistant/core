@@ -55,7 +55,9 @@ class DeconzSensor(Entity):
     @callback
     def async_update_callback(self, reason):
         """Update the sensor's state, if reason is that state is updated."""
-        if reason['state']:
+        if reason['state'] or \
+           'reachable' in reason['attr'] or \
+           'battery' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -108,7 +110,6 @@ class DeconzBattery(Entity):
     def __init__(self, device):
         """Register dispatcher callback for update of battery state."""
         self._device = device
-        self._battery = device.battery
         self._name = self._device.name + ' Battery Level'
         self._device_class = 'battery'
         self._unit_of_measurement = "%"
@@ -117,14 +118,13 @@ class DeconzBattery(Entity):
     @callback
     def async_update_callback(self, reason):
         """Update the battery's state, if needed."""
-        if self._battery != self._device.battery:
-            self._battery = self._device.battery
+        if 'battery' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
     def state(self):
         """Return the state of the battery."""
-        return self._battery
+        return self._device.battery
 
     @property
     def name(self):

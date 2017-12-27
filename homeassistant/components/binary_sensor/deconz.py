@@ -44,8 +44,14 @@ class DeconzBinarySensor(BinarySensorDevice):
 
     @callback
     def async_update_callback(self, reason):
-        """Update the sensor's state, if reason is that state is updated."""
-        if reason['state']:
+        """Update the sensor's state.
+
+        If reason is that state is updated,
+        or reachable has changed or battery has changed."""
+        print('reason', reason)
+        if reason['state'] or \
+           'reachable' in reason['attr'] or \
+           'battery' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property

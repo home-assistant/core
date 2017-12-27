@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==21']
+REQUIREMENTS = ['pydeconz==22']
 
 _LOGGER = logging.getLogger(__name__)
 
