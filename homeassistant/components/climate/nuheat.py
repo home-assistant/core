@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     STATE_AUTO,
     STATE_HEAT,
     STATE_IDLE)
-from homeassistant.components.nuheat import DATA_NUHEAT
+from homeassistant.components.nuheat import DOMAIN as NUHEAT_DOMAIN
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     temperature_unit = hass.config.units.temperature_unit
-    api, serial_numbers = hass.data[DATA_NUHEAT]
+    api, serial_numbers = hass.data[NUHEAT_DOMAIN]
     thermostats = [
         NuHeatThermostat(api, serial_number, temperature_unit)
         for serial_number in serial_numbers
@@ -74,7 +74,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def resume_program_set_service(service):
         """Resume the program on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
-
         if entity_id:
             target_thermostats = [device for device in thermostats
                                   if device.entity_id in entity_id]
@@ -93,6 +92,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
         descriptions.get(SERVICE_RESUME_PROGRAM),
         schema=RESUME_PROGRAM_SCHEMA)
+
+    return True
 
 
 class NuHeatThermostat(ClimateDevice):
