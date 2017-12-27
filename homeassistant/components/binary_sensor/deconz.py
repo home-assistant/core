@@ -47,8 +47,8 @@ class DeconzBinarySensor(BinarySensorDevice):
         """Update the sensor's state.
 
         If reason is that state is updated,
-        or reachable has changed or battery has changed."""
-        print('reason', reason)
+        or reachable has changed or battery has changed.
+        """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
            'battery' in reason['attr']:
