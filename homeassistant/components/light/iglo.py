@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
-    add_devices([IGloLamp(name, host, port)])
+    add_devices([IGloLamp(name, host, port)], True)
 
 
 class IGloLamp(Light):
@@ -46,11 +46,7 @@ class IGloLamp(Light):
         """Initialize the light."""
         from iglo import Lamp
         self._name = name
-        self._host = host
-        self._port = port
         self._lamp = Lamp(0, host, port)
-        self.update()
-        self._on = True
 
     @property
     def name(self):
@@ -96,25 +92,23 @@ class IGloLamp(Light):
         """Turn the light on."""
         if not self._on:
             self._lamp.switch(True)
-            self._on = True
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = int((kwargs[ATTR_BRIGHTNESS] / 255.0) * 200.0)
-            self._lamp.brightness(self._brightness)
+            brightness = int((kwargs[ATTR_BRIGHTNESS] / 255.0) * 200.0)
+            self._lamp.brightness(brightness)
             return
 
         if ATTR_RGB_COLOR in kwargs:
-            self._rgb = kwargs[ATTR_RGB_COLOR]
-            self._lamp.rgb(*self._rgb)
+            rgb = kwargs[ATTR_RGB_COLOR]
+            self._lamp.rgb(*rgb)
             return
 
         if ATTR_COLOR_TEMP in kwargs:
-            self._color_temp = 255 - kwargs[ATTR_COLOR_TEMP]
-            self._lamp.white(self._color_temp)
+            color_temp = 255 - kwargs[ATTR_COLOR_TEMP]
+            self._lamp.white(color_temp)
             return
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self._on = False
         self._lamp.switch(False)
 
     def update(self):
