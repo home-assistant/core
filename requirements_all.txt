@@ -820,7 +820,7 @@ pysma==0.1.3
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
-pysnmp==4.4.2
+pysnmp==4.4.3
 
 # homeassistant.components.media_player.liveboxplaytv
 pyteleloisirs==3.3
