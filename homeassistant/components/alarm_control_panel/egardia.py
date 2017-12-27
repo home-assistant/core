@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 raise IOError("Binding error occurred while " +
                               "starting EgardiaServer")
         except IOError as ioe:
-            errormessage = "Unable to start EgardiaServer: ", ioe.message
+            errormessage = "Unable to start EgardiaServer: ", ioe
             _LOGGER.error(errormessage)
             return False
 
