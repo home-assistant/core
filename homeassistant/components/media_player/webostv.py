@@ -39,8 +39,6 @@ DEFAULT_NAME = 'LG webOS Smart TV'
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
-ATTR_CHANNEL = 'channel'
-
 SUPPORT_WEBOSTV = SUPPORT_TURN_OFF | \
     SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
@@ -199,12 +197,7 @@ class LgWebOSDevice(MediaPlayerDevice):
             if self._state is not STATE_OFF:
                 self._muted = self._client.get_muted()
                 self._volume = self._client.get_volume()
-
-                ch = self._client.get_current_channel()
-                if 'channelName' in ch:
-                   self._channel = ch['channelName']
-                else:
-                   self._channel = None
+                self._channel = self._client.get_current_channel()
 
                 self._source_list = {}
                 self._app_list = {}
@@ -366,13 +359,5 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._client.rewind()
 
     @property 
-    def channel(self):
-        """Return current TV channel"""
-        return self._channel
-
-    @property
-    def device_state_attributes(self):
-        if self._state is not STATE_OFF:
-           return { ATTR_CHANNEL: self.channel }
-        else:
-           return None
+    def media_title(self):
+        return self._channel['channelName'] if (self._channel!=None) and ('channelName' in self._channel) else None
