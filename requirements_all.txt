@@ -1187,7 +1187,7 @@ yahoo-finance==1.4.0
 
 # homeassistant.components.sensor.yweather
 # homeassistant.components.weather.yweather
-yahooweather==0.9
+yahooweather==0.10
 
 # homeassistant.components.light.yeelight
 yeelight==0.3.3
