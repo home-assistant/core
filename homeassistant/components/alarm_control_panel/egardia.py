@@ -16,7 +16,7 @@ from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN,
     CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['pythonegardia==1.0.25']
 
@@ -94,24 +94,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Setting up EgardiaServer")
         try:
             if D_EGARDIASRV not in hass.data:
-                hass.data[D_EGARDIASRV] = egardiaserver.EgardiaServer('',
-                                                                      rs_port)
-                bound = hass.data[D_EGARDIASRV].bind()
+                server = egardiaserver.EgardiaServer('', rs_port)
+                hass.data[D_EGARDIASRV] = server
+                bound = server.bind()
 
                 if not bound:
                     raise IOError("Binding error occurred while " +
                                   "starting EgardiaServer")
-                hass.data[D_EGARDIASRV].register_callback(
-                    eg_dev.handle_status_event)
-                hass.data[D_EGARDIASRV].start()
+                server.register_callback(eg_dev.handle_status_event)
+                server.start()
         except IOError:
             return False
 
     def handle_stop_event(event):
+        """Callback function for HA stop event."""
         hass.data[D_EGARDIASRV].stop()
 
     # listen to home assistant stop event
-    hass.bus.listen('homeassistant_stop', handle_stop_event)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
 
     # add egardia alarm device
     add_devices([eg_dev], True)
