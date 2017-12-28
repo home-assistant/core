@@ -316,7 +316,7 @@ class HistoryPeriodView(HomeAssistantView):
                     result.remove(state_list)
         sorted_result.extend(result)
 
-        return self.json(result)
+        return self.json(sorted_result)
 
 
 class Filters(object):
