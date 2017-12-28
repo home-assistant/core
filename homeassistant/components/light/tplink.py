@@ -8,10 +8,13 @@ import logging
 import colorsys
 import time
 
+import voluptuous as vol
+
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, PLATFORM_SCHEMA)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
@@ -26,6 +29,13 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CURRENT_CONSUMPTION = 'current_consumption'
 ATTR_DAILY_CONSUMPTION = 'daily_consumption'
 ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
+
+DEFAULT_NAME = 'TP-Link Light'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
