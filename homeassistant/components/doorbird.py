@@ -74,5 +74,5 @@ class DoorbirdRequestView(HomeAssistantView):
     def get(self, request, sensor):
         """Respond to requests from the device."""
         hass = request.app["hass"]
-        hass.bus.fire("{}_{}".format(DOMAIN, sensor))
+        hass.bus.async_fire("{}_{}".format(DOMAIN, sensor))
         return "OK"
