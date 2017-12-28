@@ -267,6 +267,11 @@ class LgWebOSDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         return MEDIA_TYPE_CHANNEL
 
+    @property 
+    def media_title(self):
+        """Title of current playing media."""
+        return self._channel['channelName'] if (self._channel!=None) and ('channelName' in self._channel) else None
+
     @property
     def media_image_url(self):
         """Image url of current playing media."""
@@ -357,7 +362,3 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self._client.rewind()
-
-    @property 
-    def media_title(self):
-        return self._channel['channelName'] if (self._channel!=None) and ('channelName' in self._channel) else None
