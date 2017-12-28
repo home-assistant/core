@@ -4,6 +4,8 @@ Support for watching multiple cryptocurrencies.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sochain/
 """
+import asyncio
+import logging
 from datetime import timedelta
 
 import voluptuous as vol
@@ -12,8 +14,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['python-sochain-api==0.0.1']
+REQUIREMENTS = ['python-sochain-api==0.0.2']
 
 CONF_ADDRESS = 'address'
 CONF_NETWORK = 'network'
@@ -30,25 +33,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the sochain sensors."""
     address = config.get(CONF_ADDRESS)
     network = config.get(CONF_NETWORK)
     name = config.get(CONF_NAME)
 
-    add_devices([SochainSensor(name, network, address)], True)
+    connection = SochainSensor(hass, name, network, address)
+    yield from connection.async_update()
+
+    if connection.state is None:
+        _LOGGER.error("Check that your network and address is correct")
+        return False
+
+    async_add_devices([connection])
 
 
 class SochainSensor(Entity):
     """Representation of a Sochain sensor."""
 
-    def __init__(self, name, network, address):
+    def __init__(self, hass, name, network, address):
         """Initialize the sensor."""
+        from pysochain import ChainSo
+        self.hass = hass
         self._name = name
-        self.network = network
-        self.address = address
-        self._state = None
         self._unit_of_measurement = network.upper()
+        self._websession = async_get_clientsession(self.hass)
+        self.chainso = ChainSo(network, address, self.hass.loop, self._websession)
 
     @property
     def name(self):
@@ -58,7 +70,8 @@ class SochainSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self.chainso.data.get("confirmed_balance") \
+            if self.chainso is not None else None
 
     @property
     def unit_of_measurement(self):
@@ -72,7 +85,7 @@ class SochainSensor(Entity):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest state of the sensor."""
-        from pysochain import get_balance
-        self._state = get_balance(self.network, self.address)
+        yield from self.chainso.async_get_data()
