@@ -988,4 +988,4 @@ def test_no_restore_state(hass):
         }})
 
     state = hass.states.get('climate.test_thermostat')
-    assert(state.attributes[ATTR_TEMPERATURE] == 20)
+    assert(state.attributes[ATTR_TEMPERATURE] == 22)
