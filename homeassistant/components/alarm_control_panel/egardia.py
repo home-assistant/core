@@ -34,7 +34,7 @@ DEFAULT_REPORT_SERVER_ENABLED = False
 DEFAULT_REPORT_SERVER_PORT = 52010
 DEFAULT_VERSION = 'GATE-01'
 DOMAIN = 'egardia'
-DATA_EGARDIASERVER = 'egardiaserver'
+D_EGARDIASRV = 'egardiaserver'
 NOTIFICATION_ID = 'egardia_notification'
 NOTIFICATION_TITLE = 'Egardia'
 
@@ -86,20 +86,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to authorize. Wrong password or username")
         return False
 
-    
     if rs_enabled:
         # Set up the egardia server
         _LOGGER.info("Setting up EgardiaServer")
         try:
-            if DATA_EGARDIASERVER not in hass.data:
-                hass.data[DATA_EGARDIASERVER] = egardiaserver.EgardiaServer('', rs_port)
-                bound = hass.data[DATA_EGARDIASERVER].bind()
+            if D_EGARDIASRV not in hass.data:
+                hass.data[D_EGARDIASRV] = egardiaserver.EgardiaServer('',
+                                                                      rs_port)
+                bound = hass.data[D_EGARDIASRV].bind()
                 if not bound:
                     raise IOError("Binding error occurred while " +
-                                 "starting EgardiaServer")
-        except IOError as ioe:
+                                  "starting EgardiaServer")
+        except IOError:
             return False
-    
+
     add_devices([EgardiaAlarm(
         name, egardiasystem, hass, rs_codes)], True)
 
@@ -113,7 +113,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         self._name = name
         self._egardiasystem = egardiasystem
         self._status = None
-        self._egardiaserver = hass.data[DATA_EGARDIASERVER]
+        self._egardiaserver = hass.data[D_EGARDIASRV]
         self._hass = hass
 
         if rs_codes is not None:
@@ -124,7 +124,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         if self._egardiaserver is not None:
             _LOGGER.debug("Starting EgardiaServer and registering callback")
             # Register callback for alarm status changes through EgardiaServer
-            self._egardiaserver.register_callback(self.handle_system_status_event)
+            self._egardiaserver.register_callback(self.handle_status_event)
             self._egardiaserver.start()
 
     @property
@@ -144,7 +144,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
             return True
         return False
 
-    def handle_system_status_event(self, event):
+    def handle_status_event(self, event):
         """Handle egardia_system_status_event."""
         statuscode = event.get('status')
         if statuscode is not None:
