@@ -24,7 +24,7 @@ from homeassistant.const import (ATTR_ENTITY_ID,
                                  ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyeconet==0.0.3']
+REQUIREMENTS = ['pyeconet==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,10 +83,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     econet = PyEcoNet(username, password)
     water_heaters = econet.get_water_heaters()
-    hass_water_heaters = []
-    for water_heater in water_heaters:
-        _temp_water_heater = EcoNetWaterHeater(water_heater)
-        hass_water_heaters.append(_temp_water_heater)
+    hass_water_heaters = [
+        EcoNetWaterHeater(water_heater) for water_heater in water_heaters]
     add_devices(hass_water_heaters)
     hass.data[ECONET_DATA]['water_heaters'].extend(hass_water_heaters)
 
@@ -155,7 +153,8 @@ class EcoNetWaterHeater(ClimateDevice):
             data[ATTR_VACATION_END] = vacations[0].end_date
         data[ATTR_ON_VACATION] = self.water_heater.is_on_vacation
         todays_usage = self.water_heater.total_usage_for_today
-        data[ATTR_TODAYS_ENERGY_USAGE] = todays_usage
+        if todays_usage:
+            data[ATTR_TODAYS_ENERGY_USAGE] = todays_usage
         data[ATTR_IN_USE] = self.water_heater.in_use
 
         return data
