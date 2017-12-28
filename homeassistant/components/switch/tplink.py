@@ -24,10 +24,13 @@ ATTR_CURRENT = 'current'
 
 CONF_LEDS = 'enable_leds'
 
+DEFAULT_NAME = 'TP-Link Switch'
+DEFAULT_LEDS = True
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_LEDS, default=True): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_LEDS, default=DEFAULT_LEDS): cv.boolean,
 })
 
 
