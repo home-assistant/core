@@ -176,6 +176,7 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle being added to home assistant."""
         yield from super().async_added_to_hass()

@@ -86,10 +86,7 @@ class MqttLock(MqttAvailability, LockDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
-
-        This method is a coroutine.
-        """
+        """Subscribe to MQTT events."""
         yield from super().async_added_to_hass()
 
         @callback

@@ -79,11 +79,9 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         self._qos = qos
         self._template = value_template
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe mqtt events."""
         yield from super().async_added_to_hass()
 
         @callback

@@ -82,11 +82,9 @@ class MqttSensor(MqttAvailability, Entity):
         self._expire_after = expire_after
         self._expiration_trigger = None
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe to MQTT events."""
         yield from super().async_added_to_hass()
 
         @callback
