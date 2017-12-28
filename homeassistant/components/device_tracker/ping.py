@@ -13,7 +13,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DEFAULT_SCAN_INTERVAL, SOURCE_TYPE_ROUTER)
+    PLATFORM_SCHEMA, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
+    SOURCE_TYPE_ROUTER)
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant import util
 from homeassistant import const
@@ -70,8 +71,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Host objects and return the update function."""
     hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
              config[const.CONF_HOSTS].items()]
-    interval = timedelta(seconds=len(hosts) * config[CONF_PING_COUNT]) + \
-        DEFAULT_SCAN_INTERVAL
+    interval = config.get(CONF_SCAN_INTERVAL, timedelta(seconds=len(hosts) * \
+                config[CONF_PING_COUNT]) + DEFAULT_SCAN_INTERVAL)
     _LOGGER.info("Started ping tracker with interval=%s on hosts: %s",
                  interval, ",".join([host.ip_address for host in hosts]))
 
