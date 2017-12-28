@@ -64,7 +64,7 @@ class MochadSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        from pymochad.exceptions import MochadException 
+        from pymochad.exceptions import MochadException
         _LOGGER.debug("Reconnect %s:%s", self._controller.server,
                       self._controller.port)
         with mochad.REQ_LOCK:
@@ -81,7 +81,7 @@ class MochadSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        from pymochad.exceptions import MochadException 
+        from pymochad.exceptions import MochadException
         _LOGGER.debug("Reconnect %s:%s", self._controller.server,
                       self._controller.port)
         with mochad.REQ_LOCK:
