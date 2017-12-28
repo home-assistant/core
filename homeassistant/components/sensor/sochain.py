@@ -44,19 +44,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
 
     session = async_get_clientsession(hass)
-    chainSo = ChainSo(network, address, hass.loop, session)
+    chainso = ChainSo(network, address, hass.loop, session)
 
-    async_add_devices([SochainSensor(name, network.upper(), chainSo)], True)
+    async_add_devices([SochainSensor(name, network.upper(), chainso)], True)
 
 
 class SochainSensor(Entity):
     """Representation of a Sochain sensor."""
 
-    def __init__(self, name, unit_of_measurement, chainSo):
+    def __init__(self, name, unit_of_measurement, chainso):
         """Initialize the sensor."""
         self._name = name
         self._unit_of_measurement = unit_of_measurement
-        self.chainSo = chainSo
+        self.chainso = chainso
 
     @property
     def name(self):
@@ -66,8 +66,8 @@ class SochainSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.chainSo.data.get("confirmed_balance") \
-            if self.chainSo is not None else None
+        return self.chainso.data.get("confirmed_balance") \
+            if self.chainso is not None else None
 
     @property
     def unit_of_measurement(self):
@@ -84,4 +84,4 @@ class SochainSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest state of the sensor."""
-        yield from self.chainSo.async_get_data()
+        yield from self.chainso.async_get_data()
