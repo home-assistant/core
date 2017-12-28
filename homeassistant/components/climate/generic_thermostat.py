@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
-        CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
@@ -110,7 +110,7 @@ class GenericThermostat(ClimateDevice):
         self._keep_alive = keep_alive
         self._initial_operation_mode = initial_operation_mode
         self._saved_target_temp = target_temp if target_temp is not None \
-                else away_temp
+            else away_temp
         if self.ac_mode:
             self._current_operation = STATE_COOL
             self._operation_list = [STATE_COOL, STATE_OFF]
