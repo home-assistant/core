@@ -18,6 +18,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 REQUIREMENTS = ['python-sochain-api==0.0.2']
 
+_LOGGER = logging.getLogger(__name__)
+
 CONF_ADDRESS = 'address'
 CONF_NETWORK = 'network'
 CONF_ATTRIBUTION = "Data provided by chain.so"
@@ -60,7 +62,8 @@ class SochainSensor(Entity):
         self._name = name
         self._unit_of_measurement = network.upper()
         self._websession = async_get_clientsession(self.hass)
-        self.chainso = ChainSo(network, address, self.hass.loop, self._websession)
+        self.chainso = ChainSo(
+            network, address, self.hass.loop, self._websession)
 
     @property
     def name(self):
