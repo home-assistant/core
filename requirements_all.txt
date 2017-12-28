@@ -507,6 +507,7 @@ myusps==1.2.2
 
 # homeassistant.components.media_player.nad
 # homeassistant.components.media_player.nadtcp
+# homeassistant.components.media_player.nadtelnet
 nad_receiver==0.0.9
 
 # homeassistant.components.discovery
