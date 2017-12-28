@@ -146,8 +146,10 @@ class GenericThermostat(ClimateDevice):
         old_state = yield from async_get_last_state(self.hass,
                                                     self.entity_id)
         if old_state is not None:
-            self._target_temp = float(
-                old_state.attributes[ATTR_TEMPERATURE])
+            # If we have no initial temperature, restore
+            if self._target_temp is None:
+                self._target_temp = float(
+                    old_state.attributes[ATTR_TEMPERATURE])
             self._is_away = True if str(
                 old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON else False
             if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
