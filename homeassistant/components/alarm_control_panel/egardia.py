@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         raise exc.PlatformNotReady()
     except egardiadevice.UnauthorizedError:
         _LOGGER.error("Unable to authorize. Wrong password or username")
-        return False
+        return
 
     eg_dev = EgardiaAlarm(
         name, egardiasystem, rs_enabled, rs_codes)
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 hass.data[D_EGARDIASRV] = server
                 server.start()
         except IOError:
-            return False
+            return
         hass.data[D_EGARDIASRV].register_callback(eg_dev.handle_status_event)
 
     def handle_stop_event(event):
