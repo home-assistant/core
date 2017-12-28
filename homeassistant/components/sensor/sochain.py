@@ -38,32 +38,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the sochain sensors."""
+    from pysochain import ChainSo
     address = config.get(CONF_ADDRESS)
     network = config.get(CONF_NETWORK)
     name = config.get(CONF_NAME)
 
-    connection = SochainSensor(hass, name, network, address)
-    yield from connection.async_update()
+    session = async_get_clientsession(hass)
+    chainSo = ChainSo(network, address, hass.loop, session)
 
-    if connection.state is None:
-        _LOGGER.error("Check that your network and address is correct")
-        return False
-
-    async_add_devices([connection])
+    async_add_devices([SochainSensor(name, network.upper(), chainSo)], True)
 
 
 class SochainSensor(Entity):
     """Representation of a Sochain sensor."""
 
-    def __init__(self, hass, name, network, address):
+    def __init__(self, name, unit_of_measurement, chainSo):
         """Initialize the sensor."""
-        from pysochain import ChainSo
-        self.hass = hass
         self._name = name
-        self._unit_of_measurement = network.upper()
-        self._websession = async_get_clientsession(self.hass)
-        self.chainso = ChainSo(
-            network, address, self.hass.loop, self._websession)
+        self._unit_of_measurement = unit_of_measurement
+        self.chainSo = chainSo
 
     @property
     def name(self):
@@ -73,8 +66,8 @@ class SochainSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.chainso.data.get("confirmed_balance") \
-            if self.chainso is not None else None
+        return self.chainSo.data.get("confirmed_balance") \
+            if self.chainSo is not None else None
 
     @property
     def unit_of_measurement(self):
@@ -91,4 +84,4 @@ class SochainSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest state of the sensor."""
-        yield from self.chainso.async_get_data()
+        yield from self.chainSo.async_get_data()
