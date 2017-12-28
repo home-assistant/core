@@ -14,7 +14,6 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (CONF_NAME, CONF_DEVICES,
                                  CONF_PLATFORM, CONF_ADDRESS)
 from homeassistant.helpers import config_validation as cv
-from pymochad.exceptions import MochadException 
 
 DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
@@ -65,11 +64,12 @@ class MochadSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
+        from pymochad.exceptions import MochadException 
+        _LOGGER.debug("Reconnect %s:%s", self._controller.server,
+                      self._controller.port)
         with mochad.REQ_LOCK:
             try:
                 # Recycle socket on new command to recover mochad connection
-                _LOGGER.debug("Reconnect %s:%s", self._controller.server,
-                              self._controller.port)
                 self._controller.reconnect()
                 self.device.send_cmd('on')
                 # No read data on CM19A which is rf only
@@ -81,11 +81,12 @@ class MochadSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
+        from pymochad.exceptions import MochadException 
+        _LOGGER.debug("Reconnect %s:%s", self._controller.server,
+                      self._controller.port)
         with mochad.REQ_LOCK:
             try:
                 # Recycle socket on new command to recover mochad connection
-                _LOGGER.debug("Reconnect %s:%s", self._controller.server,
-                              self._controller.port)
                 self._controller.reconnect()
                 self.device.send_cmd('off')
                 # No read data on CM19A which is rf only
