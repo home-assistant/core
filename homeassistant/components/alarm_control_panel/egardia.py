@@ -86,6 +86,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to authorize. Wrong password or username")
         return False
 
+    eg_dev = EgardiaAlarm(
+        name, egardiasystem, rs_enabled, rs_codes)
+
     if rs_enabled:
         # Set up the egardia server
         _LOGGER.info("Setting up EgardiaServer")
@@ -94,38 +97,40 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 hass.data[D_EGARDIASRV] = egardiaserver.EgardiaServer('',
                                                                       rs_port)
                 bound = hass.data[D_EGARDIASRV].bind()
+
                 if not bound:
                     raise IOError("Binding error occurred while " +
                                   "starting EgardiaServer")
+                hass.data[D_EGARDIASRV].register_callback(
+                    eg_dev.handle_status_event)
+                hass.data[D_EGARDIASRV].start()
         except IOError:
             return False
 
-    add_devices([EgardiaAlarm(
-        name, egardiasystem, hass, rs_codes)], True)
+    def handle_stop_event(event):
+        hass.data[D_EGARDIASRV].stop()
+
+    # listen to home assistant stop event
+    hass.bus.listen('homeassistant_stop', handle_stop_event)
+
+    # add egardia alarm device
+    add_devices([eg_dev], True)
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem, hass,
-                 rs_codes=None):
+    def __init__(self, name, egardiasystem,
+                 rs_enabled=False, rs_codes=None):
         """Initialize object."""
         self._name = name
         self._egardiasystem = egardiasystem
         self._status = None
-        self._egardiaserver = hass.data[D_EGARDIASRV]
-        self._hass = hass
-
+        self._rs_enabled = rs_enabled
         if rs_codes is not None:
             self._rs_codes = rs_codes[0]
         else:
             self._rs_codes = rs_codes
-
-        if self._egardiaserver is not None:
-            _LOGGER.debug("Starting EgardiaServer and registering callback")
-            # Register callback for alarm status changes through EgardiaServer
-            self._egardiaserver.register_callback(self.handle_status_event)
-            self._egardiaserver.start()
 
     @property
     def name(self):
@@ -140,7 +145,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     @property
     def should_poll(self):
         """Poll if no report server is enabled."""
-        if self._egardiaserver is None:
+        if not self._rs_enabled:
             return True
         return False
 
