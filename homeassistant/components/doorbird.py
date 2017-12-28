@@ -52,7 +52,13 @@ def setup(hass, config):
         return False
 
     if config[DOMAIN].get(CONF_DOORBELL_EVENTS):
-        DoorbirdRequestView.setup_notifications(hass, device)
+        # Provide an endpoint for the device to call to trigger events
+        hass.http.register_view(DoorbirdRequestView())
+
+        # This will make HA the only service that gets doorbell events
+        url = hass.config.api.base_url + API_URL + "/" + SENSOR_DOORBELL
+        device.reset_notifications()
+        device.subscribe_notification(SENSOR_DOORBELL, url)
 
     return True
 
@@ -60,26 +66,13 @@ def setup(hass, config):
 class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
 
-    @staticmethod
-    def setup_notifications(hass, device):
-        """Register the endpoint with the device."""
-        # Provide an endpoint for the device to call to trigger events
-        hass.http.register_view(DoorbirdRequestView(hass))
-
-        # This will make HA the only service that gets doorbell events
-        url = hass.config.api.base_url + API_URL + "/" + SENSOR_DOORBELL
-        device.reset_notifications()
-        device.subscribe_notification(SENSOR_DOORBELL, url)
-
-    def __init__(self, hass):
-        """Initialize the page with access to hass data."""
-        self._hass = hass
-
     url = API_URL
     name = API_URL[1:].replace("/", ":")
     extra_urls = [API_URL + "/{sensor}"]
 
     @asyncio.coroutine
     def get(self, request, sensor):
-        self._hass.bus.fire(DOMAIN + '_' + sensor)
+        """Respond to requests from the device."""
+        hass = request.app["hass"]
+        hass.bus.fire("{}_{}".format(DOMAIN, sensor))
         return "OK"

@@ -3,14 +3,12 @@
 import asyncio
 import datetime
 import logging
-import voluptuous as vol
 
 import aiohttp
 import async_timeout
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import Camera
 from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 DEPENDENCIES = ['doorbird']
