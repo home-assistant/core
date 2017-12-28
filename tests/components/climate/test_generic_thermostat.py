@@ -399,6 +399,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
             'name': 'test',
             'cold_tolerance': 2,
             'hot_tolerance': 4,
+            'away_temp': 30,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True
