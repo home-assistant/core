@@ -95,16 +95,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             if D_EGARDIASRV not in hass.data:
                 server = egardiaserver.EgardiaServer('', rs_port)
-                hass.data[D_EGARDIASRV] = server
                 bound = server.bind()
-
                 if not bound:
                     raise IOError("Binding error occurred while " +
                                   "starting EgardiaServer")
-                server.register_callback(eg_dev.handle_status_event)
+                hass.data[D_EGARDIASRV] = server
                 server.start()
         except IOError:
             return False
+        hass.data[D_EGARDIASRV].register_callback(eg_dev.handle_status_event)
 
     def handle_stop_event(event):
         """Callback function for HA stop event."""
