@@ -1,5 +1,5 @@
 """
-Support for a DoorBird video doorbell.
+Support for DoorBird device.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/doorbird/
@@ -62,7 +62,8 @@ def setup(hass, config):
         hass.http.register_view(DoorbirdRequestView())
 
         # This will make HA the only service that gets doorbell events
-        url = '{}{}/{}'.format(hass.config.api.base_url, API_URL, SENSOR_DOORBELL)
+        url = '{}{}/{}'.format(
+            hass.config.api.base_url, API_URL, SENSOR_DOORBELL)
         device.reset_notifications()
         device.subscribe_notification(SENSOR_DOORBELL, url)
 
