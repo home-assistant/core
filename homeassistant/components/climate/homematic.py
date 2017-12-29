@@ -8,7 +8,7 @@ import logging
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE)
-from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['homematic']
@@ -76,12 +76,25 @@ class HMThermostat(HMDevice, ClimateDevice):
         if HM_CONTROL_MODE not in self._data:
             return None
 
-        # read state and search
-        hm_code = getattr(self._hmdevice, "MODE", 0)
-        for mode, state in HM_STATE_MAP.items():
-            code = getattr(self._hmdevice, mode, 0)
-            if hm_code == code:
-                return state
+        set_point_mode = self._data.get('SET_POINT_MODE', -1)
+        control_mode = self._data.get('CONTROL_MODE', -1)
+        boost_mode = self._data.get('BOOST_MODE', False)
+
+        # boost mode is active
+        if boost_mode:
+            return STATE_BOOST
+
+        # HM ip etrv 2 uses the set_point_mode to say if its
+        # auto or manual
+        elif not set_point_mode == -1:
+            code = set_point_mode
+        # Other devices use the control_mode
+        else:
+            code = control_mode
+
+        # get the name of the mode
+        name = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][code]
+        return name.lower()
 
     @property
     def operation_list(self):
@@ -127,6 +140,7 @@ class HMThermostat(HMDevice, ClimateDevice):
             if state == operation_mode:
                 code = getattr(self._hmdevice, mode, 0)
                 self._hmdevice.MODE = code
+                return
 
     @property
     def min_temp(self):
