@@ -9,7 +9,8 @@ import time
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
 from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
 
@@ -17,10 +18,8 @@ REQUIREMENTS = ['pyHS100==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_CONSUMPTION = 'current_consumption'
-ATTR_TOTAL_CONSUMPTION = 'total_consumption'
-ATTR_DAILY_CONSUMPTION = 'daily_consumption'
-ATTR_CURRENT = 'current'
+ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
+ATTR_CURRENT_A = 'current_a'
 
 CONF_LEDS = 'enable_leds'
 
@@ -102,19 +101,20 @@ class SmartPlugSwitch(SwitchDevice):
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
-                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                    = "%.1f W" % emeter_readings["power"]
-                self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
-                    = "%.2f kW" % emeter_readings["total"]
+                self._emeter_params[ATTR_CURRENT_POWER_W] \
+                    = "{:.2f}".format(emeter_readings["power"])
+                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] \
+                    = "{:.3f}".format(emeter_readings["total"])
                 self._emeter_params[ATTR_VOLTAGE] \
-                    = "%.2f V" % emeter_readings["voltage"]
-                self._emeter_params[ATTR_CURRENT] \
-                    = "%.1f A" % emeter_readings["current"]
+                    = "{:.1f}".format(emeter_readings["voltage"])
+                self._emeter_params[ATTR_CURRENT_A] \
+                    = "{:.2f}".format(emeter_readings["current"])
 
                 emeter_statics = self.smartplug.get_emeter_daily()
                 try:
-                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                        = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            emeter_statics[int(time.strftime("%e"))])
                 except KeyError:
                     # Device returned no daily history
                     pass

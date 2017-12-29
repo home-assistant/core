@@ -26,9 +26,9 @@ REQUIREMENTS = ['pyHS100==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_CONSUMPTION = 'current_consumption'
-ATTR_DAILY_CONSUMPTION = 'daily_consumption'
-ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
+ATTR_CURRENT_POWER_W = 'current_power_w'
+ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
+ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
 DEFAULT_NAME = 'TP-Link Light'
 
@@ -166,17 +166,17 @@ class TPLinkSmartBulb(Light):
             if self._supported_features & SUPPORT_RGB_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
             if self.smartbulb.has_emeter:
-                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                    = "%.1f W" % self.smartbulb.current_consumption()
+                self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
+                    self.smartbulb.current_consumption() / 1e3)
                 daily_statistics = self.smartbulb.get_emeter_daily()
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
-                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                        = "%.2f kW" % daily_statistics[int(
-                            time.strftime("%d"))]
-                    self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
-                        = "%.2f kW" % monthly_statistics[int(
-                            time.strftime("%m"))]
+                    self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            daily_statistics[int(time.strftime("%d"))] / 1e3)
+                    self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            monthly_statistics[int(time.strftime("%m"))] / 1e3)
                 except KeyError:
                     # device returned no daily/monthly history
                     pass
