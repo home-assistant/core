@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfido==2.0.1']
+REQUIREMENTS = ['pyfido==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    fido_data = FidoData(username, password)
+    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    fido_data = FidoData(username, password, httpsession)
     ret = yield from fido_data.async_update()
     if ret is False:
         return
@@ -149,10 +150,11 @@ class FidoSensor(Entity):
 class FidoData(object):
     """Get data from Fido."""
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, httpsession):
         """Initialize the data object."""
         from pyfido import FidoClient
-        self.client = FidoClient(username, password, REQUESTS_TIMEOUT)
+        self.client = FidoClient(username, password,
+                                 REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
     @asyncio.coroutine

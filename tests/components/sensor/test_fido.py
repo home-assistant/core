@@ -15,7 +15,7 @@ CONTRACT = "123456789"
 class FidoClientMock():
     """Fake Fido client."""
 
-    def __init__(self, username, password, contract=None):
+    def __init__(self, username, password, timeout=None, httpsession=None):
         """Fake Fido client init."""
         pass
 

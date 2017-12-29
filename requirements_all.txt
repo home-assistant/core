@@ -680,7 +680,7 @@ pyenvisalink==2.2
 pyephember==0.1.1
 
 # homeassistant.components.sensor.fido
-pyfido==2.0.1
+pyfido==2.1.0
 
 # homeassistant.components.climate.flexit
 pyflexit==0.3
