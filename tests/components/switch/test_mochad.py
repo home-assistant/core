@@ -8,7 +8,9 @@ from homeassistant.setup import setup_component
 from homeassistant.components import switch
 from homeassistant.components.switch import mochad
 
-from tests.common import get_test_home_assistant
+from tests.common import (
+    get_test_home_assistant, MockDependency
+)
 
 
 @pytest.fixture(autouse=True)
@@ -72,11 +74,13 @@ class TestMochadSwitch(unittest.TestCase):
         """Test the name."""
         self.assertEqual('fake_switch', self.switch.name)
 
+    @MockDependency('pymochad')
     def test_turn_on(self):
         """Test turn_on."""
         self.switch.turn_on()
         self.switch.device.send_cmd.assert_called_once_with('on')
 
+    @MockDependency('pymochad')
     def test_turn_off(self):
         """Test turn_off."""
         self.switch.turn_off()
