@@ -247,8 +247,8 @@ def process_entity_turn_on_params(entity, params):
             entity.supported_features & SUPPORT_XY_COLOR and not \
             entity.supported_features & SUPPORT_RGB_COLOR:
         rgb = params.pop(ATTR_RGB_COLOR)
-        xyb = color_util.color_RGB_to_xy(*rgb)
-        params[ATTR_XY_COLOR] = xyb[:2]
+        xy_color = color_util.color_RGB_to_xy(*rgb)
+        params[ATTR_XY_COLOR] = xy_color
 
     if ATTR_XY_COLOR in params and \
             entity.supported_features & SUPPORT_RGB_COLOR and not \
@@ -439,7 +439,7 @@ class Light(ToggleEntity):
                     data[ATTR_BRIGHTNESS])
 
             if ATTR_XY_COLOR not in data and ATTR_RGB_COLOR in data:
-                data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(
+                data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy_brightness(
                     *data[ATTR_RGB_COLOR])
 
         return data

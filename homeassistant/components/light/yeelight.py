@@ -14,7 +14,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_to_rgb,
-    color_RGB_to_xy,
+    color_RGB_to_xy_brightness,
     color_xy_brightness_to_RGB)
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
@@ -296,7 +296,7 @@ class YeelightLight(Light):
             self._rgb = self._get_rgb_from_properties()
 
             if self._rgb:
-                xyb = color_RGB_to_xy(*self._rgb)
+                xyb = color_RGB_to_xy_brightness(*self._rgb)
                 self._xy = (xyb[0], xyb[1])
             else:
                 self._xy = None

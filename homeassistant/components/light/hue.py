@@ -325,7 +325,7 @@ class HueLight(Light):
                 command['sat'] = hsv[1]
                 command['bri'] = hsv[2]
             else:
-                xyb = color_util.color_RGB_to_xy(
+                xyb = color_util.color_RGB_to_xy_brightness(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['xy'] = xyb[0], xyb[1]
                 command['bri'] = xyb[2]

@@ -177,11 +177,18 @@ def color_name_to_rgb(color_name):
     return hex_value
 
 
+# pylint: disable=invalid-name, invalid-sequence-index
+def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float]:
+    """Convert from RGB color to XY color."""
+    return color_RGB_to_xy_brightness(iR, iG, iB)[:2]
+
+
 # Taken from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name, invalid-sequence-index
-def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
+def color_RGB_to_xy_brightness(
+        iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     """Convert from RGB color to XY color."""
     if iR + iG + iB == 0:
         return 0.0, 0.0, 0
@@ -212,6 +219,11 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     brightness = round(Y * 255)
 
     return round(x, 3), round(y, 3), brightness
+
+
+def color_xy_to_RGB(vX: float, vY: float) -> Tuple[int, int, int]:
+    """Convert from XY to a normalized RGB."""
+    return color_xy_brightness_to_RGB(vX, vY, 255)
 
 
 # Converted to Python from Obj-C, original source from:
@@ -318,6 +330,12 @@ def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
     """Convert an xy color to its hs representation."""
     h, s, _ = color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, 255))
     return (h, s)
+
+
+# pylint: disable=invalid-sequence-index
+def color_hs_to_xy(iH: int, iS: int) -> Tuple[int, int]:
+    """Convert an hs color to its xy representation."""
+    return color_RGB_to_xy(*color_xy_brightness_to_RGB(iH, iS, 255))
 
 
 # pylint: disable=invalid-sequence-index

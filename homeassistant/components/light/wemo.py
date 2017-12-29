@@ -112,7 +112,7 @@ class WemoLight(Light):
         if ATTR_XY_COLOR in kwargs:
             xycolor = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
-            xycolor = color_util.color_RGB_to_xy(
+            xycolor = color_util.color_RGB_to_xy_brightness(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
             kwargs.setdefault(ATTR_BRIGHTNESS, xycolor[2])
         else:

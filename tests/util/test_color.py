@@ -7,25 +7,51 @@ class TestColorUtil(unittest.TestCase):
     """Test color util methods."""
 
     # pylint: disable=invalid-name
-    def test_color_RGB_to_xy(self):
-        """Test color_RGB_to_xy."""
-        self.assertEqual((0, 0, 0), color_util.color_RGB_to_xy(0, 0, 0))
+    def test_color_RGB_to_xy_brightness(self):
+        """Test color_RGB_to_xy_brightness."""
+        self.assertEqual((0, 0, 0),
+                         color_util.color_RGB_to_xy_brightness(0, 0, 0))
         self.assertEqual((0.32, 0.336, 255),
-                         color_util.color_RGB_to_xy(255, 255, 255))
+                         color_util.color_RGB_to_xy_brightness(255, 255, 255))
 
         self.assertEqual((0.136, 0.04, 12),
-                         color_util.color_RGB_to_xy(0, 0, 255))
+                         color_util.color_RGB_to_xy_brightness(0, 0, 255))
 
         self.assertEqual((0.172, 0.747, 170),
-                         color_util.color_RGB_to_xy(0, 255, 0))
+                         color_util.color_RGB_to_xy_brightness(0, 255, 0))
 
         self.assertEqual((0.679, 0.321, 80),
+                         color_util.color_RGB_to_xy_brightness(255, 0, 0))
+
+        self.assertEqual((0.679, 0.321, 17),
+                         color_util.color_RGB_to_xy_brightness(128, 0, 0))
+
+    def test_color_RGB_to_xy(self):
+        """Test color_RGB_to_xy."""
+        self.assertEqual((0, 0),
+                         color_util.color_RGB_to_xy(0, 0, 0))
+        self.assertEqual((0.32, 0.336),
+                         color_util.color_RGB_to_xy(255, 255, 255))
+
+        self.assertEqual((0.136, 0.04),
+                         color_util.color_RGB_to_xy(0, 0, 255))
+
+        self.assertEqual((0.172, 0.747),
+                         color_util.color_RGB_to_xy(0, 255, 0))
+
+        self.assertEqual((0.679, 0.321),
                          color_util.color_RGB_to_xy(255, 0, 0))
 
+        self.assertEqual((0.679, 0.321),
+                         color_util.color_RGB_to_xy(128, 0, 0))
+
     def test_color_xy_brightness_to_RGB(self):
-        """Test color_RGB_to_xy."""
+        """Test color_xy_brightness_to_RGB."""
         self.assertEqual((0, 0, 0),
                          color_util.color_xy_brightness_to_RGB(1, 1, 0))
+
+        self.assertEqual((194, 186, 169),
+                         color_util.color_xy_brightness_to_RGB(.35, .35, 128))
 
         self.assertEqual((255, 243, 222),
                          color_util.color_xy_brightness_to_RGB(.35, .35, 255))
@@ -38,6 +64,20 @@ class TestColorUtil(unittest.TestCase):
 
         self.assertEqual((0, 63, 255),
                          color_util.color_xy_brightness_to_RGB(0, 0, 255))
+
+    def test_color_xy_to_RGB(self):
+        """Test color_xy_to_RGB."""
+        self.assertEqual((255, 243, 222),
+                         color_util.color_xy_to_RGB(.35, .35))
+
+        self.assertEqual((255, 0, 60),
+                         color_util.color_xy_to_RGB(1, 0))
+
+        self.assertEqual((0, 255, 0),
+                         color_util.color_xy_to_RGB(0, 1))
+
+        self.assertEqual((0, 63, 255),
+                         color_util.color_xy_to_RGB(0, 0))
 
     def test_color_RGB_to_hsv(self):
         """Test color_RGB_to_hsv."""
@@ -106,6 +146,23 @@ class TestColorUtil(unittest.TestCase):
 
         self.assertEqual((40992, 255),
                          color_util.color_xy_to_hs(0, 0))
+
+    def test_color_hs_to_xy(self):
+        """Test color_hs_to_xy."""
+        self.assertEqual((0.388, 0.565),
+                         color_util.color_hs_to_xy(127, 255))
+
+        self.assertEqual((0.679, 0.321),
+                         color_util.color_hs_to_xy(250, 32))
+
+        self.assertEqual((0.349, 0.598),
+                         color_util.color_hs_to_xy(100, 255))
+
+        self.assertEqual((0.172, 0.747),
+                         color_util.color_hs_to_xy(0, 255))
+
+        self.assertEqual((0.679, 0.321),
+                         color_util.color_hs_to_xy(255, 0))
 
     def test_rgb_hex_to_rgb_list(self):
         """Test rgb_hex_to_rgb_list."""
