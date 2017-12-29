@@ -166,6 +166,13 @@ class ApplicationListener:
                     profile_clusters = profile.CLUSTERS[endpoint.device_type]
                     profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
                     component = profile_info[endpoint.device_type]
+            else:
+                # These may be manufacturer specific profiles and they
+                # will need special handling if they are to be supported
+                # correctly.
+                _LOGGER.info("Skipping endpoint with profile_id: %s",
+                             endpoint.profile_id)
+                continue
 
             if ha_const.CONF_TYPE in node_config:
                 component = node_config[ha_const.CONF_TYPE]
@@ -235,12 +242,13 @@ class Entity(entity.Entity):
             '%02x' % (o, ) for o in endpoint.device.ieee[-4:]
         ])
         if manufacturer and model is not None:
-            self.entity_id = '%s.%s_%s_%s_%s' % (
+            self.entity_id = '%s.%s_%s_%s_%s_%s' % (
                 self._domain,
                 slugify(manufacturer),
                 slugify(model),
                 ieeetail,
                 endpoint.endpoint_id,
+                slugify(self.__class__.__name__),
             )
             self._device_state_attributes['friendly_name'] = '%s %s' % (
                 manufacturer,
@@ -252,10 +260,20 @@ class Entity(entity.Entity):
                 ieeetail,
                 endpoint.endpoint_id,
             )
+        self._device_state_attributes['endpoint_id'] = endpoint.endpoint_id
+        self._device_state_attributes['ieee'] = "%s" % (endpoint.device.ieee, )
         for cluster in in_clusters.values():
             cluster.add_listener(self)
+            self._device_state_attributes['%s (%s)' % (
+                'in_cluster',
+                cluster.cluster_id,
+            )] = cluster.name
         for cluster in out_clusters.values():
             cluster.add_listener(self)
+            self._device_state_attributes['%s_%s' % (
+                'out_cluster',
+                cluster.cluster_id,
+            )] = cluster.name
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
