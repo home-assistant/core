@@ -70,7 +70,6 @@ class PushBulletNotificationService(BaseNotificationService):
                 tgt.channel_tag.lower(): tgt for
                 tgt in self.pushbullet.channels},
         }
-        _LOGGER.info("Sent notification to self {}".format(self.pbtargets))
 
     def send_message(self, message=None, **kwargs):
         """Send a message to a specified target.
