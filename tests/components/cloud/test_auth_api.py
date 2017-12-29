@@ -119,6 +119,22 @@ def test_confirm_register_fails(mock_cognito):
         auth_api.confirm_register(cloud, '123456', 'email@home-assistant.io')
 
 
+def test_resend_email_confirm(mock_cognito):
+    """Test starting forgot password flow."""
+    cloud = MagicMock()
+    auth_api.resend_email_confirm(cloud, 'email@home-assistant.io')
+    assert len(mock_cognito.client.resend_confirmation_code.mock_calls) == 1
+
+
+def test_resend_email_confirm_fails(mock_cognito):
+    """Test failure when starting forgot password flow."""
+    cloud = MagicMock()
+    mock_cognito.client.resend_confirmation_code.side_effect = \
+        aws_error('SomeError')
+    with pytest.raises(auth_api.CloudError):
+        auth_api.resend_email_confirm(cloud, 'email@home-assistant.io')
+
+
 def test_forgot_password(mock_cognito):
     """Test starting forgot password flow."""
     cloud = MagicMock()
