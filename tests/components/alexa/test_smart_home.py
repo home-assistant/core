@@ -346,6 +346,7 @@ def test_exclude_filters(hass):
     ))
 
     msg = yield from smart_home.async_handle_message(hass, config, request)
+    yield from hass.async_block_till_done()
 
     msg = msg['event']
 
@@ -378,6 +379,7 @@ def test_include_filters(hass):
     ))
 
     msg = yield from smart_home.async_handle_message(hass, config, request)
+    yield from hass.async_block_till_done()
 
     msg = msg['event']
 
@@ -393,6 +395,7 @@ def test_api_entity_not_exists(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -445,6 +448,7 @@ def test_api_turn_on(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -481,6 +485,7 @@ def test_api_turn_off(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -507,6 +512,7 @@ def test_api_set_brightness(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -538,6 +544,7 @@ def test_api_adjust_brightness(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -572,6 +579,7 @@ def test_api_set_color_rgb(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -606,6 +614,7 @@ def test_api_set_color_xy(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -635,6 +644,7 @@ def test_api_set_color_temperature(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -664,6 +674,7 @@ def test_api_decrease_color_temp(hass, result, initial):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -693,6 +704,7 @@ def test_api_increase_color_temp(hass, result, initial):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -720,6 +732,7 @@ def test_api_activate(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -746,6 +759,7 @@ def test_api_set_percentage_fan(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -775,6 +789,7 @@ def test_api_set_percentage_cover(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -806,6 +821,7 @@ def test_api_adjust_percentage_fan(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -838,6 +854,7 @@ def test_api_adjust_percentage_cover(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -865,6 +882,7 @@ def test_api_lock(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -891,6 +909,7 @@ def test_api_play(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -917,6 +936,7 @@ def test_api_pause(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -943,6 +963,7 @@ def test_api_stop(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -969,6 +990,7 @@ def test_api_next(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -995,6 +1017,7 @@ def test_api_previous(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -1023,6 +1046,7 @@ def test_api_set_volume(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -1054,6 +1078,7 @@ def test_api_adjust_volume(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -1083,6 +1108,7 @@ def test_api_mute(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
