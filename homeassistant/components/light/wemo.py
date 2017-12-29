@@ -8,9 +8,8 @@ import logging
 from datetime import timedelta
 
 import homeassistant.util as util
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_TRANSITION,
     ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 
@@ -109,14 +108,7 @@ class WemoLight(Light):
         """Turn the light on."""
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
 
-        if ATTR_XY_COLOR in kwargs:
-            xycolor = kwargs[ATTR_XY_COLOR]
-        elif ATTR_RGB_COLOR in kwargs:
-            xycolor = color_util.color_RGB_to_xy_brightness(
-                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-            kwargs.setdefault(ATTR_BRIGHTNESS, xycolor[2])
-        else:
-            xycolor = None
+        xycolor = kwargs.get(ATTR_XY_COLOR)
 
         if xycolor is not None:
             self.device.set_color(xycolor, transition=transitiontime)

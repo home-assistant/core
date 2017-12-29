@@ -8,7 +8,6 @@ import asyncio
 import logging
 
 from homeassistant.components import light, zha
-from homeassistant.util.color import color_RGB_to_xy_brightness
 from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,12 +82,6 @@ class Light(zha.Entity, light.Light):
 
         if light.ATTR_XY_COLOR in kwargs:
             self._xy_color = kwargs[light.ATTR_XY_COLOR]
-        elif light.ATTR_RGB_COLOR in kwargs:
-            xyb = color_RGB_to_xy_brightness(
-                *(int(val) for val in kwargs[light.ATTR_RGB_COLOR]))
-            self._xy_color = (xyb[0], xyb[1])
-            self._brightness = xyb[2]
-        if light.ATTR_XY_COLOR in kwargs or light.ATTR_RGB_COLOR in kwargs:
             yield from self._endpoint.light_color.move_to_color(
                 int(self._xy_color[0] * 65535),
                 int(self._xy_color[1] * 65535),

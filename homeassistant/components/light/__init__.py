@@ -418,14 +418,12 @@ class Light(ToggleEntity):
                 if value is not None:
                     data[attr] = value
 
-            if ATTR_RGB_COLOR not in data and ATTR_XY_COLOR in data and \
-               ATTR_BRIGHTNESS in data:
-                data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
-                    data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
-                    data[ATTR_BRIGHTNESS])
-
+            # Expose current color as both RGB and XY
+            if ATTR_RGB_COLOR not in data and ATTR_XY_COLOR in data:
+                data[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(
+                    *data[ATTR_XY_COLOR])
             if ATTR_XY_COLOR not in data and ATTR_RGB_COLOR in data:
-                data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy_brightness(
+                data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(
                     *data[ATTR_RGB_COLOR])
 
         return data

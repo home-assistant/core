@@ -18,7 +18,7 @@ import homeassistant.util as util
 from homeassistant.util import yaml
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
@@ -317,18 +317,6 @@ class HueLight(Light):
                 command['sat'] = sat
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
-        elif ATTR_RGB_COLOR in kwargs:
-            if self.info.get('manufacturername') == 'OSRAM':
-                hsv = color_util.color_RGB_to_hsv(
-                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
-            else:
-                xyb = color_util.color_RGB_to_xy_brightness(
-                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['xy'] = xyb[0], xyb[1]
-                command['bri'] = xyb[2]
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
