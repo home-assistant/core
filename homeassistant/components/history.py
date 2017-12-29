@@ -310,10 +310,11 @@ class HistoryPeriodView(HomeAssistantView):
 
         sorted_result = []
         for order_entity in self.filters.included_entities:
-            for state_list in result[:]:
+            for state_list in result:
                 if state_list[0].entity_id == order_entity:
                     sorted_result.append(state_list)
                     result.remove(state_list)
+                    break
         sorted_result.extend(result)
 
         return self.json(sorted_result)
