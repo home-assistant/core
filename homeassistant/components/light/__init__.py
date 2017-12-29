@@ -240,26 +240,13 @@ def preprocess_turn_on_alternatives(params):
     if brightness_pct is not None:
         params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
-
-def process_entity_turn_on_params(entity, params):
-    """Process parameters to ensure proper format for entity."""
-    if ATTR_RGB_COLOR in params and \
-            entity.supported_features & SUPPORT_XY_COLOR and not \
-            entity.supported_features & SUPPORT_RGB_COLOR:
-        rgb = params.pop(ATTR_RGB_COLOR)
-        xy_color = color_util.color_RGB_to_xy(*rgb)
-        params[ATTR_XY_COLOR] = xy_color
-
-    if ATTR_XY_COLOR in params and \
-            entity.supported_features & SUPPORT_RGB_COLOR and not \
-            entity.supported_features & SUPPORT_XY_COLOR:
-        color_xy = params.pop(ATTR_XY_COLOR)
-        brightness = params.get(
-            ATTR_BRIGHTNESS, entity.state_attributes.get(ATTR_BRIGHTNESS, 255))
-        params[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
-            color_xy[0], color_xy[1], brightness)
-
-    return params
+    # Make color changes available as both XY and RGB for platforms
+    if ATTR_XY_COLOR in params:
+        color_rgb = color_util.color_xy_to_RGB(*params[ATTR_XY_COLOR])
+        params[ATTR_RGB_COLOR] = color_rgb
+    elif ATTR_RGB_COLOR in params:
+        color_xy = color_util.color_RGB_to_xy(*params[ATTR_RGB_COLOR])
+        params[ATTR_XY_COLOR] = color_xy
 
 
 @asyncio.coroutine
@@ -289,8 +276,7 @@ def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
-                entity_params = process_entity_turn_on_params(light, params)
-                yield from light.async_turn_on(**entity_params)
+                yield from light.async_turn_on(**params)
             elif service.service == SERVICE_TURN_OFF:
                 yield from light.async_turn_off(**params)
             else:

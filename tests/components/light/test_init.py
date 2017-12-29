@@ -186,23 +186,29 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_TRANSITION: 10,
-             light.ATTR_BRIGHTNESS: 20,
-             light.ATTR_RGB_COLOR: (0, 0, 255)},
-            data)
+        self.assertEqual({
+            light.ATTR_TRANSITION: 10,
+            light.ATTR_BRIGHTNESS: 20,
+            light.ATTR_RGB_COLOR: (0, 0, 255),
+            light.ATTR_XY_COLOR: (0.136, 0.04),
+        }, data)
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_RGB_COLOR: (255, 255, 255),
-             light.ATTR_WHITE_VALUE: 255},
-            data)
+        self.assertEqual({
+            light.ATTR_RGB_COLOR: (255, 255, 255),
+            light.ATTR_XY_COLOR: (0.32, 0.336),
+            light.ATTR_WHITE_VALUE: 255,
+        }, data)
 
         _, data = dev3.last_call('turn_on')
-        self.assertEqual({light.ATTR_XY_COLOR: (.4, .6)}, data)
+        self.assertEqual({
+            light.ATTR_RGB_COLOR: (208, 255, 0),
+            light.ATTR_XY_COLOR: (.4, .6),
+        }, data)
 
         # One of the light profiles
-        prof_name, prof_x, prof_y, prof_bri = 'relax', 0.5119, 0.4147, 144
+        prof_name, prof_x, prof_y, prof_bri, prof_r, prof_g, prof_b = \
+            'relax', 0.5119, 0.4147, 144, 255, 184, 78
 
         # Test light profiles
         light.turn_on(self.hass, dev1.entity_id, profile=prof_name)
@@ -214,16 +220,18 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_BRIGHTNESS: prof_bri,
-             light.ATTR_XY_COLOR: (prof_x, prof_y)},
-            data)
+        self.assertEqual({
+            light.ATTR_BRIGHTNESS: prof_bri,
+            light.ATTR_XY_COLOR: (prof_x, prof_y),
+            light.ATTR_RGB_COLOR: (prof_r, prof_g, prof_b),
+        }, data)
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_BRIGHTNESS: 100,
-             light.ATTR_XY_COLOR: (.5119, .4147)},
-            data)
+        self.assertEqual({
+            light.ATTR_BRIGHTNESS: 100,
+            light.ATTR_XY_COLOR: (prof_x, prof_y),
+            light.ATTR_RGB_COLOR: (prof_r, prof_g, prof_b),
+        }, data)
 
         # Test bad data
         light.turn_on(self.hass)
@@ -299,108 +307,8 @@ class TestLight(unittest.TestCase):
 
         _, data = dev1.last_call('turn_on')
 
-        self.assertEqual(
-            {light.ATTR_XY_COLOR: (.4, .6), light.ATTR_BRIGHTNESS: 100},
-            data)
-
-    def test_light_process_rgb(self):
-        """Test light profiles."""
-        platform = loader.get_component('light.test')
-
-        platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
-
-        dev1 = platform.DEVICES[0]
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      rgb_color=[255, 128, 0])
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_RGB_COLOR: (255, 128, 0)},
-            data)
-
-        dev1._supported_features = light.SUPPORT_RGB_COLOR
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      rgb_color=[255, 128, 0])
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_RGB_COLOR: (255, 128, 0)},
-            data)
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      xy_color=[0.5, 0.25])
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_RGB_COLOR: (255, 93, 164)},
-            data)
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      xy_color=[0.5, 0.25], brightness=128)
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_RGB_COLOR: (255, 91, 163),
-             light.ATTR_BRIGHTNESS: 128},
-            data)
-
-        dev1._state_attributes = {light.ATTR_BRIGHTNESS: 64}
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      xy_color=[0.5, 0.25])
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_RGB_COLOR: (214, 74, 136)},
-            data)
-
-    def test_light_process_xy(self):
-        """Test light profiles."""
-        platform = loader.get_component('light.test')
-
-        platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
-
-        dev1 = platform.DEVICES[0]
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      xy_color=[0.5, 0.25])
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_XY_COLOR: (0.5, 0.25)},
-            data)
-
-        dev1._supported_features = light.SUPPORT_XY_COLOR
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      xy_color=[0.5, 0.25])
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_XY_COLOR: (0.5, 0.25)},
-            data)
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      rgb_color=[255, 128, 0])
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_XY_COLOR: (0.596, 0.391)},
-            data)
-
-        light.turn_on(self.hass, dev1.entity_id,
-                      rgb_color=[255, 128, 0], brightness=128)
-        self.hass.block_till_done()
-        _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_XY_COLOR: (0.596, 0.391),
-             light.ATTR_BRIGHTNESS: 128},
-            data)
+        self.assertEqual({
+            light.ATTR_RGB_COLOR: (208, 255, 0),
+            light.ATTR_XY_COLOR: (.4, .6),
+            light.ATTR_BRIGHTNESS: 100
+        }, data)
