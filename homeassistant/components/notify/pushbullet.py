@@ -70,6 +70,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 tgt.channel_tag.lower(): tgt for
                 tgt in self.pushbullet.channels},
         }
+        _LOGGER.info("Sent notification to self {}".format(self.pbtargets))
 
     def send_message(self, message=None, **kwargs):
         """Send a message to a specified target.
@@ -150,14 +151,24 @@ class PushBulletNotificationService(BaseNotificationService):
                     if filedata.get('file_type') == 'application/x-empty':
                         _LOGGER.error("Can not send an empty file")
                         return
-                    pusher.push_file(title=title, body=message, **filedata)
+                    if tname:
+                        pusher.push_file(title=title, body=message,
+                                         email=tname, **filedata)
+                    else:
+                        pusher.push_file(title=title, body=message, **filedata)
             elif file_url:
                 if not file_url.startswith('http'):
                     _LOGGER.error("URL should start with http or https")
                     return
-                pusher.push_file(title=title, body=message, file_name=file_url,
-                                 file_url=file_url,
-                                 file_type=mimetypes.guess_type(file_url)[0])
+                if tname:
+                    pusher.push_file(title=title, body=message, email=tname,
+                                     file_name=file_url, file_url=file_url,
+                                     file_type=mimetypes.guess_type(file_url)[0])
+                else:
+                    pusher.push_file(title=title, body=message,
+                                     file_name=file_url, file_url=file_url,
+                                     file_type=mimetypes.guess_type(file_url)[0])
+
             else:
                 if tname:
                     pusher.push_note(title, message, email=tname)
