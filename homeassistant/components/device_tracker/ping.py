@@ -15,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
     SOURCE_TYPE_ROUTER)
-from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant import util
 from homeassistant import const
 
@@ -76,13 +75,16 @@ def setup_scanner(hass, config, see, discovery_info=None):
                                     config[CONF_PING_COUNT])
                           + DEFAULT_SCAN_INTERVAL)
     _LOGGER.debug("Started ping tracker with interval=%s on hosts: %s",
-                 interval, ",".join([host.ip_address for host in hosts]))
+                  interval, ",".join([host.ip_address for host in hosts]))
 
     def update_interval(now):
         """Update all the hosts on every interval time."""
-        for host in hosts:
-            host.update(see)
-        track_point_in_utc_time(hass, update, util.dt.utcnow() + interval)
+        try:
+            for host in hosts:
+                host.update(see)
+        finally:
+            hass.helpers.event.track_point_in_utc_time(
+                update_interval, util.dt.utcnow() + interval)
 
     update_interval(None)
     return True
