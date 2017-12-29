@@ -797,7 +797,7 @@ pyotp==2.2.6
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.7.1
+pyowm==2.8.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4

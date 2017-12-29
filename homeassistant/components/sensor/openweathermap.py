@@ -4,20 +4,20 @@ Support for the OpenWeatherMap (OWM) service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.openweathermap/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.7.1']
+REQUIREMENTS = ['pyowm==2.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,11 +53,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the OpenWeatherMap sensor."""
+    from pyowm import OWM
+
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
-
-    from pyowm import OWM
 
     SENSOR_TYPES['temperature'][1] = hass.config.units.temperature_unit
 
