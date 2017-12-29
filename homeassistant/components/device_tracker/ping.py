@@ -75,7 +75,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
                           timedelta(seconds=len(hosts) *
                                     config[CONF_PING_COUNT])
                           + DEFAULT_SCAN_INTERVAL)
-    _LOGGER.info("Started ping tracker with interval=%s on hosts: %s",
+    _LOGGER.debug("Started ping tracker with interval=%s on hosts: %s",
                  interval, ",".join([host.ip_address for host in hosts]))
 
     def update_interval(now):
@@ -84,8 +84,5 @@ def setup_scanner(hass, config, see, discovery_info=None):
             host.update(see)
         track_point_in_utc_time(hass, update, util.dt.utcnow() + interval)
 
-    if not hosts:
-        return False
-    
     update_interval(None)
     return True
