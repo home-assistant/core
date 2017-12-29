@@ -5,8 +5,18 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.climate import (
-    ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
+    ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_AUX_HEAT, SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
+                 SUPPORT_AWAY_MODE | SUPPORT_HOLD_MODE | SUPPORT_FAN_MODE |
+                 SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT |
+                 SUPPORT_SWING_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -46,6 +56,11 @@ class DemoClimate(ClimateDevice):
         self._swing_list = ['Auto', '1', '2', '3', 'Off']
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def should_poll(self):

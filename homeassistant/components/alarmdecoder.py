@@ -4,16 +4,13 @@ Support for AlarmDecoder devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alarmdecoder/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.discovery import load_platform
 
 REQUIREMENTS = ['alarmdecoder==0.12.3']
 
@@ -32,6 +29,7 @@ CONF_DEVICE_TYPE = 'type'
 CONF_PANEL_DISPLAY = 'panel_display'
 CONF_ZONE_NAME = 'name'
 CONF_ZONE_TYPE = 'type'
+CONF_ZONE_RFID = 'rfid'
 CONF_ZONES = 'zones'
 
 DEFAULT_DEVICE_TYPE = 'socket'
@@ -51,6 +49,7 @@ SIGNAL_PANEL_DISARM = 'alarmdecoder.panel_disarm'
 
 SIGNAL_ZONE_FAULT = 'alarmdecoder.zone_fault'
 SIGNAL_ZONE_RESTORE = 'alarmdecoder.zone_restore'
+SIGNAL_RFX_MESSAGE = 'alarmdecoder.rfx_message'
 
 DEVICE_SOCKET_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_TYPE): 'socket',
@@ -67,13 +66,14 @@ DEVICE_USB_SCHEMA = vol.Schema({
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_NAME): cv.string,
-    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string})
+    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string,
+    vol.Optional(CONF_ZONE_RFID): cv.string})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): vol.Any(DEVICE_SOCKET_SCHEMA,
-                                           DEVICE_SERIAL_SCHEMA,
-                                           DEVICE_USB_SCHEMA),
+        vol.Required(CONF_DEVICE): vol.Any(
+            DEVICE_SOCKET_SCHEMA, DEVICE_SERIAL_SCHEMA,
+            DEVICE_USB_SCHEMA),
         vol.Optional(CONF_PANEL_DISPLAY,
                      default=DEFAULT_PANEL_DISPLAY): cv.boolean,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
@@ -81,8 +81,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up for the AlarmDecoder devices."""
     from alarmdecoder import AlarmDecoder
     from alarmdecoder.devices import (SocketDevice, SerialDevice, USBDevice)
@@ -99,32 +98,30 @@ def async_setup(hass, config):
     path = DEFAULT_DEVICE_PATH
     baud = DEFAULT_DEVICE_BAUD
 
-    sync_connect = asyncio.Future(loop=hass.loop)
-
-    def handle_open(device):
-        """Handle the successful connection."""
-        _LOGGER.info("Established a connection with the alarmdecoder")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
-        sync_connect.set_result(True)
-
-    @callback
     def stop_alarmdecoder(event):
         """Handle the shutdown of AlarmDecoder."""
         _LOGGER.debug("Shutting down alarmdecoder")
         controller.close()
 
-    @callback
     def handle_message(sender, message):
         """Handle message from AlarmDecoder."""
-        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_PANEL_MESSAGE, message)
+
+    def handle_rfx_message(sender, message):
+        """Handle RFX message from AlarmDecoder."""
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_RFX_MESSAGE, message)
 
     def zone_fault_callback(sender, zone):
         """Handle zone fault from AlarmDecoder."""
-        async_dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_ZONE_FAULT, zone)
 
     def zone_restore_callback(sender, zone):
         """Handle zone restore from AlarmDecoder."""
-        async_dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_ZONE_RESTORE, zone)
 
     controller = False
     if device_type == 'socket':
@@ -139,8 +136,8 @@ def async_setup(hass, config):
         AlarmDecoder(USBDevice.find())
         return False
 
-    controller.on_open += handle_open
     controller.on_message += handle_message
+    controller.on_rfx_message += handle_rfx_message
     controller.on_zone_fault += zone_fault_callback
     controller.on_zone_restore += zone_restore_callback
 
@@ -148,21 +145,16 @@ def async_setup(hass, config):
 
     controller.open(baud)
 
-    result = yield from sync_connect
+    _LOGGER.debug("Established a connection with the alarmdecoder")
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
 
-    if not result:
-        return False
-
-    hass.async_add_job(
-        async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf,
-                            config))
+    load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config)
 
     if zones:
-        hass.async_add_job(async_load_platform(
-            hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config))
+        load_platform(
+            hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config)
 
     if display:
-        hass.async_add_job(async_load_platform(
-            hass, 'sensor', DOMAIN, conf, config))
+        load_platform(hass, 'sensor', DOMAIN, conf, config)
 
     return True

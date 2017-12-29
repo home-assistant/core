@@ -243,9 +243,13 @@ def async_api_turn_on(hass, config, request, entity):
     if entity.domain == group.DOMAIN:
         domain = ha.DOMAIN
 
-    yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
+    service = SERVICE_TURN_ON
+    if entity.domain == cover.DOMAIN:
+        service = cover.SERVICE_OPEN_COVER
+
+    yield from hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -259,9 +263,13 @@ def async_api_turn_off(hass, config, request, entity):
     if entity.domain == group.DOMAIN:
         domain = ha.DOMAIN
 
-    yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
+    service = SERVICE_TURN_OFF
+    if entity.domain == cover.DOMAIN:
+        service = cover.SERVICE_CLOSE_COVER
+
+    yield from hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -276,7 +284,7 @@ def async_api_set_brightness(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -300,7 +308,7 @@ def async_api_adjust_brightness(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -321,14 +329,14 @@ def async_api_set_color(hass, config, request, entity):
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
             light.ATTR_RGB_COLOR: rgb,
-        }, blocking=True)
+        }, blocking=False)
     else:
         xyz = color_util.color_RGB_to_xy(*rgb)
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
             light.ATTR_XY_COLOR: (xyz[0], xyz[1]),
             light.ATTR_BRIGHTNESS: xyz[2],
-        }, blocking=True)
+        }, blocking=False)
 
     return api_message(request)
 
@@ -343,7 +351,7 @@ def async_api_set_color_temperature(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_KELVIN: kelvin,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -361,7 +369,7 @@ def async_api_decrease_color_temp(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_COLOR_TEMP: value,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -379,7 +387,7 @@ def async_api_increase_color_temp(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_COLOR_TEMP: value,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -391,7 +399,7 @@ def async_api_activate(hass, config, request, entity):
     """Process a activate request."""
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -421,8 +429,8 @@ def async_api_set_percentage(hass, config, request, entity):
         service = SERVICE_SET_COVER_POSITION
         data[cover.ATTR_POSITION] = percentage
 
-    yield from hass.services.async_call(entity.domain, service,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, service, data, blocking=False)
 
     return api_message(request)
 
@@ -469,8 +477,8 @@ def async_api_adjust_percentage(hass, config, request, entity):
 
         data[cover.ATTR_POSITION] = max(0, percentage_delta + current)
 
-    yield from hass.services.async_call(entity.domain, service,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, service, data, blocking=False)
 
     return api_message(request)
 
@@ -482,7 +490,7 @@ def async_api_lock(hass, config, request, entity):
     """Process a lock request."""
     yield from hass.services.async_call(entity.domain, SERVICE_LOCK, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -495,7 +503,7 @@ def async_api_unlock(hass, config, request, entity):
     """Process a unlock request."""
     yield from hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -512,8 +520,9 @@ def async_api_set_volume(hass, config, request, entity):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_VOLUME_SET,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_VOLUME_SET,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -540,9 +549,9 @@ def async_api_adjust_volume(hass, config, request, entity):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_VOLUME_SET,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, media_player.SERVICE_VOLUME_SET,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -559,9 +568,9 @@ def async_api_set_mute(hass, config, request, entity):
         media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_VOLUME_MUTE,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, media_player.SERVICE_VOLUME_MUTE,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -575,8 +584,9 @@ def async_api_play(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PLAY,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_PLAY,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -590,8 +600,9 @@ def async_api_pause(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PAUSE,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_PAUSE,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -605,8 +616,9 @@ def async_api_stop(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_STOP,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_STOP,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -620,9 +632,9 @@ def async_api_next(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        SERVICE_MEDIA_NEXT_TRACK,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_NEXT_TRACK,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -636,8 +648,8 @@ def async_api_previous(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        SERVICE_MEDIA_PREVIOUS_TRACK,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
+        data, blocking=False)
 
     return api_message(request)

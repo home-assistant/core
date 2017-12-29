@@ -1,0 +1,3 @@
+# Ensure Docker script files uses LF to support Docker for Windows.
+setup_docker_prereqs    eol=lf
+/virtualization/Docker/scripts/*    eol=lf

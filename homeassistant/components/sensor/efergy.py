@@ -31,6 +31,7 @@ CONF_COST = 'cost'
 CONF_CURRENT_VALUES = 'current_values'
 
 DEFAULT_PERIOD = 'year'
+DEFAULT_UTC_OFFSET = '0'
 
 SENSOR_TYPES = {
     CONF_INSTANT: ['Energy Usage', 'W'],
@@ -50,7 +51,7 @@ SENSORS_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_APPTOKEN): cv.string,
-    vol.Optional(CONF_UTC_OFFSET): cv.string,
+    vol.Optional(CONF_UTC_OFFSET, default=DEFAULT_UTC_OFFSET): cv.string,
     vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA]
 })
 

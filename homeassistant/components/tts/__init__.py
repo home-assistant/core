@@ -8,53 +8,53 @@ import asyncio
 import ctypes
 import functools as ft
 import hashlib
+import io
 import logging
 import mimetypes
 import os
 import re
-import io
 
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.core import callback
-from homeassistant.config import load_yaml_config_file
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC, ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE, DOMAIN as DOMAIN_MP)
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, MEDIA_TYPE_MUSIC,
+    SERVICE_PLAY_MEDIA)
+from homeassistant.components.media_player import DOMAIN as DOMAIN_MP
+from homeassistant.config import load_yaml_config_file
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['mutagen==1.38']
-
-DOMAIN = 'tts'
-DEPENDENCIES = ['http']
+REQUIREMENTS = ['mutagen==1.39']
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_CACHE = 'cache'
+ATTR_LANGUAGE = 'language'
+ATTR_MESSAGE = 'message'
+ATTR_OPTIONS = 'options'
+
+CONF_CACHE = 'cache'
+CONF_CACHE_DIR = 'cache_dir'
+CONF_LANG = 'language'
+CONF_TIME_MEMORY = 'time_memory'
+
+DEFAULT_CACHE = True
+DEFAULT_CACHE_DIR = 'tts'
+DEFAULT_TIME_MEMORY = 300
+DEPENDENCIES = ['http']
+DOMAIN = 'tts'
 
 MEM_CACHE_FILENAME = 'filename'
 MEM_CACHE_VOICE = 'voice'
 
-CONF_LANG = 'language'
-CONF_CACHE = 'cache'
-CONF_CACHE_DIR = 'cache_dir'
-CONF_TIME_MEMORY = 'time_memory'
-
-DEFAULT_CACHE = True
-DEFAULT_CACHE_DIR = "tts"
-DEFAULT_TIME_MEMORY = 300
-
-SERVICE_SAY = 'say'
 SERVICE_CLEAR_CACHE = 'clear_cache'
-
-ATTR_MESSAGE = 'message'
-ATTR_CACHE = 'cache'
-ATTR_LANGUAGE = 'language'
-ATTR_OPTIONS = 'options'
+SERVICE_SAY = 'say'
 
 _RE_VOICE_FILE = re.compile(
     r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}")

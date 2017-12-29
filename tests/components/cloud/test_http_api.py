@@ -191,7 +191,7 @@ def test_register_view(mock_cognito, cloud_client):
     assert req.status == 200
     assert len(mock_cognito.register.mock_calls) == 1
     result_email, result_pass = mock_cognito.register.mock_calls[0][1]
-    assert result_email == auth_api._generate_username('hello@bla.com')
+    assert result_email == 'hello@bla.com'
     assert result_pass == 'falcon42'
 
 
@@ -238,7 +238,7 @@ def test_confirm_register_view(mock_cognito, cloud_client):
     assert req.status == 200
     assert len(mock_cognito.confirm_sign_up.mock_calls) == 1
     result_code, result_email = mock_cognito.confirm_sign_up.mock_calls[0][1]
-    assert result_email == auth_api._generate_username('hello@bla.com')
+    assert result_email == 'hello@bla.com'
     assert result_code == '123456'
 
 
@@ -310,6 +310,48 @@ def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
     """Test unknown error while logging out."""
     mock_cognito.initiate_forgot_password.side_effect = auth_api.UnknownError
     req = yield from cloud_client.post('/api/cloud/forgot_password', json={
+        'email': 'hello@bla.com',
+    })
+    assert req.status == 502
+
+
+@asyncio.coroutine
+def test_resend_confirm_view(mock_cognito, cloud_client):
+    """Test logging out."""
+    req = yield from cloud_client.post('/api/cloud/resend_confirm', json={
+        'email': 'hello@bla.com',
+    })
+    assert req.status == 200
+    assert len(mock_cognito.client.resend_confirmation_code.mock_calls) == 1
+
+
+@asyncio.coroutine
+def test_resend_confirm_view_bad_data(mock_cognito, cloud_client):
+    """Test logging out."""
+    req = yield from cloud_client.post('/api/cloud/resend_confirm', json={
+        'not_email': 'hello@bla.com',
+    })
+    assert req.status == 400
+    assert len(mock_cognito.client.resend_confirmation_code.mock_calls) == 0
+
+
+@asyncio.coroutine
+def test_resend_confirm_view_request_timeout(mock_cognito, cloud_client):
+    """Test timeout while logging out."""
+    mock_cognito.client.resend_confirmation_code.side_effect = \
+        asyncio.TimeoutError
+    req = yield from cloud_client.post('/api/cloud/resend_confirm', json={
+        'email': 'hello@bla.com',
+    })
+    assert req.status == 502
+
+
+@asyncio.coroutine
+def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
+    """Test unknown error while logging out."""
+    mock_cognito.client.resend_confirmation_code.side_effect = \
+        auth_api.UnknownError
+    req = yield from cloud_client.post('/api/cloud/resend_confirm', json={
         'email': 'hello@bla.com',
     })
     assert req.status == 502

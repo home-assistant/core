@@ -36,7 +36,7 @@ from .static import (
     CachingFileResponse, CachingStaticResource, staticresource_middleware)
 from .util import get_real_ip
 
-REQUIREMENTS = ['aiohttp_cors==0.5.3']
+REQUIREMENTS = ['aiohttp_cors==0.6.0']
 
 ALLOWED_CORS_HEADERS = [
     ORIGIN, ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, CONTENT_TYPE,

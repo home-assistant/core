@@ -59,13 +59,6 @@ class CloudIoT:
         if self.state == STATE_CONNECTED:
             raise RuntimeError('Already connected')
 
-        self.state = STATE_CONNECTING
-        self.close_requested = False
-        remove_hass_stop_listener = None
-        session = async_get_clientsession(self.cloud.hass)
-        client = None
-        disconnect_warn = None
-
         @asyncio.coroutine
         def _handle_hass_stop(event):
             """Handle Home Assistant shutting down."""
@@ -73,18 +66,23 @@ class CloudIoT:
             remove_hass_stop_listener = None
             yield from self.disconnect()
 
+        self.state = STATE_CONNECTING
+        self.close_requested = False
+        remove_hass_stop_listener = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _handle_hass_stop)
+        session = async_get_clientsession(self.cloud.hass)
+        client = None
+        disconnect_warn = None
+
         try:
             yield from hass.async_add_job(auth_api.check_token, self.cloud)
 
             self.client = client = yield from session.ws_connect(
-                self.cloud.relayer, headers={
+                self.cloud.relayer, heartbeat=55, headers={
                     hdrs.AUTHORIZATION:
                         'Bearer {}'.format(self.cloud.id_token)
                 })
             self.tries = 0
-
-            remove_hass_stop_listener = hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, _handle_hass_stop)
 
             _LOGGER.info('Connected')
             self.state = STATE_CONNECTED

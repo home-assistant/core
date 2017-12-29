@@ -40,7 +40,7 @@ SERIAL_SCHEMA = {
 ETHERNET_SCHEMA = {
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.positive_int,
-    vol.Required(CONF_TYPE): vol.Any('tcp', 'udp'),
+    vol.Required(CONF_TYPE): vol.Any('tcp', 'udp', 'rtuovertcp'),
     vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
 }
 
@@ -91,6 +91,13 @@ def setup(hass, config):
                               stopbits=config[DOMAIN][CONF_STOPBITS],
                               bytesize=config[DOMAIN][CONF_BYTESIZE],
                               parity=config[DOMAIN][CONF_PARITY],
+                              timeout=config[DOMAIN][CONF_TIMEOUT])
+    elif client_type == 'rtuovertcp':
+        from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+        from pymodbus.transaction import ModbusRtuFramer as ModbusFramer
+        client = ModbusClient(host=config[DOMAIN][CONF_HOST],
+                              port=config[DOMAIN][CONF_PORT],
+                              framer=ModbusFramer,
                               timeout=config[DOMAIN][CONF_TIMEOUT])
     elif client_type == 'tcp':
         from pymodbus.client.sync import ModbusTcpClient as ModbusClient
