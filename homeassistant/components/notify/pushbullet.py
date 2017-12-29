@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_URL = 'url'
 ATTR_FILE = 'file'
 ATTR_FILE_URL = 'file_url'
+ATTR_LIST = 'list'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -132,6 +133,7 @@ class PushBulletNotificationService(BaseNotificationService):
         from pushbullet import PushError
         if data is None:
             data = {}
+        data_list = data.get(ATTR_LIST)
         url = data.get(ATTR_URL)
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
@@ -168,6 +170,11 @@ class PushBulletNotificationService(BaseNotificationService):
                                      file_name=file_url, file_url=file_url,
                                      file_type=mimetypes.guess_type(file_url)[0])
 
+            elif data_list:
+                if tname:
+                    pusher.push_list(title, data_list, email=tname)
+                else:
+                    pusher.push_list(title, data_list)
             else:
                 if tname:
                     pusher.push_note(title, message, email=tname)
