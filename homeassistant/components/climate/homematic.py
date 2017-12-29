@@ -8,7 +8,8 @@ import logging
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE)
-from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
+from homeassistant.components.homematic import (
+    HMDevice, ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT)
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['homematic']
