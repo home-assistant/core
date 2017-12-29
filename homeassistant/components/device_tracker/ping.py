@@ -83,6 +83,5 @@ def setup_scanner(hass, config, see, discovery_info=None):
         for host in hosts:
             host.update(see)
         track_point_in_utc_time(hass, update, util.dt.utcnow() + interval)
-        return True
 
-    return update(util.dt.utcnow())
+    return update(None)
