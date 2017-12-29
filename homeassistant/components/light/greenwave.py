@@ -48,7 +48,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         token = None
     doc = greenwave.grab_xml(host, token)
     for room in doc:
-        add_devices(GreenwaveLight(device, host, token) for device in room['device'])
+        add_devices(GreenwaveLight(device, host, token)
+                    for device in room['device'])
 
 
 class GreenwaveLight(Light):
