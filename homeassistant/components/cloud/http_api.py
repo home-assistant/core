@@ -23,6 +23,7 @@ def async_setup(hass):
     hass.http.register_view(CloudAccountView)
     hass.http.register_view(CloudRegisterView)
     hass.http.register_view(CloudConfirmRegisterView)
+    hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
     hass.http.register_view(CloudConfirmForgotPasswordView)
 
@@ -168,6 +169,29 @@ class CloudConfirmRegisterView(HomeAssistantView):
             yield from hass.async_add_job(
                 auth_api.confirm_register, cloud, data['confirmation_code'],
                 data['email'])
+
+        return self.json_message('ok')
+
+
+class CloudResendConfirmView(HomeAssistantView):
+    """Resend email confirmation code."""
+
+    url = '/api/cloud/resend_confirm'
+    name = 'api:cloud:resend_confirm'
+
+    @_handle_cloud_errors
+    @RequestDataValidator(vol.Schema({
+        vol.Required('email'): str,
+    }))
+    @asyncio.coroutine
+    def post(self, request, data):
+        """Handle resending confirm email code request."""
+        hass = request.app['hass']
+        cloud = hass.data[DOMAIN]
+
+        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+            yield from hass.async_add_job(
+                auth_api.resend_email_confirm, cloud, data['email'])
 
         return self.json_message('ok')
 
