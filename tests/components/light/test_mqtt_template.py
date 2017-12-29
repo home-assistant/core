@@ -145,12 +145,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
 
         # turn on the light, full white
         fire_mqtt_message(self.hass, 'test_light_rgb',
-                          'on,255,145,123,255-255-255,')
+                          'on,255,145,123,255-128-64,')
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual([255, 128, 64], state.attributes.get('rgb_color'))
         self.assertEqual(255, state.attributes.get('brightness'))
         self.assertEqual(145, state.attributes.get('color_temp'))
         self.assertEqual(123, state.attributes.get('white_value'))
