@@ -1,5 +1,9 @@
-"""Support for viewing the camera feed from a DoorBird video doorbell."""
+"""
+Support for viewing the camera feed from a DoorBird video doorbell.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/camera.doorbird/
+"""
 import asyncio
 import datetime
 import logging
@@ -13,10 +17,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 DEPENDENCIES = ['doorbird']
 
-_CAMERA_LIVE = "DoorBird Live"
 _CAMERA_LAST_VISITOR = "DoorBird Last Ring"
-_LIVE_INTERVAL = datetime.timedelta(seconds=1)
+_CAMERA_LIVE = "DoorBird Live"
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=1)
+_LIVE_INTERVAL = datetime.timedelta(seconds=1)
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 10  # seconds
 
@@ -26,12 +30,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the DoorBird camera platform."""
     device = hass.data.get(DOORBIRD_DOMAIN)
     async_add_devices([
-        DoorBirdCamera(device.live_image_url,
-                       _CAMERA_LIVE,
-                       _LIVE_INTERVAL),
-        DoorBirdCamera(device.history_image_url(1, "doorbell"),
-                       _CAMERA_LAST_VISITOR,
-                       _LAST_VISITOR_INTERVAL)
+        DoorBirdCamera(device.live_image_url, _CAMERA_LIVE, _LIVE_INTERVAL),
+        DoorBirdCamera(
+            device.history_image_url(1, 'doorbell'), _CAMERA_LAST_VISITOR,
+            _LAST_VISITOR_INTERVAL),
     ])
 
 
@@ -62,7 +64,6 @@ class DoorBirdCamera(Camera):
 
         try:
             websession = async_get_clientsession(self.hass)
-
             with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
                 response = yield from websession.get(self._url)
 
