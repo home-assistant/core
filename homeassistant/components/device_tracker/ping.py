@@ -78,10 +78,14 @@ def setup_scanner(hass, config, see, discovery_info=None):
     _LOGGER.info("Started ping tracker with interval=%s on hosts: %s",
                  interval, ",".join([host.ip_address for host in hosts]))
 
-    def update(now):
+    def update_interval(now):
         """Update all the hosts on every interval time."""
         for host in hosts:
             host.update(see)
         track_point_in_utc_time(hass, update, util.dt.utcnow() + interval)
 
-    return update(None)
+    if not hosts:
+        return False
+    
+    update_interval(None)
+    return True
