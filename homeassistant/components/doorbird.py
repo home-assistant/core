@@ -1,7 +1,12 @@
-"""Support for a DoorBird video doorbell."""
+"""
+Support for a DoorBird video doorbell.
 
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/doorbird/
+"""
 import asyncio
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
@@ -14,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'doorbird'
 
-API_URL = "/api/" + DOMAIN
+API_URL = '/api/{}'.format(DOMAIN)
 
 CONF_DOORBELL_EVENTS = 'doorbell_events'
 
@@ -23,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean
+        vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -32,11 +37,12 @@ SENSOR_DOORBELL = 'doorbell'
 
 def setup(hass, config):
     """Set up the DoorBird component."""
+    from doorbirdpy import DoorBird
+
     device_ip = config[DOMAIN].get(CONF_HOST)
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
-    from doorbirdpy import DoorBird
     device = DoorBird(device_ip, username, password)
     status = device.ready()
 
@@ -56,7 +62,7 @@ def setup(hass, config):
         hass.http.register_view(DoorbirdRequestView())
 
         # This will make HA the only service that gets doorbell events
-        url = hass.config.api.base_url + API_URL + "/" + SENSOR_DOORBELL
+        url = '{}{}/{}'.format(hass.config.api.base_url, API_URL, SENSOR_DOORBELL
         device.reset_notifications()
         device.subscribe_notification(SENSOR_DOORBELL, url)
 
@@ -67,12 +73,13 @@ class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
 
     url = API_URL
-    name = API_URL[1:].replace("/", ":")
-    extra_urls = [API_URL + "/{sensor}"]
+    name = API_URL[1:].replace('/', ':')
+    extra_urls = [API_URL + '/{sensor}']
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def get(self, request, sensor):
         """Respond to requests from the device."""
-        hass = request.app["hass"]
-        hass.bus.async_fire("{}_{}".format(DOMAIN, sensor))
-        return "OK"
+        hass = request.app['hass']
+        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
+        return 'OK'
