@@ -13,9 +13,9 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
-SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS)
+SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
-REQUIREMENTS = ['greenwavereality==0.2.9']
+REQUIREMENTS = ['greenwavereality==0.4.1']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -36,14 +36,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             token = tokenfile.read()
             tokenfile.close()
         else:
-            token = greenwave.grab_token(host, 'hass', 'homeassistant')
+            try:
+                token = greenwave.grab_token(host, 'hass', 'homeassistant')
+            except PermissionError:
+                _LOGGER.error('The Gateway Is Not In Sync Mode')
+                raise
             tokenfile = open(tokenfile, "w+")
             tokenfile.write(token)
             tokenfile.close()
     else:
         token = None
     doc = greenwave.grab_xml(host, token)
-    add_devices(GreenwaveLight(device, host, token) for device in doc)
+    for room in doc:
+        add_devices(GreenwaveLight(device, host, token) for device in room['device'])
 
 
 class GreenwaveLight(Light):
@@ -104,9 +109,10 @@ class GreenwaveLight(Light):
         import greenwavereality as greenwave
         doc = greenwave.grab_xml(self._host, self.token)
 
-        for device in doc:
-            if device['did'] == self._did:
-                self._state = int(device['state'])
-                self._brightness = greenwave.hass_brightness(device)
-                self._online = greenwave.check_online(device)
-                self._name = device['name']
+        for room in doc:
+            for device in room['device']:
+                if device['did'] == self._did:
+                    self._state = int(device['state'])
+                    self._brightness = greenwave.hass_brightness(device)
+                    self._online = greenwave.check_online(device)
+                    self._name = device['name']
