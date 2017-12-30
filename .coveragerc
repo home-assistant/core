@@ -296,6 +296,7 @@ omit =
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/synology.py
     homeassistant/components/camera/yi.py
+    homeassistant/components/climate/econet.py
     homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
@@ -365,6 +366,7 @@ omit =
     homeassistant/components/light/decora.py
     homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/flux_led.py
+    homeassistant/components/light/greenwave.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/lifx.py
@@ -476,6 +478,7 @@ omit =
     homeassistant/components/notify/yessssms.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/prometheus.py
+    homeassistant/components/rainbird.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
@@ -504,6 +507,7 @@ omit =
     homeassistant/components/sensor/deluge.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/discogs.py
     homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
@@ -517,7 +521,6 @@ omit =
     homeassistant/components/sensor/etherscan.py
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
-    homeassistant/components/sensor/fido.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
@@ -532,7 +535,6 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
-    homeassistant/components/sensor/hydroquebec.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
@@ -570,6 +572,7 @@ omit =
     homeassistant/components/sensor/pyload.py
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
+    homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
@@ -580,6 +583,7 @@ omit =
     homeassistant/components/sensor/skybeacon.py
     homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
+    homeassistant/components/sensor/sochain.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/steam_online.py

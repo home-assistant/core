@@ -31,10 +31,6 @@ DEPENDENCIES = ['hue']
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_KEY = 'hue_lights'
-DATA_LIGHTS = 'lights'
-DATA_LIGHTGROUPS = 'lightgroups'
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
@@ -93,8 +89,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or 'bridge_id' not in discovery_info:
         return
 
-    setup_data(hass)
-
     if config is not None and len(config) > 0:
         # Legacy configuration, will be removed in 0.60
         config_str = yaml.dump([config])
@@ -108,12 +102,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bridge_id = discovery_info['bridge_id']
     bridge = hass.data[hue.DOMAIN][bridge_id]
     unthrottled_update_lights(hass, bridge, add_devices)
-
-
-def setup_data(hass):
-    """Initialize internal data. Useful from tests."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {DATA_LIGHTS: {}, DATA_LIGHTGROUPS: {}}
 
 
 @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
@@ -176,18 +164,17 @@ def process_lights(hass, api, bridge, bridge_type, update_lights_cb):
 
     new_lights = []
 
-    lights = hass.data[DATA_KEY][DATA_LIGHTS]
     for light_id, info in api_lights.items():
-        if light_id not in lights:
-            lights[light_id] = HueLight(
+        if light_id not in bridge.lights:
+            bridge.lights[light_id] = HueLight(
                 int(light_id), info, bridge,
                 update_lights_cb,
                 bridge_type, bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue)
-            new_lights.append(lights[light_id])
+            new_lights.append(bridge.lights[light_id])
         else:
-            lights[light_id].info = info
-            lights[light_id].schedule_update_ha_state()
+            bridge.lights[light_id].info = info
+            bridge.lights[light_id].schedule_update_ha_state()
 
     return new_lights
 
@@ -202,23 +189,22 @@ def process_groups(hass, api, bridge, bridge_type, update_lights_cb):
 
     new_lights = []
 
-    groups = hass.data[DATA_KEY][DATA_LIGHTGROUPS]
     for lightgroup_id, info in api_groups.items():
         if 'state' not in info:
             _LOGGER.warning('Group info does not contain state. '
                             'Please update your hub.')
             return []
 
-        if lightgroup_id not in groups:
-            groups[lightgroup_id] = HueLight(
+        if lightgroup_id not in bridge.lightgroups:
+            bridge.lightgroups[lightgroup_id] = HueLight(
                 int(lightgroup_id), info, bridge,
                 update_lights_cb,
                 bridge_type, bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue, True)
-            new_lights.append(groups[lightgroup_id])
+            new_lights.append(bridge.lightgroups[lightgroup_id])
         else:
-            groups[lightgroup_id].info = info
-            groups[lightgroup_id].schedule_update_ha_state()
+            bridge.lightgroups[lightgroup_id].info = info
+            bridge.lightgroups[lightgroup_id].schedule_update_ha_state()
 
     return new_lights
 
