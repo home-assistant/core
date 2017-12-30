@@ -6,7 +6,7 @@ http://home-assistant.io/components/climate.fritzhome/
 """
 import logging
 
-from homeassistant.components.fritzhome import DOMAIN
+from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
@@ -30,7 +30,7 @@ MAX_TEMPERATURE = 28
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome thermostat platform."""
-    device_list = hass.data[DOMAIN]
+    device_list = hass.data[FRITZHOME_DOMAIN]
 
     devices = []
     for device in device_list:

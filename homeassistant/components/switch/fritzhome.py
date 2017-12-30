@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 http://home-assistant.io/components/switch.fritzhome/
 """
 import logging
-from homeassistant.components.fritzhome import DOMAIN
+from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
 from homeassistant.components.switch import (SwitchDevice)
 
 DEPENDENCIES = ['fritzhome']
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome switch platform."""
-    device_list = hass.data[DOMAIN]
+    device_list = hass.data[FRITZHOME_DOMAIN]
 
     devices = []
     for device in device_list:
