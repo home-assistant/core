@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for device in device_list:
         if device.has_switch:
-            devices.append(FritzhomeSwitch(hass, device))
+            devices.append(FritzhomeSwitch(device))
 
     add_devices(devices)
 
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FritzhomeSwitch(SwitchDevice):
     """The switch class for Fritzhome switches."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize the switch."""
         self._device = device
 
