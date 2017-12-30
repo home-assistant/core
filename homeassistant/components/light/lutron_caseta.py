@@ -8,7 +8,8 @@ import asyncio
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, DOMAIN)
+    ATTR_BRIGHTNESS, ATTR_TRANSITION, SUPPORT_BRIGHTNESS,
+    SUPPORT_TRANSITION, Light, DOMAIN)
 from homeassistant.components.light.lutron import (
     to_hass_level, to_lutron_level)
 from homeassistant.components.lutron_caseta import (
@@ -17,6 +18,9 @@ from homeassistant.components.lutron_caseta import (
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['lutron_caseta']
+
+# How many updates per second to perform when transitioning between states
+TRANSITION_RATE = 2
 
 
 # pylint: disable=unused-argument
@@ -39,7 +43,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     @property
     def brightness(self):
@@ -53,13 +57,32 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
             brightness = kwargs[ATTR_BRIGHTNESS]
         else:
             brightness = 255
-        self._smartbridge.set_value(self._device_id,
-                                    to_lutron_level(brightness))
+        if ATTR_TRANSITION in kwargs:
+            transition = kwargs[ATTR_TRANSITION]
+            yield from self.transition(transition, self.brightness, brightness)
+        else:
+            self._smartbridge.set_value(self._device_id,
+                                        to_lutron_level(brightness))
+
+    @asyncio.coroutine
+    def transition(self, transition, from_, to):
+        delta = to - from_
+        step = delta / transition / TRANSITION_RATE
+        for i in range(int(transition * TRANSITION_RATE)):
+            step_brightness = int(max(0, from_ + (i + 1) * step))
+            self._smartbridge.set_value(self._device_id,
+                                        to_lutron_level(step_brightness))
+            yield from asyncio.sleep(1 / TRANSITION_RATE)
+
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self._smartbridge.set_value(self._device_id, 0)
+        if ATTR_TRANSITION in kwargs:
+            transition = kwargs[ATTR_TRANSITION]
+            yield from self.transition(transition, self.brightness, 0)
+        else:
+            self._smartbridge.set_value(self._device_id, 0)
 
     @property
     def is_on(self):
