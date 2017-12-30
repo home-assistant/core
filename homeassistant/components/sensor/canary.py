@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.canary/
 """
 
-from canary.api import SensorType
-
 from homeassistant.components.canary import DATA_CANARY
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
@@ -17,12 +15,16 @@ SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY_READING = "air_quality_reading"
 
 # Sensor types are defined like so:
-# SensorType enum, unit_of_measurement, icon
+# sensor type name, unit_of_measurement, icon
 SENSOR_TYPES = [
-    [SensorType.TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
-    [SensorType.HUMIDITY, "%", "mdi:water-percent"],
-    [SensorType.AIR_QUALITY, None, "mdi:weather-windy"],
+    ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    ["humidity", "%", "mdi:water-percent"],
+    ["air_quality", None, "mdi:weather-windy"],
 ]
+
+STATE_AIR_QUALITY_NORMAL = "normal"
+STATE_AIR_QUALITY_ABNORMAL = "abnormal"
+STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,7 +52,7 @@ class CanarySensor(Entity):
         self._device_id = device.device_id
         self._sensor_value = None
 
-        sensor_type_name = sensor_type[0].value.replace("_", " ").title()
+        sensor_type_name = sensor_type[0].replace("_", " ").title()
         self._name = '{} {} {}'.format(location.name,
                                        device.name,
                                        sensor_type_name)
@@ -63,13 +65,13 @@ class CanarySensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._sensor_type[0] == SensorType.AIR_QUALITY:
+        if self._sensor_type[0] == "air_quality":
             if self._sensor_value <= .4:
-                return "Very Abnormal"
+                return STATE_AIR_QUALITY_VERY_ABNORMAL
             elif self._sensor_value <= .59:
-                return "Abnormal"
+                return STATE_AIR_QUALITY_ABNORMAL
             elif self._sensor_value <= 1.0:
-                return "Normal"
+                return STATE_AIR_QUALITY_NORMAL
 
         return self._sensor_value
 
@@ -77,7 +79,7 @@ class CanarySensor(Entity):
     def unique_id(self):
         """Return the unique ID of this sensor."""
         return "sensor_canary_{}_{}".format(self._device_id,
-                                            self._sensor_type[0].value)
+                                            self._sensor_type[0])
 
     @property
     def unit_of_measurement(self):
@@ -92,7 +94,7 @@ class CanarySensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._sensor_type[0] == SensorType.AIR_QUALITY:
+        if self._sensor_type[0] == "air_quality":
             return {
                 ATTR_AIR_QUALITY_READING: self._sensor_value
             }
@@ -103,5 +105,14 @@ class CanarySensor(Entity):
         """Get the latest state of the sensor."""
         self._data.update()
 
-        value = self._data.get_reading(self._device_id, self._sensor_type[0])
+        from canary.api import SensorType
+        canary_sensor_type = None
+        if self._sensor_type[0] == "air_quality":
+            canary_sensor_type = SensorType.AIR_QUALITY
+        elif self._sensor_type[0] == "temperature":
+            canary_sensor_type = SensorType.TEMPERATURE
+        elif self._sensor_type[0] == "humidity":
+            canary_sensor_type = SensorType.HUMIDITY
+
+        value = self._data.get_reading(self._device_id, canary_sensor_type)
         self._sensor_value = round(float(value), SENSOR_VALUE_PRECISION)
