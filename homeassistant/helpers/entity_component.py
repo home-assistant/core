@@ -80,8 +80,10 @@ class EntityComponent(object):
         @callback
         def component_platform_discovered(platform, info):
             """Handle the loading of a platform."""
+            d_config = dict(config_per_platform(config, self.domain))
+            p_config = d_config[platform] if d_config is not None else {}
             self.hass.async_add_job(
-                self._async_setup_platform(platform, {}, info))
+                self._async_setup_platform(platform, p_config, info))
 
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
