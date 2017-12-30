@@ -10,8 +10,8 @@ from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (PRECISION_HALVES)
-from homeassistant.const import (TEMP_CELSIUS, ATTR_TEMPERATURE)
+from homeassistant.const import PRECISION_HALVES
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['fritzhome']
 

@@ -6,7 +6,7 @@ http://home-assistant.io/components/switch.fritzhome/
 """
 import logging
 from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
-from homeassistant.components.switch import (SwitchDevice)
+from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['fritzhome']
 
