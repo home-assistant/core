@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 
 
 DEPENDENCIES = ['abode']
@@ -77,7 +77,7 @@ class AbodeLight(AbodeDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         if self._device.is_dimmable and self._device.has_color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         elif self._device.is_dimmable:
             return SUPPORT_BRIGHTNESS
 

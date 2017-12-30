@@ -10,7 +10,7 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
                                             ATTR_RGB_COLOR,
                                             SUPPORT_BRIGHTNESS,
                                             SUPPORT_COLOR_TEMP,
-                                            SUPPORT_RGB_COLOR, Light)
+                                            SUPPORT_COLOR, Light)
 
 DEPENDENCIES = ['hive']
 
@@ -132,7 +132,7 @@ class HiveDeviceLight(Light):
             supported_features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
         elif self.light_device_type == "colourtuneablelight":
             supported_features = (
-                SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR)
+                SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR)
 
         return supported_features
 

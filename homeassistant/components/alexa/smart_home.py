@@ -51,8 +51,7 @@ MAPPING_COMPONENT = {
     light.DOMAIN: [
         'LIGHT', ('Alexa.PowerController',), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
-            light.SUPPORT_RGB_COLOR: 'Alexa.ColorController',
-            light.SUPPORT_XY_COLOR: 'Alexa.ColorController',
+            light.SUPPORT_COLOR: 'Alexa.ColorController',
             light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
         }
     ],
@@ -317,18 +316,10 @@ def async_api_set_color(hass, config, request, entity):
         float(request[API_PAYLOAD]['color']['brightness'])
     )
 
-    if supported & light.SUPPORT_RGB_COLOR > 0:
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_RGB_COLOR: rgb,
-        }, blocking=True)
-    else:
-        xyz = color_util.color_RGB_to_xy_brightness(*rgb)
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_XY_COLOR: (xyz[0], xyz[1]),
-            light.ATTR_BRIGHTNESS: xyz[2],
-        }, blocking=True)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_RGB_COLOR: rgb,
+    }, blocking=True)
 
     return api_message(request)
 

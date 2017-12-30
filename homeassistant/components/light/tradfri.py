@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_RGB_COLOR, Light)
+    SUPPORT_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -316,10 +316,10 @@ class TradfriLight(Light):
             if self._light_control.can_set_kelvin:
                 self._features |= SUPPORT_COLOR_TEMP
             if self._light_control.can_set_color:
-                self._features |= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_COLOR
         else:
             if self._light_data.hex_color is not None:
-                self._features |= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_COLOR
 
         self._temp_supported = self._light.device_info.manufacturer \
             in ALLOWED_TEMPERATURES

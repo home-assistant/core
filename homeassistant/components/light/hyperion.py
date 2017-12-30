@@ -11,7 +11,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+    ATTR_RGB_COLOR, SUPPORT_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -25,7 +25,7 @@ DEFAULT_NAME = 'Hyperion'
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 
-SUPPORT_HYPERION = SUPPORT_RGB_COLOR
+SUPPORT_HYPERION = SUPPORT_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

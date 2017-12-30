@@ -11,7 +11,7 @@ import logging
 from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
     ATTR_RGB_COLOR, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, DOMAIN, Light
+    SUPPORT_COLOR, SUPPORT_TRANSITION, DOMAIN, Light
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -218,7 +218,7 @@ class ZwaveColorLight(ZwaveDimmer):
         """Call when a new value is added to this entity."""
         super().value_added()
 
-        self._supported_features |= SUPPORT_RGB_COLOR
+        self._supported_features |= SUPPORT_COLOR
         if self._zw098:
             self._supported_features |= SUPPORT_COLOR_TEMP
 

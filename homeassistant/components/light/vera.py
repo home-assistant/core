@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
@@ -50,7 +50,7 @@ class VeraLight(VeraDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         if self._color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):

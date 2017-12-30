@@ -47,7 +47,7 @@ MAPPING_COMPONENT = {
     light.DOMAIN: [
         TYPE_LIGHT, TRAIT_ONOFF, {
             light.SUPPORT_BRIGHTNESS: TRAIT_BRIGHTNESS,
-            light.SUPPORT_RGB_COLOR: TRAIT_RGB_COLOR,
+            light.SUPPORT_COLOR: TRAIT_RGB_COLOR,
             light.SUPPORT_COLOR_TEMP: TRAIT_COLOR_TEMP,
         }
     ],
@@ -186,7 +186,7 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
 
     supported_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
     if supported_features & \
-       (light.SUPPORT_COLOR_TEMP | light.SUPPORT_RGB_COLOR):
+       (light.SUPPORT_COLOR_TEMP | light.SUPPORT_COLOR):
         query_response["color"] = {}
 
         if entity.attributes.get(light.ATTR_COLOR_TEMP) is not None:

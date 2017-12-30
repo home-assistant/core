@@ -15,8 +15,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
     ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_XY_COLOR,
     FLASH_LONG, FLASH_SHORT, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, SUPPORT_XY_COLOR)
+    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT,
     CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY)
@@ -148,12 +148,12 @@ class MqttJson(Light):
         self._flash_times = flash_times
 
         self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
-        self._supported_features |= (rgb and SUPPORT_RGB_COLOR)
+        self._supported_features |= (rgb and SUPPORT_COLOR)
         self._supported_features |= (brightness and SUPPORT_BRIGHTNESS)
         self._supported_features |= (color_temp and SUPPORT_COLOR_TEMP)
         self._supported_features |= (effect and SUPPORT_EFFECT)
         self._supported_features |= (white_value and SUPPORT_WHITE_VALUE)
-        self._supported_features |= (xy and SUPPORT_XY_COLOR)
+        self._supported_features |= (xy and SUPPORT_COLOR)
 
     @asyncio.coroutine
     def async_added_to_hass(self):

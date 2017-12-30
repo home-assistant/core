@@ -14,8 +14,8 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
     ATTR_WHITE_VALUE, ATTR_XY_COLOR, Light, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR,
-    SUPPORT_WHITE_VALUE, SUPPORT_XY_COLOR)
+    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_COLOR,
+    SUPPORT_WHITE_VALUE)
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_NAME,
     CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON,
@@ -190,7 +190,7 @@ class MqttLight(Light):
         self._xy = None
         self._supported_features = 0
         self._supported_features |= (
-            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_RGB_COLOR)
+            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
         self._supported_features |= (
             topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
             SUPPORT_BRIGHTNESS)
@@ -204,7 +204,7 @@ class MqttLight(Light):
             topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None and
             SUPPORT_WHITE_VALUE)
         self._supported_features |= (
-            topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_XY_COLOR)
+            topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
 
     @asyncio.coroutine
     def async_added_to_hass(self):

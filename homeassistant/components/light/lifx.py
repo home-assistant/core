@@ -18,8 +18,8 @@ from homeassistant.components.light import (
     Light, DOMAIN, PLATFORM_SCHEMA, LIGHT_TURN_ON_SCHEMA,
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
     ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_TRANSITION, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_EFFECT,
     VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT,
     preprocess_turn_on_alternatives)
 from homeassistant.config import load_yaml_config_file
@@ -600,7 +600,7 @@ class LIFXColor(LIFXLight):
     def supported_features(self):
         """Flag supported features."""
         support = super().supported_features
-        support |= SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR
+        support |= SUPPORT_COLOR
         return support
 
     @property

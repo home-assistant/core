@@ -10,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    Light, ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, ATTR_BRIGHTNESS,
+    Light, ATTR_RGB_COLOR, SUPPORT_COLOR, ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST
 
@@ -18,7 +18,7 @@ REQUIREMENTS = ['yeelightsunflower==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string

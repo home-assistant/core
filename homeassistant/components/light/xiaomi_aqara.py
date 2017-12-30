@@ -6,7 +6,7 @@ from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
                                             SUPPORT_BRIGHTNESS,
-                                            SUPPORT_RGB_COLOR, Light)
+                                            SUPPORT_COLOR, Light)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

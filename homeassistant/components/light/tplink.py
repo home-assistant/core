@@ -11,7 +11,7 @@ import time
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
@@ -153,7 +153,7 @@ class TPLinkSmartBulb(Light):
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
-            if self._supported_features & SUPPORT_RGB_COLOR:
+            if self._supported_features & SUPPORT_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
@@ -187,4 +187,4 @@ class TPLinkSmartBulb(Light):
         if self.smartbulb.is_variable_color_temp:
             self._supported_features += SUPPORT_COLOR_TEMP
         if self.smartbulb.is_color:
-            self._supported_features += SUPPORT_RGB_COLOR
+            self._supported_features += SUPPORT_COLOR

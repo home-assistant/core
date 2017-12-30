@@ -19,8 +19,7 @@ from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
     ATTR_FLASH, ATTR_XY_COLOR, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_XY_COLOR,
-    SUPPORT_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_TRANSITION,
     SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_EFFECT,
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -52,8 +51,7 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_FLASH)
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
-                        SUPPORT_RGB_COLOR |
-                        SUPPORT_XY_COLOR |
+                        SUPPORT_COLOR |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
 
@@ -316,7 +314,7 @@ class YeelightLight(Light):
     @_cmd
     def set_rgb(self, rgb, duration) -> None:
         """Set bulb's color."""
-        if rgb and self.supported_features & SUPPORT_RGB_COLOR:
+        if rgb and self.supported_features & SUPPORT_COLOR:
             _LOGGER.debug("Setting RGB: %s", rgb)
             self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
 

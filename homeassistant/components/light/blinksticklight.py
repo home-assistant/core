@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+    ATTR_RGB_COLOR, SUPPORT_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -21,7 +21,7 @@ CONF_SERIAL = 'serial'
 
 DEFAULT_NAME = 'Blinkstick'
 
-SUPPORT_BLINKSTICK = SUPPORT_RGB_COLOR
+SUPPORT_BLINKSTICK = SUPPORT_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERIAL): cv.string,

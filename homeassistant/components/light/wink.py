@@ -9,7 +9,7 @@ import colorsys
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_XY_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
 from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.util import color as color_util
 from homeassistant.util.color import \
@@ -17,7 +17,7 @@ from homeassistant.util.color import \
 
 DEPENDENCIES = ['wink']
 
-SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
+SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

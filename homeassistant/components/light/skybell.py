@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 from homeassistant.components.skybell import (
     DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
 
@@ -84,4 +84,4 @@ class SkybellLight(SkybellDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
     EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+    SUPPORT_COLOR, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['flux_led==0.20']
@@ -27,7 +27,7 @@ ATTR_MODE = 'mode'
 DOMAIN = 'flux_led'
 
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                    SUPPORT_RGB_COLOR)
+                    SUPPORT_COLOR)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'

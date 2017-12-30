@@ -10,8 +10,8 @@ from datetime import timedelta
 import homeassistant.util as util
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_TRANSITION,
-    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
+    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
+    SUPPORT_TRANSITION)
 
 DEPENDENCIES = ['wemo']
 
@@ -20,8 +20,8 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
+SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR |
+                SUPPORT_TRANSITION)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

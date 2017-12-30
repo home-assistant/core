@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
     ATTR_XY_COLOR, ATTR_TRANSITION, EFFECT_RANDOM, SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT, SUPPORT_XY_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    SUPPORT_EFFECT, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
     SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired,
@@ -33,8 +33,8 @@ CONF_ALLOW_LIGHTIFY_GROUPS = "allow_lightify_groups"
 DEFAULT_ALLOW_LIGHTIFY_GROUPS = True
 
 SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                         SUPPORT_EFFECT | SUPPORT_RGB_COLOR |
-                         SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
+                         SUPPORT_EFFECT | SUPPORT_COLOR |
+                         SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

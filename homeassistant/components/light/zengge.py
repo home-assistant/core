@@ -11,14 +11,14 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_RGB_COLOR, ATTR_WHITE_VALUE,
-    SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
+    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['zengge==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_ZENGGE_LED = (SUPPORT_RGB_COLOR | SUPPORT_WHITE_VALUE)
+SUPPORT_ZENGGE_LED = (SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,

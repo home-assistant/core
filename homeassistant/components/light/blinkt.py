@@ -10,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_COLOR,
     Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 
@@ -18,7 +18,7 @@ REQUIREMENTS = ['blinkt==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_BLINKT = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+SUPPORT_BLINKT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
 
 DEFAULT_NAME = 'blinkt'
 

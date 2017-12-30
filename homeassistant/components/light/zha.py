@@ -58,8 +58,7 @@ class Light(zha.Entity, light.Light):
                 self._supported_features |= light.SUPPORT_COLOR_TEMP
 
             if color_capabilities & 0x08:
-                self._supported_features |= light.SUPPORT_XY_COLOR
-                self._supported_features |= light.SUPPORT_RGB_COLOR
+                self._supported_features |= light.SUPPORT_COLOR
                 self._xy_color = (1.0, 1.0)
 
     @property
@@ -167,7 +166,7 @@ class Light(zha.Entity, light.Light):
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
-        if self._supported_features & light.SUPPORT_XY_COLOR:
+        if self._supported_features & light.SUPPORT_COLOR:
             result = yield from safe_read(self._endpoint.light_color,
                                           ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:

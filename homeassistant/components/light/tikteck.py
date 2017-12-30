@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PASSWORD
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
@@ -18,7 +18,7 @@ REQUIREMENTS = ['tikteck==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_TIKTECK_LED = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+SUPPORT_TIKTECK_LED = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
