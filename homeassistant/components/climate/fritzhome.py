@@ -88,10 +88,10 @@ class FritzhomeThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_OPERATION_MODE) is not None:
+        if ATTR_OPERATION_MODE in kwargs:
             operation_mode = kwargs.get(ATTR_OPERATION_MODE)
             self.set_operation_mode(operation_mode)
-        elif kwargs.get(ATTR_TEMPERATURE) is not None:
+        elif ATTR_TEMPERATURE in kwargs:
             temperature = kwargs.get(ATTR_TEMPERATURE)
             self._device.set_target_temperature(temperature)
 
