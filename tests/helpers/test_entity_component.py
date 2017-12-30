@@ -418,6 +418,41 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert sorted(self.hass.states.entity_ids()) == \
             ['test_domain.yummy_beer', 'test_domain.yummy_unnamed_device']
 
+    def test_set_entity_namespace_via_config_on_discovery(self):
+        """Test setting an entity namespace on an autodiscovered component."""
+        def platform_setup(hass, config, add_devices, discovery_info=None):
+            """Test the platform setup."""
+            if discovery_info is not None:
+                add_devices([
+                    EntityTest(name='bar'),
+                    EntityTest(name=None),
+                ])
+
+        component_setup = Mock(return_value=True)
+        loader.set_component(
+            'test_domain',
+            MockModule('test_domain', setup=component_setup))
+
+        platform = MockPlatform(platform_setup)
+        loader.set_component('test_domain.mod1', platform)
+
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        component.setup(OrderedDict([
+            (DOMAIN, {
+                'platform': 'mod1',
+                'entity_namespace': 'foo',
+            }),
+        ]))
+        self.hass.block_till_done()
+
+        discovery.load_platform(self.hass, DOMAIN, 'mod1',
+                                {'msg': 'discovery_info'})
+        self.hass.block_till_done()
+
+        assert sorted(self.hass.states.entity_ids()) == \
+            ['test_domain.foo_bar', 'test_domain.foo_unnamed_device']
+
     def test_adding_entities_with_generator_and_thread_callback(self):
         """Test generator in add_entities that calls thread method.
 
