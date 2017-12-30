@@ -55,6 +55,4 @@ def setup(hass, config):
     for domain in SUPPORTED_DOMAINS:
         discovery.load_platform(hass, domain, DOMAIN, {}, config)
 
-    _LOGGER.info('Connected to fritzbox')
-
     return True
