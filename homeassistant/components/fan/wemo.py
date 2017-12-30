@@ -4,8 +4,8 @@ Support for WeMo Humidifier.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan.wemo/
 """
-import logging
 import asyncio
+import logging
 
 from homeassistant.components.fan import (
     SPEED_OFF, SPEED_MINIMUM, SPEED_LOW,
@@ -58,6 +58,15 @@ WEMO_FAN_SPEED_TO_HASS = {
     WEMO_FAN_MEDIUM: SPEED_MEDIUM,
     WEMO_FAN_HIGH: SPEED_HIGH,
     WEMO_FAN_MAXIMUM: SPEED_MAXIMUM
+}
+
+HASS_FAN_SPEED_TO_WEMO = {
+    SPEED_OFF: WEMO_FAN_OFF,
+    SPEED_MINIMUM: WEMO_FAN_MINIMUM,
+    SPEED_LOW: WEMO_FAN_LOW,
+    SPEED_MEDIUM: WEMO_FAN_MEDIUM,
+    SPEED_HIGH: WEMO_FAN_HIGH,
+    SPEED_MAXIMUM: WEMO_FAN_MAXIMUM
 }
 
 
@@ -169,18 +178,7 @@ class WemoHumidifier(FanEntity):
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the fan_mode of the Humidifier."""
-        if speed == SPEED_OFF:
-            self.wemo.set_state(WEMO_FAN_OFF)
-        elif speed == SPEED_MINIMUM:
-            self.wemo.set_state(WEMO_FAN_MINIMUM)
-        elif speed == SPEED_LOW:
-            self.wemo.set_state(WEMO_FAN_LOW)
-        elif speed == SPEED_MEDIUM:
-            self.wemo.set_state(WEMO_FAN_MEDIUM)
-        elif speed == SPEED_HIGH:
-            self.wemo.set_state(WEMO_FAN_HIGH)
-        elif speed == SPEED_MAXIMUM:
-            self.wemo.set_state(WEMO_FAN_MAXIMUM)
+		self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
 
     def set_humidity(self: ToggleEntity, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
@@ -210,7 +208,7 @@ class WemoHumidifier(FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return WEMO_FAN_SPEED_TO_HASS.get(self.wemo.fan_mode, None)
+        return WEMO_FAN_SPEED_TO_HASS.get(self.wemo.fan_mode)
 
     @property
     def speed_list(self: ToggleEntity) -> list:
