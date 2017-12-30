@@ -168,7 +168,6 @@ def process_lights(hass, api, bridge, update_lights_cb):
         else:
             bridge.lights[light_id].info = info
             hass.helpers.dispatcher.dispatcher_send(
-                hass,
                 SIGNAL_CALLBACK.format(
                     bridge.bridge_id,
                     bridge.lights[light_id].light_id))
@@ -202,7 +201,6 @@ def process_groups(hass, api, bridge, update_lights_cb):
         else:
             bridge.lightgroups[lightgroup_id].info = info
             hass.helpers.dispatcher.dispatcher_send(
-                hass,
                 SIGNAL_CALLBACK.format(
                     bridge.bridge_id,
                     bridge.lightgroups[lightgroup_id].light_id))

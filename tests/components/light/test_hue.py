@@ -381,7 +381,6 @@ class TestSetup(unittest.TestCase):
                     self.mock_bridge.allow_in_emulated_hue),
             ])
             mock_dispatcher_send.assert_called_once_with(
-                self.hass,
                 'hue_light_callback_bridge-id_1')
             self.assertEquals(len(self.mock_bridge.lights), 2)
 
@@ -462,7 +461,6 @@ class TestSetup(unittest.TestCase):
                     self.mock_bridge.allow_in_emulated_hue, True),
             ])
             mock_dispatcher_send.assert_called_once_with(
-                self.hass,
                 'hue_light_callback_bridge-id_1')
             self.assertEquals(len(self.mock_bridge.lightgroups), 2)
 
