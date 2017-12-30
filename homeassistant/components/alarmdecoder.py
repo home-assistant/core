@@ -6,11 +6,13 @@ https://home-assistant.io/components/alarmdecoder/
 """
 import logging
 
+from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['alarmdecoder==0.12.3']
 
@@ -106,7 +108,7 @@ def setup(hass, config):
         restart = False
         controller.close()
 
-    def open_connection():
+    def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
         from alarmdecoder.util import NoDeviceError
         nonlocal restart
@@ -114,12 +116,13 @@ def setup(hass, config):
             controller.open(baud)
         except NoDeviceError:
             _LOGGER.debug("Failed to connect.  Retrying in 5 seconds")
-            hass.loop.call_later(5.0, hass.async_add_job, open_connection)
+            hass.helpers.event.track_point_in_time(
+                open_connection, dt_util.utcnow() + timedelta(seconds=5))
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")
         restart = True
 
-    def handle_close(event):
+    def handle_closed_connection(event):
         """Restart after unexpected loss of connection."""
         nonlocal restart
         if not restart:
@@ -165,7 +168,7 @@ def setup(hass, config):
     controller.on_rfx_message += handle_rfx_message
     controller.on_zone_fault += zone_fault_callback
     controller.on_zone_restore += zone_restore_callback
-    controller.on_close += handle_close
+    controller.on_close += handle_closed_connection
 
     hass.data[DATA_AD] = controller
 
