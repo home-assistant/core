@@ -95,6 +95,7 @@ class WemoHumidifier(FanEntity):
         # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
 
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register update callback."""
