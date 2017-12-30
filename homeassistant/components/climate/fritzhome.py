@@ -98,8 +98,6 @@ class FritzhomeThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        if not self.available:
-            return None
         if self._target_temperature == self._comfort_temperature:
             return STATE_COMFORT
         elif self._target_temperature == self._eco_temperature:
