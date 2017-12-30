@@ -7,16 +7,14 @@ https://home-assistant.io/components/google_assistant/
 import asyncio
 import logging
 
-from typing import Any, Dict  # NOQA
-
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response  # NOQA
 
+from homeassistant.const import HTTP_UNAUTHORIZED
+
 # Typing imports
 # pylint: disable=using-constant-test,unused-import,ungrouped-imports
-# if False:
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_UNAUTHORIZED
 from homeassistant.core import HomeAssistant, callback  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA
 
