@@ -178,7 +178,7 @@ class WemoHumidifier(FanEntity):
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the fan_mode of the Humidifier."""
-		self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
+        self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
 
     def set_humidity(self: ToggleEntity, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
