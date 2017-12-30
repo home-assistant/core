@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan.wemo/
 """
 import logging
+import asyncio
 
 from homeassistant.components.fan import (
     SPEED_OFF, SPEED_MINIMUM, SPEED_LOW,
@@ -13,8 +14,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_FILTER_LIFE,
-    SUPPORT_FILTER_EXPIRED,
-    STATE_UNKNOWN)
+    SUPPORT_FILTER_EXPIRED)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
@@ -43,9 +43,9 @@ WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
 
 SUPPORTED_SPEEDS = [
-    SPEED_OFF, SPEED_MINIMUM
-    , SPEED_LOW, SPEED_MEDIUM
-    , SPEED_HIGH, SPEED_MAXIMUM]
+    SPEED_OFF, SPEED_MINIMUM,
+    SPEED_LOW, SPEED_MEDIUM,
+    SPEED_HIGH, SPEED_MAXIMUM]
 
 SUPPORTED_FEATURES = [
     SUPPORT_SET_SPEED, SUPPORT_TARGET_HUMIDITY
@@ -59,6 +59,7 @@ WEMO_FAN_SPEED_TO_HASS = {
     WEMO_FAN_HIGH: SPEED_HIGH,
     WEMO_FAN_MAXIMUM: SPEED_MAXIMUM
 }
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up discovered WeMo humidifiers."""
@@ -100,7 +101,8 @@ class WemoHumidifier(FanEntity):
         wemo = get_component('wemo')
         # The register method uses a threading condition, so call via executor,
         # and yield from to wait until the task is done.
-        yield from self.hass.async_add_job(wemo.SUBSCRIPTION_REGISTRY.register, self.wemo)
+        yield from self.hass.async_add_job(
+            wemo.SUBSCRIPTION_REGISTRY.register, self.wemo)
         # The on method just appends to a defaultdict list.
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
