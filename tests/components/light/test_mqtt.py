@@ -524,7 +524,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual((75, 75, 75), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
         self.assertEqual(80, state.attributes['white_value'])
-        self.assertEqual((0.123, 0.123), state.attributes['xy_color'])
+        self.assertEqual((0.32, 0.336), state.attributes['xy_color'])
 
     def test_sending_mqtt_rgb_command_with_template(self):
         """Test the sending of RGB command with template."""

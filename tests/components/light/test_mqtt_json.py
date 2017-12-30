@@ -168,7 +168,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual(255, state.attributes.get(ATTR_SUPPORTED_FEATURES))
+        self.assertEqual(191, state.attributes.get(ATTR_SUPPORTED_FEATURES))
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('color_temp'))

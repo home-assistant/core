@@ -309,7 +309,6 @@ def async_api_adjust_brightness(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_set_color(hass, config, request, entity):
     """Process a set color request."""
-    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES)
     rgb = color_util.color_hsb_to_RGB(
         float(request[API_PAYLOAD]['color']['hue']),
         float(request[API_PAYLOAD]['color']['saturation']),
