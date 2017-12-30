@@ -95,6 +95,21 @@ def confirm_register(cloud, confirmation_code, email):
         raise _map_aws_exception(err)
 
 
+def resend_email_confirm(cloud, email):
+    """Resend email confirmation."""
+    from botocore.exceptions import ClientError
+
+    cognito = _cognito(cloud, username=email)
+
+    try:
+        cognito.client.resend_confirmation_code(
+            Username=email,
+            ClientId=cognito.client_id
+        )
+    except ClientError as err:
+        raise _map_aws_exception(err)
+
+
 def forgot_password(cloud, email):
     """Initiate forgotten password flow."""
     from botocore.exceptions import ClientError

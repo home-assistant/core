@@ -675,6 +675,30 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert len(config) == 1
         self.assertTrue(config[0].hidden)
 
+    def test_backward_compatibility_for_track_new(self):
+        """Test backward compatibility for track new."""
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), False,
+            {device_tracker.CONF_TRACK_NEW: True}, [])
+        tracker.see(dev_id=13)
+        self.hass.block_till_done()
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert len(config) == 1
+        self.assertFalse(config[0].track)
+
+    def test_old_style_track_new_is_skipped(self):
+        """Test old style config is skipped."""
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), None,
+            {device_tracker.CONF_TRACK_NEW: False}, [])
+        tracker.see(dev_id=14)
+        self.hass.block_till_done()
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert len(config) == 1
+        self.assertFalse(config[0].track)
+
 
 @asyncio.coroutine
 def test_async_added_to_hass(hass):

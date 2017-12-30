@@ -424,7 +424,7 @@ class MqttLight(Light):
 
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
             if tpl:
-                colors = {'red', 'green', 'blue'}
+                colors = ('red', 'green', 'blue')
                 variables = {key: val for key, val in
                              zip(colors, kwargs[ATTR_RGB_COLOR])}
                 rgb_color_str = tpl.async_render(variables)
