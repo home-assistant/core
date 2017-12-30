@@ -48,8 +48,8 @@ SUPPORTED_SPEEDS = [
     SPEED_HIGH, SPEED_MAXIMUM]
 
 SUPPORTED_FEATURES = [
-    SUPPORT_SET_SPEED, SUPPORT_TARGET_HUMIDITY
-    , SUPPORT_FILTER_LIFE, SUPPORT_FILTER_EXPIRED]
+    SUPPORT_SET_SPEED, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_FILTER_LIFE, SUPPORT_FILTER_EXPIRED]
 
 WEMO_FAN_SPEED_TO_HASS = {
     WEMO_FAN_OFF: SPEED_OFF,
@@ -158,7 +158,6 @@ class WemoHumidifier(FanEntity):
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn the switch on."""
-
         if speed is None:
             self.wemo.set_state(self._last_fan_on_mode)
         else:
