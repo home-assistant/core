@@ -31,7 +31,6 @@ class FritzhomeSwitch(SwitchDevice):
     def __init__(self, hass, device):
         """Initialize the switch."""
         self._device = device
-        self._state = None
 
     @property
     def available(self):
