@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 http://home-assistant.io/components/switch.fritzhome/
 """
 import logging
+
 from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
