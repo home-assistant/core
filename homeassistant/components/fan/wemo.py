@@ -6,14 +6,15 @@ https://home-assistant.io/components/fan.wemo/
 """
 import logging
 
-from homeassistant.components.fan import (SPEED_OFF, SPEED_MINIMUM, SPEED_LOW,
-                                          SPEED_MEDIUM, SPEED_HIGH,
-                                          SPEED_MAXIMUM, FanEntity,
-                                          SUPPORT_SET_SPEED,
-                                          SUPPORT_TARGET_HUMIDITY,
-                                          SUPPORT_FILTER_LIFE,
-                                          SUPPORT_FILTER_EXPIRED,
-                                          STATE_UNKNOWN)
+from homeassistant.components.fan import (
+    SPEED_OFF, SPEED_MINIMUM, SPEED_LOW,
+    SPEED_MEDIUM, SPEED_HIGH,
+    SPEED_MAXIMUM, FanEntity,
+    SUPPORT_SET_SPEED,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_FILTER_LIFE,
+    SUPPORT_FILTER_EXPIRED,
+    STATE_UNKNOWN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
@@ -41,12 +42,26 @@ WEMO_WATER_EMPTY = 0
 WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
 
+SUPPORTED_SPEEDS = [
+    SPEED_OFF, SPEED_MINIMUM
+    , SPEED_LOW, SPEED_MEDIUM
+    , SPEED_HIGH, SPEED_MAXIMUM]
 
-# pylint: disable=unused-argument, too-many-function-args
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+SUPPORTED_FEATURES = [
+    SUPPORT_SET_SPEED, SUPPORT_TARGET_HUMIDITY
+    , SUPPORT_FILTER_LIFE, SUPPORT_FILTER_EXPIRED]
+
+WEMO_FAN_SPEED_TO_HASS = {
+    WEMO_FAN_OFF: SPEED_OFF,
+    WEMO_FAN_MINIMUM: SPEED_MINIMUM,
+    WEMO_FAN_LOW: SPEED_LOW,
+    WEMO_FAN_MEDIUM: SPEED_MEDIUM,
+    WEMO_FAN_HIGH: SPEED_HIGH,
+    WEMO_FAN_MAXIMUM: SPEED_MAXIMUM
+}
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up discovered WeMo humidifiers."""
-    _LOGGER.debug('setup_platform called for wemo Humidifier device class')
-
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
@@ -55,7 +70,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device = discovery.device_from_description(location, mac)
 
         if device:
-            add_devices_callback([WemoHumidifier(device)])
+            add_devices([WemoHumidifier(device)])
             _LOGGER.debug('Added a WeMo Humidifier device at: %s', location)
 
 
@@ -65,8 +80,6 @@ class WemoHumidifier(FanEntity):
     def __init__(self, device):
         """Initialize the WeMo humidifier."""
         self.wemo = device
-
-        _LOGGER.debug('Init called for a WeMo humidifier device.')
 
         self._state = None
         self._fan_mode = None
@@ -81,18 +94,21 @@ class WemoHumidifier(FanEntity):
         # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register update callback."""
         wemo = get_component('wemo')
-        wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
+        # The register method uses a threading condition, so call via executor,
+        # and yield from to wait until the task is done.
+        yield from self.hass.async_add_job(wemo.SUBSCRIPTION_REGISTRY.register, self.wemo)
+        # The on method just appends to a defaultdict list.
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
     def _update_callback(self, _device, _type, _params):
         """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription update for  %s", _device)
+        _LOGGER.debug("Subscription update for  %s", _device)
         updated = self.wemo.subscription_update(_type, _params)
         self._update(force_update=(not updated))
-
-        if not hasattr(self, 'hass'):
-            return
         self.schedule_update_ha_state()
 
     def _update(self, force_update=True):
@@ -112,10 +128,6 @@ class WemoHumidifier(FanEntity):
         except AttributeError as err:
             _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)
-
-    def update(self):
-        """Update WeMo state."""
-        self._update(force_update=True)
 
     @property
     def should_poll(self):
@@ -144,44 +156,30 @@ class WemoHumidifier(FanEntity):
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn the switch on."""
-        self._state = WEMO_ON
 
         if speed is None:
             self.wemo.set_state(self._last_fan_on_mode)
         else:
             self.set_speed(speed)
 
-        self.schedule_update_ha_state()
-
     def turn_off(self: ToggleEntity, **kwargs) -> None:
         """Turn the switch off."""
-        self._state = WEMO_OFF
         self.wemo.set_state(WEMO_FAN_OFF)
-
-        self.schedule_update_ha_state()
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the fan_mode of the Humidifier."""
         if speed == SPEED_OFF:
             self.wemo.set_state(WEMO_FAN_OFF)
-            self._state = WEMO_OFF
         elif speed == SPEED_MINIMUM:
             self.wemo.set_state(WEMO_FAN_MINIMUM)
-            self._state = WEMO_ON
         elif speed == SPEED_LOW:
             self.wemo.set_state(WEMO_FAN_LOW)
-            self._state = WEMO_ON
         elif speed == SPEED_MEDIUM:
             self.wemo.set_state(WEMO_FAN_MEDIUM)
-            self._state = WEMO_ON
         elif speed == SPEED_HIGH:
             self.wemo.set_state(WEMO_FAN_HIGH)
-            self._state = WEMO_ON
         elif speed == SPEED_MAXIMUM:
             self.wemo.set_state(WEMO_FAN_MAXIMUM)
-            self._state = WEMO_ON
-
-        self.schedule_update_ha_state()
 
     def set_humidity(self: ToggleEntity, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
@@ -195,8 +193,6 @@ class WemoHumidifier(FanEntity):
             self.wemo.set_humidity(WEMO_HUMIDITY_60)
         elif humidity >= 100:
             self.wemo.set_humidity(WEMO_HUMIDITY_100)
-
-        self.schedule_update_ha_state()
 
     @property
     def device_state_attributes(self):
@@ -213,36 +209,14 @@ class WemoHumidifier(FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        current_wemo_speed = self.wemo.fan_mode
-        if WEMO_FAN_OFF == current_wemo_speed:
-            return SPEED_OFF
-        elif WEMO_FAN_MINIMUM == current_wemo_speed:
-            return SPEED_MINIMUM
-        elif WEMO_FAN_LOW == current_wemo_speed:
-            return SPEED_LOW
-        elif WEMO_FAN_MEDIUM == current_wemo_speed:
-            return SPEED_MEDIUM
-        elif WEMO_FAN_HIGH == current_wemo_speed:
-            return SPEED_HIGH
-        elif WEMO_FAN_MAXIMUM == current_wemo_speed:
-            return SPEED_MAXIMUM
-        else:
-            return STATE_UNKNOWN
+        return WEMO_FAN_SPEED_TO_HASS.get(self.wemo.fan_mode, None)
 
     @property
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
-        supported_speeds = []
-        supported_speeds.append(SPEED_OFF)
-        supported_speeds.append(SPEED_MINIMUM)
-        supported_speeds.append(SPEED_LOW)
-        supported_speeds.append(SPEED_MEDIUM)
-        supported_speeds.append(SPEED_HIGH)
-        supported_speeds.append(SPEED_MAXIMUM)
-        return supported_speeds
+        return SUPPORTED_SPEEDS
 
     @property
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
-        return SUPPORT_SET_SPEED | SUPPORT_TARGET_HUMIDITY |\
-            SUPPORT_FILTER_LIFE | SUPPORT_FILTER_EXPIRED
+        return SUPPORTED_FEATURES
