@@ -65,9 +65,9 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
                                         to_lutron_level(brightness))
 
     @asyncio.coroutine
-    def transition(self, transition, from_, to):
+    def transition(self, transition, from_, target):
         """Transition from one level of brightness to another."""
-        delta = to - from_
+        delta = target - from_
         step = delta / transition / TRANSITION_RATE
         for i in range(int(transition * TRANSITION_RATE)):
             step_brightness = int(max(0, from_ + (i + 1) * step))
