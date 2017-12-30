@@ -66,6 +66,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
 
     @asyncio.coroutine
     def transition(self, transition, from_, to):
+        """Transition from one level of brightness to another."""
         delta = to - from_
         step = delta / transition / TRANSITION_RATE
         for i in range(int(transition * TRANSITION_RATE)):
@@ -73,7 +74,6 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
             self._smartbridge.set_value(self._device_id,
                                         to_lutron_level(step_brightness))
             yield from asyncio.sleep(1 / TRANSITION_RATE)
-
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
