@@ -293,7 +293,8 @@ class ZigBeeDigitalIn(Entity):
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
-            self._state = self._config.state2bool[self._config.bool2state[sample[pin_name]]]
+            self._state = self._config.state2bool[
+                self._config.bool2state[sample[pin_name]]]
             self.schedule_update_ha_state()
 
         async_dispatcher_connect(
