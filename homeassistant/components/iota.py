@@ -44,8 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Setup IOTA component"""
-
+    """Setup IOTA component."""
     # Set domain sepecific data
     iota_config = config[DOMAIN]
     hass.data[DOMAIN] = {
@@ -93,6 +92,6 @@ class IotaDevice(Entity):
 
     @property
     def api(self):
-        """ Constructs API object for interaction with the IRI node"""
+        """Construct API object for interaction with the IRI node."""
         from iota import Iota
         return Iota(adapter=self.iri, seed=self._seed)
