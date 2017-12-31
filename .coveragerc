@@ -354,6 +354,7 @@ omit =
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/ifttt.py
+    homeassistant/components/iota.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/image_processing/seven_segments.py
@@ -538,6 +539,7 @@ omit =
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
+    homeassistant/components/sensor/iota.py
     homeassistant/components/sensor/irish_rail_transport.py
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lacrosse.py
