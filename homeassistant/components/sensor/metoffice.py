@@ -107,10 +107,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     data = MetOfficeCurrentData(hass, datapoint, site)
-    try:
-        data.update()
-    except (ValueError, dp.exceptions.APIException) as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
+    data.update()
+    if data.data is None:
         return
 
     sensors = []
@@ -141,7 +139,7 @@ class MetOfficeCurrentSensor(Entity):
         if (self._condition == 'visibility_distance' and
                 'visibility' in self.data.data.__dict__.keys()):
             return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
-        if self._condition in self.data.data.__dict__.keys():
+        if self._condition in self.data.data.__dict__:
             variable = getattr(self.data.data, self._condition)
             if self._condition == 'weather':
                 return [k for k, v in CONDITION_CLASSES.items() if
@@ -157,7 +155,7 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = dict()
+        attr = {}
         attr['Sensor Id'] = self._condition
         attr['Site Id'] = self.site.id
         attr['Site Name'] = self.site.name
@@ -176,7 +174,6 @@ class MetOfficeCurrentData(object):
     def __init__(self, hass, datapoint, site):
         """Initialize the data object."""
         self._datapoint = datapoint
-        self._hass = hass
         self._site = site
         self.data = None
 
@@ -192,4 +189,3 @@ class MetOfficeCurrentData(object):
         except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office %s", err.args)
             self.data = None
-            raise
