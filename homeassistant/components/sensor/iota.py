@@ -12,7 +12,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Add sensors for wallet balance
     iota_config = hass.data[IOTA_DOMAIN]
-    balance_sensors = [IotaBalanceSensor(wallet, iota_config) for wallet in iota_config['wallets']]
+    balance_sensors = [IotaBalanceSensor(wallet, iota_config)
+                       for wallet in iota_config['wallets']]
     add_devices(balance_sensors)
 
     # Add sensor for node information
@@ -25,8 +26,10 @@ class IotaBalanceSensor(IotaDevice):
     def __init__(self, wallet_config, iota_config):
         """Initialize the sensor."""
 
-        super().__init__(name=wallet_config['name'], seed=wallet_config['seed'],
-                         iri=iota_config['iri'], is_testnet=iota_config['is_testnet'])
+        super().__init__(name=wallet_config['name'],
+                         seed=wallet_config['seed'],
+                         iri=iota_config['iri'],
+                         is_testnet=iota_config['is_testnet'])
         self._state = 0
 
     @property
@@ -55,8 +58,8 @@ class IotaNodeSensor(IotaDevice):
     def __init__(self, iota_config):
         """Initialize the sensor."""
 
-        super().__init__(name='Node Info', seed=None,
-                         iri=iota_config['iri'], is_testnet=iota_config['is_testnet'])
+        super().__init__(name='Node Info', seed=None, iri=iota_config['iri'],
+                         is_testnet=iota_config['is_testnet'])
         self._state = ""
         self._attr = dict()
 
@@ -84,4 +87,5 @@ class IotaNodeSensor(IotaDevice):
         """Fetch new attribures IRI node."""
         node_info = self.api.get_node_info()
         self._state = node_info.get('appVersion')
-        self._attr = {k: str(v) for k, v in node_info.items()}  # convert values to raw string formats
+        # convert values to raw string formats
+        self._attr = {k: str(v) for k, v in node_info.items()}
