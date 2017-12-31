@@ -19,7 +19,7 @@ REQUIREMENTS = ['pyota==2.0.3']
 
 IOTA_PLATFORMS = ['sensor']
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 CONF_IRI = 'iri'
 CONF_TESTNET = 'testnet'
