@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
 from homeassistant.components.climate import (
-    ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO,
+    ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_HEAT, STATE_MANUAL,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import PRECISION_HALVES
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
@@ -17,12 +17,9 @@ DEPENDENCIES = ['fritzhome']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_COMFORT = 'comfort'
-STATE_MANUAL = 'manual'
-
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
-OPERATION_LIST = [STATE_COMFORT, STATE_ECO, STATE_MANUAL]
+OPERATION_LIST = [STATE_HEAT, STATE_ECO, STATE_MANUAL]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
@@ -99,7 +96,7 @@ class FritzhomeThermostat(ClimateDevice):
     def current_operation(self):
         """Return the current operation mode."""
         if self._target_temperature == self._comfort_temperature:
-            return STATE_COMFORT
+            return STATE_HEAT
         elif self._target_temperature == self._eco_temperature:
             return STATE_ECO
         return STATE_MANUAL
@@ -111,7 +108,7 @@ class FritzhomeThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        if operation_mode == STATE_COMFORT:
+        if operation_mode == STATE_HEAT:
             self.set_temperature(temperature=self._comfort_temperature)
         elif operation_mode == STATE_ECO:
             self.set_temperature(temperature=self._eco_temperature)
