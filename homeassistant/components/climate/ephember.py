@@ -63,7 +63,7 @@ class EphEmberThermostat(ClimateDevice):
         if self._hot_water:
             return SUPPORT_AUX_HEAT
 
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT)
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT
 
     @property
     def name(self):
