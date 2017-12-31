@@ -164,14 +164,13 @@ class PushBulletNotificationService(BaseNotificationService):
                 if tname:
                     pusher.push_file(title=title, body=message, email=tname,
                                      file_name=file_url, file_url=file_url,
-                                     file_type=
-                                     mimetypes.guess_type(file_url)[0])
+                                     file_type=(mimetypes
+                                                .guess_type(file_url)[0]))
                 else:
                     pusher.push_file(title=title, body=message,
                                      file_name=file_url, file_url=file_url,
-                                     file_type=
-                                     mimetypes.guess_type(file_url)[0])
-
+                                     file_type=(mimetypes
+                                                .guess_type(file_url)[0]))
             elif data_list:
                 if tname:
                     pusher.push_list(title, data_list, email=tname)
