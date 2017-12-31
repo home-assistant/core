@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_URL = 'url'
 ATTR_FILE = 'file'
 ATTR_FILE_URL = 'file_url'
-ATTR_LIST = 'list'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -133,7 +132,6 @@ class PushBulletNotificationService(BaseNotificationService):
         from pushbullet import PushError
         if data is None:
             data = {}
-        data_list = data.get(ATTR_LIST)
         url = data.get(ATTR_URL)
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
@@ -152,30 +150,14 @@ class PushBulletNotificationService(BaseNotificationService):
                     if filedata.get('file_type') == 'application/x-empty':
                         _LOGGER.error("Can not send an empty file")
                         return
-                    if tname:
-                        pusher.push_file(title=title, body=message,
-                                         email=tname, **filedata)
-                    else:
-                        pusher.push_file(title=title, body=message, **filedata)
+                    pusher.push_file(title=title, body=message, **filedata)
             elif file_url:
                 if not file_url.startswith('http'):
                     _LOGGER.error("URL should start with http or https")
                     return
-                if tname:
-                    pusher.push_file(title=title, body=message, email=tname,
-                                     file_name=file_url, file_url=file_url,
-                                     file_type=(mimetypes
-                                                .guess_type(file_url)[0]))
-                else:
-                    pusher.push_file(title=title, body=message,
-                                     file_name=file_url, file_url=file_url,
-                                     file_type=(mimetypes
-                                                .guess_type(file_url)[0]))
-            elif data_list:
-                if tname:
-                    pusher.push_list(title, data_list, email=tname)
-                else:
-                    pusher.push_list(title, data_list)
+                pusher.push_file(title=title, body=message, file_name=file_url,
+                                 file_url=file_url,
+                                 file_type=mimetypes.guess_type(file_url)[0])
             else:
                 if tname:
                     pusher.push_note(title, message, email=tname)
