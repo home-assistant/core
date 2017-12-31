@@ -109,6 +109,7 @@ class TestShellCommand(unittest.TestCase):
     def test_template_render(self, mock_call):
         """Ensure shell_commands with templates get rendered properly."""
         self.hass.states.set('sensor.test_state', 'Works')
+        mock_call.return_value = mock_process_creator(error=False)
         self.assertTrue(
                 setup_component(self.hass, shell_command.DOMAIN, {
                     shell_command.DOMAIN: {
