@@ -6,23 +6,20 @@ https://home-assistant.io/components/scene.deconz/
 """
 
 import asyncio
-import logging
 
-from homeassistant.components.deconz import DOMAIN
+from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.scene import Scene
 
-DEPENDENCIES = [DOMAIN]
-
-_LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['deconz']
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up scenes for deCONZ component."""
     if discovery_info is None:
-        return False
+        return
 
-    scenes = hass.data[DOMAIN].scenes
+    scenes = hass.data[DECONZ_DATA].scenes
     entities = []
 
     for scene in scenes.values():
@@ -46,8 +43,3 @@ class DeconzScene(Scene):
     def name(self):
         """Return the name of the scene."""
         return self._scene.full_name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

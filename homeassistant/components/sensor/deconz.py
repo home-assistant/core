@@ -2,22 +2,19 @@
 Support for deCONZ sensor.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor/deconz/
+https://home-assistant.io/components/sensor.deconz/
 """
 
 import asyncio
-import logging
 
-from homeassistant.components.deconz import DOMAIN
+from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
 from homeassistant.core import callback, EventOrigin
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
-DEPENDENCIES = [DOMAIN]
-
-_LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['deconz']
 
 ATTR_EVENT_ID = 'event_id'
 ATTR_ZHASWITCH = 'ZHASwitch'
@@ -27,10 +24,10 @@ ATTR_ZHASWITCH = 'ZHASwitch'
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup sensor for deCONZ component."""
     if discovery_info is None:
-        return False
+        return
 
     from pydeconz.sensor import DECONZ_SENSOR
-    sensors = hass.data[DOMAIN].sensors
+    sensors = hass.data[DECONZ_DATA].sensors
     entities = []
 
     for sensor in sensors.values():
@@ -50,6 +47,10 @@ class DeconzSensor(Entity):
     def __init__(self, sensor):
         """Setup sensor and add update callback to get data from websocket."""
         self._sensor = sensor
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
 
     @callback
@@ -117,6 +118,10 @@ class DeconzBattery(Entity):
         self._name = self._device.name + ' Battery Level'
         self._device_class = 'battery'
         self._unit_of_measurement = "%"
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe to sensors events."""
         self._device.register_async_callback(self.async_update_callback)
 
     @callback
@@ -176,7 +181,7 @@ class DeconzEvent(object):
         self._hass = hass
         self._device = device
         self._device.register_async_callback(self.async_update_callback)
-        self._event = DOMAIN + '_' + CONF_EVENT
+        self._event = 'deconz_{}'.format(CONF_EVENT)
         self._id = slugify(self._device.name)
 
     @callback

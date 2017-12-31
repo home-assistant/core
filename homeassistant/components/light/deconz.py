@@ -2,13 +2,12 @@
 Support for deCONZ light.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light/deconz/
+https://home-assistant.io/components/light.deconz/
 """
 
 import asyncio
-import logging
 
-from homeassistant.components.deconz import DOMAIN
+from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
     ATTR_RGB_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -17,9 +16,7 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
-DEPENDENCIES = [DOMAIN]
-
-_LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['deconz']
 
 ATTR_LIGHT_GROUP = 'LightGroup'
 
@@ -28,10 +25,10 @@ ATTR_LIGHT_GROUP = 'LightGroup'
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup light for deCONZ component."""
     if discovery_info is None:
-        return False
+        return
 
-    lights = hass.data[DOMAIN].lights
-    groups = hass.data[DOMAIN].groups
+    lights = hass.data[DECONZ_DATA].lights
+    groups = hass.data[DECONZ_DATA].groups
     entities = []
 
     for light in lights.values():
@@ -49,7 +46,6 @@ class DeconzLight(Light):
     def __init__(self, light):
         """Setup light and add update callback to get data from websocket."""
         self._light = light
-        self._light.register_async_callback(self.async_update_callback)
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
@@ -64,6 +60,11 @@ class DeconzLight(Light):
 
         if self._light.effect is not None:
             self._features |= SUPPORT_EFFECT
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe to lights events."""
+        self._light.register_async_callback(self.async_update_callback)
 
     @callback
     def async_update_callback(self, reason):
