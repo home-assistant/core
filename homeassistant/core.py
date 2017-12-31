@@ -1038,9 +1038,8 @@ class ServiceRegistry(object):
                     fire_service_executed()
 
                 yield from self._hass.async_add_job(execute_service)
-        except Exception:
-            _LOGGER.exception('Error executing service %s/%s: %s',
-                              domain, service, service_data)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error executing service %s', service_call)
 
 
 class Config(object):
