@@ -47,6 +47,10 @@ class IGloLamp(Light):
         from iglo import Lamp
         self._name = name
         self._lamp = Lamp(0, host, port)
+        self._on = True
+        self._brightness = 255
+        self._rgb = (0, 0, 0)
+        self._color_temp = 0
 
     @property
     def name(self):
@@ -81,7 +85,7 @@ class IGloLamp(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR)
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
     @property
     def is_on(self):
