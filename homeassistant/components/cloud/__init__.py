@@ -5,13 +5,16 @@ import json
 import logging
 import os
 
+import aiohttp
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
 from homeassistant.helpers import entityfilter
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
-from homeassistant.components.alexa import smart_home
+from homeassistant.components.alexa import smart_home as alexa
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -21,7 +24,7 @@ REQUIREMENTS = ['warrant==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALEXA = 'alexa'
-CONF_ALEXA_FILTER = 'filter'
+CONF_FILTER = 'filter'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
@@ -30,9 +33,9 @@ MODE_DEV = 'development'
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
 
-ALEXA_SCHEMA = vol.Schema({
+ASSISTANT_SCHEMA = vol.Schema({
     vol.Optional(
-        CONF_ALEXA_FILTER,
+        CONF_FILTER,
         default=lambda: entityfilter.generate_filter([], [], [], [])
     ): entityfilter.FILTER_SCHEMA,
 })
@@ -46,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USER_POOL_ID): str,
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
-        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA
+        vol.Optional(CONF_ALEXA): ASSISTANT_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -60,17 +63,16 @@ def async_setup(hass, config):
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
     if CONF_ALEXA not in kwargs:
-        kwargs[CONF_ALEXA] = ALEXA_SCHEMA({})
+        kwargs[CONF_ALEXA] = ASSISTANT_SCHEMA({})
 
-    kwargs[CONF_ALEXA] = smart_home.Config(**kwargs[CONF_ALEXA])
+
+    kwargs[CONF_ALEXA] = alexa.Config(**kwargs[CONF_ALEXA])
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
-    @asyncio.coroutine
-    def init_cloud(event):
-        """Initialize connection."""
-        yield from cloud.initialize()
+    success = yield from cloud.initialize()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, init_cloud)
+    if not success:
+        return False
 
     yield from http_api.async_setup(hass)
     return True
@@ -85,6 +87,7 @@ class Cloud:
         self.hass = hass
         self.mode = mode
         self.alexa_config = alexa
+        self.jwt_keyset = None
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
@@ -128,9 +131,8 @@ class Cloud:
 
     @property
     def claims(self):
-        """Get the claims from the id token."""
-        from jose import jwt
-        return jwt.get_unverified_claims(self.id_token)
+        """Return the claims from the id token."""
+        return self._decode_claims(self.id_token)
 
     @property
     def user_info_path(self):
@@ -140,7 +142,13 @@ class Cloud:
     @asyncio.coroutine
     def initialize(self):
         """Initialize and load cloud info."""
-        def load_config():
+        yield from self._fetch_jwt_keyset()
+
+        # Fetching failed
+        if self.jwt_keyset is None:
+            return False
+
+        def start_cloud(event):
             """Load the configuration."""
             # Ensure config dir exists
             path = self.hass.config.path(CONFIG_DIR)
@@ -148,17 +156,29 @@ class Cloud:
                 os.mkdir(path)
 
             user_info = self.user_info_path
-            if os.path.isfile(user_info):
-                with open(user_info, 'rt') as file:
-                    info = json.loads(file.read())
-                self.id_token = info['id_token']
-                self.access_token = info['access_token']
-                self.refresh_token = info['refresh_token']
+            if not os.path.isfile(user_info):
+                return
 
-        yield from self.hass.async_add_job(load_config)
+            with open(user_info, 'rt') as file:
+                info = json.loads(file.read())
 
-        if self.id_token is not None:
-            yield from self.iot.connect()
+            # Validate tokens
+            try:
+                for token in 'id_token', 'access_token':
+                    self._decode_claims(info[token])
+            except ValueError as err:  # Raised when token is invalid
+                _LOGGER.warning('Found invalid token %s: %s', token, err)
+                return
+
+            self.id_token = info['id_token']
+            self.access_token = info['access_token']
+            self.refresh_token = info['refresh_token']
+
+            self.hass.add_job(self.iot.connect())
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_cloud)
+
+        return True
 
     def path(self, *parts):
         """Get config path inside cloud dir.
@@ -187,3 +207,45 @@ class Cloud:
                 'access_token': self.access_token,
                 'refresh_token': self.refresh_token,
             }, indent=4))
+
+    @asyncio.coroutine
+    def _fetch_jwt_keyset(self):
+        """Fetch the JWT keyset for the Cognito instance."""
+        session = async_get_clientsession(self.hass)
+        url = ("https://cognito-idp.us-east-1.amazonaws.com/"
+               "{}/.well-known/jwks.json".format(self.user_pool_id))
+
+        try:
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                req = yield from session.get(url)
+                self.jwt_keyset = yield from req.json()
+
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.error("Error fetching Cognito keyset: %s", err)
+
+    def _decode_claims(self, token):
+        """Decode the claims in a token."""
+        from jose import jwt, exceptions as jose_exceptions
+        try:
+            header = jwt.get_unverified_header(token)
+        except jose_exceptions.JWTError as err:
+            raise ValueError(str(err)) from None
+        kid = header.get("kid")
+
+        if kid is None:
+            raise ValueError('No kid in header')
+
+        # Locate the key for this kid
+        key = None
+        for key_dict in self.jwt_keyset["keys"]:
+            if key_dict["kid"] == kid:
+                key = key_dict
+                break
+        if not key:
+            raise ValueError(
+                "Unable to locate kid ({}) in keyset".format(kid))
+
+        try:
+            return jwt.decode(token, key, audience=self.cognito_client_id)
+        except jose_exceptions.JWTError as err:
+            raise ValueError(str(err)) from None
