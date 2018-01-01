@@ -1,5 +1,4 @@
 """Package to communicate with the authentication API."""
-import hashlib
 import logging
 
 
