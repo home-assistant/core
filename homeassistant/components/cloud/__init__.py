@@ -15,6 +15,7 @@ from homeassistant.helpers import entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa
+from homeassistant.components.google_assistant import smart_home as ga
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -24,6 +25,7 @@ REQUIREMENTS = ['warrant==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALEXA = 'alexa'
+CONF_GOOGLE_ASSISTANT = 'google_assistant'
 CONF_FILTER = 'filter'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
 CONF_RELAYER = 'relayer'
@@ -50,6 +52,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
         vol.Optional(CONF_ALEXA): ASSISTANT_SCHEMA,
+        vol.Optional(CONF_GOOGLE_ASSISTANT): ASSISTANT_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -65,8 +68,11 @@ def async_setup(hass, config):
     if CONF_ALEXA not in kwargs:
         kwargs[CONF_ALEXA] = ASSISTANT_SCHEMA({})
 
+    if CONF_GOOGLE_ASSISTANT not in kwargs:
+        kwargs[CONF_GOOGLE_ASSISTANT] = ASSISTANT_SCHEMA({})
 
     kwargs[CONF_ALEXA] = alexa.Config(**kwargs[CONF_ALEXA])
+    kwargs['gass_should_expose'] = kwargs.pop(CONF_GOOGLE_ASSISTANT)
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
     success = yield from cloud.initialize()
@@ -81,12 +87,15 @@ def async_setup(hass, config):
 class Cloud:
     """Store the configuration of the cloud connection."""
 
-    def __init__(self, hass, mode, cognito_client_id=None, user_pool_id=None,
-                 region=None, relayer=None, alexa=None):
+    def __init__(self, hass, mode, alexa, gass_should_expose,
+                 cognito_client_id=None, user_pool_id=None, region=None,
+                 relayer=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
         self.alexa_config = alexa
+        self._gass_should_expose = gass_should_expose
+        self._gass_config = None
         self.jwt_keyset = None
         self.id_token = None
         self.access_token = None
@@ -138,6 +147,17 @@ class Cloud:
     def user_info_path(self):
         """Get path to the stored auth."""
         return self.path('{}_auth.json'.format(self.mode))
+
+    @property
+    def gass_config(self):
+        """Return the Google Assistant config."""
+        if self._gass_config is None:
+            self._gass_config = ga.Config(
+                should_expose=self._gass_should_expose,
+                agent_user_id=self.claims['cognito:username']
+            )
+
+        return self._gass_config
 
     @asyncio.coroutine
     def initialize(self):
@@ -195,6 +215,7 @@ class Cloud:
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
+        self._gass_config = None
 
         yield from self.hass.async_add_job(
             lambda: os.remove(self.user_info_path))
