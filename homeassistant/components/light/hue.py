@@ -130,14 +130,12 @@ def unthrottled_update_lights(hass, bridge, add_devices):
         _LOGGER.exception('Cannot reach the bridge')
         return
 
-    bridge_type = get_bridge_type(api)
-
     new_lights = process_lights(
-        hass, api, bridge, bridge_type,
+        hass, api, bridge,
         lambda **kw: update_lights(hass, bridge, add_devices, **kw))
     if bridge.allow_hue_groups:
         new_lightgroups = process_groups(
-            hass, api, bridge, bridge_type,
+            hass, api, bridge,
             lambda **kw: update_lights(hass, bridge, add_devices, **kw))
         new_lights.extend(new_lightgroups)
 
@@ -145,16 +143,7 @@ def unthrottled_update_lights(hass, bridge, add_devices):
         add_devices(new_lights)
 
 
-def get_bridge_type(api):
-    """Return the bridge type."""
-    api_name = api.get('config').get('name')
-    if api_name in ('RaspBee-GW', 'deCONZ-GW'):
-        return 'deconz'
-    else:
-        return 'hue'
-
-
-def process_lights(hass, api, bridge, bridge_type, update_lights_cb):
+def process_lights(hass, api, bridge, update_lights_cb):
     """Set up HueLight objects for all lights."""
     api_lights = api.get('lights')
 
@@ -169,7 +158,7 @@ def process_lights(hass, api, bridge, bridge_type, update_lights_cb):
             bridge.lights[light_id] = HueLight(
                 int(light_id), info, bridge,
                 update_lights_cb,
-                bridge_type, bridge.allow_unreachable,
+                bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue)
             new_lights.append(bridge.lights[light_id])
         else:
@@ -179,7 +168,7 @@ def process_lights(hass, api, bridge, bridge_type, update_lights_cb):
     return new_lights
 
 
-def process_groups(hass, api, bridge, bridge_type, update_lights_cb):
+def process_groups(hass, api, bridge, update_lights_cb):
     """Set up HueLight objects for all groups."""
     api_groups = api.get('groups')
 
@@ -199,7 +188,7 @@ def process_groups(hass, api, bridge, bridge_type, update_lights_cb):
             bridge.lightgroups[lightgroup_id] = HueLight(
                 int(lightgroup_id), info, bridge,
                 update_lights_cb,
-                bridge_type, bridge.allow_unreachable,
+                bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue, True)
             new_lights.append(bridge.lightgroups[lightgroup_id])
         else:
@@ -213,14 +202,12 @@ class HueLight(Light):
     """Representation of a Hue light."""
 
     def __init__(self, light_id, info, bridge, update_lights_cb,
-                 bridge_type, allow_unreachable, allow_in_emulated_hue,
-                 is_group=False):
+                 allow_unreachable, allow_in_emulated_hue, is_group=False):
         """Initialize the light."""
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
         self.update_lights = update_lights_cb
-        self.bridge_type = bridge_type
         self.allow_unreachable = allow_unreachable
         self.is_group = is_group
         self.allow_in_emulated_hue = allow_in_emulated_hue
@@ -330,7 +317,7 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command['alert'] = 'select'
             del command['on']
-        elif self.bridge_type == 'hue':
+        else:
             command['alert'] = 'none'
 
         effect = kwargs.get(ATTR_EFFECT)
@@ -340,8 +327,7 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif (self.bridge_type == 'hue' and
-              self.info.get('manufacturername') == 'Philips'):
+        elif self.info.get('manufacturername') == 'Philips':
             command['effect'] = 'none'
 
         self._command_func(self.light_id, command)
@@ -361,7 +347,7 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command['alert'] = 'select'
             del command['on']
-        elif self.bridge_type == 'hue':
+        else:
             command['alert'] = 'none'
 
         self._command_func(self.light_id, command)

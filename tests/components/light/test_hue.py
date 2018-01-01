@@ -32,7 +32,6 @@ class TestSetup(unittest.TestCase):
         self.mock_bridge.allow_hue_groups = False
         self.mock_api = MagicMock()
         self.mock_bridge.get_api.return_value = self.mock_api
-        self.mock_bridge_type = MagicMock()
         self.mock_lights = []
         self.mock_groups = []
         self.mock_add_devices = MagicMock()
@@ -43,7 +42,6 @@ class TestSetup(unittest.TestCase):
         self.mock_api = MagicMock()
         self.mock_api.get.return_value = {}
         self.mock_bridge.get_api.return_value = self.mock_api
-        self.mock_bridge_type = MagicMock()
 
     def setup_mocks_for_process_groups(self):
         """Set up all mocks for process_groups tests."""
@@ -54,8 +52,6 @@ class TestSetup(unittest.TestCase):
         self.mock_api = MagicMock()
         self.mock_api.get.return_value = {}
         self.mock_bridge.get_api.return_value = self.mock_api
-
-        self.mock_bridge_type = MagicMock()
 
     def create_mock_bridge(self, host, allow_hue_groups=True):
         """Return a mock HueBridge with reasonable defaults."""
@@ -137,21 +133,18 @@ class TestSetup(unittest.TestCase):
         """Test the update_lights function when no lights are found."""
         self.setup_mocks_for_update_lights()
 
-        with patch('homeassistant.components.light.hue.get_bridge_type',
-                   return_value=self.mock_bridge_type):
-            with patch('homeassistant.components.light.hue.process_lights',
-                       return_value=[]) as mock_process_lights:
-                with patch('homeassistant.components.light.hue.process_groups',
-                           return_value=self.mock_groups) \
-                        as mock_process_groups:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
+        with patch('homeassistant.components.light.hue.process_lights',
+                   return_value=[]) as mock_process_lights:
+            with patch('homeassistant.components.light.hue.process_groups',
+                       return_value=self.mock_groups) \
+                    as mock_process_groups:
+                hue_light.unthrottled_update_lights(
+                    self.hass, self.mock_bridge, self.mock_add_devices)
 
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge,
-                        self.mock_bridge_type, mock.ANY)
-                    mock_process_groups.assert_not_called()
-                    self.mock_add_devices.assert_not_called()
+                mock_process_lights.assert_called_once_with(
+                    self.hass, self.mock_api, self.mock_bridge, mock.ANY)
+                mock_process_groups.assert_not_called()
+                self.mock_add_devices.assert_not_called()
 
     @MockDependency('phue')
     def test_update_lights_with_some_lights(self, mock_phue):
@@ -159,22 +152,19 @@ class TestSetup(unittest.TestCase):
         self.setup_mocks_for_update_lights()
         self.mock_lights = ['some', 'light']
 
-        with patch('homeassistant.components.light.hue.get_bridge_type',
-                   return_value=self.mock_bridge_type):
-            with patch('homeassistant.components.light.hue.process_lights',
-                       return_value=self.mock_lights) as mock_process_lights:
-                with patch('homeassistant.components.light.hue.process_groups',
-                           return_value=self.mock_groups) \
-                        as mock_process_groups:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
+        with patch('homeassistant.components.light.hue.process_lights',
+                   return_value=self.mock_lights) as mock_process_lights:
+            with patch('homeassistant.components.light.hue.process_groups',
+                       return_value=self.mock_groups) \
+                    as mock_process_groups:
+                hue_light.unthrottled_update_lights(
+                    self.hass, self.mock_bridge, self.mock_add_devices)
 
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge,
-                        self.mock_bridge_type, mock.ANY)
-                    mock_process_groups.assert_not_called()
-                    self.mock_add_devices.assert_called_once_with(
-                        self.mock_lights)
+                mock_process_lights.assert_called_once_with(
+                    self.hass, self.mock_api, self.mock_bridge, mock.ANY)
+                mock_process_groups.assert_not_called()
+                self.mock_add_devices.assert_called_once_with(
+                    self.mock_lights)
 
     @MockDependency('phue')
     def test_update_lights_no_groups(self, mock_phue):
@@ -183,24 +173,20 @@ class TestSetup(unittest.TestCase):
         self.mock_bridge.allow_hue_groups = True
         self.mock_lights = ['some', 'light']
 
-        with patch('homeassistant.components.light.hue.get_bridge_type',
-                   return_value=self.mock_bridge_type):
-            with patch('homeassistant.components.light.hue.process_lights',
-                       return_value=self.mock_lights) as mock_process_lights:
-                with patch('homeassistant.components.light.hue.process_groups',
-                           return_value=self.mock_groups) \
-                        as mock_process_groups:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
+        with patch('homeassistant.components.light.hue.process_lights',
+                   return_value=self.mock_lights) as mock_process_lights:
+            with patch('homeassistant.components.light.hue.process_groups',
+                       return_value=self.mock_groups) \
+                    as mock_process_groups:
+                hue_light.unthrottled_update_lights(
+                    self.hass, self.mock_bridge, self.mock_add_devices)
 
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge,
-                        self.mock_bridge_type, mock.ANY)
-                    mock_process_groups.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge,
-                        self.mock_bridge_type, mock.ANY)
-                    self.mock_add_devices.assert_called_once_with(
-                        self.mock_lights)
+                mock_process_lights.assert_called_once_with(
+                    self.hass, self.mock_api, self.mock_bridge, mock.ANY)
+                mock_process_groups.assert_called_once_with(
+                    self.hass, self.mock_api, self.mock_bridge, mock.ANY)
+                self.mock_add_devices.assert_called_once_with(
+                    self.mock_lights)
 
     @MockDependency('phue')
     def test_update_lights_with_lights_and_groups(self, mock_phue):
@@ -210,24 +196,20 @@ class TestSetup(unittest.TestCase):
         self.mock_lights = ['some', 'light']
         self.mock_groups = ['and', 'groups']
 
-        with patch('homeassistant.components.light.hue.get_bridge_type',
-                   return_value=self.mock_bridge_type):
-            with patch('homeassistant.components.light.hue.process_lights',
-                       return_value=self.mock_lights) as mock_process_lights:
-                with patch('homeassistant.components.light.hue.process_groups',
-                           return_value=self.mock_groups) \
-                        as mock_process_groups:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
+        with patch('homeassistant.components.light.hue.process_lights',
+                   return_value=self.mock_lights) as mock_process_lights:
+            with patch('homeassistant.components.light.hue.process_groups',
+                       return_value=self.mock_groups) \
+                    as mock_process_groups:
+                hue_light.unthrottled_update_lights(
+                    self.hass, self.mock_bridge, self.mock_add_devices)
 
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge,
-                        self.mock_bridge_type, mock.ANY)
-                    mock_process_groups.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge,
-                        self.mock_bridge_type, mock.ANY)
-                    self.mock_add_devices.assert_called_once_with(
-                        self.mock_lights)
+                mock_process_lights.assert_called_once_with(
+                    self.hass, self.mock_api, self.mock_bridge, mock.ANY)
+                mock_process_groups.assert_called_once_with(
+                    self.hass, self.mock_api, self.mock_bridge, mock.ANY)
+                self.mock_add_devices.assert_called_once_with(
+                    self.mock_lights)
 
     @MockDependency('phue')
     def test_update_lights_with_two_bridges(self, mock_phue):
@@ -242,23 +224,21 @@ class TestSetup(unittest.TestCase):
         mock_bridge_two_lights = self.create_mock_lights(
             {1: {'name': 'b2l1'}, 3: {'name': 'b2l3'}})
 
-        with patch('homeassistant.components.light.hue.get_bridge_type',
-                   return_value=self.mock_bridge_type):
-            with patch('homeassistant.components.light.hue.HueLight.'
-                       'schedule_update_ha_state'):
-                mock_api = MagicMock()
-                mock_api.get.return_value = mock_bridge_one_lights
-                with patch.object(mock_bridge_one, 'get_api',
-                                  return_value=mock_api):
-                    hue_light.unthrottled_update_lights(
-                        self.hass, mock_bridge_one, self.mock_add_devices)
+        with patch('homeassistant.components.light.hue.HueLight.'
+                   'schedule_update_ha_state'):
+            mock_api = MagicMock()
+            mock_api.get.return_value = mock_bridge_one_lights
+            with patch.object(mock_bridge_one, 'get_api',
+                              return_value=mock_api):
+                hue_light.unthrottled_update_lights(
+                    self.hass, mock_bridge_one, self.mock_add_devices)
 
-                mock_api = MagicMock()
-                mock_api.get.return_value = mock_bridge_two_lights
-                with patch.object(mock_bridge_two, 'get_api',
-                                  return_value=mock_api):
-                    hue_light.unthrottled_update_lights(
-                        self.hass, mock_bridge_two, self.mock_add_devices)
+            mock_api = MagicMock()
+            mock_api.get.return_value = mock_bridge_two_lights
+            with patch.object(mock_bridge_two, 'get_api',
+                              return_value=mock_api):
+                hue_light.unthrottled_update_lights(
+                    self.hass, mock_bridge_two, self.mock_add_devices)
 
         self.assertEquals(sorted(mock_bridge_one.lights.keys()), [1, 2])
         self.assertEquals(sorted(mock_bridge_two.lights.keys()), [1, 3])
@@ -299,8 +279,7 @@ class TestSetup(unittest.TestCase):
         self.mock_api.get.return_value = None
 
         ret = hue_light.process_lights(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals([], ret)
         self.assertEquals(self.mock_bridge.lights, {})
@@ -310,8 +289,7 @@ class TestSetup(unittest.TestCase):
         self.setup_mocks_for_process_lights()
 
         ret = hue_light.process_lights(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals([], ret)
         self.assertEquals(self.mock_bridge.lights, {})
@@ -324,18 +302,17 @@ class TestSetup(unittest.TestCase):
             1: {'state': 'on'}, 2: {'state': 'off'}}
 
         ret = hue_light.process_lights(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals(len(ret), 2)
         mock_hue_light.assert_has_calls([
             call(
                 1, {'state': 'on'}, self.mock_bridge, mock.ANY,
-                self.mock_bridge_type, self.mock_bridge.allow_unreachable,
+                self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue),
             call(
                 2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                self.mock_bridge_type, self.mock_bridge.allow_unreachable,
+                self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue),
         ])
         self.assertEquals(len(self.mock_bridge.lights), 2)
@@ -353,14 +330,13 @@ class TestSetup(unittest.TestCase):
         self.mock_bridge.lights = {1: MagicMock()}
 
         ret = hue_light.process_lights(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals(len(ret), 1)
         mock_hue_light.assert_has_calls([
             call(
                 2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                self.mock_bridge_type, self.mock_bridge.allow_unreachable,
+                self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue),
         ])
         self.assertEquals(len(self.mock_bridge.lights), 2)
@@ -373,8 +349,7 @@ class TestSetup(unittest.TestCase):
         self.mock_api.get.return_value = None
 
         ret = hue_light.process_groups(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals([], ret)
         self.assertEquals(self.mock_bridge.lightgroups, {})
@@ -385,8 +360,7 @@ class TestSetup(unittest.TestCase):
         self.mock_bridge.get_group.return_value = {'name': 'Group 0'}
 
         ret = hue_light.process_groups(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals([], ret)
         self.assertEquals(self.mock_bridge.lightgroups, {})
@@ -399,18 +373,17 @@ class TestSetup(unittest.TestCase):
             1: {'state': 'on'}, 2: {'state': 'off'}}
 
         ret = hue_light.process_groups(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals(len(ret), 2)
         mock_hue_light.assert_has_calls([
             call(
                 1, {'state': 'on'}, self.mock_bridge, mock.ANY,
-                self.mock_bridge_type, self.mock_bridge.allow_unreachable,
+                self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue, True),
             call(
                 2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                self.mock_bridge_type, self.mock_bridge.allow_unreachable,
+                self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue, True),
         ])
         self.assertEquals(len(self.mock_bridge.lightgroups), 2)
@@ -428,14 +401,13 @@ class TestSetup(unittest.TestCase):
         self.mock_bridge.lightgroups = {1:  MagicMock()}
 
         ret = hue_light.process_groups(
-            self.hass, self.mock_api, self.mock_bridge, self.mock_bridge_type,
-            None)
+            self.hass, self.mock_api, self.mock_bridge, None)
 
         self.assertEquals(len(ret), 1)
         mock_hue_light.assert_has_calls([
             call(
                 2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                self.mock_bridge_type, self.mock_bridge.allow_unreachable,
+                self.mock_bridge.allow_unreachable,
                 self.mock_bridge.allow_in_emulated_hue, True),
         ])
         self.assertEquals(len(self.mock_bridge.lightgroups), 2)
@@ -455,7 +427,6 @@ class TestHueLight(unittest.TestCase):
         self.mock_info = MagicMock()
         self.mock_bridge = MagicMock()
         self.mock_update_lights = MagicMock()
-        self.mock_bridge_type = MagicMock()
         self.mock_allow_unreachable = MagicMock()
         self.mock_is_group = MagicMock()
         self.mock_allow_in_emulated_hue = MagicMock()
@@ -476,7 +447,6 @@ class TestHueLight(unittest.TestCase):
             (update_lights
              if update_lights is not None
              else self.mock_update_lights),
-            self.mock_bridge_type,
             self.mock_allow_unreachable, self.mock_allow_in_emulated_hue,
             is_group if is_group is not None else self.mock_is_group)
 

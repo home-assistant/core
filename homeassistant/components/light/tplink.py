@@ -167,16 +167,16 @@ class TPLinkSmartBulb(Light):
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
-                    self.smartbulb.current_consumption() / 1e3)
+                    self.smartbulb.current_consumption())
                 daily_statistics = self.smartbulb.get_emeter_daily()
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
                     self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
                         = "{:.3f}".format(
-                            daily_statistics[int(time.strftime("%d"))] / 1e3)
+                            daily_statistics[int(time.strftime("%d"))])
                     self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
                         = "{:.3f}".format(
-                            monthly_statistics[int(time.strftime("%m"))] / 1e3)
+                            monthly_statistics[int(time.strftime("%m"))])
                 except KeyError:
                     # device returned no daily/monthly history
                     pass
