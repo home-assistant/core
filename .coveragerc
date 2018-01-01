@@ -53,6 +53,9 @@ omit =
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
 
+    homeassistant/components/deconz/*
+    homeassistant/components/*/deconz.py
+
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
