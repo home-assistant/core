@@ -270,6 +270,9 @@ class Cloud:
                 "Unable to locate kid ({}) in keyset".format(kid))
 
         try:
-            return jwt.decode(token, key, audience=self.cognito_client_id)
+            return jwt.decode(
+                token, key, audience=self.cognito_client_id, options={
+                    'verify_exp': False,
+                })
         except jose_exceptions.JWTError as err:
             raise ValueError(str(err)) from None
