@@ -87,13 +87,13 @@ def async_setup(hass, config):
 class Cloud:
     """Store the configuration of the cloud connection."""
 
-    def __init__(self, hass, mode, alexa_config, gass_should_expose,
+    def __init__(self, hass, mode, alexa, gass_should_expose,
                  cognito_client_id=None, user_pool_id=None, region=None,
                  relayer=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
-        self.alexa_config = alexa_config
+        self.alexa_config = alexa
         self._gass_should_expose = gass_should_expose
         self._gass_config = None
         self.jwt_keyset = None

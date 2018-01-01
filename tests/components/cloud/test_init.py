@@ -3,7 +3,6 @@ import asyncio
 import json
 from unittest.mock import patch, MagicMock, mock_open
 
-from jose import jwt
 import pytest
 
 from homeassistant.components import cloud
