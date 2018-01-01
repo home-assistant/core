@@ -193,7 +193,7 @@ class SnmpData(object):
             # so we need to decode this type ourselves based on:
             # https://tools.ietf.org/html/draft-perkins-opaque-01
             if bytes(value).startswith(b'\x9f\x78'):
-                return unpack("!f", bytes(value)[3:])[0]
+                return str(unpack("!f", bytes(value)[3:])[0])
             # Otherwise Opaque types should be asn1 encoded
             try:
                 decoded_value, _ = decoder.decode(bytes(value))
