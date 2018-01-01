@@ -202,4 +202,10 @@ class TimeWrapper:
 
     def __getattr__(self, attr):
         """Fetch an attribute from Time module."""
-        return getattr(time, attr)
+        a = getattr(time, attr)
+        if callable(a):
+            def wrapper(*args, **kw):
+                return a(*args, **kw)
+            return wrapper
+        else:
+            return a
