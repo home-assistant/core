@@ -162,41 +162,13 @@ class Cloud:
     @asyncio.coroutine
     def initialize(self):
         """Initialize and load cloud info."""
-        yield from self._fetch_jwt_keyset()
+        jwt_success = yield from self._fetch_jwt_keyset()
 
-        # Fetching failed
-        if self.jwt_keyset is None:
+        if not jwt_success:
             return False
 
-        def start_cloud(event):
-            """Load the configuration."""
-            # Ensure config dir exists
-            path = self.hass.config.path(CONFIG_DIR)
-            if not os.path.isdir(path):
-                os.mkdir(path)
-
-            user_info = self.user_info_path
-            if not os.path.isfile(user_info):
-                return
-
-            with open(user_info, 'rt') as file:
-                info = json.loads(file.read())
-
-            # Validate tokens
-            try:
-                for token in 'id_token', 'access_token':
-                    self._decode_claims(info[token])
-            except ValueError as err:  # Raised when token is invalid
-                _LOGGER.warning('Found invalid token %s: %s', token, err)
-                return
-
-            self.id_token = info['id_token']
-            self.access_token = info['access_token']
-            self.refresh_token = info['refresh_token']
-
-            self.hass.add_job(self.iot.connect())
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_cloud)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        self._start_cloud)
 
         return True
 
@@ -229,6 +201,34 @@ class Cloud:
                 'refresh_token': self.refresh_token,
             }, indent=4))
 
+    def _start_cloud(self, event):
+        """Start the cloud component."""
+        # Ensure config dir exists
+        path = self.hass.config.path(CONFIG_DIR)
+        if not os.path.isdir(path):
+            os.mkdir(path)
+
+        user_info = self.user_info_path
+        if not os.path.isfile(user_info):
+            return
+
+        with open(user_info, 'rt') as file:
+            info = json.loads(file.read())
+
+        # Validate tokens
+        try:
+            for token in 'id_token', 'access_token':
+                self._decode_claims(info[token])
+        except ValueError as err:  # Raised when token is invalid
+            _LOGGER.warning('Found invalid token %s: %s', token, err)
+            return
+
+        self.id_token = info['id_token']
+        self.access_token = info['access_token']
+        self.refresh_token = info['refresh_token']
+
+        self.hass.add_job(self.iot.connect())
+
     @asyncio.coroutine
     def _fetch_jwt_keyset(self):
         """Fetch the JWT keyset for the Cognito instance."""
@@ -241,8 +241,11 @@ class Cloud:
                 req = yield from session.get(url)
                 self.jwt_keyset = yield from req.json()
 
+            return True
+
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Error fetching Cognito keyset: %s", err)
+            return False
 
     def _decode_claims(self, token):
         """Decode the claims in a token."""
