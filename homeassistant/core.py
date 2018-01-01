@@ -1024,19 +1024,22 @@ class ServiceRegistry(object):
 
         service_call = ServiceCall(domain, service, service_data, call_id)
 
-        if service_handler.is_callback:
-            service_handler.func(service_call)
-            fire_service_executed()
-        elif service_handler.is_coroutinefunction:
-            yield from service_handler.func(service_call)
-            fire_service_executed()
-        else:
-            def execute_service():
-                """Execute a service and fires a SERVICE_EXECUTED event."""
+        try:
+            if service_handler.is_callback:
                 service_handler.func(service_call)
                 fire_service_executed()
+            elif service_handler.is_coroutinefunction:
+                yield from service_handler.func(service_call)
+                fire_service_executed()
+            else:
+                def execute_service():
+                    """Execute a service and fires a SERVICE_EXECUTED event."""
+                    service_handler.func(service_call)
+                    fire_service_executed()
 
-            self._hass.async_add_job(execute_service)
+                yield from self._hass.async_add_job(execute_service)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error executing service %s', service_call)
 
 
 class Config(object):
