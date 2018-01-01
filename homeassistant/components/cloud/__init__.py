@@ -14,8 +14,8 @@ from homeassistant.const import (
 from homeassistant.helpers import entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
-from homeassistant.components.alexa import smart_home as alexa
-from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.google_assistant import smart_home as ga_sh
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -71,7 +71,7 @@ def async_setup(hass, config):
     if CONF_GOOGLE_ASSISTANT not in kwargs:
         kwargs[CONF_GOOGLE_ASSISTANT] = ASSISTANT_SCHEMA({})
 
-    kwargs[CONF_ALEXA] = alexa.Config(**kwargs[CONF_ALEXA])
+    kwargs[CONF_ALEXA] = alexa_sh.Config(**kwargs[CONF_ALEXA])
     kwargs['gass_should_expose'] = kwargs.pop(CONF_GOOGLE_ASSISTANT)
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
@@ -147,7 +147,7 @@ class Cloud:
     def gass_config(self):
         """Return the Google Assistant config."""
         if self._gass_config is None:
-            self._gass_config = ga.Config(
+            self._gass_config = ga_sh.Config(
                 should_expose=self._gass_should_expose,
                 agent_user_id=self.claims['cognito:username']
             )
