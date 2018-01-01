@@ -96,6 +96,7 @@ def async_setup(hass, config):
 
     return True
 
+
 class SnipsResponse(object):
     """Help generating the response for Snips."""
 
