@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
 
+from ratelimit import rate_limited
 
 DEPENDENCIES = ['apple_tv']
 
@@ -110,6 +111,7 @@ class AppleTvDevice(MediaPlayerDevice):
             return STATE_STANDBY  # Bad or unknown state?
 
     @callback
+    @rate_limited(1)  # only update status once per second
     def playstatus_update(self, updater, playing):
         """Print what is currently playing when it changes."""
         self._playing = playing
