@@ -664,6 +664,9 @@ pycsspeechtts==1.0.2
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
+# homeassistant.components.deconz
+pydeconz==23
+
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
