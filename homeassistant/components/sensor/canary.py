@@ -72,6 +72,8 @@ class CanarySensor(Entity):
                 return STATE_AIR_QUALITY_ABNORMAL
             elif self._sensor_value <= 1.0:
                 return STATE_AIR_QUALITY_NORMAL
+            else:
+                return None
 
         return self._sensor_value
 
