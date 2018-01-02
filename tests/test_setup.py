@@ -465,6 +465,7 @@ def test_component_warn_slow_setup(hass):
 
         assert mock_call().cancel.called
 
+
 @asyncio.coroutine
 def test_platform_no_warn_slow(hass):
     """Do not warn for long entity setup time."""
