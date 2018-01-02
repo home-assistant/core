@@ -180,7 +180,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         devices.update(self._get_arp())
         devices.update(self._get_neigh())
         if not self.mode == 'ap':
-            devices.update(self._get_leases())
+            devices.update(self._get_leases(devices))
         return devices
 
     def _get_wl(self):
@@ -194,7 +194,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
             devices[mac] = Device(mac, None, None)
         return devices
 
-    def _get_leases(self):
+    def _get_leases(self, cur_devices):
         lines = self.connection.run_command(_LEASES_CMD)
         if not lines:
             return {}
@@ -208,7 +208,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
             if host == '*':
                 host = ''
             mac = device['mac'].upper()
-            devices[mac] = Device(mac, device['ip'], host)
+            if mac in cur_devices:
+                devices[mac] = Device(mac, device['ip'], host)
         return devices
 
     def _get_neigh(self):
@@ -218,8 +219,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
         devices = {}
         for device in result:
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, None, None)
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, None, None)
         return devices
 
     def _get_arp(self):
@@ -348,8 +350,9 @@ class TelnetConnection(_Connection):
                 self.connect()
 
             self._telnet.write('{}\n'.format(command).encode('ascii'))
-            return (self._telnet.read_until(self._prompt_string).
+            data = (self._telnet.read_until(self._prompt_string).
                     split(b'\n')[1:-1])
+            return [line.decode('utf-8') for line in data]
         except EOFError:
             _LOGGER.error("Unexpected response from router")
             self.disconnect()
