@@ -63,11 +63,12 @@ class TuyaDevice(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn Tuya switch on."""
         self._device.set_status(True, self._switchid)
-        self._state = True
-        self.async_schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn Tuya switch off."""
         self._device.set_status(False, self._switchid)
-        self._state = False
-        self.async_schedule_update_ha_state()
+
+    def update(self):
+        """Get the Tuya switch state."""
+        response = self._device.status()
+        self._state = response['dps'][self._switchid]
