@@ -69,6 +69,13 @@ class TuyaDevice(SwitchDevice):
         self._device.set_status(False, self._switchid)
 
     def update(self):
-        """Get the Tuya switch state."""
-        response = self._device.status()
-        self._state = response['dps'][self._switchid]
+        """Get state of Tuya switch."""
+        retry_limit = 3
+        for i in range(retry_limit):
+            try:
+                status = self._device.status()
+                self._state = status['dps'][self._switchid]
+                return
+            except:
+                if i+1 == retry_limit:
+                    raise ConnectionRefusedError("Connection reset.")
