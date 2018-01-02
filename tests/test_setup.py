@@ -456,7 +456,7 @@ def test_component_warn_slow_setup(hass):
             hass, 'test_component1', {})
         assert result
         assert mock_call.called
-        assert len(mock_call.mock_calls) == 2
+        assert len(mock_call.mock_calls) == 3
 
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
