@@ -92,7 +92,11 @@ def _parse_lines(lines, regex):
     """
     results = []
     for line in lines:
-        match = regex.search(line.decode('utf-8'))
+        if isinstance(str, line):
+            match = regex.search(line)
+        else:
+            match = regex.search(line.decode('utf-8'))
+
         if not match:
             _LOGGER.debug("Could not parse row: %s", line)
             continue
