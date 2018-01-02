@@ -182,7 +182,7 @@ def _async_setup_component(hass: core.HomeAssistant,
     start = timer()
     _LOGGER.info("Setting up %s", domain)
     warn_task = hass.loop.call_later(
-        SLOW_SETUP_WARNING, _LOGGER.info,
+        SLOW_SETUP_WARNING, _LOGGER.warning,
         "Setup of %s is taking over %s seconds.", domain, SLOW_SETUP_WARNING)
 
     try:
