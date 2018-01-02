@@ -7,7 +7,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import climate
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
                SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
                SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
@@ -432,3 +432,27 @@ class TestMQTTClimate(unittest.TestCase):
                          self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('aux_heat'))
+
+    def test_custom_availability_payload(self):
+        """Test availability by custom payload with defined topic."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['availability_topic'] = 'availability-topic'
+        config['climate']['payload_available'] = 'good'
+        config['climate']['payload_not_available'] = 'nogood'
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get('climate.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('climate.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('climate.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
