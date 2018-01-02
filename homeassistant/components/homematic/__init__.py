@@ -80,7 +80,7 @@ HM_DEVICE_TYPES = {
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP'],
-    DISCOVER_COVER: ['Blind', 'KeyBlind']
+    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [

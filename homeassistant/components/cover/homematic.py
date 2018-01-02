@@ -6,7 +6,7 @@ https://home-assistant.io/components/cover.homematic/
 """
 import logging
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,3 +69,33 @@ class HMCover(HMDevice, CoverDevice):
         """Generate a data dictoinary (self._data) from metadata."""
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
+
+    @property
+    def current_cover_tilt_position(self):
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        try:
+            return int(self._hmdevice.get_cover_tilt_position() * 100)
+        except:
+            return None
+
+    def set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position."""
+        if ATTR_TILT_POSITION in kwargs:
+            position = float(kwargs[ATTR_TILT_POSITION])
+            position = min(100, max(0, position))
+            level = position / 100.0
+            self._hmdevice.set_cover_tilt_position(level, self._channel)
+
+    def open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        self._hmdevice.open_slats()
+
+    def close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        self._hmdevice.close_slats()
+
+    def stop_cover_tilt(self, **kwargs):
+        self.stop_cover(**kwargs)
