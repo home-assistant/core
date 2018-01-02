@@ -81,7 +81,7 @@ def async_setup(hass, config):
             return
 
         mailboxes.append(mailbox)
-        mailbox_entity = MailboxEntity(hass, mailbox)
+        mailbox_entity = MailboxEntity(mailbox)
         component = EntityComponent(
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
         yield from component.async_add_entities([mailbox_entity])
@@ -105,17 +105,20 @@ def async_setup(hass, config):
 class MailboxEntity(Entity):
     """Entity for each mailbox platform to provide a badge display."""
 
-    def __init__(self, hass, mailbox):
+    def __init__(self, mailbox):
         """Initialize mailbox entity."""
         self.mailbox = mailbox
-        self.hass = hass
         self.message_count = 0
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Complete entity initialization."""
         @callback
         def _mailbox_updated(event):
             self.async_schedule_update_ha_state(True)
 
-        hass.bus.async_listen(EVENT, _mailbox_updated)
+        self.hass.bus.async_listen(EVENT, _mailbox_updated)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def state(self):

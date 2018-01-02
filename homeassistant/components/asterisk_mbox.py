@@ -83,13 +83,13 @@ class AsteriskData(object):
 
         if command == CMD_MESSAGE_LIST:
             _LOGGER.debug("AsteriskVM sent updated message list")
-            if not isinstance(self.messages, list):
-                self.messages = []
-                dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
-                                DOMAIN)
-
+            old_messages = self.messages
             self.messages = sorted(
                 msg, key=lambda item: item['info']['origtime'], reverse=True)
+
+            if not isinstance(old_messages, list):
+                dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
+                                DOMAIN)
             dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE, self.messages)
         elif command == CMD_MESSAGE_CDR:
             _LOGGER.info("AsteriskVM sent updated CDR list")
