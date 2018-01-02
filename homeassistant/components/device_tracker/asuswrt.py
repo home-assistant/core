@@ -179,8 +179,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
         devices.update(self._get_wl())
         devices.update(self._get_arp())
         devices.update(self._get_neigh())
-        if not self.mode == 'ap':
-            devices.update(self._get_leases())
+        # if not self.mode == 'ap':
+        #     devices.update(self._get_leases())
         return devices
 
     def _get_wl(self):
