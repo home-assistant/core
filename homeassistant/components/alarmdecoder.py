@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['alarmdecoder==0.12.3']
+REQUIREMENTS = ['alarmdecoder==1.13.2']
 
 _LOGGER = logging.getLogger(__name__)
 
