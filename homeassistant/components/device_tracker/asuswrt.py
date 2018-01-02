@@ -92,7 +92,11 @@ def _parse_lines(lines, regex):
     """
     results = []
     for line in lines:
-        match = regex.search(line)
+        if isinstance(str, line):
+            match = regex.search(line)
+        else:
+            match = regex.search(line.decode('utf-8'))
+
         if not match:
             _LOGGER.debug("Could not parse row: %s", line)
             continue
@@ -179,8 +183,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
         devices.update(self._get_wl())
         devices.update(self._get_arp())
         devices.update(self._get_neigh())
-        if not self.mode == 'ap':
-            devices.update(self._get_leases())
+        # if not self.mode == 'ap':
+        #     devices.update(self._get_leases())
         return devices
 
     def _get_wl(self):
@@ -190,15 +194,16 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _WL_REGEX)
         devices = {}
         for device in result:
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, None, None)
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, None, None)
         return devices
 
     def _get_leases(self):
         lines = self.connection.run_command(_LEASES_CMD)
         if not lines:
             return {}
-        lines = [line for line in lines if not line.startswith('duid ')]
+        lines = [line for line in lines if not line.startswith(b'duid ')]
         result = _parse_lines(lines, _LEASES_REGEX)
         devices = {}
         for device in result:
@@ -207,8 +212,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
             host = device['host']
             if host == '*':
                 host = ''
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, device['ip'], host)
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, device['ip'], host)
         return devices
 
     def _get_neigh(self):
@@ -218,8 +224,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
         devices = {}
         for device in result:
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, None, None)
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, None, None)
         return devices
 
     def _get_arp(self):
@@ -229,8 +236,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _ARP_REGEX)
         devices = {}
         for device in result:
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, device['ip'], None)
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, device['ip'], None)
         return devices
 
 
