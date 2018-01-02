@@ -420,7 +420,8 @@ class PlexClient(MediaPlayerDevice):
 
             # season number (00)
             if callable(self._session.season):
-                self._media_season =str((self._session.season()).index).zfill(2)
+                self._media_season = str(
+                    (self._session.season()).index).zfill(2)
             elif self._session.parentIndex is not None:
                 self._media_season = self._session.parentIndex.zfill(2)
             else:
