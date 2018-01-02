@@ -456,7 +456,7 @@ def test_component_warn_slow_setup(hass):
             hass, 'test_component1', {})
         assert result
         assert mock_call.called
-        assert len(mock_call.mock_calls) == 2
+        assert len(mock_call.mock_calls) == 3
 
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
@@ -464,3 +464,17 @@ def test_component_warn_slow_setup(hass):
         assert logger_method == setup._LOGGER.warning
 
         assert mock_call().cancel.called
+
+
+@asyncio.coroutine
+def test_platform_no_warn_slow(hass):
+    """Do not warn for long entity setup time."""
+    loader.set_component(
+        'test_component1',
+        MockModule('test_component1', platform_schema=PLATFORM_SCHEMA))
+    with mock.patch.object(hass.loop, 'call_later', mock.MagicMock()) \
+            as mock_call:
+        result = yield from setup.async_setup_component(
+            hass, 'test_component1', {})
+        assert result
+        assert not mock_call.called
