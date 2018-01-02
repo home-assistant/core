@@ -582,7 +582,7 @@ def _is_latest(js_option, request):
     useragent = request.headers.get('User-Agent')
     if not useragent:
         return False
-    
+
     from user_agents import parse
     useragent = parse(useragent)
 
