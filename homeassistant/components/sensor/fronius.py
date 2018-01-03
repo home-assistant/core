@@ -25,15 +25,15 @@ CONF_TYPE = 'type'
 CONF_DEVICE = 'device'
 CONF_SCOPE = 'scope'
 
-DEFAULT_SCOPE = 'device'
-DEFAULT_DEVICE = None
-
 TYPE_INVERTER = 'inverter'
 TYPE_STORAGE = 'storage'
 TYPE_METER = 'meter'
 TYPE_POWER_FLOW = 'power_flow'
 SCOPE_DEVICE = 'device'
 SCOPE_SYSTEM = 'system'
+
+DEFAULT_SCOPE = SCOPE_DEVICE
+DEFAULT_DEVICE = None
 
 SENSOR_TYPES = [ TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW ]
 SCOPE_TYPES = [ SCOPE_DEVICE, SCOPE_SYSTEM ]
@@ -122,7 +122,7 @@ class FroniusSensor(Entity):
                 return self.data.current_system_inverter_data()
             elif self._scope == SCOPE_DEVICE and self._device:
                 return self.data.current_inverter_data(self._device)
-            elif self._scope == SCOPE_DEVICE and self._device:
+            elif self._scope == SCOPE_DEVICE:
                 return self.data.current_inverter_data()
         elif self._type == TYPE_STORAGE:
             return self.data.current_storage_data()
