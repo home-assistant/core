@@ -136,4 +136,3 @@ class DaikinApi(object):
             _LOGGER.warning(
                 "Connection failed for %s", self.ip_address
             )
-            return False
