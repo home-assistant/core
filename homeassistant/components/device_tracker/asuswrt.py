@@ -177,8 +177,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
         """
         devices = {}
         devices.update(self._get_wl())
-        devices.update(self._get_arp())
-        devices.update(self._get_neigh())
+        devices = self._get_arp(devices)
+        devices = self._get_neigh(devices)
         if not self.mode == 'ap':
             devices.update(self._get_leases(devices))
         return devices
@@ -212,7 +212,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 devices[mac] = Device(mac, device['ip'], host)
         return devices
 
-    def _get_neigh(self):
+    def _get_neigh(self, cur_devices):
         lines = self.connection.run_command(_IP_NEIGH_CMD)
         if not lines:
             return {}
@@ -222,18 +222,31 @@ class AsusWrtDeviceScanner(DeviceScanner):
             if device['mac']:
                 mac = device['mac'].upper()
                 devices[mac] = Device(mac, None, None)
-        return devices
+            else:
+                cur_devices = {
+                    k: v for k, v in
+                    cur_devices.items() if v.ip != device['ip']
+                }
+        cur_devices.update(devices)
+        return cur_devices
 
-    def _get_arp(self):
+    def _get_arp(self, cur_devices):
         lines = self.connection.run_command(_ARP_CMD)
         if not lines:
             return {}
         result = _parse_lines(lines, _ARP_REGEX)
         devices = {}
         for device in result:
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, device['ip'], None)
-        return devices
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, device['ip'], None)
+            else:
+                cur_devices = {
+                    k: v for k, v in
+                    cur_devices.items() if v.ip != device['ip']
+                }
+        cur_devices.update(devices)
+        return cur_devices
 
 
 class _Connection:
