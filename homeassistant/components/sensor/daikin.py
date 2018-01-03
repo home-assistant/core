@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.daikin import (
     SENSOR_TYPES, SENSOR_TYPE_TEMPERATURE,
     ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE,
@@ -19,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.unit_system import UnitSystem
-import homeassistant.helpers.config_validation as cv
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

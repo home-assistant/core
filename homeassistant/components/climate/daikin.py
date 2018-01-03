@@ -4,8 +4,8 @@ Support for the Daikin HVAC.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.daikin/
 """
-import re
 import logging
+import re
 
 import voluptuous as vol
 
