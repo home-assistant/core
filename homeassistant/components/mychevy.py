@@ -33,7 +33,7 @@ NOTIFICATION_TITLE = 'MyChevy website status'
 
 _LOGGER = getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=2)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 ERROR_SLEEP_TIME = 5*60
 
 CONFIG_SCHEMA = vol.Schema({
@@ -295,7 +295,6 @@ class MyChevyStatus(Entity):
         self._state = MYCHEVY_UNKNOWN
         self._last_update = dt.now()
         self._conn = connection
-        self.hass = connection.hass
 
     @property
     def device_state_attributes(self):
@@ -307,7 +306,6 @@ class MyChevyStatus(Entity):
         if self._state != MYCHEVY_SUCCESS:
             _LOGGER.info("Successfully connected to mychevy website")
             self._state = MYCHEVY_SUCCESS
-        self._last_update = dt.now()
         self.schedule_update_ha_state()
 
     def error(self):
@@ -319,7 +317,6 @@ class MyChevyStatus(Entity):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
             self._state = MYCHEVY_ERROR
-        self._last_update = dt.now()
         self.schedule_update_ha_state()
 
     @property
