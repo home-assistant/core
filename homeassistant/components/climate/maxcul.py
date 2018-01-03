@@ -1,15 +1,22 @@
+"""
+Support for MAX! thermostats using the maxcul component
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/climate.maxcul/
+"""
 import logging
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, STATE_UNKNOWN, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE)
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE
+)
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
-from homeassistant.components.maxcul import DATA_MAXCUL, DATA_DEVICES, EVENT_THERMOSTAT_UPDATE
+from homeassistant.components.maxcul import (
+    DATA_MAXCUL, DATA_DEVICES, EVENT_THERMOSTAT_UPDATE
+)
 
-REQUIREMENTS = ['pymaxcul']
 DEPENDS = ['maxcul']
 
 DEFAULT_TEMPERATURE = 12
@@ -20,15 +27,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if thermostat_id is None:
         return
 
-    device = MaxCulClimate( hass, thermostat_id )
+    device = MaxCulClimate(hass, thermostat_id)
     add_devices([device])
-
 
 
 class MaxCulClimate(ClimateDevice):
     """MAX! CUL climate device"""
 
-    def __init__(self, hass, thermostat_id, current_temperature = None, target_temperature = None, mode = None, battery_low = None):
+    def __init__(
+            self,
+            hass,
+            thermostat_id,
+            current_temperature=None,
+            target_temperature=None,
+            mode=None,
+            battery_low=None):
         self.entity_id = "climate.maxcul_thermostat_{:x}".format(thermostat_id)
         self._name = "Thermostat {:x}".format(thermostat_id)
         self._thermostat_id = thermostat_id
@@ -113,15 +126,20 @@ class MaxCulClimate(ClimateDevice):
             return False
 
         try:
-            self._maxcul_handle.set_temperature(self._thermostat_id, target_temperature, self._mode or MODE_MANUAL)
+            self._maxcul_handle.set_temperature(
+                self._thermostat_id,
+                target_temperature,
+                self._mode or MODE_MANUAL)
         except Exception as e:
-            LOGGER.error("Failed to set target temperature: {}".format(e))
+            _LOGGER.error("Failed to set target temperature: {}".format(e))
             return False
 
     def set_operation_mode(self, operation_mode):
         try:
-            self._maxcul_handle.set_temperature(self._thermostat_id, self._target_temperature or DEFAULT_TEMPERATURE, operation_mode)
+            self._maxcul_handle.set_temperature(
+                self._thermostat_id,
+                self._target_temperature or DEFAULT_TEMPERATURE,
+                operation_mode)
         except Exception as e:
-            LOGGER.error("Failed to set operation mode: {}".format(e))
+            _LOGGER.error("Failed to set operation mode: {}".format(e))
             return False
-
