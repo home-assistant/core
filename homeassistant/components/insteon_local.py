@@ -83,6 +83,7 @@ def setup(hass, config):
     hass.data['insteon_local'] = insteonhub
 
     for insteon_platform in INSTEON_PLATFORMS:
-        load_platform(hass, insteon_platform, DOMAIN, {'linked': linked})
+        load_platform(hass, insteon_platform, DOMAIN, {'linked': linked},
+		      config)
 
     return True
