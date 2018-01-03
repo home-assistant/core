@@ -78,21 +78,17 @@ def test_login(mock_cognito):
 def test_register(mock_cognito):
     """Test registering an account."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     auth_api.register(cloud, 'email@home-assistant.io', 'password')
     assert len(mock_cognito.register.mock_calls) == 1
     result_user, result_password = mock_cognito.register.mock_calls[0][1]
-    assert result_user == \
-        auth_api._generate_username('email@home-assistant.io')
+    assert result_user == 'email@home-assistant.io'
     assert result_password == 'password'
 
 
 def test_register_fails(mock_cognito):
     """Test registering an account."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     mock_cognito.register.side_effect = aws_error('SomeError')
     with pytest.raises(auth_api.CloudError):
         auth_api.register(cloud, 'email@home-assistant.io', 'password')
@@ -101,19 +97,16 @@ def test_register_fails(mock_cognito):
 def test_confirm_register(mock_cognito):
     """Test confirming a registration of an account."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     auth_api.confirm_register(cloud, '123456', 'email@home-assistant.io')
     assert len(mock_cognito.confirm_sign_up.mock_calls) == 1
     result_code, result_user = mock_cognito.confirm_sign_up.mock_calls[0][1]
-    assert result_user == \
-        auth_api._generate_username('email@home-assistant.io')
+    assert result_user == 'email@home-assistant.io'
     assert result_code == '123456'
 
 
 def test_confirm_register_fails(mock_cognito):
     """Test an error during confirmation of an account."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     mock_cognito.confirm_sign_up.side_effect = aws_error('SomeError')
     with pytest.raises(auth_api.CloudError):
         auth_api.confirm_register(cloud, '123456', 'email@home-assistant.io')
@@ -138,7 +131,6 @@ def test_resend_email_confirm_fails(mock_cognito):
 def test_forgot_password(mock_cognito):
     """Test starting forgot password flow."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     auth_api.forgot_password(cloud, 'email@home-assistant.io')
     assert len(mock_cognito.initiate_forgot_password.mock_calls) == 1
 
@@ -146,7 +138,6 @@ def test_forgot_password(mock_cognito):
 def test_forgot_password_fails(mock_cognito):
     """Test failure when starting forgot password flow."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     mock_cognito.initiate_forgot_password.side_effect = aws_error('SomeError')
     with pytest.raises(auth_api.CloudError):
         auth_api.forgot_password(cloud, 'email@home-assistant.io')
@@ -155,7 +146,6 @@ def test_forgot_password_fails(mock_cognito):
 def test_confirm_forgot_password(mock_cognito):
     """Test confirming forgot password."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     auth_api.confirm_forgot_password(
         cloud, '123456', 'email@home-assistant.io', 'new password')
     assert len(mock_cognito.confirm_forgot_password.mock_calls) == 1
@@ -168,7 +158,6 @@ def test_confirm_forgot_password(mock_cognito):
 def test_confirm_forgot_password_fails(mock_cognito):
     """Test failure when confirming forgot password."""
     cloud = MagicMock()
-    cloud.cognito_email_based = False
     mock_cognito.confirm_forgot_password.side_effect = aws_error('SomeError')
     with pytest.raises(auth_api.CloudError):
         auth_api.confirm_forgot_password(
