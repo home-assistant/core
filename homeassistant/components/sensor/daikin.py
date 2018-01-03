@@ -7,19 +7,18 @@ https://home-assistant.io/components/sensor.daikin/
 import logging
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_ICON,
-    CONF_MONITORED_CONDITIONS, CONF_TEMPERATURE_UNIT
-)
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.daikin import (
     SENSOR_TYPES,
     ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE,
     daikin_api_setup
 )
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_ICON,
+    CONF_MONITORED_CONDITIONS, CONF_TEMPERATURE_UNIT
+)
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -39,7 +38,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         monitored_conditions = discovery_info.get(
             CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES.keys())
         )
-        _LOGGER.info("Discovered a Daikin AC sensor on %s", host)
     else:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
@@ -63,7 +61,7 @@ class DaikinClimateSensor(Entity):
         self._api = api
         self._sensor = SENSOR_TYPES.get(monitored_state)
         if name is None:
-            name = self._sensor.get(CONF_NAME) + ' ' + api.name
+            name = "{} {}".format(self._sensor[CONF_NAME], api.name)
 
         self._name = name
         self._device_attribute = monitored_state
@@ -100,7 +98,7 @@ class DaikinClimateSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return self._sensor.get(CONF_ICON)
+        return self._sensor[CONF_ICON]
 
     @property
     def name(self):

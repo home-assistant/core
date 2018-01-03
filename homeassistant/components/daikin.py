@@ -5,20 +5,20 @@ For more details about this component, please refer to the documentation
 https://home-assistant.io/components/daikin/
 """
 import logging
-import time
+from datetime import timedelta
 from socket import timeout
-from threading import Lock
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.discovery import SERVICE_DAIKIN
-from homeassistant.helpers import discovery
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import (
     CONF_HOSTS, CONF_ICON, CONF_NAME,
     CONF_MONITORED_CONDITIONS
 )
+from homeassistant.helpers import discovery
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pydaikin==0.4']
 
@@ -31,8 +31,7 @@ ATTR_TARGET_TEMPERATURE = 'target_temperature'
 ATTR_INSIDE_TEMPERATURE = 'inside_temperature'
 ATTR_OUTSIDE_TEMPERATURE = 'outside_temperature'
 
-# default scan interval in seconds
-DEFAULT_SCAN_INTERVAL = 60
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 COMPONENT_TYPES = ['climate', 'sensor']
 
@@ -50,7 +49,9 @@ SENSOR_TYPES = {
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOSTS, default=[]): vol.Schema([cv.string]),
+        vol.Optional(
+            CONF_HOSTS, default=[]
+        ): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(
             CONF_MONITORED_CONDITIONS,
             default=list(SENSOR_TYPES.keys())
@@ -75,13 +76,15 @@ def setup(hass, config):
     discovery.listen(hass, SERVICE_DAIKIN, discovery_dispatch)
 
     for host in config.get(DOMAIN, {}).get(CONF_HOSTS, []):
-        if daikin_api_setup(hass, host) is not None:
-            discovery_info = {
-                'ip': host,
-                CONF_MONITORED_CONDITIONS:
-                    config.get(DOMAIN, {}).get(CONF_MONITORED_CONDITIONS)
-            }
-            load_platform(hass, 'sensor', DOMAIN, discovery_info, config)
+        if daikin_api_setup(hass, host) is None:
+            continue
+
+        discovery_info = {
+            'ip': host,
+            CONF_MONITORED_CONDITIONS:
+                config[DOMAIN][CONF_MONITORED_CONDITIONS]
+        }
+        load_platform(hass, 'sensor', DOMAIN, discovery_info, config)
 
     return True
 
@@ -91,7 +94,8 @@ def daikin_api_setup(hass, host, name=None):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    if hass.data[DOMAIN].get(host) is None:
+    api = hass.data[DOMAIN].get(host)
+    if api is None:
         from pydaikin import appliance
 
         try:
@@ -103,9 +107,9 @@ def daikin_api_setup(hass, host, name=None):
         if name is None:
             name = device.values['name']
 
-        hass.data[DOMAIN][host] = DaikinApi(device, name)
+        api = DaikinApi(device, name)
 
-    return hass.data[DOMAIN][host]
+    return api
 
 
 class DaikinApi(object):
@@ -117,28 +121,16 @@ class DaikinApi(object):
         self.name = name
         self.ip_address = device.ip
 
-        self.mutex = Lock()
-        self._scan_interval = DEFAULT_SCAN_INTERVAL
-        self._last_update = time.time()
-
-    def update(self, force_refresh=False):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self, **kwargs):
         """Pull the latest data from Daikin."""
-        # Acquire mutex to prevent simultaneous update from multiple threads
-        with self.mutex:
-            # don't update too often
-            if force_refresh or \
-                    (time.time() - self._last_update) >= self._scan_interval:
-
-                try:
-                    for resource in HTTP_RESOURCES:
-                        self.device.values.update(
-                            self.device.get_resource(resource)
-                        )
-                except timeout:
-                    _LOGGER.warning(
-                        "Connection failed for %s, retying in %d seconds",
-                        self.ip_address, self._scan_interval
-                    )
-                    return False
-
-                self._last_update = time.time()
+        try:
+            for resource in HTTP_RESOURCES:
+                self.device.values.update(
+                    self.device.get_resource(resource)
+                )
+        except timeout:
+            _LOGGER.warning(
+                "Connection failed for %s", self.ip_address
+            )
+            return False

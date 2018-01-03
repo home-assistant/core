@@ -4,34 +4,33 @@ Support for the Daikin HVAC.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.daikin/
 """
+import re
 import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
     ClimateDevice,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE,
-
     STATE_OFF,
     STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
-
     ATTR_OPERATION_MODE, ATTR_FAN_MODE, ATTR_SWING_MODE,
-    ATTR_CURRENT_TEMPERATURE, ATTR_TARGET_TEMP_STEP,
+    ATTR_CURRENT_TEMPERATURE,
     PLATFORM_SCHEMA
 )
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME,
-    TEMP_CELSIUS,
-    ATTR_TEMPERATURE
-)
-
 from homeassistant.components.daikin import (
     daikin_api_setup,
     ATTR_TARGET_TEMPERATURE,
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE
+)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME,
+    TEMP_CELSIUS,
+    ATTR_TEMPERATURE
 )
 
 REQUIREMENTS = ['pydaikin==0.4']
@@ -88,7 +87,7 @@ class DaikinClimate(ClimateDevice):
         from pydaikin import appliance
 
         self._api = api
-
+        self._force_refresh = False
         self._list = {
             ATTR_OPERATION_MODE: list(
                 map(str.title, set(HA_STATE_TO_DAIKIN.values()))
@@ -126,11 +125,7 @@ class DaikinClimate(ClimateDevice):
             value = self._api.device.represent('f_rate')[1].title()
         elif key == ATTR_SWING_MODE:
             value = self._api.device.represent('f_dir')[1].title()
-        elif key == ATTR_TARGET_TEMP_STEP:
-            return 1
         elif key == ATTR_OPERATION_MODE:
-            import re
-
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
             value = re.sub(
@@ -175,8 +170,8 @@ class DaikinClimate(ClimateDevice):
                         _LOGGER.error("Invalid temperature %s", value)
 
         if values:
+            self._force_refresh = True
             self._api.device.set(values)
-            self._api.update(force_refresh=True)
 
     @property
     def unique_id(self):
@@ -211,7 +206,7 @@ class DaikinClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.get(ATTR_TARGET_TEMP_STEP)
+        return 1
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -261,4 +256,5 @@ class DaikinClimate(ClimateDevice):
 
     def update(self):
         """Retrieve latest state."""
-        self._api.update()
+        self._api.update(no_throttle=self._force_refresh)
+        self._force_refresh = False
