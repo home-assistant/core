@@ -84,6 +84,6 @@ def setup(hass, config):
 
     for insteon_platform in INSTEON_PLATFORMS:
         load_platform(hass, insteon_platform, DOMAIN, {'linked': linked},
-		      config)
+                      config)
 
     return True
