@@ -14,7 +14,7 @@ from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
     STATE_AUTO, ATTR_OPERATION_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -42,7 +42,15 @@ CONF_COLD_TOLERANCE = 'cold_tolerance'
 CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 CONF_INITIAL_OPERATION_MODE = 'initial_operation_mode'
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
+CONF_AWAY_TEMP_COOL = 'away_temp_cool'
+CONF_AWAY_TEMP_HEAT = 'away_temp_heat'
+
+DEFAULT_AWAY_TEMP_COOL = 30
+DEFAULT_AWAY_TEMP_HEAT = 16
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+                 | SUPPORT_AWAY_MODE)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
@@ -60,7 +68,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_INITIAL_OPERATION_MODE):
-        vol.In([STATE_AUTO, STATE_OFF])
+        vol.In([STATE_AUTO, STATE_OFF]),
+    vol.Optional(CONF_AWAY_TEMP_HEAT,
+                 default=DEFAULT_AWAY_TEMP_HEAT): vol.Coerce(float),
+    vol.Optional(CONF_AWAY_TEMP_COOL,
+                 default=DEFAULT_AWAY_TEMP_COOL): vol.Coerce(float)
 })
 
 
@@ -79,11 +91,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
     initial_operation_mode = config.get(CONF_INITIAL_OPERATION_MODE)
+    away_temp_heat = config.get(CONF_AWAY_TEMP_HEAT)
+    away_temp_cool = config.get(CONF_AWAY_TEMP_COOL)
 
     async_add_devices([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
         target_temp, ac_mode, min_cycle_duration, cold_tolerance,
-        hot_tolerance, keep_alive, initial_operation_mode)])
+        hot_tolerance, keep_alive, initial_operation_mode,
+        away_temp_heat, away_temp_cool)])
 
 
 class GenericThermostat(ClimateDevice):
@@ -92,7 +107,7 @@ class GenericThermostat(ClimateDevice):
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
                  cold_tolerance, hot_tolerance, keep_alive,
-                 initial_operation_mode):
+                 initial_operation_mode, away_temp_heat, away_temp_cool):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
@@ -114,6 +129,11 @@ class GenericThermostat(ClimateDevice):
         self._max_temp = max_temp
         self._target_temp = target_temp
         self._unit = hass.config.units.temperature_unit
+
+        self._away_temp_heat = away_temp_heat
+        self._away_temp_cool = away_temp_cool
+
+        self._away = False
 
         async_track_state_change(
             hass, sensor_entity_id, self._async_sensor_changed)
@@ -232,6 +252,21 @@ class GenericThermostat(ClimateDevice):
         # Get default temp from super class
         return ClimateDevice.max_temp.fget(self)
 
+    @property
+    def is_away_mode_on(self):
+        """Return if away mode is on."""
+        return self._away
+
+    def turn_away_mode_on(self):
+        """Turn away mode on."""
+        self._away = True
+        self._async_control_heating()
+
+    def turn_away_mode_off(self):
+        """Turn away mode off."""
+        self._away = False
+        self._async_control_heating()
+
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Handle temperature changes."""
@@ -295,30 +330,34 @@ class GenericThermostat(ClimateDevice):
                 return
 
         if self.ac_mode:
+            target_temp = (self._target_temp
+                           if not self._away else self._away_temp_cool)
             is_cooling = self._is_device_active
             if is_cooling:
-                too_cold = self._target_temp - self._cur_temp >= \
+                too_cold = target_temp - self._cur_temp >= \
                     self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning off AC %s', self.heater_entity_id)
                     self._heater_turn_off()
             else:
-                too_hot = self._cur_temp - self._target_temp >= \
+                too_hot = self._cur_temp - target_temp >= \
                     self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning on AC %s', self.heater_entity_id)
                     self._heater_turn_on()
         else:
+            target_temp = (self._target_temp
+                           if not self._away else self._away_temp_heat)
             is_heating = self._is_device_active
             if is_heating:
-                too_hot = self._cur_temp - self._target_temp >= \
+                too_hot = self._cur_temp - target_temp >= \
                     self._hot_tolerance
                 if too_hot:
                     _LOGGER.info('Turning off heater %s',
                                  self.heater_entity_id)
                     self._heater_turn_off()
             else:
-                too_cold = self._target_temp - self._cur_temp >= \
+                too_cold = target_temp - self._cur_temp >= \
                     self._cold_tolerance
                 if too_cold:
                     _LOGGER.info('Turning on heater %s', self.heater_entity_id)
