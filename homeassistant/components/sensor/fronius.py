@@ -32,9 +32,11 @@ TYPE_INVERTER = 'inverter'
 TYPE_STORAGE = 'storage'
 TYPE_METER = 'meter'
 TYPE_POWER_FLOW = 'power_flow'
+SCOPE_DEVICE = 'device'
+SCOPE_SYSTEM = 'system'
 
 SENSOR_TYPES = [ TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW ]
-SCOPE_TYPES = [ 'device', 'system' ]
+SCOPE_TYPES = [ SCOPE_DEVICE, SCOPE_SYSTEM ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -69,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         """Update all the fronius sensors."""
         yield from sensor.async_update()
 
-    interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
+    interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=10)
     async_track_time_interval(hass, async_fronius, interval)
 
 
@@ -104,7 +106,7 @@ class FroniusSensor(Entity):
         """Retrieve latest state."""
         _LOGGER.debug("Update {}".format(self.name))
         
-        values = yield from self.update()
+        values = yield from self._update()
 
         _LOGGER.debug(values)
 
@@ -114,9 +116,14 @@ class FroniusSensor(Entity):
             self.async_update_ha_state()
 
     @asyncio.coroutine
-    def update(self):
+    def _update(self):
         if self._type == TYPE_INVERTER:
-            return self.data.current_inverter_data()
+            if self._scope == SCOPE_SYSTEM:
+                return self.data.current_system_inverter_data()
+            elif self._scope == SCOPE_DEVICE and self._device:
+                return self.data.current_inverter_data(self._device)
+            elif self._scope == SCOPE_DEVICE and self._device:
+                return self.data.current_inverter_data()
         elif self._type == TYPE_STORAGE:
             return self.data.current_storage_data()
         elif self._type == TYPE_METER:
