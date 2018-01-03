@@ -81,6 +81,22 @@ set_swing_mode:
     swing_mode:
       description: New value of swing mode.
       example: 1
+
+turn_on:
+  description: Turn climate device on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+turn_off:
+  description: Turn climate device off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+
 ecobee_set_fan_min_on_time:
   description: Set the minimum fan on time.
   fields:
@@ -103,6 +119,20 @@ ecobee_resume_program:
 
 nuheat_resume_program:
   description: Resume the programmed schedule.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+sensibo_assume_on:
+  description: Make climate device assume it is on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+sensibo_assume_off:
+  description: Make climate device assume it is off.
   fields:
     entity_id:
       description: Name(s) of entities to change.

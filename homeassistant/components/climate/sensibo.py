@@ -7,30 +7,33 @@ https://home-assistant.io/components/climate.sensibo/
 
 import asyncio
 import logging
+import os
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, STATE_OFF, TEMP_CELSIUS,
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_AUX_HEAT)
+    ATTR_CURRENT_HUMIDITY, ClimateDevice, DOMAIN, ON_OFF_SERVICE_SCHEMA,
+    PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_AUX_HEAT, SUPPORT_ON_OFF)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
-
-REQUIREMENTS = ['pysensibo==1.0.1']
+REQUIREMENTS = ['pysensibo==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 ALL = 'all'
 TIMEOUT = 10
+
+SERVICE_ASSUME_ON = 'sensibo_assume_on'
+SERVICE_ASSUME_OFF = 'sensibo_assume_off'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -47,7 +50,7 @@ FIELD_TO_FLAG = {
     'mode': SUPPORT_OPERATION_MODE,
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
-    'on': SUPPORT_AUX_HEAT,
+    'on': SUPPORT_AUX_HEAT | SUPPORT_ON_OFF,
 }
 
 
@@ -73,6 +76,41 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if devices:
         async_add_devices(devices)
 
+        @asyncio.coroutine
+        def async_on_off_service(service):
+            """Handle on/off calls."""
+            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            if entity_ids:
+                target_climate = [device for device in devices
+                                  if device.entity_id in entity_ids]
+            else:
+                target_climate = devices
+
+            update_tasks = []
+            for climate in target_climate:
+                if service.service == SERVICE_ASSUME_ON:
+                    yield from climate.async_assume_on()
+                elif service.service == SERVICE_ASSUME_OFF:
+                    yield from climate.async_assume_off()
+
+                if not climate.should_poll:
+                    continue
+                update_tasks.append(climate.async_update_ha_state(True))
+
+            if update_tasks:
+                yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+        descriptions = yield from hass.async_add_job(
+            load_yaml_config_file,
+            os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_ASSUME_OFF, async_on_off_service,
+            descriptions.get(SERVICE_ASSUME_OFF), schema=ON_OFF_SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, SERVICE_ASSUME_ON, async_on_off_service,
+            descriptions.get(SERVICE_ASSUME_ON), schema=ON_OFF_SERVICE_SCHEMA)
+
 
 class SensiboClimate(ClimateDevice):
     """Representation of a Sensibo device."""
@@ -91,13 +129,6 @@ class SensiboClimate(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         return self._supported_features
-
-    @property
-    def state(self):
-        """Return the current state."""
-        if not self.is_aux_heat_on:
-            return STATE_OFF
-        return super().state
 
     def _do_update(self, data):
         self._name = data['room']['name']
@@ -208,6 +239,8 @@ class SensiboClimate(ClimateDevice):
         """Return true if AC is on."""
         return self._ac_states['on']
 
+    is_on = is_aux_heat_on
+
     @property
     def min_temp(self):
         """Return the minimum temperature."""
@@ -278,6 +311,23 @@ class SensiboClimate(ClimateDevice):
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
                 self._id, 'on', False)
+
+    async_on = async_turn_aux_heat_on
+    async_off = async_turn_aux_heat_off
+
+    @asyncio.coroutine
+    def async_assume_on(self):
+        """Tell Sensibo it is on."""
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'on', True, assumed_state=True)
+
+    @asyncio.coroutine
+    def async_assume_off(self):
+        """Tell Sensibo it is off."""
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'on', False, assumed_state=True)
 
     @asyncio.coroutine
     def async_update(self):
