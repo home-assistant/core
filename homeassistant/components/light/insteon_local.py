@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local light platform."""
     insteonhub = hass.data['insteon_local']
     if discovery_info is None:
-       return
+        return
 
     linked = discovery_info['linked']
 
