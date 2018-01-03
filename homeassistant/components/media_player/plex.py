@@ -23,7 +23,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['plexapi==3.0.3']
+REQUIREMENTS = ['plexapi==3.0.5']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -156,7 +156,7 @@ def setup_plexserver(
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(config, device, None,
                                         plex_sessions, update_devices,
-                                        update_sessions, plexserver)
+                                        update_sessions)
                 plex_clients[device.machineIdentifier] = new_client
                 new_plex_clients.append(new_client)
             else:
@@ -169,7 +169,7 @@ def setup_plexserver(
                         and machine_identifier is not None):
                     new_client = PlexClient(config, None, session,
                                             plex_sessions, update_devices,
-                                            update_sessions, plexserver)
+                                            update_sessions)
                     plex_clients[machine_identifier] = new_client
                     new_plex_clients.append(new_client)
                 else:
@@ -249,10 +249,9 @@ class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
     def __init__(self, config, device, session, plex_sessions,
-                 update_devices, update_sessions, plex_server):
+                 update_devices, update_sessions):
         """Initialize the Plex device."""
         self._app_name = ''
-        self._server = plex_server
         self._device = None
         self._device_protocol_capabilities = None
         self._is_player_active = False
@@ -392,13 +391,12 @@ class PlexClient(MediaPlayerDevice):
         thumb_url = self._session.thumbUrl
         if (self.media_content_type is MEDIA_TYPE_TVSHOW
                 and not self.config.get(CONF_USE_EPISODE_ART)):
-            thumb_url = self._server.url(
-                self._session.grandparentThumb)
+            thumb_url = self._session.url(self._session.grandparentThumb)
 
         if thumb_url is None:
             _LOGGER.debug("Using media art because media thumb "
                           "was not found: %s", self.entity_id)
-            thumb_url = self._server.url(self._session.art)
+            thumb_url = self.session.url(self._session.art)
 
         self._media_image_url = thumb_url
 
@@ -421,8 +419,9 @@ class PlexClient(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
-            if callable(self._session.seasons):
-                self._media_season = self._session.seasons()[0].index.zfill(2)
+            if callable(self._session.season):
+                self._media_season = str(
+                    (self._session.season()).index).zfill(2)
             elif self._session.parentIndex is not None:
                 self._media_season = self._session.parentIndex.zfill(2)
             else:
