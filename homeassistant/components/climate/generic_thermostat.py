@@ -148,8 +148,17 @@ class GenericThermostat(ClimateDevice):
         if old_state is not None:
             # If we have no initial temperature, restore
             if self._target_temp is None:
-                self._target_temp = float(
-                    old_state.attributes[ATTR_TEMPERATURE])
+                # If we have a previously saved temperature
+                if old_state.attributes[ATTR_TEMPERATURE] is None:
+                    if self.ac_mode:
+                        self._target_temp = self.max_temp
+                    else:
+                        self._target_temp = self.min_temp
+                    _LOGGER.warning('Undefined target temperature, \
+                                    falling back to %s', self._target_temp)
+                else:
+                    self._target_temp = float(
+                        old_state.attributes[ATTR_TEMPERATURE])
             self._is_away = True if str(
                 old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON else False
             if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
