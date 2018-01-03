@@ -30,11 +30,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     linked = discovery_info['linked']
-
+    device_list = []
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'dimmer':
             device = insteonhub.dimmer(device_id)
-            add_devices([InsteonLocalDimmerDevice(device)])
+            device_list.append(
+                InsteonLocalDimmerDevice(device)
+            )
+
+    add_devices(device_list)
 
 
 class InsteonLocalDimmerDevice(Light):
