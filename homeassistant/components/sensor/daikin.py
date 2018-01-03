@@ -113,7 +113,7 @@ class DaikinClimateSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._sensor.get(CONF_TEMPERATURE_UNIT)
+        return self._sensor[CONF_TEMPERATURE_UNIT]
 
     def update(self):
         """Retrieve latest state."""
