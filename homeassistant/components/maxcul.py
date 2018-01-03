@@ -12,7 +12,7 @@ from homeassistant.util.yaml import load_yaml, dump as dump_yaml
 
 DOMAIN = 'maxcul'
 
-REQUIREMENTS = [ 'pymaxcul' ]
+REQUIREMENTS = [ 'pymaxcul==0.1.0' ]
 
 CONF_DEVICE_PATH = 'device_path'
 CONF_DEVICE_BAUD_RATE = 'device_baud_rate'
