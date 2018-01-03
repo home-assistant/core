@@ -72,7 +72,8 @@ class MqttSensor(MqttAvailability, Entity):
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
                  force_update, expire_after, value_template,
-                 json_attributes, availability_topic, payload_available, payload_not_available):
+                 json_attributes, availability_topic, payload_available,
+                 payload_not_available):
         """Initialize the sensor."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
