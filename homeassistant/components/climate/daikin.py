@@ -148,21 +148,23 @@ class DaikinClimate(ClimateDevice):
 
         for attr in [ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE,
                      ATTR_OPERATION_MODE]:
-            if attr in settings and settings[attr] is not None:
-                value = settings[attr]
-                daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
-                if daikin_attr is not None:
-                    if value.title() in self._list[attr]:
-                        values[daikin_attr] = value.lower()
-                    else:
-                        _LOGGER.error("Invalid value %s for %s", attr, value)
+            value = settings.get(attr)
+            if value is None:
+                continue
 
-                # temperature
-                elif attr == ATTR_TEMPERATURE:
-                    try:
-                        values['stemp'] = str(int(value))
-                    except ValueError:
-                        _LOGGER.error("Invalid temperature %s", value)
+            daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
+            if daikin_attr is not None:
+                if value.title() in self._list[attr]:
+                    values[daikin_attr] = value.lower()
+                else:
+                    _LOGGER.error("Invalid value %s for %s", attr, value)
+
+            # temperature
+            elif attr == ATTR_TEMPERATURE:
+                try:
+                    values['stemp'] = str(int(value))
+                except ValueError:
+                    _LOGGER.error("Invalid temperature %s", value)
 
         if values:
             self._force_refresh = True
