@@ -346,7 +346,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171223.0
+home-assistant-frontend==20180102.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -565,7 +565,7 @@ pizzapi==0.0.3
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==3.0.3
+plexapi==3.0.5
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
@@ -650,7 +650,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.2
+pychromecast==1.0.3
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -663,6 +663,9 @@ pycsspeechtts==1.0.2
 
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
+
+# homeassistant.components.deconz
+pydeconz==23
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -931,7 +934,7 @@ python_opendata_transport==0.0.3
 python_openzwave==0.4.0.35
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.25
+pythonegardia==1.0.26
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
@@ -964,7 +967,7 @@ pyvlx==0.1.3
 pywebpush==1.3.0
 
 # homeassistant.components.wemo
-pywemo==0.4.20
+pywemo==0.4.25
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4

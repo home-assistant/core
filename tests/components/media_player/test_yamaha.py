@@ -4,12 +4,29 @@ import xml.etree.ElementTree as ET
 
 import rxv
 
+import homeassistant.components.media_player.yamaha as yamaha
+
+TEST_CONFIG = {
+    'name': "Test Receiver",
+    'source_ignore': ['HDMI5'],
+    'source_names': {'HDMI1': 'Laserdisc'},
+    'zone_names': {'Main_Zone': "Laser Dome"}
+}
+
 
 def sample_content(name):
     """Read content into a string from a file."""
     with open('tests/components/media_player/yamaha_samples/%s' % name,
               encoding='utf-8') as content:
         return content.read()
+
+
+def yamaha_player(receiver):
+    """Create a YamahaDevice from a given receiver, presumably a Mock."""
+    zone_controller = receiver.zone_controllers()[0]
+    player = yamaha.YamahaDevice(receiver=zone_controller, **TEST_CONFIG)
+    player.build_source_list()
+    return player
 
 
 class FakeYamaha(rxv.rxv.RXV):
@@ -74,6 +91,7 @@ class TestYamaha(unittest.TestCase):
         """Setup things to be run when tests are started."""
         super(TestYamaha, self).setUp()
         self.rec = FakeYamaha("http://10.0.0.0:80/YamahaRemoteControl/ctrl")
+        self.player = yamaha_player(self.rec)
 
     def test_get_playback_support(self):
         """Test the playback."""
@@ -92,3 +110,20 @@ class TestYamaha(unittest.TestCase):
         self.assertTrue(support.stop)
         self.assertFalse(support.skip_f)
         self.assertFalse(support.skip_r)
+
+    def test_configuration_options(self):
+        """Test configuration options."""
+        rec_name = TEST_CONFIG['name']
+        src_zone = 'Main_Zone'
+        src_zone_alt = src_zone.replace('_', ' ')
+        renamed_zone = TEST_CONFIG['zone_names'][src_zone]
+        ignored_src = TEST_CONFIG['source_ignore'][0]
+        renamed_src = 'HDMI1'
+        new_src = TEST_CONFIG['source_names'][renamed_src]
+        self.assertFalse(self.player.name == rec_name + ' ' + src_zone)
+        self.assertFalse(self.player.name == rec_name + ' ' + src_zone_alt)
+        self.assertTrue(self.player.name == rec_name + ' ' + renamed_zone)
+
+        self.assertFalse(ignored_src in self.player.source_list)
+        self.assertFalse(renamed_src in self.player.source_list)
+        self.assertTrue(new_src in self.player.source_list)
