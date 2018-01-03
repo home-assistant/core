@@ -5,7 +5,8 @@ import logging
 from aiohttp import hdrs, client_exceptions, WSMsgType
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.alexa import smart_home
+from homeassistant.components.alexa import smart_home as alexa
+from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
@@ -204,9 +205,18 @@ def async_handle_message(hass, cloud, handler_name, payload):
 @asyncio.coroutine
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
-    return (yield from smart_home.async_handle_message(hass,
-                                                       cloud.alexa_config,
-                                                       payload))
+    result = yield from alexa.async_handle_message(hass, cloud.alexa_config,
+                                                   payload)
+    return result
+
+
+@HANDLERS.register('google_assistant')
+@asyncio.coroutine
+def async_handle_google_assistant(hass, cloud, payload):
+    """Handle an incoming IoT message for Google Assistant."""
+    result = yield from ga.async_handle_message(hass, cloud.gass_config,
+                                                payload)
+    return result
 
 
 @HANDLERS.register('cloud')

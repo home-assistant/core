@@ -579,8 +579,12 @@ def _is_latest(js_option, request):
     if js_option != 'auto':
         return js_option == 'latest'
 
+    useragent = request.headers.get('User-Agent')
+    if not useragent:
+        return False
+
     from user_agents import parse
-    useragent = parse(request.headers.get('User-Agent'))
+    useragent = parse(useragent)
 
     # on iOS every browser is a Safari which we support from version 10.
     if useragent.os.family == 'iOS':
