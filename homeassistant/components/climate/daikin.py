@@ -11,14 +11,11 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
-    ClimateDevice,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE,
-    STATE_OFF,
-    STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
     ATTR_OPERATION_MODE, ATTR_FAN_MODE, ATTR_SWING_MODE,
-    ATTR_CURRENT_TEMPERATURE,
-    PLATFORM_SCHEMA
+    ATTR_CURRENT_TEMPERATURE, ClimateDevice, PLATFORM_SCHEMA,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, STATE_OFF, STATE_AUTO, STATE_HEAT, STATE_COOL,
+    STATE_DRY, STATE_FAN_ONLY
 )
 from homeassistant.components.daikin import (
     daikin_api_setup,
