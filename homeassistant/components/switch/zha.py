@@ -15,13 +15,14 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zha']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Zigbee Home Automation switches."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the Zigbee Home Automation switches."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
-    add_devices([Switch(**discovery_info)])
+    async_add_devices([Switch(**discovery_info)], update_before_add=True)
 
 
 class Switch(zha.Entity, SwitchDevice):
@@ -47,3 +48,27 @@ class Switch(zha.Entity, SwitchDevice):
         """Turn the entity off."""
         yield from self._endpoint.on_off.off()
         self._state = 0
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug("%s async_update", self.entity_id)
+
+        @asyncio.coroutine
+        def safe_read(cluster, attributes):
+            """Swallow all exceptions from network read.
+
+            If we throw during initialization, setup fails. Rather have an
+            entity that exists, but is in a maybe wrong state, than no entity.
+            """
+            try:
+                result, _ = yield from cluster.read_attributes(
+                    attributes,
+                    allow_cache=False,
+                )
+                return result
+            except Exception:  # pylint: disable=broad-except
+                return {}
+
+        result = yield from safe_read(self._endpoint.on_off, ['on_off'])
+        self._state = result.get('on_off', self._state)
