@@ -293,6 +293,8 @@ class ZigBeeDigitalIn(Entity):
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
+            # Set state to the value of sample, respecting any inversion
+            # logic from the on_state config variable.
             self._state = self._config.state2bool[
                 self._config.bool2state[sample[pin_name]]]
             self.schedule_update_ha_state()
