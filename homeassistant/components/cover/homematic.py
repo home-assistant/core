@@ -5,9 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.homematic/
 """
 import logging
-from homeassistant.const import STATE_UNKNOWN
+
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
+from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +70,10 @@ class HMCover(HMDevice, CoverDevice):
         """Generate a data dictoinary (self._data) from metadata."""
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
+        try:
+            self._data.update({'LEVEL_2': self._hmdevice.get_cover_tilt_position()})
+        except:
+            pass
 
     @property
     def current_cover_tilt_position(self):
@@ -76,10 +81,11 @@ class HMCover(HMDevice, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        try:
-            return int(self._hmdevice.get_cover_tilt_position() * 100)
-        except:
+        level_2 = self._data.get('LEVEL_2', None)
+        if level_2 is None:
             return None
+
+        return int(level_2 * 100)
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
