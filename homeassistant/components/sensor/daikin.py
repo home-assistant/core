@@ -5,19 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.daikin/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.daikin import (
-    SENSOR_TYPES,
+    SENSOR_TYPES, SENSOR_TYPE_TEMPERATURE,
     ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE,
     daikin_api_setup
 )
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_ICON,
-    CONF_MONITORED_CONDITIONS, CONF_TEMPERATURE_UNIT
+    CONF_HOST, CONF_ICON, CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_TYPE
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.unit_system import UnitSystem
 import homeassistant.helpers.config_validation as cv
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -39,16 +40,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES.keys())
         )
     else:
-        host = config.get(CONF_HOST)
+        host = config[CONF_HOST]
         name = config.get(CONF_NAME)
-        monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+        monitored_conditions = config[CONF_MONITORED_CONDITIONS]
         _LOGGER.info("Added Daikin AC sensor on %s", host)
 
     api = daikin_api_setup(hass, host, name)
-
+    units = hass.config.units
     sensors = []
     for monitored_state in monitored_conditions:
-        sensors.append(DaikinClimateSensor(api, name, monitored_state))
+        sensors.append(DaikinClimateSensor(api, monitored_state, units, name))
 
     add_devices(sensors, True)
 
@@ -56,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DaikinClimateSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, name=None, monitored_state=SENSOR_TYPES.keys()):
+    def __init__(self, api, monitored_state, units: UnitSystem, name=None):
         """Initialize the sensor."""
         self._api = api
         self._sensor = SENSOR_TYPES.get(monitored_state)
@@ -65,6 +66,9 @@ class DaikinClimateSensor(Entity):
 
         self._name = name
         self._device_attribute = monitored_state
+
+        if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
+            self._unit_of_measurement = units.temperature_unit
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -113,7 +117,7 @@ class DaikinClimateSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._sensor[CONF_TEMPERATURE_UNIT]
+        return self._unit_of_measurement
 
     def update(self):
         """Retrieve latest state."""

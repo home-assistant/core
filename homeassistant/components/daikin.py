@@ -13,8 +13,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.discovery import SERVICE_DAIKIN
 from homeassistant.const import (
-    CONF_HOSTS, CONF_ICON, CONF_NAME,
-    CONF_MONITORED_CONDITIONS
+    CONF_HOSTS, CONF_ICON, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_TYPE
 )
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
@@ -35,14 +34,18 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 COMPONENT_TYPES = ['climate', 'sensor']
 
+SENSOR_TYPE_TEMPERATURE = 'temperature'
+
 SENSOR_TYPES = {
     ATTR_INSIDE_TEMPERATURE: {
         CONF_NAME: 'Inside Temperature',
-        CONF_ICON: 'mdi:thermometer'
+        CONF_ICON: 'mdi:thermometer',
+        CONF_TYPE: SENSOR_TYPE_TEMPERATURE
     },
     ATTR_OUTSIDE_TEMPERATURE: {
         CONF_NAME: 'Outside Temperature',
-        CONF_ICON: 'mdi:thermometer'
+        CONF_ICON: 'mdi:thermometer',
+        CONF_TYPE: SENSOR_TYPE_TEMPERATURE
     }
 
 }
