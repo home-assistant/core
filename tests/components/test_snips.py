@@ -189,13 +189,6 @@ class TestSnips(unittest.TestCase):
             "slots": []
         }
         """
-        #unsub = mqtt.subscribe(self.hass,
-        #                       'hermes/dialogueManager/endSession',
-        #                       self.record_calls)
-        #print("self.calls:", self.calls)
-        #self.assertEqual('hermes/dialogueManager/endSession',
-        #                 self.calls[0][1])
-
         with self.assertLogs(level='WARNING') as test_handle:
             fire_mqtt_message(self.hass,
                               'hermes/intent/unknownIntent', payload)
@@ -203,14 +196,12 @@ class TestSnips(unittest.TestCase):
             self.assertIn("WARNING:homeassistant.components.snips:"
                           "Received unknown intent unknownIntent",
                           test_handle.output[0])
-        # unsub()
 
     def test_intent_invalid_confg(self):
         """Test when intent has invalid config."""
         setup_component(self.hass, snips.DOMAIN, {
             "snips": {},
         })
-        # intent should contain a slot.value.kind key
         payload = """
         {
             "input": "turn the lights green",
