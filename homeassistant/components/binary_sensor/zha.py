@@ -109,5 +109,9 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
             except Exception:  # pylint: disable=broad-except
                 return {}
 
+        from bellows.types.basic import uint16_t
+
         result = yield from safe_read(self._endpoint.ias_zone, ['zone_status'])
-        self._state = result.get('zone_status', self._state) & 3
+        state = result.get('zone_status', self._state)
+        if isinstance(state, (int, uint16_t)):
+            self._state = result.get('zone_status', self._state)
