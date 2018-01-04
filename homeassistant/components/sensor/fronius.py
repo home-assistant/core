@@ -125,7 +125,7 @@ class FroniusSensor(Entity):
 
         _LOGGER.debug(values)
 
-        if values: 
+        if values:
             self._state = values['status']['Code']
             self._attributes = self._get_attributes(values)
             self.async_update_ha_state()
