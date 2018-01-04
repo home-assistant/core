@@ -14,7 +14,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 from homeassistant.components.maxcul import (
-    DATA_MAXCUL, DATA_DEVICES, EVENT_THERMOSTAT_UPDATE
+    DATA_MAXCUL, DATA_DEVICES, EVENT_THERMOSTAT_UPDATE,
+    ATTR_DURATION
 )
 
 DEPENDS = ['maxcul']
@@ -23,7 +24,8 @@ DEFAULT_TEMPERATURE = 12
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    thermostat_id = discovery_info.get('device_id', None)
+    from maxcul import ATTR_DEVICE_ID
+    thermostat_id = discovery_info.get(ATTR_DEVICE_ID, None)
     if thermostat_id is None:
         return
 
@@ -34,32 +36,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MaxCulClimate(ClimateDevice):
     """MAX! CUL climate device"""
 
-    def __init__(
-            self,
-            hass,
-            thermostat_id,
-            current_temperature=None,
-            target_temperature=None,
-            mode=None,
-            battery_low=None):
+    def __init__(self, hass, thermostat_id):
+        from maxcul import (
+            ATTR_DEVICE_ID, ATTR_DESIRED_TEMPERATURE,
+            ATTR_MEASURED_TEMPERATURE, ATTR_MODE,
+            ATTR_BATTERY_LOW
+        )
         self.entity_id = "climate.maxcul_thermostat_{:x}".format(thermostat_id)
         self._name = "Thermostat {:x}".format(thermostat_id)
         self._thermostat_id = thermostat_id
         self._maxcul_handle = hass.data[DATA_MAXCUL]
-        self._current_temperature = current_temperature
-        self._target_temperature = target_temperature
-        self._mode = mode
-        self._battery_low = battery_low
+        self._current_temperature = None
+        self._target_temperature = None
+        self._mode = None
+        self._battery_low = None
 
         def update(event):
-            thermostat_id = event.data.get('device_id')
+            thermostat_id = event.data.get(ATTR_DEVICE_ID)
             if thermostat_id != self._thermostat_id:
                 return
 
-            current_temperature = event.data.get('measured_temperature')
-            target_temperature = event.data.get('desired_temperature')
-            mode = event.data.get('mode')
-            battery_low = event.data.get('battery_low')
+            current_temperature = event.data.get(ATTR_MEASURED_TEMPERATURE)
+            target_temperature = event.data.get(ATTR_DESIRED_TEMPERATURE)
+            mode = event.data.get(ATTR_MODE)
+            battery_low = event.data.get(ATTR_BATTERY_LOW)
 
             if current_temperature is not None:
                 self._current_temperature = current_temperature
@@ -130,8 +130,8 @@ class MaxCulClimate(ClimateDevice):
                 self._thermostat_id,
                 target_temperature,
                 self._mode or MODE_MANUAL)
-        except Exception as e:
-            _LOGGER.error("Failed to set target temperature: {}".format(e))
+        except Exception as err:
+            _LOGGER.error("Failed to set target temperature: %s", err)
             return False
 
     def set_operation_mode(self, operation_mode):
@@ -140,6 +140,6 @@ class MaxCulClimate(ClimateDevice):
                 self._thermostat_id,
                 self._target_temperature or DEFAULT_TEMPERATURE,
                 operation_mode)
-        except Exception as e:
-            _LOGGER.error("Failed to set operation mode: {}".format(e))
+        except Exception as err:
+            _LOGGER.error("Failed to set operation mode: %s", err)
             return False

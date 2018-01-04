@@ -15,8 +15,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import discovery
 from homeassistant.util.yaml import load_yaml, dump as dump_yaml
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 
-REQUIREMENTS = ['pymaxcul==0.1.0']
+REQUIREMENTS = ['pymaxcul==0.1.1']
 
 DOMAIN = 'maxcul'
 
@@ -36,6 +37,8 @@ DATA_DEVICES = 'maxcul_devices'
 
 EVENT_THERMOSTAT_UPDATE = 'maxcul.thermostat_update'
 
+ATTR_DURATION = 'duration'
+
 YAML_DEVICES = 'maxcul_paired_devices.yaml'
 
 SERIVCE_ENABLE_PAIRING = 'enable_pairing'
@@ -45,16 +48,14 @@ SCHEMA_SERVICE_ENABLE_PAIRING = vol.Schema({
 })
 
 DESCRIPTION_SERVICE_ENABLE_PAIRING = {
-    'description': 'Enable pairing for a given duration',
+    'description': "Enable pairing for a given duration",
     'fields': {
-        'duration': {
-            'description': 'Duration for which pairing is possible in seconds',
+        ATTR_DURATION: {
+            'description': "Duration for which pairing is possible in seconds",
             'example': 30
         }
     }
 }
-
-ATTR_DEVICE_ID = 'device_id'
 
 
 def read_paired_devices(path):
@@ -63,7 +64,7 @@ def read_paired_devices(path):
     paired_devices = load_yaml(path)
     if not isinstance(paired_devices, list):
         _LOGGER.warn(
-            "Paired devices file {} did not contain a list".format(path))
+            "Paired devices file %s did not contain a list", path)
         return []
     return paired_devices
 
@@ -89,12 +90,12 @@ def setup(hass, config):
 
         elif event in [maxcul.EVENT_DEVICE_PAIRED,
                        maxcul.EVENT_DEVICE_REPAIRED]:
-            device_id = payload.get(ATTR_DEVICE_ID)
+            device_id = payload.get(maxcul.ATTR_DEVICE_ID)
             if device_id is None or device_id in hass.data[DATA_DEVICES]:
                 return
             hass.data[DATA_DEVICES].append(device_id)
             discovery.load_platform(
-                hass, 'climate', DOMAIN, payload, config)
+                hass, CLIMATE_DOMAIN, DOMAIN, payload, config)
             write_paired_devices(
                 paired_devices_path,
                 hass.data[DATA_DEVICES])
@@ -109,11 +110,11 @@ def setup(hass, config):
 
     for device_id in hass.data[DATA_DEVICES]:
         discovery.load_platform(
-            hass, 'climate', DOMAIN, {
-                ATTR_DEVICE_ID: device_id}, config)
+            hass, CLIMATE_DOMAIN, DOMAIN, {
+                maxcul.ATTR_DEVICE_ID: device_id}, config)
 
     def _service_enable_pairing(service):
-        duration = service.data.get('duration')
+        duration = service.data.get(ATTR_DURATION)
         maxconn.enable_pairing(duration)
 
     hass.services.register(
