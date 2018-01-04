@@ -38,6 +38,7 @@ SERVICE_XIAOMI_GW = 'xiaomi_gw'
 SERVICE_TELLDUSLIVE = 'tellstick'
 SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
+SERVICE_DAIKIN = 'daikin'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
