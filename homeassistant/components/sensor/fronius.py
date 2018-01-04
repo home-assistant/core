@@ -19,7 +19,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = [ 'pyfronius==0.2' ]
+REQUIREMENTS = ['pyfronius==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,15 +37,17 @@ SCOPE_SYSTEM = 'system'
 DEFAULT_SCOPE = SCOPE_DEVICE
 DEFAULT_DEVICE = None
 
-SENSOR_TYPES = [ TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW ]
-SCOPE_TYPES = [ SCOPE_DEVICE, SCOPE_SYSTEM ]
+SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
+SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-    vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE): vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
+    vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
+        vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
     vol.Optional(CONF_DEVICE): cv.positive_int,
 })
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -53,7 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug("Running setup")
     _LOGGER.debug(config)
     import pyfronius
-    
+
     session = async_get_clientsession(hass)
     fronius = pyfronius.Fronius(session, config[CONF_HOST])
 
@@ -63,9 +65,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         name = name + "_{}".format(device)
     else:
         device = DEFAULT_DEVICE
-    
-    sensor = FroniusSensor(fronius, name, config[CONF_TYPE], config[CONF_SCOPE], device)
-    
+
+    sensor = FroniusSensor(
+        fronius, name, config[CONF_TYPE], config[CONF_SCOPE], device)
+
     async_add_devices([sensor])
 
     @asyncio.coroutine
@@ -110,9 +113,9 @@ class FroniusSensor(Entity):
     def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("Update {}".format(self.name))
-        
+
         values = {}
-        
+
         try:
             values = yield from self._update()
         except ServerDisconnectedError:
@@ -146,6 +149,9 @@ class FroniusSensor(Entity):
     def _get_attributes(self, values):
         attributes = {}
         for key in values:
-            if 'value' in values[key]:
-                attributes[key] = values[key]['value'] if values[key]['value'] else 0
+            if 'value' in values[key] and values[key]['value']:
+                attributes[key] = values[key]['value']
+            else:
+                attributes[key] = 0
+
         return attributes
