@@ -308,6 +308,7 @@ kodi_call_method:
       description: Name of the Kodi JSONRPC API method to be called.
       example: 'VideoLibrary.GetRecentlyAddedEpisodes'
 
+<<<<<<< a8444b22e76fbb2581a5da367aff477df604085e
 squeezebox_call_method:
   description: 'Call a Squeezebox JSON/RPC API method.'
   fields:
@@ -334,3 +335,21 @@ yamaha_enable_output:
     enabled:
       description: Boolean indicating if port should be enabled or not.
       example: true
+=======
+bluesound_join:
+  description: Group player together.
+  fields:
+    master:
+      description: Entity ID of the player that should become the master of the group.
+      example: 'media_player.bluesound_livingroom'
+    entity_id:
+      description: Name(s) of entities that will coordinate the grouping. Platform dependent.
+      example: 'media_player.bluesound_livingroom'
+
+bluesound_unjoin:
+  description: Unjoin the player from a group.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be unjoined from their group. Platform dependent.
+      example: 'media_player.bluesound_livingroom'
+>>>>>>> Added support for join and unjoin
