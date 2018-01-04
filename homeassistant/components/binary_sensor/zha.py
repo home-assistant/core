@@ -115,4 +115,3 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
-
