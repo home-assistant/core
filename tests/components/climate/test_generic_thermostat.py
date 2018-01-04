@@ -184,7 +184,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Test that the operation list returns the correct modes."""
         state = self.hass.states.get(ENTITY)
         modes = state.attributes.get('operation_list')
-        self.assertEqual([climate.STATE_HEAT, STATE_OFF], modes)
+        self.assertEqual([STATE_OFF, climate.STATE_HEAT], modes)
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
