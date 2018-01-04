@@ -81,7 +81,7 @@ aiolifx_effects==0.1.2
 aiopvapi==1.5.4
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==0.12.3
+alarmdecoder==1.13.2
 
 # homeassistant.components.sensor.alpha_vantage
 alpha_vantage==1.6.0
