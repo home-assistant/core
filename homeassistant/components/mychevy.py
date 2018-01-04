@@ -180,15 +180,9 @@ class EVSensor(Entity):
     def __init__(self, connection):
         """Initialize sensor with car connection."""
         self._conn = connection
-        self.hass = connection.hass
         self.car = connection.car
         self.entity_id = ENTITY_ID_FORMAT.format(
             '{}_{}'.format(DOMAIN, self.__class__.__name__))
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {"units": self._unit}
 
     @property
     def icon(self):
@@ -226,8 +220,18 @@ class EVCharge(EVSensor):
     """
 
     _name = "EV Charge"
-    _unit = "percent"
+    _unit = "%"
     _attr = "percent"
+
+    @property
+    def icon(self):
+        state = int(self.state / 10)
+        if state == 10:
+            return "mdi:battery"
+        if state >= 1 and state < 10:
+            return "mdi:battery-%d0" % state
+        if state < 1:
+            return "mdi:battery-alert"
 
 
 class EVMileage(EVSensor):
@@ -239,6 +243,7 @@ class EVMileage(EVSensor):
     _name = "EV Mileage"
     _unit = "miles"
     _attr = "mileage"
+    _icon = "mdi:speedometer"
 
 
 class EVRange(EVSensor):
@@ -253,6 +258,7 @@ class EVRange(EVSensor):
     _name = "EST Range"
     _unit = "miles"
     _attr = "range"
+    _icon = "mdi:speedometer"
 
 
 class EVPlugged(EVSensor):
@@ -288,18 +294,13 @@ class MyChevyStatus(Entity):
     """A string representing the charge mode."""
 
     _name = "MyChevy Status"
-    _icon = None
+    _icon = "mdi:car-connected"
 
     def __init__(self, connection):
         """Initialize sensor with car connection."""
         self._state = MYCHEVY_UNKNOWN
         self._last_update = dt.now()
         self._conn = connection
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {"last_update": self._last_update}
 
     def success(self):
         """Update state, trigger updates."""
