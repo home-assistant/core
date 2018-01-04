@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['pyxcel==1.1.0']
+REQUIREMENTS = ['pyxcel==1.2.0']
 
 _LOGGER = getLogger(__name__)
 
@@ -150,31 +150,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.debug('Configuration data: %s', config)
 
+    monitored_premises = config.get(CONF_MONITORED_PREMISES, None)
     client = xcel.Client(config[CONF_USERNAME], config[CONF_PASSWORD])
-
     account_data = XcelAccountData(client)
     account_data.update()
 
-    monitored_premises = config.get(CONF_MONITORED_PREMISES, None)
+    if account_data.overview:
+        sensors = []
+        for premise in [
+                p for p in account_data.overview.get('premises', [])
+                if not monitored_premises or p['number'] in monitored_premises
+        ]:
+            usage_data = XcelUsageData(client, premise['number'])
+            usage_data.update()
 
-    sensors = []
-    for premise in [
-            p for p in account_data.overview.get('premises', [])
-            if not monitored_premises or p['number'] in monitored_premises
-    ]:
-        usage_data = XcelUsageData(client, premise['number'])
-        usage_data.update()
+            for condition in config.get(CONF_MONITORED_CONDITIONS, []):
+                sensor_class, params, name, icon = CONDITIONS[condition]
+                sensors.append(globals()[sensor_class](
+                    params,
+                    account_data,
+                    usage_data,
+                    name,
+                    icon))
 
-        for condition in config.get(CONF_MONITORED_CONDITIONS, []):
-            sensor_class, params, name, icon = CONDITIONS[condition]
-            sensors.append(globals()[sensor_class](
-                params,
-                account_data,
-                usage_data,
-                name,
-                icon))
-
-    add_devices(sensors, True)
+        add_devices(sensors, True)
+    else:
+        _LOGGER.error('There was an error creating the Xcel sensors')
 
 
 def merge_two_dicts(dict1, dict2):
@@ -197,10 +198,13 @@ class BaseSensor(Entity):
         self.account_data = account_data
         self.usage_data = usage_data
 
-        self._premise = [
-            p for p in self.account_data.overview['premises']
-            if p['number'] == self.usage_data.premise_number
-        ][0]
+        if self.account_data.overview:
+            self._premise = [
+                p for p in self.account_data.overview['premises']
+                if p['number'] == self.usage_data.premise_number
+            ][0]
+        else:
+            self._premise = None
 
     @property
     def device_state_attributes(self):
@@ -240,26 +244,29 @@ class BalanceInfoSensor(BaseSensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attrs = {
-            ATTR_BALANCE_LAST_AMOUNT:
-                self.account_data.overview['lastPaymentAmt'],
-            ATTR_BALANCE_LAST_DATE:
-                self.account_data.overview['lastPaymentDate'],
-            ATTR_BALANCE_NEXT_DATE:
-                self.account_data.overview['dueDate'],
-            ATTR_BALANCE_OVERDUE:
-                self.account_data.overview['overdue']
-        }
+        if self.account_data.overview:
+            attrs = {
+                ATTR_BALANCE_LAST_AMOUNT:
+                    self.account_data.overview['lastPaymentAmt'],
+                ATTR_BALANCE_LAST_DATE:
+                    self.account_data.overview['lastPaymentDate'],
+                ATTR_BALANCE_NEXT_DATE:
+                    self.account_data.overview['dueDate'],
+                ATTR_BALANCE_OVERDUE:
+                    self.account_data.overview['overdue']
+            }
+        else:
+            attrs = {}
 
         for year, average in self._averages.items():
             attrs['{0}{1}'.format(year, ATTR_BALANCE_AVERAGE)] = average
 
         return merge_two_dicts(attrs, super().device_state_attributes)
 
-    def _calculate_averages(self):
+    @staticmethod
+    def _calculate_averages(series_data):
         """Calculate the average bill per year."""
         averages = {}
-        series_data = self.account_data.overview['trendData']['series']
 
         for series in series_data:
             amounts = [float(f) for f in series['data']]
@@ -270,10 +277,16 @@ class BalanceInfoSensor(BaseSensor):
     def update(self):
         """Update the status of the sensor."""
         self.account_data.update()
-        self._averages = self._calculate_averages()
 
-        self._state = self.account_data.overview['currentBalance']
-        self._unit = '$'
+        if self.account_data.overview:
+            self._averages = self._calculate_averages(
+                self.account_data.overview['trendData']['series'])
+            self._state = self.account_data.overview['currentBalance']
+            self._unit = '$'
+        else:
+            self._averages = {}
+            self._state = None
+            self._unit = None
 
 
 class EfficiencyComparisonSensor(BaseSensor):
@@ -300,6 +313,8 @@ class EfficiencyComparisonSensor(BaseSensor):
                 ATTR_COMPARISON_EFFICIENT_NEIGHBORS: self._en,
                 ATTR_COMPARISON_YOU: self._you
             }
+        else:
+            attrs = {}
 
         return merge_two_dicts(attrs, super().device_state_attributes)
 
@@ -320,6 +335,9 @@ class EfficiencyComparisonSensor(BaseSensor):
         except IndexError:
             self._state = None
             self._unit = None
+        except KeyError:
+            self._state = None
+            self._unit = None
 
 
 class PremiseGradeSensor(BaseSensor):
@@ -329,7 +347,10 @@ class PremiseGradeSensor(BaseSensor):
         """Update the status of the sensor."""
         self.account_data.update()
 
-        self._state = self._premise['grade']
+        if self._premise:
+            self._state = self._premise['grade']
+        else:
+            self._state = None
 
 
 class ReadSensor(BaseSensor):
@@ -430,7 +451,14 @@ class XcelAccountData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update with new Xcel data."""
-        self.overview = self._client.overview.get()
+        from pyxcel.exceptions import XcelSessionError
+
+        try:
+            self.overview = self._client.overview.get()
+        except XcelSessionError as exc:
+            self.overview = None
+            _LOGGER.error('There was an error retrieving Xcel overview data')
+            _LOGGER.debug(exc)
 
 
 class XcelUsageData(object):
@@ -445,4 +473,11 @@ class XcelUsageData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update with new Xcel data."""
-        self.data = self._client.usages.get(self.premise_number)
+        from pyxcel.exceptions import XcelSessionError
+
+        try:
+            self.data = self._client.usages.get(self.premise_number)
+        except XcelSessionError as exc:
+            self.data = None
+            _LOGGER.error('There was an error retrieving Xcel usage data')
+            _LOGGER.debug(exc)
