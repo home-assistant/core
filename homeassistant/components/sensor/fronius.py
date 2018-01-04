@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.fronius/
 import asyncio
 import logging
 from datetime import timedelta
+from aiohttp.client_exceptions import ServerDisconnectedError
+from concurrent.futures._base import TimeoutError
 
 import voluptuous as vol
 
@@ -69,7 +71,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     @asyncio.coroutine
     def async_fronius(event):
         """Update all the fronius sensors."""
-        yield from sensor.async_update()
+        try:
+            yield from sensor.async_update()
+        except:
+            _LOGGER.error("yield failed")
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=10)
     async_track_time_interval(hass, async_fronius, interval)
@@ -106,7 +111,14 @@ class FroniusSensor(Entity):
         """Retrieve latest state."""
         _LOGGER.debug("Update {}".format(self.name))
         
-        values = yield from self._update()
+        values = {}
+        
+        try:
+            values = yield from self._update()
+        except ServerDisconnectedError:
+            _LOGGER.error("ServerDisconnectedError")
+        except TimeoutError:
+            _LOGGER.error("TimeoutError")
 
         _LOGGER.debug(values)
 
