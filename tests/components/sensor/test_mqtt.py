@@ -216,3 +216,23 @@ class TestSensorMQTT(unittest.TestCase):
     def _send_time_changed(self, now):
         """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+
+    def test_setting_sensor_value_via_mqtt_json_message(self):
+        """Test the setting of attribute via MQTT with JSON playload."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        self.assertEqual('100',
+                         state.attributes.get('val'))
