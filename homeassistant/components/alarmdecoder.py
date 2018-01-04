@@ -6,13 +6,15 @@ https://home-assistant.io/components/alarmdecoder/
 """
 import logging
 
+from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['alarmdecoder==0.12.3']
+REQUIREMENTS = ['alarmdecoder==1.13.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +90,7 @@ def setup(hass, config):
 
     conf = config.get(DOMAIN)
 
+    restart = False
     device = conf.get(CONF_DEVICE)
     display = conf.get(CONF_PANEL_DISPLAY)
     zones = conf.get(CONF_ZONES)
@@ -101,7 +104,32 @@ def setup(hass, config):
     def stop_alarmdecoder(event):
         """Handle the shutdown of AlarmDecoder."""
         _LOGGER.debug("Shutting down alarmdecoder")
+        nonlocal restart
+        restart = False
         controller.close()
+
+    def open_connection(now=None):
+        """Open a connection to AlarmDecoder."""
+        from alarmdecoder.util import NoDeviceError
+        nonlocal restart
+        try:
+            controller.open(baud)
+        except NoDeviceError:
+            _LOGGER.debug("Failed to connect.  Retrying in 5 seconds")
+            hass.helpers.event.track_point_in_time(
+                open_connection, dt_util.utcnow() + timedelta(seconds=5))
+            return
+        _LOGGER.debug("Established a connection with the alarmdecoder")
+        restart = True
+
+    def handle_closed_connection(event):
+        """Restart after unexpected loss of connection."""
+        nonlocal restart
+        if not restart:
+            return
+        restart = False
+        _LOGGER.warning("AlarmDecoder unexpectedly lost connection.")
+        hass.add_job(open_connection)
 
     def handle_message(sender, message):
         """Handle message from AlarmDecoder."""
@@ -140,12 +168,12 @@ def setup(hass, config):
     controller.on_rfx_message += handle_rfx_message
     controller.on_zone_fault += zone_fault_callback
     controller.on_zone_restore += zone_restore_callback
+    controller.on_close += handle_closed_connection
 
     hass.data[DATA_AD] = controller
 
-    controller.open(baud)
+    open_connection()
 
-    _LOGGER.debug("Established a connection with the alarmdecoder")
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
 
     load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config)
