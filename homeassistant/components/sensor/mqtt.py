@@ -118,6 +118,7 @@ class MqttSensor(MqttAvailability, Entity):
                     if isinstance(json_dict, dict):
                         attrs = {k: json_dict[k] for k in
                                  self._json_attributes & json_dict.keys()}
+                        self._attributes = attrs
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
