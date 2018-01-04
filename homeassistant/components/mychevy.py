@@ -34,7 +34,7 @@ NOTIFICATION_TITLE = 'MyChevy website status'
 _LOGGER = getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-ERROR_SLEEP_TIME = 5*60
+ERROR_SLEEP_TIME = timedelta(minutes=30)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -160,7 +160,7 @@ class MyChevyHub(threading.Thread):
                     "Error updating mychevy data. "
                     "This probably means the OnStar link is down again")
                 self.status.error()
-                time.sleep(ERROR_SLEEP_TIME)
+                time.sleep(ERROR_SLEEP_TIME.seconds)
 
 
 class EVSensor(Entity):
