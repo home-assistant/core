@@ -8,10 +8,7 @@ from homeassistant.setup import setup_component
 from homeassistant.components import switch
 from homeassistant.components.switch import mochad
 
-from tests.common import (
-    get_test_home_assistant, MockDependency
-)
-
+from tests.common import get_test_home_assistant
 
 @pytest.fixture(autouse=True)
 def pymochad_mock():
