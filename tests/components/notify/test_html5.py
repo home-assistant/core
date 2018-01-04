@@ -179,6 +179,103 @@ class TestHtml5Notify(object):
             assert json.loads(handle.write.call_args[0][0]) == expected
 
     @asyncio.coroutine
+    def test_registering_new_device_fails_view(self, loop, test_client):
+        """Test subs. are not altered when registering a new device fails."""
+        hass = MagicMock()
+        expected = {}
+
+        m = mock_open()
+        with patch(
+                'homeassistant.util.json.open',
+                m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            html5.get_service(hass, {})
+            view = hass.mock_calls[1][1][0]
+
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+
+            m.side_effect = OSError()
+            resp = yield from client.post(REGISTER_URL,
+                                          data=json.dumps(SUBSCRIPTION_1))
+
+            content = yield from resp.text()
+            assert resp.status == 500, content
+            assert view.registrations == expected
+
+    @asyncio.coroutine
+    def test_registering_existing_device_view(self, loop, test_client):
+        """Test subscription is updated when registering existing device."""
+        hass = MagicMock()
+        expected = {
+            'unnamed device': SUBSCRIPTION_4,
+        }
+
+        m = mock_open()
+        with patch(
+                'homeassistant.util.json.open',
+                m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            html5.get_service(hass, {})
+            view = hass.mock_calls[1][1][0]
+
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+
+            yield from client.post(REGISTER_URL,
+                                   data=json.dumps(SUBSCRIPTION_1))
+            resp = yield from client.post(REGISTER_URL,
+                                          data=json.dumps(SUBSCRIPTION_4))
+
+            content = yield from resp.text()
+            assert resp.status == 200, content
+            assert view.registrations == expected
+            handle = m()
+            assert json.loads(handle.write.call_args[0][0]) == expected
+
+    @asyncio.coroutine
+    def test_registering_existing_device_fails_view(self, loop, test_client):
+        """Test sub. is not updated when registering existing device fails."""
+        hass = MagicMock()
+        expected = {
+            'unnamed device': SUBSCRIPTION_1,
+        }
+
+        m = mock_open()
+        with patch(
+                'homeassistant.util.json.open',
+                m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            html5.get_service(hass, {})
+            view = hass.mock_calls[1][1][0]
+
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+
+            yield from client.post(REGISTER_URL,
+                                   data=json.dumps(SUBSCRIPTION_1))
+
+            m.side_effect = OSError()
+            resp = yield from client.post(REGISTER_URL,
+                                          data=json.dumps(SUBSCRIPTION_4))
+
+            content = yield from resp.text()
+            assert resp.status == 500, content
+            assert view.registrations == expected
+
+    @asyncio.coroutine
     def test_registering_new_device_validation(self, loop, test_client):
         """Test various errors when registering a new device."""
         hass = MagicMock()
