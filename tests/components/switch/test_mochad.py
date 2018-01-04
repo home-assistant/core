@@ -74,13 +74,13 @@ class TestMochadSwitch(unittest.TestCase):
         """Test the name."""
         self.assertEqual('fake_switch', self.switch.name)
 
-    @MockDependency('pymochad')
+    @mock.patch('pymochad.exceptions.MochadException')
     def test_turn_on(self):
         """Test turn_on."""
         self.switch.turn_on()
         self.switch.device.send_cmd.assert_called_once_with('on')
 
-    @MockDependency('pymochad')
+    @mock.patch('pymochad.exceptions.MochadException')
     def test_turn_off(self):
         """Test turn_off."""
         self.switch.turn_off()
