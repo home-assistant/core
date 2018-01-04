@@ -7,15 +7,13 @@ https://home-assistant.io/components/maxcul/
 import logging
 import os
 
-_LOGGER = logging.getLogger(__name__)
-
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import discovery
 from homeassistant.util.yaml import load_yaml, dump as dump_yaml
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pymaxcul==0.1.1']
 
@@ -58,7 +56,7 @@ DESCRIPTION_SERVICE_ENABLE_PAIRING = {
 }
 
 
-def read_paired_devices(path):
+def _read_paired_devices(path):
     if not os.path.isfile(path):
         return []
     paired_devices = load_yaml(path)
@@ -69,20 +67,28 @@ def read_paired_devices(path):
     return paired_devices
 
 
-def write_paired_devices(path, devices):
+def _write_paired_devices(path, devices):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT)
     os.write(fd, dump_yaml(devices).encode())
     os.close(fd)
 
 
 def setup(hass, config):
+    """
+    Initialize the maxcul component.
+
+    Reads previously paired devices from a configuration file.
+    Starts the thread that communications with the CUL stick.
+    Sets up appropriate callback for events from the stick.
+    Sets up devices that have previously been paired.
+    """
     import maxcul
     conf = config[DOMAIN]
     path = conf[CONF_DEVICE_PATH]
     baud = conf[CONF_DEVICE_BAUD_RATE]
 
     paired_devices_path = hass.config.path(YAML_DEVICES)
-    hass.data[DATA_DEVICES] = read_paired_devices(paired_devices_path)
+    hass.data[DATA_DEVICES] = _read_paired_devices(paired_devices_path)
 
     def callback(event, payload):
         if event == maxcul.EVENT_THERMOSTAT_UPDATE:
@@ -96,7 +102,7 @@ def setup(hass, config):
             hass.data[DATA_DEVICES].append(device_id)
             discovery.load_platform(
                 hass, CLIMATE_DOMAIN, DOMAIN, payload, config)
-            write_paired_devices(
+            _write_paired_devices(
                 paired_devices_path,
                 hass.data[DATA_DEVICES])
 
@@ -123,10 +129,5 @@ def setup(hass, config):
         _service_enable_pairing,
         DESCRIPTION_SERVICE_ENABLE_PAIRING,
         schema=SCHEMA_SERVICE_ENABLE_PAIRING)
-
-    # Stops server when HASS is shutting down
-    # TODO this leads to an exception
-    # hass.bus.listen_once(
-    #    EVENT_HOMEASSISTANT_STOP, hass.data[DATA_MAXCUL].stop)
 
     return True
