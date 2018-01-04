@@ -64,7 +64,7 @@ class DaikinClimateSensor(Entity):
         if name is None:
             name = "{} {}".format(self._sensor[CONF_NAME], api.name)
 
-        self._name = name
+        self._name = "{} {}".format(name, monitored_state.replace("_", " "))
         self._device_attribute = monitored_state
 
         if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
