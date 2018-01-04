@@ -72,7 +72,7 @@ class TuyaDevice(SwitchDevice):
         """Get state of Tuya switch."""
         success = False
         for i in range(3):
-            if success == False:
+            if success is False:
                 try:
                     status = self._device.status()
                     self._state = status['dps'][self._switchid]
