@@ -664,6 +664,10 @@ pycsspeechtts==1.0.2
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
+# homeassistant.components.daikin
+# homeassistant.components.climate.daikin
+pydaikin==0.4
+
 # homeassistant.components.deconz
 pydeconz==23
 
