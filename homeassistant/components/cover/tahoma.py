@@ -14,6 +14,7 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Tahoma covers."""
