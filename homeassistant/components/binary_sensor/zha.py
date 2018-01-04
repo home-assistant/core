@@ -111,4 +111,3 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
 
         result = yield from safe_read(self._endpoint.ias_zone, ['zone_status'])
         self._state = result.get('zone_status', self._state) & 3
-
