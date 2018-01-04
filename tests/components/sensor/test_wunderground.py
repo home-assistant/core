@@ -37,6 +37,14 @@ INVALID_CONFIG = {
     ]
 }
 
+VALID_CONFIG_ALERT = {
+    'platform': 'wunderground',
+    'api_key': 'foo',
+    'monitored_conditions': [
+        'alerts'
+    ]
+}
+
 FEELS_LIKE = '40'
 WEATHER = 'Clear'
 HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
@@ -202,6 +210,69 @@ def mocked_requests_get_invalid(*args, **kwargs):
     }, 200)
 
 
+MOCKED_ALERTS_CALLED = 0
+
+def mocked_requests_get_alerts(*args, **kwargs):
+    """Mock requests.get invocations."""
+    class MockResponse:
+        """Class to represent a mocked response."""
+
+        def __init__(self, json_data, status_code):
+            """Initialize the mock response class."""
+            self.json_data = json_data
+            self.status_code = status_code
+
+        def json(self):
+            """Return the json of the response."""
+            return self.json_data
+
+    global MOCKED_ALERTS_CALLED
+    MOCKED_ALERTS_CALLED = MOCKED_ALERTS_CALLED + 1
+    if MOCKED_ALERTS_CALLED < 3:
+        return MockResponse({
+            "response": {
+                "version": "0.1",
+                "termsofService":
+                    "http://www.wunderground.com/weather/api/d/terms.html",
+                "features": {
+                    "alerts": 1,
+                }
+            }, "alerts": [
+                {
+                    "type": 'FLO',
+                    "description": "Areal Flood Warning",
+                    "date": "9:36 PM CDT on September 22, 2016",
+                    "expires": "10:00 AM CDT on September 23, 2016",
+                    "message": ALERT_MESSAGE,
+                },
+                {
+                    "type": 'WND',
+                    "description": "Areal Flood Warning",
+                    "date": "9:36 PM CDT on September 22, 2016",
+                    "expires": "10:00 AM CDT on September 23, 2016",
+                    "message": ALERT_MESSAGE,
+                },
+            ]}, 200)
+    else:
+        return MockResponse({
+            "response": {
+                "version": "0.1",
+                "termsofService":
+                    "http://www.wunderground.com/weather/api/d/terms.html",
+                "features": {
+                    "alerts": 1,
+                }
+            }, "alerts": [
+                {
+                    "type": 'FLO',
+                    "description": "Areal Flood Warning",
+                    "date": "9:36 PM CDT on September 22, 2016",
+                    "expires": "10:00 AM CDT on September 23, 2016",
+                    "message": ALERT_MESSAGE,
+                },
+            ]}, 200)
+
+
 class TestWundergroundSetup(unittest.TestCase):
     """Test the WUnderground platform."""
 
@@ -292,3 +363,17 @@ class TestWundergroundSetup(unittest.TestCase):
         for device in self.DEVICES:
             device.update()
             self.assertEqual(STATE_UNKNOWN, device.state)
+
+    @unittest.mock.patch('requests.get',
+                         side_effect=mocked_requests_get_alerts)
+    def test_alert_data(self, req_mock):
+        """Test the WUnderground invalid data."""
+        wunderground.setup_platform(self.hass, VALID_CONFIG_ALERT,
+                                    self.add_devices, None)
+        for device in self.DEVICES:
+            device.update()
+            device.update()
+            self.assertEqual(1, device.state)
+            self.assertEqual(ALERT_MESSAGE, device.device_state_attributes['Message'])
+            self.assertIsNone(device.device_state_attributes.get("Message_FLO"))
+            self.assertIsNone(device.device_state_attributes.get("Message_WND"))
