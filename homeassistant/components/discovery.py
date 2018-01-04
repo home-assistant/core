@@ -53,7 +53,6 @@ SERVICE_HANDLERS = {
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
     SERVICE_HUE: ('hue', None),
     SERVICE_DECONZ: ('deconz', None),
-    SERVICE_DAIKIN: ('daikin', None),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
