@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['pyxcel==1.2.0']
+REQUIREMENTS = ['pyxcel==1.2.1']
 
 _LOGGER = getLogger(__name__)
 
@@ -55,13 +55,13 @@ CONDITIONS = {
     'electric_commodity_adjustment_off_peak': (
         'ReadSensor',
         {'category': CATEGORY_ELECTRICITY, 'label': 'ECA Off-Peak'},
-        'Electric Commodity Adjustment (Off Peak)',
+        'ECA (Off Peak)',
         'mdi:flash'
     ),
     'electric_commodity_adjustment_on_peak': (
         'ReadSensor',
         {'category': CATEGORY_ELECTRICITY, 'label': 'ECA On-Peak'},
-        'Electric Commodity Adjustment (On Peak)',
+        'ECA (On Peak)',
         'mdi:flash'
     ),
     'electricity_efficiency_comparison': (
