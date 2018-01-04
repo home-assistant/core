@@ -263,7 +263,8 @@ class BluesoundPlayer(MediaPlayerDevice):
         if master is not None:
             self._is_master = False
             master_host = master.get('#text')
-            master_device = [device for device in self._hass.data[DATA_BLUESOUND]
+            master_device = [device for device in
+                             self._hass.data[DATA_BLUESOUND]
                              if device.host == master_host]
 
             if master_device and master_host != self.host:
@@ -414,18 +415,21 @@ class BluesoundPlayer(MediaPlayerDevice):
 
                 group_name = self._status.get('groupName', None)
                 if group_name != self._group_name:
-                    _LOGGER.debug('Group name change detected on device: %s', self.host)
+                    _LOGGER.debug('Group name change detected on device: %s',
+                                  self.host)
                     self._group_name = group_name
-                    # the sleep is needed to make sure that the devices is synced
+                    # the sleep is needed to make sure that the
+                    # devices is synced
                     yield from asyncio.sleep(1, loop=self._hass.loop)
                     yield from self.async_trigger_sync_on_all()
                 elif self.is_grouped:
-                    # when player is grouped we need to fetch volume from sync_status.
-                    # we will force an update if the player is grouped
-                    # this isn't a foolproof solution. A better solution would be to fetch
-                    # sync_status more often when the device is playing. This would solve
-                    # alot of problems. This change will be done when the communication
-                    # is moved to a separate library
+                    # when player is grouped we need to fetch volume from
+                    # sync_status. We will force an update if the player is
+                    # grouped this isn't a foolproof solution. A better
+                    # solution would be to fetch sync_status more often when
+                    # the device is playing. This would solve alot of
+                    # problems. This change will be done when the
+                    # communication is moved to a separate library
                     yield from self.force_update_sync_status()
 
                 self.schedule_update_ha_state()
@@ -441,7 +445,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_trigger_sync_on_all(self):
-        """Trigger sync status update on all devices"""
+        """Trigger sync status update on all devices."""
         _LOGGER.debug("Trigger sync status on all devices")
 
         for player in self._hass.data[DATA_BLUESOUND]:
@@ -780,7 +784,8 @@ class BluesoundPlayer(MediaPlayerDevice):
             return None
 
         if self.is_grouped and not self.is_master:
-            return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
+            return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | \
+                   SUPPORT_VOLUME_MUTE
 
         supported = SUPPORT_CLEAR_PLAYLIST
 
@@ -848,30 +853,32 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_add_slave(self, slave_device):
-        """Add slave to master"""
+        """Add slave to master."""
         return self.send_bluesound_command('/AddSlave?slave={}&port={}'
-                                           .format(slave_device.host, slave_device.port))
+                                           .format(slave_device.host,
+                                                   slave_device.port))
 
     @asyncio.coroutine
     def async_remove_slave(self, slave_device):
-        """Remove slave to master"""
+        """Remove slave to master."""
         return self.send_bluesound_command('/RemoveSlave?slave={}&port={}'
-                                           .format(slave_device.host, slave_device.port))
+                                           .format(slave_device.host,
+                                                   slave_device.port))
 
     @asyncio.coroutine
     def async_increase_timer(self):
-        """Increases sleep time on player"""
+        """Increases sleep time on player."""
         sleep_time = yield from self.send_bluesound_command('/Sleep')
         if sleep_time is None:
-            _LOGGER.error('Error while increasing sleep time on player: %s', self.host)
+            _LOGGER.error('Error while increasing sleep time on player: %s',
+                          self.host)
             return 0
         else:
             return int(sleep_time.get('sleep', '0'))
 
     @asyncio.coroutine
     def async_clear_timer(self):
-        """Clears sleep timer on player"""
-
+        """Removes the sleep timer on player."""
         sleep = 1
         while sleep > 0:
             sleep = yield from self.async_increase_timer()
