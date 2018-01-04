@@ -52,7 +52,7 @@ class MochadSwitch(SwitchDevice):
                                     comm_type=self._comm_type)
         # Init with false to avoid locking HA for long on CM19A (goes from rf
         # to pl via TM751, but not other way around)
-        if (self._comm_type == 'pl'):
+        if self._comm_type == 'pl':
             self._state = self._get_device_status()
         else:
             self._state = False
@@ -73,7 +73,7 @@ class MochadSwitch(SwitchDevice):
                 self._controller.reconnect()
                 self.device.send_cmd('on')
                 # No read data on CM19A which is rf only
-                if (self._comm_type == 'pl'):
+                if self._comm_type == 'pl':
                     self._controller.read_data()
                 self._state = True
             except (MochadException, OSError) as exc:
@@ -90,7 +90,7 @@ class MochadSwitch(SwitchDevice):
                 self._controller.reconnect()
                 self.device.send_cmd('off')
                 # No read data on CM19A which is rf only
-                if (self._comm_type == 'pl'):
+                if self._comm_type == 'pl':
                     self._controller.read_data()
                 self._state = False
             except (MochadException, OSError) as exc:
