@@ -129,7 +129,7 @@ class TestSnips(unittest.TestCase):
             fire_mqtt_message(self.hass,
                               'hermes/intent/SetTimer', payload)
             self.hass.block_till_done()
-            self.assertIn("\"sessionId\": \"abcdef1234567890\",
+            self.assertIn("\"sessionId\": \"abcdef1234567890\"",
                           test_handle.output[1])
             self.assertIn("\"text\": \"Timer set 300\"}",
                           test_handle.output[1])
@@ -164,7 +164,7 @@ class TestSnips(unittest.TestCase):
             fire_mqtt_message(self.hass,
                               'hermes/intent/CallServiceIntent', payload)
             self.hass.block_till_done()
-            self.assertIn("\"sessionId\": \"abcdef1234567890\",
+            self.assertIn("\"sessionId\": \"abcdef1234567890\"",
                           test_handle.output[1])
             self.assertIn("\"text\": \"Service called\"}",
                           test_handle.output[1])
