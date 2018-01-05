@@ -15,7 +15,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['py-canary==0.2.3']
+REQUIREMENTS = ['py-canary==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,3 +115,6 @@ class CanaryData(object):
         """Set location mode."""
         self._api.set_location_mode(location_id, mode_name, is_private)
         self.update(no_throttle=True)
+
+    def get_live_stream_session(self, device):
+        return self._api.get_live_stream_session(device)
