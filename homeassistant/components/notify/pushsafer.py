@@ -54,28 +54,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_service(hass, config, discovery_info=None):
-    """Get the Pushsafer.com notification service."""
     return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
                                         hass.config.is_allowed_path)
 
 
 class PushsaferNotificationService(BaseNotificationService):
-    """Implementation of the notification service for Pushsafer.com."""
 
     def __init__(self, private_key, is_allowed_path):
-        """Initialize the service."""
         self._private_key = private_key
         self.is_allowed_path = is_allowed_path
 
     def send_message(self, message='', **kwargs):
-        """Send a message to a device."""
         _LOGGER.info("Sending message")
-
-        """Send a message to specified target.
-        If no target specified (group or device),
-        a push will be sent to all devices
-        parameter d for devices is ignored here
-        """
         if kwargs.get(ATTR_TARGET) is None:
             targets = ["a"]
             _LOGGER.debug("No target specified. Sending push to all")
@@ -88,7 +78,6 @@ class PushsaferNotificationService(BaseNotificationService):
 
         if data is None:
             data = {}
-        """ Converting the specified image to base64"""
         picture1 = data.get(ATTR_PICTURE1)
         picture1_encoded = ""
         if picture1 is not None:
@@ -117,7 +106,6 @@ class PushsaferNotificationService(BaseNotificationService):
         _LOGGER.debug("using push data: %s", str(payload))
 
         for target in targets:
-            """ Adding/Overwriting device target to payload"""
             payload['d'] = target
             response = requests.post(_RESOURCE, data=payload,
                                      timeout=CONF_TIMEOUT)
@@ -126,8 +114,7 @@ class PushsaferNotificationService(BaseNotificationService):
             else:
                 _LOGGER.debug("Push send: %s", response.json())
 
-    def convert_to_base64string(self, filebyte, mimetype):
-        """Converts the image to the expected base64 string of pushsafer."""
+    def convert_base64string(self, filebyte, mimetype):
         _LOGGER.debug("Base64 got mimetype: %s", mimetype)
         if mimetype in _ALLOWED_IMAGES:
             if filebyte is not None:
@@ -143,7 +130,6 @@ class PushsaferNotificationService(BaseNotificationService):
 
     def load_from_file(self, url=None, local_path=None, username=None,
                        password=None, auth=None):
-        """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:
                 _LOGGER.debug("Downloading image from %s", url)
@@ -153,19 +139,18 @@ class PushsaferNotificationService(BaseNotificationService):
                                             timeout=CONF_TIMEOUT)
                 else:
                     response = requests.get(url, timeout=CONF_TIMEOUT)
-                    return self.convert_to_base64string(
+                    return self.convert_base64string(
                         response.content,
                         response.headers['content-type'])
 
             elif local_path is not None:
                 _LOGGER.debug("Loading image from local path")
-                """Check whether path is whitelisted in configuration.yaml """
                 if self.is_allowed_path(local_path):
                     file_mimetype = mimetypes.guess_type(local_path)
                     _LOGGER.debug("Detected mimetype %s", file_mimetype)
                     with open(local_path, "rb") as binary_file:
                         data = binary_file.read()
-                    return self.convert_to_base64string(data, file_mimetype[0])
+                    return self.convert_base64string(data, file_mimetype[0])
                 _LOGGER.warning("'%s' is not secure to load data from!",
                                 local_path)
             else:
