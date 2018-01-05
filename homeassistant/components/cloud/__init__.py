@@ -86,7 +86,7 @@ def async_setup(hass, config):
         should_expose=alexa_conf[CONF_FILTER],
         entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
     )
-    kwargs['gass_should_expose'] = gactions_conf[CONF_FILTER]
+    kwargs['gactions_should_expose'] = gactions_conf[CONF_FILTER]
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
     success = yield from cloud.initialize()
@@ -101,15 +101,15 @@ def async_setup(hass, config):
 class Cloud:
     """Store the configuration of the cloud connection."""
 
-    def __init__(self, hass, mode, alexa, gass_should_expose,
+    def __init__(self, hass, mode, alexa, gactions_should_expose,
                  cognito_client_id=None, user_pool_id=None, region=None,
                  relayer=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
         self.alexa_config = alexa
-        self._gass_should_expose = gass_should_expose
-        self._gass_config = None
+        self._gactions_should_expose = gactions_should_expose
+        self._gactions_config = None
         self.jwt_keyset = None
         self.id_token = None
         self.access_token = None
@@ -158,15 +158,15 @@ class Cloud:
         return self.path('{}_auth.json'.format(self.mode))
 
     @property
-    def gass_config(self):
+    def gactions_config(self):
         """Return the Google Assistant config."""
-        if self._gass_config is None:
-            self._gass_config = ga_sh.Config(
-                should_expose=lambda e: self._gass_should_expose(e.entity_id),
+        if self._gactions_config is None:
+            self._gactions_config = ga_sh.Config(
+                should_expose=lambda e: self._gactions_should_expose(e.entity_id),
                 agent_user_id=self.claims['cognito:username']
             )
 
-        return self._gass_config
+        return self._gactions_config
 
     @asyncio.coroutine
     def initialize(self):
@@ -196,7 +196,7 @@ class Cloud:
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
-        self._gass_config = None
+        self._gactions_config = None
 
         yield from self.hass.async_add_job(
             lambda: os.remove(self.user_info_path))
