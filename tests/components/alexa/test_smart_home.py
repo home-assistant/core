@@ -1116,3 +1116,40 @@ def test_api_mute(hass, domain):
     assert len(call) == 1
     assert call[0].data['entity_id'] == '{}.test'.format(domain)
     assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+def test_entity_config(hass):
+    """Test that we can configure things via entity config."""
+    request = get_new_request('Alexa.Discovery', 'Discover')
+
+    hass.states.async_set(
+        'light.test_1', 'on', {'friendly_name': "Test light 1"})
+
+    config = smart_home.Config(
+        should_expose=lambda entity_id: True,
+        entity_config={
+            'light.test_1': {
+                'name': 'Config name',
+                'display_categories': 'SWITCH',
+                'description': 'Config description'
+            }
+        }
+    )
+
+    msg = yield from smart_home.async_handle_message(
+        hass, config, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(msg['payload']['endpoints']) == 1
+
+    appliance = msg['payload']['endpoints'][0]
+    assert appliance['endpointId'] == 'light#test_1'
+    assert appliance['displayCategories'][0] == "SWITCH"
+    assert appliance['friendlyName'] == "Config name"
+    assert appliance['description'] == "Config description"
+    assert len(appliance['capabilities']) == 1
+    assert appliance['capabilities'][-1]['interface'] == \
+        'Alexa.PowerController'
