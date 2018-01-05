@@ -7,7 +7,7 @@ jinja2>=2.9.6
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.3.7
-yarl==0.16.0
+yarl==0.17.0
 async_timeout==2.0.0
 chardet==3.0.4
 astral==1.4
