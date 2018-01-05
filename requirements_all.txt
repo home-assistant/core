@@ -581,7 +581,7 @@ proliphix==0.4.1
 prometheus_client==0.0.21
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.4.2
+psutil==5.4.3
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
