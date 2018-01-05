@@ -169,6 +169,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
+            vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
@@ -747,10 +749,6 @@ class HMDevice(Entity):
         """Return device specific state attributes."""
         attr = {}
 
-        # No data available
-        if not self.available:
-            return attr
-
         # Generate a dictionary with attributes
         for node, data in HM_ATTRIBUTE_SUPPORT.items():
             # Is an attribute and exists for this object
@@ -805,6 +803,9 @@ class HMDevice(Entity):
         # Availability has changed
         if attribute == 'UNREACH':
             self._available = bool(value)
+            has_changed = True
+        elif not self.available:
+            self._available = False
             has_changed = True
 
         # If it has changed data point, update HASS
