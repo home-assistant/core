@@ -162,7 +162,7 @@ class Cloud:
         """Return the Google Assistant config."""
         if self._gass_config is None:
             self._gass_config = ga_sh.Config(
-                should_expose=self._gass_should_expose,
+                should_expose=lambda e: self._gass_should_expose(e.entity_id),
                 agent_user_id=self.claims['cognito:username']
             )
 
