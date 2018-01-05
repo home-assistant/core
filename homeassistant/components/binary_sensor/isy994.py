@@ -62,10 +62,9 @@ def setup_platform(hass, config: ConfigType,
                           node.nid, node.parent_nid)
         else:
             device_type = _detect_device_type(node)
-            if device_type in ['moisture', 'opening']:
-                subnode_id = int(node.nid[-1])
-                # Leak and door/window sensors work the same way with negative
-                # nodes and heartbeat nodes
+            subnode_id = int(node.nid[-1])
+            if device_type == 'opening':
+                # Door/window sensors use an optional "negative" node
                 if subnode_id == 4:
                     # Subnode 4 is the heartbeat node, which we will represent
                     # as a separate binary_sensor
@@ -74,6 +73,14 @@ def setup_platform(hass, config: ConfigType,
                     devices.append(device)
                 elif subnode_id == 2:
                     parent_device.add_negative_node(node)
+            elif device_type == 'moisture':
+                # Moisure nodes have a subnode 2, but we ignore it because it's
+                # just the inverse of the primary node.
+                if subnode_id == 4:
+                    # Heartbeat node
+                    device = ISYBinarySensorHeartbeat(node, parent_device)
+                    parent_device.add_heartbeat_device(device)
+                    devices.append(device)
             else:
                 # We don't yet have any special logic for other sensor types,
                 # so add the nodes as individual devices
@@ -165,7 +172,8 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         """
         self._negative_node = child
 
-        if not _is_val_unknown(self._negative_node):
+        # pylint: disable=protected-access
+        if not _is_val_unknown(self._negative_node.status._val):
             # If the negative node has a value, it means the negative node is
             # in use for this device. Therefore, we cannot determine the state
             # of the sensor until we receive our first ON event.
