@@ -38,16 +38,6 @@ def mock_cloud():
     return MagicMock(subscription_expired=False)
 
 
-@pytest.fixture
-def cloud_instance(loop, hass):
-    """Instance of an initialized cloud class."""
-    with patch('homeassistant.components.cloud.Cloud.initialize',
-               return_value=mock_coro(True)):
-        loop.run_until_complete(async_setup_component(hass, 'cloud', {}))
-
-    yield hass.data['cloud']
-
-
 @asyncio.coroutine
 def test_cloud_calling_handler(mock_client, mock_handle_message, mock_cloud):
     """Test we call handle message with correct info."""
@@ -269,13 +259,35 @@ def test_refresh_token_before_expiration_fails(hass, mock_cloud):
 
 
 @asyncio.coroutine
-def test_handler_alexa(hass, cloud_instance):
+def test_handler_alexa(hass):
     """Test handler Alexa."""
     hass.states.async_set(
         'switch.test', 'on', {'friendly_name': "Test switch"})
+    hass.states.async_set(
+        'switch.test2', 'on', {'friendly_name': "Test switch 2"})
+
+    with patch('homeassistant.components.cloud.Cloud.initialize',
+               return_value=mock_coro(True)):
+        setup = yield from async_setup_component(hass, 'cloud', {
+            'cloud': {
+                'alexa': {
+                    'filter': {
+                        'exclude_entities': 'switch.test2'
+                    },
+                    'entity_config': {
+                        'switch.test': {
+                            'name': 'Config name',
+                            'description': 'Config description',
+                            'display_categories': 'LIGHT'
+                        }
+                    }
+                }
+            }
+        })
+        assert setup
 
     resp = yield from iot.async_handle_alexa(
-        hass, cloud_instance,
+        hass, hass.data['cloud'],
         test_alexa.get_new_request('Alexa.Discovery', 'Discover'))
 
     endpoints = resp['event']['payload']['endpoints']
@@ -283,16 +295,32 @@ def test_handler_alexa(hass, cloud_instance):
     assert len(endpoints) == 1
     device = endpoints[0]
 
-    assert device['description'] == 'switch.test'
-    assert device['friendlyName'] == 'Test switch'
+    assert device['description'] == 'Config description'
+    assert device['friendlyName'] == 'Config name'
+    assert device['displayCategories'] == ['LIGHT']
     assert device['manufacturerName'] == 'Home Assistant'
 
 
 @asyncio.coroutine
-def test_handler_google_actions(hass, cloud_instance):
+def test_handler_google_actions(hass):
     """Test handler Google Actions."""
     hass.states.async_set(
         'switch.test', 'on', {'friendly_name': "Test switch"})
+    hass.states.async_set(
+        'switch.test2', 'on', {'friendly_name': "Test switch 2"})
+
+    with patch('homeassistant.components.cloud.Cloud.initialize',
+               return_value=mock_coro(True)):
+        setup = yield from async_setup_component(hass, 'cloud', {
+            'cloud': {
+                'google_actions': {
+                    'filter': {
+                        'exclude_entities': 'switch.test2'
+                    },
+                }
+            }
+        })
+        assert setup
 
     reqid = '5711642932632160983'
     data = {'requestId': reqid, 'inputs': [{'intent': 'action.devices.SYNC'}]}
@@ -300,7 +328,7 @@ def test_handler_google_actions(hass, cloud_instance):
     with patch('homeassistant.components.cloud.Cloud._decode_claims',
                return_value={'cognito:username': 'myUserName'}):
         resp = yield from iot.async_handle_google_actions(
-            hass, cloud_instance, data)
+            hass, hass.data['cloud'], data)
 
     assert resp['requestId'] == reqid
     payload = resp['payload']
