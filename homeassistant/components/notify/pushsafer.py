@@ -15,7 +15,8 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
+	PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the Pushsafer.com notification service."""
     return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
-	                                    hass.config.is_allowed_path)
+                                        hass.config.is_allowed_path)
 
 
 class PushsaferNotificationService(BaseNotificationService):
@@ -72,10 +73,11 @@ class PushsaferNotificationService(BaseNotificationService):
 
     def send_message(self, message='', **kwargs):
         """Send a message to a device."""
-        _LOGGER.info("Sending message");
-        
+        _LOGGER.info("Sending message")
+
         """Send a message to specified target.
-        If no target specified (group or device), a push will be sent to all devices
+        If no target specified (group or device),
+        a push will be sent to all devices
         parameter d for devices is ignored here
         """
         if kwargs.get(ATTR_TARGET) is None:
@@ -87,7 +89,7 @@ class PushsaferNotificationService(BaseNotificationService):
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
-        
+
         if data is None:
             data = {}
         """ Converting the specified image to base64"""
@@ -157,8 +159,8 @@ class PushsaferNotificationService(BaseNotificationService):
                                             timeout=CONF_TIMEOUT)
                 else:
                     response = requests.get(url, timeout=CONF_TIMEOUT)
-					return self.file_to_base64string(
-							    response.content,
+                    return self.file_to_base64string(
+                                response.content,
                                 response.headers['content-type'])
 
             elif local_path is not None:
@@ -171,7 +173,7 @@ class PushsaferNotificationService(BaseNotificationService):
                         data = binary_file.read()
                     return self.file_to_base64string(data, file_mimetype[0])
                 _LOGGER.warning("'%s' is not secure to load data from!",
-				                local_path)
+                                local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")
 
