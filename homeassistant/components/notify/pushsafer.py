@@ -5,11 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.pushsafer/
 """
 import logging
-
-import requests
-from requests.auth import HTTPBasicAuth
 import base64
 import mimetypes
+import requests
+from requests.auth import HTTPBasicAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -123,8 +122,6 @@ class PushsaferNotificationService(BaseNotificationService):
             response = requests.post(_RESOURCE, data=payload,
                                      timeout=CONF_TIMEOUT)
             if response.status_code != requests.codes.ok:
-                """ Log error. response contains a detailed description
-                from pushsafer, please see API documentation"""
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())
@@ -157,8 +154,8 @@ class PushsaferNotificationService(BaseNotificationService):
                 else:
                     response = requests.get(url, timeout=CONF_TIMEOUT)
                     return self.convert_to_base64string(
-                                response.content,
-                                response.headers['content-type'])
+                        response.content,
+                        response.headers['content-type'])
 
             elif local_path is not None:
                 _LOGGER.debug("Loading image from local path")
