@@ -96,6 +96,7 @@ def async_setup(hass, config):
 
     return True
 
+
 def resolve_slot_values(slot):
     """Convert snips builtin types to useable values."""
     if 'value' in slot['value']:
