@@ -25,11 +25,11 @@ CONF_DEVICE_ID = 'device_id'
 CONF_CALENDARS = 'calendars'
 CONF_CUSTOM_CALENDARS = 'custom_calendars'
 CONF_CALENDAR = 'calendar'
-CONF_ALL_DAY = 'all_day'
 CONF_SEARCH = 'search'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): vol.Url,
+    # pylint: disable=no-value-for-parameter
+    vol.Required(CONF_URL): vol.Url(),
     vol.Optional(CONF_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             cv.string
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                 WebDavCalendarEventDevice(hass,
                                           device_data,
                                           calendar,
-                                          cust_calendar.get(CONF_ALL_DAY),
+                                          True,
                                           cust_calendar.get(CONF_SEARCH))
                 )
 
