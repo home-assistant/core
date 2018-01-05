@@ -72,7 +72,7 @@ def async_setup(hass, config):
         kwargs[CONF_GOOGLE_ASSISTANT] = ASSISTANT_SCHEMA({})
 
     kwargs[CONF_ALEXA] = alexa_sh.Config(**kwargs[CONF_ALEXA])
-    kwargs['gass_should_expose'] = kwargs.pop(CONF_GOOGLE_ASSISTANT)
+    kwargs['gass_should_expose'] = kwargs.pop(CONF_GOOGLE_ASSISTANT)['filter']
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
     success = yield from cloud.initialize()
