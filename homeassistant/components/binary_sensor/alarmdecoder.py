@@ -77,17 +77,6 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def icon(self):
-        """Icon for device by its type."""
-        if "window" in self._name.lower():
-            return "mdi:window-open" if self.is_on else "mdi:window-closed"
-
-        if self._type == 'smoke':
-            return "mdi:fire"
-
-        return None
-
-    @property
     def should_poll(self):
         """No polling needed."""
         return False
