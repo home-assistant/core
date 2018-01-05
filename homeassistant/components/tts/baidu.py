@@ -128,7 +128,7 @@ class BaiduTTSProvider(Provider):
                 message, language, 1, self._speech_conf_data
             )
         else:
-            speech_data = {**self._speech_conf_data}
+            speech_data = self._speech_conf_data.copy()
             for k, v in options.items():
                 speech_data[_options[k]] = v
 
