@@ -10,6 +10,7 @@ from tests.common import (get_test_home_assistant, fire_mqtt_message,
 
 class TestSnips(unittest.TestCase):
     """Test Snips."""
+
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -162,7 +163,6 @@ class TestSnips(unittest.TestCase):
             fire_mqtt_message(self.hass,
                               'hermes/intent/CallServiceIntent', payload)
             self.hass.block_till_done()
-            #print("test_handle:", test_handle.output[1])
             self.assertIn("payload={\"sessionId\": \"abcdef1234567890\","
                           " \"text\": \"Service called\"}",
                           test_handle.output[1])
