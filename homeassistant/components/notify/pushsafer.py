@@ -90,7 +90,7 @@ class PushsaferNotificationService(BaseNotificationService):
         picture1 = data.get(ATTR_PICTURE1)
         picture1_encoded = ""
         if picture1 is not None:
-            picture1_encoded = self.load_from_file(
+            picture1_encoded = self.loadfromfile(
                 url=picture1.get(ATTR_PICTURE1_URL),
                 local_path=picture1.get(ATTR_PICTURE1_PATH),
                 username=picture1.get(ATTR_PICTURE1_USERNAME),
@@ -123,9 +123,9 @@ class PushsaferNotificationService(BaseNotificationService):
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())
-
-    def convert_base64string(self, filebyte, mimetype):
-        """Converts the image to the expected base64 string of pushsafer."""
+                
+    def convertbase64string(self, filebyte, mimetype):
+        """Convert the image to the expected base64 string of pushsafer."""
         _LOGGER.debug("Base64 got mimetype: %s", mimetype)
         if mimetype in _ALLOWED_IMAGES:
             if filebyte is not None:
@@ -137,9 +137,9 @@ class PushsaferNotificationService(BaseNotificationService):
         else:
             _LOGGER.warning("%s is a not supported mimetype for images",
                             mimetype)
-        return None
+            return None
 
-    def load_from_file(self, url=None, local_path=None, username=None,
+    def loadfromfile(self, url=None, local_path=None, username=None,
                        password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
         try:
@@ -151,7 +151,7 @@ class PushsaferNotificationService(BaseNotificationService):
                                             timeout=CONF_TIMEOUT)
                 else:
                     response = requests.get(url, timeout=CONF_TIMEOUT)
-                    return self.convert_base64string(
+                    return self.convertbase64string(
                         response.content,
                         response.headers['content-type'])
 
@@ -163,7 +163,7 @@ class PushsaferNotificationService(BaseNotificationService):
                     _LOGGER.debug("Detected mimetype %s", file_mimetype)
                     with open(local_path, "rb") as binary_file:
                         data = binary_file.read()
-                    return self.convert_base64string(data, file_mimetype[0])
+                    return self.convertbase64string(data, file_mimetype[0])
                 _LOGGER.warning("'%s' is not secure to load data from!",
                                 local_path)
             else:
