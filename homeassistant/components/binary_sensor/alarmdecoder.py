@@ -55,7 +55,6 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._zone_type = zone_type
         self._state = None
         self._name = zone_name
-        self._type = zone_type
         self._rfid = zone_rfid
         self._rfstate = None
 
