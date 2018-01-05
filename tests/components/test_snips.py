@@ -1,6 +1,5 @@
 """The tests for the Dialogflow component."""
 import unittest
-#from unittest import mock
 
 from homeassistant.core import callback
 #from homeassistant import setup
@@ -8,10 +7,6 @@ from homeassistant.components import snips
 from homeassistant.setup import async_setup_component, setup_component
 from tests.common import (get_test_home_assistant, fire_mqtt_message,
                           mock_mqtt_component, mock_component, mock_service)
-
-# An unknown action takes 8 s to return. Request timeout should be bigger to
-# allow the test to finish
-REQUEST_TIMEOUT = 15
 
 
 class TestSnips(unittest.TestCase):
