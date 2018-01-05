@@ -212,8 +212,8 @@ def async_handle_alexa(hass, cloud, payload):
 
 @HANDLERS.register('google_actions')
 @asyncio.coroutine
-def async_handle_google_assistant(hass, cloud, payload):
-    """Handle an incoming IoT message for Google Assistant."""
+def async_handle_google_actions(hass, cloud, payload):
+    """Handle an incoming IoT message for Google Actions."""
     result = yield from ga.async_handle_message(hass, cloud.gass_config,
                                                 payload)
     return result
