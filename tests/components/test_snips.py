@@ -2,7 +2,6 @@
 import unittest
 
 from homeassistant.core import callback
-#from homeassistant import setup
 from homeassistant.components import snips
 from homeassistant.setup import async_setup_component, setup_component
 from tests.common import (get_test_home_assistant, fire_mqtt_message,
