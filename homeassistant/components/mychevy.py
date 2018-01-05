@@ -20,7 +20,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["mychevy==0.1"]
+REQUIREMENTS = ["mychevy==0.1.1"]
 
 DOMAIN = 'mychevy'
 
