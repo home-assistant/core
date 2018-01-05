@@ -50,7 +50,11 @@ class EVSensorConfig(object):
         self.unit_of_measurement = unit_of_measurement
         self.icon = icon
 
-SENSORS = []
+class EVBinarySensorConfig(object):
+    def __init__(self, name, attr, device_class=None):
+        self.name = name
+        self.attr = attr
+        self.device_class = device_class
 
 
 def setup(hass, base_config):
@@ -91,10 +95,8 @@ class MyChevyHub(threading.Thread):
         self._client = client
         self.hass = hass
         self._car = None
-        self.add_devices = None
+        self.status = None
         self.sensors = []
-        # This is a status sensor for the connection itself
-        self.status = MyChevyStatus(self)
 
     @property
     def car(self):
@@ -114,45 +116,16 @@ class MyChevyHub(threading.Thread):
             sensor.car = data
             sensor.schedule_update_ha_state()
 
-    def register_add_devices(self, add_devices):
-        """Register add_devices method.
-
-        This creates the initial status sensor, and makes it possible
-        for the hub to spin up devices as it has appropriate
-        information for them.
-
-        """
-        self.add_devices = add_devices
-        add_devices([self.status], True)
-
-    def _create_sensors(self):
-        """Create the sensors for the car.
-
-        This is not done during initialization because the sensors
-        have no value at initialization time.
-
-        """
-        self.sensors = [
-            EVRange(self),
-            EVMileage(self),
-            EVCharge(self),
-            EVPlugged(self),
-            EVCharging(self),
-            EVChargeMode(self)
-        ]
-        add = self.add_devices
-        add(self.sensors, True)
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update sensors from mychevy website.
 
-        This is a synchronous polling call.
+        This is a synchronous polling call that takes a very long time
+        (like 2 to 3 minutes long time)
+
         """
         self.car = self._client.data()
         self.status.success()
-        if self.add_devices and not self.sensors:
-            self._create_sensors()
 
     def run(self):
         """Thread run loop."""
@@ -172,179 +145,82 @@ class MyChevyHub(threading.Thread):
                 time.sleep(ERROR_SLEEP_TIME.seconds)
 
 
-class EVSensor(Entity):
-    """Base EVSensor class.
-
-    The only real difference between sensors is which units and what
-    attribute from the car object they are returning. All logic can be
-    built with just setting subclass attributes.
-
-    """
-
-    _icon = None
-    _unit = "miles"
-    _name = "EV Sensor"
-    _attr = None
-
-    def __init__(self, connection):
-        """Initialize sensor with car connection."""
-        self._conn = connection
-        self.car = connection.car
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}'.format(DOMAIN, self.__class__.__name__))
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state."""
-        if self.car is not None:
-            return getattr(self.car, self._attr, None)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement the state is expressed in."""
-        return self._unit
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
 
-class EVCharge(EVSensor):
-    """EVCharge Sensor.
+# class EVCharge(EVSensor):
+#     """EVCharge Sensor.
 
-    The charge percentage of the EV battery. It is an integer from 0 -
-    100.
+#     The charge percentage of the EV battery. It is an integer from 0 -
+#     100.
 
-    """
+#     """
 
-    _name = "EV Charge"
-    _unit = "%"
-    _attr = "percent"
+#     _name = "EV Charge"
+#     _unit = "%"
+#     _attr = "percent"
 
-    @property
-    def icon(self):
-        state = int(self.state / 10)
-        if state == 10:
-            return "mdi:battery"
-        if state >= 1 and state < 10:
-            return "mdi:battery-%d0" % state
-        if state < 1:
-            return "mdi:battery-alert"
-
-
-class EVMileage(EVSensor):
-    """EVMileage Sensor.
-
-    The total odometer mileage on the car.
-    """
-
-    _name = "EV Mileage"
-    _unit = "miles"
-    _attr = "mileage"
-    _icon = "mdi:speedometer"
+#     @property
+#     def icon(self):
+#         state = int(self.state / 10)
+#         if state == 10:
+#             return "mdi:battery"
+#         if state >= 1 and state < 10:
+#             return "mdi:battery-%d0" % state
+#         if state < 1:
+#             return "mdi:battery-alert"
 
 
-class EVRange(EVSensor):
-    """EV Range.
+# class EVMileage(EVSensor):
+#     """EVMileage Sensor.
 
-    The estimated average range of the car. This is going to depend on
-    both charge percentage as well as recent driving conditions (for
-    instance very cold temperatures drive down the range quite a bit).
+#     The total odometer mileage on the car.
+#     """
 
-    """
-
-    _name = "EST Range"
-    _unit = "miles"
-    _attr = "range"
-    _icon = "mdi:speedometer"
+#     _name = "EV Mileage"
+#     _unit = "miles"
+#     _attr = "mileage"
+#     _icon = "mdi:speedometer"
 
 
-class EVPlugged(EVSensor):
-    """EV Plugged in.
+# class EVRange(EVSensor):
+#     """EV Range.
 
-    Is the EV Plugged in. Returns True or False. This does not
-    indicate whether or not it's currently charging.
+#     The estimated average range of the car. This is going to depend on
+#     both charge percentage as well as recent driving conditions (for
+#     instance very cold temperatures drive down the range quite a bit).
 
-    """
+#     """
 
-    _name = "EV Plugged In"
-    _unit = None
-    _attr = "plugged_in"
-
-
-class EVCharging(EVSensor):
-    """A string representing the charging state."""
-
-    _name = "EV Charging"
-    _unit = None
-    _attr = "charging"
+#     _name = "EST Range"
+#     _unit = "miles"
+#     _attr = "range"
+#     _icon = "mdi:speedometer"
 
 
-class EVChargeMode(EVSensor):
-    """A string representing the charging mode."""
+# class EVPlugged(EVSensor):
+#     """EV Plugged in.
 
-    _name = "EV Charge Mode"
-    _unit = None
-    _attr = "charge_mode"
+#     Is the EV Plugged in. Returns True or False. This does not
+#     indicate whether or not it's currently charging.
+
+#     """
+
+#     _name = "EV Plugged In"
+#     _unit = None
+#     _attr = "plugged_in"
 
 
-class MyChevyStatus(Entity):
-    """A string representing the charge mode."""
+# class EVCharging(EVSensor):
+#     """A string representing the charging state."""
 
-    _name = "MyChevy Status"
-    _icon = "mdi:car-connected"
+#     _name = "EV Charging"
+#     _unit = None
+#     _attr = "charging"
 
-    def __init__(self, connection):
-        """Initialize sensor with car connection."""
-        self._state = None
-        self._last_update = dt.now()
-        self._conn = connection
 
-    def success(self):
-        """Update state, trigger updates."""
-        if self._state != MYCHEVY_SUCCESS:
-            _LOGGER.info("Successfully connected to mychevy website")
-            self._state = MYCHEVY_SUCCESS
-        self.schedule_update_ha_state()
+# class EVChargeMode(EVSensor):
+#     """A string representing the charging mode."""
 
-    def error(self):
-        """Update state, trigger updates."""
-        if self._state != MYCHEVY_ERROR:
-            self.hass.components.persistent_notification.create(
-                "Error:<br/>Connection to mychevy website failed. "
-                "This probably means the mychevy to OnStar link is down.",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-            self._state = MYCHEVY_ERROR
-        self.schedule_update_ha_state()
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
+#     _name = "EV Charge Mode"
+#     _unit = None
+#     _attr = "charge_mode"
