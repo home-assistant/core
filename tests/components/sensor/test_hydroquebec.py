@@ -46,7 +46,6 @@ class HydroQuebecClientMockError(HydroQuebecClientMock):
         raise PyHydroQuebecErrorMock("Fake Error")
 
 
-
 class PyHydroQuebecErrorMock(BaseException):
     """Fake PyHydroquebec Error."""
 
