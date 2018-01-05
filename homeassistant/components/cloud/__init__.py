@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
 from homeassistant.helpers import entityfilter
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
@@ -25,7 +26,7 @@ REQUIREMENTS = ['warrant==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALEXA = 'alexa'
-CONF_GOOGLE_ASSISTANT = 'google_assistant'
+CONF_GOOGLE_ACTIONS = 'google_actions'
 CONF_FILTER = 'filter'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
 CONF_RELAYER = 'relayer'
@@ -35,11 +36,23 @@ MODE_DEV = 'development'
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
 
+CONF_ENTITY_CONFIG = 'entity_config'
+
+ALEXA_ENTITY_SCHEMA = vol.Schema({
+    vol.Optional(alexa_sh.CONF_DESCRIPTION): cv.string,
+    vol.Optional(alexa_sh.CONF_DISPLAY_CATEGORIES): cv.string,
+    vol.Optional(alexa_sh.CONF_NAME): cv.string,
+})
+
 ASSISTANT_SCHEMA = vol.Schema({
     vol.Optional(
         CONF_FILTER,
         default=lambda: entityfilter.generate_filter([], [], [], [])
     ): entityfilter.FILTER_SCHEMA,
+})
+
+ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
+    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -52,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
         vol.Optional(CONF_ALEXA): ASSISTANT_SCHEMA,
-        vol.Optional(CONF_GOOGLE_ASSISTANT): ASSISTANT_SCHEMA,
+        vol.Optional(CONF_GOOGLE_ACTIONS): ASSISTANT_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -61,18 +74,19 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Initialize the Home Assistant cloud."""
     if DOMAIN in config:
-        kwargs = config[DOMAIN]
+        kwargs = dict(config[DOMAIN])
     else:
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
-    if CONF_ALEXA not in kwargs:
-        kwargs[CONF_ALEXA] = ASSISTANT_SCHEMA({})
+    alexa_conf = kwargs.pop(CONF_ALEXA, None) or ALEXA_SCHEMA({})
+    gactions_conf = (kwargs.pop(CONF_GOOGLE_ACTIONS, None) or
+                     ASSISTANT_SCHEMA({}))
 
-    if CONF_GOOGLE_ASSISTANT not in kwargs:
-        kwargs[CONF_GOOGLE_ASSISTANT] = ASSISTANT_SCHEMA({})
-
-    kwargs[CONF_ALEXA] = alexa_sh.Config(**kwargs[CONF_ALEXA])
-    kwargs['gass_should_expose'] = kwargs.pop(CONF_GOOGLE_ASSISTANT)['filter']
+    kwargs[CONF_ALEXA] = alexa_sh.Config(
+        should_expose=alexa_conf[CONF_FILTER],
+        entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
+    )
+    kwargs['gass_should_expose'] = gactions_conf[CONF_FILTER]
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
     success = yield from cloud.initialize()
