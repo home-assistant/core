@@ -4,6 +4,7 @@
 from homeassistant.components import mychevy
 
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:

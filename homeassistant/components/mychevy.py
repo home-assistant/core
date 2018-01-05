@@ -26,7 +26,6 @@ DOMAIN = 'mychevy'
 
 MYCHEVY_SUCCESS = "Success"
 MYCHEVY_ERROR = "Error"
-MYCHEVY_UNKNOWN = "Unknown"
 
 NOTIFICATION_ID = 'mychevy_website_notification'
 NOTIFICATION_TITLE = 'MyChevy website status'
@@ -42,6 +41,16 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+
+class EVSensorConfig(object):
+    def __init__(self, name, attr, unit_of_measurement=None, icon=None):
+        self.name = name
+        self.attr = attr
+        self.unit_of_measurement = unit_of_measurement
+        self.icon = icon
+
+SENSORS = []
 
 
 def setup(hass, base_config):
@@ -298,7 +307,7 @@ class MyChevyStatus(Entity):
 
     def __init__(self, connection):
         """Initialize sensor with car connection."""
-        self._state = MYCHEVY_UNKNOWN
+        self._state = None
         self._last_update = dt.now()
         self._conn = connection
 
