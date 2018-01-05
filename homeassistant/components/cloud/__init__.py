@@ -64,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USER_POOL_ID): str,
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
-        vol.Optional(CONF_ALEXA): ASSISTANT_SCHEMA,
+        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): ASSISTANT_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)

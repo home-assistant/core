@@ -319,7 +319,7 @@ def async_devices_sync(hass, config, payload):
     """Handle action.devices.SYNC request."""
     devices = []
     for entity in hass.states.async_all():
-        if not config.should_expose(entity):
+        if not config.should_expose(entity.entity_id):
             continue
 
         device = entity_to_device(entity, hass.config.units)
