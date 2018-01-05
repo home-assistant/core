@@ -58,7 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Pushsafer.com notification service."""
-    return PushsaferNotificationService(config.get(CONF_DEVICE_KEY), hass.config.is_allowed_path)
+    return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
+	                                    hass.config.is_allowed_path)
 
 
 class PushsaferNotificationService(BaseNotificationService):
@@ -102,31 +103,33 @@ class PushsaferNotificationService(BaseNotificationService):
             # _LOGGER.debug("Base64: %s", picture1_encoded)
 
         payload = {
-            'k': self._private_key, 
-            't': title, 
-            'm': message, 
-            's': data.get(ATTR_SOUND, ATTR_SOUND_DEFAULT), 
-            'v': data.get(ATTR_VIBRATION, ATTR_VIBRATION_DEFAULT), 
-            'i': data.get(ATTR_ICON, ATTR_ICON_DEFAULT), 
-            'c': data.get(ATTR_ICONCOLOR, ATTR_ICONCOLOR_DEFAULT), 
-            'u': data.get(ATTR_URL, ATTR_URL_DEFAULT), 
-            'ut': data.get(ATTR_URLTITLE, ATTR_URLTITLE_DEFAULT), 
-            'l': data.get(ATTR_TIME2LIVE, ATTR_TIME2LIVE_DEFAULT), 
+            'k': self._private_key,
+            't': title,
+            'm': message,
+            's': data.get(ATTR_SOUND, ATTR_SOUND_DEFAULT),
+            'v': data.get(ATTR_VIBRATION, ATTR_VIBRATION_DEFAULT),
+            'i': data.get(ATTR_ICON, ATTR_ICON_DEFAULT),
+            'c': data.get(ATTR_ICONCOLOR, ATTR_ICONCOLOR_DEFAULT),
+            'u': data.get(ATTR_URL, ATTR_URL_DEFAULT),
+            'ut': data.get(ATTR_URLTITLE, ATTR_URLTITLE_DEFAULT),
+            'l': data.get(ATTR_TIME2LIVE, ATTR_TIME2LIVE_DEFAULT),
             'p': picture1_encoded
         }
-        
+
         _LOGGER.debug("using push data: %s", str(payload))
-        
+
         for target in targets:
             """ Adding/Overwriting device target to payload"""
             payload['d'] = target
-            response = requests.post(_RESOURCE, data=payload, timeout=CONF_TIMEOUT)
+            response = requests.post(_RESOURCE, data=payload,
+                                     timeout=CONF_TIMEOUT)
             if response.status_code != requests.codes.ok:
-                """ Log error. response contains a detailed description from pushsafer, please see API documentation"""
+                """ Log error. response contains a detailed description
+                from pushsafer, please see API documentation"""
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())
-            
+
     def file_to_base64string(self, filebyte, mimetype):
         """Converts the image to the expected base64 string of pushsafer."""
         _LOGGER.debug("Base64 got mimetype: %s", mimetype)
@@ -138,23 +141,25 @@ class PushsaferNotificationService(BaseNotificationService):
             else:
                 _LOGGER.warning("Base64 encode no image passed")
         else:
-            _LOGGER.warning("%s is a not supported mimetype for images", mimetype)
+            _LOGGER.warning("%s is a not supported mimetype for images",
+                            mimetype)
         return None
 
-    def load_from_file(self, url=None, local_path=None, username=None, password=None, auth=None):
+    def load_from_file(self, url=None, local_path=None, username=None,
+                       password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:
                 _LOGGER.debug("Downloading image from %s", url)
                 if username is not None and password is not None:
-                    if ATTR_FILE_AUTH_DIGEST == auth:
-                        auth_ = HTTPDigestAuth(username, password)
-                    else:
-                        auth_ = HTTPBasicAuth(username, password)
-                    response = requests.get(url, auth=auth_, timeout=CONF_TIMEOUT)
+                    auth_ = HTTPBasicAuth(username, password)
+                    response = requests.get(url, auth=auth_,
+                                            timeout=CONF_TIMEOUT)
                 else:
                     response = requests.get(url, timeout=CONF_TIMEOUT)
-                return self.file_to_base64string(response.content, response.headers['content-type'])
+					return self.file_to_base64string(
+							    response.content,
+                                response.headers['content-type'])
 
             elif local_path is not None:
                 _LOGGER.debug("Loading image from local path")
@@ -165,7 +170,8 @@ class PushsaferNotificationService(BaseNotificationService):
                     with open(local_path, "rb") as binary_file:
                         data = binary_file.read()
                     return self.file_to_base64string(data, file_mimetype[0])
-                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+                _LOGGER.warning("'%s' is not secure to load data from!",
+				                local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")
 
