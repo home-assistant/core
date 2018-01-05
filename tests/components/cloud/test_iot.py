@@ -5,7 +5,9 @@ from unittest.mock import patch, MagicMock, PropertyMock
 from aiohttp import WSMsgType, client_exceptions
 import pytest
 
+from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud import iot, auth_api
+from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro
 
 
@@ -34,6 +36,16 @@ def mock_handle_message():
 def mock_cloud():
     """Mock cloud class."""
     return MagicMock(subscription_expired=False)
+
+
+@pytest.fixture
+def cloud_instance(loop, hass):
+    """Instance of an initialized cloud class."""
+    with patch('homeassistant.components.cloud.Cloud.initialize',
+               return_value=mock_coro(True)):
+        loop.run_until_complete(async_setup_component(hass, 'cloud', {}))
+
+    yield hass.data['cloud']
 
 
 @asyncio.coroutine
@@ -254,3 +266,50 @@ def test_refresh_token_before_expiration_fails(hass, mock_cloud):
 
     assert len(mock_check_token.mock_calls) == 1
     assert len(mock_create.mock_calls) == 1
+
+
+@asyncio.coroutine
+def test_handler_alexa(hass, cloud_instance):
+    """Test handler Alexa."""
+    hass.states.async_set(
+        'switch.test', 'on', {'friendly_name': "Test switch"})
+
+    resp = yield from iot.async_handle_alexa(
+        hass, cloud_instance,
+        test_alexa.get_new_request('Alexa.Discovery', 'Discover'))
+
+    endpoints = resp['event']['payload']['endpoints']
+
+    assert len(endpoints) == 1
+    device = endpoints[0]
+
+    assert device['description'] == 'switch.test'
+    assert device['friendlyName'] == 'Test switch'
+    assert device['manufacturerName'] == 'Home Assistant'
+
+
+@asyncio.coroutine
+def test_handler_google_actions(hass, cloud_instance):
+    """Test handler Google Actions."""
+    hass.states.async_set(
+        'switch.test', 'on', {'friendly_name': "Test switch"})
+
+    reqid = '5711642932632160983'
+    data = {'requestId': reqid, 'inputs': [{'intent': 'action.devices.SYNC'}]}
+
+    with patch('homeassistant.components.cloud.Cloud._decode_claims',
+               return_value={'cognito:username': 'myUserName'}):
+        resp = yield from iot.async_handle_google_actions(
+            hass, cloud_instance, data)
+
+    assert resp['requestId'] == reqid
+    payload = resp['payload']
+
+    assert payload['agentUserId'] == 'myUserName'
+
+    devices = payload['devices']
+    assert len(devices) == 1
+
+    device = devices[0]
+    assert device['id'] == 'switch.test'
+    assert device['name']['name'] == 'Test switch'

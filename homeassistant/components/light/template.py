@@ -40,7 +40,7 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 

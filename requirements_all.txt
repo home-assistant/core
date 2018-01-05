@@ -6,7 +6,7 @@ pip>=8.0.3
 jinja2>=2.9.6
 voluptuous==0.10.5
 typing>=3,<4
-aiohttp==2.3.6
+aiohttp==2.3.7
 yarl==0.16.0
 async_timeout==2.0.0
 chardet==3.0.4
@@ -20,7 +20,7 @@ certifi>=2017.4.17
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.doorbird
-DoorBirdPy==0.1.0
+DoorBirdPy==0.1.2
 
 # homeassistant.components.isy994
 PyISY==1.1.0
@@ -81,7 +81,7 @@ aiolifx_effects==0.1.2
 aiopvapi==1.5.4
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==0.12.3
+alarmdecoder==1.13.2
 
 # homeassistant.components.sensor.alpha_vantage
 alpha_vantage==1.6.0
@@ -289,7 +289,7 @@ fritzhome==1.0.3
 fsapi==0.0.7
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.15.1
+fuzzywuzzy==0.16.0
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
@@ -346,7 +346,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171223.0
+home-assistant-frontend==20180102.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -565,7 +565,7 @@ pizzapi==0.0.3
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==3.0.3
+plexapi==3.0.5
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
@@ -650,7 +650,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.2
+pychromecast==1.0.3
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -664,6 +664,13 @@ pycsspeechtts==1.0.2
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
+# homeassistant.components.daikin
+# homeassistant.components.climate.daikin
+pydaikin==0.4
+
+# homeassistant.components.deconz
+pydeconz==23
+
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
@@ -672,6 +679,9 @@ pydroid-ipcam==0.8
 
 # homeassistant.components.sensor.ebox
 pyebox==0.1.0
+
+# homeassistant.components.climate.econet
+pyeconet==0.0.4
 
 # homeassistant.components.eight_sleep
 pyeight==0.0.7
@@ -686,7 +696,7 @@ pyenvisalink==2.2
 pyephember==0.1.1
 
 # homeassistant.components.sensor.fido
-pyfido==1.0.1
+pyfido==2.1.0
 
 # homeassistant.components.climate.flexit
 pyflexit==0.3
@@ -797,7 +807,7 @@ pyotp==2.2.6
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.7.1
+pyowm==2.8.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4
@@ -907,7 +917,7 @@ python-synology==0.1.0
 python-tado==0.2.2
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==8.1.1
+python-telegram-bot==9.0.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -928,7 +938,7 @@ python_opendata_transport==0.0.3
 python_openzwave==0.4.0.35
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.25
+pythonegardia==1.0.26
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
@@ -961,7 +971,7 @@ pyvlx==0.1.3
 pywebpush==1.3.0
 
 # homeassistant.components.wemo
-pywemo==0.4.20
+pywemo==0.4.25
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
@@ -1072,7 +1082,7 @@ speedtest-cli==1.0.7
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.15
+sqlalchemy==1.2.0
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1202,7 +1212,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.12.23
+youtube_dl==2017.12.28
 
 # homeassistant.components.light.zengge
 zengge==0.2

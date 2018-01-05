@@ -11,7 +11,9 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
+from homeassistant.components.mqtt import (
+    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
     CONF_UNIT_OF_MEASUREMENT)
@@ -34,7 +36,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -55,15 +57,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_FORCE_UPDATE),
         config.get(CONF_EXPIRE_AFTER),
         value_template,
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
     )])
 
 
-class MqttSensor(Entity):
+class MqttSensor(MqttAvailability, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, expire_after, value_template):
+                 force_update, expire_after, value_template,
+                 availability_topic, payload_available, payload_not_available):
         """Initialize the sensor."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic
@@ -74,11 +82,11 @@ class MqttSensor(Entity):
         self._expire_after = expire_after
         self._expiration_trigger = None
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
+        """Subscribe to MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
@@ -102,7 +110,7 @@ class MqttSensor(Entity):
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        return mqtt.async_subscribe(
+        yield from mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
 
     @callback

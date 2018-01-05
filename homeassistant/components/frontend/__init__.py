@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171223.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180102.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -579,8 +579,12 @@ def _is_latest(js_option, request):
     if js_option != 'auto':
         return js_option == 'latest'
 
+    useragent = request.headers.get('User-Agent')
+    if not useragent:
+        return False
+
     from user_agents import parse
-    useragent = parse(request.headers.get('User-Agent'))
+    useragent = parse(useragent)
 
     # on iOS every browser is a Safari which we support from version 10.
     if useragent.os.family == 'iOS':
