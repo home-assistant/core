@@ -161,8 +161,12 @@ class Cloud:
     def gactions_config(self):
         """Return the Google Assistant config."""
         if self._gactions_config is None:
+            def should_expose(entity):
+                """If an entity should be exposed."""
+                return self._gactions_should_expose(entity.entity_id)
+
             self._gactions_config = ga_sh.Config(
-                should_expose=lambda e: self._gactions_should_expose(e.entity_id),
+                should_expose=should_expose,
                 agent_user_id=self.claims['cognito:username']
             )
 
