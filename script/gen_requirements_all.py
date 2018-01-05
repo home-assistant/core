@@ -62,7 +62,6 @@ TEST_REQUIREMENTS = (
     'pilight',
     'pmsensor',
     'prometheus_client',
-    'py-canary',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
