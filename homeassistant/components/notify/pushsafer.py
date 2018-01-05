@@ -64,7 +64,7 @@ class PushsaferNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._private_key = private_key
         self.is_allowed_path = is_allowed_path
-	
+
     def send_message(self, message='', **kwargs):
         """Send a message to a device."""
         _LOGGER.info("Sending message")
