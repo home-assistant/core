@@ -33,7 +33,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     def see_device(device):
         """Mark a device as seen."""
-        see(mac=BT_PREFIX + device[0], host_name=device[1], source_type=SOURCE_TYPE_BLUETOOTH)
+        see(mac=BT_PREFIX + device[0], host_name=device[1],
+            source_type=SOURCE_TYPE_BLUETOOTH)
 
     def discover_devices():
         """Discover Bluetooth devices."""
