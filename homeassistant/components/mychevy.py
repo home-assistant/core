@@ -71,6 +71,7 @@ def setup(hass, base_config):
         hass.data[DOMAIN].start()
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
     return True
 

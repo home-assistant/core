@@ -23,6 +23,7 @@ SENSORS = [
     EVSensorConfig("EVCharge", "percent", "%", "mdi:battery")
 ]
 
+_LOGGER = getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MyChevy sensors."""
