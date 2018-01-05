@@ -57,7 +57,6 @@ def get_service(hass, config, discovery_info=None):
     return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
                                         hass.config.is_allowed_path)
 
-
 class PushsaferNotificationService(BaseNotificationService):
 
     def __init__(self, private_key, is_allowed_path):
@@ -109,7 +108,7 @@ class PushsaferNotificationService(BaseNotificationService):
             payload['d'] = target
             response = requests.post(_RESOURCE, data=payload,
                                      timeout=CONF_TIMEOUT)
-            if response.status_code != requests.codes.ok:
+            if response.status_code != '200':
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())
