@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
-	PLATFORM_SCHEMA, BaseNotificationService)
+    PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.pushsafer.com/api'
@@ -129,7 +129,7 @@ class PushsaferNotificationService(BaseNotificationService):
             else:
                 _LOGGER.debug("Push send: %s", response.json())
 
-    def file_to_base64string(self, filebyte, mimetype):
+    def convert_to_base64string(self, filebyte, mimetype):
         """Converts the image to the expected base64 string of pushsafer."""
         _LOGGER.debug("Base64 got mimetype: %s", mimetype)
         if mimetype in _ALLOWED_IMAGES:
@@ -156,7 +156,7 @@ class PushsaferNotificationService(BaseNotificationService):
                                             timeout=CONF_TIMEOUT)
                 else:
                     response = requests.get(url, timeout=CONF_TIMEOUT)
-                    return self.file_to_base64string(
+                    return self.convert_to_base64string(
                                 response.content,
                                 response.headers['content-type'])
 
@@ -168,7 +168,7 @@ class PushsaferNotificationService(BaseNotificationService):
                     _LOGGER.debug("Detected mimetype %s", file_mimetype)
                     with open(local_path, "rb") as binary_file:
                         data = binary_file.read()
-                    return self.file_to_base64string(data, file_mimetype[0])
+                    return self.convert_to_base64string(data, file_mimetype[0])
                 _LOGGER.warning("'%s' is not secure to load data from!",
                                 local_path)
             else:
