@@ -175,7 +175,10 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations[name] = data
 
         try:
-            save_json(self.json_path, self.registrations)
+            hass = request.app['hass']
+
+            yield from hass.async_add_job(save_json, self.json_path,
+                                          self.registrations)
             return self.json_message(
                 'Push notification subscriber registered.')
         except HomeAssistantError:
@@ -219,7 +222,12 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         reg = self.registrations.pop(found)
 
-        if not save_json(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            yield from hass.async_add_job(save_json, self.json_path,
+                                          self.registrations)
+        except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
