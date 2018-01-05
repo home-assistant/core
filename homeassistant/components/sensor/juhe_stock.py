@@ -19,7 +19,6 @@ symbols(Optional): List of stock market symbols for given companies.
 import logging
 import json
 import asyncio
-from datetime import timedelta
 
 import voluptuous as vol
 
