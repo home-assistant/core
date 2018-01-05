@@ -8,17 +8,14 @@ import logging
 
 import requests
 from requests.auth import HTTPBasicAuth
-from requests.auth import HTTPDigestAuth
 import base64
 import mimetypes
-import os
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
 	PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
-
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.pushsafer.com/api'
 _ALLOWED_IMAGES = ['image/gif', 'image/jpeg', 'image/png']
