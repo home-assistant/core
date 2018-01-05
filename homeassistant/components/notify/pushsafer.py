@@ -51,12 +51,10 @@ ATTR_PICTURE1_AUTH = 'auth'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_KEY): cv.string,
 })
-
 def get_service(hass, config, discovery_info=None):
     """Get the Pushsafer.com notification service."""
     return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
                                         hass.config.is_allowed_path)
-
 class PushsaferNotificationService(BaseNotificationService):
     """Implementation of the notification service for Pushsafer.com."""
 
@@ -126,6 +124,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 
     def convertbase64string(self, filebyte, mimetype):
         """Convert the image to the expected base64 string of pushsafer."""
+        
         _LOGGER.debug("Base64 got mimetype: %s", mimetype)
         if mimetype in _ALLOWED_IMAGES:
             if filebyte is not None:
@@ -142,6 +141,7 @@ class PushsaferNotificationService(BaseNotificationService):
     def loadfromfile(self, url=None, local_path=None, username=None,
                        password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
+        
         try:
             if url is not None:
                 _LOGGER.debug("Downloading image from %s", url)
