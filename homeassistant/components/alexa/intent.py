@@ -11,7 +11,6 @@ import logging
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.core import callback
-from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers import intent
 from homeassistant.components import http
 from homeassistant.util.decorator import Registry
