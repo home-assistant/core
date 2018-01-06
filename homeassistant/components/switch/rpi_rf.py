@@ -44,13 +44,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+class RFDeviceWrapper:
+    def __init__(self, gpio):
+        import rpi_rf
+        import queue
+        import threading
+
+        self._rfdevice = rpi_rf.RFDevice(gpio)
+        self._tx_queue = queue.Queue()
+
+        def txsender():
+            while True:
+                codes, protocol, pulselength, repeats = self._tx_queue.get()
+                self._rfdevice._tx_repeat = repeats
+                for code in codes:
+                    self._rfdevice.tx_code(code, protocol, pulselength)
+        self._tx_sender = threading.Thread(target=txsender, daemon=True)
+        self._tx_sender.start()
+
+    def send_code(self, code_list, protocol, pulselength, repetitions):
+        self._tx_queue.put((code_list, protocol, pulselength, repetitions))
+
+    def enable_tx(self):
+        self._rfdevice.enable_tx()
+
+    def cleanup(self):
+        self._rfdevice.cleanup()
+
 # pylint: disable=unused-argument, import-error
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return switches controlled by a generic RF device via GPIO."""
-    import rpi_rf
 
     gpio = config.get(CONF_GPIO)
-    rfdevice = rpi_rf.RFDevice(gpio)
+    rfdevice = RFDeviceWrapper(gpio)
     switches = config.get(CONF_SWITCHES)
 
     devices = []
@@ -90,7 +116,7 @@ class RPiRFSwitch(SwitchDevice):
         self._pulselength = pulselength
         self._code_on = code_on
         self._code_off = code_off
-        self._rfdevice.tx_repeat = signal_repetitions
+        self._repetitions = signal_repetitions
 
     @property
     def should_poll(self):
@@ -110,8 +136,8 @@ class RPiRFSwitch(SwitchDevice):
     def _send_code(self, code_list, protocol, pulselength):
         """Send the code(s) with a specified pulselength."""
         _LOGGER.info("Sending code(s): %s", code_list)
-        for code in code_list:
-            self._rfdevice.tx_code(code, protocol, pulselength)
+        self._rfdevice.send_code(code_list, protocol, pulselength,
+                                 self._repetitions)
         return True
 
     def turn_on(self):
