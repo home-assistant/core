@@ -22,21 +22,7 @@ from homeassistant.const import (
 )
 
 
-class _BACKENDS(Enum):
-    """Symbolic constants for the different bluetooth backends."""
-
-    GATTTOOL = 0
-    BLUEPY = 1
-
-
 REQUIREMENTS = ['miflora==0.2.0']
-# normally use gatttool as this is what people are used to
-_BACKEND = _BACKENDS.GATTTOOL
-# on linux use bluepy
-if sys.platform == "linux" or sys.platform == "linux2":
-    REQUIREMENTS.append('bluepy==1.1.4')
-    _BACKEND = _BACKENDS.BLUEPY
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,11 +67,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
-    backend = None
-    if _BACKEND == _BACKENDS.BLUEPY:
+    try:
+        import bluepy.btle  # noqa: F401
         from miflora.backends.bluepy import BluepyBackend
         backend = BluepyBackend
-    else:
+    except ImportError:
         from miflora.backends.gatttool import GatttoolBackend
         backend = GatttoolBackend
     _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
@@ -163,7 +149,6 @@ class MiFloraSensor(Entity):
             data = self.poller.parameter_value(self.parameter)
         except IOError as ioerr:
             _LOGGER.info("Polling error %s", ioerr)
-            data = None
             return
 
         if data is not None:
