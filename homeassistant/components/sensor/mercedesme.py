@@ -24,11 +24,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     for car in controller.cars:
-        add_devices([Sensor('fuelLevelPercent', car, controller, "%")])
-        add_devices([Sensor('fuelRangeKm', car, controller, "Km")])
-        add_devices([Sensor('serviceIntervalDays', car, controller, "days")])
-        add_devices([Sensor('odometerKm', car, controller, "Km")])
-        add_devices([Sensor('latestTrip', car, controller, None)])
+        add_devices([Sensor('fuelLevelPercent', car, controller, "%")], True)
+        add_devices([Sensor('fuelRangeKm', car, controller, "Km")], True)
+        add_devices([Sensor('serviceIntervalDays', car, controller, "days")], True)
+        add_devices([Sensor('odometerKm', car, controller, "Km")], True)
+        add_devices([Sensor('latestTrip', car, controller, None)], True)
 
     return True
 
@@ -43,7 +43,6 @@ class Sensor(Entity):
         self.__car = Car
         self.controller = Controller
         self.__unit = Unit
-        self.update()
 
     @property
     def name(self):
