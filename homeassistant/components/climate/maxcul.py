@@ -23,6 +23,7 @@ DEPENDS = ['maxcul']
 
 DEFAULT_TEMPERATURE = 12
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add a new MAX! thermostat."""
     from maxcul import ATTR_DEVICE_ID
@@ -54,7 +55,7 @@ class MaxCulClimate(ClimateDevice):
         self._battery_low = None
 
         def update(event):
-            """Callback handler for thermostat update events."""
+            """Handle thermostat update events."""
             thermostat_id = event.data.get(ATTR_DEVICE_ID)
             if thermostat_id != self._thermostat_id:
                 return

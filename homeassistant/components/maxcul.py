@@ -91,7 +91,7 @@ def setup(hass, config):
     hass.data[DATA_DEVICES] = _read_paired_devices(paired_devices_path)
 
     def callback(event, payload):
-        """Callback for new MAX! events."""
+        """Handle new MAX! events."""
         if event == maxcul.EVENT_THERMOSTAT_UPDATE:
             hass.bus.fire(EVENT_THERMOSTAT_UPDATE, payload)
 
