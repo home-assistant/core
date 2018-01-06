@@ -12,7 +12,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_QOS,
-    CONF_RETAIN)
+    CONF_RETAIN, ATTR_DISCOVERY_HASH)
+from homeassistant.components.mqtt.discovery import (
+    ALREADY_DISCOVERED)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
@@ -56,7 +58,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices([MqttSwitch(
+    newswitch = MqttSwitch(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -69,8 +71,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         value_template,
-    )])
+    )
 
+    async_add_devices([newswitch])
+
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        hass.data[ALREADY_DISCOVERED][discovery_info[ATTR_DISCOVERY_HASH]] = newswitch
 
 class MqttSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
