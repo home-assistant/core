@@ -9,8 +9,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
-from homeassistant.const import \
-    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE,
+    SPEED_KILOMETERS_PER_HOUR)
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.bom import \
@@ -90,6 +91,11 @@ class BOMWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         return self.bom_data.data.get('wind_spd_kmh')
+
+    @property
+    def wind_speed_unit(self):
+        """Return the wind speed units."""
+        return SPEED_KILOMETERS_PER_HOUR
 
     @property
     def wind_bearing(self):

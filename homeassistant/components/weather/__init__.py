@@ -73,6 +73,11 @@ class WeatherEntity(Entity):
         return None
 
     @property
+    def wind_speed_unit(self):
+        """Return the unit of measurement."""
+        return None
+
+    @property
     def wind_bearing(self):
         """Return the wind bearing."""
         return None
@@ -90,6 +95,11 @@ class WeatherEntity(Entity):
     @property
     def visibility(self):
         """Return the visibility."""
+        return None
+
+    @property
+    def visibility_unit(self):
+        """Return the unit of measurement."""
         return None
 
     @property
@@ -127,11 +137,15 @@ class WeatherEntity(Entity):
 
         wind_speed = self.wind_speed
         if wind_speed is not None:
-            data[ATTR_WEATHER_WIND_SPEED] = wind_speed
+            data[ATTR_WEATHER_WIND_SPEED] = (
+                self.hass.config.units.speed(wind_speed, self.wind_speed_unit)
+                if self.wind_speed_unit else wind_speed)
 
         visibility = self.visibility
         if visibility is not None:
-            data[ATTR_WEATHER_VISIBILITY] = visibility
+            data[ATTR_WEATHER_VISIBILITY] = (
+                self.hass.config.units.length(visibility, self.visibility_unit)
+                if self.visibility_unit else visibility)
 
         attribution = self.attribution
         if attribution is not None:

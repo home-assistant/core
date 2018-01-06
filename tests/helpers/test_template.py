@@ -15,6 +15,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     MASS_GRAMS,
     VOLUME_LITERS,
+    SPEED_KILOMETERS_PER_HOUR,
     MATCH_ALL,
 )
 import homeassistant.util.dt as dt_util
@@ -31,7 +32,8 @@ class TestHelpersTemplate(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
                                             LENGTH_METERS, VOLUME_LITERS,
-                                            MASS_GRAMS)
+                                            MASS_GRAMS,
+                                            SPEED_KILOMETERS_PER_HOUR)
 
     # pylint: disable=invalid-name
     def tearDown(self):

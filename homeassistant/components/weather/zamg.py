@@ -13,7 +13,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE,
+    SPEED_KILOMETERS_PER_HOUR)
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.zamg import (
@@ -102,6 +103,11 @@ class ZamgWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         return self.zamg_data.get_data(ATTR_WEATHER_WIND_SPEED)
+
+    @property
+    def wind_speed_unit(self):
+        """Return the wind speed units."""
+        return SPEED_KILOMETERS_PER_HOUR
 
     @property
     def wind_bearing(self):

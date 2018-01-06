@@ -8,10 +8,12 @@ from homeassistant.const import (
     LENGTH_KILOMETERS, LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
     VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
     MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS,
+    SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR, SPEED_METERS_PER_SECOND,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, LENGTH, MASS, VOLUME,
-    TEMPERATURE, UNIT_NOT_RECOGNIZED_TEMPLATE)
+    TEMPERATURE, SPEED, UNIT_NOT_RECOGNIZED_TEMPLATE)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
+from homeassistant.util import speed as speed_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +46,12 @@ TEMPERATURE_UNITS = [
     TEMP_CELSIUS,
 ]
 
+SPEED_UNITS = [
+    SPEED_MILES_PER_HOUR,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
+]
+
 
 def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
@@ -55,6 +63,8 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
         units = MASS_UNITS
     elif unit_type == VOLUME:
         units = VOLUME_UNITS
+    elif unit_type == SPEED:
+        units = SPEED_UNITS
     else:
         return False
 
@@ -65,7 +75,7 @@ class UnitSystem(object):
     """A container for units of measure."""
 
     def __init__(self: object, name: str, temperature: str, length: str,
-                 volume: str, mass: str) -> None:
+                 volume: str, mass: str, speed: str) -> None:
         """Initialize the unit system object."""
         errors = \
             ', '.join(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
@@ -73,7 +83,8 @@ class UnitSystem(object):
                           (temperature, TEMPERATURE),
                           (length, LENGTH),
                           (volume, VOLUME),
-                          (mass, MASS), ]
+                          (mass, MASS),
+                          (speed, SPEED), ]
                       if not is_valid_unit(unit, unit_type))  # type: str
 
         if errors:
@@ -84,6 +95,7 @@ class UnitSystem(object):
         self.length_unit = length
         self.mass_unit = mass
         self.volume_unit = volume
+        self.speed_unit = speed
 
     @property
     def is_metric(self: object) -> bool:
@@ -107,18 +119,29 @@ class UnitSystem(object):
         return distance_util.convert(length, from_unit,
                                      self.length_unit)  # type: float
 
+    def speed(self: object, speed: float, from_unit: str) -> float:
+        """Convert the given speed to this unit system."""
+        if not isinstance(speed, Number):
+            raise TypeError('{} is not a numeric value.'.format(str(speed)))
+
+        return speed_util.convert(speed, from_unit,
+                                  self.speed_unit)  # type: float
+
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
         return {
             LENGTH: self.length_unit,
             MASS: self.mass_unit,
             TEMPERATURE: self.temperature_unit,
-            VOLUME: self.volume_unit
+            VOLUME: self.volume_unit,
+            SPEED: self.speed_unit
         }
 
 
 METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,
-                           LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS)
+                           LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS,
+                           SPEED_KILOMETERS_PER_HOUR)
 
 IMPERIAL_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_IMPERIAL, TEMP_FAHRENHEIT,
-                             LENGTH_MILES, VOLUME_GALLONS, MASS_POUNDS)
+                             LENGTH_MILES, VOLUME_GALLONS, MASS_POUNDS,
+                             SPEED_MILES_PER_HOUR)

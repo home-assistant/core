@@ -7,7 +7,8 @@ https://home-assistant.io/components/weather.ecobee/
 from homeassistant.components import ecobee
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_FAHRENHEIT)
+from homeassistant.const import (TEMP_FAHRENHEIT, SPEED_MILES_PER_HOUR,
+                                 LENGTH_MILES)
 
 
 DEPENDENCIES = ['ecobee']
@@ -100,17 +101,27 @@ class EcobeeWeather(WeatherEntity):
     def visibility(self):
         """Return the visibility."""
         try:
-            return int(self.get_forecast(0, 'visibility'))
+            return float(self.get_forecast(0, 'visibility')) / 1000
         except ValueError:
             return None
+
+    @property
+    def visibility_unit(self):
+        """Return the visibility units."""
+        return LENGTH_MILES
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
         try:
-            return int(self.get_forecast(0, 'windSpeed'))
+            return float(self.get_forecast(0, 'windSpeed')) / 1000
         except ValueError:
             return None
+
+    @property
+    def wind_speed_unit(self):
+        """Return the wind speed units."""
+        return SPEED_MILES_PER_HOUR
 
     @property
     def wind_bearing(self):

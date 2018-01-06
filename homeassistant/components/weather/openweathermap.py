@@ -13,7 +13,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, STATE_UNKNOWN,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, SPEED_KILOMETERS_PER_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -123,6 +123,11 @@ class OpenWeatherMapWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         return self.data.get_wind().get('speed')
+
+    @property
+    def wind_speed_unit(self):
+        """Return the wind speed units."""
+        return SPEED_KILOMETERS_PER_HOUR
 
     @property
     def wind_bearing(self):

@@ -12,10 +12,12 @@ from homeassistant.const import (
     MASS_GRAMS,
     VOLUME_LITERS,
     TEMP_CELSIUS,
+    SPEED_KILOMETERS_PER_HOUR,
     LENGTH,
     MASS,
     TEMPERATURE,
-    VOLUME
+    VOLUME,
+    SPEED
 )
 
 SYSTEM_NAME = 'TEST'
@@ -29,19 +31,23 @@ class TestUnitSystem(unittest.TestCase):
         """Test errors are raised when invalid units are passed in."""
         with self.assertRaises(ValueError):
             UnitSystem(SYSTEM_NAME, INVALID_UNIT, LENGTH_METERS, VOLUME_LITERS,
-                       MASS_GRAMS)
+                       MASS_GRAMS, SPEED_KILOMETERS_PER_HOUR)
 
         with self.assertRaises(ValueError):
             UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, INVALID_UNIT, VOLUME_LITERS,
-                       MASS_GRAMS)
+                       MASS_GRAMS, SPEED_KILOMETERS_PER_HOUR)
 
         with self.assertRaises(ValueError):
             UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, INVALID_UNIT,
-                       MASS_GRAMS)
+                       MASS_GRAMS, SPEED_KILOMETERS_PER_HOUR)
 
         with self.assertRaises(ValueError):
             UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS,
-                       INVALID_UNIT)
+                       INVALID_UNIT, SPEED_KILOMETERS_PER_HOUR)
+
+        with self.assertRaises(ValueError):
+            UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS,
+                       MASS_GRAMS, INVALID_UNIT)
 
     def test_invalid_value(self):
         """Test no conversion happens if value is non-numeric."""
@@ -49,6 +55,8 @@ class TestUnitSystem(unittest.TestCase):
             METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
         with self.assertRaises(TypeError):
             METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
+        with self.assertRaises(TypeError):
+            METRIC_SYSTEM.temperature('50mph', SPEED_KILOMETERS_PER_HOUR)
 
     def test_as_dict(self):
         """Test that the as_dict() method returns the expected dictionary."""
@@ -56,7 +64,8 @@ class TestUnitSystem(unittest.TestCase):
             LENGTH: LENGTH_KILOMETERS,
             TEMPERATURE: TEMP_CELSIUS,
             VOLUME: VOLUME_LITERS,
-            MASS: MASS_GRAMS
+            MASS: MASS_GRAMS,
+            SPEED: SPEED_KILOMETERS_PER_HOUR
         }
 
         self.assertEqual(expected, METRIC_SYSTEM.as_dict())
@@ -120,12 +129,41 @@ class TestUnitSystem(unittest.TestCase):
             IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit)
         )
 
+    def test_speed_unknown_unit(self):
+        """Test speed conversion with unknown from unit."""
+        with self.assertRaises(ValueError):
+            METRIC_SYSTEM.speed(5, 'fr')
+
+    def test_speed_to_metric(self):
+        """Test length conversion to metric system."""
+        self.assertEqual(
+            100,
+            METRIC_SYSTEM.speed(100, METRIC_SYSTEM.speed_unit)
+        )
+        self.assertEqual(
+            8.0467,
+            METRIC_SYSTEM.speed(5, IMPERIAL_SYSTEM.speed_unit)
+        )
+
+    def test_speed_to_imperial(self):
+        """Test speed conversion to imperial system."""
+        self.assertEqual(
+            100,
+            IMPERIAL_SYSTEM.speed(100,
+                                  IMPERIAL_SYSTEM.speed_unit)
+        )
+        self.assertEqual(
+            3.106855,
+            IMPERIAL_SYSTEM.speed(5, METRIC_SYSTEM.speed_unit)
+        )
+
     def test_properties(self):
         """Test the unit properties are returned as expected."""
         self.assertEqual(LENGTH_KILOMETERS, METRIC_SYSTEM.length_unit)
         self.assertEqual(TEMP_CELSIUS, METRIC_SYSTEM.temperature_unit)
         self.assertEqual(MASS_GRAMS, METRIC_SYSTEM.mass_unit)
         self.assertEqual(VOLUME_LITERS, METRIC_SYSTEM.volume_unit)
+        self.assertEqual(SPEED_KILOMETERS_PER_HOUR, METRIC_SYSTEM.speed_unit)
 
     def test_is_metric(self):
         """Test the is metric flag."""

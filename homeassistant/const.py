@@ -321,6 +321,11 @@ MASS_KILOGRAMS = 'kg'  # type: str
 MASS_OUNCES = 'oz'  # type: str
 MASS_POUNDS = 'lb'  # type: str
 
+# Speed units
+SPEED_MILES_PER_HOUR = "mph"
+SPEED_KILOMETERS_PER_HOUR = "km/h"
+SPEED_METERS_PER_SECOND = "m/s"
+
 # UV Index units
 UNIT_UV_INDEX = 'UV index'  # type: str
 
@@ -419,6 +424,7 @@ LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
 VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
+SPEED = 'speed'  # type: str
 SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
 
