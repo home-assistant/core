@@ -78,10 +78,14 @@ class Sensor(Entity):
             }
         elif self.__name == "tireWarningLight":
             return {
-                "frontRightTirePressureKpa": self.__car["frontRightTirePressureKpa"],
-                "frontLeftTirePressureKpa": self.__car["frontLeftTirePressureKpa"],
-                "rearRightTirePressureKpa": self.__car["rearRightTirePressureKpa"],
-                "rearLeftTirePressureKpa": self.__car["rearLeftTirePressureKpa"],
+                "frontRightTirePressureKpa":
+                    self.__car["frontRightTirePressureKpa"],
+                "frontLeftTirePressureKpa":
+                    self.__car["frontLeftTirePressureKpa"],
+                "rearRightTirePressureKpa":
+                    self.__car["rearRightTirePressureKpa"],
+                "rearLeftTirePressureKpa":
+                    self.__car["rearLeftTirePressureKpa"],
                 "lastUpdate": datetime.datetime.fromtimestamp(
                     self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
                 "car": self.__car["license"]
