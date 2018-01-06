@@ -117,6 +117,7 @@ class PushsaferNotificationService(BaseNotificationService):
             else:
                 _LOGGER.debug("Push send: %s", response.json())
 
+    @staticmethod
     def convertbase64string(self, filebyte, mimetype):
         """Convert the image to the expected base64 string of pushsafer."""
         _LOGGER.debug("Base64 got mimetype: %s", mimetype)
