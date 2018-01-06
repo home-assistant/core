@@ -189,26 +189,22 @@ class TestLight(unittest.TestCase):
         self.assertEqual({
             light.ATTR_TRANSITION: 10,
             light.ATTR_BRIGHTNESS: 20,
-            light.ATTR_RGB_COLOR: (0, 0, 255),
-            light.ATTR_XY_COLOR: (0.136, 0.04),
+            light.ATTR_HS_COLOR: (43690, 255),
         }, data)
 
         _, data = dev2.last_call('turn_on')
         self.assertEqual({
-            light.ATTR_RGB_COLOR: (255, 255, 255),
-            light.ATTR_XY_COLOR: (0.32, 0.336),
+            light.ATTR_HS_COLOR: (0, 0),
             light.ATTR_WHITE_VALUE: 255,
         }, data)
 
         _, data = dev3.last_call('turn_on')
         self.assertEqual({
-            light.ATTR_RGB_COLOR: (208, 255, 0),
-            light.ATTR_XY_COLOR: (.4, .6),
+            light.ATTR_HS_COLOR: (12935, 255),
         }, data)
 
         # One of the light profiles
-        prof_name, prof_x, prof_y, prof_bri, prof_r, prof_g, prof_b = \
-            'relax', 0.5119, 0.4147, 144, 255, 184, 78
+        prof_name, prof_h, prof_s, prof_bri = 'relax', 6541, 177, 144
 
         # Test light profiles
         light.turn_on(self.hass, dev1.entity_id, profile=prof_name)
@@ -222,15 +218,13 @@ class TestLight(unittest.TestCase):
         _, data = dev1.last_call('turn_on')
         self.assertEqual({
             light.ATTR_BRIGHTNESS: prof_bri,
-            light.ATTR_XY_COLOR: (prof_x, prof_y),
-            light.ATTR_RGB_COLOR: (prof_r, prof_g, prof_b),
+            light.ATTR_HS_COLOR: (prof_h, prof_s),
         }, data)
 
         _, data = dev2.last_call('turn_on')
         self.assertEqual({
             light.ATTR_BRIGHTNESS: 100,
-            light.ATTR_XY_COLOR: (prof_x, prof_y),
-            light.ATTR_RGB_COLOR: (prof_r, prof_g, prof_b),
+            light.ATTR_HS_COLOR: (prof_h, prof_s),
         }, data)
 
         # Test bad data
@@ -308,7 +302,6 @@ class TestLight(unittest.TestCase):
         _, data = dev1.last_call('turn_on')
 
         self.assertEqual({
-            light.ATTR_RGB_COLOR: (208, 255, 0),
-            light.ATTR_XY_COLOR: (.4, .6),
+            light.ATTR_HS_COLOR: (12935, 255),
             light.ATTR_BRIGHTNESS: 100
         }, data)
