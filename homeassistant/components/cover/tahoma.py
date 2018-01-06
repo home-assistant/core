@@ -33,7 +33,13 @@ class TahomaCover(TahomaDevice, CoverDevice):
     def __init__(self, tahoma_device, controller):
         """Initialize the Tahoma device."""
         super().__init__(tahoma_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
+        eid = ENTITY_ID_FORMAT.format(self.unique_id)
+        # strip off the RTS or the IO ID from the entity ID
+        if eid.rfind('_rts') > 0:
+            eid = eid[:eid.rfind('_rts')]
+        elif eid.rfind('_io') > 0:
+            eid = eid[:eid.rfind('_io')]
+        self.entity_id = eid
 
     def update(self):
         """Update method."""
