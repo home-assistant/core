@@ -66,21 +66,22 @@ def async_start(hass, discovery_topic, hass_config):
             try:
                 payload = json.loads(payload)
             except ValueError:
-                _LOGGER.warning("Unable to parse JSON %s: %s", object_id, payload)
+                _LOGGER.warning("Unable to parse JSON %s: %s",
+                                object_id, payload)
                 return
 
             payload = dict(payload)
             platform = payload.get(CONF_PLATFORM, 'mqtt')
             if platform not in ALLOWED_PLATFORMS.get(component, []):
                 _LOGGER.warning("Platform %s (component %s) is not allowed",
-                            platform, component)
+                                 platform, component)
                 return
 
             payload[CONF_PLATFORM] = platform
             if CONF_STATE_TOPIC not in payload:
                 payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
-                    discovery_topic, component, '%s/' % node_id if node_id else '',
-                    object_id)
+                    discovery_topic, component,
+                    '%s/' % node_id if node_id else '', object_id)
 
             if discovery_hash in hass.data[ALREADY_DISCOVERED]:
                 _LOGGER.info("Component has already been discovered: %s %s",
@@ -98,7 +99,8 @@ def async_start(hass, discovery_topic, hass_config):
         else:
             # Remove component
             if discovery_hash in hass.data[ALREADY_DISCOVERED]:
-                _LOGGER.info("Removing component: %s %s" % (component, discovery_id))
+                _LOGGER.info("Removing component: %s %s",
+                             component, discovery_id)
 
                 if hass.data[ALREADY_DISCOVERED][discovery_hash] is not None:
                     hass.states.async_remove(
