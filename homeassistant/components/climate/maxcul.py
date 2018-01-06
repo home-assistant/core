@@ -9,7 +9,9 @@ import logging
 from homeassistant.components.climate import (
     ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE
 )
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.const import (
+    TEMP_CELSIUS, ATTR_TEMPERATURE
+)
 
 from homeassistant.components.maxcul import (
     DATA_MAXCUL, EVENT_THERMOSTAT_UPDATE
@@ -20,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDS = ['maxcul']
 
 DEFAULT_TEMPERATURE = 12
+
+ATTR_BATTERY_LOW = 'battery_low'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -91,6 +95,13 @@ class MaxCulClimate(ClimateDevice):
     def name(self):
         """Return the name of this device."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific attributes."""
+        return {
+            ATTR_BATTERY_LOW: self._battery_low
+        }
 
     @property
     def max_temp(self):
