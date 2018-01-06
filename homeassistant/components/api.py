@@ -294,10 +294,11 @@ class APIServicesView(HomeAssistantView):
     url = URL_API_SERVICES
     name = "api:services"
 
-    @ha.callback
+    @asyncio.coroutine
     def get(self, request):
         """Get registered services."""
-        return self.json(async_services_json(request.app['hass']))
+        services = yield from async_services_json(request.app['hass'])
+        return self.json(services)
 
 
 class APIDomainServicesView(HomeAssistantView):
@@ -356,10 +357,12 @@ class APITemplateView(HomeAssistantView):
                                      HTTP_BAD_REQUEST)
 
 
+@asyncio.coroutine
 def async_services_json(hass):
     """Generate services data to JSONify."""
+    descriptions = yield from async_get_all_descriptions(hass)
     return [{"domain": key, "services": value}
-            for key, value in async_get_all_descriptions(hass).items()]
+            for key, value in descriptions.items()]
 
 
 def async_events_json(hass):

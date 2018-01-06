@@ -437,7 +437,7 @@ class ActiveConnection:
     def handle_call_service(self, msg):
         """Handle call service command.
 
-        This is a coroutine.
+        Async friendly.
         """
         msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
 
@@ -467,8 +467,13 @@ class ActiveConnection:
         """
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        descriptions = async_get_all_descriptions(self.hass)
-        self.to_write.put_nowait(result_message(msg['id'], descriptions))
+        @asyncio.coroutine
+        def call_service_helper(msg):
+            """Call a service and fire complete message."""
+            descriptions = yield from async_get_all_descriptions(self.hass)
+            self.send_message_outside(result_message(msg['id'], descriptions))
+
+        self.hass.async_add_job(call_service_helper(msg))
 
     def handle_get_config(self, msg):
         """Handle get config command.

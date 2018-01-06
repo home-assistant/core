@@ -145,6 +145,7 @@ def get_description(hass, domain, service):
     }
 
 
+@asyncio.coroutine
 @bind_hass
 def async_get_all_descriptions(hass):
     """Return the descriptions for all service calls."""
@@ -154,7 +155,8 @@ def async_get_all_descriptions(hass):
     for domain in services:
         descriptions[domain] = {}
         for service in services[domain]:
-            description = get_description(hass, domain, service)
+            description = yield from hass.async_add_job(
+                get_description, hass, domain, service)
             if description:
                 descriptions[domain][service] = description
 
