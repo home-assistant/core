@@ -52,12 +52,15 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
         0 is closed, 100 is fully open.
         """
-        position = 100 - self.tahoma_device.active_states['core:ClosureState']
-        if position <= 5:
-            return 0
-        if position >= 95:
-            return 100
-        return position
+        try:
+            position = 100 - self.tahoma_device.active_states['core:ClosureState']
+            if position <= 5:
+                return 0
+            if position >= 95:
+                return 100
+            return position
+        except KeyError:
+            return None
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
