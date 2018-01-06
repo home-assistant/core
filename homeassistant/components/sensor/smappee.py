@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     smappee = hass.data[DATA_SMAPPEE]
 
     dev = []
-    for location_id, location_name in smappee.locations.items():
+    for location_id in smappee.locations.items():
         for sensor in SENSOR_TYPES:
             dev.append(SmappeeSensor(smappee, location_id, sensor))
 
@@ -88,19 +88,19 @@ class SmappeeSensor(Entity):
         """Get the latest data from Smappee and update the state."""
         if SENSOR_TYPES[self._sensor][0] == 'Always On':
             data = self._smappee.get_consumption(
-                    self._location_id, aggregation=1, delta=30)
+                self._location_id, aggregation=1, delta=30)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = consumption.get(self._sensor)
         elif SENSOR_TYPES[self._sensor][0] == 'Solar Today':
             data = self._smappee.get_consumption(
-                    self._location_id, aggregation=3, delta=1440)
+                self._location_id, aggregation=3, delta=1440)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(consumption.get('solar') / 1000, 2)
         elif SENSOR_TYPES[self._sensor][0] == 'Current Today':
             data = self._smappee.get_consumption(
-                    self._location_id, aggregation=3, delta=1440)
+                self._location_id, aggregation=3, delta=1440)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(consumption.get('consumption') / 1000, 2)

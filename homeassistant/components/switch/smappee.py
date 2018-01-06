@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     smappee = hass.data[DATA_SMAPPEE]
 
     dev = []
-    for location_id, location_name in smappee.locations.items():
+    for location_id in smappee.locations.items():
         for items in smappee.info[location_id].get('actuators'):
             if items.get('name') is not '':
                 dev.append(SmappeeSwitch(smappee,
