@@ -9,7 +9,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, template
 from homeassistant.components.http import HomeAssistantView
@@ -32,6 +31,7 @@ SOURCE = "Home Assistant Dialogflow"
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {}
 }, extra=vol.ALLOW_EXTRA)
+
 
 class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
@@ -113,7 +113,7 @@ def async_handle_message(hass, message):
     intent_response = yield from intent.async_handle(
         hass, DOMAIN, action,
         {key: {'value': value} for key, value
-            in parameters.items()})
+         in parameters.items()})
 
     if 'plain' in intent_response.speech:
         dialogflow_response.add_speech(
