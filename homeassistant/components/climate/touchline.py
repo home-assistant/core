@@ -1,15 +1,9 @@
 """
 Platform for Roth Touchline heat pump controller.
 
-Example configuration:
-climate:
-  - platform: touchline
-    host: http://192.168.1.1
-
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.touchline/
 """
-
 import logging
 
 import voluptuous as vol
@@ -19,14 +13,14 @@ from homeassistant.components.climate import (
 from homeassistant.const import CONF_HOST, TEMP_CELSIUS, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
-
 REQUIREMENTS = ['pytouchline==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string
+    vol.Required(CONF_HOST): cv.string,
 })
 
 
