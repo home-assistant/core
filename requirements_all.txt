@@ -491,7 +491,7 @@ motorparts==1.0.2
 mutagen==1.39
 
 # homeassistant.components.mychevy
-mychevy==0.1
+mychevy==0.1.1
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
