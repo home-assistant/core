@@ -762,7 +762,7 @@ pylutron==0.1.0
 pymailgunner==1.4
 
 # homeassistant.components.maxcul
-pymaxcul==0.1.5
+pymaxcul==0.1.7
 
 # homeassistant.components.mochad
 pymochad==0.1.1

@@ -15,7 +15,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pymaxcul==0.1.5']
+REQUIREMENTS = ['pymaxcul==0.1.7']
 
 DOMAIN = 'maxcul'
 
