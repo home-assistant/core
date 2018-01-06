@@ -121,18 +121,17 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 @bind_hass
 def get_description(hass, domain, service):
     """Return the description (i.e. user documentation) for a service call."""
-
     if domain == ha.DOMAIN:
         import homeassistant.components as components
-        file = components.__file__
+        comp_file = components.__file__
     else:
-        file = get_component(domain).__file__
+        comp_file = get_component(domain).__file__
 
-    descriptions = DESCRIPTION_CACHE.get(file)
+    descriptions = DESCRIPTION_CACHE.get(comp_file)
     if descriptions is None:
         descriptions = load_yaml_config_file(
-            path.join(path.dirname(file), 'services.yaml'))
-        DESCRIPTION_CACHE[file] = descriptions
+            path.join(path.dirname(comp_file), 'services.yaml'))
+        DESCRIPTION_CACHE[comp_file] = descriptions
 
     if domain == ha.DOMAIN:
         description = descriptions[domain].get(service, {})
@@ -149,7 +148,6 @@ def get_description(hass, domain, service):
 @bind_hass
 def async_get_all_descriptions(hass):
     """Return the descriptions for all service calls."""
-
     services = hass.services.async_services()
     descriptions = {}
     for domain in services:

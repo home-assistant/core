@@ -816,7 +816,8 @@ class ServiceRegistry(object):
 
         This method must be run in the event loop.
         """
-        return {domain: self._services[domain].copy() for domain in self._services}
+        return {domain: self._services[domain].copy()
+                for domain in self._services}
 
     def has_service(self, domain, service):
         """Test if specified service exists.
