@@ -117,6 +117,7 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
         return service_ent_id
 
+
 @bind_hass
 def get_description(hass, domain, service):
     """Return the description (i.e. user documentation) for a service call."""
@@ -142,6 +143,7 @@ def get_description(hass, domain, service):
         'description': description.get('description', ''),
         'fields': description.get('fields', {})
     }
+
 
 @bind_hass
 def async_get_all_descriptions(hass):

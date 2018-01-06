@@ -640,10 +640,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         """Test services."""
-        expected = {
-            'test_domain': {'test_service': {'description': '', 'fields': {}}}
-        }
-        self.assertEqual(expected, self.services.services)
+        assert len(self.services.services) == 1
 
     def test_call_with_blocking_done_in_time(self):
         """Test call with blocking."""
