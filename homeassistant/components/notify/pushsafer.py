@@ -52,10 +52,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_KEY): cv.string,
 })
 
+
 def get_service(hass, config, discovery_info=None):
     """Get the Pushsafer.com notification service."""
     return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
                                         hass.config.is_allowed_path)
+
 
 class PushsaferNotificationService(BaseNotificationService):
     """Implementation of the notification service for Pushsafer.com."""
@@ -66,11 +68,7 @@ class PushsaferNotificationService(BaseNotificationService):
         self.is_allowed_path = is_allowed_path
 
     def send_message(self, message='', **kwargs):
-        """Send a message to specified target.
-        If no target specified (group or device),
-        a push will be sent to all devices
-        parameter d for devices is ignored here
-        """
+        """Send a message to specified target."""
         if kwargs.get(ATTR_TARGET) is None:
             targets = ["a"]
             _LOGGER.debug("No target specified. Sending push to all")
@@ -136,7 +134,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 _LOGGER.warning("Base64 encode no image passed")
 
     def loadfromfile(self, url=None, local_path=None, username=None,
-            password=None, auth=None):
+                        password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:
