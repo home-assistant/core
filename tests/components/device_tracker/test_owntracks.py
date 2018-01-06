@@ -35,6 +35,7 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = owntracks.CONF_WAYPOINT_IMPORT
 CONF_WAYPOINT_WHITELIST = owntracks.CONF_WAYPOINT_WHITELIST
 CONF_SECRET = owntracks.CONF_SECRET
+CONF_MQTT_TOPIC = owntracks.CONF_MQTT_TOPIC
 
 TEST_ZONE_LAT = 45.0
 TEST_ZONE_LON = 90.0
@@ -1111,7 +1112,8 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         test_config = {
             CONF_PLATFORM: 'owntracks',
             CONF_MAX_GPS_ACCURACY: 200,
-            CONF_WAYPOINT_IMPORT: True
+            CONF_WAYPOINT_IMPORT: True,
+            CONF_MQTT_TOPIC: 'owntracks/#',
         }
         run_coroutine_threadsafe(owntracks.async_setup_scanner(
             self.hass, test_config, mock_see), self.hass.loop).result()

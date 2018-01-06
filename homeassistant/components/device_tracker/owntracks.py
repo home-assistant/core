@@ -38,14 +38,14 @@ CONF_EVENTS_ONLY = 'events_only'
 
 DEPENDENCIES = ['mqtt']
 
-OWNTRACKS_TOPIC = 'owntracks/#'
+DEFAULT_OWNTRACKS_TOPIC = 'owntracks/#'
 REGION_MAPPING = {}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
     vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
     vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
-    vol.Optional(CONF_MQTT_TOPIC, default=OWNTRACKS_TOPIC):
+    vol.Optional(CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC):
         mqtt.valid_subscribe_topic,
     vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
         cv.ensure_list, [cv.string]),
@@ -90,7 +90,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         yield from async_handle_message(hass, context, message)
 
     yield from mqtt.async_subscribe(
-        hass, OWNTRACKS_TOPIC, async_handle_mqtt_message, 1)
+        hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
     return True
 
@@ -195,17 +195,18 @@ def context_from_config(async_see, config):
     secret = config.get(CONF_SECRET)
     region_mapping = config.get(CONF_REGION_MAPPING)
     events_only = config.get(CONF_EVENTS_ONLY)
+    mqtt_topic = config.get(CONF_MQTT_TOPIC)
 
     return OwnTracksContext(async_see, secret, max_gps_accuracy,
                             waypoint_import, waypoint_whitelist,
-                            region_mapping, events_only)
+                            region_mapping, events_only, mqtt_topic)
 
 
 class OwnTracksContext:
     """Hold the current OwnTracks context."""
 
     def __init__(self, async_see, secret, max_gps_accuracy, import_waypoints,
-                 waypoint_whitelist, region_mapping, events_only):
+                 waypoint_whitelist, region_mapping, events_only, mqtt_topic):
         """Initialize an OwnTracks context."""
         self.async_see = async_see
         self.secret = secret
@@ -216,6 +217,7 @@ class OwnTracksContext:
         self.waypoint_whitelist = waypoint_whitelist
         self.region_mapping = region_mapping
         self.events_only = events_only
+        self.mqtt_topic = mqtt_topic
 
     @callback
     def async_valid_accuracy(self, message):
