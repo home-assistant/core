@@ -236,3 +236,80 @@ class TestSensorMQTT(unittest.TestCase):
 
         self.assertEqual('100',
                          state.attributes.get('val'))
+
+
+    @patch('homeassistant.components.sensor.mqtt._LOGGER')
+    def test_update_with_json_attrs_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '[ "list", "of", "things"]')
+        self.hass.block_till_done()
+
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+
+    def test_update_with_json_attrs_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', 'This is not JSON')
+        self.hass.block_till_done()
+
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+        self.assertTrue(mock_logger.debug.called)
+
+    def test_update_with_json_attrs_and_template(self):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '{ "key": "json_state_updated_value" }'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement,
+                                      self.value_template, ['key'],
+                                      self.force_update)
+        self.sensor.update()
+        self.assertEqual('json_state_updated_value', self.sensor.state)
+        self.assertEqual('json_state_updated_value',
+                         self.sensor.device_state_attributes['key'],
+                         self.force_update)
+
+
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'value_template': '{{ value_json.val }}'
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        self.assertEqual('100',
+                         state.attributes.get('val'))
+        self.assertEqual('100', state.state)
