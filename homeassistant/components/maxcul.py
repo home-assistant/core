@@ -21,12 +21,14 @@ DOMAIN = 'maxcul'
 
 CONF_DEVICE_PATH = 'device_path'
 CONF_DEVICE_BAUD_RATE = 'device_baud_rate'
+CONF_DEVICE_ID = 'device_id'
 
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE_PATH): cv.string,
-        vol.Required(CONF_DEVICE_BAUD_RATE): cv.positive_int
+        vol.Required(CONF_DEVICE_PATH): cv.isdevice,
+        vol.Required(CONF_DEVICE_BAUD_RATE): cv.positive_int,
+        vol.Optional(CONF_DEVICE_ID): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -86,6 +88,7 @@ def setup(hass, config):
     conf = config[DOMAIN]
     path = conf[CONF_DEVICE_PATH]
     baud = conf[CONF_DEVICE_BAUD_RATE]
+    device_id = conf.get(CONF_DEVICE_ID)
 
     paired_devices_path = hass.config.path(YAML_DEVICES)
     hass.data[DATA_DEVICES] = _read_paired_devices(paired_devices_path)
@@ -107,12 +110,15 @@ def setup(hass, config):
                 paired_devices_path,
                 hass.data[DATA_DEVICES])
 
-    maxconn = hass.data[DATA_MAXCUL] = maxcul.MaxConnection(
+    params = dict(
         device_path=path,
         baudrate=baud,
         paired_devices=list(hass.data[DATA_DEVICES]),
         callback=callback
     )
+    if device_id:
+        params['sender_id'] = device_id
+    maxconn = hass.data[DATA_MAXCUL] = maxcul.MaxConnection(**params)
     maxconn.start()
 
     for device_id in hass.data[DATA_DEVICES]:
