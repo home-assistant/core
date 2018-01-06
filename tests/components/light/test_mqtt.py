@@ -513,7 +513,7 @@ class TestLightMQTT(unittest.TestCase):
 
         self.mock_publish().async_publish.assert_has_calls([
             mock.call('test_light_rgb/set', 'on', 2, False),
-            mock.call('test_light_rgb/rgb/set', '255,255,255', 2, False),
+            mock.call('test_light_rgb/rgb/set', '50,50,50', 2, False),
             mock.call('test_light_rgb/brightness/set', 50, 2, False),
             mock.call('test_light_rgb/white_value/set', 80, 2, False),
             mock.call('test_light_rgb/xy/set', '0.14,0.133', 2, False),
@@ -790,7 +790,7 @@ class TestLightMQTT(unittest.TestCase):
         light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75])
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light/rgb', '255,255,255', 0, False),
+        self.assertEqual(('test_light/rgb', '50,50,50', 0, False),
                          self.mock_publish.mock_calls[-4][1])
         self.assertEqual(('test_light/bright', 50, 0, False),
                          self.mock_publish.mock_calls[-2][1])

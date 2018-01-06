@@ -256,7 +256,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
 
         # check the payload
         payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('on,50,,,255-255-255', payload)
+        self.assertEqual('on,50,,,50-50-50', payload)
 
         # turn on the light with color temp and white val
         light.turn_on(self.hass, 'light.test', color_temp=200, white_value=139)

@@ -414,7 +414,11 @@ class MqttLight(Light):
         if ATTR_HS_COLOR in kwargs and \
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
-            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            hs_color = kwargs[ATTR_HS_COLOR]
+            brightness = kwargs.get(
+                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
+            rgb = color_util.color_hsv_to_RGB(
+                hs_color[0], hs_color[1], brightness)
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
             if tpl:
                 rgb_color_str = tpl.async_render({
