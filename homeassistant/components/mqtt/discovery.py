@@ -74,7 +74,7 @@ def async_start(hass, discovery_topic, hass_config):
             platform = payload.get(CONF_PLATFORM, 'mqtt')
             if platform not in ALLOWED_PLATFORMS.get(component, []):
                 _LOGGER.warning("Platform %s (component %s) is not allowed",
-                                 platform, component)
+                                platform, component)
                 return
 
             payload[CONF_PLATFORM] = platform
@@ -103,8 +103,8 @@ def async_start(hass, discovery_topic, hass_config):
                              component, discovery_id)
 
                 if hass.data[ALREADY_DISCOVERED][discovery_hash] is not None:
-                    hass.states.async_remove(
-                        hass.data[ALREADY_DISCOVERED][discovery_hash].entity_id)
+                    entity = hass.data[ALREADY_DISCOVERED][discovery_hash]
+                    hass.states.async_remove(entity.entity_id)
 
                 del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
