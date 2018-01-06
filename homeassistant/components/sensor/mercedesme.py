@@ -24,11 +24,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     for car in controller.cars:
-        add_devices([Sensor('fuelLevelPercent', car, controller)])
-        add_devices([Sensor('fuelRangeKm', car, controller)])
-        add_devices([Sensor('serviceIntervalDays', car, controller)])
-        add_devices([Sensor('odometerKm', car, controller)])
-        add_devices([Sensor('latestTrip', car, controller)])
+        add_devices([Sensor('fuelLevelPercent', car, controller, "%")])
+        add_devices([Sensor('fuelRangeKm', car, controller, "Km")])
+        add_devices([Sensor('serviceIntervalDays', car, controller, "days")])
+        add_devices([Sensor('odometerKm', car, controller, "Km")])
+        add_devices([Sensor('latestTrip', car, controller, None)])
 
     return True
 
@@ -36,12 +36,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Sensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, SensorName, Car, Controller):
+    def __init__(self, SensorName, Car, Controller, Unit):
         """Initialize the sensor."""
         self._state = None
         self.__name = SensorName
         self.__car = Car
         self.controller = Controller
+        self.__unit = Unit
         self.update()
 
     @property
@@ -57,7 +58,7 @@ class Sensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return None
+        return self.__unit
 
     @property
     def device_state_attributes(self):
