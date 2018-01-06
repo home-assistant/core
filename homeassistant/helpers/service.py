@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component, bind_hass
-from homeassistant.config import load_yaml_config_file
+from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -23,7 +23,7 @@ CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 
 _LOGGER = logging.getLogger(__name__)
 
-DESCRIPTION_CACHE = {}
+SERVICE_DESCRIPTION_CACHE = 'service_description_cache'
 
 
 @bind_hass
@@ -118,44 +118,55 @@ def extract_entity_ids(hass, service_call, expand_group=True):
         return service_ent_id
 
 
-@bind_hass
-def get_description(hass, domain, service):
-    """Return the description (i.e. user documentation) for a service call."""
-    if domain == ha.DOMAIN:
-        import homeassistant.components as components
-        comp_file = components.__file__
-    else:
-        comp_file = get_component(domain).__file__
-
-    descriptions = DESCRIPTION_CACHE.get(comp_file)
-    if descriptions is None:
-        descriptions = load_yaml_config_file(
-            path.join(path.dirname(comp_file), 'services.yaml'))
-        DESCRIPTION_CACHE[comp_file] = descriptions
-
-    if domain == ha.DOMAIN:
-        description = descriptions[domain].get(service, {})
-    else:
-        description = descriptions.get(service, {})
-
-    return {
-        'description': description.get('description', ''),
-        'fields': description.get('fields', {})
-    }
-
-
 @asyncio.coroutine
 @bind_hass
 def async_get_all_descriptions(hass):
-    """Return the descriptions for all service calls."""
+    """Return descriptions (i.e. user documentation) for all service calls."""
+    FILE_CACHE = {}
+
+    if not SERVICE_DESCRIPTION_CACHE in hass.data:
+        hass.data[SERVICE_DESCRIPTION_CACHE] = {}
+
+    def get_description(hass, domain, service):
+        """Return the description for a single service call."""
+        cache_key = "{}.{}".format(domain, service)
+        description = hass.data[SERVICE_DESCRIPTION_CACHE].get(cache_key)
+
+        if description is None:
+            import homeassistant.components as components
+            catch_all_path = path.dirname(components.__file__)
+
+            if domain == ha.DOMAIN:
+                component_path = catch_all_path
+            else:
+                component_path = path.dirname(get_component(domain).__file__)
+            yaml_file = path.join(component_path, 'services.yaml')
+
+            if yaml_file not in FILE_CACHE:
+                try:
+                    FILE_CACHE[yaml_file] = load_yaml(yaml_file)
+                except FileNotFoundError:
+                    FILE_CACHE[yaml_file] = {}
+
+            if component_path == catch_all_path:
+                domain_services = FILE_CACHE[yaml_file].get(domain, {})
+            else:
+                domain_services = FILE_CACHE[yaml_file]
+            description = domain_services.get(service, {})
+
+            hass.data[SERVICE_DESCRIPTION_CACHE][cache_key] = description
+
+        return {
+            'description': description.get('description', ''),
+            'fields': description.get('fields', {})
+        }
+
     services = hass.services.async_services()
     descriptions = {}
     for domain in services:
         descriptions[domain] = {}
         for service in services[domain]:
-            description = yield from hass.async_add_job(
+            descriptions[domain][service] = yield from hass.async_add_job(
                 get_description, hass, domain, service)
-            if description:
-                descriptions[domain][service] = description
 
     return descriptions
