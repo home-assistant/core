@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['mercedesme']
 
-DOMAIN = 'mercedesme'
+DATA_MME = 'mercedesme'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    controller = hass.data[DOMAIN]['controller']
+    controller = hass.data[DATA_MME]['controller']
 
     if not controller.cars:
         return False
@@ -28,10 +28,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([Sensor('fuelRangeKm', car, controller)])
         add_devices([Sensor('serviceIntervalDays', car, controller)])
         add_devices([Sensor('odometerKm', car, controller)])
-        add_devices([Sensor('doorsClosed', car, controller)])
-        add_devices([Sensor('windowsClosed', car, controller)])
-        add_devices([Sensor('locked', car, controller)])
-        add_devices([Sensor('tireWarningLight', car, controller)])
         add_devices([Sensor('latestTrip', car, controller)])
 
     return True
@@ -66,40 +62,21 @@ class Sensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.__name == "windowsClosed":
+        if self.__name == "latestTrip":
             return {
-                "windowStatusFrontLeft": self.__car["windowStatusFrontLeft"],
-                "windowStatusFrontRight": self.__car["windowStatusFrontRight"],
-                "windowStatusRearLeft": self.__car["windowStatusRearLeft"],
-                "windowStatusRearRight": self.__car["windowStatusRearRight"],
-                "lastUpdate": datetime.datetime.fromtimestamp(
-                    self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-                "car": self.__car["license"]
-            }
-        elif self.__name == "tireWarningLight":
-            return {
-                "frontRightTirePressureKpa":
-                    self.__car["frontRightTirePressureKpa"],
-                "frontLeftTirePressureKpa":
-                    self.__car["frontLeftTirePressureKpa"],
-                "rearRightTirePressureKpa":
-                    self.__car["rearRightTirePressureKpa"],
-                "rearLeftTirePressureKpa":
-                    self.__car["rearLeftTirePressureKpa"],
-                "lastUpdate": datetime.datetime.fromtimestamp(
-                    self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-                "car": self.__car["license"]
-            }
-        elif self.__name == "latestTrip":
-            return {
-                "durationSeconds": self.__car["latestTrip"]["durationSeconds"],
-                "distanceTraveledKm": self.__car["latestTrip"]["distanceTraveledKm"],
+                "durationSeconds":
+                    self.__car["latestTrip"]["durationSeconds"],
+                "distanceTraveledKm":
+                    self.__car["latestTrip"]["distanceTraveledKm"],
                 "startedAt": datetime.datetime.fromtimestamp(
-                    self.__car["latestTrip"]["startedAt"]).strftime('%Y-%m-%d %H:%M:%S'),
-                "averageSpeedKmPerHr": self.__car["latestTrip"]["averageSpeedKmPerHr"],
+                    self.__car["latestTrip"]["startedAt"]
+                    ).strftime('%Y-%m-%d %H:%M:%S'),
+                "averageSpeedKmPerHr":
+                    self.__car["latestTrip"]["averageSpeedKmPerHr"],
                 "finished": self.__car["latestTrip"]["finished"],
                 "lastUpdate": datetime.datetime.fromtimestamp(
-                    self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
+                    self.__car["lastUpdate"]
+                    ).strftime('%Y-%m-%d %H:%M:%S'),
                 "car": self.__car["license"]
             }
 
@@ -118,10 +95,5 @@ class Sensor(Entity):
 
         if self.__name == "latestTrip":
             self._state = self.__car["latestTrip"]["id"]
-        elif self.__name == "tireWarningLight":
-            if self.__car[self.__name] == "INACTIVE":
-                self._state = "Off"
-            else:
-                self._state = "On"
         else:
             self._state = self.__car[self.__name]

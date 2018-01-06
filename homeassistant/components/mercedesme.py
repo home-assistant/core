@@ -17,6 +17,7 @@ REQUIREMENTS = ['mercedesmejsonpy==0.0.9', 'lxml==4.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_MME = 'mercedesme'
 DOMAIN = 'mercedesme'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -33,14 +34,15 @@ def setup(hass, config):
     """Set up MercedesMe System."""
     from mercedesmejsonpy import controller as mbmeAPI
 
-    hass.data[DOMAIN] = {
+    hass.data[DATA_MME] = {
         'controller': mbmeAPI.Controller(
-            config[DOMAIN][CONF_USERNAME],
-            config[DOMAIN][CONF_PASSWORD],
-            config[DOMAIN][CONF_SCAN_INTERVAL])
+            config[DATA_MME][CONF_USERNAME],
+            config[DATA_MME][CONF_PASSWORD],
+            config[DATA_MME][CONF_SCAN_INTERVAL])
     }
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'device_tracker', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'sensor', DATA_MME, {}, config)
+    discovery.load_platform(hass, 'device_tracker', DATA_MME, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DATA_MME, {}, config)
 
     return True

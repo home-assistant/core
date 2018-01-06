@@ -4,9 +4,9 @@ Support for Mercedes cars with Mercedes ME.
 import logging
 from homeassistant.helpers.event import track_utc_time_change
 
-DOMAIN = 'mercedesme'
-
 _LOGGER = logging.getLogger(__name__)
+
+DATA_MME = 'mercedesme'
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
@@ -14,7 +14,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     if discovery_info is None:
         return False
 
-    controller = hass.data[DOMAIN]['controller']
+    controller = hass.data[DATA_MME]['controller']
 
     if not controller.cars:
         return False
