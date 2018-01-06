@@ -1,6 +1,9 @@
 """The tests for the Vultr sensor platform."""
-import pytest
+import json
 import unittest
+from unittest.mock import patch
+
+import pytest
 import requests_mock
 import voluptuous as vol
 
@@ -59,11 +62,12 @@ class TestVultrSensorSetup(unittest.TestCase):
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
 
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
-
-        base_vultr.setup(self.hass, VALID_CONFIG)
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(
+                load_fixture('vultr_server_list.json'))):
+            # Setup hub
+            base_vultr.setup(self.hass, VALID_CONFIG)
 
         for config in self.configs:
             setup = vultr.setup_platform(self.hass,
@@ -146,11 +150,12 @@ class TestVultrSensorSetup(unittest.TestCase):
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
 
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
-
-        base_vultr.setup(self.hass, VALID_CONFIG)
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(
+                load_fixture('vultr_server_list.json'))):
+            # Setup hub
+            base_vultr.setup(self.hass, VALID_CONFIG)
 
         bad_conf = {
             CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
