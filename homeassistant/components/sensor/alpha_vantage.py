@@ -91,9 +91,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(AlphaVantageSensor(timeseries, symbol))
 
     forex = ForeignExchange(key=api_key)
-    for fx in config.get(CONF_FOREIGN_EXCHANGE):
-        from_cur = fx.get(CONF_FROM)
-        to_cur = fx.get(CONF_TO)
+    for conversion in config.get(CONF_FOREIGN_EXCHANGE):
+        from_cur = conversion.get(CONF_FROM)
+        to_cur = conversion.get(CONF_TO)
         try:
             forex.get_currency_exchange_rate(from_currency=from_cur,
                                              to_currency=to_cur)
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 "API Key is not valid or currencies '%s'/'%s' not known",
                 from_cur, to_cur)
             _LOGGER.debug(str(error))
-        dev.append(AlphaVantageForeingExchange(forex, fx))
+        dev.append(AlphaVantageForeingExchange(forex, conversion))
 
     add_devices(dev, True)
 
