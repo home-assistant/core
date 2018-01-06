@@ -53,6 +53,9 @@ omit =
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
 
+    homeassistant/components/deconz/*
+    homeassistant/components/*/deconz.py
+
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
@@ -263,6 +266,9 @@ omit =
     homeassistant/components/zoneminder.py
     homeassistant/components/*/zoneminder.py
 
+    homeassistant/components/daikin.py
+    homeassistant/components/*/daikin.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
@@ -308,6 +314,7 @@ omit =
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/climate/sensibo.py
+    homeassistant/components/climate/touchline.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py

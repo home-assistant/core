@@ -1,8 +1,11 @@
 """The tests for the Vultr component."""
+from copy import deepcopy
+import json
 import unittest
+from unittest.mock import patch
+
 import requests_mock
 
-from copy import deepcopy
 from homeassistant import setup
 import homeassistant.components.vultr as vultr
 
@@ -31,14 +34,11 @@ class TestVultr(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock):
         """Test successful setup."""
-        mock.get(
-            'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_account_info.json'))
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
-
-        response = vultr.setup(self.hass, self.config)
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(
+                load_fixture('vultr_server_list.json'))):
+            response = vultr.setup(self.hass, self.config)
         self.assertTrue(response)
 
     def test_setup_no_api_key(self):

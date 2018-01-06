@@ -7,7 +7,7 @@ jinja2>=2.9.6
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.3.7
-yarl==0.16.0
+yarl==0.17.0
 async_timeout==2.0.0
 chardet==3.0.4
 astral==1.4
@@ -81,10 +81,10 @@ aiolifx_effects==0.1.2
 aiopvapi==1.5.4
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==0.12.3
+alarmdecoder==1.13.2
 
 # homeassistant.components.sensor.alpha_vantage
-alpha_vantage==1.6.0
+alpha_vantage==1.8.0
 
 # homeassistant.components.amcrest
 amcrest==1.2.1
@@ -346,7 +346,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171223.0
+home-assistant-frontend==20180102.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -565,7 +565,7 @@ pizzapi==0.0.3
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==3.0.3
+plexapi==3.0.5
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
@@ -581,7 +581,7 @@ proliphix==0.4.1
 prometheus_client==0.0.21
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.4.2
+psutil==5.4.3
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
@@ -650,7 +650,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.2
+pychromecast==1.0.3
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -663,6 +663,13 @@ pycsspeechtts==1.0.2
 
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
+
+# homeassistant.components.daikin
+# homeassistant.components.climate.daikin
+pydaikin==0.4
+
+# homeassistant.components.deconz
+pydeconz==23
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -710,7 +717,7 @@ pyhiveapi==0.2.10
 pyhomematic==0.1.36
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==2.0.2
+pyhydroquebec==2.1.0
 
 # homeassistant.components.alarm_control_panel.ialarm
 pyialarm==0.2
@@ -931,13 +938,16 @@ python_opendata_transport==0.0.3
 python_openzwave==0.4.0.35
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.25
+pythonegardia==1.0.26
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
 
 # homeassistant.components.device_tracker.tile
 pytile==1.1.0
+
+# homeassistant.components.climate.touchline
+pytouchline==0.6
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -964,7 +974,7 @@ pyvlx==0.1.3
 pywebpush==1.3.0
 
 # homeassistant.components.wemo
-pywemo==0.4.20
+pywemo==0.4.25
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4

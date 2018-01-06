@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171223.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180102.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -579,12 +579,17 @@ def _is_latest(js_option, request):
     if js_option != 'auto':
         return js_option == 'latest'
 
-    from user_agents import parse
-    useragent = parse(request.headers.get('User-Agent'))
+    useragent = request.headers.get('User-Agent')
+    if not useragent:
+        return False
 
-    # on iOS every browser is a Safari which we support from version 10.
+    from user_agents import parse
+    useragent = parse(useragent)
+
+    # on iOS every browser is a Safari which we support from version 11.
     if useragent.os.family == 'iOS':
-        return useragent.os.version[0] >= 10
+        # Was >= 10, temp setting it to 12 to work around issue #11387
+        return useragent.os.version[0] >= 12
 
     family_min_version = {
         'Chrome': 50,   # Probably can reduce this
