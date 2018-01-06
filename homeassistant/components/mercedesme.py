@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['mercedesmejsonpy==0.0.9', 'lxml==4.1.1']
+REQUIREMENTS = ['mercedesmejsonpy==0.0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
