@@ -58,6 +58,7 @@ def get_service(hass, config, discovery_info=None):
     return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
                                         hass.config.is_allowed_path)
 
+
 class PushsaferNotificationService(BaseNotificationService):
     """Implementation of the notification service for Pushsafer.com."""
 
@@ -129,7 +130,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 base64_image = base64.b64encode(filebyte).decode('utf8')
                 return "data:"+mimetype+";base64,"+base64_image
             else:
-               _LOGGER.warning("Base64 encode no image passed")
+                _LOGGER.warning("Base64 encode no image passed")
 
     def loadfromfile(self, url=None, local_path=None, username=None,
                      password=None, auth=None):
