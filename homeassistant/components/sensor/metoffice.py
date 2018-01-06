@@ -21,6 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['datapoint==0.4.3']
 
+ATTR_LAST_UPDATE = 'last_update'
+ATTR_SENSOR_ID = 'sensor_id'
+ATTR_SITE_ID = 'site_id'
+ATTR_SITE_NAME = 'site_name'
+
 CONF_ATTRIBUTION = "Data provided by the Met Office"
 
 CONDITION_CLASSES = {
@@ -84,6 +89,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Met Office sensor platform."""
     import datapoint as dp
+
     api_key = config.get(CONF_API_KEY)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -137,9 +143,9 @@ class MetOfficeCurrentSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         if (self._condition == 'visibility_distance' and
-                'visibility' in self.data.data.__dict__.keys()):
+                hasattr(self.data.data, 'visibility')):
             return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
-        if self._condition in self.data.data.__dict__:
+        if hasattr(self.data.data, self._condition):
             variable = getattr(self.data.data, self._condition)
             if self._condition == 'weather':
                 return [k for k, v in CONDITION_CLASSES.items() if
@@ -156,11 +162,11 @@ class MetOfficeCurrentSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr['Sensor Id'] = self._condition
-        attr['Site Id'] = self.site.id
-        attr['Site Name'] = self.site.name
-        attr['Last Update'] = self.data.data.date
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attr[ATTR_LAST_UPDATE] = self.data.data.date
+        attr[ATTR_SENSOR_ID] = self._condition
+        attr[ATTR_SITE_ID] = self.site.id
+        attr[ATTR_SITE_NAME] = self.site.name
         return attr
 
     def update(self):
