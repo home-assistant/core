@@ -23,9 +23,6 @@ DEPENDS = ['maxcul']
 
 DEFAULT_TEMPERATURE = 12
 
-ATTR_BATTERY_LOW = 'battery_low'
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add a new MAX! thermostat."""
     from maxcul import ATTR_DEVICE_ID
@@ -57,6 +54,7 @@ class MaxCulClimate(ClimateDevice):
         self._battery_low = None
 
         def update(event):
+            """Callback handler for thermostat update events."""
             thermostat_id = event.data.get(ATTR_DEVICE_ID)
             if thermostat_id != self._thermostat_id:
                 return
@@ -99,6 +97,7 @@ class MaxCulClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return device specific attributes."""
+        from maxcul import ATTR_BATTERY_LOW
         return {
             ATTR_BATTERY_LOW: self._battery_low
         }
@@ -148,22 +147,14 @@ class MaxCulClimate(ClimateDevice):
         if target_temperature is None:
             return False
 
-        try:
-            self._maxcul_handle.set_temperature(
-                self._thermostat_id,
-                target_temperature,
-                self._mode or MODE_MANUAL)
-        except Exception as err:
-            _LOGGER.error("Failed to set target temperature: %s", err)
-            return False
+        return self._maxcul_handle.set_temperature(
+            self._thermostat_id,
+            target_temperature,
+            self._mode or MODE_MANUAL)
 
     def set_operation_mode(self, operation_mode):
         """Set the operation mode of this device."""
-        try:
-            self._maxcul_handle.set_temperature(
-                self._thermostat_id,
-                self._target_temperature or DEFAULT_TEMPERATURE,
-                operation_mode)
-        except Exception as err:
-            _LOGGER.error("Failed to set operation mode: %s", err)
-            return False
+        return self._maxcul_handle.set_temperature(
+            self._thermostat_id,
+            self._target_temperature or DEFAULT_TEMPERATURE,
+            operation_mode)

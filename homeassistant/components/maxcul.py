@@ -15,7 +15,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pymaxcul==0.1.1']
+REQUIREMENTS = ['pymaxcul==0.1.5']
 
 DOMAIN = 'maxcul'
 
@@ -61,16 +61,16 @@ def _read_paired_devices(path):
         return []
     paired_devices = load_yaml(path)
     if not isinstance(paired_devices, list):
-        _LOGGER.warn(
+        _LOGGER.warning(
             "Paired devices file %s did not contain a list", path)
         return []
     return paired_devices
 
 
 def _write_paired_devices(path, devices):
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT)
-    os.write(fd, dump_yaml(devices).encode())
-    os.close(fd)
+    file_descriptor = os.open(path, os.O_WRONLY | os.O_CREAT)
+    os.write(file_descriptor, dump_yaml(devices).encode())
+    os.close(file_descriptor)
 
 
 def setup(hass, config):
@@ -91,6 +91,7 @@ def setup(hass, config):
     hass.data[DATA_DEVICES] = _read_paired_devices(paired_devices_path)
 
     def callback(event, payload):
+        """Callback for new MAX! events."""
         if event == maxcul.EVENT_THERMOSTAT_UPDATE:
             hass.bus.fire(EVENT_THERMOSTAT_UPDATE, payload)
 
