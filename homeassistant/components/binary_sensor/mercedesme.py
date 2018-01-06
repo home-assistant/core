@@ -5,7 +5,7 @@ import logging
 import datetime
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT)
+    BinarySensorDevice)
 
 DEPENDENCIES = ['mercedesme']
 
@@ -25,10 +25,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     for car in controller.cars:
-        add_devices([BinarySensor('doorsClosed', car, controller)])
-        add_devices([BinarySensor('windowsClosed', car, controller)])
-        add_devices([BinarySensor('locked', car, controller)])
-        add_devices([BinarySensor('tireWarningLight', car, controller)])
+        add_devices([BinarySensor('doorsClosed', car, controller)], True)
+        add_devices([BinarySensor('windowsClosed', car, controller)], True)
+        add_devices([BinarySensor('locked', car, controller)], True)
+        add_devices([BinarySensor('tireWarningLight', car, controller)], True)
 
     return True
 
@@ -43,7 +43,6 @@ class BinarySensor(BinarySensorDevice):
         self._sensor_type = None
         self.__car = Car
         self.controller = Controller
-        self.update()
 
     @property
     def device_class(self):
