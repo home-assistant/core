@@ -396,8 +396,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
 
     def test_modify_group(self):
-        """Test modifying a group"""
-
+        """Test modifying a group."""
         group_conf = OrderedDict()
         group_conf['modify_group'] = {
             'name': 'friendly_name',
@@ -418,6 +417,7 @@ class TestComponentsGroup(unittest.TestCase):
         assert group_state.attributes.get(ATTR_ICON) == 'mdi:play'
         assert group_state.attributes.get(ATTR_FRIENDLY_NAME) == \
             'friendly_name'
+
 
 @asyncio.coroutine
 def test_service_group_services(hass):
