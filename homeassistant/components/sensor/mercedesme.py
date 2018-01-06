@@ -12,6 +12,7 @@ DOMAIN = 'mercedesme'
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     if discovery_info is None:
@@ -34,6 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([Sensor('latestTrip', car, controller)])
 
     return True
+
 
 class Sensor(Entity):
     """Representation of a Sensor."""
@@ -72,7 +74,7 @@ class Sensor(Entity):
                 "windowStatusRearRight": self.__car["windowStatusRearRight"],
                 "lastUpdate": datetime.datetime.fromtimestamp(
                     self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-                "car" : self.__car["license"]
+                "car": self.__car["license"]
             }
         elif self.__name == "tireWarningLight":
             return {
@@ -82,7 +84,7 @@ class Sensor(Entity):
                 "rearLeftTirePressureKpa": self.__car["rearLeftTirePressureKpa"],
                 "lastUpdate": datetime.datetime.fromtimestamp(
                     self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-                "car" : self.__car["license"]
+                "car": self.__car["license"]
             }
         elif self.__name == "latestTrip":
             return {
@@ -94,13 +96,13 @@ class Sensor(Entity):
                 "finished": self.__car["latestTrip"]["finished"],
                 "lastUpdate": datetime.datetime.fromtimestamp(
                     self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-                "car" : self.__car["license"]
+                "car": self.__car["license"]
             }
 
         return {
             "lastUpdate": datetime.datetime.fromtimestamp(
                 self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-            "car" : self.__car["license"]
+            "car": self.__car["license"]
         }
 
     def update(self):

@@ -8,6 +8,7 @@ DOMAIN = 'mercedesme'
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Mercedes ME tracker."""
     if discovery_info is None:
