@@ -9,8 +9,6 @@ on the platform different backends are used. On most linux systems bluepy
 should cause the least problems.
 """
 import logging
-import sys
-from enum import Enum
 
 import voluptuous as vol
 
