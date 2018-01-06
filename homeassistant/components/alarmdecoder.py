@@ -69,7 +69,8 @@ DEVICE_USB_SCHEMA = vol.Schema({
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_NAME): cv.string,
-    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): vol.Any(DEVICE_CLASSES_SCHEMA),
+    vol.Optional(CONF_ZONE_TYPE,
+                 default=DEFAULT_ZONE_TYPE): vol.Any(DEVICE_CLASSES_SCHEMA),
     vol.Optional(CONF_ZONE_RFID): cv.string})
 
 CONFIG_SCHEMA = vol.Schema({
