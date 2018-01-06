@@ -86,7 +86,7 @@ class MqttSensor(MqttAvailability, Entity):
         self._template = value_template
         self._expire_after = expire_after
         self._expiration_trigger = None
-        self._json_attributes = json_attributes
+        self._json_attributes = set(json_attributes)
         self._attributes = None
 
     @asyncio.coroutine
@@ -111,8 +111,8 @@ class MqttSensor(MqttAvailability, Entity):
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self.value_is_expired, expiration_at)
 
-            if len(self._json_attributes) > 0:
-                self._attributes = set({})
+            if self._json_attributes:
+                self._attributes = {}
                 try:
                     json_dict = json.loads(payload)
                     if isinstance(json_dict, dict):
