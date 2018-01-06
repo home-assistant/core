@@ -205,7 +205,7 @@ class TimeWrapper:
         attribute = getattr(time, attr)
         if callable(attribute):
             def wrapper(*args, **kw):
-                """Wrapper to return callable method if attribute is callable."""
+                """Wrapper to return callable method if callable."""
                 return attribute(*args, **kw)
             return wrapper
         else:
