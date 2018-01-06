@@ -3,13 +3,15 @@ import asyncio
 import logging
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
+from os import path
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant  # NOQA
+import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component, bind_hass
+from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -20,6 +22,8 @@ CONF_SERVICE_DATA = 'data'
 CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 
 _LOGGER = logging.getLogger(__name__)
+
+DESCRIPTION_CACHE = {}
 
 
 @bind_hass
@@ -112,3 +116,44 @@ def extract_entity_ids(hass, service_call, expand_group=True):
             return [service_ent_id]
 
         return service_ent_id
+
+@bind_hass
+def get_description(hass, domain, service):
+    """Return the description (i.e. user documentation) for a service call."""
+
+    if domain == ha.DOMAIN:
+        import homeassistant.components as components
+        file = components.__file__
+    else:
+        file = get_component(domain).__file__
+
+    descriptions = DESCRIPTION_CACHE.get(file)
+    if descriptions is None:
+        descriptions = load_yaml_config_file(
+            path.join(path.dirname(file), 'services.yaml'))
+        DESCRIPTION_CACHE[file] = descriptions
+
+    if domain == ha.DOMAIN:
+        description = descriptions[domain].get(service, {})
+    else:
+        description = descriptions.get(service, {})
+
+    return {
+        'description': description.get('description', ''),
+        'fields': description.get('fields', {})
+    }
+
+@bind_hass
+def async_get_all_descriptions(hass):
+    """Return the descriptions for all service calls."""
+
+    services = hass.services.async_services()
+    descriptions = {}
+    for domain in services:
+        descriptions[domain] = {}
+        for service in services[domain]:
+            description = get_description(hass, domain, service)
+            if description:
+                descriptions[domain][service] = description
+
+    return descriptions

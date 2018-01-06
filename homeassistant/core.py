@@ -754,24 +754,14 @@ class StateMachine(object):
 class Service(object):
     """Representation of a callable service."""
 
-    __slots__ = ['func', 'description', 'fields', 'schema',
-                 'is_callback', 'is_coroutinefunction']
+    __slots__ = ['func', 'schema', 'is_callback', 'is_coroutinefunction']
 
-    def __init__(self, func, description, fields, schema):
+    def __init__(self, func, schema):
         """Initialize a service."""
         self.func = func
-        self.description = description or ''
-        self.fields = fields or {}
         self.schema = schema
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
-
-    def as_dict(self):
-        """Return dictionary representation of this service."""
-        return {
-            'description': self.description,
-            'fields': self.fields,
-        }
 
 
 class ServiceCall(object):
@@ -826,9 +816,7 @@ class ServiceRegistry(object):
 
         This method must be run in the event loop.
         """
-        return {domain: {key: value.as_dict() for key, value
-                         in self._services[domain].items()}
-                for domain in self._services}
+        return {domain: self._services[domain] for domain in self._services}
 
     def has_service(self, domain, service):
         """Test if specified service exists.
@@ -841,9 +829,6 @@ class ServiceRegistry(object):
                  schema=None):
         """
         Register a service.
-
-        Description is a dict containing key 'description' to describe
-        the service and a key 'fields' to describe the fields.
 
         Schema is called to coerce and validate the service data.
         """
@@ -859,18 +844,13 @@ class ServiceRegistry(object):
         """
         Register a service.
 
-        Description is a dict containing key 'description' to describe
-        the service and a key 'fields' to describe the fields.
-
         Schema is called to coerce and validate the service data.
 
         This method must be run in the event loop.
         """
         domain = domain.lower()
         service = service.lower()
-        description = description or {}
-        service_obj = Service(service_func, description.get('description'),
-                              description.get('fields', {}), schema)
+        service_obj = Service(service_func, schema)
 
         if domain in self._services:
             self._services[domain][service] = service_obj

@@ -24,6 +24,7 @@ from homeassistant.const import (
     __version__)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.state import AsyncTrackStates
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers import template
 from homeassistant.components.http import HomeAssistantView
 
@@ -358,7 +359,7 @@ class APITemplateView(HomeAssistantView):
 def async_services_json(hass):
     """Generate services data to JSONify."""
     return [{"domain": key, "services": value}
-            for key, value in hass.services.async_services().items()]
+            for key, value in async_get_all_descriptions(hass).items()]
 
 
 def async_events_json(hass):

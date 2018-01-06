@@ -21,6 +21,7 @@ from homeassistant.components import frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
@@ -466,8 +467,8 @@ class ActiveConnection:
         """
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.services.async_services()))
+        descriptions = async_get_all_descriptions(self.hass)
+        self.to_write.put_nowait(result_message(msg['id'], descriptions))
 
     def handle_get_config(self, msg):
         """Handle get config command.
