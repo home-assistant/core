@@ -458,6 +458,10 @@ class Group(Entity):
         else:
             yield from group.async_update_ha_state(True)
 
+        # If called before the platform async_setup is called (test cases)
+        if DATA_ALL_GROUPS not in hass.data:
+            hass.data[DATA_ALL_GROUPS] = {}
+
         hass.data[DATA_ALL_GROUPS][object_id] = group
         return group
 
