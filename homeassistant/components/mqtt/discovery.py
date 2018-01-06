@@ -85,7 +85,7 @@ def async_start(hass, discovery_topic, hass_config):
 
             if discovery_hash in hass.data[ALREADY_DISCOVERED]:
                 _LOGGER.info("Component has already been discovered: %s %s",
-                         component, discovery_id)
+                             component, discovery_id)
                 return
 
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
@@ -107,7 +107,6 @@ def async_start(hass, discovery_topic, hass_config):
                     hass.states.async_remove(entity.entity_id)
 
                 del hass.data[ALREADY_DISCOVERED][discovery_hash]
-
 
     yield from mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)

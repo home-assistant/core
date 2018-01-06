@@ -71,6 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
         hass.data[ALREADY_DISCOVERED][discovery_hash] = newswitch
 
+
 class MqttSwitch(MqttAvailability, SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
