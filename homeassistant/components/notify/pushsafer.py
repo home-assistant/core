@@ -67,7 +67,6 @@ class PushsaferNotificationService(BaseNotificationService):
 
     def send_message(self, message='', **kwargs):
         """Send a message to specified target.
-        """Send a message to specified target.
         If no target specified (group or device),
         a push will be sent to all devices
         parameter d for devices is ignored here
