@@ -72,27 +72,28 @@ class AlexaIntentsView(http.HomeAssistantView):
             return b'' if response is None else self.json(response)
         except UnknownRequest as err:
             _LOGGER.warning(str(err))
-            return self.json_message(str(err), HTTP_BAD_REQUEST)
+            return self.json(intent_error_response(
+                hass, message, str(err)))
+
         except intent.UnknownIntent as err:
             _LOGGER.warning(str(err))
-            return self.json(alexa_intent_error(
+            return self.json(intent_error_response(
                 hass, message,
                 "This intent is not yet configured within Home Assistant."))
 
         except intent.InvalidSlotInfo as err:
             _LOGGER.error('Received invalid slot data from Alexa: %s', err)
-            return self.json(alexa_intent_error(
+            return self.json(intent_error_response(
                 hass, message,
                 "Invalid slot information received for this intent."))
 
         except intent.IntentError as err:
             _LOGGER.exception(str(err))
-            return self.json(alexa_intent_error(
-                hass, message, "This intent is configured with different "
-                "slots within Home Assistant."))
+            return self.json(intent_error_response(
+                hass, message, "Error handling intent."))
 
 
-def alexa_intent_error(hass, message, error):
+def intent_error_response(hass, message, error):
     """Return an Alexa response that will speak the error message."""
     alexa_intent_info = message.get('request').get('intent')
     alexa_response = AlexaResponse(hass, alexa_intent_info)
