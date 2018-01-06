@@ -376,6 +376,7 @@ omit =
     homeassistant/components/light/greenwave.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
+    homeassistant/components/light/iglo.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/lifx_legacy.py
     homeassistant/components/light/limitlessled.py
