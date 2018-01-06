@@ -22,7 +22,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_PREVIOUS_TRACK,
-    ATTR_MEDIA_ENQUEUE, MediaPlayerDevice, DOMAIN, STATE_OFF)
+    SUPPORT_SHUFFLE_SET, ATTR_MEDIA_ENQUEUE, MediaPlayerDevice,
+    DOMAIN, STATE_OFF)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_HOSTS, STATE_IDLE, STATE_PAUSED,
     STATE_PLAYING, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
@@ -792,7 +793,8 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._status.get('indexing', '0') == '0':
             supported = supported | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
                       SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | \
-                      SUPPORT_STOP | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
+                      SUPPORT_STOP | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE | \
+                      SUPPORT_SHUFFLE_SET
 
         current_vol = self.volume_level
         if current_vol is not None and current_vol >= 0:
@@ -827,6 +829,11 @@ class BluesoundPlayer(MediaPlayerDevice):
     def is_grouped(self):
         """Return true if player is a coordinator."""
         return self._master is not None or self._is_master
+
+    @property
+    def shuffle(self):
+        """Return true if shuffle is active."""
+        return True if self._status.get('shuffle', '0') == '1' else False
 
     @asyncio.coroutine
     def async_join(self, master):
@@ -882,6 +889,12 @@ class BluesoundPlayer(MediaPlayerDevice):
         sleep = 1
         while sleep > 0:
             sleep = yield from self.async_increase_timer()
+
+    @asyncio.coroutine
+    def async_set_shuffle(self, shuffle):
+        """Enable or disable shuffle mode."""
+        return self.send_bluesound_command('/Shuffle?state={}'
+                                           .format('1' if shuffle else '0'))
 
     @asyncio.coroutine
     def async_select_source(self, source):
