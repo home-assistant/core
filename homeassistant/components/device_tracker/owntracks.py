@@ -32,19 +32,27 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_SECRET = 'secret'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
+CONF_MQTT_TOPIC = 'mqtt_topic'
+CONF_REGION_MAPPING = 'region_mapping'
+CONF_EVENTS_ONLY = 'events_only'
 
 DEPENDENCIES = ['mqtt']
 
 OWNTRACKS_TOPIC = 'owntracks/#'
+REGION_MAPPING = {}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
     vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+    vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
+    vol.Optional(CONF_MQTT_TOPIC, default=OWNTRACKS_TOPIC):
+        mqtt.valid_subscribe_topic,
     vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
         cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SECRET): vol.Any(
         vol.Schema({vol.Optional(cv.string): cv.string}),
-        cv.string)
+        cv.string),
+    vol.Optional(CONF_REGION_MAPPING, default=REGION_MAPPING): dict
 })
 
 
@@ -185,16 +193,19 @@ def context_from_config(async_see, config):
     waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
     waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
     secret = config.get(CONF_SECRET)
+    region_mapping = config.get(CONF_REGION_MAPPING)
+    events_only = config.get(CONF_EVENTS_ONLY)
 
     return OwnTracksContext(async_see, secret, max_gps_accuracy,
-                            waypoint_import, waypoint_whitelist)
+                            waypoint_import, waypoint_whitelist,
+                            region_mapping, events_only)
 
 
 class OwnTracksContext:
     """Hold the current OwnTracks context."""
 
     def __init__(self, async_see, secret, max_gps_accuracy, import_waypoints,
-                 waypoint_whitelist):
+                 waypoint_whitelist, region_mapping, events_only):
         """Initialize an OwnTracks context."""
         self.async_see = async_see
         self.secret = secret
@@ -203,6 +214,8 @@ class OwnTracksContext:
         self.regions_entered = defaultdict(list)
         self.import_waypoints = import_waypoints
         self.waypoint_whitelist = waypoint_whitelist
+        self.region_mapping = region_mapping
+        self.events_only = events_only
 
     @callback
     def async_valid_accuracy(self, message):
@@ -265,6 +278,10 @@ class OwnTracksContext:
 def async_handle_location_message(hass, context, message):
     """Handle a location message."""
     if not context.async_valid_accuracy(message):
+        return
+
+    if context.events_only:
+        _LOGGER.debug("Location update ignored due to events_only setting")
         return
 
     dev_id, kwargs = _parse_see_args(message)
@@ -352,6 +369,12 @@ def async_handle_transition_message(hass, context, message):
     # OwnTracks uses - at the start of a beacon zone
     # to switch on 'hold mode' - ignore this
     location = message['desc'].lstrip("-")
+
+    # Create a layer of indirection for Owntracks instances that may name
+    # regions differently than their HA names
+    if location in context.region_mapping:
+        location = context.region_mapping[location]
+
     if location.lower() == 'home':
         location = STATE_HOME
 
