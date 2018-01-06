@@ -109,7 +109,6 @@ class PushsaferNotificationService(BaseNotificationService):
         _LOGGER.debug("using push data: %s", str(payload))
 
         for target in targets:
-            """ Adding/Overwriting device target to payload"""
             payload['d'] = target
             response = requests.post(_RESOURCE, data=payload,
                                      timeout=CONF_TIMEOUT)
@@ -134,7 +133,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 _LOGGER.warning("Base64 encode no image passed")
 
     def loadfromfile(self, url=None, local_path=None, username=None,
-                        password=None, auth=None):
+                     password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:
@@ -151,7 +150,6 @@ class PushsaferNotificationService(BaseNotificationService):
 
             elif local_path is not None:
                 _LOGGER.debug("Loading image from local path")
-                """Check whether path is whitelisted in configuration.yaml """
                 if self.is_allowed_path(local_path):
                     file_mimetype = mimetypes.guess_type(local_path)
                     _LOGGER.debug("Detected mimetype %s", file_mimetype)
