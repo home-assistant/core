@@ -58,6 +58,20 @@ def get_service(hass, config, discovery_info=None):
     return PushsaferNotificationService(config.get(CONF_DEVICE_KEY),
                                         hass.config.is_allowed_path)
 
+def convertbase64string(self, filebyte, mimetype):
+    """Convert the image to the expected base64 string of pushsafer."""
+    _LOGGER.debug("Base64 got mimetype: %s", mimetype)
+
+    if mimetype not in _ALLOWED_IMAGES:
+        _LOGGER.warning("%s is a not supported mimetype for images",
+                        mimetype)
+        return None
+    else:
+        if filebyte is not None:
+            base64_image = base64.b64encode(filebyte).decode('utf8')
+            return "data:"+mimetype+";base64,"+base64_image
+        else:
+            _LOGGER.warning("Base64 encode no image passed")
 
 class PushsaferNotificationService(BaseNotificationService):
     """Implementation of the notification service for Pushsafer.com."""
@@ -116,22 +130,6 @@ class PushsaferNotificationService(BaseNotificationService):
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())
-
-    @classmethod
-    def convertbase64string(self, filebyte, mimetype):
-        """Convert the image to the expected base64 string of pushsafer."""
-        _LOGGER.debug("Base64 got mimetype: %s", mimetype)
-
-        if mimetype not in _ALLOWED_IMAGES:
-            _LOGGER.warning("%s is a not supported mimetype for images",
-                            mimetype)
-            return None
-        else:
-            if filebyte is not None:
-                base64_image = base64.b64encode(filebyte).decode('utf8')
-                return "data:"+mimetype+";base64,"+base64_image
-            else:
-                _LOGGER.warning("Base64 encode no image passed")
 
     def loadfromfile(self, url=None, local_path=None, username=None,
                      password=None, auth=None):
