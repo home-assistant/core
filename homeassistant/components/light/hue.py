@@ -16,10 +16,9 @@ import homeassistant.components.hue as hue
 
 import homeassistant.util as util
 from homeassistant.util import yaml
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
+    ATTR_TRANSITION, ATTR_HS_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
     Light, PLATFORM_SCHEMA)
@@ -254,11 +253,17 @@ class HueLight(Light):
         return self.info['state'].get('bri')
 
     @property
-    def xy_color(self):
-        """Return the XY color value."""
+    def hs_color(self):
+        """Return the hs color value."""
         if self.is_group:
-            return self.info['action'].get('xy')
-        return self.info['state'].get('xy')
+            return (
+                self.info['action'].get('hue'),
+                self.info['action'].get('sat'),
+            )
+        return (
+            self.info['state'].get('hue'),
+            self.info['state'].get('sat'),
+        )
 
     @property
     def color_temp(self):
@@ -294,14 +299,9 @@ class HueLight(Light):
         if ATTR_TRANSITION in kwargs:
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        if ATTR_XY_COLOR in kwargs:
-            if self.info.get('manufacturername') == 'OSRAM':
-                color_hue, sat = color_util.color_xy_to_hs(
-                    *kwargs[ATTR_XY_COLOR])
-                command['hue'] = color_hue
-                command['sat'] = sat
-            else:
-                command['xy'] = kwargs[ATTR_XY_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            command['hue'] = kwargs[ATTR_HS_COLOR][0]
+            command['sat'] = kwargs[ATTR_HS_COLOR][1]
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))

@@ -13,7 +13,7 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_XY_COLOR,
+    ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_HS_COLOR,
     FLASH_LONG, FLASH_SHORT, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
     SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,20 +131,15 @@ class MqttJson(Light):
         else:
             self._effect = None
 
-        if rgb:
-            self._rgb = [0, 0, 0]
+        if rgb or xy:
+            self._hs = [0, 0]
         else:
-            self._rgb = None
+            self._hs = None
 
         if white_value:
             self._white_value = 255
         else:
             self._white_value = None
-
-        if xy:
-            self._xy = [1, 1]
-        else:
-            self._xy = None
 
         self._flash_times = flash_times
 
@@ -171,17 +167,26 @@ class MqttJson(Light):
             elif values['state'] == 'OFF':
                 self._state = False
 
-            if self._rgb is not None:
+            if self._hs is not None:
                 try:
                     red = int(values['color']['r'])
                     green = int(values['color']['g'])
                     blue = int(values['color']['b'])
 
-                    self._rgb = [red, green, blue]
+                    self._hs = color_util.color_RGB_to_hs(red, green, blue)
                 except KeyError:
                     pass
                 except ValueError:
                     _LOGGER.warning("Invalid RGB color value received")
+                try:
+                    x_color = float(values['color']['x'])
+                    y_color = float(values['color']['y'])
+
+                    self._hs = color_util.color_xy_to_hs(x_color, y_color)
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning("Invalid XY color value received")
 
             if self._brightness is not None:
                 try:
@@ -215,17 +220,6 @@ class MqttJson(Light):
                 except ValueError:
                     _LOGGER.warning("Invalid white value received")
 
-            if self._xy is not None:
-                try:
-                    x_color = float(values['color']['x'])
-                    y_color = float(values['color']['y'])
-
-                    self._xy = [x_color, y_color]
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning("Invalid XY color value received")
-
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -254,19 +248,14 @@ class MqttJson(Light):
         return self._effect_list
 
     @property
-    def rgb_color(self):
-        """Return the RGB color value."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color value."""
+        return self._hs
 
     @property
     def white_value(self):
         """Return the white property."""
         return self._white_value
-
-    @property
-    def xy_color(self):
-        """Return the XY color value."""
-        return self._xy
 
     @property
     def should_poll(self):
@@ -303,15 +292,19 @@ class MqttJson(Light):
 
         message = {'state': 'ON'}
 
-        if ATTR_RGB_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs:
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
             message['color'] = {
-                'r': kwargs[ATTR_RGB_COLOR][0],
-                'g': kwargs[ATTR_RGB_COLOR][1],
-                'b': kwargs[ATTR_RGB_COLOR][2]
+                'r': rgb[0],
+                'g': rgb[1],
+                'b': rgb[2],
+                'x': xy_color[0],
+                'y': xy_color[1],
             }
 
             if self._optimistic:
-                self._rgb = kwargs[ATTR_RGB_COLOR]
+                self._hs = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
         if ATTR_FLASH in kwargs:
@@ -351,16 +344,6 @@ class MqttJson(Light):
 
             if self._optimistic:
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
-                should_update = True
-
-        if ATTR_XY_COLOR in kwargs:
-            message['color'] = {
-                'x': kwargs[ATTR_XY_COLOR][0],
-                'y': kwargs[ATTR_XY_COLOR][1]
-            }
-
-            if self._optimistic:
-                self._xy = kwargs[ATTR_XY_COLOR]
                 should_update = True
 
         mqtt.async_publish(

@@ -110,36 +110,6 @@ class KNXLight(Light):
             None
 
     @property
-    def xy_color(self):
-        """Return the XY color value [float, float]."""
-        return None
-
-    @property
-    def rgb_color(self):
-        """Return the RBG color value."""
-        return None
-
-    @property
-    def color_temp(self):
-        """Return the CT color temperature."""
-        return None
-
-    @property
-    def white_value(self):
-        """Return the white value of this light between 0..255."""
-        return None
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return None
-
-    @property
-    def effect(self):
-        """Return the current effect."""
-        return None
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self.device.state

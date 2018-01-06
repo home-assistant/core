@@ -11,9 +11,11 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR, SUPPORT_COLOR, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ DEFAULT_NAME = 'Hyperion'
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 
-SUPPORT_HYPERION = SUPPORT_COLOR
+SUPPORT_HYPERION = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -64,7 +66,8 @@ class Hyperion(Light):
         self._name = name
         self._priority = priority
         self._default_color = default_color
-        self._rgb_color = [0, 0, 0]
+        self._hs_color = [0, 0]
+        self._brightness = 0
 
     @property
     def name(self):
@@ -72,14 +75,14 @@ class Hyperion(Light):
         return self._name
 
     @property
-    def rgb_color(self):
-        """Return last RGB color value set."""
-        return self._rgb_color
+    def hs_color(self):
+        """Return last hs color value set."""
+        return self._hs_color
 
     @property
     def is_on(self):
         """Return true if not black."""
-        return self._rgb_color != [0, 0, 0]
+        return self._brightness > 0
 
     @property
     def supported_features(self):
@@ -88,21 +91,28 @@ class Hyperion(Light):
 
     def turn_on(self, **kwargs):
         """Turn the lights on."""
-        if ATTR_RGB_COLOR in kwargs:
-            self._rgb_color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            self._hs_color = kwargs[ATTR_HS_COLOR]
+        elif ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
         else:
-            self._rgb_color = self._default_color
+            hsv = color_util.color_RGB_to_hsv(*self._default_color)
+            self._hs_color = hsv[:2]
+            self._brightness = hsv[2]
+
+        rgb = color_util.color_hsv_to_RGB(
+            self._hs_color[0], self._hs_color[1], self._brightness)
 
         self.json_request({
             'command': 'color',
             'priority': self._priority,
-            'color': self._rgb_color
+            'color': rgb,
         })
 
     def turn_off(self, **kwargs):
         """Disconnect all remotes."""
         self.json_request({'command': 'clearall'})
-        self._rgb_color = [0, 0, 0]
+        self._brightness = 0
 
     def update(self):
         """Get the remote's active color."""
@@ -110,14 +120,19 @@ class Hyperion(Light):
         if response:
             # workaround for outdated Hyperion
             if 'activeLedColor' not in response['info']:
-                self._rgb_color = self._default_color
+                hsv = color_util.color_RGB_to_hsv(*self._default_color)
+                self._hs_color = hsv[:2]
+                self._brightness = hsv[2]
                 return
 
             if response['info']['activeLedColor'] == []:
-                self._rgb_color = [0, 0, 0]
+                self._brightness = 0
             else:
-                self._rgb_color =\
+                rgb =\
                     response['info']['activeLedColor'][0]['RGB Value']
+                hsv = color_util.color_RGB_to_hsv(*rgb)
+                self._hs_color = hsv[:2]
+                self._brightness = hsv[2]
 
     def setup(self):
         """Get the hostname of the remote."""

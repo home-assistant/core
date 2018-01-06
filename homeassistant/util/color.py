@@ -312,30 +312,42 @@ def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-sequence-index
+def color_RGB_to_hs(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
+    """Convert an rgb color to its hs representation."""
+    return color_RGB_to_hsv(iR, iG, iB)[:2]
+
+
+# pylint: disable=invalid-sequence-index
 def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
     """Convert an rgb color to its hsv representation."""
     fHSV = colorsys.rgb_to_hsv(iR/255.0, iG/255.0, iB/255.0)
-    return (int(fHSV[0]*65536), int(fHSV[1]*255), int(fHSV[2]*255))
+    return (int(fHSV[0]*65535), int(fHSV[1]*255), int(fHSV[2]*255))
+
+
+# pylint: disable=invalid-sequence-index
+def color_hs_to_RGB(iH: int, iS: int) -> Tuple[int, int, int]:
+    """Convert an hsv color into its rgb representation."""
+    return color_hsv_to_RGB(iH, iS, 255)
 
 
 # pylint: disable=invalid-sequence-index
 def color_hsv_to_RGB(iH: int, iS: int, iV: int) -> Tuple[int, int, int]:
     """Convert an hsv color into its rgb representation."""
-    fRGB = colorsys.hsv_to_rgb(iH/65536, iS/255, iV/255)
+    fRGB = colorsys.hsv_to_rgb(iH/65535, iS/255, iV/255)
     return (int(fRGB[0]*255), int(fRGB[1]*255), int(fRGB[2]*255))
 
 
 # pylint: disable=invalid-sequence-index
 def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
     """Convert an xy color to its hs representation."""
-    h, s, _ = color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, 255))
+    h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY))
     return (h, s)
 
 
 # pylint: disable=invalid-sequence-index
 def color_hs_to_xy(iH: int, iS: int) -> Tuple[int, int]:
     """Convert an hs color to its xy representation."""
-    return color_RGB_to_xy(*color_xy_brightness_to_RGB(iH, iS, 255))
+    return color_RGB_to_xy(*color_hs_to_RGB(iH, iS))
 
 
 # pylint: disable=invalid-sequence-index
@@ -384,6 +396,11 @@ def rgb_hex_to_rgb_list(hex_string):
             for i in range(0,
                            len(hex_string),
                            len(hex_string) // 3)]
+
+
+def color_temperature_to_hs(color_temperature_kelvin):
+    """Return an hs color from a color temperature in Kelvin."""
+    return color_RGB_to_hs(*color_temperature_to_rgb(color_temperature_kelvin))
 
 
 def color_temperature_to_rgb(color_temperature_kelvin):

@@ -9,6 +9,7 @@ import logging
 
 from homeassistant.components import light, zha
 from homeassistant.const import STATE_UNKNOWN
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class Light(zha.Entity, light.Light):
         super().__init__(**kwargs)
         self._supported_features = 0
         self._color_temp = None
-        self._xy_color = None
+        self._hs_color = None
         self._brightness = None
 
         import bellows.zigbee.zcl.clusters as zcl_clusters
@@ -59,7 +60,7 @@ class Light(zha.Entity, light.Light):
 
             if color_capabilities & 0x08:
                 self._supported_features |= light.SUPPORT_COLOR
-                self._xy_color = (1.0, 1.0)
+                self._hs_color = (0, 0)
 
     @property
     def is_on(self) -> bool:
@@ -79,11 +80,12 @@ class Light(zha.Entity, light.Light):
                 temperature, duration)
             self._color_temp = temperature
 
-        if light.ATTR_XY_COLOR in kwargs:
-            self._xy_color = kwargs[light.ATTR_XY_COLOR]
+        if light.ATTR_HS_COLOR in kwargs:
+            self._hs_color = kwargs[light.ATTR_HS_COLOR]
+            xy_color = color_util.color_hs_to_xy(*self._hs_color)
             yield from self._endpoint.light_color.move_to_color(
-                int(self._xy_color[0] * 65535),
-                int(self._xy_color[1] * 65535),
+                int(xy_color[0] * 65535),
+                int(xy_color[1] * 65535),
                 duration,
             )
 
@@ -117,9 +119,9 @@ class Light(zha.Entity, light.Light):
         return self._brightness
 
     @property
-    def xy_color(self):
-        """Return the XY color value [float, float]."""
-        return self._xy_color
+    def hs_color(self):
+        """Return the hs color value [int, int]."""
+        return self._hs_color
 
     @property
     def color_temp(self):
@@ -170,7 +172,8 @@ class Light(zha.Entity, light.Light):
             result = yield from safe_read(self._endpoint.light_color,
                                           ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:
-                self._xy_color = (result['current_x'], result['current_y'])
+                xy_color = (result['current_x'], result['current_y'])
+                self._hs_color = color_util.color_xy_to_hs(*xy_color)
 
     @property
     def should_poll(self) -> bool:

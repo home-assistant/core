@@ -12,10 +12,11 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
     EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
     SUPPORT_COLOR, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 REQUIREMENTS = ['flux_led==0.20']
 
@@ -188,9 +189,9 @@ class FluxLight(Light):
         return self._bulb.brightness
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color property."""
-        return self._bulb.getRgb()
+        return color_util.color_RGB_to_hs(*self._bulb.getRgb())
 
     @property
     def supported_features(self):
@@ -207,7 +208,8 @@ class FluxLight(Light):
         if not self.is_on:
             self._bulb.turnOn()
 
-        rgb = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        rgb = color_util.color_hs_to_RGB(*hs_color)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
 

@@ -10,11 +10,12 @@ import voluptuous as vol
 
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
     SUPPORT_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 REQUIREMENTS = ['limitlessled==1.0.8']
 
@@ -34,9 +35,9 @@ DEFAULT_FADE = False
 
 LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led']
 
-RGB_BOUNDARY = 40
+MIN_SATURATION = 40
 
-WHITE = [255, 255, 255]
+WHITE = [0, 0]
 
 SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                               SUPPORT_TRANSITION)
@@ -262,7 +263,7 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
         self.group.on = False
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color property."""
         return self._color
 
@@ -278,10 +279,10 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
         # Check arguments.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-        if ATTR_RGB_COLOR in kwargs:
-            self._color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            self._color = kwargs[ATTR_HS_COLOR]
         # White is a special case.
-        if min(self._color) > 256 - RGB_BOUNDARY:
+        if self._color[1] < MIN_SATURATION:
             pipeline.white()
             self._color = WHITE
         # Set up transition.
@@ -323,7 +324,7 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
         self.group.on = False
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color property."""
         return self._color
 
@@ -344,12 +345,12 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
         # Check arguments.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-        if ATTR_RGB_COLOR in kwargs:
-            self._color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            self._color = kwargs[ATTR_HS_COLOR]
         elif ATTR_COLOR_TEMP in kwargs:
             self._temperature = kwargs[ATTR_COLOR_TEMP]
         # White is a special case.
-        if min(self._color) > 256 - RGB_BOUNDARY:
+        if self._color[1] < MIN_SATURATION:
             pipeline.white()
             self._color = WHITE
         # Set up transition.
@@ -401,12 +402,8 @@ def _to_hass_brightness(brightness):
     return int(brightness * 255)
 
 
-def _from_hass_color(color):
+def _from_hass_color(hs_color):
     """Convert Home Assistant RGB list to Color tuple."""
     from limitlessled import Color
-    return Color(*tuple(color))
-
-
-def _to_hass_color(color):
-    """Convert from Color tuple to Home Assistant RGB list."""
-    return list([int(c) for c in color])
+    rgb = color_util.color_hs_to_RGB(*hs_color)
+    return Color(*tuple(rgb))

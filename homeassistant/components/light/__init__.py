@@ -49,6 +49,7 @@ ATTR_TRANSITION = "transition"
 # Lists holding color values
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
+ATTR_HS_COLOR = "hs_color"
 ATTR_COLOR_TEMP = "color_temp"
 ATTR_KELVIN = "kelvin"
 ATTR_MIN_MIREDS = "min_mireds"
@@ -86,8 +87,7 @@ PROP_TO_ATTR = {
     'color_temp': ATTR_COLOR_TEMP,
     'min_mireds': ATTR_MIN_MIREDS,
     'max_mireds': ATTR_MAX_MIREDS,
-    'rgb_color': ATTR_RGB_COLOR,
-    'xy_color': ATTR_XY_COLOR,
+    'hs_color': ATTR_HS_COLOR,
     'white_value': ATTR_WHITE_VALUE,
     'effect_list': ATTR_EFFECT_LIST,
     'effect': ATTR_EFFECT,
@@ -110,6 +110,10 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
         vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence(
+            (vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)), cv.byte)),
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -239,13 +243,13 @@ def preprocess_turn_on_alternatives(params):
     if brightness_pct is not None:
         params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
-    # Make color changes available as both XY and RGB for platforms
-    if ATTR_XY_COLOR in params:
-        color_rgb = color_util.color_xy_to_RGB(*params[ATTR_XY_COLOR])
-        params[ATTR_RGB_COLOR] = color_rgb
-    elif ATTR_RGB_COLOR in params:
-        color_xy = color_util.color_RGB_to_xy(*params[ATTR_RGB_COLOR])
-        params[ATTR_XY_COLOR] = color_xy
+    xy_color = params.pop(ATTR_XY_COLOR, None)
+    if xy_color is not None:
+        params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
+
+    rgb_color = params.pop(ATTR_RGB_COLOR, None)
+    if rgb_color is not None:
+        params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
 
 
 @asyncio.coroutine
@@ -365,13 +369,8 @@ class Light(ToggleEntity):
         return None
 
     @property
-    def xy_color(self):
-        """Return the XY color value [float, float]."""
-        return None
-
-    @property
-    def rgb_color(self):
-        """Return the RGB color value [int, int, int]."""
+    def hs_color(self):
+        """Return the hue and saturation color value [int, int]."""
         return None
 
     @property
@@ -417,13 +416,12 @@ class Light(ToggleEntity):
                 if value is not None:
                     data[attr] = value
 
-            # Expose current color as both RGB and XY
-            if ATTR_RGB_COLOR not in data and ATTR_XY_COLOR in data:
-                data[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(
-                    *data[ATTR_XY_COLOR])
-            if ATTR_XY_COLOR not in data and ATTR_RGB_COLOR in data:
-                data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(
-                    *data[ATTR_RGB_COLOR])
+            # Expose current color also as RGB and XY
+            if ATTR_HS_COLOR in data:
+                data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(
+                    *data[ATTR_HS_COLOR])
+                data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(
+                    *data[ATTR_HS_COLOR])
 
         return data
 

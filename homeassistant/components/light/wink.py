@@ -8,7 +8,7 @@ import asyncio
 import colorsys
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_XY_COLOR, SUPPORT_BRIGHTNESS,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
 from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.util import color as color_util
@@ -72,11 +72,11 @@ class WinkLight(WinkDevice, Light):
             return r_value, g_value, b_value
 
     @property
-    def xy_color(self):
-        """Define current bulb color in CIE 1931 (XY) color space."""
+    def hs_color(self):
+        """Define current bulb color."""
         if not self.wink.supports_xy_color():
             return None
-        return self.wink.color_xy()
+        return color_util.color_xy_to_hs(*self.wink.color_xy())
 
     @property
     def color_temp(self):
@@ -94,16 +94,16 @@ class WinkLight(WinkDevice, Light):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        xy_color = kwargs.get(ATTR_XY_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
 
         state_kwargs = {}
 
-        if xy_color:
+        if hs_color:
             if self.wink.supports_xy_color():
+                xy_color = color_util.color_hs_to_xy(*hs_color)
                 state_kwargs['color_xy'] = xy_color
             if self.wink.supports_hue_saturation():
-                hs_color = color_util.color_xy_to_hs(*xy_color)
                 state_kwargs['color_hue_saturation'] = hs_color
 
         if color_temp_mired:
