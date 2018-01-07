@@ -18,10 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_PREFIX = 'Smappee'
 SENSOR_TYPES = {
     'solar': ['Solar', 'mdi:white-balance-sunny', 'local', 'W'],
-    'alwaysOn': ['Always On', 'mdi:gauge', 'remote', 'W'],
-    'current': ['Current', 'mdi:power-plug', 'local', 'W'],
+    'always_on': ['Always On', 'mdi:gauge', 'remote', 'W'],
+    'active_power': ['Active Power', 'mdi:power-plug', 'local', 'W'],
+    'current': ['Current', 'mdi:gauge', 'local', 'Amps'],
+    'voltage': ['Voltage', 'mdi:gauge', 'local', 'V'],
+    'active_cosfi': ['Power Factor', 'mdi:gauge', 'local', '%'],
     'solar_today': ['Solar Today', 'mdi:white-balance-sunny', 'remote', 'kW'],
-    'current_today': ['Current Today', 'mdi:power-plug', 'remote', 'kW']
+    'power_today': ['Power Today', 'mdi:power-plug', 'remote', 'kW']
 }
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
@@ -32,10 +35,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     smappee = hass.data[DATA_SMAPPEE]
 
     dev = []
-    for location_id in smappee.locations.items():
+    if smappee.is_remote_active:
         for sensor in SENSOR_TYPES:
-            dev.append(SmappeeSensor(smappee, location_id, sensor))
+            if 'remote' in SENSOR_TYPES[sensor]:
+                for location_id in smappee.locations.items():
+                    dev.append(SmappeeSensor(smappee, location_id, sensor))
 
+    if smappee.is_local_active:
+        for sensor in SENSOR_TYPES:
+            if 'local' in SENSOR_TYPES[sensor]:
+                if smappee.is_remote_active:
+                    for location_id in smappee.locations.items():
+                        dev.append(SmappeeSensor(smappee, location_id, sensor))
+                else:
+                    dev.append(SmappeeSensor(smappee, None, sensor))
     add_devices(dev)
 
 
@@ -55,8 +68,13 @@ class SmappeeSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
+        if self._location_id:
+            location_name = self._smappee.locations[self._location_id]
+        else:
+            location_name = 'Local'
+
         return "{} {} {}".format(SENSOR_PREFIX,
-                                 self._smappee.locations[self._location_id],
+                                 location_name,
                                  SENSOR_TYPES[self._sensor][0])
 
     @property
@@ -78,33 +96,46 @@ class SmappeeSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr['Location Id'] = self._location_id
-        attr['Location Name'] = self._smappee.locations[self._location_id]
+        if self._location_id:
+            attr['Location Id'] = self._location_id
+            attr['Location Name'] = self._smappee.locations[self._location_id]
         attr['Last Update'] = self._timestamp
         return attr
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Smappee and update the state."""
-        if SENSOR_TYPES[self._sensor][0] == 'Always On':
+        if self._sensor == 'always_on':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=1, delta=30)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = consumption.get(self._sensor)
-        elif SENSOR_TYPES[self._sensor][0] == 'Solar Today':
+        elif self._sensor == 'solar_today':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=3, delta=1440)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(consumption.get('solar') / 1000, 2)
-        elif SENSOR_TYPES[self._sensor][0] == 'Current Today':
+        elif self._sensor == 'power_today':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=3, delta=1440)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(consumption.get('consumption') / 1000, 2)
-        elif SENSOR_TYPES[self._sensor][0] is 'Current':
+        elif self._sensor == 'active_cosfi':
+            cosfi = self._smappee.active_cosfi()
+            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._state = round(cosfi, 2)
+        elif self._sensor == 'current':
+            current = self._smappee.active_current()
+            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._state = round(current, 2)
+        elif self._sensor == 'voltage':
+            voltage = self._smappee.active_voltage()
+            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._state = round(voltage, 3)
+        elif self._sensor is 'active_power':
             data = self._smappee.load_instantaneous()
             value1 = [float(i['value']) for i in data
                       if i['key'].endswith('phase0ActivePower')]
@@ -112,10 +143,10 @@ class SmappeeSensor(Entity):
                       if i['key'].endswith('phase1ActivePower')]
             value3 = [float(i['value']) for i in data
                       if i['key'].endswith('phase2ActivePower')]
-            current = sum(value1 + value2 + value3) / 1000
-            self._state = round(current, 2)
+            active_power = sum(value1 + value2 + value3) / 1000
+            self._state = round(active_power, 2)
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        elif SENSOR_TYPES[self._sensor][0] is 'Solar':
+        elif self._sensor is 'solar':
             data = self._smappee.load_instantaneous()
             value1 = [float(i['value']) for i in data
                       if i['key'].endswith('phase3ActivePower')]
@@ -123,8 +154,8 @@ class SmappeeSensor(Entity):
                       if i['key'].endswith('phase4ActivePower')]
             value3 = [float(i['value']) for i in data
                       if i['key'].endswith('phase5ActivePower')]
-            current = sum(value1 + value2 + value3) / 1000
-            self._state = round(current, 2)
+            power = sum(value1 + value2 + value3) / 1000
+            self._state = round(power, 2)
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         else:
             return None
