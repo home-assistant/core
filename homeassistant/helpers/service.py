@@ -122,9 +122,9 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 @bind_hass
 def async_get_all_descriptions(hass):
     """Return descriptions (i.e. user documentation) for all service calls."""
-    FILE_CACHE = {}
+    yaml_cache = {}
 
-    if not SERVICE_DESCRIPTION_CACHE in hass.data:
+    if SERVICE_DESCRIPTION_CACHE not in hass.data:
         hass.data[SERVICE_DESCRIPTION_CACHE] = {}
 
     def get_description(hass, domain, service):
@@ -142,16 +142,16 @@ def async_get_all_descriptions(hass):
                 component_path = path.dirname(get_component(domain).__file__)
             yaml_file = path.join(component_path, 'services.yaml')
 
-            if yaml_file not in FILE_CACHE:
+            if yaml_file not in yaml_cache:
                 try:
-                    FILE_CACHE[yaml_file] = load_yaml(yaml_file)
+                    yaml_cache[yaml_file] = load_yaml(yaml_file)
                 except FileNotFoundError:
-                    FILE_CACHE[yaml_file] = {}
+                    yaml_cache[yaml_file] = {}
 
             if component_path == catch_all_path:
-                domain_services = FILE_CACHE[yaml_file].get(domain, {})
+                domain_services = yaml_cache[yaml_file].get(domain, {})
             else:
-                domain_services = FILE_CACHE[yaml_file]
+                domain_services = yaml_cache[yaml_file]
             description = domain_services.get(service, {})
 
             hass.data[SERVICE_DESCRIPTION_CACHE][cache_key] = description
