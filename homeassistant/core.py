@@ -826,8 +826,7 @@ class ServiceRegistry(object):
         """
         return service.lower() in self._services.get(domain.lower(), [])
 
-    def register(self, domain, service, service_func, description=None,
-                 schema=None):
+    def register(self, domain, service, service_func, schema=None):
         """
         Register a service.
 
@@ -835,13 +834,11 @@ class ServiceRegistry(object):
         """
         run_callback_threadsafe(
             self._hass.loop,
-            self.async_register, domain, service, service_func, description,
-            schema
+            self.async_register, domain, service, service_func, schema
         ).result()
 
     @callback
-    def async_register(self, domain, service, service_func, description=None,
-                       schema=None):
+    def async_register(self, domain, service, service_func, schema=None):
         """
         Register a service.
 
