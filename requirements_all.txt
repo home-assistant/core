@@ -392,6 +392,9 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 # homeassistant.components.sensor.htu21d
 # i2csense==0.0.4
 
+# homeassistant.components.ihc
+ihcsdk==2.1.0
+
 # homeassistant.components.light.iglo
 iglo==1.0.0
 
