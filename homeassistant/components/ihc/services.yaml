@@ -3,7 +3,7 @@
 set_runtime_value_bool:
   description: Set a boolean runtime value on the ihc controller
   fields:
-    ihcid:
+    ihc_id:
       description: The integer ihc resource id
     value:
       description: The boolean value to set
@@ -11,7 +11,7 @@ set_runtime_value_bool:
 set_runtime_value_int:
   description: Set a integer runtime value on the ihc controller
   fields:
-    ihcid:
+    ihc_id:
       description: The integer ihc resource id
     value:
       description: The integer value to set
@@ -19,7 +19,7 @@ set_runtime_value_int:
 set_runtime_value_float:
   description: Set a float runtime value on the ihc controller
   fields:
-    ihcid:
+    ihc_id:
       description: The integer ihc resource id
     value:
       description: The float value to set
