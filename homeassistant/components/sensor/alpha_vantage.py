@@ -10,12 +10,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, \
-    CONF_CURRENCY
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['alpha_vantage==1.3.6']
+REQUIREMENTS = ['alpha_vantage==1.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,20 +24,24 @@ ATTR_HIGH = 'high'
 ATTR_LOW = 'low'
 ATTR_VOLUME = 'volume'
 
-CONF_ATTRIBUTION = "Stock market information provided by Alpha Vantage."
-CONF_SYMBOLS = 'symbols'
-CONF_SYMBOL = 'symbol'
+CONF_ATTRIBUTION = "Stock market information provided by Alpha Vantage"
 CONF_FOREIGN_EXCHANGE = 'foreign_exchange'
 CONF_FROM = 'from'
+CONF_SYMBOL = 'symbol'
+CONF_SYMBOLS = 'symbols'
 CONF_TO = 'to'
 
-DEFAULT_SYMBOL = {CONF_SYMBOL: 'GOOGL',
-                  CONF_CURRENCY: 'USD',
-                  CONF_NAME: 'Google'}
+DEFAULT_SYMBOL = {
+    CONF_CURRENCY: 'USD',
+    CONF_NAME: 'Google',
+    CONF_SYMBOL: 'GOOGL',
+}
 
-DEFAULT_CURRENCY = {CONF_FROM: 'BTC',
-                    CONF_TO: 'USD',
-                    CONF_NAME: 'Bitcon'}
+DEFAULT_CURRENCY = {
+    CONF_FROM: 'BTC',
+    CONF_NAME: 'Bitcon',
+    CONF_TO: 'USD',
+}
 
 ICONS = {
     'BTC': 'mdi:currency-btc',
@@ -53,8 +57,8 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 SYMBOL_SCHEMA = vol.Schema({
     vol.Required(CONF_SYMBOL): cv.string,
+    vol.Optional(CONF_CURRENCY): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_CURRENCY): cv.string
 })
 
 CURRENCY_SCHEMA = vol.Schema({
@@ -65,10 +69,10 @@ CURRENCY_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_SYMBOLS, default=[DEFAULT_SYMBOL]):
-        vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
     vol.Optional(CONF_FOREIGN_EXCHANGE, default=[DEFAULT_CURRENCY]):
         vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
+    vol.Optional(CONF_SYMBOLS, default=[DEFAULT_SYMBOL]):
+        vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
 })
 
 
@@ -76,6 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
     from alpha_vantage.timeseries import TimeSeries
     from alpha_vantage.foreignexchange import ForeignExchange
+
     api_key = config.get(CONF_API_KEY)
     symbols = config.get(CONF_SYMBOLS)
 
@@ -95,14 +100,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         from_cur = conversion.get(CONF_FROM)
         to_cur = conversion.get(CONF_TO)
         try:
-            forex.get_currency_exchange_rate(from_currency=from_cur,
-                                             to_currency=to_cur)
+            forex.get_currency_exchange_rate(
+                from_currency=from_cur, to_currency=to_cur)
         except ValueError as error:
             _LOGGER.error(
                 "API Key is not valid or currencies '%s'/'%s' not known",
                 from_cur, to_cur)
             _LOGGER.debug(str(error))
-        dev.append(AlphaVantageForeingExchange(forex, conversion))
+        dev.append(AlphaVantageForeignExchange(forex, conversion))
 
     add_devices(dev, True)
 
@@ -157,12 +162,8 @@ class AlphaVantageSensor(Entity):
         self.values = next(iter(all_values.values()))
 
 
-class AlphaVantageForeingExchange(Entity):
-    """Sensor for forein exchange rates.
-
-    This is quite similar to AlphaVantageSensor, yet the API is slighly
-    different.
-    """
+class AlphaVantageForeignExchange(Entity):
+    """Sensor for foreign exchange rates."""
 
     def __init__(self, foreign_exchange, config):
         """Initialize the sensor."""
@@ -197,12 +198,6 @@ class AlphaVantageForeingExchange(Entity):
         """Return the icon to use in the frontend, if any."""
         return self._icon
 
-    def update(self):
-        """Get the latest data and updates the states."""
-        self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
-            from_currency=self._from_currency,
-            to_currency=self._to_currency)
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -212,3 +207,8 @@ class AlphaVantageForeingExchange(Entity):
                 CONF_FROM: self._from_currency,
                 CONF_TO: self._to_currency,
             }
+
+    def update(self):
+        """Get the latest data and updates the states."""
+        self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
+            from_currency=self._from_currency, to_currency=self._to_currency)
