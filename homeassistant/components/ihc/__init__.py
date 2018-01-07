@@ -94,7 +94,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Setyp the IHC component."""
+    """Setup the IHC component."""
     from ihcsdk.ihccontroller import IHCController
     conf = config[DOMAIN]
     url = conf.get(CONF_URL)
