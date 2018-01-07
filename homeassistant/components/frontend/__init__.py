@@ -376,12 +376,11 @@ def async_setup(hass, config):
     for url in conf.get(CONF_EXTRA_HTML_URL_ES5, []):
         add_extra_html_url(hass, url, True)
 
-    yield from async_setup_themes(hass, conf.get(CONF_THEMES))
+    async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-@asyncio.coroutine
 def async_setup_themes(hass, themes):
     """Set up themes data and services."""
     hass.http.register_view(ThemesView)
