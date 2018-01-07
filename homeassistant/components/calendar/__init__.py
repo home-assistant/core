@@ -7,17 +7,19 @@ https://home-assistant.io/components/calendar/
 import asyncio
 import logging
 from datetime import timedelta
-import re
 
-from homeassistant.components.google import (
-    CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
+from aiohttp.web_exceptions import HTTPNotFound
+
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.helpers.config_validation import time_period_str
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
+from homeassistant.components.http import HomeAssistantView
+
+
+DEPENDENCIES = ['http']
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,155 +33,173 @@ SCAN_INTERVAL = timedelta(seconds=60)
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+
+    hass.components.frontend.register_built_in_panel(
+        'calendar', 'Calendar', 'mdi:calendar')
+    hass.http.register_view(CalendarPlatformsView(component))
+    hass.http.register_view(CalendarEventView(component))
 
     yield from component.async_setup(config)
     return True
 
 
-DEFAULT_CONF_TRACK_NEW = True
-DEFAULT_CONF_OFFSET = '!!'
+class Calendar(Entity):
+    """Entity for each calendar platform."""
 
+    @asyncio.coroutine
+    def async_get_events(self):
+        """Return a list of events."""
+        raise NotImplementedError()
 
-# pylint: disable=too-many-instance-attributes
-class CalendarEventDevice(Entity):
-    """A calendar event device."""
-
-    # Classes overloading this must set data to an object
-    # with an update() method
-    data = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(self, hass, data):
-        """Create the Calendar Event Device."""
-        self._name = data.get(CONF_NAME)
-        self.dev_id = data.get(CONF_DEVICE_ID)
-        self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT, self.dev_id, hass=hass)
-
-        self._cal_data = {
-            'all_day': False,
-            'offset_time': dt.dt.timedelta(),
-            'message': '',
-            'start': None,
-            'end': None,
-            'location': '',
-            'description': '',
-        }
-
-        self.update()
-
-    def offset_reached(self):
-        """Have we reached the offset time specified in the event title."""
-        if self._cal_data['start'] is None or \
-           self._cal_data['offset_time'] == dt.dt.timedelta():
-            return False
-
-        return self._cal_data['start'] + self._cal_data['offset_time'] <= \
-            dt.now(self._cal_data['start'].tzinfo)
+    def update_next_event(self):
+        """Find next occuring event in all events."""
+        return next((event for event in self._events if
+                    event.start > dt.now() or
+                    (event.start < dt.now() and
+                     event.end > dt.now())), None)
 
     @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        start = self._cal_data.get('start', None)
-        end = self._cal_data.get('end', None)
-        start = start.strftime(DATE_STR_FORMAT) if start is not None else None
-        end = end.strftime(DATE_STR_FORMAT) if end is not None else None
-
-        return {
-            'message': self._cal_data.get('message', ''),
-            'all_day': self._cal_data.get('all_day', False),
-            'offset_reached': self.offset_reached(),
-            'start_time': start,
-            'end_time': end,
-            'location': self._cal_data.get('location', None),
-            'description': self._cal_data.get('description', None),
-        }
+    def next_event(self):
+        """Return next occuring event."""
+        return None
 
     @property
     def state(self):
-        """Return the state of the calendar event."""
-        start = self._cal_data.get('start', None)
-        end = self._cal_data.get('end', None)
-        if start is None or end is None:
+        """Return the state of the calendar."""
+        if self.next_event is None:
             return STATE_OFF
 
-        now = dt.now()
-
-        if start <= now and end > now:
+        if self.next_event.is_active():
             return STATE_ON
-
-        if now >= end:
-            self.cleanup()
 
         return STATE_OFF
 
-    def cleanup(self):
-        """Cleanup any start/end listeners that were setup."""
-        self._cal_data = {
-            'all_day': False,
-            'offset_time': 0,
-            'message': '',
-            'start': None,
-            'end': None,
-            'location': None,
-            'description': None
+    @property
+    def state_attributes(self):
+        """Return the state attributes."""
+        if self.next_event is None:
+            return None
+
+        data = {
+            'start': self.next_event.start,
+            'end': self.next_event.end,
+            'offset_reached': self.next_event.offset_reached
         }
 
-    def update(self):
-        """Search for the next event."""
-        if not self.data or not self.data.update():
-            # update cached, don't do anything
-            return
+        return data
 
-        if not self.data.event:
-            # we have no event to work on, make sure we're clean
-            self.cleanup()
-            return
 
-        def _get_date(date):
-            """Get the dateTime from date or dateTime as a local."""
-            if 'date' in date:
-                return dt.start_of_local_day(dt.dt.datetime.combine(
-                    dt.parse_date(date['date']), dt.dt.time.min))
-            return dt.as_local(dt.parse_datetime(date['dateTime']))
+class CalendarEvent(object):
+    """Representation of an event."""
 
-        start = _get_date(self.data.event['start'])
-        end = _get_date(self.data.event['end'])
+    @property
+    def start(self):
+        """Return start time set on the event."""
+        return None
 
-        summary = self.data.event.get('summary', '')
+    @property
+    def end(self):
+        """Return end time set on the event."""
+        return None
 
-        # check if we have an offset tag in the message
-        # time is HH:MM or MM
-        reg = '{}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)'.format(self._offset)
-        search = re.search(reg, summary)
-        if search and search.group(1):
-            time = search.group(1)
-            if ':' not in time:
-                if time[0] == '+' or time[0] == '-':
-                    time = '{}0:{}'.format(time[0], time[1:])
-                else:
-                    time = '0:{}'.format(time)
+    @property
+    def message(self):
+        """Return text set on the event."""
+        return None
 
-            offset_time = time_period_str(time)
-            summary = (summary[:search.start()] + summary[search.end():]) \
-                .strip()
-        else:
-            offset_time = dt.dt.timedelta()  # default it
+    @property
+    def location(self):
+        """Return location of the event."""
+        return None
 
-        # cleanup the string so we don't have a bunch of double+ spaces
-        self._cal_data['message'] = re.sub('  +', '', summary).strip()
+    @property
+    def labels(self):
+        """Return labels of the event."""
+        return None
 
-        self._cal_data['offset_time'] = offset_time
-        self._cal_data['location'] = self.data.event.get('location', '')
-        self._cal_data['description'] = self.data.event.get('description', '')
-        self._cal_data['start'] = start
-        self._cal_data['end'] = end
-        self._cal_data['all_day'] = 'date' in self.data.event['start']
+    @property
+    def offset_reached(self):
+        """Return whether event has reached offset time."""
+        if self.start is None or self._offset is None:
+            return False
+
+        return self.start + self._offset <= dt.now(self.start.tzinfo)
+
+    def is_active(self):
+        """Check whether event is currently active."""
+        if self.start is None:
+            return False
+
+        if self.end is None:
+            return False
+
+        now = dt.now()
+
+        if self.start <= now and self.end > now:
+            return True
+
+        return False
+
+    def as_dict(self):
+        """Return response in a dict."""
+        event = {
+            'start': self.start,
+            'end': self.end,
+            'message': self.message
+        }
+
+        if self.location is not None:
+            event['location'] = self.location
+
+        if self.labels is not None:
+            event['labels'] = self.labels
+
+        return event
+
+
+class CalendarView(HomeAssistantView):
+    """Base Calendar view."""
+
+    def __init__(self, component):
+        """Initialize base calendar view."""
+        self._component = component
+
+    def get_calendar(self, platform):
+        """Get calendar by name."""
+        for calendar in self._component.entities.values():
+            if calendar.name == platform:
+                return calendar
+        return None
+
+
+class CalendarPlatformsView(CalendarView):
+    """All platforms view."""
+
+    url = "/api/calendar/platforms"
+    name = "api:calendar:platforms"
+
+    @asyncio.coroutine
+    def get(self, request):
+        """Get all calendars."""
+        for calendar in self._component.entities.values():
+            _LOGGER.debug('Entity: %s', calendar.name)
+
+        return self.json([calendar.name for calendar in
+                          self._component.entities.values()])
+
+
+class CalendarEventView(CalendarView):
+    """Events per platform view."""
+
+    url = "/api/calendar/events/{platform}"
+    name = "api:calendar:events"
+
+    @asyncio.coroutine
+    def get(self, request, platform):
+        """Get all events for platform."""
+        calendar = self.get_calendar(platform)
+        if calendar is None:
+            return HTTPNotFound
+        events = yield from calendar.async_get_events()
+        return self.json(events)

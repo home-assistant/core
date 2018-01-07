@@ -6,21 +6,28 @@ https://home-assistant.io/components/binary_sensor.google_calendar/
 """
 # pylint: disable=import-error
 import logging
-from datetime import timedelta
+import asyncio
+import re
 
-from homeassistant.components.calendar import CalendarEventDevice
+from datetime import timedelta, datetime
+
+
+from homeassistant.components.calendar import Calendar, CalendarEvent
 from homeassistant.components.google import (
-    CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
-    GoogleCalendarService)
+    GoogleCalendarService, TOKEN_FILE, CONF_TRACK, CONF_ENTITIES, CONF_CAL_ID)
 from homeassistant.util import Throttle, dt
+
+from homeassistant.helpers.config_validation import time_period_str
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'GoogleCalendar'
+
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'orderBy': 'startTime',
-    'maxResults': 1,
     'singleEvents': True,
 }
+
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
@@ -34,44 +41,128 @@ def setup_platform(hass, config, add_devices, disc_info=None):
         return
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
-    add_devices([GoogleCalendarEventDevice(hass, calendar_service,
-                                           disc_info[CONF_CAL_ID], data)
+
+    add_devices([GoogleCalendar(calendar_service,
+                                data, disc_info[CONF_CAL_ID])
                  for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
 
-class GoogleCalendarEventDevice(CalendarEventDevice):
-    """A calendar event device."""
+class GoogleCalendar(Calendar):
+    """Entity for Google Calendar events."""
 
-    def __init__(self, hass, calendar_service, calendar, data):
-        """Create the Calendar event device."""
-        self.data = GoogleCalendarData(calendar_service, calendar,
-                                       data.get('search', None))
-        super().__init__(hass, data)
-
-
-class GoogleCalendarData(object):
-    """Class to utilize calendar service object to get next event."""
-
-    def __init__(self, calendar_service, calendar_id, search=None):
-        """Set up how we are going to search the google calendar."""
+    def __init__(self, calendar_service, data, calendar_id):
+        """Initialze Google Calendar entity."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
-        self.search = search
-        self.event = None
+        self.search = data.get('search', None)
+        self._events = []
+
+        self._name = data.get('name', DOMAIN)
+        self._next_event = None
+
+        self.refresh_events()
+
+    @property
+    def name(self):
+        """Return the name of the calendar."""
+        return self._name
+
+    @property
+    def next_event(self):
+        """Return the next occuring event."""
+        return self._next_event
+
+    @asyncio.coroutine
+    def async_get_events(self):
+        """Return a list of events."""
+        return self._events
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Update Calendar."""
+        self.refresh_events()
+        self._next_event = self.update_next_event()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data."""
+    def refresh_events(self):
+        """Update list of event."""
         service = self.calendar_service.get()
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-        params['timeMin'] = dt.now().isoformat('T')
-        params['calendarId'] = self.calendar_id
-        if self.search:
-            params['q'] = self.search
+        params['timeMin'] = dt.now().replace(day=1,
+                                             minute=0,
+                                             hour=0).isoformat('T')
 
-        events = service.events()  # pylint: disable=no-member
+        end = dt.now() + dt.dt.timedelta(weeks=8)
+
+        params['timeMax'] = end.replace(day=1, minute=0, hour=0).isoformat('T')
+        params['calendarId'] = self.calendar_id
+
+        events = service.events()
         result = events.list(**params).execute()
 
         items = result.get('items', [])
-        self.event = items[0] if len(items) == 1 else None
-        return True
+
+        self._events = [GoogleCalendarEvent(item) for item in items]
+        self._events.sort(key=lambda event: event.start)
+
+
+class GoogleCalendarEvent(CalendarEvent):
+    """class for creating google events."""
+
+    def __init__(self, event):
+        """Initialize google event."""
+        self._start = self.convertDatetime(event['start'])
+        self._end = self.convertDatetime(event['end'])
+        self._message = event['summary']
+
+        self._location = event.get('location')
+        self.extract_offset()
+
+    @property
+    def location(self):
+        """Return location of the event."""
+        return self._location
+
+    def convertDatetime(self, dateObject):
+        """Convert dateTime returned from Google."""
+        dateString = dateObject['dateTime']
+        if ":" == dateString[-3:-2]:
+            dateString = dateString[:-3]+dateString[-2:]
+        return datetime.strptime(dateString, '%Y-%m-%dT%H:%M:%S%z')
+
+    @property
+    def start(self):
+        """Return start time set on the event."""
+        return self._start
+
+    @property
+    def end(self):
+        """Return end time set on the event."""
+        return self._end
+
+    @property
+    def message(self):
+        """Return text set on the event."""
+        return self._message
+
+    def extract_offset(self):
+        """Extract offset from title."""
+        reg = '{}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)'.format('!!')  # TODO: Replace hardcoded offset format
+        search = re.search(reg, self._message)
+        if search and search.group(1):
+            time = search.group(1)
+            if ':' not in time:
+                if time[0] == '+' or time[0] == '-':
+                    time = '{}0:{}'.format(time[0], time[1:])
+                else:
+                    time = '0:{}'.format(time)
+
+            offset_time = time_period_str(time)
+
+            summary = (self._message[:search.start()] + self._message[search.end():]) \
+                .strip()
+            self._message = re.sub('  +', '', summary).strip()
+        else:
+            offset_time = dt.dt.timedelta()  # default it
+
+        self._offset = offset_time
