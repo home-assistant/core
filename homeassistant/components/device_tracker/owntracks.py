@@ -95,26 +95,35 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     return True
 
 
-def _parse_topic(topic):
-    """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple.
+def _parse_topic(topic, subscribe_topic):
+    """Parse an MQTT topic {subscribe_topic}/user/dev,
+    return (user, dev) tuple.
 
     Async friendly.
     """
+    subscription = subscribe_topic.split('/')
     try:
-        _, user, device, *_ = topic.split('/', 3)
+        user_index = subscription.index('#')
     except ValueError:
+        _LOGGER.error("Can't parse subscription topic: '%s'", subscribe_topic)
+        raise
+
+    topic_list = topic.split('/')
+    try:
+        user, device = topic_list[user_index], topic_list[user_index + 1]
+    except IndexError:
         _LOGGER.error("Can't parse topic: '%s'", topic)
         raise
 
     return user, device
 
 
-def _parse_see_args(message):
+def _parse_see_args(message, subscribe_topic):
     """Parse the OwnTracks location parameters, into the format see expects.
 
     Async friendly.
     """
-    user, device = _parse_topic(message['topic'])
+    user, device = _parse_topic(message['topic'], subscribe_topic)
     dev_id = slugify('{}_{}'.format(user, device))
     kwargs = {
         'dev_id': dev_id,
@@ -286,7 +295,7 @@ def async_handle_location_message(hass, context, message):
         _LOGGER.debug("Location update ignored due to events_only setting")
         return
 
-    dev_id, kwargs = _parse_see_args(message)
+    dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
 
     if context.regions_entered[dev_id]:
         _LOGGER.debug(
@@ -302,7 +311,7 @@ def async_handle_location_message(hass, context, message):
 def _async_transition_message_enter(hass, context, message, location):
     """Execute enter event."""
     zone = hass.states.get("zone.{}".format(slugify(location)))
-    dev_id, kwargs = _parse_see_args(message)
+    dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
 
     if zone is None and message.get('t') == 'b':
         # Not a HA zone, and a beacon so mobile beacon.
@@ -328,7 +337,7 @@ def _async_transition_message_enter(hass, context, message, location):
 @asyncio.coroutine
 def _async_transition_message_leave(hass, context, message, location):
     """Execute leave event."""
-    dev_id, kwargs = _parse_see_args(message)
+    dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
     regions = context.regions_entered[dev_id]
 
     if location in regions:
@@ -423,7 +432,7 @@ def async_handle_waypoints_message(hass, context, message):
         return
 
     if context.waypoint_whitelist is not None:
-        user = _parse_topic(message['topic'])[0]
+        user = _parse_topic(message['topic'], context.mqtt_topic)[0]
 
         if user not in context.waypoint_whitelist:
             return
@@ -435,7 +444,7 @@ def async_handle_waypoints_message(hass, context, message):
 
     _LOGGER.info("Got %d waypoints from %s", len(wayps), message['topic'])
 
-    name_base = ' '.join(_parse_topic(message['topic']))
+    name_base = ' '.join(_parse_topic(message['topic'], context.mqtt_topic))
 
     for wayp in wayps:
         yield from async_handle_waypoint(hass, name_base, wayp)
