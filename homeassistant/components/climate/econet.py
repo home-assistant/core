@@ -6,7 +6,6 @@ https://home-assistant.io/components/climate.econet/
 """
 import datetime
 import logging
-from os import path
 
 import voluptuous as vol
 

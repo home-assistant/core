@@ -6,7 +6,6 @@ https://home-assistant.io/components/eight_sleep/
 """
 import asyncio
 import logging
-import os
 from datetime import timedelta
 
 import voluptuous as vol

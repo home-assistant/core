@@ -7,7 +7,6 @@ https://home-assistant.io/components/device_tracker/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 from typing import Any, List, Sequence, Callable
 
 import aiohttp

@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_extractor/
 """
 import logging
-import os
 
 import voluptuous as vol
 

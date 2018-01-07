@@ -6,7 +6,6 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import logging
 import multiprocessing
-import os
 from collections import defaultdict
 from functools import reduce
 

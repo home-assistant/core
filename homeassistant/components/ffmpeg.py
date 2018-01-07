@@ -6,7 +6,6 @@ https://home-assistant.io/components/ffmpeg/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 

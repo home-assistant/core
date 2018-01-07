@@ -7,7 +7,6 @@ https://home-assistant.io/components/lock.nuki/
 import asyncio
 from datetime import timedelta
 import logging
-from os import path
 
 import voluptuous as vol
 

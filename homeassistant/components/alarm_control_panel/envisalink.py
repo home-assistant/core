@@ -6,7 +6,6 @@ https://home-assistant.io/components/alarm_control_panel.envisalink/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 

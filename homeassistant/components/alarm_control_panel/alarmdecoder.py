@@ -6,7 +6,6 @@ https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 """
 import asyncio
 import logging
-from os import path
 
 import voluptuous as vol
 

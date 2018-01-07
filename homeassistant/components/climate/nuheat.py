@@ -6,7 +6,6 @@ https://home-assistant.io/components/climate.nuheat/
 """
 import logging
 from datetime import timedelta
-from os import path
 
 import voluptuous as vol
 

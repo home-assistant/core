@@ -9,7 +9,6 @@ https://home-assistant.io/components/calendar.todoist/
 from datetime import datetime
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 

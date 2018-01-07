@@ -7,7 +7,6 @@ https://home-assistant.io/components/zwave/
 import asyncio
 import copy
 import logging
-import os.path
 import time
 from pprint import pprint
 

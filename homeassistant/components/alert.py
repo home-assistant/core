@@ -7,7 +7,6 @@ https://home-assistant.io/components/alert/
 import asyncio
 from datetime import datetime, timedelta
 import logging
-import os
 
 import voluptuous as vol
 

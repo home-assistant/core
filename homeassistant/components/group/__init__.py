@@ -6,7 +6,6 @@ https://home-assistant.io/components/group/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 

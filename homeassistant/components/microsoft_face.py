@@ -7,7 +7,6 @@ https://home-assistant.io/components/microsoft_face/
 import asyncio
 import json
 import logging
-import os
 
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE

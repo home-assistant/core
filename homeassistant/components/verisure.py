@@ -6,7 +6,6 @@ https://home-assistant.io/components/verisure/
 """
 import logging
 import threading
-import os.path
 from datetime import timedelta
 
 import voluptuous as vol

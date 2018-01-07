@@ -6,7 +6,6 @@ https://home-assistant.io/components/foursquare/
 """
 import asyncio
 import logging
-import os
 
 import requests
 import voluptuous as vol

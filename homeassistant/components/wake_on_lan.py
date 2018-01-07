@@ -7,7 +7,6 @@ https://home-assistant.io/components/wake_on_lan/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 

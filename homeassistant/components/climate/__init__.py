@@ -7,7 +7,6 @@ https://home-assistant.io/components/climate/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 import functools as ft
 
 import voluptuous as vol

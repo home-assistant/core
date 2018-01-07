@@ -8,7 +8,6 @@ import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
-import os
 
 import async_timeout
 

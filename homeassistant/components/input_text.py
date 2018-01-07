@@ -4,7 +4,6 @@ Component to offer a way to enter a value into a text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_text/
 """
-import os
 import asyncio
 import logging
 

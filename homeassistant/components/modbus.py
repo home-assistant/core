@@ -6,7 +6,6 @@ https://home-assistant.io/components/modbus/
 """
 import logging
 import threading
-import os
 
 import voluptuous as vol
 

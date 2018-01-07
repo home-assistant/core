@@ -12,7 +12,6 @@ from datetime import timedelta
 import logging
 import hashlib
 from random import SystemRandom
-import os
 
 import aiohttp
 from aiohttp import web

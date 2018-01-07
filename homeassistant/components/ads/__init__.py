@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation.
 https://home-assistant.io/components/ads/
 
 """
-import os
 import threading
 import struct
 import logging

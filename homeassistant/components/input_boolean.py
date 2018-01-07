@@ -6,7 +6,6 @@ at https://home-assistant.io/components/input_boolean/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 

@@ -10,7 +10,6 @@ Component design guidelines:
 import asyncio
 import itertools as it
 import logging
-import os
 
 import homeassistant.core as ha
 import homeassistant.config as conf_util

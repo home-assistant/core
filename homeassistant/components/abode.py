@@ -7,7 +7,6 @@ https://home-assistant.io/components/abode/
 import asyncio
 import logging
 from functools import partial
-from os import path
 
 import voluptuous as vol
 

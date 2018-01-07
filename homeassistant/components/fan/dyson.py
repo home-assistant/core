@@ -5,7 +5,6 @@ https://home-assistant.io/components/fan.dyson/
 """
 import logging
 import asyncio
-from os import path
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (FanEntity, SUPPORT_OSCILLATE,

@@ -6,7 +6,6 @@ https://home-assistant.io/components/logger/
 """
 import asyncio
 import logging
-import os
 from collections import OrderedDict
 
 import voluptuous as vol

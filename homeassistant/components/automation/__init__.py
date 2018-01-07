@@ -7,7 +7,6 @@ https://home-assistant.io/components/automation/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 

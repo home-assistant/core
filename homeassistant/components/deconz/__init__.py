@@ -7,7 +7,6 @@ https://home-assistant.io/components/deconz/
 
 import asyncio
 import logging
-import os
 import voluptuous as vol
 
 from homeassistant.const import (

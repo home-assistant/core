@@ -8,7 +8,6 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
-import os
 import socket
 
 import voluptuous as vol

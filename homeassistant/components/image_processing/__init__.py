@@ -7,7 +7,6 @@ https://home-assistant.io/components/image_processing/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 
