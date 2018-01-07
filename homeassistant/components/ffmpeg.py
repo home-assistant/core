@@ -6,14 +6,12 @@ https://home-assistant.io/components/ffmpeg/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 import homeassistant.helpers.config_validation as cv
@@ -89,10 +87,6 @@ def async_setup(hass, config):
         conf.get(CONF_RUN_TEST, DEFAULT_RUN_TEST)
     )
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     # Register service
     @asyncio.coroutine
     def async_service_handle(service):
@@ -108,15 +102,14 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_START, async_service_handle,
-        descriptions[DOMAIN].get(SERVICE_START), schema=SERVICE_FFMPEG_SCHEMA)
+        schema=SERVICE_FFMPEG_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_STOP, async_service_handle,
-        descriptions[DOMAIN].get(SERVICE_STOP), schema=SERVICE_FFMPEG_SCHEMA)
+        schema=SERVICE_FFMPEG_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RESTART, async_service_handle,
-        descriptions[DOMAIN].get(SERVICE_RESTART),
         schema=SERVICE_FFMPEG_SCHEMA)
 
     hass.data[DATA_FFMPEG] = manager
