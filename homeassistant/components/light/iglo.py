@@ -10,10 +10,11 @@ import voluptuous as vol
 
 from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_COLOR_TEMP,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
     Light, PLATFORM_SCHEMA
 )
+import homeassistant.util.color as color_util
 
 import homeassistant.helpers.config_validation as cv
 
@@ -49,7 +50,7 @@ class IGloLamp(Light):
         self._lamp = Lamp(0, host, port)
         self._on = True
         self._brightness = 255
-        self._rgb = (0, 0, 0)
+        self._hs = (0, 0)
         self._color_temp = 0
 
     @property
@@ -78,14 +79,14 @@ class IGloLamp(Light):
         return 255
 
     @property
-    def rgb_color(self):
-        """Return the RGB value."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs value."""
+        return self._hs
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
 
     @property
     def is_on(self):
@@ -101,8 +102,8 @@ class IGloLamp(Light):
             self._lamp.brightness(brightness)
             return
 
-        if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self._lamp.rgb(*rgb)
             return
 
@@ -120,5 +121,5 @@ class IGloLamp(Light):
         state = self._lamp.state()
         self._on = state['on']
         self._brightness = state['brightness']
-        self._rgb = state['rgb']
+        self._hs = color_util.color_RGB_to_hs(*state['rgb'])
         self._color_temp = 255 - state['white']

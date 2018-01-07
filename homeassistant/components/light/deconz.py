@@ -10,11 +10,11 @@ import asyncio
 from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
+    ATTR_HS_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
+    SUPPORT_COLOR, SUPPORT_TRANSITION)
 from homeassistant.core import callback
-from homeassistant.util.color import color_RGB_to_xy
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['deconz']
 
@@ -55,8 +55,7 @@ class DeconzLight(Light):
             self._features |= SUPPORT_COLOR_TEMP
 
         if self._light.xy is not None:
-            self._features |= SUPPORT_RGB_COLOR
-            self._features |= SUPPORT_XY_COLOR
+            self._features |= SUPPORT_COLOR
 
         if self._light.effect is not None:
             self._features |= SUPPORT_EFFECT
@@ -124,11 +123,8 @@ class DeconzLight(Light):
         if ATTR_COLOR_TEMP in kwargs:
             data['ct'] = kwargs[ATTR_COLOR_TEMP]
 
-        if ATTR_RGB_COLOR in kwargs:
-            xyb = color_RGB_to_xy(
-                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-            data['xy'] = xyb[0], xyb[1]
-            data['bri'] = xyb[2]
+        if ATTR_HS_COLOR in kwargs:
+            data['xy'] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
 
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
