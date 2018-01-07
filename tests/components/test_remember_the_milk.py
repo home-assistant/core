@@ -38,7 +38,8 @@ class TestConfiguration(unittest.TestCase):
     def test_create_new(self):
         """Test creating a new config file."""
         with patch("builtins.open", mock_open()), \
-                patch("os.path.isfile", Mock(return_value=False)):
+                patch("os.path.isfile", Mock(return_value=False)), \
+                patch.object(rtm.RememberTheMilkConfiguration, 'save_config'):
             config = rtm.RememberTheMilkConfiguration(self.hass)
             config.set_token(self.profile, self.token)
         self.assertEqual(config.get_token(self.profile), self.token)
@@ -65,16 +66,17 @@ class TestConfiguration(unittest.TestCase):
         timeseries_id = "my_timeseries"
         rtm_id = "rtm-id-4567"
         with patch("builtins.open", mock_open()), \
-                patch("os.path.isfile", Mock(return_value=False)):
+                patch("os.path.isfile", Mock(return_value=False)), \
+                patch.object(rtm.RememberTheMilkConfiguration, 'save_config'):
             config = rtm.RememberTheMilkConfiguration(self.hass)
 
-        self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
-        config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id,
-                          rtm_id)
-        self.assertEqual((list_id, timeseries_id, rtm_id),
-                         config.get_rtm_id(self.profile, hass_id))
-        config.delete_rtm_id(self.profile, hass_id)
-        self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
+            self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
+            config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id,
+                              rtm_id)
+            self.assertEqual((list_id, timeseries_id, rtm_id),
+                             config.get_rtm_id(self.profile, hass_id))
+            config.delete_rtm_id(self.profile, hass_id)
+            self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
 
     def test_load_key_map(self):
         """Test loading an existing key map from the file."""

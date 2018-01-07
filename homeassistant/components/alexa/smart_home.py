@@ -1,6 +1,5 @@
 """Support for alexa Smart Home Skill API."""
 import asyncio
-from collections import namedtuple
 import logging
 import math
 from uuid import uuid4
@@ -27,10 +26,9 @@ API_EVENT = 'event'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
 
-ATTR_ALEXA_DESCRIPTION = 'alexa_description'
-ATTR_ALEXA_DISPLAY_CATEGORIES = 'alexa_display_categories'
-ATTR_ALEXA_HIDDEN = 'alexa_hidden'
-ATTR_ALEXA_NAME = 'alexa_name'
+CONF_DESCRIPTION = 'description'
+CONF_DISPLAY_CATEGORIES = 'display_categories'
+CONF_NAME = 'name'
 
 
 MAPPING_COMPONENT = {
@@ -73,7 +71,13 @@ MAPPING_COMPONENT = {
 }
 
 
-Config = namedtuple('AlexaConfig', 'filter')
+class Config:
+    """Hold the configuration for Alexa."""
+
+    def __init__(self, should_expose, entity_config=None):
+        """Initialize the configuration."""
+        self.should_expose = should_expose
+        self.entity_config = entity_config or {}
 
 
 @asyncio.coroutine
@@ -150,13 +154,8 @@ def async_api_discovery(hass, config, request):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
-        if not config.filter(entity.entity_id):
+        if not config.should_expose(entity.entity_id):
             _LOGGER.debug("Not exposing %s because filtered by config",
-                          entity.entity_id)
-            continue
-
-        if entity.attributes.get(ATTR_ALEXA_HIDDEN, False):
-            _LOGGER.debug("Not exposing %s because alexa_hidden is true",
                           entity.entity_id)
             continue
 
@@ -165,17 +164,18 @@ def async_api_discovery(hass, config, request):
         if not class_data:
             continue
 
-        friendly_name = entity.attributes.get(ATTR_ALEXA_NAME, entity.name)
-        description = entity.attributes.get(ATTR_ALEXA_DESCRIPTION,
-                                            entity.entity_id)
+        entity_conf = config.entity_config.get(entity.entity_id, {})
+
+        friendly_name = entity_conf.get(CONF_NAME, entity.name)
+        description = entity_conf.get(CONF_DESCRIPTION, entity.entity_id)
 
         # Required description as per Amazon Scene docs
         if entity.domain == scene.DOMAIN:
             scene_fmt = '{} (Scene connected via Home Assistant)'
             description = scene_fmt.format(description)
 
-        cat_key = ATTR_ALEXA_DISPLAY_CATEGORIES
-        display_categories = entity.attributes.get(cat_key, class_data[0])
+        display_categories = entity_conf.get(CONF_DISPLAY_CATEGORIES,
+                                             class_data[0])
 
         endpoint = {
             'displayCategories': [display_categories],

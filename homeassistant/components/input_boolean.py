@@ -27,7 +27,6 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = 'initial'
-DEFAULT_INITIAL = False
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
