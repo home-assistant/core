@@ -122,51 +122,72 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 @bind_hass
 def async_get_all_descriptions(hass):
     """Return descriptions (i.e. user documentation) for all service calls."""
-    yaml_cache = {}
-
     if SERVICE_DESCRIPTION_CACHE not in hass.data:
         hass.data[SERVICE_DESCRIPTION_CACHE] = {}
+    description_cache = hass.data[SERVICE_DESCRIPTION_CACHE]
 
-    def get_description(hass, domain, service):
-        """Return the description for a single service call."""
-        cache_key = "{}.{}".format(domain, service)
-        description = hass.data[SERVICE_DESCRIPTION_CACHE].get(cache_key)
+    def format_cache_key(domain, service):
+        """Build a cache key."""
+        return "{}.{}".format(domain, service)
 
-        if description is None:
+    def domain_yaml_file(domain):
+        """Return the services.yaml location for a domain."""
+        if domain == ha.DOMAIN:
             import homeassistant.components as components
-            catch_all_path = path.dirname(components.__file__)
+            component_path = path.dirname(components.__file__)
+        else:
+            component_path = path.dirname(get_component(domain).__file__)
+        return path.join(component_path, 'services.yaml')
 
-            if domain == ha.DOMAIN:
-                component_path = catch_all_path
-            else:
-                component_path = path.dirname(get_component(domain).__file__)
-            yaml_file = path.join(component_path, 'services.yaml')
-
-            if yaml_file not in yaml_cache:
-                try:
-                    yaml_cache[yaml_file] = load_yaml(yaml_file)
-                except FileNotFoundError:
-                    yaml_cache[yaml_file] = {}
-
-            if component_path == catch_all_path:
-                domain_services = yaml_cache[yaml_file].get(domain, {})
-            else:
-                domain_services = yaml_cache[yaml_file]
-            description = domain_services.get(service, {})
-
-            hass.data[SERVICE_DESCRIPTION_CACHE][cache_key] = description
-
-        return {
-            'description': description.get('description', ''),
-            'fields': description.get('fields', {})
-        }
+    def load_services_file(yaml_file):
+        """Load and cache a services.yaml file."""
+        try:
+            yaml_cache[yaml_file] = load_yaml(yaml_file)
+        except FileNotFoundError:
+            pass
 
     services = hass.services.async_services()
+
+    # Load missing files
+    yaml_cache = {}
+    loading_tasks = []
+    for domain in services:
+        yaml_file = domain_yaml_file(domain)
+
+        for service in services[domain]:
+            if format_cache_key(domain, service) not in description_cache:
+                if yaml_file not in yaml_cache:
+                    yaml_cache[yaml_file] = {}
+                    task = hass.async_add_job(load_services_file, yaml_file)
+                    loading_tasks.append(task)
+
+    if loading_tasks:
+        yield from asyncio.wait(loading_tasks, loop=hass.loop)
+
+    # Build response
+    catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
     descriptions = {}
     for domain in services:
         descriptions[domain] = {}
+        yaml_file = domain_yaml_file(domain)
+
         for service in services[domain]:
-            descriptions[domain][service] = yield from hass.async_add_job(
-                get_description, hass, domain, service)
+            cache_key = format_cache_key(domain, service)
+            description = description_cache.get(cache_key)
+
+            # Cache missing descriptions
+            if description is None:
+                if yaml_file == catch_all_yaml_file:
+                    yaml_services = yaml_cache[yaml_file].get(domain, {})
+                else:
+                    yaml_services = yaml_cache[yaml_file]
+                yaml_description = yaml_services.get(service, {})
+
+                description = description_cache[cache_key] = {
+                    'description': yaml_description.get('description', ''),
+                    'fields': yaml_description.get('fields', {})
+                }
+
+            descriptions[domain][service] = description
 
     return descriptions
