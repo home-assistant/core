@@ -63,10 +63,7 @@ def async_setup(hass, config):
 
         snips_response = None
 
-        if request['intent']['intentName'].startswith('user'):
-            intent_type = request['intent']['intentName'].split('__')[-1]
-        else:
-            intent_type = request['intent']['intentName'].split(':')[-1]
+        intent_type = request['intent']['intentName'].split('__')[-1]
         slots = {}
         for slot in request.get('slots', []):
             slots[slot['slotName']] = {'value': resolve_slot_values(slot)}
