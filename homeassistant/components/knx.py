@@ -123,9 +123,10 @@ class KNXModule(object):
         """Initialization of KNXModule."""
         self.hass = hass
         self.config = config
+        self.connected = False
+        self.initialized = True
         self.init_xknx()
         self.register_callbacks()
-        self.initialized = True
 
     def init_xknx(self):
         """Initialization of KNX object."""
@@ -142,6 +143,7 @@ class KNXModule(object):
             state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
             connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
+        self.connected = True
 
     @asyncio.coroutine
     def stop(self, event):
