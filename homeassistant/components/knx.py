@@ -80,8 +80,11 @@ def async_setup(hass, config):
         yield from hass.data[DATA_KNX].start()
 
     except XKNXException as ex:
-        _LOGGER.exception("Can't connect to KNX interface: %s", ex)
-        return False
+        _LOGGER.warning("Can't connect to KNX interface: %s", ex)
+        hass.components.persistent_notification.async_create(
+            "Can't connect to KNX interface: <br>"
+            "<b>{0}</b>".format(ex),
+            title="KNX")
 
     for component, discovery_type in (
             ('switch', 'Switch'),
@@ -120,7 +123,8 @@ class KNXModule(object):
         """Initialization of KNXModule."""
         self.hass = hass
         self.config = config
-        self.initialized = False
+        self.connected = False
+        self.initialized = True
         self.init_xknx()
         self.register_callbacks()
 
@@ -139,7 +143,7 @@ class KNXModule(object):
             state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
             connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
-        self.initialized = True
+        self.connected = True
 
     @asyncio.coroutine
     def stop(self, event):
