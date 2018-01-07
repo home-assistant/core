@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['alpha_vantage==1.6.0']
+REQUIREMENTS = ['alpha_vantage==1.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 

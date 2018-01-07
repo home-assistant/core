@@ -7,9 +7,11 @@ https://home-assistant.io/components/sensor.isy994/
 import logging
 from typing import Callable  # noqa
 
-import homeassistant.components.isy994 as isy
+from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.isy994 import (ISY994_NODES, ISY994_WEATHER,
+                                             ISYDevice)
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF, STATE_ON, UNIT_UV_INDEX)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -232,37 +234,29 @@ UOM_TO_STATES = {
     }
 }
 
-BINARY_UOM = ['2', '78']
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 sensor platform."""
-    if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error("A connection has not been made to the ISY controller")
-        return False
-
     devices = []
 
-    for node in isy.SENSOR_NODES:
-        if (not node.uom or node.uom[0] not in BINARY_UOM) and \
-                STATE_OFF not in node.uom and STATE_ON not in node.uom:
-            _LOGGER.debug("Loading %s", node.name)
-            devices.append(ISYSensorDevice(node))
+    for node in hass.data[ISY994_NODES][DOMAIN]:
+        _LOGGER.debug("Loading %s", node.name)
+        devices.append(ISYSensorDevice(node))
 
-    for node in isy.WEATHER_NODES:
+    for node in hass.data[ISY994_WEATHER]:
         devices.append(ISYWeatherDevice(node))
 
     add_devices(devices)
 
 
-class ISYSensorDevice(isy.ISYDevice):
+class ISYSensorDevice(ISYDevice):
     """Representation of an ISY994 sensor device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 sensor device."""
-        isy.ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def raw_unit_of_measurement(self) -> str:
@@ -316,14 +310,12 @@ class ISYSensorDevice(isy.ISYDevice):
         return raw_units
 
 
-class ISYWeatherDevice(isy.ISYDevice):
+class ISYWeatherDevice(ISYDevice):
     """Representation of an ISY994 weather device."""
-
-    _domain = 'sensor'
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 weather device."""
-        isy.ISYDevice.__init__(self, node)
+        super().__init__(node)
 
     @property
     def unique_id(self) -> str:

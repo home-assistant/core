@@ -77,9 +77,9 @@ HM_DEVICE_TYPES = {
         'ThermostatGroup'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
-        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
-        'HMWIOSwitch', 'MaxShutterContact', 'Rain', 'WiredSensor',
-        'PresenceIP'],
+        'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
+        'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
+        'WiredSensor', 'PresenceIP'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
@@ -90,6 +90,7 @@ HM_IGNORE_DISCOVERY_NODE = [
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
+    'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
@@ -105,6 +106,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'POWER': ['power', {}],
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
+    'OPERATING_VOLTAGE': ['voltage', {}],
     'WORKING': ['working', {0: 'No', 1: 'Yes'}],
 }
 
@@ -169,6 +171,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
+            vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
@@ -747,10 +751,6 @@ class HMDevice(Entity):
         """Return device specific state attributes."""
         attr = {}
 
-        # No data available
-        if not self.available:
-            return attr
-
         # Generate a dictionary with attributes
         for node, data in HM_ATTRIBUTE_SUPPORT.items():
             # Is an attribute and exists for this object
@@ -805,6 +805,9 @@ class HMDevice(Entity):
         # Availability has changed
         if attribute == 'UNREACH':
             self._available = bool(value)
+            has_changed = True
+        elif not self.available:
+            self._available = False
             has_changed = True
 
         # If it has changed data point, update HASS
