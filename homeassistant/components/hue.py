@@ -12,7 +12,6 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_HUE
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
@@ -207,11 +206,8 @@ class HueBridge(object):
             scene_name = call.data[ATTR_SCENE_NAME]
             self.bridge.run_scene(group_name, scene_name)
 
-        descriptions = load_yaml_config_file(
-            os.path.join(os.path.dirname(__file__), 'services.yaml'))
         self.hass.services.register(
             DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
-            descriptions.get(SERVICE_HUE_SCENE),
             schema=SCENE_SCHEMA)
 
     def request_configuration(self):

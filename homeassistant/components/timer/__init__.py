@@ -6,14 +6,12 @@ at https://home-assistant.io/components/timer/
 """
 import asyncio
 import logging
-import os
 from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -166,23 +164,18 @@ def async_setup(hass, config):
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml')
-    )
-
     hass.services.async_register(
         DOMAIN, SERVICE_START, async_handler_service,
-        descriptions[SERVICE_START], SERVICE_SCHEMA_DURATION)
+        schema=SERVICE_SCHEMA_DURATION)
     hass.services.async_register(
         DOMAIN, SERVICE_PAUSE, async_handler_service,
-        descriptions[SERVICE_PAUSE], SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_CANCEL, async_handler_service,
-        descriptions[SERVICE_CANCEL], SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_FINISH, async_handler_service,
-        descriptions[SERVICE_FINISH], SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True
