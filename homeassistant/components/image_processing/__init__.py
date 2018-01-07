@@ -7,12 +7,10 @@ https://home-assistant.io/components/image_processing/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
 from homeassistant.exceptions import HomeAssistantError
@@ -74,10 +72,6 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_scan_service(service):
         """Service handler for scan."""
@@ -90,7 +84,7 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_scan_service,
-        descriptions.get(SERVICE_SCAN), schema=SERVICE_SCAN_SCHEMA)
+        schema=SERVICE_SCAN_SCHEMA)
 
     return True
 

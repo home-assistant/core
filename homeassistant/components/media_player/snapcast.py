@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.snapcast/
 """
 import asyncio
 import logging
-from os import path
 import socket
 
 import voluptuous as vol
@@ -18,7 +17,6 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST,
     CONF_PORT, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['snapcast==2.0.8']
 
@@ -69,14 +67,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             elif service.service == SERVICE_RESTORE:
                 yield from device.async_restore()
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
     hass.services.async_register(
         DOMAIN, SERVICE_SNAPSHOT, _handle_service,
-        descriptions.get(SERVICE_SNAPSHOT), schema=SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_RESTORE, _handle_service,
-        descriptions.get(SERVICE_RESTORE), schema=SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
 
     try:
         server = yield from snapcast.control.create_server(
