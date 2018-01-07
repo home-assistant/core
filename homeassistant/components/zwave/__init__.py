@@ -623,21 +623,21 @@ def setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_network)
 
         # Register node services for Z-Wave network
-        hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node,
+        hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node)
         hass.services.register(DOMAIN, const.SERVICE_ADD_NODE_SECURE,
-                               add_node_secure,
-        hass.services.register(DOMAIN, const.SERVICE_REMOVE_NODE, remove_node,
+                               add_node_secure)
+        hass.services.register(DOMAIN, const.SERVICE_REMOVE_NODE, remove_node)
         hass.services.register(DOMAIN, const.SERVICE_CANCEL_COMMAND,
-                               cancel_command,
+                               cancel_command)
         hass.services.register(DOMAIN, const.SERVICE_HEAL_NETWORK,
-                               heal_network,
-        hass.services.register(DOMAIN, const.SERVICE_SOFT_RESET, soft_reset,
+                               heal_network)
+        hass.services.register(DOMAIN, const.SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, const.SERVICE_TEST_NETWORK,
-                               test_network,
+                               test_network)
         hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK,
-                               stop_network,
+                               stop_network)
         hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
-                               start_zwave,
+                               start_zwave)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_NODE, rename_node,
                                schema=RENAME_NODE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_VALUE,
