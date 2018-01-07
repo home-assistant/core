@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element
 class IHCDevice:
     """Base class for all ihc devices."""
 
-    def __init__(self, ihc, name, ihc_id, product: Element = None):
+    def __init__(self, ihc, name, ihc_id, product: Element=None):
         """Initialize IHC attributes."""
         self.ihc = ihc
         self._name = name

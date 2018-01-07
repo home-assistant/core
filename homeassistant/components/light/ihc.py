@@ -56,7 +56,7 @@ class IhcLight(IHCDevice, Light):
     """Representation of a IHC light."""
 
     def __init__(self, ihccontroller, name, ihcid, dimmable=False,
-                 product: Element = None):
+                 product: Element=None):
         """Initialize the light."""
         super().__init__(ihccontroller, name, ihcid, product)
         self._brightness = 0

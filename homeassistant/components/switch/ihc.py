@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class IHCSwitch(IHCDevice, SwitchDevice):
     """IHC Switch."""
 
-    def __init__(self, ihc, name: str, ihc_id: int, product: Element = None):
+    def __init__(self, ihc, name: str, ihc_id: int, product: Element=None):
         """Initialize the IHC switch."""
         super().__init__(ihc, name, ihc_id, product)
         self._state = False
