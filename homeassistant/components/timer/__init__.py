@@ -29,6 +29,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DEFAULT_DURATION = 0
 ATTR_DURATION = 'duration'
+ATTR_REMAINING = 'remaining'
 CONF_DURATION = 'duration'
 
 STATUS_IDLE = 'idle'
@@ -227,6 +228,7 @@ class Timer(Entity):
         """Return the state attributes."""
         return {
             ATTR_DURATION: str(self._duration),
+            ATTR_REMAINING: str(self._remaining)
         }
 
     @asyncio.coroutine
