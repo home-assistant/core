@@ -62,22 +62,27 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config[CONF_API_KEY], session=async_get_clientsession(hass),
         timeout=TIMEOUT)
     devices = []
+
+    def maybe_add_device(dev):
+        """Maybe add device if it is whitelisted."""
+        for device_config in config[CONF_ID]:
+            if isinstance(device_config, str):
+                if device_config == dev['id']:
+                    devices.append(SensiboClimate(hass, client, dev, None))
+                    return
+            else:
+                if dev['id'] in device_config:
+                    devices.append(SensiboClimate(
+                        hass, client, dev, device_config.get(dev['id'])))
+                    return
+
     try:
         for dev in (
                 yield from client.async_get_devices(_INITIAL_FETCH_FIELDS)):
             if config[CONF_ID] == ALL:
                 devices.append(SensiboClimate(hass, client, dev, None))
             else:
-                for device_config in config[CONF_ID]:
-                    if isinstance(device_config, str):
-                        if device_config == dev['id']:
-                            devices.append(SensiboClimate(hass, client, dev, None))
-                            break
-                    else:
-                        if dev['id'] in device_config:
-                            devices.append(SensiboClimate(
-                                hass, client, dev, device_config.get(dev['id'])))
-                            break
+                maybe_add_device(dev)
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to Sensibo servers.')
