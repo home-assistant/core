@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.soundtouch/
 """
 import logging
 
-from os import path
 import re
 import voluptuous as vol
 

@@ -6,7 +6,6 @@ https://home-assistant.io/components/notify/
 """
 import asyncio
 import logging
-import os
 from functools import partial
 
 import voluptuous as vol

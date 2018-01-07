@@ -10,7 +10,6 @@ import functools as ft
 import collections
 import hashlib
 import logging
-import os
 from random import SystemRandom
 
 from aiohttp import web

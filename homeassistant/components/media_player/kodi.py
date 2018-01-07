@@ -10,7 +10,6 @@ from functools import wraps
 import logging
 import urllib
 import re
-import os
 
 import aiohttp
 import voluptuous as vol

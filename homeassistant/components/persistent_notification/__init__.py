@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/persistent_notification/
 """
 import asyncio
-import os
 import logging
 
 import voluptuous as vol

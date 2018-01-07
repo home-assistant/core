@@ -8,7 +8,6 @@ import asyncio
 import io
 from functools import partial
 import logging
-import os
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth

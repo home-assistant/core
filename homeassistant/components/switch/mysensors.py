@@ -4,8 +4,6 @@ Support for MySensors switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.mysensors/
 """
-import os
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv

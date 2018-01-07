@@ -6,7 +6,6 @@ at https://home-assistant.io/components/timer/
 """
 import asyncio
 import logging
-import os
 from datetime import timedelta
 
 import voluptuous as vol

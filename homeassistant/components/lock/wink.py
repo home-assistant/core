@@ -6,7 +6,6 @@ https://home-assistant.io/components/lock.wink/
 """
 import asyncio
 import logging
-from os import path
 
 import voluptuous as vol
 

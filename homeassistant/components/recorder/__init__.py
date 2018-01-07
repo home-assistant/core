@@ -10,7 +10,6 @@ https://home-assistant.io/components/recorder/
 import asyncio
 import concurrent.futures
 import logging
-from os import path
 import queue
 import threading
 import time

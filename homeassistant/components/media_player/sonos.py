@@ -8,7 +8,6 @@ import asyncio
 import datetime
 import functools as ft
 import logging
-from os import path
 import socket
 import urllib
 

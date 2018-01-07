@@ -8,7 +8,6 @@ https://home-assistant.io/components/lock.zwave/
 # pylint: disable=import-error
 import asyncio
 import logging
-from os import path
 
 import voluptuous as vol
 

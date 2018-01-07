@@ -4,7 +4,6 @@ Support for system log.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/system_log/
 """
-import os
 import re
 import asyncio
 import logging

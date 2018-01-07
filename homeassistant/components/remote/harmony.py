@@ -6,7 +6,6 @@ https://home-assistant.io/components/remote.harmony/
 """
 import logging
 import asyncio
-from os import path
 import time
 
 import voluptuous as vol

@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.snapcast/
 """
 import asyncio
 import logging
-from os import path
 import socket
 
 import voluptuous as vol
