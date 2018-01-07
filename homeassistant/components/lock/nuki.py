@@ -7,13 +7,11 @@ https://home-assistant.io/components/lock.nuki/
 import asyncio
 from datetime import timedelta
 import logging
-from os import path
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import (DOMAIN, LockDevice, PLATFORM_SCHEMA)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN)
 from homeassistant.helpers.service import extract_entity_ids
@@ -75,15 +73,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif service.service == SERVICE_UNLATCH:
                 lock.unlatch()
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
         DOMAIN, SERVICE_LOCK_N_GO, service_handler,
-        descriptions.get(SERVICE_LOCK_N_GO), schema=LOCK_N_GO_SERVICE_SCHEMA)
+        schema=LOCK_N_GO_SERVICE_SCHEMA)
     hass.services.register(
         DOMAIN, SERVICE_UNLATCH, service_handler,
-        descriptions.get(SERVICE_UNLATCH), schema=UNLATCH_SERVICE_SCHEMA)
+        schema=UNLATCH_SERVICE_SCHEMA)
 
 
 class NukiLock(LockDevice):

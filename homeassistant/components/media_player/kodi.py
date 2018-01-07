@@ -10,12 +10,10 @@ from functools import wraps
 import logging
 import urllib
 import re
-import os
 
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
@@ -207,15 +205,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
         return
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]['schema']
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
-            description=descriptions.get(service), schema=schema)
+            schema=schema)
 
 
 def cmd(func):

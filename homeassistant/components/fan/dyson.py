@@ -5,7 +5,6 @@ https://home-assistant.io/components/fan.dyson/
 """
 import logging
 import asyncio
-from os import path
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (FanEntity, SUPPORT_OSCILLATE,
@@ -13,7 +12,6 @@ from homeassistant.components.fan import (FanEntity, SUPPORT_OSCILLATE,
                                           DOMAIN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.config import load_yaml_config_file
 
 DEPENDENCIES = ['dyson']
 
@@ -44,9 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(hass.data[DYSON_FAN_DEVICES])
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     def service_handle(service):
         """Handle dyson services."""
         entity_id = service.data.get('entity_id')
@@ -64,7 +59,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Register dyson service(s)
     hass.services.register(DOMAIN, SERVICE_SET_NIGHT_MODE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_NIGHT_MODE),
                            schema=DYSON_SET_NIGHT_MODE_SCHEMA)
 
 
