@@ -38,14 +38,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if smappee.is_remote_active:
         for sensor in SENSOR_TYPES:
             if 'remote' in SENSOR_TYPES[sensor]:
-                for location_id in smappee.locations.items():
+                for location_id in smappee.locations.keys():
                     dev.append(SmappeeSensor(smappee, location_id, sensor))
 
     if smappee.is_local_active:
         for sensor in SENSOR_TYPES:
             if 'local' in SENSOR_TYPES[sensor]:
                 if smappee.is_remote_active:
-                    for location_id in smappee.locations.items():
+                    for location_id in smappee.locations.keys():
                         dev.append(SmappeeSensor(smappee, location_id, sensor))
                 else:
                     dev.append(SmappeeSensor(smappee, None, sensor))

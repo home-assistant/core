@@ -22,12 +22,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     smappee = hass.data[DATA_SMAPPEE]
 
     dev = []
-    for location_id in smappee.locations.items():
-        for items in smappee.info[location_id].get('actuators'):
-            if items.get('name') is not '':
-                dev.append(SmappeeSwitch(smappee,
-                                         location_id,
-                                         items.get('id')))
+    if smappee.is_remote_active:
+        for location_id in smappee.locations.keys():
+            for items in smappee.info[location_id].get('actuators'):
+                if items.get('name') is not '':
+                    dev.append(SmappeeSwitch(smappee,
+                                             location_id,
+                                             items.get('id')))
 
     add_devices(dev)
 
@@ -72,6 +73,16 @@ class SmappeeSwitch(SwitchDevice):
         self._smappee.actuator_off(self._location_id, self._switch_id)
         self._smappee.actuator_off(self._location_id, self._switch_id)
         self._state = False
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attr = {}
+        if self._location_id:
+            attr['Location Id'] = self._location_id
+            attr['Location Name'] = self._smappee.locations[self._location_id]
+        attr['Switch Id'] = self._switch_id
+        return attr
 
     def update(self):
         """Get the latest data from the device and update the data."""
