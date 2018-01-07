@@ -253,10 +253,13 @@ class TestSensorMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', '[ "list", "of", "things"]')
         self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
 
-        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertEqual(None,
+                         state.attributes.get('val'))
         self.assertTrue(mock_logger.warning.called)
 
+    @patch('homeassistant.components.sensor.mqtt._LOGGER')
     def test_update_with_json_attrs_bad_JSON(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         mock_component(self.hass, 'mqtt')
@@ -273,7 +276,9 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', 'This is not JSON')
         self.hass.block_till_done()
 
-        self.assertEqual({}, self.sensor.device_state_attributes)
+        state = self.hass.states.get('sensor.test')
+        self.assertEqual(None,
+                         state.attributes.get('val'))
         self.assertTrue(mock_logger.warning.called)
         self.assertTrue(mock_logger.debug.called)
 
