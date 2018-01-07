@@ -16,7 +16,6 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
     CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
@@ -216,9 +215,6 @@ def async_setup(hass, config):
         return False
 
     p_config = config[DOMAIN][0]
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     p_type = p_config.get(CONF_PLATFORM)
 
@@ -301,7 +297,7 @@ def async_setup(hass, config):
     for service_notif, schema in SERVICE_MAP.items():
         hass.services.async_register(
             DOMAIN, service_notif, async_send_telegram_message,
-            descriptions.get(service_notif), schema=schema)
+            schema=schema)
 
     return True
 

@@ -13,7 +13,6 @@ import os
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
     SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
@@ -183,10 +182,6 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_handle_vacuum_service(service):
         """Map services to methods on VacuumDevice."""
@@ -210,7 +205,7 @@ def async_setup(hass, config):
             'schema', VACUUM_SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, service, async_handle_vacuum_service,
-            descriptions.get(service), schema=schema)
+            schema=schema)
 
     return True
 

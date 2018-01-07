@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -96,17 +95,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             thermostat.schedule_update_ha_state(True)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
         DOMAIN, SERVICE_SET_FAN_MIN_ON_TIME, fan_min_on_time_set_service,
-        descriptions.get(SERVICE_SET_FAN_MIN_ON_TIME),
         schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
-        descriptions.get(SERVICE_RESUME_PROGRAM),
         schema=RESUME_PROGRAM_SCHEMA)
 
 

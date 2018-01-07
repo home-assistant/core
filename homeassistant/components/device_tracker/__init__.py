@@ -207,12 +207,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                  ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
         yield from tracker.async_see(**args)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml')
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEE, async_see_service, descriptions.get(SERVICE_SEE))
+    hass.services.async_register(DOMAIN, SERVICE_SEE, async_see_service)
 
     # restore
     yield from tracker.async_setup_tracked_device()

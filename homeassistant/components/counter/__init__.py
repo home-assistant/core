@@ -11,7 +11,6 @@ import os
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -133,20 +132,12 @@ def async_setup(hass, config):
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     hass.services.async_register(
-        DOMAIN, SERVICE_INCREMENT, async_handler_service,
-        descriptions[SERVICE_INCREMENT], SERVICE_SCHEMA)
+        DOMAIN, SERVICE_INCREMENT, async_handler_service)
     hass.services.async_register(
-        DOMAIN, SERVICE_DECREMENT, async_handler_service,
-        descriptions[SERVICE_DECREMENT], SERVICE_SCHEMA)
+        DOMAIN, SERVICE_DECREMENT, async_handler_service)
     hass.services.async_register(
-        DOMAIN, SERVICE_RESET, async_handler_service,
-        descriptions[SERVICE_RESET], SERVICE_SCHEMA)
+        DOMAIN, SERVICE_RESET, async_handler_service)
 
     yield from component.async_add_entities(entities)
     return True

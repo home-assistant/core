@@ -428,16 +428,9 @@ def async_setup_themes(hass, themes):
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
         update_theme_and_fire_event()
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(DOMAIN, SERVICE_SET_THEME,
-                                 set_theme,
-                                 descriptions[SERVICE_SET_THEME],
-                                 SERVICE_SET_THEME_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
-                                 descriptions[SERVICE_RELOAD_THEMES])
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_THEME, set_theme, schema=SERVICE_SET_THEME_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
 
 
 class IndexView(HomeAssistantView):

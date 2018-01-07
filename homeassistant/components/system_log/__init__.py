@@ -15,7 +15,6 @@ from collections import deque
 import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 
@@ -84,13 +83,8 @@ def async_setup(hass, config):
         # Only one service so far
         handler.records.clear()
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR, async_service_handler,
-        descriptions[DOMAIN].get(SERVICE_CLEAR),
         schema=SERVICE_CLEAR_SCHEMA)
 
     return True
