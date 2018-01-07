@@ -138,6 +138,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.assertEqual(['group.test'], service.extract_entity_ids(
             self.hass, call, expand_group=False))
 
+
 @asyncio.coroutine
 def test_async_get_all_descriptions(hass):
     """Test async_get_all_descriptions."""

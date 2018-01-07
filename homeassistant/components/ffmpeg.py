@@ -107,7 +107,7 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_STOP, async_service_handle,
-         schema=SERVICE_FFMPEG_SCHEMA)
+        schema=SERVICE_FFMPEG_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RESTART, async_service_handle,
