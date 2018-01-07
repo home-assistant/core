@@ -13,8 +13,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DEFAULT_SCAN_INTERVAL, SOURCE_TYPE_ROUTER)
-from homeassistant.helpers.event import track_point_in_utc_time
+    PLATFORM_SCHEMA, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
+    SOURCE_TYPE_ROUTER)
 from homeassistant import util
 from homeassistant import const
 
@@ -70,16 +70,21 @@ def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Host objects and return the update function."""
     hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
              config[const.CONF_HOSTS].items()]
-    interval = timedelta(seconds=len(hosts) * config[CONF_PING_COUNT]) + \
-        DEFAULT_SCAN_INTERVAL
-    _LOGGER.info("Started ping tracker with interval=%s on hosts: %s",
-                 interval, ",".join([host.ip_address for host in hosts]))
+    interval = config.get(CONF_SCAN_INTERVAL,
+                          timedelta(seconds=len(hosts) *
+                                    config[CONF_PING_COUNT])
+                          + DEFAULT_SCAN_INTERVAL)
+    _LOGGER.debug("Started ping tracker with interval=%s on hosts: %s",
+                  interval, ",".join([host.ip_address for host in hosts]))
 
-    def update(now):
+    def update_interval(now):
         """Update all the hosts on every interval time."""
-        for host in hosts:
-            host.update(see)
-        track_point_in_utc_time(hass, update, util.dt.utcnow() + interval)
-        return True
+        try:
+            for host in hosts:
+                host.update(see)
+        finally:
+            hass.helpers.event.track_point_in_utc_time(
+                update_interval, util.dt.utcnow() + interval)
 
-    return update(util.dt.utcnow())
+    update_interval(None)
+    return True

@@ -15,7 +15,6 @@ import voluptuous as vol
 
 # Typing imports
 # pylint: disable=using-constant-test,unused-import,ungrouped-imports
-# if False:
 from homeassistant.core import HomeAssistant  # NOQA
 from typing import Dict, Any  # NOQA
 
@@ -26,12 +25,12 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     DOMAIN, CONF_PROJECT_ID, CONF_CLIENT_ID, CONF_ACCESS_TOKEN,
-    CONF_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS,
-    CONF_AGENT_USER_ID, CONF_API_KEY,
+    CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS,
+    DEFAULT_EXPOSED_DOMAINS, CONF_AGENT_USER_ID, CONF_API_KEY,
     SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL
 )
 from .auth import GoogleAssistantAuthView
-from .http import GoogleAssistantView
+from .http import async_register_http
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +44,10 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Required(CONF_PROJECT_ID): cv.string,
             vol.Required(CONF_CLIENT_ID): cv.string,
             vol.Required(CONF_ACCESS_TOKEN): cv.string,
-            vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
-            vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
+            vol.Optional(CONF_EXPOSE_BY_DEFAULT,
+                         default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
+            vol.Optional(CONF_EXPOSED_DOMAINS,
+                         default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
             vol.Optional(CONF_AGENT_USER_ID,
                          default=DEFAULT_AGENT_USER_ID): cv.string,
             vol.Optional(CONF_API_KEY): cv.string
@@ -73,7 +74,7 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
                 os.path.dirname(__file__), 'services.yaml')
         )
     hass.http.register_view(GoogleAssistantAuthView(hass, config))
-    hass.http.register_view(GoogleAssistantView(hass, config))
+    async_register_http(hass, config)
 
     @asyncio.coroutine
     def request_sync_service_handler(call):
@@ -94,7 +95,7 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Could not contact Google for request_sync")
 
-# Register service only if api key is provided
+    # Register service only if api key is provided
     if api_key is not None:
         hass.services.async_register(
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler,

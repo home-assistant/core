@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_ON, STATE_OFF, STATE_AUTO, PLATFORM_SCHEMA, ClimateDevice)
+    STATE_ON, STATE_OFF, STATE_AUTO, PLATFORM_SCHEMA, ClimateDevice,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.const import (
     CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
@@ -36,6 +37,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES):
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_AWAY_MODE)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -71,6 +75,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self._name = _name
         self._thermostat = eq3.Thermostat(_mac)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def available(self) -> bool:

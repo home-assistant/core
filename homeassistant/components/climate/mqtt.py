@@ -15,11 +15,14 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
-    ATTR_OPERATION_MODE)
+    ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
+    SUPPORT_AUX_HEAT)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME)
-from homeassistant.components.mqtt import (CONF_QOS, CONF_RETAIN,
-                                           MQTT_BASE_PLATFORM_SCHEMA)
+from homeassistant.components.mqtt import (
+    CONF_AVAILABILITY_TOPIC, CONF_QOS, CONF_RETAIN, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, MQTT_BASE_PLATFORM_SCHEMA, MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
@@ -91,7 +94,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
     vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -132,19 +135,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             STATE_OFF, STATE_OFF, False,
             config.get(CONF_SEND_IF_OFF),
             config.get(CONF_PAYLOAD_ON),
-            config.get(CONF_PAYLOAD_OFF))
+            config.get(CONF_PAYLOAD_OFF),
+            config.get(CONF_AVAILABILITY_TOPIC),
+            config.get(CONF_PAYLOAD_AVAILABLE),
+            config.get(CONF_PAYLOAD_NOT_AVAILABLE))
     ])
 
 
-class MqttClimate(ClimateDevice):
+class MqttClimate(MqttAvailability, ClimateDevice):
     """Representation of a demo climate device."""
 
     def __init__(self, hass, name, topic, qos, retain, mode_list,
                  fan_mode_list, swing_mode_list, target_temperature, away,
                  hold, current_fan_mode, current_swing_mode,
                  current_operation, aux, send_if_off, payload_on,
-                 payload_off):
+                 payload_off, availability_topic, payload_available,
+                 payload_not_available):
         """Initialize the climate device."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self.hass = hass
         self._name = name
         self._topic = topic
@@ -167,8 +176,11 @@ class MqttClimate(ClimateDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle being added to home assistant."""
+        yield from super().async_added_to_hass()
+
         @callback
         def handle_current_temp_received(topic, payload, qos):
             """Handle current temperature coming via MQTT."""
@@ -483,3 +495,38 @@ class MqttClimate(ClimateDevice):
         if self._topic[CONF_AUX_STATE_TOPIC] is None:
             self._aux = False
             self.async_schedule_update_ha_state()
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        support = 0
+
+        if (self._topic[CONF_TEMPERATURE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_TEMPERATURE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_TARGET_TEMPERATURE
+
+        if (self._topic[CONF_MODE_COMMAND_TOPIC] is not None) or \
+           (self._topic[CONF_MODE_STATE_TOPIC] is not None):
+            support |= SUPPORT_OPERATION_MODE
+
+        if (self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_FAN_MODE
+
+        if (self._topic[CONF_SWING_MODE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_SWING_MODE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_SWING_MODE
+
+        if (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_AWAY_MODE
+
+        if (self._topic[CONF_HOLD_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_HOLD_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_HOLD_MODE
+
+        if (self._topic[CONF_AUX_STATE_TOPIC] is not None) or \
+           (self._topic[CONF_AUX_COMMAND_TOPIC] is not None):
+            support |= SUPPORT_AUX_HEAT
+
+        return support

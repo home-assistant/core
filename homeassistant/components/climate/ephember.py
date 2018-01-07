@@ -9,7 +9,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE)
+    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT)
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
@@ -55,6 +55,11 @@ class EphEmberThermostat(ClimateDevice):
         self._zone_name = zone['name']
         self._zone = zone
         self._hot_water = zone['isHotWater']
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_AUX_HEAT
 
     @property
     def name(self):

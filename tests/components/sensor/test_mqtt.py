@@ -7,7 +7,7 @@ from unittest.mock import patch
 import homeassistant.core as ha
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
 
 from tests.common import mock_mqtt_component, fire_mqtt_message
@@ -184,6 +184,34 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
         self.assertEqual(2, len(events))
+
+    def test_custom_availability_payload(self):
+        """Test availability by custom payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'availability_topic': 'availability-topic',
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
+            }
+        }))
+
+        state = self.hass.states.get('sensor.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
 
     def _send_time_changed(self, now):
         """Send a time changed event."""

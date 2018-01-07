@@ -12,15 +12,15 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC)
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
+)
 
-REQUIREMENTS = ['miflora==0.1.16']
+REQUIREMENTS = ['miflora==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ADAPTER = 'adapter'
 CONF_CACHE = 'cache_value'
-CONF_FORCE_UPDATE = 'force_update'
 CONF_MEDIAN = 'median'
 CONF_RETRIES = 'retries'
 CONF_TIMEOUT = 'timeout'
@@ -60,11 +60,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
+    from miflora.backends.gatttool import GatttoolBackend
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(
         config.get(CONF_MAC), cache_timeout=cache,
-        adapter=config.get(CONF_ADAPTER))
+        adapter=config.get(CONF_ADAPTER), backend=GatttoolBackend)
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)

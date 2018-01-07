@@ -7,8 +7,11 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import climate
-from homeassistant.const import STATE_OFF
-
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.components.climate import (
+               SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+               SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
+               SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT)
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
                           fire_mqtt_message, mock_component)
 
@@ -50,6 +53,17 @@ class TestMQTTClimate(unittest.TestCase):
         self.assertEqual("low", state.attributes.get('fan_mode'))
         self.assertEqual("off", state.attributes.get('swing_mode'))
         self.assertEqual("off", state.attributes.get('operation_mode'))
+
+    def test_supported_features(self):
+        """Test the supported_features."""
+        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        support = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                   SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE |
+                   SUPPORT_HOLD_MODE | SUPPORT_AUX_HEAT)
+
+        self.assertEqual(state.attributes.get("supported_features"), support)
 
     def test_get_operation_modes(self):
         """Test that the operation list returns the correct modes."""
@@ -418,3 +432,27 @@ class TestMQTTClimate(unittest.TestCase):
                          self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('aux_heat'))
+
+    def test_custom_availability_payload(self):
+        """Test availability by custom payload with defined topic."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['availability_topic'] = 'availability-topic'
+        config['climate']['payload_available'] = 'good'
+        config['climate']['payload_not_available'] = 'nogood'
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get('climate.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('climate.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('climate.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)

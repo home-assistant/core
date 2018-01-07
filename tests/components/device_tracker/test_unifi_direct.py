@@ -11,7 +11,8 @@ import voluptuous as vol
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
-    CONF_CONSIDER_HOME, CONF_TRACK_NEW)
+    CONF_CONSIDER_HOME, CONF_TRACK_NEW, CONF_AWAY_HIDE,
+    CONF_NEW_DEVICE_DEFAULTS)
 from homeassistant.components.device_tracker.unifi_direct import (
     DOMAIN, CONF_PORT, PLATFORM_SCHEMA, _response_to_json, get_scanner)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
@@ -54,7 +55,11 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
                 CONF_USERNAME: 'fake_user',
                 CONF_PASSWORD: 'fake_pass',
                 CONF_TRACK_NEW: True,
-                CONF_CONSIDER_HOME: timedelta(seconds=180)
+                CONF_CONSIDER_HOME: timedelta(seconds=180),
+                CONF_NEW_DEVICE_DEFAULTS: {
+                    CONF_TRACK_NEW: True,
+                    CONF_AWAY_HIDE: False
+                }
             }
         }
 

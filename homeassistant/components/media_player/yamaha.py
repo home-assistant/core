@@ -27,6 +27,7 @@ SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
+CONF_ZONE_NAMES = 'zone_names'
 CONF_ZONE_IGNORE = 'zone_ignore'
 
 DEFAULT_NAME = 'Yamaha Receiver'
@@ -40,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ZONE_IGNORE, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+    vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
 })
 
 
@@ -57,6 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     source_ignore = config.get(CONF_SOURCE_IGNORE)
     source_names = config.get(CONF_SOURCE_NAMES)
     zone_ignore = config.get(CONF_ZONE_IGNORE)
+    zone_names = config.get(CONF_ZONE_NAMES)
 
     if discovery_info is not None:
         name = discovery_info.get('name')
@@ -84,14 +87,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if receiver.zone not in zone_ignore:
             hass.data[KNOWN].add(receiver.ctrl_url)
             add_devices([
-                YamahaDevice(name, receiver, source_ignore, source_names)
+                YamahaDevice(name, receiver, source_ignore,
+                             source_names, zone_names)
             ], True)
 
 
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha device."""
 
-    def __init__(self, name, receiver, source_ignore, source_names):
+    def __init__(self, name, receiver, source_ignore,
+                 source_names, zone_names):
         """Initialize the Yamaha Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -101,6 +106,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._source_list = None
         self._source_ignore = source_ignore or []
         self._source_names = source_names or {}
+        self._zone_names = zone_names or {}
         self._reverse_mapping = None
         self._playback_support = None
         self._is_playback_supported = False
@@ -148,9 +154,10 @@ class YamahaDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         name = self._name
-        if self._zone != "Main_Zone":
+        zone_name = self._zone_names.get(self._zone, self._zone)
+        if zone_name != "Main_Zone":
             # Zone will be one of Main_Zone, Zone_2, Zone_3
-            name += " " + self._zone.replace('_', ' ')
+            name += " " + zone_name.replace('_', ' ')
         return name
 
     @property
