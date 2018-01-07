@@ -152,12 +152,12 @@ def test_async_get_all_descriptions(hass):
     assert 'description' in descriptions['group']['reload']
     assert 'fields' in descriptions['group']['reload']
 
-    remote = loader.get_component('remote')
-    remote_config = {remote.DOMAIN: {}}
-    yield from async_setup_component(hass, remote.DOMAIN, remote_config)
+    logger = loader.get_component('logger')
+    logger_config = {logger.DOMAIN: {}}
+    yield from async_setup_component(hass, logger.DOMAIN, logger_config)
     descriptions = yield from service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
 
-    assert 'description' in descriptions[remote.DOMAIN]['send_command']
-    assert 'fields' in descriptions[remote.DOMAIN]['send_command']
+    assert 'description' in descriptions[logger.DOMAIN]['set_level']
+    assert 'fields' in descriptions[logger.DOMAIN]['set_level']
