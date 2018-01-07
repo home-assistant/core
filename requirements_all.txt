@@ -1034,7 +1034,7 @@ samsungctl==0.6.0
 satel_integra==0.1.0
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.19
+schiene==0.20
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
