@@ -236,6 +236,8 @@ def test_exposed_modules(hass, caplog):
     caplog.set_level(logging.ERROR)
     source = """
 hass.states.set('module.time', time.strftime('%Y', time.gmtime(521276400)))
+hass.states.set('module.time_strptime',
+                time.strftime('%H:%M', time.strptime('12:34', '%H:%M')))
 hass.states.set('module.datetime',
                 datetime.timedelta(minutes=1).total_seconds())
 """
@@ -244,6 +246,7 @@ hass.states.set('module.datetime',
     yield from hass.async_block_till_done()
 
     assert hass.states.is_state('module.time', '1986')
+    assert hass.states.is_state('module.time_strptime', '12:34')
     assert hass.states.is_state('module.datetime', '60.0')
 
     # No errors logged = good
