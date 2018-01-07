@@ -126,9 +126,7 @@ def async_get_all_descriptions(hass):
         hass.data[SERVICE_DESCRIPTION_CACHE] = {}
     description_cache = hass.data[SERVICE_DESCRIPTION_CACHE]
 
-    def format_cache_key(domain, service):
-        """Build a cache key."""
-        return "{}.{}".format(domain, service)
+    format_cache_key = '{}.{}'.format
 
     def domain_yaml_file(domain):
         """Return the services.yaml location for a domain."""

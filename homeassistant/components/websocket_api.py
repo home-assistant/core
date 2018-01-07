@@ -468,12 +468,12 @@ class ActiveConnection:
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
         @asyncio.coroutine
-        def call_service_helper(msg):
-            """Call a service and fire complete message."""
+        def get_services_helper(msg):
+            """Get available services and fire complete message."""
             descriptions = yield from async_get_all_descriptions(self.hass)
             self.send_message_outside(result_message(msg['id'], descriptions))
 
-        self.hass.async_add_job(call_service_helper(msg))
+        self.hass.async_add_job(get_services_helper(msg))
 
     def handle_get_config(self, msg):
         """Handle get config command.
