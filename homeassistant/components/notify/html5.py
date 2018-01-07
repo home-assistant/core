@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.html5/
 """
 import asyncio
+from copy import deepcopy
 import datetime
 import json
 import logging
@@ -131,17 +132,6 @@ def _load_config(filename):
     except HomeAssistantError:
         pass
     return {}
-
-
-class JSONBytesDecoder(json.JSONEncoder):
-    """JSONEncoder to decode bytes objects to unicode."""
-
-    # pylint: disable=method-hidden
-    def default(self, obj):
-        """Decode object if it's a bytes object, else defer to base class."""
-        if isinstance(obj, bytes):
-            return obj.decode()
-        return json.JSONEncoder.default(self, obj)
 
 
 class HTML5PushRegistrationView(HomeAssistantView):
@@ -408,8 +398,12 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
-            response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+            # Deepcopy here because WebPusher alters our reference with byte()
+            # Remove deepcopy when pywebpush releases a new version (>1.4.0)
+            # See https://github.com/home-assistant/home-assistant/pull/11437
+            subscription = deepcopy(info[ATTR_SUBSCRIPTION])
+            response = WebPusher(subscription).send(
+                json.dumps(payload), gcm_key=self._gcm_key, ttl=86400)
 
             # pylint: disable=no-member
             if response.status_code == 410:
