@@ -146,6 +146,7 @@ def test_intent_speech_response(hass, mqtt_mock):
     assert payload['text'] == 'I am speaking to you'
     assert topic == 'hermes/dialogueManager/endSession'
 
+
 @asyncio.coroutine
 def test_snips_unknown_intent(hass, mqtt_mock):
     """Test calling unknown Intent via Snips."""
@@ -175,6 +176,7 @@ def test_snips_unknown_intent(hass, mqtt_mock):
                             payload)
     yield from hass.async_block_till_done()
 
+    assert len(intents) == 0
     assert len(events) == 1
     assert events[0].data['domain'] == 'mqtt'
     assert events[0].data['service'] == 'publish'
