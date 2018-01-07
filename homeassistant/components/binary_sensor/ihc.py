@@ -10,8 +10,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.ihc import validate_name, IHC_DATA
 from homeassistant.components.ihc.const import CONF_AUTOSETUP, CONF_INVERTING
 from homeassistant.components.ihc.ihcdevice import IHCDevice
-from homeassistant.const import (STATE_UNKNOWN, CONF_NAME, CONF_TYPE,
-                                 CONF_ID, CONF_BINARY_SENSORS)
+from homeassistant.const import (
+    CONF_NAME, CONF_TYPE, CONF_ID, CONF_BINARY_SENSORS)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ihc']
@@ -64,7 +64,7 @@ class IHCBinarySensor(IHCDevice, BinarySensorDevice):
                  inverting: bool, product: Element = None):
         """Initialize the IHC binary sensor."""
         super().__init__(ihc, name, ihc_id, product)
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._sensor_type = sensor_type
         self.inverting = inverting
 
