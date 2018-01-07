@@ -3,7 +3,6 @@ Dahua Camera lock (VTO2000A)
 """
 import asyncio
 import logging
-import collections
 import requests
 
 import voluptuous as vol
@@ -11,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.camera import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
+    CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "dahua"
@@ -45,20 +44,20 @@ class Dahua(LockDevice):
         """Initialize a Dahua Lock."""
 
         self._name = config.get(CONF_NAME)
-        self._url  = "http://{}".format(config.get(CONF_HOST))
+        self._url = "http://{}".format(config.get(CONF_HOST))
         self._session = requests.Session()
         self._state = True
         payload_homepage = dict(
             method="global.login",
             params=dict(userName=config.get(CONF_USERNAME), password="",
-            clientType="Web3.0"),
+                        clientType="Web3.0"),
             id=1,
             session=0
         )
         response = self._session.post("{}/RPC2_Login".format(self._url),
-                                        json=payload_homepage).json()
+                                      json=payload_homepage).json()
         self._session_id = response.get("session")
-        self._session.headers["Cookie"]="DhWebClientSessionID=%s" % self._session_id
+        self._session.headers["Cookie"] = "DhWebClientSessionID=%s" % (self._session_id)
         _LOGGER.debug("%s: URL %s session_id=%s",
                       self._name, self._url, self._session_id)
         payload_login = dict(
@@ -89,7 +88,7 @@ class Dahua(LockDevice):
                 session=self._session_id
             )
             response = self._session.post("{}/RPC2".format(self._url),
-                                            json=payload_object_id).json()
+                                          json=payload_object_id).json()
             payload_open = dict(
                 method="accessControl.openDoor",
                 params=dict(Type="Remote"),
@@ -98,7 +97,7 @@ class Dahua(LockDevice):
                 object=response.get("result")
             )
             response = self._session.post("{}/RPC2".format(self._url),
-                                            json=payload_open).json()
+                                          json=payload_open).json()
             _LOGGER.debug("%s: unlock=%s",
                           self._name, response.get("result"))
 
