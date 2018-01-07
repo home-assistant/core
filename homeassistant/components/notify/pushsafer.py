@@ -120,7 +120,6 @@ class PushsaferNotificationService(BaseNotificationService):
     @classmethod
     def convertbase64string(cls, filebyte, mimetype):
         """Convert the image to the expected base64 string of pushsafer."""
-
         if mimetype not in _ALLOWED_IMAGES:
             _LOGGER.warning("%s is a not supported mimetype for images",
                             mimetype)
