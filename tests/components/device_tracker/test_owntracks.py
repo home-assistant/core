@@ -664,8 +664,6 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         # Location update processed
         self.assert_location_state('outer')
 
-        return
-
     # Region Beacon based event entry / exit testing
 
     def test_event_region_entry_exit(self):
@@ -1404,3 +1402,37 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
 
         self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(LOCATION_MESSAGE['lat'])
+
+    def test_customized_mqtt_topic(self):
+        """Test subscribing to a custom mqtt topic"""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_MQTT_TOPIC: 'mytracks/#',
+                    }})
+
+        topic = 'mytracks/{}/{}'.format(USER, DEVICE)
+
+        self.send_message(topic, LOCATION_MESSAGE)
+        self.assert_location_latitude(LOCATION_MESSAGE['lat'])
+
+    def test_region_mapping(self):
+        """Test region to zone mapping"""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_REGION_MAPPING: {
+                        'foo': 'inner'
+                    },
+                    }})
+
+        self.hass.states.set(
+            'zone.inner', 'zoning', INNER_ZONE)
+
+        message = build_message({'desc': 'foo'}, REGION_GPS_ENTER_MESSAGE)
+        self.assertEqual(message['desc'], 'foo')
+
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('inner')
