@@ -252,6 +252,6 @@ def _account_data(cloud):
 
     return {
         'email': claims['email'],
-        'sub_exp': claims.get('custom:sub-exp'),
+        'sub_exp': claims['custom:sub-exp'],
         'cloud': cloud.iot.state,
     }

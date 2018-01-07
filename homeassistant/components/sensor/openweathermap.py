@@ -136,7 +136,7 @@ class OpenWeatherMapSensor(Entity):
         data = self.owa_client.data
         fc_data = self.owa_client.fc_data
 
-        if data is None or fc_data is None:
+        if data is None:
             return
 
         if self.type == 'weather':
@@ -174,6 +174,8 @@ class OpenWeatherMapSensor(Entity):
                 self._state = 'not snowing'
                 self._unit_of_measurement = ''
         elif self.type == 'forecast':
+            if fc_data is None:
+                return
             self._state = fc_data.get_weathers()[0].get_status()
 
 

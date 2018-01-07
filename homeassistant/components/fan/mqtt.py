@@ -15,7 +15,9 @@ from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON)
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
+    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH, FanEntity,
@@ -72,7 +74,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
                  default=[SPEED_OFF, SPEED_LOW,
                           SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -111,15 +113,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         },
         config.get(CONF_SPEED_LIST),
         config.get(CONF_OPTIMISTIC),
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
     )])
 
 
-class MqttFan(FanEntity):
+class MqttFan(MqttAvailability, FanEntity):
     """A MQTT fan component."""
 
     def __init__(self, name, topic, templates, qos, retain, payload,
-                 speed_list, optimistic):
+                 speed_list, optimistic, availability_topic, payload_available,
+                 payload_not_available):
         """Initialize the MQTT fan."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._name = name
         self._topic = topic
         self._qos = qos
@@ -143,10 +151,9 @@ class MqttFan(FanEntity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
+        """Subscribe to MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
         templates = {}
         for key, tpl in list(self._templates.items()):
             if tpl is None:
