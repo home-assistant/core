@@ -1,5 +1,4 @@
 """Package to communicate with the authentication API."""
-import hashlib
 import logging
 
 
@@ -58,21 +57,16 @@ def _map_aws_exception(err):
     return ex(err.response['Error']['Message'])
 
 
-def _generate_username(email):
-    """Generate a username from an email address."""
-    return hashlib.sha512(email.encode('utf-8')).hexdigest()
-
-
 def register(cloud, email, password):
     """Register a new account."""
     from botocore.exceptions import ClientError
 
     cognito = _cognito(cloud)
+    # Workaround for bug in Warrant. PR with fix:
+    # https://github.com/capless/warrant/pull/82
+    cognito.add_base_attributes()
     try:
-        if cloud.cognito_email_based:
-            cognito.register(email, password, email=email)
-        else:
-            cognito.register(_generate_username(email), password, email=email)
+        cognito.register(email, password)
     except ClientError as err:
         raise _map_aws_exception(err)
 
@@ -83,11 +77,22 @@ def confirm_register(cloud, confirmation_code, email):
 
     cognito = _cognito(cloud)
     try:
-        if cloud.cognito_email_based:
-            cognito.confirm_sign_up(confirmation_code, email)
-        else:
-            cognito.confirm_sign_up(confirmation_code,
-                                    _generate_username(email))
+        cognito.confirm_sign_up(confirmation_code, email)
+    except ClientError as err:
+        raise _map_aws_exception(err)
+
+
+def resend_email_confirm(cloud, email):
+    """Resend email confirmation."""
+    from botocore.exceptions import ClientError
+
+    cognito = _cognito(cloud, username=email)
+
+    try:
+        cognito.client.resend_confirmation_code(
+            Username=email,
+            ClientId=cognito.client_id
+        )
     except ClientError as err:
         raise _map_aws_exception(err)
 
@@ -96,10 +101,7 @@ def forgot_password(cloud, email):
     """Initiate forgotten password flow."""
     from botocore.exceptions import ClientError
 
-    if cloud.cognito_email_based:
-        cognito = _cognito(cloud, username=email)
-    else:
-        cognito = _cognito(cloud, username=_generate_username(email))
+    cognito = _cognito(cloud, username=email)
 
     try:
         cognito.initiate_forgot_password()
@@ -111,10 +113,7 @@ def confirm_forgot_password(cloud, confirmation_code, email, new_password):
     """Confirm forgotten password code and change password."""
     from botocore.exceptions import ClientError
 
-    if cloud.cognito_email_based:
-        cognito = _cognito(cloud, username=email)
-    else:
-        cognito = _cognito(cloud, username=_generate_username(email))
+    cognito = _cognito(cloud, username=email)
 
     try:
         cognito.confirm_forgot_password(confirmation_code, new_password)

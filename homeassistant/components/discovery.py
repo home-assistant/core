@@ -36,6 +36,9 @@ SERVICE_APPLE_TV = 'apple_tv'
 SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 SERVICE_TELLDUSLIVE = 'tellstick'
+SERVICE_HUE = 'philips_hue'
+SERVICE_DECONZ = 'deconz'
+SERVICE_DAIKIN = 'daikin'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -48,7 +51,8 @@ SERVICE_HANDLERS = {
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
-    'philips_hue': ('light', 'hue'),
+    SERVICE_HUE: ('hue', None),
+    SERVICE_DECONZ: ('deconz', None),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),

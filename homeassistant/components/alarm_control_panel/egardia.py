@@ -16,9 +16,9 @@ from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN,
     CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pythonegardia==1.0.22']
+REQUIREMENTS = ['pythonegardia==1.0.26']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,13 +26,15 @@ CONF_REPORT_SERVER_CODES = 'report_server_codes'
 CONF_REPORT_SERVER_ENABLED = 'report_server_enabled'
 CONF_REPORT_SERVER_PORT = 'report_server_port'
 CONF_REPORT_SERVER_CODES_IGNORE = 'ignore'
+CONF_VERSION = 'version'
 
 DEFAULT_NAME = 'Egardia'
 DEFAULT_PORT = 80
 DEFAULT_REPORT_SERVER_ENABLED = False
 DEFAULT_REPORT_SERVER_PORT = 52010
+DEFAULT_VERSION = 'GATE-01'
 DOMAIN = 'egardia'
-
+D_EGARDIASRV = 'egardiaserver'
 NOTIFICATION_ID = 'egardia_notification'
 NOTIFICATION_TITLE = 'Egardia'
 
@@ -49,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_REPORT_SERVER_CODES): vol.All(cv.ensure_list),
@@ -62,6 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Egardia platform."""
     from pythonegardia import egardiadevice
+    from pythonegardia import egardiaserver
 
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
@@ -71,40 +75,61 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rs_enabled = config.get(CONF_REPORT_SERVER_ENABLED)
     rs_port = config.get(CONF_REPORT_SERVER_PORT)
     rs_codes = config.get(CONF_REPORT_SERVER_CODES)
+    version = config.get(CONF_VERSION)
 
     try:
         egardiasystem = egardiadevice.EgardiaDevice(
-            host, port, username, password, '')
+            host, port, username, password, '', version)
     except requests.exceptions.RequestException:
         raise exc.PlatformNotReady()
     except egardiadevice.UnauthorizedError:
         _LOGGER.error("Unable to authorize. Wrong password or username")
-        return False
+        return
 
-    add_devices([EgardiaAlarm(
-        name, egardiasystem, hass, rs_enabled, rs_port, rs_codes)], True)
+    eg_dev = EgardiaAlarm(
+        name, egardiasystem, rs_enabled, rs_codes)
+
+    if rs_enabled:
+        # Set up the egardia server
+        _LOGGER.info("Setting up EgardiaServer")
+        try:
+            if D_EGARDIASRV not in hass.data:
+                server = egardiaserver.EgardiaServer('', rs_port)
+                bound = server.bind()
+                if not bound:
+                    raise IOError("Binding error occurred while " +
+                                  "starting EgardiaServer")
+                hass.data[D_EGARDIASRV] = server
+                server.start()
+        except IOError:
+            return
+        hass.data[D_EGARDIASRV].register_callback(eg_dev.handle_status_event)
+
+    def handle_stop_event(event):
+        """Callback function for HA stop event."""
+        hass.data[D_EGARDIASRV].stop()
+
+    # listen to home assistant stop event
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
+
+    # add egardia alarm device
+    add_devices([eg_dev], True)
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem, hass, rs_enabled=False,
-                 rs_port=None, rs_codes=None):
+    def __init__(self, name, egardiasystem,
+                 rs_enabled=False, rs_codes=None):
         """Initialize object."""
         self._name = name
         self._egardiasystem = egardiasystem
-        self._status = STATE_UNKNOWN
+        self._status = None
         self._rs_enabled = rs_enabled
-        self._rs_port = rs_port
-        self._hass = hass
-
         if rs_codes is not None:
             self._rs_codes = rs_codes[0]
         else:
             self._rs_codes = rs_codes
-
-        if self._rs_enabled:
-            self.listen_to_system_status()
 
     @property
     def name(self):
@@ -116,17 +141,20 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._status
 
-    def handle_system_status_event(self, event):
+    @property
+    def should_poll(self):
+        """Poll if no report server is enabled."""
+        if not self._rs_enabled:
+            return True
+        return False
+
+    def handle_status_event(self, event):
         """Handle egardia_system_status_event."""
-        if event.data.get('status') is not None:
-            statuscode = event.data.get('status')
+        statuscode = event.get('status')
+        if statuscode is not None:
             status = self.lookupstatusfromcode(statuscode)
             self.parsestatus(status)
-
-    def listen_to_system_status(self):
-        """Subscribe to egardia_system_status event."""
-        self._hass.bus.listen(
-            'egardia_system_status', self.handle_system_status_event)
+            self.schedule_update_ha_state()
 
     def lookupstatusfromcode(self, statuscode):
         """Look at the rs_codes and returns the status from the code."""
@@ -161,9 +189,8 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def update(self):
         """Update the alarm status."""
-        if not self._rs_enabled:
-            status = self._egardiasystem.getstate()
-            self.parsestatus(status)
+        status = self._egardiasystem.getstate()
+        self.parsestatus(status)
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

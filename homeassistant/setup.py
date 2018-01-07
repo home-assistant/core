@@ -181,9 +181,15 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-    warn_task = hass.loop.call_later(
-        SLOW_SETUP_WARNING, _LOGGER.warning,
-        "Setup of %s is taking over %s seconds.", domain, SLOW_SETUP_WARNING)
+
+    if hasattr(component, 'PLATFORM_SCHEMA'):
+        # Entity components have their own warning
+        warn_task = None
+    else:
+        warn_task = hass.loop.call_later(
+            SLOW_SETUP_WARNING, _LOGGER.warning,
+            "Setup of %s is taking over %s seconds.",
+            domain, SLOW_SETUP_WARNING)
 
     try:
         if async_comp:
@@ -197,7 +203,8 @@ def _async_setup_component(hass: core.HomeAssistant,
         return False
     finally:
         end = timer()
-        warn_task.cancel()
+        if warn_task:
+            warn_task.cancel()
     _LOGGER.info("Setup of domain %s took %.1f seconds.", domain, end - start)
 
     if result is False:

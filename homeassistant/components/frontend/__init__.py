@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171130.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180102.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -35,7 +35,7 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
-JS_DEFAULT_OPTION = 'es5'
+JS_DEFAULT_OPTION = 'auto'
 JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
@@ -49,7 +49,7 @@ MANIFEST_JSON = {
     'lang': 'en-US',
     'name': 'Home Assistant',
     'short_name': 'Assistant',
-    'start_url': '/',
+    'start_url': '/states',
     'theme_color': DEFAULT_THEME_COLOR
 }
 
@@ -299,11 +299,16 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        hass.http.register_static_path(
-            "/home-assistant-polymer", repo_path, False)
+        for subpath in ["src", "build-translations", "build-temp", "build",
+                        "hass_frontend", "bower_components", "panels"]:
+            hass.http.register_static_path(
+                "/home-assistant-polymer/{}".format(subpath),
+                os.path.join(repo_path, subpath),
+                False)
+
         hass.http.register_static_path(
             "/static/translations",
-            os.path.join(repo_path, "build-translations"), False)
+            os.path.join(repo_path, "build-translations/output"), False)
         sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
         sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
@@ -574,18 +579,23 @@ def _is_latest(js_option, request):
     if js_option != 'auto':
         return js_option == 'latest'
 
-    from user_agents import parse
-    useragent = parse(request.headers.get('User-Agent'))
+    useragent = request.headers.get('User-Agent')
+    if not useragent:
+        return False
 
-    # on iOS every browser is a Safari which we support from version 10.
+    from user_agents import parse
+    useragent = parse(useragent)
+
+    # on iOS every browser is a Safari which we support from version 11.
     if useragent.os.family == 'iOS':
-        return useragent.os.version[0] >= 10
+        # Was >= 10, temp setting it to 12 to work around issue #11387
+        return useragent.os.version[0] >= 12
 
     family_min_version = {
         'Chrome': 50,   # Probably can reduce this
-        'Firefox': 41,  # Destructuring added in 41
+        'Firefox': 43,  # Array.protopype.includes added in 43
         'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Maybe can reduce this
+        'Edge': 14,     # Array.protopype.includes added in 14
         'Safari': 10,   # many features not supported by 9
     }
     version = family_min_version.get(useragent.browser.family)

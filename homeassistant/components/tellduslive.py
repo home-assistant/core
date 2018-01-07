@@ -24,7 +24,7 @@ APPLICATION_NAME = 'Home Assistant'
 
 DOMAIN = 'tellduslive'
 
-REQUIREMENTS = ['tellduslive==0.10.3']
+REQUIREMENTS = ['tellduslive==0.10.4']
 
 _LOGGER = logging.getLogger(__name__)
 
