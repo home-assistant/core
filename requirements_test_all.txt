@@ -115,7 +115,7 @@ pilight==0.1.1
 pmsensor==0.4
 
 # homeassistant.components.prometheus
-prometheus_client==0.0.21
+prometheus_client==0.1.0
 
 # homeassistant.components.canary
 py-canary==0.2.3
