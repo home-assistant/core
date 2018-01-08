@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['smappy==0.2.13']
+REQUIREMENTS = ['smappy==0.2.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class Smappee(object):
         self.locations = {}
         self.info = {}
 
-        if self._remote_active:
+        if self._remote_active or self._local_active:
             self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -121,6 +121,10 @@ class Smappee(object):
                     self.locations[location_id] = location.get('name')
                     self.info[location_id] = self._smappy \
                         .get_service_location_info(location_id)
+                    _LOGGER.debug(self.locations, self.info)
+        if self.is_local_active:
+            self.local_devices = self.get_switches()
+            _LOGGER.debug(self.local_devices)
 
     @property
     def is_remote_active(self):
@@ -131,6 +135,12 @@ class Smappee(object):
     def is_local_active(self):
         """Return true if Smappe local device is configured and working."""
         return self._local_active
+
+    def get_switches(self):
+        """Get switches from local Smappee."""
+        if self.is_local_active:
+            return self._localsmappy.load_command_control_config()
+        return False
 
     def get_consumption(self, location_id, aggregation, delta):
         """Update data from Smappee."""
@@ -166,19 +176,27 @@ class Smappee(object):
                                                        start, end, 1)
         return False
 
-    def actuator_on(self, location_id, actuator_id, duration=None):
+    def actuator_on(self, location_id, actuator_id,
+                    is_remote_switch, duration=None):
         """Turn on actuator."""
         # Duration = 300,900,1800,3600
         #  or any other value for an undetermined period of time.
-        if self.is_remote_active:
+        if is_remote_switch:
             self._smappy.actuator_on(location_id, actuator_id, duration)
+        else:
+            self._localsmappy.on_command_control(actuator_id)
+            return True
 
-    def actuator_off(self, location_id, actuator_id, duration=None):
+    def actuator_off(self, location_id, actuator_id,
+                     is_remote_switch, duration=None):
         """Turn off actuator."""
         # Duration = 300,900,1800,3600
         #  or any other value for an undetermined period of time.
-        if self.is_remote_active:
+        if is_remote_switch:
             self._smappy.actuator_off(location_id, actuator_id, duration)
+        else:
+            self._localsmappy.off_command_control(actuator_id)
+            return True
 
     def active_power(self):
         """Get sum of all instantanious active power values from local hub."""

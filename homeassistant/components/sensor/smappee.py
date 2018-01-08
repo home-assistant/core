@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_PREFIX = 'Smappee'
 SENSOR_TYPES = {
     'solar': ['Solar', 'mdi:white-balance-sunny', 'local', 'W'],
-    'always_on': ['Always On', 'mdi:gauge', 'remote', 'W'],
+    'alwaysOn': ['Always On', 'mdi:gauge', 'remote', 'W'],
     'active_power': ['Active Power', 'mdi:power-plug', 'local', 'W'],
     'current': ['Current', 'mdi:gauge', 'local', 'Amps'],
     'voltage': ['Voltage', 'mdi:gauge', 'local', 'V'],
@@ -105,38 +105,45 @@ class SmappeeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Smappee and update the state."""
-        if self._sensor == 'always_on':
+        if self._sensor == 'alwaysOn':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=1, delta=30)
+            _LOGGER.debug("%s %s", self._sensor, data)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = consumption.get(self._sensor)
         elif self._sensor == 'solar_today':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=3, delta=1440)
+            _LOGGER.debug("%s %s", self._sensor, data)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(consumption.get('solar') / 1000, 2)
         elif self._sensor == 'power_today':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=3, delta=1440)
+            _LOGGER.debug("%s %s", self._sensor, data)
             consumption = data.get('consumptions')[-1]
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(consumption.get('consumption') / 1000, 2)
         elif self._sensor == 'active_cosfi':
             cosfi = self._smappee.active_cosfi()
+            _LOGGER.debug("%s %s", self._sensor, cosfi)
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(cosfi, 2)
         elif self._sensor == 'current':
             current = self._smappee.active_current()
+            _LOGGER.debug("%s %s", self._sensor, current)
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(current, 2)
         elif self._sensor == 'voltage':
             voltage = self._smappee.active_voltage()
+            _LOGGER.debug("%s %s", self._sensor, voltage)
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._state = round(voltage, 3)
         elif self._sensor is 'active_power':
             data = self._smappee.load_instantaneous()
+            _LOGGER.debug("%s %s", self._sensor, data)
             value1 = [float(i['value']) for i in data
                       if i['key'].endswith('phase0ActivePower')]
             value2 = [float(i['value']) for i in data
@@ -148,6 +155,7 @@ class SmappeeSensor(Entity):
             self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         elif self._sensor is 'solar':
             data = self._smappee.load_instantaneous()
+            _LOGGER.debug("%s %s", self._sensor, data)
             value1 = [float(i['value']) for i in data
                       if i['key'].endswith('phase3ActivePower')]
             value2 = [float(i['value']) for i in data

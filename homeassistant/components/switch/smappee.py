@@ -27,23 +27,36 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for items in smappee.info[location_id].get('actuators'):
                 if items.get('name') is not '':
                     dev.append(SmappeeSwitch(smappee,
+                                             DEFAULT_NAME,
                                              location_id,
                                              items.get('id')))
 
+    # Skip local switches if remote available
+    if not smappee.is_remote_active:
+        local_devices = smappee.local_devices
+        if smappee.is_local_active:
+            for items in local_devices:
+                dev.append(SmappeeSwitch(smappee,
+                                         items.get('value'),
+                                         None,
+                                         items.get('key')))
     add_devices(dev)
 
 
 class SmappeeSwitch(SwitchDevice):
     """Representation of a Smappee Comport Plug."""
 
-    def __init__(self, smappee, location_id, switch_id):
+    def __init__(self, smappee, name, location_id, switch_id):
         """Initialize a new Smappee Comfort Plug."""
-        self._name = DEFAULT_NAME
+        self._name = name
         self._state = False
         self._smappee = smappee
         self._location_id = location_id
         self._switch_id = switch_id
         self.data = None
+        self._remoteswitch = True
+        if location_id is None:
+            self._remoteswitch = False
 
         self.update()
 
@@ -64,21 +77,25 @@ class SmappeeSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn on Comport Plug."""
-        self._smappee.actuator_on(self._location_id, self._switch_id)
-        self._smappee.actuator_on(self._location_id, self._switch_id)
+        self._smappee.actuator_on(self._location_id, self._switch_id,
+                                  self._remoteswitch)
+        self._smappee.actuator_on(self._location_id, self._switch_id,
+                                  self._remoteswitch)
         self._state = True
 
     def turn_off(self, **kwargs):
         """Turn off Comport Plug."""
-        self._smappee.actuator_off(self._location_id, self._switch_id)
-        self._smappee.actuator_off(self._location_id, self._switch_id)
+        self._smappee.actuator_off(self._location_id, self._switch_id,
+                                   self._remoteswitch)
+        self._smappee.actuator_off(self._location_id, self._switch_id,
+                                   self._remoteswitch)
         self._state = False
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        if self._location_id:
+        if self._remoteswitch:
             attr['Location Id'] = self._location_id
             attr['Location Name'] = self._smappee.locations[self._location_id]
         attr['Switch Id'] = self._switch_id
@@ -86,9 +103,10 @@ class SmappeeSwitch(SwitchDevice):
 
     def update(self):
         """Get the latest data from the device and update the data."""
-        info = self._smappee.info[self._location_id].get('actuators')
-
-        for item in info:
-            if item.get('id') == self._switch_id:
-                self.data = item
-                self._name = item.get('name')
+        if self._smappee.is_remote_active:
+            if self._remoteswitch:
+                info = self._smappee.info[self._location_id].get('actuators')
+                for item in info:
+                    if item.get('id') == self._switch_id:
+                        self.data = item
+                        self._name = item.get('name')
