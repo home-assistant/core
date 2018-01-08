@@ -11,7 +11,8 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
+    SUPPORT_RGB_COLOR, SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -27,7 +28,14 @@ DEFAULT_NAME = 'Hyperion'
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST = ['HDMI', 'Cinema brighten lights', 'Cinema dim lights', 'Knight rider', 'Blue mood blobs', 'Cold mood blobs', 'Full color mood blobs', 'Green mood blobs', 'Red mood blobs', 'Warm mood blobs', 'Police Lights Single', 'Police Lights Solid', 'Rainbow mood', 'Rainbow swirl fast', 'Rainbow swirl', 'Random', 'Running dots', 'System Shutdown', 'Snake', 'Sparks Color', 'Sparks', 'Strobe blue', 'Strobe Raspbmc', 'Strobe white', 'Color traces', 'UDP multicast listener', 'UDP listener', 'X-Mas']
+DEFAULT_EFFECT_LIST = ['HDMI', 'Cinema brighten lights', 'Cinema dim lights',
+    'Knight rider', 'Blue mood blobs', 'Cold mood blobs',
+    'Full color mood blobs', 'Green mood blobs', 'Red mood blobs',
+    'Warm mood blobs', 'Police Lights Single', 'Police Lights Solid',
+    'Rainbow mood', 'Rainbow swirl fast', 'Rainbow swirl', 'Random',
+    'Running dots', 'System Shutdown', 'Snake', 'Sparks Color', 'Sparks',
+    'Strobe blue', 'Strobe Raspbmc', 'Strobe white', 'Color traces',
+    'UDP multicast listener', 'UDP listener', 'X-Mas']
 
 SUPPORT_HYPERION = (SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)
 
@@ -39,8 +47,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-    vol.Optional(CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY): cv.positive_int,
-    vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_HDMI_PRIORITY,
+            default=DEFAULT_HDMI_PRIORITY): cv.positive_int,
+    vol.Optional(CONF_EFFECT_LIST,
+            default=DEFAULT_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -65,7 +75,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, priority, default_color, hdmi_priority, effect_list):
+    def __init__(self, name, host, port, priority, default_color,
+        hdmi_priority, effect_list):
         """Initialize the light."""
         self._host = host
         self._port = port
@@ -150,11 +161,12 @@ class Hyperion(Light):
                     'effect': {'name': self._effect}
                 })
                 self._icon = 'mdi:lava-lamp'
-                self._rgb_color = [175,0,255]
+                self._rgb_color = [175, 0, 255]
                 self._skip_check = True
             return
 
-        cal_color = [int(round(x*float(self._brightness)/255)) for x in self._rgb_color]
+        cal_color = [int(round(x*float(self._brightness)/255))
+            for x in self._rgb_color]
         self.json_request({
             'command': 'color',
             'priority': self._priority,
@@ -174,7 +186,7 @@ class Hyperion(Light):
     def update(self):
         """Get the lights status."""
         # postpone the immediate state check for changes that take time
-        if self._skip_check == True:
+        if self._skip_check:
             self._skip_check = False
             return
         response = self.json_request({'command': 'serverinfo'})
@@ -189,7 +201,8 @@ class Hyperion(Light):
                 return
             # Check if Hyperion is in ambilight mode trough an HDMI grabber
             try:
-                if (response['info']['priorities'][0]['priority']) == self._hdmi_priority:
+                active_priority = response['info']['priorities'][0]['priority']
+                if active_priority == self._hdmi_priority:
                     self._brightness = 255
                     self._rgb_color = [125, 125, 125]
                     self._icon = 'mdi:video-input-hdmi'
@@ -197,16 +210,17 @@ class Hyperion(Light):
                     return
             except:
                 pass
-            
+
             if response['info']['activeLedColor'] == []:
                 # Get the active effect
                 if response['info']['activeEffects'] != []:
-                    self._rgb_color = [175,0,255]
+                    self._rgb_color = [175, 0, 255]
                     self._icon = 'mdi:lava-lamp'
                     try:
-                        effect_script = response['info']['activeEffects'][0]["script"]
-                        effect_script = effect_script.split('/')[-1][:-3].split("-")[0]
-                        self._effect = [x for x in self._effect_list if (effect_script.lower() in x.lower())][0]
+                        A = response['info']['activeEffects'][0]["script"]
+                        A = A.split('/')[-1][:-3].split("-")[0]
+                        self._effect = [x for x in self._effect_list
+                            if (effect_script.lower() in x.lower())][0]
                     except:
                         self._effect = 'none'
                 # Bulb off state
@@ -219,7 +233,8 @@ class Hyperion(Light):
                 self._rgb_color =\
                     response['info']['activeLedColor'][0]['RGB Value']
                 self._brightness = max(self._rgb_color)
-                self._rgb_mem = [int(round(float(x)*255/self._brightness)) for x in self._rgb_color]
+                self._rgb_mem = [int(round(float(x)*255/self._brightness))
+                    for x in self._rgb_color]
                 self._icon = 'mdi:lightbulb'
                 self._effect = 'none'
 
