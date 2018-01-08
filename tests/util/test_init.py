@@ -1,7 +1,6 @@
 """Test Home Assistant util methods."""
-# pylint: disable=too-many-public-methods
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 from homeassistant import util
@@ -31,6 +30,14 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("test", util.slugify("T-!@#$!#@$!$est"))
         self.assertEqual("test_more", util.slugify("Test More"))
         self.assertEqual("test_more", util.slugify("Test_(More)"))
+        self.assertEqual("test_more", util.slugify("Tèst_Mörê"))
+        self.assertEqual("b827eb000000", util.slugify("B8:27:EB:00:00:00"))
+        self.assertEqual("testcom", util.slugify("test.com"))
+        self.assertEqual("greg_phone__exp_wayp1",
+                         util.slugify("greg_phone - exp_wayp1"))
+        self.assertEqual("we_are_we_are_a_test_calendar",
+                         util.slugify("We are, we are, a... Test Calendar"))
+        self.assertEqual("test_aouss_aou", util.slugify("Tèst_äöüß_ÄÖÜ"))
 
     def test_repr_helper(self):
         """Test repr_helper."""
@@ -39,7 +46,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("True", util.repr_helper(True))
         self.assertEqual("test=1",
                          util.repr_helper({"test": 1}))
-        self.assertEqual("12:00:00 09-07-1986",
+        self.assertEqual("1986-07-09T12:00:00+00:00",
                          util.repr_helper(datetime(1986, 7, 9, 12, 0, 0)))
 
     def test_convert(self):
@@ -259,3 +266,17 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(tester.hello())
         self.assertTrue(tester.goodbye())
+
+    @patch.object(util, 'random')
+    def test_get_random_string(self, mock_random):
+        """Test get random string."""
+        results = ['A', 'B', 'C']
+
+        def mock_choice(choices):
+            return results.pop(0)
+
+        generator = MagicMock()
+        generator.choice.side_effect = mock_choice
+        mock_random.SystemRandom.return_value = generator
+
+        assert util.get_random_string(length=3) == 'ABC'

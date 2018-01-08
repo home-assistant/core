@@ -1,56 +1,44 @@
 """
-Zwave platform that handles simple binary switches.
+Z-Wave platform that handles simple binary switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.zwave/
 """
+import logging
+import time
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.components.zwave import (
-    ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SWITCH_BINARY, GENRE_USER,
-    NETWORK, TYPE_BOOL, ZWaveDeviceEntity)
+from homeassistant.components import zwave
+from homeassistant.components.zwave import workaround, async_setup_platform  # noqa # pylint: disable=unused-import
+
+_LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Z-Wave switches."""
-    if discovery_info is None or NETWORK is None:
-        return
-
-    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
-    value = node.values[discovery_info[ATTR_VALUE_ID]]
-
-    if value.command_class != COMMAND_CLASS_SWITCH_BINARY:
-        return
-    if value.type != TYPE_BOOL:
-        return
-    if value.genre != GENRE_USER:
-        return
-
-    value.set_change_verified(False)
-    add_devices([ZwaveSwitch(value)])
+def get_device(values, **kwargs):
+    """Create zwave entity device."""
+    return ZwaveSwitch(values)
 
 
-class ZwaveSwitch(ZWaveDeviceEntity, SwitchDevice):
+class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
     """Representation of a Z-Wave switch."""
 
-    def __init__(self, value):
+    def __init__(self, values):
         """Initialize the Z-Wave switch device."""
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
+        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        self.refresh_on_update = (
+            workaround.get_device_mapping(values.primary) ==
+            workaround.WORKAROUND_REFRESH_NODE_ON_UPDATE)
+        self.last_update = time.perf_counter()
+        self._state = self.values.primary.data
 
-        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-
-        self._state = value.data
-        dispatcher.connect(
-            self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
-
-    def _value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
-            self._state = value.data
-            self.update_ha_state()
+    def update_properties(self):
+        """Handle data changes for node values."""
+        self._state = self.values.primary.data
+        if self.refresh_on_update and \
+                time.perf_counter() - self.last_update > 30:
+            self.last_update = time.perf_counter()
+            self.node.request_state()
 
     @property
     def is_on(self):
@@ -59,8 +47,8 @@ class ZwaveSwitch(ZWaveDeviceEntity, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self._value.node.set_switch(self._value.value_id, True)
+        self.node.set_switch(self.values.primary.value_id, True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self._value.node.set_switch(self._value.value_id, False)
+        self.node.set_switch(self.values.primary.value_id, False)

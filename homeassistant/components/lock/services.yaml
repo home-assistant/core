@@ -1,0 +1,134 @@
+# Describes the format for available lock services
+
+clear_usercode:
+  description: Clear a usercode from lock.
+  fields:
+    node_id:
+      description: Node id of the lock.
+      example: 18
+    code_slot:
+      description: Code slot to clear code from.
+      example: 1
+
+get_usercode:
+  description: Retrieve a usercode from lock.
+  fields:
+    node_id:
+      description: Node id of the lock.
+      example: 18
+    code_slot:
+      description: Code slot to retrieve a code from.
+      example: 1
+
+nuki_lock_n_go:
+  description: "Nuki Lock 'n' Go"
+  fields:
+    entity_id:
+      description: Entity id of the Nuki lock.
+      example: 'lock.front_door'
+    unlatch:
+      description: Whether to unlatch the lock.
+      example: false
+
+nuki_unlatch:
+  description: Nuki unlatch.
+  fields:
+    entity_id:
+      description: Entity id of the Nuki lock.
+      example: 'lock.front_door'
+
+lock:
+  description: Lock all or specified locks.
+  fields:
+    entity_id:
+      description: Name of lock to lock.
+      example: 'lock.front_door'
+    code:
+      description: An optional code to lock the lock with.
+      example: 1234
+
+set_usercode:
+  description: Set a usercode to lock.
+  fields:
+    node_id:
+      description: Node id of the lock.
+      example: 18
+    code_slot:
+      description: Code slot to set the code.
+      example: 1
+    usercode:
+      description: Code to set.
+      example: 1234
+
+unlock:
+  description: Unlock all or specified locks.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    code:
+      description: An optional code to unlock the lock with.
+      example: 1234
+
+wink_set_lock_vacation_mode:
+  description: Set vacation mode for all or specified locks. Disables all user codes.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false.
+      example: true
+
+wink_set_lock_alarm_mode:
+  description: Set alarm mode for all or specified locks.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    mode:
+      description: One of tamper, activity, or forced_entry.
+      example: tamper
+
+wink_set_lock_alarm_sensitivity:
+  description: Set alarm sensitivity for all or specified locks.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    sensitivity:
+      description: One of low, medium_low, medium, medium_high, high.
+      example: medium
+
+wink_set_lock_alarm_state:
+  description: Set alarm state.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false.
+      example: true
+
+wink_set_lock_beeper_state:
+  description: Set beeper state.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false.
+      example: true
+
+wink_add_new_lock_key_code:
+  description: Add a new user key code.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    name:
+      description: name of the new key code.
+      example: Bob
+    code:
+      description: new key code, length must match length of other codes. Default length is 4.
+      example: 1234

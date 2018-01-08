@@ -6,52 +6,90 @@ https://home-assistant.io/components/camera.foscam/
 """
 import logging
 
-import requests
+import voluptuous as vol
 
-from homeassistant.components.camera import DOMAIN, Camera
-from homeassistant.helpers import validate_config
+from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['libpyfoscam==1.0']
+
+CONF_IP = 'ip'
+
+DEFAULT_NAME = 'Foscam Camera'
+DEFAULT_PORT = 88
+
+FOSCAM_COMM_ERROR = -8
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_IP): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
+
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup a Foscam IP Camera."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['username', 'password', 'ip']}, _LOGGER):
-        return None
-
-    add_devices_callback([FoscamCamera(config)])
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up a Foscam IP Camera."""
+    add_devices([FoscamCam(config)])
 
 
-# pylint: disable=too-many-instance-attributes
-class FoscamCamera(Camera):
+class FoscamCam(Camera):
     """An implementation of a Foscam IP camera."""
 
     def __init__(self, device_info):
         """Initialize a Foscam camera."""
-        super(FoscamCamera, self).__init__()
+        super(FoscamCam, self).__init__()
 
-        ip_address = device_info.get('ip')
-        port = device_info.get('port', 88)
+        ip_address = device_info.get(CONF_IP)
+        port = device_info.get(CONF_PORT)
+        self._username = device_info.get(CONF_USERNAME)
+        self._password = device_info.get(CONF_PASSWORD)
+        self._name = device_info.get(CONF_NAME)
+        self._motion_status = False
 
-        self._base_url = 'http://' + ip_address + ':' + str(port) + '/'
-        self._username = device_info.get('username')
-        self._password = device_info.get('password')
-        self._snap_picture_url = self._base_url \
-            + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture2&usr=' \
-            + self._username + '&pwd=' + self._password
-        self._name = device_info.get('name', 'Foscam Camera')
+        from libpyfoscam import FoscamCamera
 
-        _LOGGER.info('Using the following URL for %s: %s',
-                     self._name, self._snap_picture_url)
+        self._foscam_session = FoscamCamera(ip_address, port, self._username,
+                                            self._password, verbose=False)
 
     def camera_image(self):
-        """Return a still image reponse from the camera."""
+        """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = requests.get(self._snap_picture_url)
+        # Handle exception if host is not reachable or url failed
+        result, response = self._foscam_session.snap_picture_2()
+        if result == FOSCAM_COMM_ERROR:
+            return None
 
-        return response.content
+        return response
+
+    @property
+    def motion_detection_enabled(self):
+        """Camera Motion Detection Status."""
+        return self._motion_status
+
+    def enable_motion_detection(self):
+        """Enable motion detection in camera."""
+        ret, err = self._foscam_session.enable_motion_detection()
+        if ret == FOSCAM_COMM_ERROR:
+            _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
+            self._motion_status = True
+        else:
+            self._motion_status = False
+
+    def disable_motion_detection(self):
+        """Disable motion detection."""
+        ret, err = self._foscam_session.disable_motion_detection()
+        if ret == FOSCAM_COMM_ERROR:
+            _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
+            self._motion_status = True
+        else:
+            self._motion_status = False
 
     @property
     def name(self):

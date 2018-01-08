@@ -7,43 +7,41 @@ https://home-assistant.io/components/device_tracker.thomson/
 import logging
 import re
 import telnetlib
-import threading
-from datetime import timedelta
 
-from homeassistant.components.device_tracker import DOMAIN
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICES_REGEX = re.compile(
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s' +
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
-    r'(?P<status>([^\s]+))\s+' +
-    r'(?P<type>([^\s]+))\s+' +
-    r'(?P<intf>([^\s]+))\s+' +
-    r'(?P<hwintf>([^\s]+))\s+' +
+    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s'
+    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+'
+    r'(?P<status>([^\s]+))\s+'
+    r'(?P<type>([^\s]+))\s+'
+    r'(?P<intf>([^\s]+))\s+'
+    r'(?P<hwintf>([^\s]+))\s+'
     r'(?P<host>([^\s]+))')
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
 
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a THOMSON scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
-
     scanner = ThomsonDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
-class ThomsonDeviceScanner(object):
+class ThomsonDeviceScanner(DeviceScanner):
     """This class queries a router running THOMSON firmware."""
 
     def __init__(self, config):
@@ -51,9 +49,6 @@ class ThomsonDeviceScanner(object):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-
-        self.lock = threading.Lock()
-
         self.last_results = {}
 
         # Test the router is accessible.
@@ -74,7 +69,6 @@ class ThomsonDeviceScanner(object):
                 return client['host']
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the THOMSON router is up to date.
 
@@ -83,17 +77,16 @@ class ThomsonDeviceScanner(object):
         if not self.success_init:
             return False
 
-        with self.lock:
-            _LOGGER.info("Checking ARP")
-            data = self.get_thomson_data()
-            if not data:
-                return False
+        _LOGGER.info("Checking ARP")
+        data = self.get_thomson_data()
+        if not data:
+            return False
 
-            # Flag C stands for CONNECTED
-            active_clients = [client for client in data.values() if
-                              client['status'].find('C') != -1]
-            self.last_results = active_clients
-            return True
+        # Flag C stands for CONNECTED
+        active_clients = [client for client in data.values() if
+                          client['status'].find('C') != -1]
+        self.last_results = active_clients
+        return True
 
     def get_thomson_data(self):
         """Retrieve data from THOMSON and return parsed result."""
@@ -111,8 +104,8 @@ class ThomsonDeviceScanner(object):
             _LOGGER.exception("Unexpected response from router")
             return
         except ConnectionRefusedError:
-            _LOGGER.exception("Connection refused by router," +
-                              " is telnet enabled?")
+            _LOGGER.exception(
+                "Connection refused by router. Telnet enabled?")
             return
 
         devices = {}

@@ -8,34 +8,40 @@ import logging
 import os
 from datetime import timedelta
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_API_KEY, EVENT_PLATFORM_DISCOVERED)
-from homeassistant.loader import get_component
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import discovery
+from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
+from homeassistant.util.json import save_json
 
-DOMAIN = "ecobee"
-DISCOVER_THERMOSTAT = "ecobee.thermostat"
-DISCOVER_SENSORS = "ecobee.sensor"
-NETWORK = None
-HOLD_TEMP = 'hold_temp'
+REQUIREMENTS = ['python-ecobee-api==0.0.14']
 
-REQUIREMENTS = [
-    'https://github.com/nkgilley/python-ecobee-api/archive/'
-    '92a2f330cbaf601d0618456fdd97e5a8c42c1c47.zip#python-ecobee==0.0.4']
-
+_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-ECOBEE_CONFIG_FILE = 'ecobee.conf'
-_CONFIGURING = {}
+CONF_HOLD_TEMP = 'hold_temp'
 
-# Return cached results if last scan was less then this time ago.
+DOMAIN = 'ecobee'
+
+ECOBEE_CONFIG_FILE = 'ecobee.conf'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
+
+NETWORK = None
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def request_configuration(network, hass, config):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if 'ecobee' in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['ecobee'], "Failed to register, please try again.")
@@ -44,13 +50,13 @@ def request_configuration(network, hass, config):
 
     # pylint: disable=unused-argument
     def ecobee_configuration_callback(callback_data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration callbacks."""
         network.request_tokens()
         network.update()
         setup_ecobee(hass, network, config)
 
     _CONFIGURING['ecobee'] = configurator.request_config(
-        hass, "Ecobee", ecobee_configuration_callback,
+        "Ecobee", ecobee_configuration_callback,
         description=(
             'Please authorize this app at https://www.ecobee.com/consumer'
             'portal/index.html with pin code: ' + network.pin),
@@ -60,41 +66,30 @@ def request_configuration(network, hass, config):
 
 
 def setup_ecobee(hass, network, config):
-    """Setup Ecobee thermostat."""
+    """Set up the Ecobee thermostat."""
     # If ecobee has a PIN then it needs to be configured.
     if network.pin is not None:
         request_configuration(network, hass, config)
         return
 
     if 'ecobee' in _CONFIGURING:
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('ecobee'))
 
-    # Ensure component is loaded
-    bootstrap.setup_component(hass, 'thermostat', config)
-    bootstrap.setup_component(hass, 'sensor', config)
+    hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP)
 
-    hold_temp = config[DOMAIN].get(HOLD_TEMP, False)
-
-    # Fire thermostat discovery event
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-        ATTR_SERVICE: DISCOVER_THERMOSTAT,
-        ATTR_DISCOVERED: {'hold_temp': hold_temp}
-    })
-
-    # Fire sensor discovery event
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-        ATTR_SERVICE: DISCOVER_SENSORS,
-        ATTR_DISCOVERED: {}
-    })
+    discovery.load_platform(
+        hass, 'climate', DOMAIN, {'hold_temp': hold_temp}, config)
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'weather', DOMAIN, {}, config)
 
 
-# pylint: disable=too-few-public-methods
 class EcobeeData(object):
     """Get the latest data and update the states."""
 
     def __init__(self, config_file):
-        """Initialize the Ecobee data object."""
+        """Init the Ecobee data object."""
         from pyecobee import Ecobee
         self.ecobee = Ecobee(config_file)
 
@@ -102,11 +97,11 @@ class EcobeeData(object):
     def update(self):
         """Get the latest data from pyecobee."""
         self.ecobee.update()
-        _LOGGER.info("ecobee data updated successfully.")
+        _LOGGER.info("Ecobee data updated successfully")
 
 
 def setup(hass, config):
-    """Setup Ecobee.
+    """Set up the Ecobee.
 
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.
@@ -117,15 +112,10 @@ def setup(hass, config):
     if 'ecobee' in _CONFIGURING:
         return
 
-    from pyecobee import config_from_file
-
     # Create ecobee.conf if it doesn't exist
     if not os.path.isfile(hass.config.path(ECOBEE_CONFIG_FILE)):
-        if config[DOMAIN].get(CONF_API_KEY) is None:
-            _LOGGER.error("No ecobee api_key found in config.")
-            return
         jsonconfig = {"API_KEY": config[DOMAIN].get(CONF_API_KEY)}
-        config_from_file(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
+        save_json(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
 
     NETWORK = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))
 

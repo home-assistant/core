@@ -2,87 +2,77 @@
 Support for ISY994 switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/isy994/
+https://home-assistant.io/components/switch.isy994/
 """
 import logging
+from typing import Callable  # noqa
 
-from homeassistant.components.isy994 import (
-    HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
-from homeassistant.const import STATE_OFF, STATE_ON  # STATE_OPEN, STATE_CLOSED
+from homeassistant.components.switch import SwitchDevice, DOMAIN
+from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
+                                             ISYDevice)
+from homeassistant.helpers.typing import ConfigType  # noqa
 
-
-# The frontend doesn't seem to fully support the open and closed states yet.
-# Once it does, the HA.doors programs should report open and closed instead of
-# off and on. It appears that on should be open and off should be closed.
-
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ISY994 platform."""
-    # pylint: disable=too-many-locals
-    logger = logging.getLogger(__name__)
-    devs = []
-    # verify connection
-    if ISY is None or not ISY.connected:
-        logger.error('A connection has not been made to the ISY controller.')
-        return False
-
-    # Import not dimmable nodes and groups
-    for (path, node) in ISY.nodes:
-        if not node.dimmable and SENSOR_STRING not in node.name:
-            if HIDDEN_STRING in path:
-                node.name += HIDDEN_STRING
-            devs.append(ISYSwitchDevice(node))
-
-    # Import ISY doors programs
-    for folder_name, states in (('HA.doors', [STATE_ON, STATE_OFF]),
-                                ('HA.switches', [STATE_ON, STATE_OFF])):
-        try:
-            folder = ISY.programs['My Programs'][folder_name]
-        except KeyError:
-            # HA.doors folder does not exist
-            pass
-        else:
-            for dtype, name, node_id in folder.children:
-                if dtype is 'folder':
-                    custom_switch = folder[node_id]
-                    try:
-                        actions = custom_switch['actions'].leaf
-                        assert actions.dtype == 'program', 'Not a program'
-                        node = custom_switch['status'].leaf
-                    except (KeyError, AssertionError):
-                        pass
-                    else:
-                        devs.append(ISYProgramDevice(name, node, actions,
-                                                     states))
-
-    add_devices(devs)
+_LOGGER = logging.getLogger(__name__)
 
 
-class ISYSwitchDevice(ISYDeviceABC):
-    """Representation of an ISY switch."""
+# pylint: disable=unused-argument
+def setup_platform(hass, config: ConfigType,
+                   add_devices: Callable[[list], None], discovery_info=None):
+    """Set up the ISY994 switch platform."""
+    devices = []
+    for node in hass.data[ISY994_NODES][DOMAIN]:
+        if not node.dimmable:
+            devices.append(ISYSwitchDevice(node))
 
-    _domain = 'switch'
-    _dtype = 'binary'
-    _states = [STATE_ON, STATE_OFF]
+    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+        devices.append(ISYSwitchProgram(name, status, actions))
+
+    add_devices(devices)
 
 
-class ISYProgramDevice(ISYSwitchDevice):
-    """Representation of an ISY door."""
+class ISYSwitchDevice(ISYDevice, SwitchDevice):
+    """Representation of an ISY994 switch device."""
 
-    _domain = 'switch'
-    _dtype = 'binary'
-
-    def __init__(self, name, node, actions, states):
-        """Initialize the switch."""
+    def __init__(self, node) -> None:
+        """Initialize the ISY994 switch device."""
         super().__init__(node)
-        self._states = states
+
+    @property
+    def is_on(self) -> bool:
+        """Get whether the ISY994 device is in the on state."""
+        return bool(self.value)
+
+    def turn_off(self, **kwargs) -> None:
+        """Send the turn on command to the ISY994 switch."""
+        if not self._node.off():
+            _LOGGER.debug('Unable to turn on switch.')
+
+    def turn_on(self, **kwargs) -> None:
+        """Send the turn off command to the ISY994 switch."""
+        if not self._node.on():
+            _LOGGER.debug('Unable to turn on switch.')
+
+
+class ISYSwitchProgram(ISYSwitchDevice):
+    """A representation of an ISY994 program switch."""
+
+    def __init__(self, name: str, node, actions) -> None:
+        """Initialize the ISY994 switch program."""
+        super().__init__(node)
         self._name = name
-        self.action_node = actions
+        self._actions = actions
 
-    def turn_on(self, **kwargs):
-        """Turn the device on/close the device."""
-        self.action_node.runThen()
+    @property
+    def is_on(self) -> bool:
+        """Get whether the ISY994 switch program is on."""
+        return bool(self.value)
 
-    def turn_off(self, **kwargs):
-        """Turn the device off/open the device."""
-        self.action_node.runElse()
+    def turn_on(self, **kwargs) -> None:
+        """Send the turn on command to the ISY994 switch program."""
+        if not self._actions.runThen():
+            _LOGGER.error('Unable to turn on switch')
+
+    def turn_off(self, **kwargs) -> None:
+        """Send the turn off command to the ISY994 switch program."""
+        if not self._actions.runElse():
+            _LOGGER.error('Unable to turn off switch')

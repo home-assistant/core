@@ -7,48 +7,64 @@ https://home-assistant.io/components/media_player.firetv/
 import logging
 
 import requests
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, SUPPORT_PLAY,
+    MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNKNOWN)
+    STATE_UNKNOWN, CONF_HOST, CONF_PORT, CONF_SSL, CONF_NAME, CONF_DEVICE,
+    CONF_DEVICES)
+import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FIRETV = SUPPORT_PAUSE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET
+    SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
-DOMAIN = 'firetv'
-DEVICE_LIST_URL = 'http://{0}/devices/list'
-DEVICE_STATE_URL = 'http://{0}/devices/state/{1}'
-DEVICE_ACTION_URL = 'http://{0}/devices/action/{1}/{2}'
+DEFAULT_SSL = False
+DEFAULT_DEVICE = 'default'
+DEFAULT_HOST = 'localhost'
+DEFAULT_NAME = 'Amazon Fire TV'
+DEFAULT_PORT = 5556
+DEVICE_ACTION_URL = '{0}://{1}:{2}/devices/action/{3}/{4}'
+DEVICE_LIST_URL = '{0}://{1}:{2}/devices/list'
+DEVICE_STATE_URL = '{0}://{1}:{2}/devices/state/{3}'
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the FireTV platform."""
-    host = config.get('host', 'localhost:5556')
-    device_id = config.get('device', 'default')
+    """Set up the FireTV platform."""
+    name = config.get(CONF_NAME)
+    ssl = config.get(CONF_SSL)
+    proto = 'https' if ssl else 'http'
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    device_id = config.get(CONF_DEVICE)
+
     try:
-        response = requests.get(DEVICE_LIST_URL.format(host)).json()
-        if device_id in response['devices'].keys():
-            add_devices([
-                FireTVDevice(
-                    host,
-                    device_id,
-                    config.get('name', 'Amazon Fire TV')
-                )
-            ])
-            _LOGGER.info(
-                'Device %s accessible and ready for control', device_id)
+        response = requests.get(
+            DEVICE_LIST_URL.format(proto, host, port)).json()
+        if device_id in response[CONF_DEVICES].keys():
+            add_devices([FireTVDevice(proto, host, port, device_id, name)])
+            _LOGGER.info("Device %s accessible and ready for control",
+                         device_id)
         else:
-            _LOGGER.warning(
-                'Device %s is not registered with firetv-server', device_id)
+            _LOGGER.warning("Device %s is not registered with firetv-server",
+                            device_id)
     except requests.exceptions.RequestException:
-        _LOGGER.error('Could not connect to firetv-server at %s', host)
+        _LOGGER.error("Could not connect to firetv-server at %s", host)
 
 
 class FireTV(object):
@@ -62,9 +78,11 @@ class FireTV(object):
     be running via Python 2).
     """
 
-    def __init__(self, host, device_id):
+    def __init__(self, proto, host, port, device_id):
         """Initialize the FireTV server."""
+        self.proto = proto
         self.host = host
+        self.port = port
         self.device_id = device_id
 
     @property
@@ -73,39 +91,32 @@ class FireTV(object):
         try:
             response = requests.get(
                 DEVICE_STATE_URL.format(
-                    self.host,
-                    self.device_id
-                    )
-                ).json()
+                    self.proto, self.host, self.port, self.device_id
+                    ), timeout=10).json()
             return response.get('state', STATE_UNKNOWN)
         except requests.exceptions.RequestException:
             _LOGGER.error(
-                'Could not retrieve device state for %s', self.device_id)
+                "Could not retrieve device state for %s", self.device_id)
             return STATE_UNKNOWN
 
     def action(self, action_id):
         """Perform an action on the device."""
         try:
-            requests.get(
-                DEVICE_ACTION_URL.format(
-                    self.host,
-                    self.device_id,
-                    action_id
-                    )
-                )
+            requests.get(DEVICE_ACTION_URL.format(
+                self.proto, self.host, self.port, self.device_id, action_id
+                ), timeout=10)
         except requests.exceptions.RequestException:
             _LOGGER.error(
-                'Action request for %s was not accepted for device %s',
+                "Action request for %s was not accepted for device %s",
                 action_id, self.device_id)
 
 
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    # pylint: disable=abstract-method
-    def __init__(self, host, device, name):
+    def __init__(self, proto, host, port, device, name):
         """Initialize the FireTV device."""
-        self._firetv = FireTV(host, device)
+        self._firetv = FireTV(proto, host, port, device)
         self._name = name
         self._state = STATE_UNKNOWN
 
@@ -120,8 +131,8 @@ class FireTVDevice(MediaPlayerDevice):
         return True
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_FIRETV
 
     @property

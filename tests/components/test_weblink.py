@@ -1,6 +1,7 @@
 """The tests for the weblink component."""
 import unittest
 
+from homeassistant.setup import setup_component
 from homeassistant.components import weblink
 
 from tests.common import get_test_home_assistant
@@ -17,16 +18,23 @@ class TestComponentWeblink(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    def test_bad_config(self):
+        """Test if new entity is created."""
+        self.assertFalse(setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [{}],
+            }
+        }))
+
     def test_entities_get_created(self):
         """Test if new entity is created."""
-        self.assertTrue(weblink.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, weblink.DOMAIN, {
             weblink.DOMAIN: {
                 'entities': [
                     {
-                        weblink.ATTR_NAME: 'My router',
-                        weblink.ATTR_URL: 'http://127.0.0.1/'
+                        weblink.CONF_NAME: 'My router',
+                        weblink.CONF_URL: 'http://127.0.0.1/'
                     },
-                    {}
                 ]
             }
         }))

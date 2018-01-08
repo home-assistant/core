@@ -2,16 +2,16 @@
 Offer template automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#template-trigger
+at https://home-assistant.io/docs/automation/trigger/#template-trigger
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, EVENT_STATE_CHANGED, CONF_PLATFORM)
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.core import callback
+from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM
+from homeassistant.helpers.event import async_track_template
 import homeassistant.helpers.config_validation as cv
 
 
@@ -23,47 +23,22 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema({
 })
 
 
-def trigger(hass, config, action):
+@asyncio.coroutine
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    value_template.hass = hass
 
-    # Local variable to keep track of if the action has already been triggered
-    already_triggered = False
-
-    def event_listener(event):
+    @callback
+    def template_listener(entity_id, from_s, to_s):
         """Listen for state changes and calls action."""
-        nonlocal already_triggered
-        template_result = _check_template(hass, value_template)
+        hass.async_run_job(action, {
+            'trigger': {
+                'platform': 'template',
+                'entity_id': entity_id,
+                'from_state': from_s,
+                'to_state': to_s,
+            },
+        })
 
-        # Check to see if template returns true
-        if template_result and not already_triggered:
-            already_triggered = True
-            action()
-        elif not template_result:
-            already_triggered = False
-
-    hass.bus.listen(EVENT_STATE_CHANGED, event_listener)
-    return True
-
-
-def if_action(hass, config):
-    """Wrap action method with state based condition."""
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-
-    return lambda: _check_template(hass, value_template)
-
-
-def _check_template(hass, value_template):
-    """Check if result of template is true."""
-    try:
-        value = template.render(hass, value_template, {})
-    except TemplateError as ex:
-        if ex.args and ex.args[0].startswith(
-                "UndefinedError: 'None' has no attribute"):
-            # Common during HA startup - so just a warning
-            _LOGGER.warning(ex)
-        else:
-            _LOGGER.error(ex)
-        return False
-
-    return value.lower() == 'true'
+    return async_track_template(hass, value_template, template_listener)

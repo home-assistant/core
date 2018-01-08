@@ -6,56 +6,40 @@ https://home-assistant.io/components/notify.message_bird/
 """
 import logging
 
-from homeassistant.components.notify import (
-    ATTR_TARGET, DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import validate_config
+import voluptuous as vol
 
-CONF_SENDER = 'sender'
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import (
+    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import CONF_API_KEY, CONF_SENDER
+
+REQUIREMENTS = ['messagebird==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['messagebird==1.1.1']
 
-
-def is_valid_sender(sender):
-    """Test if the sender config option is valid."""
-    length = len(sender)
-    if length > 1:
-        if sender[0] == '+':
-            return sender[1:].isdigit()
-        elif length <= 11:
-            return sender.isalpha()
-    return False
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_SENDER, default='HA'):
+        vol.All(cv.string, vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")),
+})
 
 
 # pylint: disable=unused-argument
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the MessageBird notification service."""
     import messagebird
-
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: [CONF_API_KEY]},
-                           _LOGGER):
-        return None
-
-    sender = config.get(CONF_SENDER, 'HA')
-    if not is_valid_sender(sender):
-        _LOGGER.error('Sender is invalid: It must be a phone number or '
-                      'a string not longer than 11 characters.')
-        return None
 
     client = messagebird.Client(config[CONF_API_KEY])
     try:
         # validates the api key
         client.balance()
     except messagebird.client.ErrorException:
-        _LOGGER.error('The specified MessageBird API key is invalid.')
+        _LOGGER.error("The specified MessageBird API key is invalid")
         return None
 
-    return MessageBirdNotificationService(sender, client)
+    return MessageBirdNotificationService(config.get(CONF_SENDER), client)
 
 
-# pylint: disable=too-few-public-methods
 class MessageBirdNotificationService(BaseNotificationService):
     """Implement the notification service for MessageBird."""
 
@@ -70,18 +54,13 @@ class MessageBirdNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
         if not targets:
-            _LOGGER.error('No target specified.')
+            _LOGGER.error("No target specified")
             return
-
-        if not isinstance(targets, list):
-            targets = [targets]
 
         for target in targets:
             try:
-                self.client.message_create(self.sender,
-                                           target,
-                                           message,
-                                           {'reference': 'HA'})
+                self.client.message_create(
+                    self.sender, target, message, {'reference': 'HA'})
             except ErrorException as exception:
-                _LOGGER.error('Failed to notify %s: %s', target, exception)
+                _LOGGER.error("Failed to notify %s: %s", target, exception)
                 continue

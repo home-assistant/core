@@ -12,33 +12,38 @@ import threading
 import requests
 import voluptuous as vol
 
-from homeassistant.helpers import validate_config
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import sanitize_filename
 
-DOMAIN = "downloader"
+_LOGGER = logging.getLogger(__name__)
 
-SERVICE_DOWNLOAD_FILE = "download_file"
-
-ATTR_URL = "url"
-ATTR_SUBDIR = "subdir"
-
-SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_URL): vol.Url,
-    vol.Optional(ATTR_SUBDIR): cv.string,
-})
+ATTR_FILENAME = 'filename'
+ATTR_SUBDIR = 'subdir'
+ATTR_URL = 'url'
+ATTR_OVERWRITE = 'overwrite'
 
 CONF_DOWNLOAD_DIR = 'download_dir'
 
+DOMAIN = 'downloader'
 
-# pylint: disable=too-many-branches
+SERVICE_DOWNLOAD_FILE = 'download_file'
+
+SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_URL): cv.url,
+    vol.Optional(ATTR_SUBDIR): cv.string,
+    vol.Optional(ATTR_FILENAME): cv.string,
+    vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_DOWNLOAD_DIR): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
 def setup(hass, config):
     """Listen for download events to download files."""
-    logger = logging.getLogger(__name__)
-
-    if not validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
-        return False
-
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
 
     # If path is relative, we assume relative to HASS config dir
@@ -46,9 +51,8 @@ def setup(hass, config):
         download_path = hass.config.path(download_path)
 
     if not os.path.isdir(download_path):
-
-        logger.error(
-            "Download path %s does not exist. File Downloader not active.",
+        _LOGGER.error(
+            "Download path %s does not exist. File Downloader not active",
             download_path)
 
         return False
@@ -62,6 +66,10 @@ def setup(hass, config):
 
                 subdir = service.data.get(ATTR_SUBDIR)
 
+                filename = service.data.get(ATTR_FILENAME)
+
+                overwrite = service.data.get(ATTR_OVERWRITE)
+
                 if subdir:
                     subdir = sanitize_filename(subdir)
 
@@ -69,22 +77,26 @@ def setup(hass, config):
 
                 req = requests.get(url, stream=True, timeout=10)
 
-                if req.status_code == 200:
-                    filename = None
+                if req.status_code != 200:
+                    _LOGGER.warning(
+                        "downloading '%s' failed, stauts_code=%d",
+                        url,
+                        req.status_code)
 
-                    if 'content-disposition' in req.headers:
+                else:
+                    if filename is None and \
+                       'content-disposition' in req.headers:
                         match = re.findall(r"filename=(\S+)",
                                            req.headers['content-disposition'])
 
-                        if len(match) > 0:
+                        if match:
                             filename = match[0].strip("'\" ")
 
                     if not filename:
-                        filename = os.path.basename(
-                            url).strip()
+                        filename = os.path.basename(url).strip()
 
                     if not filename:
-                        filename = "ha_download"
+                        filename = 'ha_download'
 
                     # Remove stuff to ruin paths
                     filename = sanitize_filename(filename)
@@ -106,23 +118,24 @@ def setup(hass, config):
 
                     # If file exist append a number.
                     # We test filename, filename_2..
-                    tries = 1
-                    final_path = path + ext
-                    while os.path.isfile(final_path):
-                        tries += 1
+                    if not overwrite:
+                        tries = 1
+                        final_path = path + ext
+                        while os.path.isfile(final_path):
+                            tries += 1
 
-                        final_path = "{}_{}.{}".format(path, tries, ext)
+                            final_path = "{}_{}.{}".format(path, tries, ext)
 
-                    logger.info("%s -> %s", url, final_path)
+                    _LOGGER.debug("%s -> %s", url, final_path)
 
                     with open(final_path, 'wb') as fil:
                         for chunk in req.iter_content(1024):
                             fil.write(chunk)
 
-                    logger.info("Downloading of %s done", url)
+                    _LOGGER.debug("Downloading of %s done", url)
 
             except requests.exceptions.ConnectionError:
-                logger.exception("ConnectionError occured for %s", url)
+                _LOGGER.exception("ConnectionError occurred for %s", url)
 
                 # Remove file if we started downloading but failed
                 if final_path and os.path.isfile(final_path):

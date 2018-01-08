@@ -4,113 +4,87 @@ Support for Wink sensors.
 For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/sensor.wink/
 """
+import asyncio
 import logging
 
-from homeassistant.const import (CONF_ACCESS_TOKEN, STATE_CLOSED,
-                                 STATE_OPEN, TEMP_CELCIUS)
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.wink import WinkDevice, DOMAIN
 
-REQUIREMENTS = ['python-wink==0.6.4']
+DEPENDENCIES = ['wink']
+_LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = ['temperature', 'humidity']
+SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Set up the Wink platform."""
     import pywink
 
-    if discovery_info is None:
-        token = config.get(CONF_ACCESS_TOKEN)
-
-        if token is None:
-            logging.getLogger(__name__).error(
-                "Missing wink access_token. "
-                "Get one at https://winkbearertoken.appspot.com/")
-            return
-
-        pywink.set_bearer_token(token)
-
     for sensor in pywink.get_sensors():
-        if sensor.capability() in SENSOR_TYPES:
-            add_devices([WinkSensorDevice(sensor)])
+        _id = sensor.object_id() + sensor.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            if sensor.capability() in SENSOR_TYPES:
+                add_devices([WinkSensorDevice(sensor, hass)])
 
-    add_devices(WinkEggMinder(eggtray) for eggtray in pywink.get_eggtrays())
+    for eggtray in pywink.get_eggtrays():
+        _id = eggtray.object_id() + eggtray.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkSensorDevice(eggtray, hass)])
+
+    for tank in pywink.get_propane_tanks():
+        _id = tank.object_id() + tank.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkSensorDevice(tank, hass)])
+
+    for piggy_bank in pywink.get_piggy_banks():
+        _id = piggy_bank.object_id() + piggy_bank.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            try:
+                if piggy_bank.capability() in SENSOR_TYPES:
+                    add_devices([WinkSensorDevice(piggy_bank, hass)])
+            except AttributeError:
+                _LOGGER.info("Device is not a sensor")
 
 
-class WinkSensorDevice(Entity):
+class WinkSensorDevice(WinkDevice, Entity):
     """Representation of a Wink sensor."""
 
-    def __init__(self, wink):
-        """Initialize the sensor."""
-        self.wink = wink
+    def __init__(self, wink, hass):
+        """Initialize the Wink device."""
+        super().__init__(wink, hass)
         self.capability = self.wink.capability()
-        if self.wink.UNIT == "°":
-            self._unit_of_measurement = TEMP_CELCIUS
+        if self.wink.unit() == '°':
+            self._unit_of_measurement = TEMP_CELSIUS
         else:
-            self._unit_of_measurement = self.wink.UNIT
+            self._unit_of_measurement = self.wink.unit()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['sensor'].append(self)
 
     @property
     def state(self):
         """Return the state."""
-        if self.capability == "humidity":
-            return self.wink.humidity_percentage()
-        elif self.capability == "temperature":
-            return self.wink.temperature_float()
+        state = None
+        if self.capability == 'humidity':
+            if self.wink.state() is not None:
+                state = round(self.wink.state())
+        elif self.capability == 'temperature':
+            if self.wink.state() is not None:
+                state = round(self.wink.state(), 1)
+        elif self.capability == 'balance':
+            if self.wink.state() is not None:
+                state = round(self.wink.state() / 100, 2)
+        elif self.capability == 'proximity':
+            if self.wink.state() is not None:
+                state = self.wink.state()
         else:
-            return STATE_OPEN if self.is_open else STATE_CLOSED
+            state = self.wink.state()
+        return state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def unique_id(self):
-        """Return the ID of this wink sensor."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the sensor if any."""
-        return self.wink.name()
-
-    @property
-    def available(self):
-        """True if connection == True."""
-        return self.wink.available
-
-    def update(self):
-        """Update state of the sensor."""
-        self.wink.update_state()
-
-    @property
-    def is_open(self):
-        """Return true if door is open."""
-        return self.wink.state()
-
-
-class WinkEggMinder(Entity):
-    """Representation of a Wink Egg Minder."""
-
-    def __init__(self, wink):
-        """Initialize the sensor."""
-        self.wink = wink
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self.wink.state()
-
-    @property
-    def unique_id(self):
-        """Return the id of this wink Egg Minder."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the Egg Minder if any."""
-        return self.wink.name()
-
-    def update(self):
-        """Update state of the Egg Minder."""
-        self.wink.update_state()

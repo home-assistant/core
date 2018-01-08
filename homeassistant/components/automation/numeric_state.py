@@ -2,104 +2,104 @@
 Offer numeric state listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#numeric-state-trigger
+at https://home-assistant.io/docs/automation/trigger/#numeric-state-trigger
 """
+import asyncio
 import logging
-from functools import partial
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers import template
+import voluptuous as vol
 
-CONF_ENTITY_ID = "entity_id"
-CONF_BELOW = "below"
-CONF_ABOVE = "above"
+from homeassistant.core import callback
+from homeassistant.const import (
+    CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
+    CONF_BELOW, CONF_ABOVE, CONF_FOR)
+from homeassistant.helpers.event import (
+    async_track_state_change, async_track_same_state)
+from homeassistant.helpers import condition, config_validation as cv
+
+TRIGGER_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_PLATFORM): 'numeric_state',
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+    vol.Optional(CONF_BELOW): vol.Coerce(float),
+    vol.Optional(CONF_ABOVE): vol.Coerce(float),
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
+}), cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE))
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _renderer(hass, value_template, state):
-    """Render the state value."""
-    if value_template is None:
-        return state.state
-
-    return template.render(hass, value_template, {'state': state})
-
-
-def trigger(hass, config, action):
+@asyncio.coroutine
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
-
-    if entity_id is None:
-        _LOGGER.error("Missing configuration key %s", CONF_ENTITY_ID)
-        return False
-
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
+    time_delta = config.get(CONF_FOR)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    unsub_track_same = {}
+    entities_triggered = set()
 
-    if below is None and above is None:
-        _LOGGER.error("Missing configuration key."
-                      " One of %s or %s is required",
-                      CONF_BELOW, CONF_ABOVE)
-        return False
+    if value_template is not None:
+        value_template.hass = hass
 
-    renderer = partial(_renderer, hass, value_template)
+    @callback
+    def check_numeric_state(entity, from_s, to_s):
+        """Return True if criteria are now met."""
+        if to_s is None:
+            return False
 
-    # pylint: disable=unused-argument
+        variables = {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': entity,
+                'below': below,
+                'above': above,
+            }
+        }
+        return condition.async_numeric_state(
+            hass, to_s, below, above, value_template, variables)
+
+    @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
-        # Fire action if we go from outside range into range
-        if _in_range(above, below, renderer(to_s)) and \
-           (from_s is None or not _in_range(above, below, renderer(from_s))):
-            action()
+        @callback
+        def call_action():
+            """Call action with right context."""
+            hass.async_run_job(action, {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': entity,
+                    'below': below,
+                    'above': above,
+                    'from_state': from_s,
+                    'to_state': to_s,
+                }
+            })
 
-    track_state_change(
+        matching = check_numeric_state(entity, from_s, to_s)
+
+        if not matching:
+            entities_triggered.discard(entity)
+        elif entity not in entities_triggered:
+            entities_triggered.add(entity)
+
+            if time_delta:
+                unsub_track_same[entity] = async_track_same_state(
+                    hass, time_delta, call_action, entity_ids=entity_id,
+                    async_check_same_func=check_numeric_state)
+            else:
+                call_action()
+
+    unsub = async_track_state_change(
         hass, entity_id, state_automation_listener)
 
-    return True
+    @callback
+    def async_remove():
+        """Remove state listeners async."""
+        unsub()
+        for async_remove in unsub_track_same.values():
+            async_remove()
+        unsub_track_same.clear()
 
-
-def if_action(hass, config):
-    """Wrap action method with state based condition."""
-    entity_id = config.get(CONF_ENTITY_ID)
-
-    if entity_id is None:
-        _LOGGER.error("Missing configuration key %s", CONF_ENTITY_ID)
-        return None
-
-    below = config.get(CONF_BELOW)
-    above = config.get(CONF_ABOVE)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-
-    if below is None and above is None:
-        _LOGGER.error("Missing configuration key."
-                      " One of %s or %s is required",
-                      CONF_BELOW, CONF_ABOVE)
-        return None
-
-    renderer = partial(_renderer, hass, value_template)
-
-    def if_numeric_state():
-        """Test numeric state condition."""
-        state = hass.states.get(entity_id)
-        return state is not None and _in_range(above, below, renderer(state))
-
-    return if_numeric_state
-
-
-def _in_range(range_start, range_end, value):
-    """Check if value is inside the range."""
-    try:
-        value = float(value)
-    except ValueError:
-        _LOGGER.warning("Value returned from template is not a number: %s",
-                        value)
-        return False
-
-    if range_start is not None and range_end is not None:
-        return float(range_start) <= value < float(range_end)
-    elif range_end is not None:
-        return value < float(range_end)
-    else:
-        return float(range_start) <= value
+    return async_remove

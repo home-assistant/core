@@ -1,7 +1,7 @@
 """
 Support for controlling GPIO pins of a Raspberry Pi.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rpi_gpio/
 """
 # pylint: disable=import-error
@@ -11,13 +11,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['RPi.GPIO==0.6.1']
-DOMAIN = "rpi_gpio"
+
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'rpi_gpio'
 
 
 # pylint: disable=no-member
 def setup(hass, config):
-    """Setup the Raspberry PI GPIO component."""
+    """Set up the Raspberry PI GPIO component."""
     import RPi.GPIO as GPIO
 
     def cleanup_gpio(event):
@@ -34,13 +36,13 @@ def setup(hass, config):
 
 
 def setup_output(port):
-    """Setup a GPIO as output."""
+    """Set up a GPIO as output."""
     import RPi.GPIO as GPIO
     GPIO.setup(port, GPIO.OUT)
 
 
 def setup_input(port, pull_mode):
-    """Setup a GPIO as input."""
+    """Set up a GPIO as input."""
     import RPi.GPIO as GPIO
     GPIO.setup(port, GPIO.IN,
                GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)

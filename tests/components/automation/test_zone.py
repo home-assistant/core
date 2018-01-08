@@ -1,20 +1,22 @@
 """The tests for the location automation."""
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 from homeassistant.components import automation, zone
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
+# pylint: disable=invalid-name
 class TestAutomationZone(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('group')
-        zone.setup(self.hass, {
+        mock_component(self.hass, 'group')
+        assert setup_component(self.hass, zone.DOMAIN, {
             'zone': {
                 'name': 'test',
                 'latitude': 32.880837,
@@ -25,12 +27,14 @@ class TestAutomationZone(unittest.TestCase):
 
         self.calls = []
 
+        @callback
         def record_call(service):
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -40,9 +44,9 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -52,6 +56,13 @@ class TestAutomationZone(unittest.TestCase):
                 },
                 'action': {
                     'service': 'test.automation',
+                    'data_template': {
+                        'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id',
+                            'from_state.state', 'to_state.state',
+                            'zone.name'))
+                    },
+
                 }
             }
         })
@@ -60,7 +71,28 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'zone - test.entity - hello - hello - test',
+            self.calls[0].data['some'])
+
+        # Set out of zone again so we can trigger call
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.881011,
+            'longitude': -117.234758
+        })
+        self.hass.block_till_done()
+
+        automation.turn_off(self.hass)
+        self.hass.block_till_done()
+
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.880586,
+            'longitude': -117.237564
+        })
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -70,9 +102,9 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -90,7 +122,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(0, len(self.calls))
 
@@ -100,9 +132,9 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -120,7 +152,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -130,9 +162,9 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -150,7 +182,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(0, len(self.calls))
 
@@ -160,16 +192,16 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
                     'event_type': 'test_event'
                 },
                 'condition': {
-                    'platform': 'zone',
+                    'condition': 'zone',
                     'entity_id': 'test.entity',
                     'zone': 'zone.test',
                 },
@@ -180,5 +212,5 @@ class TestAutomationZone(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))

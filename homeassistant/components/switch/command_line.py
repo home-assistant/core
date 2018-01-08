@@ -2,47 +2,76 @@
 Support for custom shell commands to turn a switch on/off.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.command_switch/
+https://home-assistant.io/components/switch.command_line/
 """
 import logging
 import subprocess
 
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.helpers import template
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, ENTITY_ID_FORMAT)
+from homeassistant.const import (
+    CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF,
+    CONF_COMMAND_ON, CONF_COMMAND_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
+SWITCH_SCHEMA = vol.Schema({
+    vol.Optional(CONF_COMMAND_OFF, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_ON, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_STATE): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+})
+
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return switches controlled by shell commands."""
-    switches = config.get('switches', {})
-    devices = []
+    devices = config.get(CONF_SWITCHES, {})
+    switches = []
 
-    for dev_name, properties in switches.items():
-        devices.append(
+    for object_id, device_config in devices.items():
+        value_template = device_config.get(CONF_VALUE_TEMPLATE)
+
+        if value_template is not None:
+            value_template.hass = hass
+
+        switches.append(
             CommandSwitch(
                 hass,
-                properties.get('name', dev_name),
-                properties.get('oncmd', 'true'),
-                properties.get('offcmd', 'true'),
-                properties.get('statecmd', False),
-                properties.get(CONF_VALUE_TEMPLATE, False)))
+                object_id,
+                device_config.get(CONF_FRIENDLY_NAME, object_id),
+                device_config.get(CONF_COMMAND_ON),
+                device_config.get(CONF_COMMAND_OFF),
+                device_config.get(CONF_COMMAND_STATE),
+                value_template
+            )
+        )
 
-    add_devices_callback(devices)
+    if not switches:
+        _LOGGER.error("No switches added")
+        return False
+
+    add_devices(switches)
 
 
-# pylint: disable=too-many-instance-attributes
 class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, hass, name, command_on, command_off,
-                 command_state, value_template):
+    def __init__(self, hass, object_id, friendly_name, command_on,
+                 command_off, command_state, value_template):
         """Initialize the switch."""
         self._hass = hass
-        self._name = name
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self._name = friendly_name
         self._state = False
         self._command_on = command_on
         self._command_off = command_off
@@ -52,30 +81,30 @@ class CommandSwitch(SwitchDevice):
     @staticmethod
     def _switch(command):
         """Execute the actual commands."""
-        _LOGGER.info('Running command: %s', command)
+        _LOGGER.info("Running command: %s", command)
 
         success = (subprocess.call(command, shell=True) == 0)
 
         if not success:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
         return success
 
     @staticmethod
     def _query_state_value(command):
         """Execute state command for return value."""
-        _LOGGER.info('Running state command: %s', command)
+        _LOGGER.info("Running state command: %s", command)
 
         try:
             return_value = subprocess.check_output(command, shell=True)
             return return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
     @staticmethod
     def _query_state_code(command):
         """Execute state command for return code."""
-        _LOGGER.info('Running state command: %s', command)
+        _LOGGER.info("Running state command: %s", command)
         return subprocess.call(command, shell=True) == 0
 
     @property
@@ -96,12 +125,12 @@ class CommandSwitch(SwitchDevice):
     @property
     def assumed_state(self):
         """Return true if we do optimistic updates."""
-        return self._command_state is False
+        return self._command_state is None
 
     def _query_state(self):
         """Query for state."""
         if not self._command_state:
-            _LOGGER.error('No state command specified')
+            _LOGGER.error("No state command specified")
             return
         if self._value_template:
             return CommandSwitch._query_state_value(self._command_state)
@@ -112,20 +141,20 @@ class CommandSwitch(SwitchDevice):
         if self._command_state:
             payload = str(self._query_state())
             if self._value_template:
-                payload = template.render_with_possible_json_value(
-                    self._hass, self._value_template, payload)
-            self._state = (payload.lower() == "true")
+                payload = self._value_template.render_with_possible_json_value(
+                    payload)
+            self._state = (payload.lower() == 'true')
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if (CommandSwitch._switch(self._command_on) and
                 not self._command_state):
             self._state = True
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if (CommandSwitch._switch(self._command_off) and
                 not self._command_state):
             self._state = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()

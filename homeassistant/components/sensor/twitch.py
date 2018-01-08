@@ -4,29 +4,44 @@ Support for the Twitch stream status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.twitch/
 """
-from homeassistant.helpers.entity import Entity
+import logging
 
-STATE_STREAMING = 'streaming'
-STATE_OFFLINE = 'offline'
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['python-twitch==1.3.0']
+
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_GAME = 'game'
 ATTR_TITLE = 'title'
+
+CONF_CHANNELS = 'channels'
 ICON = 'mdi:twitch'
 
-REQUIREMENTS = ['python-twitch==1.2.0']
-DOMAIN = 'twitch'
+STATE_OFFLINE = 'offline'
+STATE_STREAMING = 'streaming'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_CHANNELS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Twitch platform."""
-    add_devices(
-        [TwitchSensor(channel) for channel in config.get('channels', [])])
+    """Set up the Twitch platform."""
+    channels = config.get(CONF_CHANNELS, [])
+
+    add_devices([TwitchSensor(channel) for channel in channels], True)
 
 
 class TwitchSensor(Entity):
     """Representation of an Twitch channel."""
 
-    # pylint: disable=abstract-method
     def __init__(self, channel):
         """Initialize the sensor."""
         self._channel = channel
@@ -34,7 +49,6 @@ class TwitchSensor(Entity):
         self._preview = None
         self._game = None
         self._title = None
-        self.update()
 
     @property
     def should_poll(self):

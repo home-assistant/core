@@ -5,19 +5,29 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.netgear/
 """
 import logging
-import threading
-from datetime import timedelta
 
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
- CONF_PORT
-from homeassistant.util import Throttle
+import voluptuous as vol
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
+
+REQUIREMENTS = ['pynetgear==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pynetgear==0.3.3']
+
+DEFAULT_HOST = 'routerlogin.net'
+DEFAULT_USER = 'admin'
+DEFAULT_PORT = 5000
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_USERNAME, default=DEFAULT_USER): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port
+})
 
 
 def get_scanner(hass, config):
@@ -28,16 +38,12 @@ def get_scanner(hass, config):
     password = info.get(CONF_PASSWORD)
     port = info.get(CONF_PORT)
 
-    if password is not None and host is None:
-        _LOGGER.warning('Found username or password but no host')
-        return None
-
     scanner = NetgearDeviceScanner(host, username, password, port)
 
     return scanner if scanner.success_init else None
 
 
-class NetgearDeviceScanner(object):
+class NetgearDeviceScanner(DeviceScanner):
     """Queries a Netgear wireless router using the SOAP-API."""
 
     def __init__(self, host, username, password, port):
@@ -45,16 +51,7 @@ class NetgearDeviceScanner(object):
         import pynetgear
 
         self.last_results = []
-        self.lock = threading.Lock()
-
-        if host is None:
-            self._api = pynetgear.Netgear()
-        elif username is None:
-            self._api = pynetgear.Netgear(password, host)
-        elif port is None:
-            self._api = pynetgear.Netgear(password, host, username)
-        else:
-            self._api = pynetgear.Netgear(password, host, username, port)
+        self._api = pynetgear.Netgear(password, host, username, port)
 
         _LOGGER.info("Logging in")
 
@@ -81,7 +78,6 @@ class NetgearDeviceScanner(object):
         except StopIteration:
             return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Retrieve latest information from the Netgear router.
 
@@ -90,12 +86,11 @@ class NetgearDeviceScanner(object):
         if not self.success_init:
             return
 
-        with self.lock:
-            _LOGGER.info("Scanning")
+        _LOGGER.info("Scanning")
 
-            results = self._api.get_attached_devices()
+        results = self._api.get_attached_devices()
 
-            if results is None:
-                _LOGGER.warning('Error scanning devices')
+        if results is None:
+            _LOGGER.warning("Error scanning devices")
 
-            self.last_results = results or []
+        self.last_results = results or []

@@ -1,12 +1,19 @@
 """Service calling related helpers."""
-import functools
+import asyncio
 import logging
+# pylint: disable=unused-import
+from typing import Optional  # NOQA
+from os import path
+
+import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import template
-from homeassistant.loader import get_component
-
-HASS = None
+import homeassistant.core as ha
+from homeassistant.exceptions import TemplateError
+from homeassistant.loader import get_component, bind_hass
+from homeassistant.util.yaml import load_yaml
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_coroutine_threadsafe
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
@@ -16,67 +23,76 @@ CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def service(domain, service_name):
-    """Decorator factory to register a service."""
-    def register_service_decorator(action):
-        """Decorator to register a service."""
-        HASS.services.register(domain, service_name,
-                               functools.partial(action, HASS))
-        return action
-
-    return register_service_decorator
+SERVICE_DESCRIPTION_CACHE = 'service_description_cache'
 
 
-def call_from_config(hass, config, blocking=False):
+@bind_hass
+def call_from_config(hass, config, blocking=False, variables=None,
+                     validate_config=True):
     """Call a service based on a config hash."""
-    validation_error = validate_service_call(config)
-    if validation_error:
-        _LOGGER.error(validation_error)
-        return
+    run_coroutine_threadsafe(
+        async_call_from_config(hass, config, blocking, variables,
+                               validate_config), hass.loop).result()
 
-    domain_service = (
-        config[CONF_SERVICE]
-        if CONF_SERVICE in config
-        else template.render(hass, config[CONF_SERVICE_TEMPLATE]))
 
-    try:
-        domain, service_name = domain_service.split('.', 1)
-    except ValueError:
-        _LOGGER.error('Invalid service specified: %s', domain_service)
-        return
+@asyncio.coroutine
+@bind_hass
+def async_call_from_config(hass, config, blocking=False, variables=None,
+                           validate_config=True):
+    """Call a service based on a config hash."""
+    if validate_config:
+        try:
+            config = cv.SERVICE_SCHEMA(config)
+        except vol.Invalid as ex:
+            _LOGGER.error("Invalid config for calling service: %s", ex)
+            return
 
-    service_data = config.get(CONF_SERVICE_DATA)
-
-    if service_data is None:
-        service_data = {}
-    elif isinstance(service_data, dict):
-        service_data = dict(service_data)
+    if CONF_SERVICE in config:
+        domain_service = config[CONF_SERVICE]
     else:
-        _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
-        service_data = {}
+        try:
+            config[CONF_SERVICE_TEMPLATE].hass = hass
+            domain_service = config[CONF_SERVICE_TEMPLATE].async_render(
+                variables)
+            domain_service = cv.service(domain_service)
+        except TemplateError as ex:
+            _LOGGER.error('Error rendering service name template: %s', ex)
+            return
+        except vol.Invalid as ex:
+            _LOGGER.error('Template rendered invalid service: %s',
+                          domain_service)
+            return
 
-    service_data_template = config.get(CONF_SERVICE_DATA_TEMPLATE)
-    if service_data_template and isinstance(service_data_template, dict):
-        for key, value in service_data_template.items():
-            service_data[key] = template.render(hass, value)
-    elif service_data_template:
-        _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
+    domain, service_name = domain_service.split('.', 1)
+    service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
-    entity_id = config.get(CONF_SERVICE_ENTITY_ID)
-    if isinstance(entity_id, str):
-        service_data[ATTR_ENTITY_ID] = [ent.strip() for ent in
-                                        entity_id.split(",")]
-    elif entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
+    if CONF_SERVICE_DATA_TEMPLATE in config:
+        def _data_template_creator(value):
+            """Recursive template creator helper function."""
+            if isinstance(value, list):
+                return [_data_template_creator(item) for item in value]
+            elif isinstance(value, dict):
+                return {key: _data_template_creator(item)
+                        for key, item in value.items()}
+            value.hass = hass
+            return value.async_render(variables)
+        service_data.update(_data_template_creator(
+            config[CONF_SERVICE_DATA_TEMPLATE]))
 
-    hass.services.call(domain, service_name, service_data, blocking)
+    if CONF_SERVICE_ENTITY_ID in config:
+        service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+
+    yield from hass.services.async_call(
+        domain, service_name, service_data, blocking)
 
 
-def extract_entity_ids(hass, service_call):
-    """Helper method to extract a list of entity ids from a service call.
+@bind_hass
+def extract_entity_ids(hass, service_call, expand_group=True):
+    """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
+
+    Async friendly.
     """
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
@@ -86,23 +102,90 @@ def extract_entity_ids(hass, service_call):
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
 
-    if isinstance(service_ent_id, str):
-        return group.expand_entity_ids(hass, [service_ent_id])
+    if expand_group:
 
-    return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
+        if isinstance(service_ent_id, str):
+            return group.expand_entity_ids(hass, [service_ent_id])
+
+        return [ent_id for ent_id in
+                group.expand_entity_ids(hass, service_ent_id)]
+
+    else:
+
+        if isinstance(service_ent_id, str):
+            return [service_ent_id]
+
+        return service_ent_id
 
 
-def validate_service_call(config):
-    """Validate service call configuration.
+@asyncio.coroutine
+@bind_hass
+def async_get_all_descriptions(hass):
+    """Return descriptions (i.e. user documentation) for all service calls."""
+    if SERVICE_DESCRIPTION_CACHE not in hass.data:
+        hass.data[SERVICE_DESCRIPTION_CACHE] = {}
+    description_cache = hass.data[SERVICE_DESCRIPTION_CACHE]
 
-    Helper method to validate that a configuration is a valid service call.
-    Returns None if validation succeeds, else an error description
-    """
-    if not isinstance(config, dict):
-        return 'Invalid configuration {}'.format(config)
-    if CONF_SERVICE not in config and CONF_SERVICE_TEMPLATE not in config:
-        return 'Missing key {} or {}: {}'.format(
-            CONF_SERVICE,
-            CONF_SERVICE_TEMPLATE,
-            config)
-    return None
+    format_cache_key = '{}.{}'.format
+
+    def domain_yaml_file(domain):
+        """Return the services.yaml location for a domain."""
+        if domain == ha.DOMAIN:
+            import homeassistant.components as components
+            component_path = path.dirname(components.__file__)
+        else:
+            component_path = path.dirname(get_component(domain).__file__)
+        return path.join(component_path, 'services.yaml')
+
+    def load_services_file(yaml_file):
+        """Load and cache a services.yaml file."""
+        try:
+            yaml_cache[yaml_file] = load_yaml(yaml_file)
+        except FileNotFoundError:
+            pass
+
+    services = hass.services.async_services()
+
+    # Load missing files
+    yaml_cache = {}
+    loading_tasks = []
+    for domain in services:
+        yaml_file = domain_yaml_file(domain)
+
+        for service in services[domain]:
+            if format_cache_key(domain, service) not in description_cache:
+                if yaml_file not in yaml_cache:
+                    yaml_cache[yaml_file] = {}
+                    task = hass.async_add_job(load_services_file, yaml_file)
+                    loading_tasks.append(task)
+
+    if loading_tasks:
+        yield from asyncio.wait(loading_tasks, loop=hass.loop)
+
+    # Build response
+    catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
+    descriptions = {}
+    for domain in services:
+        descriptions[domain] = {}
+        yaml_file = domain_yaml_file(domain)
+
+        for service in services[domain]:
+            cache_key = format_cache_key(domain, service)
+            description = description_cache.get(cache_key)
+
+            # Cache missing descriptions
+            if description is None:
+                if yaml_file == catch_all_yaml_file:
+                    yaml_services = yaml_cache[yaml_file].get(domain, {})
+                else:
+                    yaml_services = yaml_cache[yaml_file]
+                yaml_description = yaml_services.get(service, {})
+
+                description = description_cache[cache_key] = {
+                    'description': yaml_description.get('description', ''),
+                    'fields': yaml_description.get('fields', {})
+                }
+
+            descriptions[domain][service] = description
+
+    return descriptions

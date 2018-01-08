@@ -1,4 +1,5 @@
 """Test state helpers."""
+import asyncio
 from datetime import timedelta
 import unittest
 from unittest.mock import patch
@@ -6,12 +7,14 @@ from unittest.mock import patch
 import homeassistant.core as ha
 import homeassistant.components as core_components
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF)
+from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
 from homeassistant.const import (
     STATE_OPEN, STATE_CLOSED,
     STATE_LOCKED, STATE_UNLOCKED,
-    STATE_ON, STATE_OFF)
+    STATE_ON, STATE_OFF,
+    STATE_HOME, STATE_NOT_HOME)
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
@@ -20,13 +23,40 @@ from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
 from tests.common import get_test_home_assistant, mock_service
 
 
+@asyncio.coroutine
+def test_async_track_states(hass):
+    """Test AsyncTrackStates context manager."""
+    point1 = dt_util.utcnow()
+    point2 = point1 + timedelta(seconds=5)
+    point3 = point2 + timedelta(seconds=5)
+
+    with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
+        mock_utcnow.return_value = point2
+
+        with state.AsyncTrackStates(hass) as states:
+            mock_utcnow.return_value = point1
+            hass.states.async_set('light.test', 'on')
+
+            mock_utcnow.return_value = point2
+            hass.states.async_set('light.test2', 'on')
+            state2 = hass.states.get('light.test2')
+
+            mock_utcnow.return_value = point3
+            hass.states.async_set('light.test3', 'on')
+            state3 = hass.states.get('light.test3')
+
+    assert [state2, state3] == \
+        sorted(states, key=lambda state: state.entity_id)
+
+
 class TestStateHelpers(unittest.TestCase):
     """Test the Home Assistant event helpers."""
 
     def setUp(self):     # pylint: disable=invalid-name
         """Run when tests are started."""
         self.hass = get_test_home_assistant()
-        core_components.setup(self.hass, {})
+        run_coroutine_threadsafe(core_components.async_setup(
+            self.hass, {}), self.hass.loop).result()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop when tests are finished."""
@@ -54,38 +84,13 @@ class TestStateHelpers(unittest.TestCase):
             [state2, state3],
             state.get_changed_since([state1, state2, state3], point2))
 
-    def test_track_states(self):
-        """Test tracking of states."""
-        point1 = dt_util.utcnow()
-        point2 = point1 + timedelta(seconds=5)
-        point3 = point2 + timedelta(seconds=5)
-
-        with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
-            mock_utcnow.return_value = point2
-
-            with state.TrackStates(self.hass) as states:
-                mock_utcnow.return_value = point1
-                self.hass.states.set('light.test', 'on')
-
-                mock_utcnow.return_value = point2
-                self.hass.states.set('light.test2', 'on')
-                state2 = self.hass.states.get('light.test2')
-
-                mock_utcnow.return_value = point3
-                self.hass.states.set('light.test3', 'on')
-                state3 = self.hass.states.get('light.test3')
-
-        self.assertEqual(
-            sorted([state2, state3], key=lambda state: state.entity_id),
-            sorted(states, key=lambda state: state.entity_id))
-
     def test_reproduce_with_no_entity(self):
         """Test reproduce_state with no entity."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
         state.reproduce_state(self.hass, ha.State('light.test', 'on'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) == 0)
         self.assertEqual(None, self.hass.states.get('light.test'))
@@ -98,7 +103,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('light.test', 'on'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -114,7 +119,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('light.test', 'off'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -134,7 +139,7 @@ class TestStateHelpers(unittest.TestCase):
             'complex': complex_data
         }))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -154,7 +159,7 @@ class TestStateHelpers(unittest.TestCase):
         state.reproduce_state(self.hass, ha.State('media_player.test', 'None',
                                                   media_attributes))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -172,7 +177,7 @@ class TestStateHelpers(unittest.TestCase):
         state.reproduce_state(
             self.hass, ha.State('media_player.test', 'playing'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -190,7 +195,7 @@ class TestStateHelpers(unittest.TestCase):
         state.reproduce_state(
             self.hass, ha.State('media_player.test', 'paused'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -207,7 +212,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('light.test', 'bad'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) == 0)
         self.assertEqual('off', self.hass.states.get('light.test').state)
@@ -221,7 +226,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('group.test', 'on'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(light_calls))
         last_call = light_calls[-1]
@@ -241,7 +246,7 @@ class TestStateHelpers(unittest.TestCase):
             ha.State('light.test1', 'on', {'brightness': 95}),
             ha.State('light.test2', 'on', {'brightness': 95})])
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(light_calls))
         last_call = light_calls[-1]
@@ -254,8 +259,9 @@ class TestStateHelpers(unittest.TestCase):
     def test_as_number_states(self):
         """Test state_as_number with states."""
         zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
-                       STATE_BELOW_HORIZON)
-        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON)
+                       STATE_BELOW_HORIZON, STATE_NOT_HOME)
+        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
+                      STATE_HOME)
         for _state in zero_states:
             self.assertEqual(0, state.state_as_number(
                 ha.State('domain.test', _state, {})))

@@ -6,70 +6,97 @@ https://home-assistant.io/components/sensor.loop_energy/
 """
 import logging
 
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "loopenergy"
+REQUIREMENTS = ['pyloopenergy==0.0.17']
 
-REQUIREMENTS = ['pyloopenergy==0.0.7']
+CONF_ELEC = 'electricity'
+CONF_GAS = 'gas'
+
+CONF_ELEC_SERIAL = 'electricity_serial'
+CONF_ELEC_SECRET = 'electricity_secret'
+
+CONF_GAS_SERIAL = 'gas_serial'
+CONF_GAS_SECRET = 'gas_secret'
+CONF_GAS_CALORIFIC = 'gas_calorific'
+
+CONF_GAS_TYPE = 'gas_type'
+
+DEFAULT_CALORIFIC = 39.11
+DEFAULT_UNIT = 'kW'
+
+ELEC_SCHEMA = vol.Schema({
+    vol.Required(CONF_ELEC_SERIAL): cv.string,
+    vol.Required(CONF_ELEC_SECRET): cv.string,
+})
+
+GAS_TYPE_SCHEMA = vol.In([CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL])
+
+GAS_SCHEMA = vol.Schema({
+    vol.Required(CONF_GAS_SERIAL): cv.string,
+    vol.Required(CONF_GAS_SECRET): cv.string,
+    vol.Optional(CONF_GAS_TYPE, default=CONF_UNIT_SYSTEM_METRIC):
+        GAS_TYPE_SCHEMA,
+    vol.Optional(CONF_GAS_CALORIFIC, default=DEFAULT_CALORIFIC):
+        vol.Coerce(float)
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ELEC): vol.All(
+        dict, ELEC_SCHEMA),
+    vol.Optional(CONF_GAS, default={}): vol.All(
+        dict, GAS_SCHEMA)
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Loop Energy sensors."""
+    """Set up the Loop Energy sensors."""
     import pyloopenergy
 
-    elec_serial = config.get('electricity_serial')
-    elec_secret = config.get('electricity_secret')
-    gas_serial = config.get('gas_serial')
-    gas_secret = config.get('gas_secret')
+    elec_config = config.get(CONF_ELEC)
+    gas_config = config.get(CONF_GAS)
 
-    if not (elec_serial and elec_secret):
-        _LOGGER.error(
-            "Configuration Error, "
-            "please make sure you have configured electricity "
-            "serial and secret tokens")
-        return None
-
-    if (gas_serial or gas_secret) and not (gas_serial and gas_secret):
-        _LOGGER.error(
-            "Configuration Error, "
-            "please make sure you have configured gas "
-            "serial and secret tokens")
-        return None
-
+    # pylint: disable=too-many-function-args
     controller = pyloopenergy.LoopEnergy(
-        elec_serial,
-        elec_secret,
-        gas_serial,
-        gas_secret
+        elec_config.get(CONF_ELEC_SERIAL),
+        elec_config.get(CONF_ELEC_SECRET),
+        gas_config.get(CONF_GAS_SERIAL),
+        gas_config.get(CONF_GAS_SECRET),
+        gas_config.get(CONF_GAS_TYPE),
+        gas_config.get(CONF_GAS_CALORIFIC)
         )
 
     def stop_loopenergy(event):
         """Shutdown loopenergy thread on exit."""
-        _LOGGER.info("Shutting down loopenergy.")
+        _LOGGER.info("Shutting down loopenergy")
         controller.terminate()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_loopenergy)
 
     sensors = [LoopEnergyElec(controller)]
 
-    if gas_serial:
+    if gas_config.get(CONF_GAS_SERIAL):
         sensors.append(LoopEnergyGas(controller))
 
     add_devices(sensors)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyDevice(Entity):
     """Implementation of an Loop Energy base sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         self._state = None
-        self._unit_of_measurement = 'kW'
+        self._unit_of_measurement = DEFAULT_UNIT
         self._controller = controller
         self._name = None
 
@@ -94,14 +121,12 @@ class LoopEnergyDevice(Entity):
         return self._unit_of_measurement
 
     def _callback(self):
-        self.update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyElec(LoopEnergyDevice):
     """Implementation of an Loop Energy Electricity sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyElec, self).__init__(controller)
@@ -113,11 +138,9 @@ class LoopEnergyElec(LoopEnergyDevice):
         self._state = round(self._controller.electricity_useage, 2)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyGas(LoopEnergyDevice):
     """Implementation of an Loop Energy Gas sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyGas, self).__init__(controller)

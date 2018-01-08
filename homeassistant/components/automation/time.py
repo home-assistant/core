@@ -2,103 +2,53 @@
 Offer time listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#time-trigger
+at https://home-assistant.io/docs/automation/trigger/#time-trigger
 """
+import asyncio
 import logging
 
-import homeassistant.util.dt as dt_util
-from homeassistant.helpers.event import track_time_change
+import voluptuous as vol
 
-CONF_HOURS = "hours"
-CONF_MINUTES = "minutes"
-CONF_SECONDS = "seconds"
-CONF_BEFORE = "before"
-CONF_AFTER = "after"
-CONF_WEEKDAY = "weekday"
+from homeassistant.core import callback
+from homeassistant.const import CONF_AT, CONF_PLATFORM
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_change
 
-WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+CONF_HOURS = 'hours'
+CONF_MINUTES = 'minutes'
+CONF_SECONDS = 'seconds'
 
 _LOGGER = logging.getLogger(__name__)
 
+TRIGGER_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_PLATFORM): 'time',
+    CONF_AT: cv.time,
+    CONF_HOURS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
+    CONF_MINUTES: vol.Any(vol.Coerce(int), vol.Coerce(str)),
+    CONF_SECONDS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
+}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AT))
 
-def trigger(hass, config, action):
+
+@asyncio.coroutine
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
-    if CONF_AFTER in config:
-        after = dt_util.parse_time_str(config[CONF_AFTER])
-        if after is None:
-            _error_time(config[CONF_AFTER], CONF_AFTER)
-            return False
-        hours, minutes, seconds = after.hour, after.minute, after.second
-    elif (CONF_HOURS in config or CONF_MINUTES in config or
-          CONF_SECONDS in config):
+    if CONF_AT in config:
+        at_time = config.get(CONF_AT)
+        hours, minutes, seconds = at_time.hour, at_time.minute, at_time.second
+    else:
         hours = config.get(CONF_HOURS)
         minutes = config.get(CONF_MINUTES)
         seconds = config.get(CONF_SECONDS)
-    else:
-        _LOGGER.error('One of %s, %s, %s OR %s needs to be specified',
-                      CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AFTER)
-        return False
 
+    @callback
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
-        action()
+        hass.async_run_job(action, {
+            'trigger': {
+                'platform': 'time',
+                'now': now,
+            },
+        })
 
-    track_time_change(hass, time_automation_listener,
-                      hour=hours, minute=minutes, second=seconds)
-
-    return True
-
-
-def if_action(hass, config):
-    """Wrap action method with time based condition."""
-    before = config.get(CONF_BEFORE)
-    after = config.get(CONF_AFTER)
-    weekday = config.get(CONF_WEEKDAY)
-
-    if before is None and after is None and weekday is None:
-        _LOGGER.error(
-            "Missing if-condition configuration key %s, %s or %s",
-            CONF_BEFORE, CONF_AFTER, CONF_WEEKDAY)
-        return None
-
-    if before is not None:
-        before = dt_util.parse_time_str(before)
-        if before is None:
-            _error_time(before, CONF_BEFORE)
-            return None
-
-    if after is not None:
-        after = dt_util.parse_time_str(after)
-        if after is None:
-            _error_time(after, CONF_AFTER)
-            return None
-
-    def time_if():
-        """Validate time based if-condition."""
-        now = dt_util.now()
-        if before is not None and now > now.replace(hour=before.hour,
-                                                    minute=before.minute):
-            return False
-
-        if after is not None and now < now.replace(hour=after.hour,
-                                                   minute=after.minute):
-            return False
-
-        if weekday is not None:
-            now_weekday = WEEKDAYS[now.weekday()]
-
-            if isinstance(weekday, str) and weekday != now_weekday or \
-               now_weekday not in weekday:
-                return False
-
-        return True
-
-    return time_if
-
-
-def _error_time(value, key):
-    """Helper method to print error."""
-    _LOGGER.error(
-        "Received invalid value for '%s': %s", key, value)
-    if isinstance(value, int):
-        _LOGGER.error('Make sure you wrap time values in quotes')
+    return async_track_time_change(hass, time_automation_listener,
+                                   hour=hours, minute=minutes, second=seconds)

@@ -1,5 +1,4 @@
 """Tests Home Assistant location helpers."""
-# pylint: disable=too-many-public-methods
 import unittest
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE

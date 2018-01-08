@@ -6,40 +6,39 @@ https://home-assistant.io/components/device_tracker.aruba/
 """
 import logging
 import re
-import threading
-from datetime import timedelta
 
-from homeassistant.components.device_tracker import DOMAIN
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-REQUIREMENTS = ['pexpect==4.0.1']
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['pexpect==4.0.1']
+
 _DEVICES_REGEX = re.compile(
-    r'(?P<name>([^\s]+))\s+' +
+    r'(?P<name>([^\s]+)?)\s+' +
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s+')
+    r'(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+')
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
 
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a Aruba scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
-
     scanner = ArubaDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
-class ArubaDeviceScanner(object):
+class ArubaDeviceScanner(DeviceScanner):
     """This class queries a Aruba Access Point for connected devices."""
 
     def __init__(self, config):
@@ -47,8 +46,6 @@ class ArubaDeviceScanner(object):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-
-        self.lock = threading.Lock()
 
         self.last_results = {}
 
@@ -70,7 +67,6 @@ class ArubaDeviceScanner(object):
                 return client['name']
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the Aruba Access Point is up to date.
 
@@ -79,18 +75,17 @@ class ArubaDeviceScanner(object):
         if not self.success_init:
             return False
 
-        with self.lock:
-            data = self.get_aruba_data()
-            if not data:
-                return False
+        data = self.get_aruba_data()
+        if not data:
+            return False
 
-            self.last_results = data.values()
-            return True
+        self.last_results = data.values()
+        return True
 
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
         import pexpect
-        connect = "ssh {}@{}"
+        connect = 'ssh {}@{}'
         ssh = pexpect.spawn(connect.format(self.username, self.host))
         query = ssh.expect(['password:', pexpect.TIMEOUT, pexpect.EOF,
                             'continue connecting (yes/no)?',
@@ -107,7 +102,7 @@ class ArubaDeviceScanner(object):
             ssh.sendline('yes')
             ssh.expect('password:')
         elif query == 4:
-            _LOGGER.error("Host key Changed")
+            _LOGGER.error("Host key changed")
             return
         elif query == 5:
             _LOGGER.error("Connection refused by server")
