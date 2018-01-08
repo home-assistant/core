@@ -2,7 +2,7 @@
 Patform for retrieving meteorological data from Dark Sky.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/
+https://home-assistant.io/components/weather.darksky/
 """
 from datetime import datetime, timedelta
 import logging
@@ -133,13 +133,12 @@ class DarkSkyWeather(WeatherEntity):
         return self._ds_daily.summary
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().state_attributes
-        attrs.update({
+        attrs = {
             ATTR_DAILY_FORECAST_SUMMARY: self.daily_forecast_summary,
             ATTR_HOURLY_FORECAST_SUMMARY: self.hourly_forecast_summary
-        })
+        }
         return attrs
 
     def update(self):
