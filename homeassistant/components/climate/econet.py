@@ -6,7 +6,6 @@ https://home-assistant.io/components/climate.econet/
 """
 import datetime
 import logging
-from os import path
 
 import voluptuous as vol
 
@@ -18,7 +17,6 @@ from homeassistant.components.climate import (
     STATE_OFF, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE,
     ClimateDevice)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID,
                                  CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT,
                                  ATTR_TEMPERATURE)
@@ -107,17 +105,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             _water_heater.schedule_update_ha_state(True)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(DOMAIN, SERVICE_ADD_VACATION,
                            service_handle,
-                           descriptions.get(SERVICE_ADD_VACATION),
                            schema=ADD_VACATION_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_DELETE_VACATION,
                            service_handle,
-                           descriptions.get(SERVICE_DELETE_VACATION),
                            schema=DELETE_VACATION_SCHEMA)
 
 

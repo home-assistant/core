@@ -864,6 +864,7 @@ python-ecobee-api==0.0.14
 python-etherscan-api==0.0.1
 
 # homeassistant.components.sensor.darksky
+# homeassistant.components.weather.darksky
 python-forecastio==1.3.5
 
 # homeassistant.components.gc100
