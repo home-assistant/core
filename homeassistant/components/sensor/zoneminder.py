@@ -133,7 +133,7 @@ class ZMSensorEvents(Entity):
 
         event = zoneminder.get_state(
             'api/events/consoleEvents/{}{}.json'.format(date_filter,
-                                                    archived_filter)
+                                                        archived_filter)
         )
 
         try:
