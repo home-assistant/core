@@ -7,8 +7,10 @@ https://home-assistant.io/components/snips/
 import asyncio
 import json
 import logging
+from datetime import timedelta
 import voluptuous as vol
 from homeassistant.helpers import intent, config_validation as cv
+import homeassistant.components.mqtt as mqtt
 
 DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']
@@ -59,21 +61,52 @@ def async_setup(hass, config):
             _LOGGER.error('Intent has invalid schema: %s. %s', err, request)
             return
 
+        snips_response = None
+
         intent_type = request['intent']['intentName'].split('__')[-1]
         slots = {}
         for slot in request.get('slots', []):
-            if 'value' in slot['value']:
-                slots[slot['slotName']] = {'value': slot['value']['value']}
-            else:
-                slots[slot['slotName']] = {'value': slot['rawValue']}
+            slots[slot['slotName']] = {'value': resolve_slot_values(slot)}
 
         try:
-            yield from intent.async_handle(
+            intent_response = yield from intent.async_handle(
                 hass, DOMAIN, intent_type, slots, request['input'])
+            if 'plain' in intent_response.speech:
+                snips_response = intent_response.speech['plain']['speech']
+        except intent.UnknownIntent as err:
+            _LOGGER.warning("Received unknown intent %s",
+                            request['intent']['intentName'])
+            snips_response = "Unknown Intent"
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s.", intent_type)
+            snips_response = "Error while handling intent"
+
+        notification = {'sessionId': request.get('sessionId', 'default'),
+                        'text': snips_response}
+
+        _LOGGER.debug("send_response %s", json.dumps(notification))
+        mqtt.async_publish(hass, 'hermes/dialogueManager/endSession',
+                           json.dumps(notification))
 
     yield from hass.components.mqtt.async_subscribe(
         INTENT_TOPIC, message_received)
 
     return True
+
+
+def resolve_slot_values(slot):
+    """Convert snips builtin types to useable values."""
+    if 'value' in slot['value']:
+        value = slot['value']['value']
+    else:
+        value = slot['rawValue']
+
+    if slot.get('entity') == "snips/duration":
+        delta = timedelta(weeks=slot['value']['weeks'],
+                          days=slot['value']['days'],
+                          hours=slot['value']['hours'],
+                          minutes=slot['value']['minutes'],
+                          seconds=slot['value']['seconds'])
+        value = delta.seconds
+
+    return value

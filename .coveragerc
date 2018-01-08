@@ -314,6 +314,7 @@ omit =
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/climate/sensibo.py
+    homeassistant/components/climate/touchline.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py
@@ -375,6 +376,7 @@ omit =
     homeassistant/components/light/greenwave.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
+    homeassistant/components/light/iglo.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/lifx_legacy.py
     homeassistant/components/light/limitlessled.py
@@ -658,6 +660,7 @@ omit =
     homeassistant/components/vacuum/xiaomi_miio.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
+    homeassistant/components/weather/darksky.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/yweather.py

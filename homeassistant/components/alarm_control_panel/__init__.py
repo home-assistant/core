@@ -7,7 +7,6 @@ https://home-assistant.io/components/alarm_control_panel/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 
@@ -15,7 +14,6 @@ from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_ARM_CUSTOM_BYPASS)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -148,14 +146,10 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for service in SERVICE_TO_METHOD:
         hass.services.async_register(
             DOMAIN, service, async_alarm_service_handler,
-            descriptions.get(service), schema=ALARM_SERVICE_SCHEMA)
+            schema=ALARM_SERVICE_SCHEMA)
 
     return True
 
