@@ -107,7 +107,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
-        
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
