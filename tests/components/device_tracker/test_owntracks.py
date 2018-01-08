@@ -627,7 +627,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('inner')
 
     def test_events_only_on(self):
-        """Test events_only config suppresses location updates"""
+        """Test events_only config suppresses location updates."""
         # Sending a location message that is not home
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
         self.assert_location_state(STATE_NOT_HOME)
@@ -636,6 +636,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
         # Enter and Leave messages
         self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
+        self.assert_location_state('outer')
         self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
         self.assert_location_state(STATE_NOT_HOME)
 
@@ -646,7 +647,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state(STATE_NOT_HOME)
 
     def test_events_only_off(self):
-        """Test when events_only is False"""
+        """Test when events_only is False."""
         # Sending a location message that is not home
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
         self.assert_location_state(STATE_NOT_HOME)
@@ -655,6 +656,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
         # Enter and Leave messages
         self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
+        self.assert_location_state('outer')
         self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
         self.assert_location_state(STATE_NOT_HOME)
 
@@ -1404,7 +1406,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
         self.assert_location_latitude(LOCATION_MESSAGE['lat'])
 
     def test_customized_mqtt_topic(self):
-        """Test subscribing to a custom mqtt topic"""
+        """Test subscribing to a custom mqtt topic."""
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
@@ -1418,7 +1420,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
         self.assert_location_latitude(LOCATION_MESSAGE['lat'])
 
     def test_region_mapping(self):
-        """Test region to zone mapping"""
+        """Test region to zone mapping."""
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {

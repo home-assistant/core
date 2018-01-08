@@ -96,8 +96,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
 
 def _parse_topic(topic, subscribe_topic):
-    """Parse an MQTT topic {subscribe_topic}/user/dev,
-    return (user, dev) tuple.
+    """Parse an MQTT topic {sub_topic}/user/dev, return (user, dev) tuple.
 
     Async friendly.
     """
