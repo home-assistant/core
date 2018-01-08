@@ -6,7 +6,8 @@ https://home-assistant.io/components/sensor.melissa/
 """
 import logging
 
-from homeassistant.components.melissa import DOMAIN, DATA_MELISSA
+from homeassistant.components.melissa import DOMAIN, DATA_MELISSA, \
+    CHANGE_THRESHOLD
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
@@ -104,7 +105,10 @@ class MelissaTemperatureSensor(MelissaSensor):
     def update(self):
         """Fetch new state data for the sensor."""
         super(MelissaTemperatureSensor, self).update()
-        self._state = self._data[self._serial]['temp']
+        if self._state == STATE_UNKNOWN or abs(
+                self._state - self._data[self._serial]['temp']
+        ) < CHANGE_THRESHOLD:
+            self._state = self._data[self._serial]['temp']
 
 
 class MelissaHumiditySensor(MelissaSensor):
@@ -121,4 +125,7 @@ class MelissaHumiditySensor(MelissaSensor):
     def update(self):
         """Fetch new state data for the sensor."""
         super(MelissaHumiditySensor, self).update()
-        self._state = self._data[self._serial]['humidity']
+        if self._state == STATE_UNKNOWN or abs(
+                self._state - self._data[self._serial]['humidity']
+        ) < CHANGE_THRESHOLD:
+            self._state = self._data[self._serial]['humidity']

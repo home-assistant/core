@@ -11,7 +11,8 @@ from homeassistant.components.climate import ClimateDevice, \
     STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, \
     SUPPORT_FAN_MODE
 from homeassistant.components.fan import SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
-from homeassistant.components.melissa import DATA_MELISSA, DOMAIN
+from homeassistant.components.melissa import DATA_MELISSA, DOMAIN, \
+    CHANGE_THRESHOLD
 from homeassistant.const import TEMP_CELSIUS, STATE_ON, STATE_OFF, \
     STATE_UNKNOWN, STATE_IDLE, ATTR_TEMPERATURE
 
@@ -53,6 +54,7 @@ class MelissaClimate(ClimateDevice):
         self._cur_settings = self._connection.cur_settings(
             serial_number
         )['controller']['_relation']['command_log']
+        self._latest_temp = None
 
     @property
     def name(self):
@@ -75,7 +77,10 @@ class MelissaClimate(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         from melissa import TEMP
-        return self._data[TEMP]
+        if not self._latest_temp or abs(
+                self._latest_temp - self._data[TEMP]) < CHANGE_THRESHOLD:
+            self._latest_temp = self._data[TEMP]
+        return self._latest_temp
 
     @property
     def target_temperature_step(self):
@@ -119,38 +124,53 @@ class MelissaClimate(ClimateDevice):
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS
 
+    @property
+    def min_temp(self):
+        """Return the minimum supported temperature for the thermostat."""
+        return 16
+
+    @property
+    def max_temp(self):
+        """Return the maximum supported temperature for the thermostat."""
+        return 30
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         from melissa import TEMP
         temp = kwargs.get(ATTR_TEMPERATURE)
-        self._cur_settings.update({TEMP: temp})
-        return self._connection.send(self._serial_number, self._cur_settings)
+        return self.send({TEMP: temp})
 
     def set_fan_mode(self, fan):
         """Set fan mode."""
         from melissa import FAN
         fan_mode = self.hass_fan_to_melissa(fan)
-        self._cur_settings.update({FAN: fan_mode})
-        return self._connection.send(self._serial_number, self._cur_settings)
+        return self.send({FAN: fan_mode})
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         from melissa import MODE
         mode = self.hass_mode_to_melissa(operation_mode)
-        self._cur_settings.update({MODE: mode})
-        return self._connection.send(self._serial_number, self._cur_settings)
+        return self.send({MODE: mode})
 
     def turn_on(self):
         """Turn on device."""
         from melissa import STATE, STATE_ON as ON  # pylint: disable=W0621
-        self._cur_settings.update({STATE: ON})
-        return self._connection.send(self._serial_number, self._cur_settings)
+        return self.send({STATE: ON})
 
     def turn_off(self):
         """Turn off device."""
         from melissa import STATE, STATE_OFF as OFF  # pylint: disable=W0621
-        self._cur_settings.update({STATE: OFF})
-        return self._connection.send(self._serial_number, self._cur_settings)
+        return self.send({STATE: OFF})
+
+    def send(self, value):
+        """Sending action to service"""
+        old_value = self._cur_settings.copy()
+        self._cur_settings.update(value)
+        if not self._connection.send(self._serial_number, self._cur_settings):
+            self._cur_settings = old_value
+            return False
+        else:
+            return True
 
     @property
     def supported_features(self):

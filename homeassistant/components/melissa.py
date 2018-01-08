@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "melissa"
 DATA_MELISSA = 'MELISSA'
+CHANGE_THRESHOLD = 10
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -39,6 +40,6 @@ def setup(hass, config):
     api = melissa.Melissa(username=username, password=password)
     hass.data[DATA_MELISSA] = api
 
-    load_platform(hass, 'sensor', DOMAIN)
-    load_platform(hass, 'climate', DOMAIN)
+    load_platform(hass, 'sensor', DOMAIN, {})
+    load_platform(hass, 'climate', DOMAIN, {})
     return True
