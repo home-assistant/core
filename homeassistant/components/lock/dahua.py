@@ -57,7 +57,8 @@ class Dahua(LockDevice):
         response = self._session.post("{}/RPC2_Login".format(self._url),
                                       json=payload_homepage).json()
         self._session_id = response.get("session")
-        self._session.headers["Cookie"] = "DhWebClientSessionID=%s" % (self._session_id)
+        cookie = "DhWebClientSessionID=%s" % self._session_id
+        self._session.headers["Cookie"] = cookie
         _LOGGER.debug("%s: URL %s session_id=%s",
                       self._name, self._url, self._session_id)
         payload_login = dict(
@@ -73,7 +74,7 @@ class Dahua(LockDevice):
             session=self._session_id
         )
         response = self._session.post("{}/RPC2_Login".format(self._url),
-                                        json=payload_login).json()
+                                      json=payload_login).json()
         _LOGGER.debug("%s: logged=%s",
                       self._name, response.get("result"))
 
