@@ -73,4 +73,4 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.apply_action('stopIdentify')
+        self.apply_action('my')
