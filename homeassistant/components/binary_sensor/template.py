@@ -75,7 +75,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         sensors.append(
             BinarySensorTemplate(
                 hass, device, friendly_name, device_class, value_template,
-                icon_template, entity_picture_template, entity_ids, delay_on, delay_off)
+                icon_template, entity_picture_template, entity_ids,
+                delay_on, delay_off)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -89,7 +90,8 @@ class BinarySensorTemplate(BinarySensorDevice):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(self, hass, device, friendly_name, device_class,
-                 value_template, icon_template, entity_picture_template, entity_ids, delay_on, delay_off):
+                 value_template, icon_template, entity_picture_template, entity_ids,
+                 delay_on, delay_off):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -197,7 +199,6 @@ class BinarySensorTemplate(BinarySensorDevice):
                     return
         return state
 
-            
     @callback
     def async_check_state(self):
         """Update the state from the template."""

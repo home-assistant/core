@@ -108,10 +108,10 @@ class TestBinarySensorTemplate(unittest.TestCase):
                         'test_template_sensor': {
                             'value_template': "State",
                             'icon_template':
-                                "{% if states.binary_sensor.test_state.state == "
-                                "'Works' %}"
-                                "mdi:check"
-                                "{% endif %}"
+                              "{% if states.binary_sensor.test_state.state == "
+                              "'Works' %}"
+                              "mdi:check"
+                              "{% endif %}"
                         }
                     }
                 }
@@ -138,10 +138,10 @@ class TestBinarySensorTemplate(unittest.TestCase):
                         'test_template_sensor': {
                             'value_template': "State",
                             'entity_picture_template':
-                                "{% if states.binary_sensor.test_state.state == "
-                                "'Works' %}"
-                                "/local/sensor.png"
-                                "{% endif %}"
+                              "{% if states.binary_sensor.test_state.state == "
+                              "'Works' %}"
+                              "/local/sensor.png"
+                              "{% endif %}"
                         }
                     }
                 }
