@@ -52,14 +52,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
 
         for sensor in config[CONF_MONITORED_CONDITIONS]:
-            if sensor not in SENSOR_TYPES:
-                _LOGGER.error("Sensor type: %s does not exist", sensor)
-            else:
-                sensors.append(
-                    ZMSensorEvents(int(i['Monitor']['Id']),
-                                   i['Monitor']['Name'],
-                                   include_archived, sensor)
-                )
+            sensors.append(
+                ZMSensorEvents(int(i['Monitor']['Id']),
+                               i['Monitor']['Name'],
+                               include_archived, sensor)
+            )
 
     add_devices(sensors)
 
@@ -86,7 +83,7 @@ class ZMSensorMonitors(Entity):
     def update(self):
         """Update the sensor."""
         monitor = zoneminder.get_state(
-            'api/monitors/%i.json' % self._monitor_id
+            'api/monitors/{}.json'.format(self._monitor_id)
         )
         if monitor['monitor']['Monitor']['Function'] is None:
             self._state = STATE_UNKNOWN
@@ -124,7 +121,7 @@ class ZMSensorEvents(Entity):
 
     def update(self):
         """Update the sensor."""
-        date_filter = '1%%20%s' % self._type
+        date_filter = '1%20{}'.format(self._type)
         if self._type == 'all':
             # The consoleEvents API uses DATE_SUB, so give it
             # something large
@@ -135,7 +132,7 @@ class ZMSensorEvents(Entity):
             archived_filter = ''
 
         event = zoneminder.get_state(
-            'api/events/consoleEvents/%s%s.json' % (date_filter,
+            'api/events/consoleEvents/{}{}.json'.format(date_filter,
                                                     archived_filter)
         )
 
