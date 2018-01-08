@@ -1,5 +1,5 @@
 """
-Dahua Camera lock (VTO2000A).
+Dahua Camera Station lock (VTO2000A).
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.dahua/
