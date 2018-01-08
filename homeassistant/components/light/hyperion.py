@@ -29,16 +29,16 @@ DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_EFFECT_LIST = ['HDMI', 'Cinema brighten lights', 'Cinema dim lights',
-                    'Knight rider', 'Blue mood blobs', 'Cold mood blobs',
-                    'Full color mood blobs', 'Green mood blobs',
-                    'Red mood blobs', 'Warm mood blobs',
-                    'Police Lights Single', 'Police Lights Solid',
-                    'Rainbow mood', 'Rainbow swirl fast',
-                    'Rainbow swirl', 'Random', 'Running dots',
-                    'System Shutdown', 'Snake', 'Sparks Color', 'Sparks',
-                    'Strobe blue', 'Strobe Raspbmc', 'Strobe white',
-                    'Color traces', 'UDP multicast listener',
-                    'UDP listener', 'X-Mas']
+                       'Knight rider', 'Blue mood blobs', 'Cold mood blobs',
+                       'Full color mood blobs', 'Green mood blobs',
+                       'Red mood blobs', 'Warm mood blobs',
+                       'Police Lights Single', 'Police Lights Solid',
+                       'Rainbow mood', 'Rainbow swirl fast',
+                       'Rainbow swirl', 'Random', 'Running dots',
+                       'System Shutdown', 'Snake', 'Sparks Color', 'Sparks',
+                       'Strobe blue', 'Strobe Raspbmc', 'Strobe white',
+                       'Color traces', 'UDP multicast listener',
+                       'UDP listener', 'X-Mas']
 
 SUPPORT_HYPERION = (SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)
 
@@ -51,10 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
     vol.Optional(CONF_HDMI_PRIORITY,
-                default=DEFAULT_HDMI_PRIORITY): cv.positive_int,
+                 default=DEFAULT_HDMI_PRIORITY): cv.positive_int,
     vol.Optional(CONF_EFFECT_LIST,
-                default=DEFAULT_EFFECT_LIST): vol.All(cv.ensure_list,
-                                                    [cv.string]),
+                 default=DEFAULT_EFFECT_LIST): vol.All(cv.ensure_list,
+                                                       [cv.string]),
 })
 
 
@@ -80,7 +80,7 @@ class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
     def __init__(self, name, host, port, priority, default_color,
-                hdmi_priority, effect_list):
+                 hdmi_priority, effect_list):
         """Initialize the light."""
         self._host = host
         self._port = port
@@ -170,7 +170,7 @@ class Hyperion(Light):
             return
 
         cal_color = [int(round(x*float(self._brightness)/255))
-                    for x in self._rgb_color]
+                     for x in self._rgb_color]
         self.json_request({
             'command': 'color',
             'priority': self._priority,
@@ -238,7 +238,7 @@ class Hyperion(Light):
                     response['info']['activeLedColor'][0]['RGB Value']
                 self._brightness = max(self._rgb_color)
                 self._rgb_mem = [int(round(float(x)*255/self._brightness))
-                                for x in self._rgb_color]
+                                 for x in self._rgb_color]
                 self._icon = 'mdi:lightbulb'
                 self._effect = 'none'
 
