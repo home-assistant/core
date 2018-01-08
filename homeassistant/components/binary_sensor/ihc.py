@@ -4,7 +4,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ihc/
 """
 from xml.etree.ElementTree import Element
+
 import voluptuous as vol
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.components.ihc import validate_name, IHC_DATA
@@ -17,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 DEPENDENCIES = ['ihc']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_AUTOSETUP, default='False'): cv.boolean,
+    vol.Optional(CONF_AUTOSETUP, default=False): cv.boolean,
     vol.Optional(CONF_BINARY_SENSORS, default=[]):
         vol.All(cv.ensure_list, [
             vol.All({
@@ -35,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 #    ihcplatform = get_ihc_platform(hass)
     ihc = hass.data[IHC_DATA]
     devices = []
-    if config.get(CONF_AUTOSETUP):
+    if config[CONF_AUTOSETUP]:
         def setup_product(ihc_id, name, product, product_cfg):
             """Product setup callback."""
             sensor = IHCBinarySensor(ihc, name, ihc_id,
@@ -45,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices.append(sensor)
         ihc.product_auto_setup('binary_sensor', setup_product)
 
-    binary_sensors = config.get(CONF_BINARY_SENSORS)
+    binary_sensors = config[CONF_BINARY_SENSORS]
     for sensor_cfg in binary_sensors:
         ihc_id = sensor_cfg[CONF_ID]
         name = sensor_cfg[CONF_NAME]
@@ -67,11 +69,6 @@ class IHCBinarySensor(IHCDevice, BinarySensorDevice):
         self._state = None
         self._sensor_type = sensor_type
         self.inverting = inverting
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def device_class(self):

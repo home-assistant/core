@@ -4,6 +4,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.ihc/
 """
 from xml.etree.ElementTree import Element
+
 import voluptuous as vol
 
 from homeassistant.components.ihc import validate_name, IHC_DATA
@@ -16,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 DEPENDENCIES = ['ihc']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_AUTOSETUP, default='False'): cv.boolean,
+    vol.Optional(CONF_AUTOSETUP, default=False): cv.boolean,
     vol.Optional(CONF_SWITCHES, default=[]):
         vol.All(cv.ensure_list, [
             vol.All({
@@ -31,14 +32,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ihc switch platform."""
     ihc = hass.data[IHC_DATA]
     devices = []
-    if config.get(CONF_AUTOSETUP):
+    if config[CONF_AUTOSETUP]:
         def setup_product(ihc_id, name, product, product_cfg):
             """Product setup callback."""
             sensor = IHCSwitch(ihc, name, ihc_id, product)
             devices.append(sensor)
         ihc.product_auto_setup('switch', setup_product)
 
-    switches = config.get(CONF_SWITCHES)
+    switches = config[CONF_SWITCHES]
     for switch in switches:
         ihc_id = switch[CONF_ID]
         name = switch[CONF_NAME]
@@ -55,33 +56,6 @@ class IHCSwitch(IHCDevice, SwitchDevice):
         """Initialize the IHC switch."""
         super().__init__(ihc, name, ihc_id, product)
         self._state = False
-        self._icon = None
-        self._assumed = False
-
-    @property
-    def should_poll(self):
-        """We do not need to poll."""
-        return False
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def assumed_state(self):
-        """Return if the state is based on assumptions."""
-        return self._assumed
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return 0
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return 0
 
     @property
     def is_on(self):
@@ -90,15 +64,11 @@ class IHCSwitch(IHCDevice, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._state = True
-        self.ihc.ihc_controller.set_runtime_value_bool(self._ihc_id, True)
-        self.schedule_update_ha_state()
+        self.ihc.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self._state = False
-        self.ihc.ihc_controller.set_runtime_value_bool(self._ihc_id, False)
-        self.schedule_update_ha_state()
+        self.ihc.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Callback when the ihc resource changes."""

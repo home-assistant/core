@@ -10,7 +10,7 @@ class IHCDevice:
         """Initialize IHC attributes."""
         self.ihc = ihc
         self._name = name
-        self._ihc_id = ihc_id
+        self.ihc_id = ihc_id
         if product:
             self.ihc_name = product.attrib['name']
             self.ihc_note = product.attrib['note']
@@ -24,23 +24,24 @@ class IHCDevice:
     def async_added_to_hass(self):
         """Add callback for ihc changes."""
         self.ihc.ihc_controller.add_notify_event(
-            self.get_ihc_id(), self.on_ihc_change, True)
+            self.ihc_id, self.on_ihc_change, True)
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed for ihc devices."""
+        return False
 
     def on_ihc_change(self, ihc_id, value):
         """Callback when ihc resource changes.
 
         Derived classes can overwrite this todo device specific stuff.
         """
-        pass
+        raise NotImplementedError
 
     @property
     def name(self):
         """Return the device name."""
         return self._name
-
-    def get_ihc_id(self) -> int:
-        """Return the ihc resource id."""
-        return self._ihc_id
 
     @property
     def device_state_attributes(self):
@@ -48,7 +49,7 @@ class IHCDevice:
         if not self.ihc.info:
             return {}
         return {
-            'ihc_id': self._ihc_id,
+            'ihc_id': self.ihc_id,
             'ihc_name': self.ihc_name,
             'ihc_note': self.ihc_note,
             'ihc_position': self.ihc_position

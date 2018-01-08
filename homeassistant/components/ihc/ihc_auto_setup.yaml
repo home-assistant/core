@@ -64,27 +64,22 @@ sensor:
     # Temperature sensor
     - xpath: './/product_dataline[@product_identifier="_0x2124"]'
       node: 'resource_temperature'
-      type: "Temperature"
       unit_of_measurement: '°C'
     # Humidity/temperature
     - xpath: './/product_dataline[@product_identifier="_0x2135"]'
       node: 'resource_humidity_level'
-      type: "Humidity"
       unit_of_measurement: '%'
     # Humidity/temperature
     - xpath: './/product_dataline[@product_identifier="_0x2135"]'
       node: 'resource_temperature'
-      type: "Temperature"
       unit_of_measurement: '°C'
     # Lux/temperature
     - xpath: './/product_dataline[@product_identifier="_0x2136"]'
       node: 'resource_light'
-      type: "Light"
       unit_of_measurement: 'Lux'
     # Lux/temperature
     - xpath: './/product_dataline[@product_identifier="_0x2136"]'
       node: 'resource_temperature'
-      type: "Temperature"
       unit_of_measurement: '°C'
 
 switch:
