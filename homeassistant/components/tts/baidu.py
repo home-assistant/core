@@ -48,16 +48,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # Keys are options in the config file, and Values are options
 # required by Baidu TTS API.
 _OPTIONS = {
-    CONF_SPEED: 'spd',
-    CONF_PITCH: 'pit',
-    CONF_VOLUME: 'vol',
     CONF_PERSON: 'per',
+    CONF_PITCH: 'pit',
+    CONF_SPEED: 'spd',
+    CONF_VOLUME: 'vol',
 }
 SUPPORTED_OPTIONS = [
-    CONF_SPEED,
-    CONF_PITCH,
-    CONF_VOLUME,
     CONF_PERSON,
+    CONF_PITCH,
+    CONF_SPEED,
+    CONF_VOLUME,
 ]
 
 
@@ -83,10 +83,10 @@ class BaiduTTSProvider(Provider):
         }
 
         self._speech_conf_data = {
-            _OPTIONS[CONF_SPEED]: conf.get(CONF_SPEED),
-            _OPTIONS[CONF_PITCH]: conf.get(CONF_PITCH),
-            _OPTIONS[CONF_VOLUME]: conf.get(CONF_VOLUME),
             _OPTIONS[CONF_PERSON]: conf.get(CONF_PERSON),
+            _OPTIONS[CONF_PITCH]: conf.get(CONF_PITCH),
+            _OPTIONS[CONF_SPEED]: conf.get(CONF_SPEED),
+            _OPTIONS[CONF_VOLUME]: conf.get(CONF_VOLUME),
         }
 
     @property
@@ -103,10 +103,10 @@ class BaiduTTSProvider(Provider):
     def default_options(self):
         """Return a dict include default options."""
         return {
-            CONF_SPEED: self._speech_conf_data[_OPTIONS[CONF_SPEED]],
-            CONF_PITCH: self._speech_conf_data[_OPTIONS[CONF_PITCH]],
-            CONF_VOLUME: self._speech_conf_data[_OPTIONS[CONF_VOLUME]],
             CONF_PERSON: self._speech_conf_data[_OPTIONS[CONF_PERSON]],
+            CONF_PITCH: self._speech_conf_data[_OPTIONS[CONF_PITCH]],
+            CONF_SPEED: self._speech_conf_data[_OPTIONS[CONF_SPEED]],
+            CONF_VOLUME: self._speech_conf_data[_OPTIONS[CONF_VOLUME]],
         }
 
     @property
