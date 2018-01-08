@@ -6,11 +6,10 @@ https://home-assistant.io/components/group/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 
-from homeassistant import config as conf_util, core as ha
+from homeassistant import core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
@@ -254,11 +253,6 @@ def async_setup(hass, config):
 
     yield from _async_process_config(hass, config, component)
 
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     @asyncio.coroutine
     def reload_service_handler(service):
         """Remove all groups and load new ones from config."""
@@ -269,7 +263,7 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
-        descriptions[SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
+        schema=RELOAD_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def groups_service_handler(service):
@@ -346,11 +340,11 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET, groups_service_handler,
-        descriptions[SERVICE_SET], schema=SET_SERVICE_SCHEMA)
+        schema=SET_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE, groups_service_handler,
-        descriptions[SERVICE_REMOVE], schema=REMOVE_SERVICE_SCHEMA)
+        schema=REMOVE_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def visibility_service_handler(service):
@@ -368,7 +362,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
-        descriptions[SERVICE_SET_VISIBILITY],
         schema=SET_VISIBILITY_SERVICE_SCHEMA)
 
     return True

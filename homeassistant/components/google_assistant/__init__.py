@@ -4,7 +4,6 @@ Support for Actions on Google Assistant Smart Home Control.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/google_assistant/
 """
-import os
 import asyncio
 import logging
 
@@ -18,7 +17,6 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant  # NOQA
 from typing import Dict, Any  # NOQA
 
-from homeassistant import config as conf_util
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import bind_hass
@@ -68,11 +66,6 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     config = yaml_config.get(DOMAIN, {})
     agent_user_id = config.get(CONF_AGENT_USER_ID)
     api_key = config.get(CONF_API_KEY)
-    if api_key is not None:
-        descriptions = yield from hass.async_add_job(
-            conf_util.load_yaml_config_file, os.path.join(
-                os.path.dirname(__file__), 'services.yaml')
-        )
     hass.http.register_view(GoogleAssistantAuthView(hass, config))
     async_register_http(hass, config)
 
@@ -98,7 +91,6 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     # Register service only if api key is provided
     if api_key is not None:
         hass.services.async_register(
-            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler,
-            descriptions.get(SERVICE_REQUEST_SYNC))
+            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler)
 
     return True

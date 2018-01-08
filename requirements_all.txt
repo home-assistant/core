@@ -392,6 +392,9 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 # homeassistant.components.sensor.htu21d
 # i2csense==0.0.4
 
+# homeassistant.components.light.iglo
+iglo==1.0.0
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==4.1.1
@@ -833,7 +836,7 @@ pysma==0.1.3
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
-pysnmp==4.4.3
+pysnmp==4.4.4
 
 # homeassistant.components.media_player.liveboxplaytv
 pyteleloisirs==3.3
@@ -861,6 +864,7 @@ python-ecobee-api==0.0.14
 python-etherscan-api==0.0.1
 
 # homeassistant.components.sensor.darksky
+# homeassistant.components.weather.darksky
 python-forecastio==1.3.5
 
 # homeassistant.components.gc100
@@ -971,7 +975,7 @@ pyvizio==0.0.2
 pyvlx==0.1.3
 
 # homeassistant.components.notify.html5
-pywebpush==1.3.0
+pywebpush==1.5.0
 
 # homeassistant.components.wemo
 pywemo==0.4.25
@@ -1031,7 +1035,7 @@ samsungctl==0.6.0
 satel_integra==0.1.0
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.19
+schiene==0.20
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
