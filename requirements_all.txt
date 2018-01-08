@@ -581,7 +581,7 @@ pocketcasts==0.1
 proliphix==0.4.1
 
 # homeassistant.components.prometheus
-prometheus_client==0.0.21
+prometheus_client==0.1.0
 
 # homeassistant.components.sensor.systemmonitor
 psutil==5.4.3
