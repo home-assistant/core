@@ -1,5 +1,8 @@
 """
-Dahua Camera lock (VTO2000A)
+Dahua Camera lock (VTO2000A).
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/lock.dahua/
 """
 import asyncio
 import logging
@@ -42,7 +45,6 @@ class Dahua(LockDevice):
 
     def __init__(self, hass, config):
         """Initialize a Dahua Lock."""
-
         self._name = config.get(CONF_NAME)
         self._url = "http://{}".format(config.get(CONF_HOST))
         self._session = requests.Session()
