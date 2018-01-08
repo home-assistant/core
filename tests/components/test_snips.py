@@ -184,3 +184,57 @@ def test_snips_unknown_intent(hass, mqtt_mock):
     topic = events[0].data['service_data']['topic']
     assert payload['text'] == 'Unknown Intent'
     assert topic == 'hermes/dialogueManager/endSession'
+
+
+@asyncio.coroutine
+def test_snips_intent_format_user(hass, mqtt_mock):
+    """Test intentName format user_XXX__intentName."""
+    result = yield from async_setup_component(hass, "snips", {
+        "snips": {},
+    })
+    assert result
+    payload = """
+    {
+        "input": "what to do",
+        "intent": {
+            "intentName": "user_ABCDEF123__Lights"
+        },
+        "slots": []
+    }
+    """
+    intents = async_mock_intent(hass, 'Lights')
+    async_fire_mqtt_message(hass, 'hermes/intent/user_ABCDEF123__Lights',
+                            payload)
+    yield from hass.async_block_till_done()
+
+    assert len(intents) == 1
+    intent = intents[0]
+    assert intent.platform == 'snips'
+    assert intent.intent_type == 'Lights'
+
+
+@asyncio.coroutine
+def test_snips_intent_format_username(hass, mqtt_mock):
+    """Test intentName format username:intentName."""
+    result = yield from async_setup_component(hass, "snips", {
+        "snips": {},
+    })
+    assert result
+    payload = """
+    {
+        "input": "what to do",
+        "intent": {
+            "intentName": "username:Lights"
+        },
+        "slots": []
+    }
+    """
+    intents = async_mock_intent(hass, 'Lights')
+    async_fire_mqtt_message(hass, 'hermes/intent/username:Lights',
+                            payload)
+    yield from hass.async_block_till_done()
+
+    assert len(intents) == 1
+    intent = intents[0]
+    assert intent.platform == 'snips'
+    assert intent.intent_type == 'Lights'
