@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.melissa/
 import logging
 
 from homeassistant.components.melissa import DOMAIN, DATA_MELISSA
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = [DOMAIN]
@@ -41,13 +41,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MelissaConnection(object):
+    """Connection class for melissa."""
+
     def __init__(self, connection, num_devices):
+        """Initiate melssa helper class."""
         self._num_devices = num_devices
         self._latest_data = None
         self._connection = connection
         self.update_count = 0
 
     def status(self):
+        """Handle status updates for melissa."""
         if self.update_count == self._num_devices or not self._latest_data:
             self._latest_data = self._connection.status()
             self.update_count = 0
@@ -63,16 +67,13 @@ class MelissaSensor(Entity):
     def __init__(self, device, connection):
         """Initialize the sensor."""
         self._connection = connection
-        self._state = self.get_init_state(device['controller_log'])
+        self._state = STATE_UNKNOWN
         self._name = 'Melissa {0} {1}'.format(
             device['serial_number'],
             self._type
         )
         self._serial = device['serial_number']
         self._data = device['controller_log']
-
-    def get_init_state(self, data):
-        return None
 
     @property
     def name(self):
@@ -85,6 +86,7 @@ class MelissaSensor(Entity):
         return self._state
 
     def update(self):
+        """Fetch status from melissa."""
         self._data = self._connection.status()
 
 
@@ -92,14 +94,12 @@ class MelissaTemperatureSensor(MelissaSensor):
     """Representation of a Melissa temperature Sensor."""
 
     _type = 'temperature'
+    _unit = TEMP_CELSIUS
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    def get_init_state(self, data):
-        return data['temp']
+        return self._unit
 
     def update(self):
         """Fetch new state data for the sensor."""
@@ -111,14 +111,12 @@ class MelissaHumiditySensor(MelissaSensor):
     """Representation of a Melissa humidity Sensor."""
 
     _type = 'humidity'
+    _unit = '%'
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
-
-    def get_init_state(self, data):
-        return data['humidity']
+        return self._unit
 
     def update(self):
         """Fetch new state data for the sensor."""

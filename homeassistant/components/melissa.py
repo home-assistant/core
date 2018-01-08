@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ["py-melissa-climate==0.2.0"]
+REQUIREMENTS = ["py-melissa-climate==0.4.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,4 +40,5 @@ def setup(hass, config):
     hass.data[DATA_MELISSA] = api
 
     load_platform(hass, 'sensor', DOMAIN)
+    load_platform(hass, 'climate', DOMAIN)
     return True
