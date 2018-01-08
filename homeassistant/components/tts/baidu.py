@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # Keys are options in the config file, and Values are options
 # required by Baidu TTS API.
-_options = {
+_OPTIONS = {
     CONF_SPEED: 'spd',
     CONF_PITCH: 'pit',
     CONF_VOLUME: 'vol',
@@ -83,10 +83,10 @@ class BaiduTTSProvider(Provider):
         }
 
         self._speech_conf_data = {
-            _options[CONF_SPEED]: conf.get(CONF_SPEED),
-            _options[CONF_PITCH]: conf.get(CONF_PITCH),
-            _options[CONF_VOLUME]: conf.get(CONF_VOLUME),
-            _options[CONF_PERSON]: conf.get(CONF_PERSON),
+            _OPTIONS[CONF_SPEED]: conf.get(CONF_SPEED),
+            _OPTIONS[CONF_PITCH]: conf.get(CONF_PITCH),
+            _OPTIONS[CONF_VOLUME]: conf.get(CONF_VOLUME),
+            _OPTIONS[CONF_PERSON]: conf.get(CONF_PERSON),
         }
 
     @property
@@ -103,10 +103,10 @@ class BaiduTTSProvider(Provider):
     def default_options(self):
         """Return a dict include default options."""
         return {
-            CONF_SPEED: self._speech_conf_data[_options[CONF_SPEED]],
-            CONF_PITCH: self._speech_conf_data[_options[CONF_PITCH]],
-            CONF_VOLUME: self._speech_conf_data[_options[CONF_VOLUME]],
-            CONF_PERSON: self._speech_conf_data[_options[CONF_PERSON]],
+            CONF_SPEED: self._speech_conf_data[_OPTIONS[CONF_SPEED]],
+            CONF_PITCH: self._speech_conf_data[_OPTIONS[CONF_PITCH]],
+            CONF_VOLUME: self._speech_conf_data[_OPTIONS[CONF_VOLUME]],
+            CONF_PERSON: self._speech_conf_data[_OPTIONS[CONF_PERSON]],
         }
 
     @property
@@ -129,8 +129,8 @@ class BaiduTTSProvider(Provider):
             )
         else:
             speech_data = self._speech_conf_data.copy()
-            for k, v in options.items():
-                speech_data[_options[k]] = v
+            for key, value in options.items():
+                speech_data[_OPTIONS[key]] = value
 
             result = aip_speech.synthesis(
                 message, language, 1, speech_data
@@ -142,6 +142,6 @@ class BaiduTTSProvider(Provider):
                 result['err_no'],
                 result['err_msg'],
                 result['err_detail'])
-            return (None, None)
+            return None, None
 
-        return (self._codec, result)
+        return self._codec, result
