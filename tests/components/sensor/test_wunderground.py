@@ -212,6 +212,7 @@ def mocked_requests_get_invalid(*args, **kwargs):
 
 MOCKED_ALERTS_CALLED = 0
 
+
 def mocked_requests_get_alerts(*args, **kwargs):
     """Mock requests.get invocations."""
     class MockResponse:
@@ -374,6 +375,11 @@ class TestWundergroundSetup(unittest.TestCase):
             device.update()
             device.update()
             self.assertEqual(1, device.state)
-            self.assertEqual(ALERT_MESSAGE, device.device_state_attributes['Message'])
-            self.assertIsNone(device.device_state_attributes.get("Message_FLO"))
-            self.assertIsNone(device.device_state_attributes.get("Message_WND"))
+            self.assertEqual(ALERT_MESSAGE,
+                             device.device_state_attributes['Message'])
+            self.assertIsNone(device
+                              .device_state_attributes
+                              .get("Message_FLO"))
+            self.assertIsNone(device
+                              .device_state_attributes
+                              .get("Message_WND"))
