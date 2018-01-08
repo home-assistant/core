@@ -90,8 +90,8 @@ class BinarySensorTemplate(BinarySensorDevice):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(self, hass, device, friendly_name, device_class,
-                 value_template, icon_template, entity_picture_template, entity_ids,
-                 delay_on, delay_off):
+                 value_template, icon_template, entity_picture_template,
+                 entity_ids, delay_on, delay_off):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -107,7 +107,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
-
+        
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
