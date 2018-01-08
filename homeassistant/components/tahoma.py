@@ -79,8 +79,8 @@ def setup(hass, config):
 
 def map_tahoma_device(tahoma_device):
     """Map tahoma classes to Home Assistant types."""
-    if (tahoma_device.type.lower().find("shutter") != -1 or
-        tahoma_device.type == 'io:WindowOpenerVeluxIOComponent'):
+    if tahoma_device.type.lower().find('shutter') != -1 \
+       or tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
         return 'cover'
     elif tahoma_device.type == 'io:LightIOSystemSensor':
         return 'sensor'
