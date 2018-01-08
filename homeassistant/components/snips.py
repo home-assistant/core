@@ -61,9 +61,11 @@ def async_setup(hass, config):
             _LOGGER.error('Intent has invalid schema: %s. %s', err, request)
             return
 
+        if request['intent']['intentName'].startswith('user_'):
+            intent_type = request['intent']['intentName'].split('__')[-1]
+        else:
+            intent_type = request['intent']['intentName'].split(':')[-1]
         snips_response = None
-
-        intent_type = request['intent']['intentName'].split('__')[-1]
         slots = {}
         for slot in request.get('slots', []):
             slots[slot['slotName']] = {'value': resolve_slot_values(slot)}
