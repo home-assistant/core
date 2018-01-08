@@ -416,7 +416,10 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
-keyring>=9.3,<10.0
+keyring==10.3.2
+
+# homeassistant.scripts.keyring
+keyrings.alt==2.3
 
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
