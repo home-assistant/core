@@ -8,8 +8,8 @@ https://home-assistant.io/components/tts.baidu/
 import logging
 import voluptuous as vol
 
+from homeassistant.components.tts import Provider, CONF_LANG, PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY
-from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ["baidu-aip==1.6.6"]
@@ -96,12 +96,12 @@ class BaiduTTSProvider(Provider):
 
     @property
     def supported_languages(self):
-        """Return list of supported languages."""
+        """Return a list of supported languages."""
         return SUPPORTED_LANGUAGES
 
     @property
     def default_options(self):
-        """Return a dict include default options."""
+        """Return a dict including default options."""
         return {
             CONF_PERSON: self._speech_conf_data[_OPTIONS[CONF_PERSON]],
             CONF_PITCH: self._speech_conf_data[_OPTIONS[CONF_PITCH]],
@@ -141,7 +141,8 @@ class BaiduTTSProvider(Provider):
                 "Baidu TTS error-- err_no:%d; err_msg:%s; err_detail:%s",
                 result['err_no'],
                 result['err_msg'],
-                result['err_detail'])
+                result['err_detail']
+            )
             return None, None
 
         return self._codec, result
