@@ -2,6 +2,7 @@
 
 import json
 import unittest
+# from unittest import mock
 from unittest.mock import patch
 
 from homeassistant.setup import setup_component
@@ -12,7 +13,8 @@ from tests.common import (get_test_home_assistant, load_fixture)
 VALID_CONFIG_MINIMAL = {
     'sensor': {
         'platform': 'teleinfo',
-        'device': '/dev/ttyUSB0',
+        # 'device': '/dev/ttyUSB0',
+        'device': '/dev/ttyACM0',
     }
 }
 
@@ -20,12 +22,13 @@ VALID_CONFIG_NAME = {
     'sensor': {
         'platform': 'teleinfo',
         'name': 'edf',
-        'device': '/dev/ttyUSB0',
+        # 'device': '/dev/ttyUSB0',
+        'device': '/dev/ttyACM0',
     }
 }
 
 
-class KylinMock():
+class KylinMock(object):
     """Mock class for the kylin.Kylin object."""
 
     def __init__(self, port, timeout=0):
@@ -45,6 +48,9 @@ class KylinMock():
     def readframe(self):
         """Return sample values."""
         return json.loads(self.sample_data.decode('ascii'))
+
+    def exceptions(self):
+        return Exception()
 
 
 class TestTeleinfoSensor(unittest.TestCase):
@@ -70,7 +76,8 @@ class TestTeleinfoSensor(unittest.TestCase):
         self.assertEqual(state.attributes.get('PAPP'), 330)
 
     @patch('kylin.Kylin', new=KylinMock)
-    def test_teleinfo_with_minimal_configuration(self):
+    @patch('kylin.exceptions')
+    def test_teleinfo_with_minimal_configuration(self, mock_exc):
         """Test Teleinfo with minimal configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
         state = self.hass.states.get('sensor.teleinfo')
@@ -78,7 +85,8 @@ class TestTeleinfoSensor(unittest.TestCase):
         self._check_teleinfo_values(state)
 
     @patch('kylin.Kylin', new=KylinMock)
-    def test_teleinfo_one_device(self):
+    @patch('kylin.exceptions')
+    def test_teleinfo_one_device(self, mock_exc):
         """Test Teleinfo with one device configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_NAME)
         state = self.hass.states.get('sensor.edf')
