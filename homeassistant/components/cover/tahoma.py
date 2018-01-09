@@ -53,7 +53,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
         0 is closed, 100 is fully open.
         """
         try:
-            position = 100 - self.tahoma_device.active_states['core:ClosureState']
+            position = 100 - \
+                self.tahoma_device.active_states['core:ClosureState']
             if position <= 5:
                 return 0
             if position >= 95:
