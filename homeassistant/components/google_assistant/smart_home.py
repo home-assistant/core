@@ -1,6 +1,5 @@
 """Support for Google Assistant Smart Home API."""
 import asyncio
-from collections import namedtuple
 import logging
 
 # Typing imports
@@ -16,9 +15,9 @@ from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
-    CONF_FRIENDLY_NAME, STATE_OFF,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
+    CONF_NAME, CONF_TYPE
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate
@@ -26,8 +25,7 @@ from homeassistant.components import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
-    ATTR_GOOGLE_ASSISTANT_NAME, COMMAND_COLOR,
-    ATTR_GOOGLE_ASSISTANT_TYPE,
+    COMMAND_COLOR,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
     COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, COMMAND_THERMOSTAT_SET_MODE,
@@ -69,13 +67,22 @@ MAPPING_COMPONENT = {
 }  # type: Dict[str, list]
 
 
-Config = namedtuple('GoogleAssistantConfig', 'should_expose,agent_user_id')
+class Config:
+    """Hold the configuration for Google Assistant."""
+
+    def __init__(self, should_expose, agent_user_id, entity_config=None):
+        """Initialize the configuration."""
+        self.should_expose = should_expose
+        self.agent_user_id = agent_user_id
+        self.entity_config = entity_config or {}
 
 
-def entity_to_device(entity: Entity, units: UnitSystem):
+def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     """Convert a hass entity into an google actions device."""
+    entity_config = config.entity_config.get(entity.entity_id, {})
     class_data = MAPPING_COMPONENT.get(
-        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) or entity.domain)
+        entity_config.get(CONF_TYPE) or entity.domain)
+
     if class_data is None:
         return None
 
@@ -90,17 +97,12 @@ def entity_to_device(entity: Entity, units: UnitSystem):
     device['traits'].append(class_data[1])
 
     # handle custom names
-    device['name']['name'] = \
-        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_NAME) or \
-        entity.attributes.get(CONF_FRIENDLY_NAME)
+    device['name']['name'] = entity_config.get(CONF_NAME) or entity.name
 
     # use aliases
-    aliases = entity.attributes.get(CONF_ALIASES)
+    aliases = entity_config.get(CONF_ALIASES)
     if aliases:
-        if isinstance(aliases, list):
-            device['name']['nicknames'] = aliases
-        else:
-            _LOGGER.warning("%s must be a list", CONF_ALIASES)
+        device['name']['nicknames'] = aliases
 
     # add trait if entity supports feature
     if class_data[2]:
@@ -322,7 +324,7 @@ def async_devices_sync(hass, config, payload):
         if not config.should_expose(entity):
             continue
 
-        device = entity_to_device(entity, hass.config.units)
+        device = entity_to_device(entity, config, hass.config.units)
         if device is None:
             _LOGGER.warning("No mapping for %s domain", entity.domain)
             continue
