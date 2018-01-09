@@ -8,22 +8,21 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
-import os
 import socket
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
     CONF_HOSTS, CONF_HOST, ATTR_ENTITY_ID, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
 
 REQUIREMENTS = ['pyhomematic==0.1.36']
-
 DOMAIN = 'homematic'
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -44,6 +43,8 @@ ATTR_VALUE = 'value'
 ATTR_INTERFACE = 'interface'
 ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
+ATTR_MODE = 'mode'
+ATTR_TIME = 'time'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -53,6 +54,7 @@ SERVICE_VIRTUALKEY = 'virtualkey'
 SERVICE_RECONNECT = 'reconnect'
 SERVICE_SET_VARIABLE_VALUE = 'set_variable_value'
 SERVICE_SET_DEVICE_VALUE = 'set_device_value'
+SERVICE_SET_INSTALL_MODE = 'set_install_mode'
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
@@ -73,9 +75,9 @@ HM_DEVICE_TYPES = {
         'ThermostatGroup'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
-        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
-        'HMWIOSwitch', 'MaxShutterContact', 'Rain', 'WiredSensor',
-        'PresenceIP'],
+        'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
+        'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
+        'WiredSensor', 'PresenceIP'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
@@ -86,6 +88,7 @@ HM_IGNORE_DISCOVERY_NODE = [
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
+    'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
@@ -101,6 +104,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'POWER': ['power', {}],
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
+    'OPERATING_VOLTAGE': ['voltage', {}],
     'WORKING': ['working', {0: 'No', 1: 'Yes'}],
 }
 
@@ -115,8 +119,6 @@ HM_PRESS_EVENTS = [
 HM_IMPULSE_EVENTS = [
     'SEQUENCE_OK',
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_RESOLVENAMES_OPTIONS = [
     'metadata',
@@ -167,6 +169,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
+            vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
@@ -203,7 +207,16 @@ SCHEMA_SERVICE_SET_DEVICE_VALUE = vol.Schema({
 
 SCHEMA_SERVICE_RECONNECT = vol.Schema({})
 
+SCHEMA_SERVICE_SET_INSTALL_MODE = vol.Schema({
+    vol.Required(ATTR_INTERFACE): cv.string,
+    vol.Optional(ATTR_TIME, default=60): cv.positive_int,
+    vol.Optional(ATTR_MODE, default=1):
+        vol.All(vol.Coerce(int), vol.In([1, 2])),
+    vol.Optional(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
+})
 
+
+@bind_hass
 def virtualkey(hass, address, channel, param, interface=None):
     """Send virtual keypress to homematic controlller."""
     data = {
@@ -216,7 +229,8 @@ def virtualkey(hass, address, channel, param, interface=None):
     hass.services.call(DOMAIN, SERVICE_VIRTUALKEY, data)
 
 
-def set_var_value(hass, entity_id, value):
+@bind_hass
+def set_variable_value(hass, entity_id, value):
     """Change value of a Homematic system variable."""
     data = {
         ATTR_ENTITY_ID: entity_id,
@@ -226,7 +240,8 @@ def set_var_value(hass, entity_id, value):
     hass.services.call(DOMAIN, SERVICE_SET_VARIABLE_VALUE, data)
 
 
-def set_dev_value(hass, address, channel, param, value, interface=None):
+@bind_hass
+def set_device_value(hass, address, channel, param, value, interface=None):
     """Call setValue XML-RPC method of supplied interface."""
     data = {
         ATTR_ADDRESS: address,
@@ -239,6 +254,22 @@ def set_dev_value(hass, address, channel, param, value, interface=None):
     hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
 
 
+@bind_hass
+def set_install_mode(hass, interface, mode=None, time=None, address=None):
+    """Call setInstallMode XML-RPC method of supplied inteface."""
+    data = {
+        key: value for key, value in (
+            (ATTR_INTERFACE, interface),
+            (ATTR_MODE, mode),
+            (ATTR_TIME, time),
+            (ATTR_ADDRESS, address)
+        ) if value
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_INSTALL_MODE, data)
+
+
+@bind_hass
 def reconnect(hass):
     """Reconnect to CCU/Homegear."""
     hass.services.call(DOMAIN, SERVICE_RECONNECT, {})
@@ -297,10 +328,6 @@ def setup(hass, config):
     for hub_name in conf[CONF_HOSTS].keys():
         entity_hubs.append(HMHub(hass, homematic, hub_name))
 
-    # Register HomeMatic services
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     def _hm_service_virtualkey(service):
         """Service to handle virtualkey servicecalls."""
         address = service.data.get(ATTR_ADDRESS)
@@ -329,7 +356,7 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_VIRTUALKEY, _hm_service_virtualkey,
-        descriptions[SERVICE_VIRTUALKEY], schema=SCHEMA_SERVICE_VIRTUALKEY)
+        schema=SCHEMA_SERVICE_VIRTUALKEY)
 
     def _service_handle_value(service):
         """Service to call setValue method for HomeMatic system variable."""
@@ -352,7 +379,6 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_VARIABLE_VALUE, _service_handle_value,
-        descriptions[SERVICE_SET_VARIABLE_VALUE],
         schema=SCHEMA_SERVICE_SET_VARIABLE_VALUE)
 
     def _service_handle_reconnect(service):
@@ -361,7 +387,7 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_RECONNECT, _service_handle_reconnect,
-        descriptions[SERVICE_RECONNECT], schema=SCHEMA_SERVICE_RECONNECT)
+        schema=SCHEMA_SERVICE_RECONNECT)
 
     def _service_handle_device(service):
         """Service to call setValue method for HomeMatic devices."""
@@ -380,8 +406,20 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_DEVICE_VALUE, _service_handle_device,
-        descriptions[SERVICE_SET_DEVICE_VALUE],
         schema=SCHEMA_SERVICE_SET_DEVICE_VALUE)
+
+    def _service_handle_install_mode(service):
+        """Service to set interface into install mode."""
+        interface = service.data.get(ATTR_INTERFACE)
+        mode = service.data.get(ATTR_MODE)
+        time = service.data.get(ATTR_TIME)
+        address = service.data.get(ATTR_ADDRESS)
+
+        homematic.setInstallMode(interface, t=time, mode=mode, address=address)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_INSTALL_MODE, _service_handle_install_mode,
+        schema=SCHEMA_SERVICE_SET_INSTALL_MODE)
 
     return True
 
@@ -704,10 +742,6 @@ class HMDevice(Entity):
         """Return device specific state attributes."""
         attr = {}
 
-        # No data available
-        if not self.available:
-            return attr
-
         # Generate a dictionary with attributes
         for node, data in HM_ATTRIBUTE_SUPPORT.items():
             # Is an attribute and exists for this object
@@ -762,6 +796,9 @@ class HMDevice(Entity):
         # Availability has changed
         if attribute == 'UNREACH':
             self._available = bool(value)
+            has_changed = True
+        elif not self.available:
+            self._available = False
             has_changed = True
 
         # If it has changed data point, update HASS

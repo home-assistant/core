@@ -160,6 +160,11 @@ class KNXClimate(ClimateDevice):
         return self.device.name
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.hass.data[DATA_KNX].connected
+
+    @property
     def should_poll(self):
         """No polling needed within KNX."""
         return False

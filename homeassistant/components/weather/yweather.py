@@ -15,7 +15,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
 
-REQUIREMENTS = ["yahooweather==0.9"]
+REQUIREMENTS = ["yahooweather==0.10"]
 
 _LOGGER = logging.getLogger(__name__)
 
