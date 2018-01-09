@@ -33,11 +33,22 @@ SERVICE_ADDON_START = 'addon_start'
 SERVICE_ADDON_STOP = 'addon_stop'
 SERVICE_ADDON_RESTART = 'addon_restart'
 SERVICE_ADDON_STDIN = 'addon_stdin'
+SERVICE_ADDON_UPDATE = 'addon_update'
 SERVICE_HOST_SHUTDOWN = 'host_shutdown'
 SERVICE_HOST_REBOOT = 'host_reboot'
+SERVICE_HOST_UPDATE = 'host_update'
+SERVICE_SNAPSHOT_FULL = 'snapshot_full'
+SERVICE_SNAPSHOT_PARTIAL = 'snapshot_partial'
+SERVICE_RESTORE_FULL = 'restore_full'
+SERVICE_RESTORE_PARTIAL = 'restore_partial'
 
 ATTR_ADDON = 'addon'
 ATTR_INPUT = 'input'
+ATTR_SNAPSHOT = 'snapshot'
+ATTR_ADDONS = 'addons'
+ATTR_FOLDERS = 'folders'
+ATTR_HOMEASSISTANT = 'homeassistant'
+ATTR_NAME = 'name'
 
 NO_TIMEOUT = {
     re.compile(r'^homeassistant/update$'),
@@ -45,7 +56,9 @@ NO_TIMEOUT = {
     re.compile(r'^supervisor/update$'),
     re.compile(r'^addons/[^/]*/update$'),
     re.compile(r'^addons/[^/]*/install$'),
-    re.compile(r'^addons/[^/]*/rebuild$')
+    re.compile(r'^addons/[^/]*/rebuild$'),
+    re.compile(r'^snapshots/.*/full$'),
+    re.compile(r'^snapshots/.*/partial$'),
 }
 
 NO_AUTH = {
@@ -60,13 +73,41 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend({
     vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)
 })
 
+SCHEMA_SNAPSHOT_FULL = vol.Schema({
+    vol.Optional(ATTR_NAME): cv.string,
+})
+
+SCHEMA_SNAPSHOT_FULL = SCHEMA_SNAPSHOT_FULL.extend({
+    vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
+})
+
+SCHEMA_RESTORE_FULL = vol.Schema({
+    vol.Required(ATTR_SNAPSHOT): cv.slug,
+})
+
+SCHEMA_RESTORE_PARTIAL = vol.Schema({
+    vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
+    vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
+})
+
 MAP_SERVICE_API = {
-    SERVICE_ADDON_START: ('/addons/{addon}/start', SCHEMA_ADDON),
-    SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON),
-    SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON),
-    SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN),
-    SERVICE_HOST_SHUTDOWN: ('/host/shutdown', None),
-    SERVICE_HOST_REBOOT: ('/host/reboot', None),
+    SERVICE_ADDON_START: ('/addons/{addon}/start', SCHEMA_ADDON, 60),
+    SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON, 60),
+    SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON, 60),
+    SERVICE_ADDON_UPDATE: ('/addons/{addon}/update', SCHEMA_ADDON, 300),
+    SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60),
+    SERVICE_HOST_SHUTDOWN: ('/host/shutdown', None, 60),
+    SERVICE_HOST_REBOOT: ('/host/reboot', None, 60),
+    SERVICE_HOST_UPDATE: ('/host/update', None, 300),
+    SERVICE_SNAPSHOT_FULL: ('/snapshots/new/full', SERVICE_SNAPSHOT_FULL, 300),
+    SERVICE_SNAPSHOT_PARTIAL: ('/snapshots/new/partial',
+                               SERVICE_SNAPSHOT_PARTIAL, 300),
+    SERVICE_RESTORE_FULL: ('/snapshots/{snapshot}/restore/full',
+                           SERVICE_RESTORE_FULL, 300),
+    SERVICE_RESTORE_PARTIAL: ('/snapshots/{snapshot}/restore/partial',
+                              SERVICE_RESTORE_PARTIAL, 300),
 }
 
 
@@ -102,11 +143,21 @@ def async_setup(hass, config):
     def async_service_handler(service):
         """Handle service calls for HassIO."""
         api_command = MAP_SERVICE_API[service.service][0]
-        addon = service.data.get(ATTR_ADDON)
-        data = service.data[ATTR_INPUT] if ATTR_INPUT in service.data else None
+        addon = service.data.pop(ATTR_ADDON)
+        snapshot = service.data.pop(ATTR_SNAPSHOT)
+        payload = None
 
+        # Pass data to hass.io API
+        if ATTR_INPUT in service.data:
+            payload = service.data[ATTR_INPUT]
+        elif service.data:
+            payload = service.data.copy()
+
+        # Call API
         yield from hassio.send_command(
-            api_command.format(addon=addon), payload=data, timeout=60)
+            api_command.format(addon=addon, snapshot=snapshot),
+            payload=payload, timeout=MAP_SERVICE_API[service.service][2]
+        )
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
