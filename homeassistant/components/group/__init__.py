@@ -525,7 +525,7 @@ class Group(Entity):
     def assumed_state(self):
         """Test if any member has an assumed state."""
         return self._assumed_state
-    
+
     @property
     def supported_features(self) -> int:
         """Get common supported state from grouped entities"""
