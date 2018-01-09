@@ -48,15 +48,12 @@ def test_new_version_shows_entity_after_hour(
         hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, 'Updater failed to setup'
 
-    print(dt_util.utcnow())
-
     with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state(updater.ENTITY_ID, NEW_VERSION)
-    # assert 0
 
 
 @asyncio.coroutine
