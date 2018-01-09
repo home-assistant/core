@@ -29,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
 
+X_HASSIO = 'X-HASSIO-KEY'
+
 SERVICE_ADDON_START = 'addon_start'
 SERVICE_ADDON_STOP = 'addon_stop'
 SERVICE_ADDON_RESTART = 'addon_restart'
@@ -218,7 +220,9 @@ class HassIO(object):
             with async_timeout.timeout(timeout, loop=self.loop):
                 request = yield from self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
-                    json=payload)
+                    json=payload, headers={
+                        X_HASSIO: os.environ.get('API_TOKEN')
+                    })
 
                 if request.status != 200:
                     _LOGGER.error(
