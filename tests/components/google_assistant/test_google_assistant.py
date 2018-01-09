@@ -38,7 +38,7 @@ def assistant_client(loop, hass, test_client):
                 'access_token': ACCESS_TOKEN,
                 'entity_config': {
                     'light.ceiling_lights': {
-                        'alias': ['top lights', 'ceiling lights'],
+                        'aliases': ['top lights', 'ceiling lights'],
                         'name': 'Roof Lights',
                     },
                     'switch.decorative_lights': {

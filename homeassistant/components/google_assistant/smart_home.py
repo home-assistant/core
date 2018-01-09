@@ -17,7 +17,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
     STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_NAME, CONF_TYPE, CONF_ALIAS
+    CONF_NAME, CONF_TYPE
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate
@@ -32,7 +32,7 @@ from .const import (
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE, TRAIT_TEMPERATURE_SETTING,
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
-    CLIMATE_SUPPORTED_MODES
+    CONF_ALIASES, CLIMATE_SUPPORTED_MODES
 )
 
 HANDLERS = Registry()
@@ -100,7 +100,7 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     device['name']['name'] = entity_config.get(CONF_NAME) or entity.name
 
     # use aliases
-    aliases = entity_config.get(CONF_ALIAS)
+    aliases = entity_config.get(CONF_ALIASES)
     if aliases:
         device['name']['nicknames'] = aliases
 

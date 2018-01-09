@@ -321,7 +321,7 @@ def test_handler_google_actions(hass):
                         'switch.test': {
                             'name': 'Config name',
                             'type': 'light',
-                            'alias': 'Config alias'
+                            'aliases': 'Config alias'
                         }
                     }
                 }

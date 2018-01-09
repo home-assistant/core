@@ -10,6 +10,7 @@ CONF_EXPOSED_DOMAINS = 'exposed_domains'
 CONF_PROJECT_ID = 'project_id'
 CONF_ACCESS_TOKEN = 'access_token'
 CONF_CLIENT_ID = 'client_id'
+CONF_ALIASES = 'aliases'
 CONF_AGENT_USER_ID = 'agent_user_id'
 CONF_API_KEY = 'api_key'
 
