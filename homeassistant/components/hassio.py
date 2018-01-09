@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT, CONF_TIME_ZONE)
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
-    CONF_SSL_CERTIFICATE)
+    CONF_SERVER_HOST, CONF_SSL_CERTIFICATE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -194,6 +194,9 @@ class HassIO(object):
             'password': http_config.get(CONF_API_PASSWORD),
         }
 
+        if CONF_SERVER_HOST in http_config:
+            _LOGGER.warning("Don't use 'server_host' options with Hass.io!")
+
         return self.send_command("/homeassistant/options", payload=options)
 
     def update_hass_timezone(self, core_config):
@@ -223,7 +226,7 @@ class HassIO(object):
                     return False
 
                 answer = yield from request.json()
-                return answer and answer['result'] == 'ok'
+                return answer.get('result') == 'ok'
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
