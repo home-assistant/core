@@ -247,6 +247,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
     return [ent_id for ent_id in entity_ids
             if ent_id.startswith(domain_filter)]
 
+
 @bind_hass
 def get_common_supported_features(hass, entity_ids):
     # Get grouped entity objects
@@ -258,6 +259,7 @@ def get_common_supported_features(hass, entity_ids):
 
     # Return merged supported features in a "common features only" manner
     return reduce(operator.and_, features) if len(features) > 0 else 0
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
