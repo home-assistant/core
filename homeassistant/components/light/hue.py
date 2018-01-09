@@ -22,7 +22,6 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 from homeassistant.util import yaml
@@ -377,14 +376,10 @@ class HueLight(Light):
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
         return attributes
 
-    @callback
-    def _async_update_callback(self):
-        """Update the entity."""
-        self.async_schedule_update_ha_state()
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register update callback."""
         dev_id = self.bridge.bridge_id, self.light_id
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_CALLBACK.format(*dev_id), self._async_update_callback)
+            SIGNAL_CALLBACK.format(*dev_id),
+            self.async_schedule_update_ha_state)

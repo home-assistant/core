@@ -152,6 +152,7 @@ class HueBridge(object):
                  allow_in_emulated_hue=True, allow_hue_groups=True):
         """Initialize the system."""
         self.host = host
+        self.bridge_id = socket.gethostbyname(host)
         self.hass = hass
         self.filename = filename
         self.allow_unreachable = allow_unreachable
@@ -165,12 +166,7 @@ class HueBridge(object):
         self.configured = False
         self.config_request_id = None
 
-        hass.data[DOMAIN][socket.gethostbyname(host)] = self
-
-    @property
-    def bridge_id(self):
-        """Return a unique identifier for the bridge."""
-        return socket.gethostbyname(self.host)
+        hass.data[DOMAIN][self.bridge_id] = self
 
     def setup(self):
         """Set up a phue bridge based on host parameter."""
