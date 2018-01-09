@@ -9,10 +9,11 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component)
 
 
+FUNCTION_PATH = 'homeassistant.components.binary_sensor.workday.get_date'
+
+
 class TestWorkdaySetup(object):
     """Test class for workday sensor."""
-
-    function_path = 'homeassistant.components.binary_sensor.workday.get_date'
 
     def setup_method(self):
         """Setup things to be run when tests are started."""
@@ -105,7 +106,7 @@ class TestWorkdaySetup(object):
         assert entity is not None
 
     # Freeze time to a workday - Mar 15th, 2017
-    @patch(function_path, return_value=date(2017, 3, 15))
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 15))
     def test_workday_province(self, mock_date):
         """Test if workdays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -118,7 +119,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'on'
 
     # Freeze time to a weekend - Mar 12th, 2017
-    @patch(function_path, return_value=date(2017, 3, 12))
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 12))
     def test_weekend_province(self, mock_date):
         """Test if weekends are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -131,7 +132,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'off'
 
     # Freeze time to a public holiday in province BW - Jan 6th, 2017
-    @patch(function_path, return_value=date(2017, 1, 6))
+    @patch(FUNCTION_PATH, return_value=date(2017, 1, 6))
     def test_public_holiday_province(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -153,7 +154,7 @@ class TestWorkdaySetup(object):
         assert entity is not None
 
     # Freeze time to a public holiday in province BW - Jan 6th, 2017
-    @patch(function_path, return_value=date(2017, 1, 6))
+    @patch(FUNCTION_PATH, return_value=date(2017, 1, 6))
     def test_public_holiday_noprovince(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -166,7 +167,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'on'
 
     # Freeze time to a public holiday in state CA - Mar 31st, 2017
-    @patch(function_path, return_value=date(2017, 3, 31))
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 31))
     def test_public_holiday_state(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -178,7 +179,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'off'
 
     # Freeze time to a public holiday in state CA - Mar 31st, 2017
-    @patch(function_path, return_value=date(2017, 3, 31))
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 31))
     def test_public_holiday_nostate(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -199,7 +200,7 @@ class TestWorkdaySetup(object):
         assert entity is None
 
     # Freeze time to a public holiday in province BW - Jan 6th, 2017
-    @patch(function_path, return_value=date(2017, 1, 6))
+    @patch(FUNCTION_PATH, return_value=date(2017, 1, 6))
     def test_public_holiday_includeholiday(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -212,7 +213,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'on'
 
     # Freeze time to a saturday to test offset - Aug 5th, 2017
-    @patch(function_path, return_value=date(2017, 8, 5))
+    @patch(FUNCTION_PATH, return_value=date(2017, 8, 5))
     def test_tomorrow(self, mock_date):
         """Test if tomorrow are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -225,7 +226,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'off'
 
     # Freeze time to a saturday to test offset - Aug 5th, 2017
-    @patch(function_path, return_value=date(2017, 8, 5))
+    @patch(FUNCTION_PATH, return_value=date(2017, 8, 5))
     def test_day_after_tomorrow(self, mock_date):
         """Test if the day after tomorrow are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -238,7 +239,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'on'
 
     # Freeze time to a saturday to test offset - Aug 5th, 2017
-    @patch(function_path, return_value=date(2017, 8, 5))
+    @patch(FUNCTION_PATH, return_value=date(2017, 8, 5))
     def test_yesterday(self, mock_date):
         """Test if yesterday are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
