@@ -79,7 +79,6 @@ def setup(hass, config):
 
 def map_tahoma_device(tahoma_device):
     """Map Tahoma device types to Home Assistant components."""
-
     if tahoma_device.type == 'rts:RollerShutterRTSComponent' \
        or tahoma_device.type == 'rts:CurtainRTSComponent' \
        or tahoma_device.type \
