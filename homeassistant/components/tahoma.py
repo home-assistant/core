@@ -93,8 +93,8 @@ def map_tahoma_device(tahoma_device):
     elif tahoma_device.type == 'io:LightIOSystemSensor':
         return 'sensor'
     else:
-        _LOGGER.warning('Unsupported type %s for Tahoma device %s'
-                        % (tahoma_device.type, tahoma_device.label))
+        _LOGGER.warning('Unsupported type %s for Tahoma device %s',
+                        tahoma_device.type, tahoma_device.label)
         return None
 
 
