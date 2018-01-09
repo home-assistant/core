@@ -110,6 +110,9 @@ sensor:
 tts:
   - platform: google
 
+# Cloud
+cloud:
+
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml

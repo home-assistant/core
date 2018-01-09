@@ -88,7 +88,7 @@ omit =
     homeassistant/components/hive.py
     homeassistant/components/*/hive.py
 
-    homeassistant/components/homematic.py
+    homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
     homeassistant/components/insteon_local.py

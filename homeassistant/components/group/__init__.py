@@ -18,7 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_OK, STATE_PROBLEM, STATE_UNKNOWN,
-    ATTR_ASSUMED_STATE, SERVICE_RELOAD)
+    ATTR_ASSUMED_STATE, SERVICE_RELOAD, ATTR_SUPPORTED_FEATURES)
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
