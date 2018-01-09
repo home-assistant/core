@@ -10,7 +10,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE)
+    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME, CONF_TYPE)
 from homeassistant.helpers import entityfilter
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,6 +31,7 @@ CONF_FILTER = 'filter'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
+CONF_ALIASES = 'aliases'
 
 MODE_DEV = 'development'
 DEFAULT_MODE = 'production'
@@ -44,6 +45,12 @@ ALEXA_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(alexa_sh.CONF_NAME): cv.string,
 })
 
+GOOGLE_ENTITY_SCHEMA = vol.Schema({
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_TYPE): vol.In(ga_sh.MAPPING_COMPONENT),
+    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
+})
+
 ASSISTANT_SCHEMA = vol.Schema({
     vol.Optional(
         CONF_FILTER,
@@ -53,6 +60,10 @@ ASSISTANT_SCHEMA = vol.Schema({
 
 ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}
+})
+
+GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend({
+    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -65,7 +76,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
-        vol.Optional(CONF_GOOGLE_ACTIONS): ASSISTANT_SCHEMA,
+        vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -79,14 +90,15 @@ def async_setup(hass, config):
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
     alexa_conf = kwargs.pop(CONF_ALEXA, None) or ALEXA_SCHEMA({})
-    gactions_conf = (kwargs.pop(CONF_GOOGLE_ACTIONS, None) or
-                     ASSISTANT_SCHEMA({}))
+
+    if CONF_GOOGLE_ACTIONS not in kwargs:
+        kwargs[CONF_GOOGLE_ACTIONS] = GACTIONS_SCHEMA({})
 
     kwargs[CONF_ALEXA] = alexa_sh.Config(
         should_expose=alexa_conf[CONF_FILTER],
         entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
     )
-    kwargs['gactions_should_expose'] = gactions_conf[CONF_FILTER]
+
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
 
     success = yield from cloud.initialize()
@@ -101,14 +113,14 @@ def async_setup(hass, config):
 class Cloud:
     """Store the configuration of the cloud connection."""
 
-    def __init__(self, hass, mode, alexa, gactions_should_expose,
+    def __init__(self, hass, mode, alexa, google_actions,
                  cognito_client_id=None, user_pool_id=None, region=None,
                  relayer=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
         self.alexa_config = alexa
-        self._gactions_should_expose = gactions_should_expose
+        self._google_actions = google_actions
         self._gactions_config = None
         self.jwt_keyset = None
         self.id_token = None
@@ -161,13 +173,16 @@ class Cloud:
     def gactions_config(self):
         """Return the Google Assistant config."""
         if self._gactions_config is None:
+            conf = self._google_actions
+
             def should_expose(entity):
                 """If an entity should be exposed."""
-                return self._gactions_should_expose(entity.entity_id)
+                return conf['filter'](entity.entity_id)
 
             self._gactions_config = ga_sh.Config(
                 should_expose=should_expose,
-                agent_user_id=self.claims['cognito:username']
+                agent_user_id=self.claims['cognito:username'],
+                entity_config=conf.get(CONF_ENTITY_CONFIG),
             )
 
         return self._gactions_config
