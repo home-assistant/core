@@ -40,7 +40,7 @@ class MercedesMEDeviceTracker(object):
     def update_info(self, now=None):
         """Update the device info."""
         for device in self.controller.cars:
-            location = self.controller.getLocation(device["vin"])
+            location = self.controller.get_location(device["vin"])
             dev_id = device["vin"]
             name = device["license"]
 
