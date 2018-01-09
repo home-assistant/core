@@ -53,12 +53,9 @@ class SmappeeSwitch(SwitchDevice):
         self._smappee = smappee
         self._location_id = location_id
         self._switch_id = switch_id
-        self.data = None
         self._remoteswitch = True
         if location_id is None:
             self._remoteswitch = False
-
-        self.update()
 
     @property
     def name(self):
@@ -100,13 +97,3 @@ class SmappeeSwitch(SwitchDevice):
             attr['Location Name'] = self._smappee.locations[self._location_id]
         attr['Switch Id'] = self._switch_id
         return attr
-
-    def update(self):
-        """Get the latest data from the device and update the data."""
-        if self._smappee.is_remote_active:
-            if self._remoteswitch:
-                info = self._smappee.info[self._location_id].get('actuators')
-                for item in info:
-                    if item.get('id') == self._switch_id:
-                        self.data = item
-                        self._name = item.get('name')
