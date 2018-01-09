@@ -49,6 +49,8 @@ def setup(hass, config):
     hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key,
                                                             api_secret)
 
+    if not hasattr(coinbase_data, 'accounts'):
+        return False
     for account in coinbase_data.accounts.data:
         load_platform(hass, 'sensor', DOMAIN,
                       {'account': account}, config)
@@ -79,5 +81,10 @@ class CoinbaseData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from coinbase."""
-        self.accounts = self.client.get_accounts()
-        self.exchange_rates = self.client.get_exchange_rates()
+        from coinbase.wallet.error import AuthenticationError
+        try:
+            self.accounts = self.client.get_accounts()
+            self.exchange_rates = self.client.get_exchange_rates()
+        except AuthenticationError as coinbase_error:
+            _LOGGER.error("Authentication error connecting"
+                          " to coinbase: %s", coinbase_error)
