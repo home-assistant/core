@@ -1,5 +1,8 @@
 """
 Support for Mercedes cars with Mercedes ME.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/mercedesme/
 """
 import logging
 import datetime

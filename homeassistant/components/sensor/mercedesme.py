@@ -1,5 +1,8 @@
 """
 Support for Mercedes cars with Mercedes ME.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/mercedesme/
 """
 import logging
 import datetime
@@ -26,7 +29,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for car in controller.cars:
         add_devices([Sensor('fuelLevelPercent', car, controller, "%")], True)
         add_devices([Sensor('fuelRangeKm', car, controller, "Km")], True)
-        add_devices([Sensor('serviceIntervalDays', car, controller, "days")], True)
+        add_devices([Sensor('serviceIntervalDays',
+                            car, controller, "days")], True)
         add_devices([Sensor('odometerKm', car, controller, "Km")], True)
         add_devices([Sensor('latestTrip', car, controller, None)], True)
 
