@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.tahoma/
 import logging
 from datetime import timedelta
 
-from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
+from homeassistant.components.cover import CoverDevice
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 
@@ -29,17 +29,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class TahomaCover(TahomaDevice, CoverDevice):
     """Representation a Tahoma Cover."""
-
-    def __init__(self, tahoma_device, controller):
-        """Initialize the Tahoma device."""
-        super().__init__(tahoma_device, controller)
-        eid = ENTITY_ID_FORMAT.format(self.unique_id)
-        # strip off the RTS or the IO ID from the entity ID
-        if eid.rfind('_rts') > 0:
-            eid = eid[:eid.rfind('_rts')]
-        elif eid.rfind('_io') > 0:
-            eid = eid[:eid.rfind('_io')]
-        self.entity_id = eid
 
     def update(self):
         """Update method."""
