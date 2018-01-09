@@ -98,8 +98,9 @@ def day_to_string(day):
     except IndexError:
         return None
 
+
 def get_date(date):
-    # Method is needed for testing
+    """Return date. Needed for testing."""
     return date
 
 

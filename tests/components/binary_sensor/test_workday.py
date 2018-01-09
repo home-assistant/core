@@ -2,8 +2,7 @@
 from datetime import date
 from unittest.mock import patch
 
-from homeassistant.components.binary_sensor.workday import (
-    get_date, day_to_string)
+from homeassistant.components.binary_sensor.workday import day_to_string
 from homeassistant.setup import setup_component
 
 from tests.common import (
