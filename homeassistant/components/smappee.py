@@ -155,8 +155,14 @@ class Smappee(object):
         if self.is_remote_active:
             end = datetime.utcnow()
             start = end - timedelta(minutes=delta)
-            return self._smappy.get_consumption(location_id, start,
-                                                end, aggregation)
+            try:
+                return self._smappy.get_consumption(location_id,
+                                                    start,
+                                                    end,
+                                                    aggregation)
+            except Exception as e:
+                _LOGGER.error("Error getting comsumption from Smappee cloud.")
+                return False
         return False
 
     def get_sensor_consumption(self, location_id, sensor_id):
@@ -172,8 +178,15 @@ class Smappee(object):
         if self.is_remote_active:
             start = datetime.utcnow() - timedelta(minutes=30)
             end = datetime.utcnow()
-            return self._smappy.get_sensor_consumption(location_id, sensor_id,
-                                                       start, end, 1)
+            try:
+                return self._smappy.get_sensor_consumption(location_id,
+                                                           sensor_id,
+                                                           start,
+                                                           end, 1)
+            except Exception as e:
+                _LOGGER.error("Error getting comsumption from Smappee cloud.")
+                return False
+
         return False
 
     def actuator_on(self, location_id, actuator_id,
@@ -201,13 +214,21 @@ class Smappee(object):
     def active_power(self):
         """Get sum of all instantanious active power values from local hub."""
         if self.is_local_active:
-            return self._localsmappy.active_power()
+            try:
+                return self._localsmappy.active_power()
+            except Exception as e:
+                _LOGGER.error("Error getting data from Local Smappee unit.")
+                return False
         return False
 
     def active_cosfi(self):
         """Get the average of all instantaneous cosfi values."""
         if self.is_local_active:
-            return self._localsmappy.active_cosfi()
+            try:
+                return self._localsmappy.active_cosfi()
+            except Exception as e:
+                _LOGGER.error("Error getting data from Local Smappee unit.")
+                return False
         return False
 
     def instantaneous_values(self):
@@ -247,5 +268,9 @@ class Smappee(object):
     def load_instantaneous(self):
         """LoadInstantaneous."""
         if self.is_local_active:
-            return self._localsmappy.load_instantaneous()
+            try:
+                return self._localsmappy.load_instantaneous()
+            except Exception as e:
+                _LOGGER.error("Error getting data from Local Smappee unit.")
+                return False
         return False

@@ -109,61 +109,69 @@ class SmappeeSensor(Entity):
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=1, delta=30)
             _LOGGER.debug("%s %s", self._sensor, data)
-            consumption = data.get('consumptions')[-1]
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = consumption.get(self._sensor)
+            if data:
+                consumption = data.get('consumptions')[-1]
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = consumption.get(self._sensor)
         elif self._sensor == 'solar_today':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=3, delta=1440)
             _LOGGER.debug("%s %s", self._sensor, data)
-            consumption = data.get('consumptions')[-1]
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = round(consumption.get('solar') / 1000, 2)
+            if data:
+                consumption = data.get('consumptions')[-1]
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = round(consumption.get('solar') / 1000, 2)
         elif self._sensor == 'power_today':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=3, delta=1440)
             _LOGGER.debug("%s %s", self._sensor, data)
-            consumption = data.get('consumptions')[-1]
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = round(consumption.get('consumption') / 1000, 2)
+            if data:
+                consumption = data.get('consumptions')[-1]
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = round(consumption.get('consumption') / 1000, 2)
         elif self._sensor == 'active_cosfi':
             cosfi = self._smappee.active_cosfi()
             _LOGGER.debug("%s %s", self._sensor, cosfi)
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = round(cosfi, 2)
+            if cosfi:
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = round(cosfi, 2)
         elif self._sensor == 'current':
             current = self._smappee.active_current()
             _LOGGER.debug("%s %s", self._sensor, current)
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = round(current, 2)
+            if current:
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = round(current, 2)
         elif self._sensor == 'voltage':
             voltage = self._smappee.active_voltage()
             _LOGGER.debug("%s %s", self._sensor, voltage)
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = round(voltage, 3)
+            if voltage:
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = round(voltage, 3)
         elif self._sensor is 'active_power':
             data = self._smappee.load_instantaneous()
             _LOGGER.debug("%s %s", self._sensor, data)
-            value1 = [float(i['value']) for i in data
-                      if i['key'].endswith('phase0ActivePower')]
-            value2 = [float(i['value']) for i in data
-                      if i['key'].endswith('phase1ActivePower')]
-            value3 = [float(i['value']) for i in data
-                      if i['key'].endswith('phase2ActivePower')]
-            active_power = sum(value1 + value2 + value3) / 1000
-            self._state = round(active_power, 2)
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            if data:
+                value1 = [float(i['value']) for i in data
+                          if i['key'].endswith('phase0ActivePower')]
+                value2 = [float(i['value']) for i in data
+                          if i['key'].endswith('phase1ActivePower')]
+                value3 = [float(i['value']) for i in data
+                          if i['key'].endswith('phase2ActivePower')]
+                active_power = sum(value1 + value2 + value3) / 1000
+                self._state = round(active_power, 2)
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         elif self._sensor is 'solar':
             data = self._smappee.load_instantaneous()
             _LOGGER.debug("%s %s", self._sensor, data)
-            value1 = [float(i['value']) for i in data
-                      if i['key'].endswith('phase3ActivePower')]
-            value2 = [float(i['value']) for i in data
-                      if i['key'].endswith('phase4ActivePower')]
-            value3 = [float(i['value']) for i in data
-                      if i['key'].endswith('phase5ActivePower')]
-            power = sum(value1 + value2 + value3) / 1000
-            self._state = round(power, 2)
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            if data:
+                value1 = [float(i['value']) for i in data
+                          if i['key'].endswith('phase3ActivePower')]
+                value2 = [float(i['value']) for i in data
+                          if i['key'].endswith('phase4ActivePower')]
+                value3 = [float(i['value']) for i in data
+                          if i['key'].endswith('phase5ActivePower')]
+                power = sum(value1 + value2 + value3) / 1000
+                self._state = round(power, 2)
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         else:
             return None
