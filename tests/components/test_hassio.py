@@ -158,10 +158,8 @@ def test_service_register(hassio_env, hass):
     assert hass.services.has_service('hassio', 'addon_stop')
     assert hass.services.has_service('hassio', 'addon_restart')
     assert hass.services.has_service('hassio', 'addon_stdin')
-    assert hass.services.has_service('hassio', 'addon_update')
     assert hass.services.has_service('hassio', 'host_shutdown')
     assert hass.services.has_service('hassio', 'host_reboot')
-    assert hass.services.has_service('hassio', 'host_update')
     assert hass.services.has_service('hassio', 'snapthost_full')
     assert hass.services.has_service('hassio', 'snapthost_partial')
     assert hass.services.has_service('hassio', 'restore_full')
@@ -182,13 +180,9 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
     aioclient_mock.post(
         "http://127.0.0.1/addons/test/stdin", json={'result': 'ok'})
     aioclient_mock.post(
-        "http://127.0.0.1/addons/test/update", json={'result': 'ok'})
-    aioclient_mock.post(
         "http://127.0.0.1/host/shutdown", json={'result': 'ok'})
     aioclient_mock.post(
         "http://127.0.0.1/host/reboot", json={'result': 'ok'})
-    aioclient_mock.post(
-        "http://127.0.0.1/host/update", json={'result': 'ok'})
     aioclient_mock.post(
         "http://127.0.0.1/snapshots/new/full", json={'result': 'ok'})
     aioclient_mock.post(
@@ -206,20 +200,17 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
     yield from hass.services.async_call(
         'hassio', 'addon_restart', {'addon': 'test'})
     yield from hass.services.async_call(
-        'hassio', 'addon_update', {'addon': 'test'})
-    yield from hass.services.async_call(
         'hassio', 'addon_stdin', {'addon': 'test', 'input': 'test'})
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 5
+    assert aioclient_mock.call_count == 4
     assert aioclient_mock.mock_calls[-1][2] == 'test'
 
     yield from hass.services.async_call('hassio', 'host_shutdown', {})
     yield from hass.services.async_call('hassio', 'host_reboot', {})
-    yield from hass.services.async_call('hassio', 'host_update', {})
     yield from hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 6
 
     yield from hass.services.async_call('hassio', 'snapshot_full', {})
     yield from hass.services.async_call('hassio', 'snapshot_partial', {
@@ -227,7 +218,7 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
         'folders': ['ssl'],
     })
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 8
     assert aioclient_mock.mock_calls[-1][2] == {
         'addons': ['test'], 'folders': ['ssl']}
 
@@ -238,7 +229,7 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
         'folders': ['ssl'],
     })
 
-    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.call_count == 10
     assert aioclient_mock.mock_calls[-1][2] == {
         'addons': ['test'], 'folders': ['ssl'], 'homeassistant': False}
 

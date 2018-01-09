@@ -35,10 +35,8 @@ SERVICE_ADDON_START = 'addon_start'
 SERVICE_ADDON_STOP = 'addon_stop'
 SERVICE_ADDON_RESTART = 'addon_restart'
 SERVICE_ADDON_STDIN = 'addon_stdin'
-SERVICE_ADDON_UPDATE = 'addon_update'
 SERVICE_HOST_SHUTDOWN = 'host_shutdown'
 SERVICE_HOST_REBOOT = 'host_reboot'
-SERVICE_HOST_UPDATE = 'host_update'
 SERVICE_SNAPSHOT_FULL = 'snapshot_full'
 SERVICE_SNAPSHOT_PARTIAL = 'snapshot_partial'
 SERVICE_RESTORE_FULL = 'restore_full'
@@ -98,11 +96,9 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_START: ('/addons/{addon}/start', SCHEMA_ADDON, 60),
     SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON, 60),
     SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON, 60),
-    SERVICE_ADDON_UPDATE: ('/addons/{addon}/update', SCHEMA_ADDON, 300),
     SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60),
     SERVICE_HOST_SHUTDOWN: ('/host/shutdown', None, 60),
     SERVICE_HOST_REBOOT: ('/host/reboot', None, 60),
-    SERVICE_HOST_UPDATE: ('/host/update', None, 300),
     SERVICE_SNAPSHOT_FULL: ('/snapshots/new/full', SERVICE_SNAPSHOT_FULL, 300),
     SERVICE_SNAPSHOT_PARTIAL: ('/snapshots/new/partial',
                                SERVICE_SNAPSHOT_PARTIAL, 300),
