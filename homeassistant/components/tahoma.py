@@ -78,13 +78,20 @@ def setup(hass, config):
 
 
 def map_tahoma_device(tahoma_device):
-    """Map tahoma classes to Home Assistant types."""
-    if tahoma_device.type.lower().find('shutter') != -1 \
-       or tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
+    """Map Tahoma device types to Home Assistant components,
+       and log an exception for unknown/unsupported types."""
+    if tahoma_device.type == 'rts:RollerShutterRTSComponent' \
+        or tahoma_device.type == 'rts:CurtainRTSComponent' \
+        or tahoma_device.type \
+        == 'io:RollerShutterWithLowSpeedManagementIOComponent' \
+        or tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
         return 'cover'
     elif tahoma_device.type == 'io:LightIOSystemSensor':
         return 'sensor'
-    return None
+    else:
+        _LOGGER.warning('Unsupported type %s for Tahoma device %s'
+                        % (tahoma_device.type, tahoma_device.label))
+        return None
 
 
 class TahomaDevice(Entity):
