@@ -81,10 +81,10 @@ def map_tahoma_device(tahoma_device):
     """Map Tahoma device types to Home Assistant components,
        and log an exception for unknown/unsupported types."""
     if tahoma_device.type == 'rts:RollerShutterRTSComponent' \
-        or tahoma_device.type == 'rts:CurtainRTSComponent' \
-        or tahoma_device.type \
-        == 'io:RollerShutterWithLowSpeedManagementIOComponent' \
-        or tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
+       or tahoma_device.type == 'rts:CurtainRTSComponent' \
+       or tahoma_device.type \
+       == 'io:RollerShutterWithLowSpeedManagementIOComponent' \
+       or tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
         return 'cover'
     elif tahoma_device.type == 'io:LightIOSystemSensor':
         return 'sensor'
