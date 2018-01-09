@@ -20,7 +20,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pymaxcul==0.1.7']
+REQUIREMENTS = ['pymaxcul==0.1.8']
 
 DOMAIN = 'climate.maxcul'
 
@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import maxcul
     path = config[CONF_DEVICE_PATH]
     baud = config[CONF_DEVICE_BAUD_RATE]
-    device_id = config.get(CONF_DEVICE_ID)
+    sender_id = config.get(CONF_DEVICE_ID)
 
     paired_devices_path = hass.config.path(YAML_DEVICES)
     paired_device_ids = _read_paired_devices(paired_devices_path)
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if event == maxcul.EVENT_THERMOSTAT_UPDATE:
             device = climate_devices.get(device_id)
             if device:
-                device.upate_from_event(payload)
+                device.update_from_event(payload)
 
         elif event in [maxcul.EVENT_DEVICE_PAIRED,
                        maxcul.EVENT_DEVICE_REPAIRED]:
@@ -121,8 +121,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         paired_devices=list(paired_device_ids),
         callback=callback
     )
-    if device_id:
-        params['sender_id'] = device_id
+    if sender_id:
+        params['sender_id'] = sender_id
     maxconn = maxcul.MaxConnection(**params)
     maxconn.start()
 
@@ -132,6 +132,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         in paired_device_ids
     ]
     add_devices(devices)
+    for device in devices:
+        climate_devices[device._thermostat_id] = device
 
     def _service_enable_pairing(service):
         duration = service.data.get(ATTR_DURATION)
@@ -170,10 +172,10 @@ class MaxCulClimate(ClimateDevice):
             ATTR_MEASURED_TEMPERATURE, ATTR_MODE,
             ATTR_BATTERY_LOW
         )
-        current_temperature = event.data.get(ATTR_MEASURED_TEMPERATURE)
-        target_temperature = event.data.get(ATTR_DESIRED_TEMPERATURE)
-        mode = event.data.get(ATTR_MODE)
-        battery_low = event.data.get(ATTR_BATTERY_LOW)
+        current_temperature = event.get(ATTR_MEASURED_TEMPERATURE)
+        target_temperature = event.get(ATTR_DESIRED_TEMPERATURE)
+        mode = event.get(ATTR_MODE)
+        battery_low = event.get(ATTR_BATTERY_LOW)
 
         if current_temperature is not None:
             self._current_temperature = current_temperature
