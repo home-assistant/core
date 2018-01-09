@@ -254,7 +254,8 @@ def get_common_supported_features(hass, entity_ids):
     sub_entities = [hass.states.get(eid) for eid in entity_ids]
 
     # Get features of existing entities or default to 0
-    features = [e.attributes.get(ATTR_SUPPORTED_FEATURES, 0) for e in sub_entities
+    features = [e.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                for e in sub_entities
                 if e is not None and hasattr(e, 'attributes')]
 
     # Return merged supported features in a "common features only" manner
