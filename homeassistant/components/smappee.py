@@ -86,9 +86,11 @@ class Smappee(object):
                 self._smappy = smappy.Smappee(client_id, client_secret)
                 self._smappy.authenticate(username, password)
                 self._remote_active = True
-            except RequestException:
+            except RequestException as error:
                 self._smappy = None
-                _LOGGER.exception("Smappee server authentication failed")
+                _LOGGER.exception(
+                    "Smappee server authentication failed (%s)",
+                    error)
         else:
             _LOGGER.warning("Smappee server component init skipped.")
 
@@ -97,9 +99,11 @@ class Smappee(object):
                 self._localsmappy = smappy.LocalSmappee(host)
                 self._localsmappy.logon(host_password)
                 self._local_active = True
-            except RequestException:
+            except RequestException as error:
                 self._localsmappy = None
-                _LOGGER.exception("Local Smappee device authentication failed")
+                _LOGGER.exception(
+                    "Local Smappee device authentication failed (%s)",
+                    error)
         else:
             _LOGGER.warning("Smappee local component init skipped.")
 
@@ -160,8 +164,10 @@ class Smappee(object):
                                                     start,
                                                     end,
                                                     aggregation)
-            except Exception as e:
-                _LOGGER.error("Error getting comsumption from Smappee cloud.")
+            except RequestException as error:
+                _LOGGER.error(
+                    "Error getting comsumption from Smappee cloud. (%s)",
+                    error)
                 return False
         return False
 
@@ -183,8 +189,10 @@ class Smappee(object):
                                                            sensor_id,
                                                            start,
                                                            end, 1)
-            except Exception as e:
-                _LOGGER.error("Error getting comsumption from Smappee cloud.")
+            except RequestException as error:
+                _LOGGER.error(
+                    "Error getting comsumption from Smappee cloud. (%s)",
+                    error)
                 return False
 
         return False
@@ -216,8 +224,10 @@ class Smappee(object):
         if self.is_local_active:
             try:
                 return self._localsmappy.active_power()
-            except Exception as e:
-                _LOGGER.error("Error getting data from Local Smappee unit.")
+            except RequestException as error:
+                _LOGGER.error(
+                    "Error getting data from Local Smappee unit. (%s)",
+                    error)
                 return False
         return False
 
@@ -226,8 +236,10 @@ class Smappee(object):
         if self.is_local_active:
             try:
                 return self._localsmappy.active_cosfi()
-            except Exception as e:
-                _LOGGER.error("Error getting data from Local Smappee unit.")
+            except RequestException as error:
+                _LOGGER.error(
+                    "Error getting data from Local Smappee unit. (%s)",
+                    error)
                 return False
         return False
 
@@ -270,7 +282,9 @@ class Smappee(object):
         if self.is_local_active:
             try:
                 return self._localsmappy.load_instantaneous()
-            except Exception as e:
-                _LOGGER.error("Error getting data from Local Smappee unit.")
+            except RequestException as error:
+                _LOGGER.error(
+                    "Error getting data from Local Smappee unit. (%s)",
+                    error)
                 return False
         return False
