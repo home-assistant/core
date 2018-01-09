@@ -212,7 +212,7 @@ class Hyperion(Light):
                     self._icon = 'mdi:video-input-hdmi'
                     self._effect = 'HDMI'
                     return
-            except:
+            except (KeyError, IndexError):
                 pass
 
             if response['info']['activeLedColor'] == []:
@@ -224,8 +224,8 @@ class Hyperion(Light):
                         s_name = response['info']['activeEffects'][0]["script"]
                         s_name = s_name.split('/')[-1][:-3].split("-")[0]
                         self._effect = [x for x in self._effect_list
-                                        if (s_name.lower() in x.lower())][0]
-                    except:
+                                        if s_name.lower() in x.lower()][0]
+                    except (KeyError, IndexError):
                         self._effect = 'none'
                 # Bulb off state
                 else:
