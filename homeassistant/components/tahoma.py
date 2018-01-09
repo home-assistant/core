@@ -78,8 +78,7 @@ def setup(hass, config):
 
 
 def map_tahoma_device(tahoma_device):
-    """
-    Map Tahoma device types to Home Assistant components.
+    """Map Tahoma device types to Home Assistant components.
 
     Logs an exception for unknown/unsupported types.
     """
