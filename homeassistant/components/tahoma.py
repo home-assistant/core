@@ -36,6 +36,14 @@ TAHOMA_COMPONENTS = [
     'sensor', 'cover'
 ]
 
+TAHOMA_TYPES = {
+    'rts:RollerShutterRTSComponent': 'cover',
+    'rts:CurtainRTSComponent': 'cover',
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
+    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:LightIOSystemSensor': 'sensor',
+}
+
 
 def setup(hass, config):
     """Activate Tahoma component."""
@@ -68,6 +76,8 @@ def setup(hass, config):
         if all(ext not in _device.type for ext in exclude):
             device_type = map_tahoma_device(_device)
             if device_type is None:
+                _LOGGER.warning('Unsupported type %s for Tahoma device %s',
+                                tahoma_device.type, tahoma_device.label)
                 continue
             hass.data[DOMAIN]['devices'][device_type].append(_device)
 
@@ -79,18 +89,7 @@ def setup(hass, config):
 
 def map_tahoma_device(tahoma_device):
     """Map Tahoma device types to Home Assistant components."""
-    if tahoma_device.type == 'rts:RollerShutterRTSComponent' \
-       or tahoma_device.type == 'rts:CurtainRTSComponent' \
-       or tahoma_device.type \
-       == 'io:RollerShutterWithLowSpeedManagementIOComponent' \
-       or tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
-        return 'cover'
-    elif tahoma_device.type == 'io:LightIOSystemSensor':
-        return 'sensor'
-    else:
-        _LOGGER.warning('Unsupported type %s for Tahoma device %s',
-                        tahoma_device.type, tahoma_device.label)
-        return None
+    return TAHOMA_TYPES.get(tahoma_device.type)
 
 
 class TahomaDevice(Entity):

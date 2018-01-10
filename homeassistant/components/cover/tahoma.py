@@ -80,4 +80,4 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
             return 'window'
         else:
-            return 'none'
+            return None
