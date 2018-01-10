@@ -125,7 +125,8 @@ def test_config_valid_verify_ssl_path(hass, mock_session_send):
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic YmFyOmZvbw=='
         }
-    assert result.req.body == "_http_id=0987654321&exec=devlist"
+    assert "_http_id=0987654321" in result.req.body
+    assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
     assert mock_session_send.mock_calls[0] == \
         mock.call(result.req, timeout=3, verify="/tmp/tomato.crt")
@@ -152,7 +153,8 @@ def test_config_valid_verify_ssl_bool(hass, mock_session_send):
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic YmFyOmZvbw=='
         }
-    assert result.req.body == "_http_id=0987654321&exec=devlist"
+    assert "_http_id=0987654321" in result.req.body
+    assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
     assert mock_session_send.mock_calls[0] == \
         mock.call(result.req, timeout=3, verify=False)
