@@ -147,7 +147,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         assert result
 
     assert aioclient_mock.call_count == 1
-    assert aioclient_mock.headers['X-HASSIO-KEY'] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]['X-HASSIO-KEY'] == "123456"
 
 
 @asyncio.coroutine
@@ -160,8 +160,8 @@ def test_service_register(hassio_env, hass):
     assert hass.services.has_service('hassio', 'addon_stdin')
     assert hass.services.has_service('hassio', 'host_shutdown')
     assert hass.services.has_service('hassio', 'host_reboot')
-    assert hass.services.has_service('hassio', 'snapthost_full')
-    assert hass.services.has_service('hassio', 'snapthost_partial')
+    assert hass.services.has_service('hassio', 'snapshot_full')
+    assert hass.services.has_service('hassio', 'snapshot_partial')
     assert hass.services.has_service('hassio', 'restore_full')
     assert hass.services.has_service('hassio', 'restore_partial')
 
@@ -217,17 +217,22 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
         'addons': ['test'],
         'folders': ['ssl'],
     })
+    yield from hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 8
     assert aioclient_mock.mock_calls[-1][2] == {
         'addons': ['test'], 'folders': ['ssl']}
 
-    yield from hass.services.async_call('hassio', 'restore_full', {})
+    yield from hass.services.async_call('hassio', 'restore_full', {
+        'snapshot': 'test',
+    })
     yield from hass.services.async_call('hassio', 'restore_partial', {
+        'snapshot': 'test',
         'homeassistant': False,
         'addons': ['test'],
         'folders': ['ssl'],
     })
+    yield from hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 10
     assert aioclient_mock.mock_calls[-1][2] == {

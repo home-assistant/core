@@ -79,7 +79,7 @@ SCHEMA_SNAPSHOT_FULL = vol.Schema({
     vol.Optional(ATTR_NAME): cv.string,
 })
 
-SCHEMA_SNAPSHOT_FULL = SCHEMA_SNAPSHOT_FULL.extend({
+SCHEMA_SNAPSHOT_PARTIAL = SCHEMA_SNAPSHOT_FULL.extend({
     vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
 })
@@ -88,7 +88,7 @@ SCHEMA_RESTORE_FULL = vol.Schema({
     vol.Required(ATTR_SNAPSHOT): cv.slug,
 })
 
-SCHEMA_RESTORE_PARTIAL = vol.Schema({
+SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend({
     vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
     vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
@@ -101,13 +101,13 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60),
     SERVICE_HOST_SHUTDOWN: ('/host/shutdown', SCHEMA_NO_DATA, 60),
     SERVICE_HOST_REBOOT: ('/host/reboot', SCHEMA_NO_DATA, 60),
-    SERVICE_SNAPSHOT_FULL: ('/snapshots/new/full', SERVICE_SNAPSHOT_FULL, 300),
+    SERVICE_SNAPSHOT_FULL: ('/snapshots/new/full', SCHEMA_SNAPSHOT_FULL, 300),
     SERVICE_SNAPSHOT_PARTIAL: ('/snapshots/new/partial',
-                               SERVICE_SNAPSHOT_PARTIAL, 300),
+                               SCHEMA_SNAPSHOT_PARTIAL, 300),
     SERVICE_RESTORE_FULL: ('/snapshots/{snapshot}/restore/full',
-                           SERVICE_RESTORE_FULL, 300),
+                           SCHEMA_RESTORE_FULL, 300),
     SERVICE_RESTORE_PARTIAL: ('/snapshots/{snapshot}/restore/partial',
-                              SERVICE_RESTORE_PARTIAL, 300),
+                              SCHEMA_RESTORE_PARTIAL, 300),
 }
 
 
@@ -144,8 +144,8 @@ def async_setup(hass, config):
         """Handle service calls for HassIO."""
         api_command = MAP_SERVICE_API[service.service][0]
         data = service.data.copy()
-        addon = data.pop(ATTR_ADDON)
-        snapshot = data.pop(ATTR_SNAPSHOT)
+        addon = data.pop(ATTR_ADDON, None)
+        snapshot = data.pop(ATTR_SNAPSHOT, None)
         payload = None
 
         # Pass data to hass.io API
