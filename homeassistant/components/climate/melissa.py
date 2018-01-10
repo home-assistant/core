@@ -20,22 +20,23 @@ DEPENDENCIES = [DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | \
-                SUPPORT_ON_OFF | SUPPORT_FAN_MODE
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_ON_OFF | SUPPORT_FAN_MODE)
+
+ICON = "mdi:thermometer"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Iterate through all MAX! Devices and add thermostats."""
+    """Iterate through and add all Melissa devices."""
     connection = hass.data[DATA_MELISSA]
     devices = connection.fetch_devices()
 
     all_devices = []
 
     for device in devices.values():
-        name = 'Melissa {} {}'.format(device['type'], device['serial_number'])
 
         all_devices.append(MelissaClimate(
-            connection, name, device['serial_number'], device))
+            connection, device['serial_number'], device))
 
     if all_devices:
         add_devices(all_devices)
@@ -44,16 +45,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MelissaClimate(ClimateDevice):
     """Representation of a Melissa Climate."""
 
-    def __init__(self, connection, name, serial_number, init_data):
+    def __init__(self, connection, serial_number, init_data):
         """Initialize the climate device."""
-        self._name = name
+        self._name = init_data['name']
         self._connection = connection
         self._serial_number = serial_number
         self._data = init_data['controller_log']
         self._state = None
-        self._cur_settings = self._connection.cur_settings(
-            serial_number
-        )['controller']['_relation']['command_log']
+        self._cur_settings = None
         self._latest_temp = None
 
     @property
@@ -64,22 +63,31 @@ class MelissaClimate(ClimateDevice):
     @property
     def is_on(self):
         """Return current state."""
-        from melissa import STATE, STATE_ON as ON, STATE_IDLE as IDLE
-        return self._cur_settings[STATE] in (ON, IDLE)
+        if not self._cur_settings:
+            return STATE_UNKNOWN
+        return self._cur_settings[self._connection.STATE] in (
+            self._connection.STATE_ON, self._connection.STATE_IDLE)
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return ICON
 
     @property
     def current_fan_mode(self):
         """Return the current fan mode."""
-        from melissa import FAN
-        return self.melissa_fan_to_hass(self._cur_settings[FAN])
+        if not self._cur_settings:
+            return STATE_UNKNOWN
+        return self.melissa_fan_to_hass(
+            self._cur_settings[self._connection.FAN])
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        from melissa import TEMP
         if not self._latest_temp or abs(
-                self._latest_temp - self._data[TEMP]) < CHANGE_THRESHOLD:
-            self._latest_temp = self._data[TEMP]
+                self._latest_temp - self._data[
+                    self._connection.TEMP]) < CHANGE_THRESHOLD:
+            self._latest_temp = self._data[self._connection.TEMP]
         return self._latest_temp
 
     @property
@@ -90,8 +98,10 @@ class MelissaClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        from melissa import MODE
-        return self.melissa_op_to_hass(self._cur_settings[MODE])
+        if not self._cur_settings:
+            return STATE_UNKNOWN
+        return self.melissa_op_to_hass(
+            self._cur_settings[self._connection.MODE])
 
     @property
     def operation_list(self):
@@ -110,14 +120,17 @@ class MelissaClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        from melissa import TEMP
-        return self._cur_settings[TEMP]
+        if not self._cur_settings:
+            return None
+        return self._cur_settings[self._connection.TEMP]
 
     @property
     def state(self):
         """Return current state."""
-        from melissa import STATE
-        return self.melissa_state_to_hass(self._cur_settings[STATE])
+        if not self._cur_settings:
+            return STATE_UNKNOWN
+        return self.melissa_state_to_hass(
+            self._cur_settings[self._connection.STATE])
 
     @property
     def temperature_unit(self):
@@ -134,36 +147,36 @@ class MelissaClimate(ClimateDevice):
         """Return the maximum supported temperature for the thermostat."""
         return 30
 
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        from melissa import TEMP
         temp = kwargs.get(ATTR_TEMPERATURE)
-        return self.send({TEMP: temp})
+        return self.send({self._connection.TEMP: temp})
 
     def set_fan_mode(self, fan):
         """Set fan mode."""
-        from melissa import FAN
         fan_mode = self.hass_fan_to_melissa(fan)
-        return self.send({FAN: fan_mode})
+        return self.send({self._connection.FAN: fan_mode})
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        from melissa import MODE
         mode = self.hass_mode_to_melissa(operation_mode)
-        return self.send({MODE: mode})
+        return self.send({self._connection.MODE: mode})
 
     def turn_on(self):
         """Turn on device."""
-        from melissa import STATE, STATE_ON as ON  # pylint: disable=W0621
-        return self.send({STATE: ON})
+        return self.send({self._connection.STATE: self._connection.STATE_ON})
 
     def turn_off(self):
         """Turn off device."""
-        from melissa import STATE, STATE_OFF as OFF  # pylint: disable=W0621
-        return self.send({STATE: OFF})
+        return self.send({self._connection.STATE: self._connection.STATE_OFF})
 
     def send(self, value):
-        """Sending action to service"""
+        """Sending action to service."""
         old_value = self._cur_settings.copy()
         self._cur_settings.update(value)
         if not self._connection.send(self._serial_number, self._cur_settings):
@@ -172,85 +185,72 @@ class MelissaClimate(ClimateDevice):
         else:
             return True
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
     def update(self):
         """Get latest data from Melissa."""
         self._data = self._connection.status()[self._serial_number]
+        self._cur_settings = self._connection.cur_settings(
+            self._serial_number
+        )['controller']['_relation']['command_log']
 
-    @staticmethod
-    def melissa_state_to_hass(state):
+    def melissa_state_to_hass(self, state):
         """Translate Melissa states to hass states."""
-        from melissa import STATE_ON as ON, \
-            STATE_OFF as OFF, STATE_IDLE as IDLE
-        if state == ON:
+        if state == self._connection.STATE_ON:
             return STATE_ON
-        elif state == OFF:
+        elif state == self._connection.STATE_OFF:
             return STATE_OFF
-        elif state == IDLE:
+        elif state == self._connection.STATE_IDLE:
             return STATE_IDLE
         else:
             return STATE_UNKNOWN
 
-    @staticmethod
-    def melissa_op_to_hass(mode):
+    def melissa_op_to_hass(self, mode):
         """Translate Melissa modes to hass states."""
-        from melissa import MODE_HEAT, MODE_AUTO, MODE_COOL, MODE_DRY, MODE_FAN
-        if mode == MODE_AUTO:
+        if mode == self._connection.MODE_AUTO:
             return STATE_AUTO
-        elif mode == MODE_HEAT:
+        elif mode == self._connection.MODE_HEAT:
             return STATE_HEAT
-        elif mode == MODE_COOL:
+        elif mode == self._connection.MODE_COOL:
             return STATE_COOL
-        elif mode == MODE_DRY:
+        elif mode == self._connection.MODE_DRY:
             return STATE_DRY
-        elif mode == MODE_FAN:
+        elif mode == self._connection.MODE_FAN:
             return STATE_FAN_ONLY
         else:
             return STATE_UNKNOWN
 
-    @staticmethod
-    def melissa_fan_to_hass(fan):
+    def melissa_fan_to_hass(self, fan):
         """Translate Melissa fan modes to hass modes."""
-        from melissa import FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH
-        if fan == FAN_AUTO:
+        if fan == self._connection.FAN_AUTO:
             return STATE_AUTO
-        elif fan == FAN_LOW:
+        elif fan == self._connection.FAN_LOW:
             return SPEED_LOW
-        elif fan == FAN_MEDIUM:
+        elif fan == self._connection.FAN_MEDIUM:
             return SPEED_MEDIUM
-        elif fan == FAN_HIGH:
+        elif fan == self._connection.FAN_HIGH:
             return SPEED_HIGH
         else:
             return STATE_UNKNOWN
 
-    @staticmethod
-    def hass_mode_to_melissa(mode):
+    def hass_mode_to_melissa(self, mode):
         """Translate hass states to melissa modes."""
-        from melissa import MODE_HEAT, MODE_AUTO, MODE_COOL, MODE_DRY, MODE_FAN
         if mode == STATE_AUTO:
-            return MODE_AUTO
+            return self._connection.MODE_AUTO
         elif mode == STATE_HEAT:
-            return MODE_HEAT
+            return self._connection.MODE_HEAT
         elif mode == STATE_COOL:
-            return MODE_COOL
+            return self._connection.MODE_COOL
         elif mode == STATE_DRY:
-            return MODE_DRY
+            return self._connection.MODE_DRY
         elif mode == STATE_FAN_ONLY:
-            return MODE_FAN
+            return self._connection.MODE_FAN
 
-    @staticmethod
-    def hass_fan_to_melissa(fan):
+    def hass_fan_to_melissa(self, fan):
         """Translate hass fan modes to melissa modes."""
-        from melissa import FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH
         if fan == STATE_AUTO:
-            return FAN_AUTO
+            return self._connection.FAN_AUTO
         elif fan == SPEED_LOW:
-            return FAN_LOW
+            return self._connection.FAN_LOW
         elif fan == SPEED_MEDIUM:
-            return FAN_MEDIUM
+            return self._connection.FAN_MEDIUM
         elif fan == SPEED_HIGH:
-            return FAN_HIGH
+            return self._connection.FAN_HIGH

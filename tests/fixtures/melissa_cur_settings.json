@@ -15,8 +15,8 @@
       "command_log": {
         "state": 1,
         "mode": 2,
-        "temp": 20,
-        "fan": 2
+        "temp": 16,
+        "fan": 1
       }
     }
   },
