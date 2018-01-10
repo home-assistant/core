@@ -60,6 +60,8 @@ def test_fail_setup_cannot_connect(hass):
         result = yield from async_setup_component(hass, 'hassio', {})
         assert not result
 
+    assert not hass.components.hassio.is_hassio()
+
 
 @asyncio.coroutine
 def test_setup_api_ping(hass, aioclient_mock):
@@ -75,7 +77,8 @@ def test_setup_api_ping(hass, aioclient_mock):
         assert result
 
     assert aioclient_mock.call_count == 2
-    assert hass.data['hassio_hass_version'] == "10.0"
+    assert hass.components.hassio.get_homeassistant_version() == "10.0"
+    assert hass.components.hassio.is_hassio()
 
 
 @asyncio.coroutine
@@ -215,6 +218,9 @@ def test_service_register(hassio_env, hass):
     assert hass.services.has_service('hassio', 'addon_stdin')
     assert hass.services.has_service('hassio', 'host_shutdown')
     assert hass.services.has_service('hassio', 'host_reboot')
+    assert hass.services.has_service('hassio', 'homeassistant_restart')
+    assert hass.services.has_service('hassio', 'homeassistant_stop')
+    assert hass.services.has_service('hassio', 'host_reboot')
     assert hass.services.has_service('hassio', 'snapshot_full')
     assert hass.services.has_service('hassio', 'snapshot_partial')
     assert hass.services.has_service('hassio', 'restore_full')
@@ -238,6 +244,10 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
         "http://127.0.0.1/host/shutdown", json={'result': 'ok'})
     aioclient_mock.post(
         "http://127.0.0.1/host/reboot", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/homeassistant/restart", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/homeassistant/stop", json={'result': 'ok'})
     aioclient_mock.post(
         "http://127.0.0.1/snapshots/new/full", json={'result': 'ok'})
     aioclient_mock.post(
@@ -292,6 +302,12 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
     assert aioclient_mock.call_count == 10
     assert aioclient_mock.mock_calls[-1][2] == {
         'addons': ['test'], 'folders': ['ssl'], 'homeassistant': False}
+
+    yield from hass.services.async_call('hassio', 'homeassistant_restart', {})
+    yield from hass.services.async_call('hassio', 'homeassistant_stop', {})
+    yield from hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 12
 
 
 @asyncio.coroutine

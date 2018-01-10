@@ -17,13 +17,14 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT, CONF_TIME_ZONE)
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SERVER_HOST, CONF_SSL_CERTIFICATE)
 from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +43,8 @@ SERVICE_ADDON_RESTART = 'addon_restart'
 SERVICE_ADDON_STDIN = 'addon_stdin'
 SERVICE_HOST_SHUTDOWN = 'host_shutdown'
 SERVICE_HOST_REBOOT = 'host_reboot'
+SERVICE_HOMEASSISTANT_RESTART = 'homeassistant_restart'
+SERVICE_HOMEASSISTANT_STOP = 'homeassistant_stop'
 SERVICE_SNAPSHOT_FULL = 'snapshot_full'
 SERVICE_SNAPSHOT_PARTIAL = 'snapshot_partial'
 SERVICE_RESTORE_FULL = 'restore_full'
@@ -108,6 +111,10 @@ MAP_SERVICE_API = {
         ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60, False),
     SERVICE_HOST_SHUTDOWN: ('/host/shutdown', SCHEMA_NO_DATA, 60, False),
     SERVICE_HOST_REBOOT: ('/host/reboot', SCHEMA_NO_DATA, 60, False),
+    SERVICE_HOMEASSISTANT_RESTART:
+        ('/homeassistant/restart', SCHEMA_NO_DATA, 60, False),
+    SERVICE_HOMEASSISTANT_STOP:
+        ('/homeassistant/stop', SCHEMA_NO_DATA, 60, False),
     SERVICE_SNAPSHOT_FULL:
         ('/snapshots/new/full', SCHEMA_SNAPSHOT_FULL, 300, True),
     SERVICE_SNAPSHOT_PARTIAL:
@@ -120,10 +127,47 @@ MAP_SERVICE_API = {
 }
 
 
+@callback
+@bind_hass
+def async_stop(hass):
+    """Stop HomeAssistant."""
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_HOMEASSISTANT_STOP))
+
+
+@callback
+@bind_hass
+def async_restart(hass):
+    """Stop HomeAssistant."""
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_HOMEASSISTANT_RESTART))
+
+
+@callback
 @bind_hass
 def get_homeassistant_version(hass):
-    """Return last available HomeAssistant version."""
+    """Return last available HomeAssistant version.
+
+    Async friendly.
+    """
     return hass.data.get(DATA_HOMEASSISTANT_VERSION)
+
+
+@callback
+@bind_hass
+def is_hassio(hass):
+    """Return True if hass.io is loaded.
+
+    Async friendly.
+    """
+    return DOMAIN in hass.config.components
+
+
+@bind_hass
+@asyncio.coroutine
+def check_config(hass):
+    """Check config over Hass.io API."""
+    pass
 
 
 @asyncio.coroutine
@@ -193,6 +237,7 @@ def async_setup(hass, config):
     # Fetch last version
     yield from update_homeassistant_version(None)
 
+    hass.data[DOMAIN] = hassio
     return True
 
 
