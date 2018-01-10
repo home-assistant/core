@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pymaxcul==0.1.8']
 
-DOMAIN = 'climate.maxcul'
+DOMAIN = 'maxcul'
 
 CONF_DEVICE_PATH = 'device_path'
 CONF_DEVICE_BAUD_RATE = 'device_baud_rate'
@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             climate_devices[device_id] = device
             _write_paired_devices(
                 paired_devices_path,
-                climate_devices.keys())
+                list(climate_devices.keys()))
 
     params = dict(
         device_path=path,
