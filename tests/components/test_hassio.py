@@ -19,7 +19,10 @@ def hassio_env():
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
                   Mock(return_value=mock_coro({"result": "ok", "data": {}}))), \
-            patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}):
+            patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}), \
+            patch('homeassistant.components.hassio.HassIO.'
+                  'get_homeassistant_info',
+                  Mock(return_value=mock_coro(None))):
         yield
 
 
@@ -27,7 +30,10 @@ def hassio_env():
 def hassio_client(hassio_env, hass, test_client):
     """Create mock hassio http client."""
     with patch('homeassistant.components.hassio.HassIO.update_hass_api',
-               Mock(return_value=mock_coro(True))):
+               Mock(return_value=mock_coro({"result": "ok"}))), \
+            patch('homeassistant.components.hassio.HassIO.'
+                  'get_homeassistant_info',
+                  Mock(return_value=mock_coro(None))):
         hass.loop.run_until_complete(async_setup_component(hass, 'hassio', {
             'http': {
                 'api_password': API_PASSWORD
@@ -59,12 +65,15 @@ def test_setup_api_ping(hass, aioclient_mock):
     """Test setup with API ping."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/info", json={
+            'result': 'ok', 'data': {'last_version': '10.0'}})
 
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
         result = yield from async_setup_component(hass, 'hassio', {})
         assert result
 
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2
 
 
 @asyncio.coroutine
@@ -72,6 +81,9 @@ def test_setup_api_push_api_data(hass, aioclient_mock):
     """Test setup with API push."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/info", json={
+            'result': 'ok', 'data': {'last_version': '10.0'}})
     aioclient_mock.post(
         "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
 
@@ -85,11 +97,11 @@ def test_setup_api_push_api_data(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 2
-    assert not aioclient_mock.mock_calls[-1][2]['ssl']
-    assert aioclient_mock.mock_calls[-1][2]['password'] == "123456"
-    assert aioclient_mock.mock_calls[-1][2]['port'] == 9999
-    assert aioclient_mock.mock_calls[-1][2]['watchdog']
+    assert aioclient_mock.call_count == 3
+    assert not aioclient_mock.mock_calls[1][2]['ssl']
+    assert aioclient_mock.mock_calls[1][2]['password'] == "123456"
+    assert aioclient_mock.mock_calls[1][2]['port'] == 9999
+    assert aioclient_mock.mock_calls[1][2]['watchdog']
 
 
 @asyncio.coroutine
@@ -97,6 +109,9 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
     """Test setup with API push with active server host."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/info", json={
+            'result': 'ok', 'data': {'last_version': '10.0'}})
     aioclient_mock.post(
         "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
 
@@ -111,11 +126,11 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 2
-    assert not aioclient_mock.mock_calls[-1][2]['ssl']
-    assert aioclient_mock.mock_calls[-1][2]['password'] == "123456"
-    assert aioclient_mock.mock_calls[-1][2]['port'] == 9999
-    assert not aioclient_mock.mock_calls[-1][2]['watchdog']
+    assert aioclient_mock.call_count == 3
+    assert not aioclient_mock.mock_calls[1][2]['ssl']
+    assert aioclient_mock.mock_calls[1][2]['password'] == "123456"
+    assert aioclient_mock.mock_calls[1][2]['port'] == 9999
+    assert not aioclient_mock.mock_calls[1][2]['watchdog']
 
 
 @asyncio.coroutine
@@ -123,6 +138,9 @@ def test_setup_api_push_api_data_default(hass, aioclient_mock):
     """Test setup with API push default data."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/info", json={
+            'result': 'ok', 'data': {'last_version': '10.0'}})
     aioclient_mock.post(
         "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
 
@@ -133,10 +151,10 @@ def test_setup_api_push_api_data_default(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 2
-    assert not aioclient_mock.mock_calls[-1][2]['ssl']
-    assert aioclient_mock.mock_calls[-1][2]['password'] is None
-    assert aioclient_mock.mock_calls[-1][2]['port'] == 8123
+    assert aioclient_mock.call_count == 3
+    assert not aioclient_mock.mock_calls[1][2]['ssl']
+    assert aioclient_mock.mock_calls[1][2]['password'] is None
+    assert aioclient_mock.mock_calls[1][2]['port'] == 8123
 
 
 @asyncio.coroutine
@@ -144,6 +162,9 @@ def test_setup_core_push_timezone(hass, aioclient_mock):
     """Test setup with API push default data."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/info", json={
+            'result': 'ok', 'data': {'last_version': '10.0'}})
     aioclient_mock.post(
         "http://127.0.0.1/supervisor/options", json={'result': 'ok'})
 
@@ -156,8 +177,8 @@ def test_setup_core_push_timezone(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 2
-    assert aioclient_mock.mock_calls[-1][2]['timezone'] == "testzone"
+    assert aioclient_mock.call_count == 3
+    assert aioclient_mock.mock_calls[1][2]['timezone'] == "testzone"
 
 
 @asyncio.coroutine
@@ -165,6 +186,11 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
     """Test setup with API push default data."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/info", json={
+            'result': 'ok', 'data': {'last_version': '10.0'}})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/info", json={'result': 'ok'})
 
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
             patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}):
@@ -173,7 +199,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         })
         assert result
 
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[-1][3]['X-HASSIO-KEY'] == "123456"
 
 

@@ -24,6 +24,7 @@ from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SERVER_HOST, CONF_SSL_CERTIFICATE)
 from homeassistant.loader import bind_hass
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,11 +178,16 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def update_homeassistant_version(now):
         """Update last available HomeAssistant version."""
-        data = yield from hassio.send_command('/homeassistant/info')
-        if data.get("result") != "ok":
-            return
-        hass.data[DATA_HOMEASSISTANT_VERSION] = \
-            data['data']['last_homeassistant']
+        data = yield from hassio.get_homeassistant_info()
+        if data:
+            hass.data[DATA_HOMEASSISTANT_VERSION] = \
+                data['data']['last_version']
+
+        hass.helpers.event.async_track_point_in_utc_time(
+            update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL)
+
+    # Fetch last version
+    yield from update_homeassistant_version(None)
 
     return True
 
@@ -201,6 +207,13 @@ class HassIO(object):
         This method return a coroutine.
         """
         return self.send_command("/supervisor/ping", method="get")
+
+    def get_homeassistant_info(self):
+        """Return data for HomeAssistant.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/homeassistant/info", method="get")
 
     def update_hass_api(self, http_config):
         """Update Home-Assistant API data on HassIO.
