@@ -1,10 +1,15 @@
 """Tests the HASS workday binary sensor."""
-from freezegun import freeze_time
+from datetime import date
+from unittest.mock import patch
+
 from homeassistant.components.binary_sensor.workday import day_to_string
 from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
+
+
+FUNCTION_PATH = 'homeassistant.components.binary_sensor.workday.get_date'
 
 
 class TestWorkdaySetup(object):
@@ -94,46 +99,45 @@ class TestWorkdaySetup(object):
     def test_setup_component_province(self):
         """Setup workday component."""
         with assert_setup_component(1, 'binary_sensor'):
-            setup_component(self.hass, 'binary_sensor', self.config_province)
+            setup_component(self.hass, 'binary_sensor',
+                            self.config_province)
 
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+        entity = self.hass.states.get('binary_sensor.workday_sensor')
+        assert entity is not None
 
-    # Freeze time to a workday
-    @freeze_time("Mar 15th, 2017")
-    def test_workday_province(self):
+    # Freeze time to a workday - Mar 15th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 15))
+    def test_workday_province(self, mock_date):
         """Test if workdays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
-            setup_component(self.hass, 'binary_sensor', self.config_province)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+            setup_component(self.hass, 'binary_sensor',
+                            self.config_province)
 
         self.hass.start()
 
         entity = self.hass.states.get('binary_sensor.workday_sensor')
         assert entity.state == 'on'
 
-    # Freeze time to a weekend
-    @freeze_time("Mar 12th, 2017")
-    def test_weekend_province(self):
+    # Freeze time to a weekend - Mar 12th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 12))
+    def test_weekend_province(self, mock_date):
         """Test if weekends are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
-            setup_component(self.hass, 'binary_sensor', self.config_province)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+            setup_component(self.hass, 'binary_sensor',
+                            self.config_province)
 
         self.hass.start()
 
         entity = self.hass.states.get('binary_sensor.workday_sensor')
         assert entity.state == 'off'
 
-    # Freeze time to a public holiday in province BW
-    @freeze_time("Jan 6th, 2017")
-    def test_public_holiday_province(self):
+    # Freeze time to a public holiday in province BW - Jan 6th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 1, 6))
+    def test_public_holiday_province(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
-            setup_component(self.hass, 'binary_sensor', self.config_province)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+            setup_component(self.hass, 'binary_sensor',
+                            self.config_province)
 
         self.hass.start()
 
@@ -143,46 +147,43 @@ class TestWorkdaySetup(object):
     def test_setup_component_noprovince(self):
         """Setup workday component."""
         with assert_setup_component(1, 'binary_sensor'):
-            setup_component(self.hass, 'binary_sensor', self.config_noprovince)
+            setup_component(self.hass, 'binary_sensor',
+                            self.config_noprovince)
 
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+        entity = self.hass.states.get('binary_sensor.workday_sensor')
+        assert entity is not None
 
-    # Freeze time to a public holiday in province BW
-    @freeze_time("Jan 6th, 2017")
-    def test_public_holiday_noprovince(self):
+    # Freeze time to a public holiday in province BW - Jan 6th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 1, 6))
+    def test_public_holiday_noprovince(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
-            setup_component(self.hass, 'binary_sensor', self.config_noprovince)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+            setup_component(self.hass, 'binary_sensor',
+                            self.config_noprovince)
 
         self.hass.start()
 
         entity = self.hass.states.get('binary_sensor.workday_sensor')
         assert entity.state == 'on'
 
-    # Freeze time to a public holiday in state CA
-    @freeze_time("Mar 31st, 2017")
-    def test_public_holiday_state(self):
+    # Freeze time to a public holiday in state CA - Mar 31st, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 31))
+    def test_public_holiday_state(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config_state)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
 
         self.hass.start()
 
         entity = self.hass.states.get('binary_sensor.workday_sensor')
         assert entity.state == 'off'
 
-    # Freeze time to a public holiday in state CA
-    @freeze_time("Mar 31st, 2017")
-    def test_public_holiday_nostate(self):
+    # Freeze time to a public holiday in state CA - Mar 31st, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 3, 31))
+    def test_public_holiday_nostate(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config_nostate)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
 
         self.hass.start()
 
@@ -195,62 +196,55 @@ class TestWorkdaySetup(object):
             setup_component(self.hass, 'binary_sensor',
                             self.config_invalidprovince)
 
-        assert self.hass.states.get('binary_sensor.workday_sensor') is None
+        entity = self.hass.states.get('binary_sensor.workday_sensor')
+        assert entity is None
 
-    # Freeze time to a public holiday in province BW
-    @freeze_time("Jan 6th, 2017")
-    def test_public_holiday_includeholiday(self):
+    # Freeze time to a public holiday in province BW - Jan 6th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 1, 6))
+    def test_public_holiday_includeholiday(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor',
                             self.config_includeholiday)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
 
         self.hass.start()
 
         entity = self.hass.states.get('binary_sensor.workday_sensor')
         assert entity.state == 'on'
 
-    # Freeze time to a saturday to test offset
-    @freeze_time("Aug 5th, 2017")
-    def test_tomorrow(self):
+    # Freeze time to a saturday to test offset - Aug 5th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 8, 5))
+    def test_tomorrow(self, mock_date):
         """Test if tomorrow are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor',
                             self.config_tomorrow)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
 
         self.hass.start()
 
         entity = self.hass.states.get('binary_sensor.workday_sensor')
         assert entity.state == 'off'
 
-    # Freeze time to a saturday to test offset
-    @freeze_time("Aug 5th, 2017")
-    def test_day_after_tomorrow(self):
+    # Freeze time to a saturday to test offset - Aug 5th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 8, 5))
+    def test_day_after_tomorrow(self, mock_date):
         """Test if the day after tomorrow are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor',
                             self.config_day_after_tomorrow)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
 
         self.hass.start()
 
         entity = self.hass.states.get('binary_sensor.workday_sensor')
         assert entity.state == 'on'
 
-    # Freeze time to a saturday to test offset
-    @freeze_time("Aug 5th, 2017")
-    def test_yesterday(self):
+    # Freeze time to a saturday to test offset - Aug 5th, 2017
+    @patch(FUNCTION_PATH, return_value=date(2017, 8, 5))
+    def test_yesterday(self, mock_date):
         """Test if yesterday are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor',
                             self.config_yesterday)
-
-        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
 
         self.hass.start()
 
