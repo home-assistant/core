@@ -77,7 +77,7 @@ def setup(hass, config):
             device_type = map_tahoma_device(_device)
             if device_type is None:
                 _LOGGER.warning('Unsupported type %s for Tahoma device %s',
-                                tahoma_device.type, tahoma_device.label)
+                                _device.type, _device.label)
                 continue
             hass.data[DOMAIN]['devices'][device_type].append(_device)
 
