@@ -166,6 +166,9 @@ caldav==0.5.0
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
 
+# homeassistant.components.coinbase
+coinbase==2.0.6
+
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==4.1.1
 
