@@ -251,11 +251,11 @@ class HassIO(object):
 
         try:
             data = None
-            headers = None
+            headers = {X_HASSIO: os.environ.get('HASSIO_TOKEN')}
             with async_timeout.timeout(10, loop=self.loop):
                 data = yield from request.read()
                 if data:
-                    headers = {CONTENT_TYPE: request.content_type}
+                    headers[CONTENT_TYPE] = request.content_type
                 else:
                     data = None
 
