@@ -133,7 +133,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ]
     add_devices(devices)
     for device in devices:
-        climate_devices[device._thermostat_id] = device
+        climate_devices[device.thermostat_id] = device
 
     def _service_enable_pairing(service):
         duration = service.data.get(ATTR_DURATION)
@@ -156,14 +156,14 @@ class MaxCulClimate(ClimateDevice):
         """Initialize a new device for the given thermostat id."""
         self.entity_id = "climate.maxcul_thermostat_{:x}".format(thermostat_id)
         self._name = "Thermostat {:x}".format(thermostat_id)
-        self._thermostat_id = thermostat_id
+        self.thermostat_id = thermostat_id
         self._maxcul_handle = maxconn
         self._current_temperature = None
         self._target_temperature = None
         self._mode = None
         self._battery_low = None
 
-        self._maxcul_handle.wakeup(self._thermostat_id)
+        self._maxcul_handle.wakeup(self.thermostat_id)
 
     def update_from_event(self, event):
         """Handle thermostat update events."""
@@ -257,13 +257,13 @@ class MaxCulClimate(ClimateDevice):
             return False
 
         return self._maxcul_handle.set_temperature(
-            self._thermostat_id,
+            self.thermostat_id,
             target_temperature,
             self._mode or MODE_MANUAL)
 
     def set_operation_mode(self, operation_mode):
         """Set the operation mode of this device."""
         return self._maxcul_handle.set_temperature(
-            self._thermostat_id,
+            self.thermostat_id,
             self._target_temperature or DEFAULT_TEMPERATURE,
             operation_mode)
