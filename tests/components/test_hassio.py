@@ -89,6 +89,33 @@ def test_setup_api_push_api_data(hass, aioclient_mock):
     assert not aioclient_mock.mock_calls[-1][2]['ssl']
     assert aioclient_mock.mock_calls[-1][2]['password'] == "123456"
     assert aioclient_mock.mock_calls[-1][2]['port'] == 9999
+    assert aioclient_mock.mock_calls[-1][2]['watchdog']
+
+
+@asyncio.coroutine
+def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
+    """Test setup with API push with active server host."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
+
+    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+        result = yield from async_setup_component(hass, 'hassio', {
+            'http': {
+                'api_password': "123456",
+                'server_port': 9999,
+                'server_host': "127.0.0.1"
+            },
+            'hassio': {}
+        })
+        assert result
+
+    assert aioclient_mock.call_count == 2
+    assert not aioclient_mock.mock_calls[-1][2]['ssl']
+    assert aioclient_mock.mock_calls[-1][2]['password'] == "123456"
+    assert aioclient_mock.mock_calls[-1][2]['port'] == 9999
+    assert not aioclient_mock.mock_calls[-1][2]['watchdog']
 
 
 @asyncio.coroutine
