@@ -18,7 +18,7 @@ def hassio_env():
     """Fixture to inject hassio env."""
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
-                  Mock(return_value=mock_coro(True))), \
+                  Mock(return_value=mock_coro({"result": "ok", "data": {}}))), \
             patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}):
         yield
 
@@ -49,7 +49,7 @@ def test_fail_setup_cannot_connect(hass):
     """Fail setup if cannot connect."""
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
-                  Mock(return_value=mock_coro(False))):
+                  Mock(return_value=mock_coro(None))):
         result = yield from async_setup_component(hass, 'hassio', {})
         assert not result
 

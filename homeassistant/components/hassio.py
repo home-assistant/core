@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/hassio/
 """
 import asyncio
+from datetime import timedelta
 import logging
 import os
 import re
@@ -22,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SERVER_HOST, CONF_SSL_CERTIFICATE)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,9 @@ DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
 
 X_HASSIO = 'X-HASSIO-KEY'
+
+DATA_HOMEASSISTANT_VERSION = 'HASSIO_HASS_VERSION'
+HASSIO_UPDATE_INTERVAL = timedelta(hours=1)
 
 SERVICE_ADDON_START = 'addon_start'
 SERVICE_ADDON_STOP = 'addon_stop'
@@ -111,6 +115,12 @@ MAP_SERVICE_API = {
 }
 
 
+@bind_hass
+def get_homeassistant_version(hass):
+    """Return last available HomeAssistant version."""
+    return hass.data.get(DATA_HOMEASSISTANT_VERSION)
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the HASSio component."""
@@ -120,7 +130,7 @@ def async_setup(hass, config):
         _LOGGER.error("No HassIO supervisor detect!")
         return False
 
-    websession = async_get_clientsession(hass)
+    websession = hass.helpers.aiohttp_client.async_get_clientsession()
     hassio = HassIO(hass.loop, websession, host)
 
     if not (yield from hassio.is_connected()):
@@ -163,6 +173,15 @@ def async_setup(hass, config):
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=settings[1])
+
+    @asyncio.coroutine
+    def update_homeassistant_version(now):
+        """Update last available HomeAssistant version."""
+        data = yield from hassio.send_command('/homeassistant/info')
+        if data.get("result") != "ok":
+            return
+        hass.data[DATA_HOMEASSISTANT_VERSION] = \
+            data['data']['last_homeassistant']
 
     return True
 
@@ -228,10 +247,10 @@ class HassIO(object):
                 if request.status != 200:
                     _LOGGER.error(
                         "%s return code %d.", command, request.status)
-                    return False
+                    return None
 
                 answer = yield from request.json()
-                return answer.get('result') == 'ok'
+                return answer
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
@@ -239,7 +258,7 @@ class HassIO(object):
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
-        return False
+        return None
 
     @asyncio.coroutine
     def command_proxy(self, path, request):
