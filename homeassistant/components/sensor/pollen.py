@@ -17,16 +17,17 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pypollencom==1.1.0']
+REQUIREMENTS = ['pypollencom==1.1.1']
 _LOGGER = getLogger(__name__)
 
 ATTR_ALLERGEN_GENUS = 'primary_allergen_genus'
 ATTR_ALLERGEN_NAME = 'primary_allergen_name'
-ATTR_ALLERGEN_TYPE = 'primary_allergen_plant_type'
-ATTR_ALLERGY_OUTLOOK = 'allergy_outlook'
-ATTR_ALLERGY_SEASON = 'allergy_season'
-ATTR_ALLERGY_TREND = 'allergy_trend'
+ATTR_ALLERGEN_TYPE = 'primary_allergen_type'
 ATTR_CITY = 'city'
+ATTR_OUTLOOK = 'outlook'
+ATTR_RATING = 'rating'
+ATTR_SEASON = 'season'
+ATTR_TREND = 'trend'
 ATTR_ZIP_CODE = 'zip_code'
 
 CONF_ZIP_CODE = 'zip_code'
@@ -81,6 +82,29 @@ CONDITIONS = {
     )
 }
 
+RATING_MAPPING = [{
+    'label': 'Low',
+    'minimum': 0.0,
+    'maximum': 2.4
+}, {
+    'label': 'Low/Medium',
+    'minimum': 2.5,
+    'maximum': 4.8
+}, {
+    'label': 'Medium',
+    'minimum': 4.9,
+    'maximum': 7.2
+}, {
+    'label': 'Medium/High',
+    'minimum': 7.3,
+    'maximum': 9.6
+}, {
+    'label': 'High',
+    'minimum': 9.7,
+    'maximum': 12
+}]
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ZIP_CODE): cv.positive_int,
     vol.Required(CONF_MONITORED_CONDITIONS):
@@ -90,11 +114,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
-    import pypollencom
+    from pypollencom import Client
 
     _LOGGER.debug('Configuration data: %s', config)
 
-    client = pypollencom.Client(config[CONF_ZIP_CODE])
+    client = Client(config[CONF_ZIP_CODE])
     datas = {
         'allergy_average_data': AllergyAveragesData(client),
         'allergy_index_data': AllergyIndexData(client),
@@ -117,9 +141,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-def average_of_list(the_list, decimal_places=1):
+def average_of_list(list_of_nums, decimal_places=1):
     """Returns the average of a list of ints."""
-    return round(sum(the_list, 0.0)/len(the_list), decimal_places)
+    return round(sum(list_of_nums, 0.0)/len(list_of_nums), decimal_places)
+
+
+def calculate_trend(list_of_nums):
+    """Returns the average of a list of ints."""
+    ratings = list(
+        map(
+            (lambda n: [
+                r['label'] for r in RATING_MAPPING
+                if r['minimum'] <= n <= r['maximum']
+            ][0]),
+            list_of_nums
+        )
+    )
+    return max(set(ratings), key=ratings.count)
 
 
 def merge_two_dicts(dict1, dict2):
@@ -184,10 +222,20 @@ class AllergyAverageSensor(BaseSensor):
             p['Index']
             for p in data_attr['Location']['periods']
         ]
+        average = average_of_list(indices)
+
         self._attrs[ATTR_CITY] = data_attr['Location']['City'].title()
         self._attrs[ATTR_STATE] = data_attr['Location']['State']
+        self._attrs[ATTR_TREND] = calculate_trend(indices)
         self._attrs[ATTR_ZIP_CODE] = data_attr['Location']['ZIP']
-        self._state = average_of_list(indices)
+
+        [rating] = [
+            i['label'] for i in RATING_MAPPING
+            if i['minimum'] <= average <= i['maximum']
+        ]
+        self._attrs[ATTR_RATING] = rating
+
+        self._state = average
         self._unit = 'index'
 
 
@@ -203,26 +251,26 @@ class AllergyIndexSensor(BaseSensor):
             p for p in location_data['periods']
             if p['Type'] == self._data_params['key']
         ]
+
         self._attrs[ATTR_CITY] = location_data['City'].title()
         self._attrs[ATTR_ALLERGEN_GENUS] = period['Triggers'][0]['Genus']
         self._attrs[ATTR_ALLERGEN_NAME] = period['Triggers'][0]['Name']
         self._attrs[ATTR_ALLERGEN_TYPE] = period['Triggers'][0]['PlantType']
-        self._attrs[ATTR_ALLERGY_OUTLOOK] = self.data.outlook_data['Outlook']
-        self._attrs[ATTR_ALLERGY_SEASON] = self.data.outlook_data['Season']
-        self._attrs[ATTR_ALLERGY_TREND] = self.data.outlook_data[
+        self._attrs[ATTR_OUTLOOK] = self.data.outlook_data['Outlook']
+        self._attrs[ATTR_SEASON] = self.data.outlook_data['Season']
+        self._attrs[ATTR_TREND] = self.data.outlook_data[
             'Trend'].title()
         self._attrs[ATTR_STATE] = location_data['State']
         self._attrs[ATTR_ZIP_CODE] = location_data['ZIP']
+
+        [rating] = [
+            i['label'] for i in RATING_MAPPING
+            if i['minimum'] <= period['Index'] <= i['maximum']
+        ]
+        self._attrs[ATTR_RATING] = rating
+
         self._state = period['Index']
         self._unit = 'index'
-
-
-class DiseaseIndexSensor(BaseSensor):
-    """Define a sensor to show disease index information."""
-
-    def update(self):
-        """Update the status of the sensor."""
-        self.data.update()
 
 
 class AllergyAveragesData(object):
@@ -237,7 +285,7 @@ class AllergyAveragesData(object):
     @Throttle(MIN_TIME_UPDATE_AVERAGES)
     def update(self):
         """Update with new data."""
-        import pypollencom.exceptions as exceptions
+        from pypollencom.exceptions import HTTPError
 
         try:
             self.extended_data = self._client.allergens.extended()
@@ -247,11 +295,8 @@ class AllergyAveragesData(object):
             self.historic_data = self._client.allergens.historic()
             _LOGGER.debug('Received "historic" allergy data: %s',
                           self.historic_data)
-        except exceptions.BadZipCodeError:
-            _LOGGER.error('No valid data for ZIP code: %s',
-                          self._client.zip_code)
-        except exceptions.HTTPError as exc:
-            _LOGGER.error('An unknown error occurred while retrieving data')
+        except HTTPError as exc:
+            _LOGGER.error('An error occurred while retrieving allergen data')
             _LOGGER.debug(exc)
 
 
@@ -267,7 +312,7 @@ class AllergyIndexData(object):
     @Throttle(MIN_TIME_UPDATE_INDICES)
     def update(self):
         """Update with new AirVisual data."""
-        import pypollencom.exceptions as exceptions
+        from pypollencom.exceptions import HTTPError
 
         try:
             self.current_data = self._client.allergens.current()
@@ -277,11 +322,8 @@ class AllergyIndexData(object):
             self.outlook_data = self._client.allergens.outlook()
             _LOGGER.debug('Received "outlook" allergy data: %s',
                           self.outlook_data)
-        except exceptions.BadZipCodeError:
-            _LOGGER.error('No valid data for ZIP code: %s',
-                          self._client.zip_code)
-        except exceptions.HTTPError as exc:
-            _LOGGER.error('An unknown error occurred while retrieving data')
+        except HTTPError as exc:
+            _LOGGER.error('An error occurred while retrieving allergen data')
             _LOGGER.debug(exc)
 
 
@@ -296,15 +338,12 @@ class DiseaseData(object):
     @Throttle(MIN_TIME_UPDATE_INDICES)
     def update(self):
         """Update with new AirVisual data."""
-        import pypollencom.exceptions as exceptions
+        from pypollencom.exceptions import HTTPError
 
         try:
             self.extended_data = self._client.disease.extended()
             _LOGGER.debug('Received "extended" disease data: %s',
                           self.extended_data)
-        except exceptions.BadZipCodeError:
-            _LOGGER.error('No valid data for ZIP code: %s',
-                          self._client.zip_code)
-        except exceptions.HTTPError as exc:
-            _LOGGER.error('An unknown error occurred while retrieving data')
+        except HTTPError as exc:
+            _LOGGER.error('An error occurred while retrieving disease data')
             _LOGGER.debug(exc)
