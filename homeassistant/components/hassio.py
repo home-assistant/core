@@ -193,9 +193,11 @@ class HassIO(object):
             'ssl': CONF_SSL_CERTIFICATE in http_config,
             'port': port,
             'password': http_config.get(CONF_API_PASSWORD),
+            'watchdog': True,
         }
 
         if CONF_SERVER_HOST in http_config:
+            options['watchdog'] = False
             _LOGGER.warning("Don't use 'server_host' options with Hass.io!")
 
         return self.send_command("/homeassistant/options", payload=options)
@@ -220,7 +222,7 @@ class HassIO(object):
                 request = yield from self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
                     json=payload, headers={
-                        X_HASSIO: os.environ.get('API_TOKEN')
+                        X_HASSIO: os.environ.get('HASSIO_TOKEN')
                     })
 
                 if request.status != 200:
