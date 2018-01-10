@@ -14,7 +14,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
+    CONF_PASSWORD, CONF_USERNAME)
 
 CONF_HTTP_ID = 'http_id'
 
@@ -22,6 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=80): cv.port,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=""): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_HTTP_ID): cv.string
@@ -39,10 +44,20 @@ class TomatoDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         host, http_id = config[CONF_HOST], config[CONF_HTTP_ID]
+        port = config[CONF_PORT]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
+        self.ssl, self.verify_ssl = config[CONF_SSL], config[CONF_VERIFY_SSL]
+
+        if self.ssl:
+            try:
+                self.verify_ssl = cv.boolean(self.verify_ssl)
+            except vol.Invalid:
+                pass
 
         self.req = requests.Request(
-            'POST', 'http://{}/update.cgi'.format(host),
+            'POST', 'http{}://{}:{}/update.cgi'.format(
+                "s" if self.ssl else "", host, port
+            ),
             data={'_http_id': http_id, 'exec': 'devlist'},
             auth=requests.auth.HTTPBasicAuth(username, password)).prepare()
 
@@ -77,7 +92,13 @@ class TomatoDeviceScanner(DeviceScanner):
         self.logger.info("Scanning")
 
         try:
-            response = requests.Session().send(self.req, timeout=3)
+            if self.ssl:
+                response = requests.Session().send(self.req,
+                                                   timeout=3,
+                                                   verify=self.verify_ssl)
+            else:
+                response = requests.Session().send(self.req, timeout=3)
+
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
             if response.status_code == 200:
