@@ -74,6 +74,7 @@ def test_setup_api_ping(hass, aioclient_mock):
         assert result
 
     assert aioclient_mock.call_count == 2
+    assert hass.data['hassio_hass_version'] == "10.0"
 
 
 @asyncio.coroutine
