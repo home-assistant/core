@@ -183,6 +183,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
                     self._thermostat.target_temperature
                     != self._target_temperature):
                 self.set_temperature(temperature=self._target_temperature)
+            else:
+                self._target_temperature = None
             if (self._target_mode and
                     self.modes[self._thermostat.mode] != self._target_mode):
                 self.set_operation_mode(operation_mode=self._target_mode)
