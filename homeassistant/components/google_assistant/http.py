@@ -39,7 +39,7 @@ def async_register_http(hass, cfg):
     expose_by_default = cfg.get(CONF_EXPOSE_BY_DEFAULT)
     exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS)
     agent_user_id = cfg.get(CONF_AGENT_USER_ID)
-    entity_config = cfg.get(CONF_ENTITY_CONFIG)
+    entity_config = cfg.get(CONF_ENTITY_CONFIG) or {}
 
     def is_exposed(entity) -> bool:
         """Determine if an entity should be exposed to Google Assistant."""
