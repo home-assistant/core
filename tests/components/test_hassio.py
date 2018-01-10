@@ -19,7 +19,7 @@ def hassio_env():
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
                   Mock(return_value=mock_coro(True))), \
-            patch.dict(os.environ, {'API_TOKEN': "123456"}):
+            patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}):
         yield
 
 
@@ -140,14 +140,14 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
 
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
-            patch.dict(os.environ, {'API_TOKEN': "123456"}):
+            patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}):
         result = yield from async_setup_component(hass, 'hassio', {
             'hassio': {},
         })
         assert result
 
     assert aioclient_mock.call_count == 1
-    assert aioclient_mock.headers['API_TOKEN'] == "123456"
+    assert aioclient_mock.headers['X-HASSIO-KEY'] == "123456"
 
 
 @asyncio.coroutine
