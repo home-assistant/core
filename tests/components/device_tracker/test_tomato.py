@@ -22,7 +22,8 @@ def mock_session_response(*args, **kwargs):
     elif "gimmie_bad_data" in args[0].body:
         return MockSessionResponse('This shouldn\'t (wldev = be here.;', 200)
     elif "gimmie_good_data" in args[0].body:
-        return MockSessionResponse("wldev = [ ['eth1','F4:F5:D8:AA:AA:AA',"
+        return MockSessionResponse(
+            "wldev = [ ['eth1','F4:F5:D8:AA:AA:AA',"
             "-42,5500,1000,7043,0],['eth1','58:EF:68:00:00:00',"
             "-42,5500,1000,7043,0]];\n"
             "dhcpd_lease = [ ['chromecast','172.10.10.5','F4:F5:D8:AA:AA:AA',"
