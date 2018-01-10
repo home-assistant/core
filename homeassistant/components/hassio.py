@@ -100,19 +100,23 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend({
 })
 
 MAP_SERVICE_API = {
-    SERVICE_ADDON_START: ('/addons/{addon}/start', SCHEMA_ADDON, 60),
-    SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON, 60),
-    SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON, 60),
-    SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60),
-    SERVICE_HOST_SHUTDOWN: ('/host/shutdown', SCHEMA_NO_DATA, 60),
-    SERVICE_HOST_REBOOT: ('/host/reboot', SCHEMA_NO_DATA, 60),
-    SERVICE_SNAPSHOT_FULL: ('/snapshots/new/full', SCHEMA_SNAPSHOT_FULL, 300),
-    SERVICE_SNAPSHOT_PARTIAL: ('/snapshots/new/partial',
-                               SCHEMA_SNAPSHOT_PARTIAL, 300),
-    SERVICE_RESTORE_FULL: ('/snapshots/{snapshot}/restore/full',
-                           SCHEMA_RESTORE_FULL, 300),
-    SERVICE_RESTORE_PARTIAL: ('/snapshots/{snapshot}/restore/partial',
-                              SCHEMA_RESTORE_PARTIAL, 300),
+    SERVICE_ADDON_START: ('/addons/{addon}/start', SCHEMA_ADDON, 60, False),
+    SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON, 60, False),
+    SERVICE_ADDON_RESTART:
+        ('/addons/{addon}/restart', SCHEMA_ADDON, 60, False),
+    SERVICE_ADDON_STDIN:
+        ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60, False),
+    SERVICE_HOST_SHUTDOWN: ('/host/shutdown', SCHEMA_NO_DATA, 60, False),
+    SERVICE_HOST_REBOOT: ('/host/reboot', SCHEMA_NO_DATA, 60, False),
+    SERVICE_SNAPSHOT_FULL:
+        ('/snapshots/new/full', SCHEMA_SNAPSHOT_FULL, 300, True),
+    SERVICE_SNAPSHOT_PARTIAL:
+        ('/snapshots/new/partial', SCHEMA_SNAPSHOT_PARTIAL, 300, True),
+    SERVICE_RESTORE_FULL:
+        ('/snapshots/{snapshot}/restore/full', SCHEMA_RESTORE_FULL, 300, True),
+    SERVICE_RESTORE_PARTIAL:
+        ('/snapshots/{snapshot}/restore/partial', SCHEMA_RESTORE_PARTIAL, 300,
+         True),
 }
 
 
@@ -162,7 +166,7 @@ def async_setup(hass, config):
         # Pass data to hass.io API
         if service.service == SERVICE_ADDON_STDIN:
             payload = data[ATTR_INPUT]
-        elif data:
+        elif MAP_SERVICE_API[service.service][3]:
             payload = data
 
         # Call API
