@@ -10,6 +10,7 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
 
 
 def mock_session_response(*args, **kwargs):
+    """Mock data generation for session response."""
     class MockSessionResponse:
         def __init__(self, text, status_code):
             self.text = text
