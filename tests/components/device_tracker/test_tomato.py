@@ -67,7 +67,8 @@ def test_config_missing_optional_params(hass, mock_session_send):
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic Zm9vOnBhc3N3b3Jk'
         }
-    assert result.req.body == "_http_id=1234567890&exec=devlist"
+    assert "_http_id=1234567890" in result.req.body
+    assert "exec=devlist" in result.req.body
 
 
 @mock.patch('os.access', return_value=True)
@@ -93,7 +94,8 @@ def test_config_verify_ssl_but_no_ssl_enabled(hass, mock_session_send):
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic Zm9vOnBhc3N3b3Jk'
         }
-    assert result.req.body == "_http_id=1234567890&exec=devlist"
+    assert "_http_id=1234567890" in result.req.body
+    assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
     assert mock_session_send.mock_calls[0] == \
         mock.call(result.req, timeout=3)
