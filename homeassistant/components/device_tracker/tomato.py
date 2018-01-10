@@ -20,13 +20,14 @@ from homeassistant.const import (
 
 CONF_HTTP_ID = 'http_id'
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("{}.{}".format(__name__, "Tomato"))
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=80): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=""): cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=True): vol.Any(
+        cv.boolean, cv.isfile),
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_HTTP_ID): cv.string
@@ -48,12 +49,6 @@ class TomatoDeviceScanner(DeviceScanner):
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
         self.ssl, self.verify_ssl = config[CONF_SSL], config[CONF_VERIFY_SSL]
 
-        if self.ssl:
-            try:
-                self.verify_ssl = cv.boolean(self.verify_ssl)
-            except vol.Invalid:
-                pass
-
         self.req = requests.Request(
             'POST', 'http{}://{}:{}/update.cgi'.format(
                 "s" if self.ssl else "", host, port
@@ -63,7 +58,6 @@ class TomatoDeviceScanner(DeviceScanner):
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
-        self.logger = logging.getLogger("{}.{}".format(__name__, "Tomato"))
         self.last_results = {"wldev": [], "dhcpd_lease": []}
 
         self.success_init = self._update_tomato_info()
@@ -89,7 +83,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        self.logger.info("Scanning")
+        _LOGGER.info("Scanning")
 
         try:
             if self.ssl:
@@ -113,7 +107,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
             elif response.status_code == 401:
                 # Authentication error
-                self.logger.exception((
+                _LOGGER.exception((
                     "Failed to authenticate, "
                     "please check your username and password"))
                 return False
@@ -121,17 +115,17 @@ class TomatoDeviceScanner(DeviceScanner):
         except requests.exceptions.ConnectionError:
             # We get this if we could not connect to the router or
             # an invalid http_id was supplied.
-            self.logger.exception("Failed to connect to the router or "
-                                  "invalid http_id supplied")
+            _LOGGER.exception("Failed to connect to the router or "
+                              "invalid http_id supplied")
             return False
 
         except requests.exceptions.Timeout:
             # We get this if we could not connect to the router or
             # an invalid http_id was supplied.
-            self.logger.exception("Connection to the router timed out")
+            _LOGGER.exception("Connection to the router timed out")
             return False
 
         except ValueError:
             # If JSON decoder could not parse the response.
-            self.logger.exception("Failed to parse response from router")
+            _LOGGER.exception("Failed to parse response from router")
             return False
