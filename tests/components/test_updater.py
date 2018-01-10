@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch, Mock
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.setup import async_setup_component
@@ -39,7 +38,6 @@ def mock_get_uuid():
 
 
 @asyncio.coroutine
-@freeze_time("Mar 15th, 2017")
 def test_new_version_shows_entity_after_hour(
         hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
@@ -59,7 +57,6 @@ def test_new_version_shows_entity_after_hour(
 
 
 @asyncio.coroutine
-@freeze_time("Mar 15th, 2017")
 def test_same_version_not_show_entity(
         hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
@@ -79,7 +76,6 @@ def test_same_version_not_show_entity(
 
 
 @asyncio.coroutine
-@freeze_time("Mar 15th, 2017")
 def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
