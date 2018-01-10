@@ -65,6 +65,8 @@ NO_AUTH = {
     re.compile(r'^panel_(es5|latest)$'), re.compile(r'^addons/[^/]*/logo$')
 }
 
+SCHEMA_NO_DATA = vol.Schema({})
+
 SCHEMA_ADDON = vol.Schema({
     vol.Required(ATTR_ADDON): cv.slug,
 })
@@ -97,8 +99,8 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON, 60),
     SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON, 60),
     SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60),
-    SERVICE_HOST_SHUTDOWN: ('/host/shutdown', None, 60),
-    SERVICE_HOST_REBOOT: ('/host/reboot', None, 60),
+    SERVICE_HOST_SHUTDOWN: ('/host/shutdown', SCHEMA_NO_DATA, 60),
+    SERVICE_HOST_REBOOT: ('/host/reboot', SCHEMA_NO_DATA, 60),
     SERVICE_SNAPSHOT_FULL: ('/snapshots/new/full', SERVICE_SNAPSHOT_FULL, 300),
     SERVICE_SNAPSHOT_PARTIAL: ('/snapshots/new/partial',
                                SERVICE_SNAPSHOT_PARTIAL, 300),
@@ -141,15 +143,16 @@ def async_setup(hass, config):
     def async_service_handler(service):
         """Handle service calls for HassIO."""
         api_command = MAP_SERVICE_API[service.service][0]
-        addon = service.data.pop(ATTR_ADDON)
-        snapshot = service.data.pop(ATTR_SNAPSHOT)
+        data = service.data.copy()
+        addon = data.pop(ATTR_ADDON)
+        snapshot = data.pop(ATTR_SNAPSHOT)
         payload = None
 
         # Pass data to hass.io API
-        if ATTR_INPUT in service.data:
-            payload = service.data[ATTR_INPUT]
-        elif service.data:
-            payload = service.data.copy()
+        if service.service == SERVICE_ADDON_STDIN:
+            payload = data[ATTR_INPUT]
+        elif data:
+            payload = data
 
         # Call API
         yield from hassio.send_command(
