@@ -59,7 +59,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for dev_name, properties in switches.items():
         devices.append(
             RPiRFSwitch(
-                hass,
                 properties.get(CONF_NAME, dev_name),
                 rfdevice,
                 rfdevice_lock,
