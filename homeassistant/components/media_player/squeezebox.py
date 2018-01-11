@@ -8,13 +8,11 @@ import logging
 import asyncio
 import urllib.parse
 import json
-import os
 import aiohttp
 import async_timeout
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, SUPPORT_PLAY_MEDIA,
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
@@ -126,15 +124,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]['schema']
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
-            description=descriptions.get(service), schema=schema)
+            schema=schema)
 
     return True
 
