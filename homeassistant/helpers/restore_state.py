@@ -13,7 +13,7 @@ from homeassistant.components.recorder import (
     wait_connection_ready, DOMAIN as _RECORDER)
 import homeassistant.util.dt as dt_util
 
-RECORDER_TIMEOUT = 10
+RECORDER_TIMEOUT = 30
 DATA_RESTORE_CACHE = 'restore_state_cache'
 _LOCK = 'restore_lock'
 _LOGGER = logging.getLogger(__name__)
