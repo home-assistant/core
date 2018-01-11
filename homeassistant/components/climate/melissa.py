@@ -11,8 +11,7 @@ from homeassistant.components.climate import ClimateDevice, \
     STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, \
     SUPPORT_FAN_MODE
 from homeassistant.components.fan import SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
-from homeassistant.components.melissa import DATA_MELISSA, DOMAIN, \
-    CHANGE_THRESHOLD
+from homeassistant.components.melissa import DATA_MELISSA, DOMAIN
 from homeassistant.const import TEMP_CELSIUS, STATE_ON, STATE_OFF, \
     STATE_UNKNOWN, STATE_IDLE, ATTR_TEMPERATURE
 
@@ -29,21 +28,20 @@ ICON = "mdi:thermometer"
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Iterate through and add all Melissa devices."""
     connection = hass.data[DATA_MELISSA]
-    devices = connection.fetch_devices()
+    devices = connection.fetch_devices().values()
 
     all_devices = []
 
-    for device in devices.values():
-
-        all_devices.append(MelissaClimate(
-            connection, device['serial_number'], device))
+    for device in devices:
+        all_devices += [
+            MelissaClimate(connection, device['serial_number'], device)]
 
     if all_devices:
         add_devices(all_devices)
 
 
 class MelissaClimate(ClimateDevice):
-    """Representation of a Melissa Climate."""
+    """Representation of a Melissa Climate device."""
 
     def __init__(self, connection, serial_number, init_data):
         """Initialize the climate device."""
@@ -53,7 +51,6 @@ class MelissaClimate(ClimateDevice):
         self._data = init_data['controller_log']
         self._state = None
         self._cur_settings = None
-        self._latest_temp = None
 
     @property
     def name(self):
@@ -84,11 +81,7 @@ class MelissaClimate(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if not self._latest_temp or abs(
-                self._latest_temp - self._data[
-                    self._connection.TEMP]) < CHANGE_THRESHOLD:
-            self._latest_temp = self._data[self._connection.TEMP]
-        return self._latest_temp
+        return self._data[self._connection.TEMP]
 
     @property
     def target_temperature_step(self):
@@ -177,8 +170,11 @@ class MelissaClimate(ClimateDevice):
 
     def send(self, value):
         """Sending action to service."""
-        old_value = self._cur_settings.copy()
-        self._cur_settings.update(value)
+        try:
+            old_value = self._cur_settings.copy()
+            self._cur_settings.update(value)
+        except AttributeError:
+            old_value = None
         if not self._connection.send(self._serial_number, self._cur_settings):
             self._cur_settings = old_value
             return False
@@ -187,7 +183,7 @@ class MelissaClimate(ClimateDevice):
 
     def update(self):
         """Get latest data from Melissa."""
-        self._data = self._connection.status()[self._serial_number]
+        self._data = self._connection.status(cached=True)[self._serial_number]
         self._cur_settings = self._connection.cur_settings(
             self._serial_number
         )['controller']['_relation']['command_log']

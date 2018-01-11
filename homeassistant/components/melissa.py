@@ -12,13 +12,12 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ["py-melissa-climate==0.4.0"]
+REQUIREMENTS = ["py-melissa-climate==1.0.1"]
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "melissa"
 DATA_MELISSA = 'MELISSA'
-CHANGE_THRESHOLD = 10
 
 
 CONFIG_SCHEMA = vol.Schema({
