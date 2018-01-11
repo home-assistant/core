@@ -53,6 +53,8 @@ def setup(hass, config):
         _LOGGER.error("Unable to fetch car details... do you actually have a Leaf connected to your account?")
         return False
 
+    _LOGGER.Info("WARNING: This component may poll your Leaf too often, and drain the 12V. If you drain your car's 12V it won't start as the drive train battery won't connect, so you have been warned.")
+
     hass.data[DATA_LEAF] = LeafDataStore(leaf)
 
     for component in LEAF_COMPONENTS:
