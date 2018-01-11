@@ -175,4 +175,3 @@ class PushsaferNotificationService(BaseNotificationService):
             _LOGGER.error("Can't load from local path: %s", error)
 
         return None
-    
