@@ -184,9 +184,9 @@ class UnifiVideoCamera(Camera):
         try:
             self._nvr.set_recordmode(self._uuid, set_mode)
             self._motion_status = mode
-        except NvrError as e:
+        except NvrError as err:
             _LOGGER.error("Unable to set recordmode to " + set_mode)
-            _LOGGER.debug(e)
+            _LOGGER.debug(err)
 
     def enable_motion_detection(self):
         """Enable motion detection in camera."""
