@@ -97,7 +97,7 @@ def async_setup(hass, config):
 
         newest, releasenotes = result
 
-        # Skeep on dev
+        # Skip on dev
         if newest is None or 'dev' in current_version:
             return
 

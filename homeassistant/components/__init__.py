@@ -159,17 +159,10 @@ def async_setup(hass, config):
     def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            if hass.components.hassio.is_hassio():
-                hass.components.hassio.async_stop()
-            else:
-                hass.async_add_job(hass.async_stop())
-            return
+            hass.async_add_job(hass.async_stop())
 
         try:
-            if hass.components.hassio.is_hassio():
-                errors = yield from hass.components.hassio.async_check_config()
-            else:
-                errors = yield from conf_util.async_check_ha_config_file(hass)
+            errors = yield from conf_util.async_check_ha_config_file(hass)
         except HomeAssistantError:
             return
 
@@ -181,10 +174,7 @@ def async_setup(hass, config):
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            if hass.components.hassio.is_hassio():
-                hass.components.hassio.async_restart()
-            else:
-                hass.async_add_job(hass.async_stop(RESTART_EXIT_CODE))
+            hass.async_add_job(hass.async_stop(RESTART_EXIT_CODE))
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)

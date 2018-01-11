@@ -17,9 +17,11 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
 from homeassistant.const import (
-    CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT, CONF_TIME_ZONE)
+    CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT, CONF_TIME_ZONE,
+    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
+from homeassistant.components import SERVICE_CHECK_CONFIG
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SERVER_HOST, CONF_SSL_CERTIFICATE)
@@ -43,8 +45,6 @@ SERVICE_ADDON_RESTART = 'addon_restart'
 SERVICE_ADDON_STDIN = 'addon_stdin'
 SERVICE_HOST_SHUTDOWN = 'host_shutdown'
 SERVICE_HOST_REBOOT = 'host_reboot'
-SERVICE_HOMEASSISTANT_RESTART = 'homeassistant_restart'
-SERVICE_HOMEASSISTANT_STOP = 'homeassistant_stop'
 SERVICE_SNAPSHOT_FULL = 'snapshot_full'
 SERVICE_SNAPSHOT_PARTIAL = 'snapshot_partial'
 SERVICE_RESTORE_FULL = 'restore_full'
@@ -111,10 +111,6 @@ MAP_SERVICE_API = {
         ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN, 60, False),
     SERVICE_HOST_SHUTDOWN: ('/host/shutdown', SCHEMA_NO_DATA, 60, False),
     SERVICE_HOST_REBOOT: ('/host/reboot', SCHEMA_NO_DATA, 60, False),
-    SERVICE_HOMEASSISTANT_RESTART:
-        ('/homeassistant/restart', SCHEMA_NO_DATA, 60, False),
-    SERVICE_HOMEASSISTANT_STOP:
-        ('/homeassistant/stop', SCHEMA_NO_DATA, 60, False),
     SERVICE_SNAPSHOT_FULL:
         ('/snapshots/new/full', SCHEMA_SNAPSHOT_FULL, 300, True),
     SERVICE_SNAPSHOT_PARTIAL:
@@ -125,22 +121,6 @@ MAP_SERVICE_API = {
         ('/snapshots/{snapshot}/restore/partial', SCHEMA_RESTORE_PARTIAL, 300,
          True),
 }
-
-
-@callback
-@bind_hass
-def async_stop(hass):
-    """Stop HomeAssistant."""
-    hass.async_add_job(
-        hass.services.async_call(DOMAIN, SERVICE_HOMEASSISTANT_STOP))
-
-
-@callback
-@bind_hass
-def async_restart(hass):
-    """Stop HomeAssistant."""
-    hass.async_add_job(
-        hass.services.async_call(DOMAIN, SERVICE_HOMEASSISTANT_RESTART))
 
 
 @callback
@@ -185,7 +165,7 @@ def async_setup(hass, config):
         return False
 
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
-    hassio = HassIO(hass.loop, websession, host)
+    hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not (yield from hassio.is_connected()):
         _LOGGER.error("Not connected with HassIO!")
@@ -245,7 +225,30 @@ def async_setup(hass, config):
     # Fetch last version
     yield from update_homeassistant_version(None)
 
-    hass.data[DOMAIN] = hassio
+    @asyncio.coroutine
+    def async_handle_core_service(call):
+        """Service handler for handling core services."""
+        if call.service == SERVICE_HOMEASSISTANT_STOP:
+            yield from hassio.send_command('/homeassistant/stop')
+            return
+
+        error = yield from async_check_config(hass)
+        if error:
+            _LOGGER.error(error)
+            hass.components.persistent_notification.async_create(
+                "Config error. See dev-info panel for details.",
+                "Config validating", "{0}.check_config".format(HASS_DOMAIN))
+            return
+
+        if call.service == SERVICE_HOMEASSISTANT_RESTART:
+            yield from hassio.send_command('/homeassistant/restart')
+
+    # Mock core services
+    for service in (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
+                    SERVICE_CHECK_CONFIG):
+        hass.services.async_register(
+            HASS_DOMAIN, service, async_handle_core_service)
+
     return True
 
 
