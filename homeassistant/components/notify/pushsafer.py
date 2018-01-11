@@ -38,6 +38,9 @@ ATTR_SOUND_DEFAULT = ''
 ATTR_VIBRATION_DEFAULT = ''
 ATTR_ICON_DEFAULT = ''
 ATTR_ICONCOLOR_DEFAULT = ''
+ATTR_URL_DEFAULT = ''
+ATTR_URLTITLE_DEFAULT = ''
+ATTR_TIME2LIVE_DEFAULT = ''
 
 # Attributes contained in picture1
 ATTR_PICTURE1_URL = 'url'
@@ -110,9 +113,9 @@ class PushsaferNotificationService(BaseNotificationService):
             'v': data.get(ATTR_VIBRATION, ATTR_VIBRATION_DEFAULT),
             'i': data.get(ATTR_ICON, ATTR_ICON_DEFAULT),
             'c': data.get(ATTR_ICONCOLOR, ATTR_ICONCOLOR_DEFAULT),
-            'u': data.get(ATTR_URL),
-            'ut': data.get(ATTR_URLTITLE),
-            'l': data.get(ATTR_TIME2LIVE),
+            'u': data.get(ATTR_URL, ATTR_URL_DEFAULT),
+            'ut': data.get(ATTR_URLTITLE, ATTR_URLTITLE_DEFAULT),
+            'l': data.get(ATTR_TIME2LIVE, ATTR_TIME2LIVE_DEFAULT),
             'p': picture1_encoded
         }
 
