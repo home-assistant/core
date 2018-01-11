@@ -62,6 +62,7 @@ CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FILENAME): cv.template
 })
 
+
 @bind_hass
 def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
@@ -397,26 +398,19 @@ class CameraImageView(CameraView):
         """Serve camera image."""
         from urllib.parse import urlparse, parse_qs
         query = parse_qs(urlparse(str(request.url)).query)
+        hass = request.app['hass']
 
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10, loop=request.app['hass'].loop):
+            with async_timeout.timeout(10, loop=hass.loop):
                 image = yield from camera.async_camera_image()
 
-            if (image and camera.content_type == DEFAULT_CONTENT_TYPE and
-                    query and int(query.get('maxwidth', [0])[0]) > 0):
-                from PIL import Image
-                import io
-                img = Image.open(io.BytesIO(image))
-                max_width = int(query['maxwidth'][0])
-                if img.size[0] > max_width:
-                    scale = max_width / float(img.size[0])
-                    hsize = int((float(img.size[1])*float(scale)))
-                    img = img.resize((max_width, hsize), Image.ANTIALIAS)
-                    imgbuf = io.BytesIO()
-                    img.save(imgbuf, "JPEG")
-                    image = imgbuf.getvalue()
-
             if image:
+                if (query and int(query.get('maxwidth', [0])[0]) > 0
+                        and hass.data.get('resize_image')):
+                    width = int(query['maxwidth'][0])
+                    image = hass.data['resize_image'].resize_image(
+                        image, width)
+
                 return web.Response(body=image,
                                     content_type=camera.content_type)
 
