@@ -260,9 +260,7 @@ def _api_bool(funct):
     def _wrapper(*argv, **kwargs):
         """Wrapper function."""
         data = yield from funct(*argv, **kwargs)
-        if not data or data['result'] != "ok":
-            return False
-        return True
+        return data and data['result'] == "ok"
 
     return _wrapper
 
