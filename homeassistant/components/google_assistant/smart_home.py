@@ -54,12 +54,12 @@ MAPPING_COMPONENT = {
         }
     ],
     cover.DOMAIN: [
-        TYPE_LIGHT, TRAIT_ONOFF, {
+        TYPE_SWITCH, TRAIT_ONOFF, {
             cover.SUPPORT_SET_POSITION: TRAIT_BRIGHTNESS
         }
     ],
     media_player.DOMAIN: [
-        TYPE_LIGHT, TRAIT_ONOFF, {
+        TYPE_SWITCH, TRAIT_ONOFF, {
             media_player.SUPPORT_VOLUME_SET: TRAIT_BRIGHTNESS
         }
     ],
