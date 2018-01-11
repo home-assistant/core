@@ -142,12 +142,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def average_of_list(list_of_nums, decimal_places=1):
-    """Returns the average of a list of ints."""
+    """Return the average of a list of ints."""
     return round(sum(list_of_nums, 0.0)/len(list_of_nums), decimal_places)
 
 
 def calculate_trend(list_of_nums):
-    """Returns the average of a list of ints."""
+    """Return the average of a list of ints."""
     ratings = list(
         map(
             (lambda n: [
