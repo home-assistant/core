@@ -34,7 +34,7 @@ WALLET_CONFIG = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_IRI): vol.All(str),
+        vol.Required(CONF_IRI): cv.string,
         vol.Optional(CONF_TESTNET, default=False): cv.boolean,
         vol.Required(CONF_WALLETS): vol.All(cv.ensure_list, [WALLET_CONFIG])
     })
@@ -78,11 +78,6 @@ class IotaDevice(Entity):
     def name(self):
         """Return the default name of the device."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Get polling requirement from IOTA device."""
-        return True
 
     @property
     def device_state_attributes(self):

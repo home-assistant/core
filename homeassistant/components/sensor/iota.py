@@ -17,12 +17,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the IOTA sensor."""
     # Add sensors for wallet balance
     iota_config = hass.data[IOTA_DOMAIN]
-    balance_sensors = [IotaBalanceSensor(wallet, iota_config)
-                       for wallet in iota_config['wallets']]
-    add_devices(balance_sensors)
+    sensors = [IotaBalanceSensor(wallet, iota_config)
+               for wallet in iota_config['wallets']]
 
     # Add sensor for node information
-    add_devices([IotaNodeSensor(iota_config=iota_config)])
+    sensors.append(IotaNodeSensor(iota_config=iota_config))
+
+    add_devices(sensors)
 
 
 class IotaBalanceSensor(IotaDevice):
@@ -63,8 +64,8 @@ class IotaNodeSensor(IotaDevice):
         """Initialize the sensor."""
         super().__init__(name='Node Info', seed=None, iri=iota_config['iri'],
                          is_testnet=iota_config['is_testnet'])
-        self._state = ""
-        self._attr = dict()
+        self._state = None
+        self._attr = {}
 
     @property
     def name(self):
