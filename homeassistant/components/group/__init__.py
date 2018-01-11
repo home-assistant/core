@@ -250,7 +250,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 @bind_hass
 def get_common_supported_features(hass, entity_ids):
-    # Get grouped entity objects
+    """Get grouped entity objects."""
     sub_entities = [hass.states.get(eid) for eid in entity_ids]
 
     # Get features of existing entities or default to 0
