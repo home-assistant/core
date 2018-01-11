@@ -150,9 +150,11 @@ def async_check_config(hass):
     result = yield from hass.data[DOMAIN].send_command(
         '/homeassistant/check', timeout=300)
 
-    # Parse return
-    if not result or result['result'] != "ok":
+    if not result:
+        return "Hass.io config check API error"
+    elif result['result'] == "error":
         return result['message']
+    return None
 
 
 @asyncio.coroutine
