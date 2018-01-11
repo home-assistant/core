@@ -31,7 +31,6 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
-REQUIREMENTS = ['Pillow==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

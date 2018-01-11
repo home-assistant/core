@@ -22,9 +22,6 @@ certifi>=2017.4.17
 # homeassistant.components.doorbird
 DoorBirdPy==0.1.2
 
-# homeassistant.components.camera
-Pillow==5.0.0
-
 # homeassistant.components.isy994
 PyISY==1.1.0
 
@@ -571,6 +568,9 @@ piglow==1.2.4
 
 # homeassistant.components.pilight
 pilight==0.1.1
+
+# homeassistant.components.resize_image
+pillow==5.0.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
