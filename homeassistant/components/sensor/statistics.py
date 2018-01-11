@@ -111,8 +111,7 @@ class StatisticsSensor(Entity):
         try:
             self.states.append(float(new_state.state))
             if self._max_age is not None:
-                now = dt_util.utcnow()
-                self.ages.append(now)
+                self.ages.append(new_state.last_updated)
             self.count = self.count + 1
         except ValueError:
             self.count = self.count + 1
