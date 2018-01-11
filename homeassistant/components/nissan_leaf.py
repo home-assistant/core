@@ -22,7 +22,7 @@ DATA_CHARGING = 'charging'
 DATA_CLIMATE = 'climate'
 
 CONF_INTERVAL = 'update_interval'
-DEFAULT_INTERVAL = 1
+DEFAULT_INTERVAL = 30
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
