@@ -80,6 +80,8 @@ ATTR_VENDOR = 'vendor'
 
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
+SOURCE_TYPE_BLUETOOTH = 'bluetooth'
+SOURCE_TYPE_BLUETOOTH_LE = 'bluetooth_le'
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
