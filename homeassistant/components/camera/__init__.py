@@ -31,6 +31,7 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
+REQUIREMENTS = ['Pillow==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +60,13 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
 
 CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FILENAME): cv.template
+})
+
+CONF_REQUEST_IMAGE_WIDTH = 'request_image_width'
+REQUEST_IMAGE_WIDTH = "camera_request_image_width"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_REQUEST_IMAGE_WIDTH): int,
 })
 
 
@@ -126,6 +134,8 @@ def async_setup(hass, config):
 
     hass.http.register_view(CameraImageView(component.entities))
     hass.http.register_view(CameraMjpegStream(component.entities))
+
+    hass.data[REQUEST_IMAGE_WIDTH] = 360
 
     yield from component.async_setup(config)
 
@@ -220,6 +230,12 @@ class Camera(Entity):
     def entity_picture(self):
         """Return a link to the camera feed as entity picture."""
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
+
+    @property
+    def request_image_width(self):
+        """Return the default image width to request."""
+        print("Image Width: {}".format(self.hass.data[REQUEST_IMAGE_WIDTH]))
+        return self.hass.data[REQUEST_IMAGE_WIDTH]
 
     @property
     def is_recording(self):
@@ -395,9 +411,26 @@ class CameraImageView(CameraView):
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
+        from urllib.parse import urlparse, parse_qs
+        query = parse_qs(urlparse(str(request.url)).query)
+
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             with async_timeout.timeout(10, loop=request.app['hass'].loop):
                 image = yield from camera.async_camera_image()
+
+            if (image and camera.content_type == DEFAULT_CONTENT_TYPE and
+                    query and int(query.get('maxwidth', [0])[0]) > 0):
+                from PIL import Image
+                import io
+                img = Image.open(io.BytesIO(image))
+                max_width = int(query['maxwidth'][0])
+                if img.size[0] > max_width:
+                    scale = max_width / float(img.size[0])
+                    hsize = int((float(img.size[1])*float(scale)))
+                    img = img.resize((max_width, hsize), Image.ANTIALIAS)
+                    imgbuf = io.BytesIO()
+                    img.save(imgbuf, "JPEG")
+                    image = imgbuf.getvalue()
 
             if image:
                 return web.Response(body=image,
