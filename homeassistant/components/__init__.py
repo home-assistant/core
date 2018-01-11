@@ -160,6 +160,7 @@ def async_setup(hass, config):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             hass.async_add_job(hass.async_stop())
+            return
 
         try:
             errors = yield from conf_util.async_check_ha_config_file(hass)
