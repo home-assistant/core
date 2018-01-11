@@ -82,6 +82,7 @@ class UnifiVideoCamera(Camera):
         self.is_streaming = False
         self._connect_addr = None
         self._camera = None
+        self._motion_status = False
 
     @property
     def name(self):
@@ -165,3 +166,32 @@ class UnifiVideoCamera(Camera):
                     raise
 
         return _get_image()
+
+    @property
+    def motion_detection_enabled(self):
+        """Camera Motion Detection Status."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        return caminfo['recordingSettings']['motionRecordEnabled']
+
+    def set_motion_detection(self, mode):
+        """Set motion detection on or off."""
+        from uvcclient.nvr import NvrError
+        if mode is True:
+            set_mode = 'motion'
+        else:
+            set_mode = 'none'
+
+        try:
+            self._nvr.set_recordmode(self._uuid, set_mode)
+            self._motion_status = mode
+        except NvrError as e:
+            _LOGGER.error("Unable to set recordmode to " + set_mode)
+            _LOGGER.debug(e)
+
+    def enable_motion_detection(self):
+        """Enable motion detection in camera."""
+        self.set_motion_detection(True)
+
+    def disable_motion_detection(self):
+        """Disable motion detection in camera."""
+        self.set_motion_detection(False)
