@@ -35,7 +35,7 @@ DEPENDENCIES = ['http']
 X_HASSIO = 'X-HASSIO-KEY'
 
 DATA_HOMEASSISTANT_VERSION = 'hassio_hass_version'
-HASSIO_UPDATE_INTERVAL = timedelta(hours=1)
+HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = 'addon_start'
 SERVICE_ADDON_STOP = 'addon_stop'
@@ -167,7 +167,12 @@ def is_hassio(hass):
 @asyncio.coroutine
 def check_config(hass):
     """Check config over Hass.io API."""
-    pass
+    ret = yield from hass.data[DOMAIN].send_command(
+        '/homeassistant/check_config', timeout=300)
+
+    # Parse return
+    if not ret or ret['result'] != "ok":
+        return ret['message']
 
 
 @asyncio.coroutine
@@ -214,10 +219,13 @@ def async_setup(hass, config):
             payload = data
 
         # Call API
-        yield from hassio.send_command(
+        ret = yield from hassio.send_command(
             api_command.format(addon=addon, snapshot=snapshot),
             payload=payload, timeout=MAP_SERVICE_API[service.service][2]
         )
+
+        if not ret or ret['result'] != "ok":
+            _LOGGER.error("Error on Hass.io API: %s", ret['message'])
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
@@ -241,6 +249,19 @@ def async_setup(hass, config):
     return True
 
 
+def _api_bool(funct):
+    """API wrapper to return Boolean."""
+    @asyncio.coroutine
+    def _wrapper(*argv, **kwargs):
+        """Wrapper function."""
+        data = yield from funct(*argv, **kwargs)
+        if not data or data['result'] != "ok":
+            return False
+        return True
+
+    return _wrapper
+
+
 class HassIO(object):
     """Small API wrapper for HassIO."""
 
@@ -250,6 +271,7 @@ class HassIO(object):
         self.websession = websession
         self._ip = ip
 
+    @_api_bool
     def is_connected(self):
         """Return True if it connected to HassIO supervisor.
 
@@ -264,6 +286,7 @@ class HassIO(object):
         """
         return self.send_command("/homeassistant/info", method="get")
 
+    @_api_bool
     def update_hass_api(self, http_config):
         """Update Home-Assistant API data on HassIO.
 
@@ -283,6 +306,7 @@ class HassIO(object):
 
         return self.send_command("/homeassistant/options", payload=options)
 
+    @_api_bool
     def update_hass_timezone(self, core_config):
         """Update Home-Assistant timezone data on HassIO.
 
@@ -306,7 +330,7 @@ class HassIO(object):
                         X_HASSIO: os.environ.get('HASSIO_TOKEN')
                     })
 
-                if request.status != 200:
+                if request.status not in (200, 400):
                     _LOGGER.error(
                         "%s return code %d.", command, request.status)
                     return None
