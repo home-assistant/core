@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, DOMAIN, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_AUX_HEAT, SUPPORT_ON_OFF)
+    SUPPORT_ON_OFF)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -54,7 +54,7 @@ FIELD_TO_FLAG = {
     'mode': SUPPORT_OPERATION_MODE,
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
-    'on': SUPPORT_AUX_HEAT | SUPPORT_ON_OFF,
+    'on': SUPPORT_ON_OFF,
 }
 
 
@@ -232,11 +232,9 @@ class SensiboClimate(ClimateDevice):
         return self._name
 
     @property
-    def is_aux_heat_on(self):
+    def is_on(self):
         """Return true if AC is on."""
         return self._ac_states['on']
-
-    is_on = is_aux_heat_on
 
     @property
     def min_temp(self):
@@ -296,21 +294,18 @@ class SensiboClimate(ClimateDevice):
                 self._id, 'swing', swing_mode, self._ac_states)
 
     @asyncio.coroutine
-    def async_turn_aux_heat_on(self):
+    def async_on(self):
         """Turn Sensibo unit on."""
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
                 self._id, 'on', True, self._ac_states)
 
     @asyncio.coroutine
-    def async_turn_aux_heat_off(self):
+    def async_off(self):
         """Turn Sensibo unit on."""
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
                 self._id, 'on', False, self._ac_states)
-
-    async_on = async_turn_aux_heat_on
-    async_off = async_turn_aux_heat_off
 
     @asyncio.coroutine
     def async_assume_state(self, state):
