@@ -8,7 +8,11 @@ import asyncio
 import json
 import logging
 from datetime import timedelta
+from os import path
+
 import voluptuous as vol
+
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import intent, config_validation as cv
 import homeassistant.components.mqtt as mqtt
 
@@ -16,6 +20,8 @@ DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'
+SERVICE_SAY = 'say'
+SERVICE_SAY_ACTION = 'say_action'
 
 INTENT_TOPIC = 'hermes/intent/#'
 
@@ -40,6 +46,20 @@ INTENT_SCHEMA = vol.Schema({
     }]
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SCHEMA_SAY = vol.Schema({
+    vol.Required('text'): str,
+    vol.Optional('siteId', default='default'): str,
+    vol.Optional('customData', default=''): str
+})
+
+SERVICE_SCHEMA_SAY_ACTION = vol.Schema({
+    vol.Required('text'): str,
+    vol.Optional('siteId', default='default'): str,
+    vol.Optional('customData', default=''): str,
+    vol.Optional('canBeEnqueued', default=True): cv.boolean,
+    vol.Optional('intentFilter'): vol.All(cv.ensure_list),
+})
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -61,11 +81,12 @@ def async_setup(hass, config):
             _LOGGER.error('Intent has invalid schema: %s. %s', err, request)
             return
 
+        snips_response = None
+
         if request['intent']['intentName'].startswith('user_'):
             intent_type = request['intent']['intentName'].split('__')[-1]
         else:
             intent_type = request['intent']['intentName'].split(':')[-1]
-        snips_response = None
         slots = {}
         for slot in request.get('slots', []):
             slots[slot['slotName']] = {'value': resolve_slot_values(slot)}
@@ -92,6 +113,47 @@ def async_setup(hass, config):
 
     yield from hass.components.mqtt.async_subscribe(
         INTENT_TOPIC, message_received)
+
+    @asyncio.coroutine
+    def snips_say(call):
+        """Send a Snips notification message."""
+        _LOGGER.debug("snips_say {}".format(call.data))
+        notification = {'siteId': call.data.get('siteId', 'default'),
+                        'customData': call.data.get('customData', ''),
+                        'init': {'type': 'notification',
+                                 'text': call.data.get('text')}}
+        mqtt.async_publish(hass, 'hermes/dialogueManager/startSession',
+                                   json.dumps(notification))
+        return
+
+    @asyncio.coroutine
+    def snips_say_action(call):
+        """Send a Snips action message."""
+        _LOGGER.debug("snips_say_action {}".format(call.data))
+        notification = {'siteId': call.data.get('siteId', 'default'),
+                        'customData': call.data.get('customData', ''),
+                        'init': {'type': 'action',
+                                 'text': call.data.get('text'),
+                                 'canBeEnqueued': call.data.get(
+                                     'canBeEnqueued', True),
+                                 'intentFilter':
+                                     call.data.get('intentFilter', [])}}
+        _LOGGER.debug("send_response %s", json.dumps(notification))
+        mqtt.async_publish(hass, 'hermes/dialogueManager/startSession',
+                                   json.dumps(notification))
+        return
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SAY, snips_say,
+        description=descriptions[DOMAIN][SERVICE_SAY],
+        schema=SERVICE_SCHEMA_SAY)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SAY_ACTION, snips_say_action,
+        description=descriptions[DOMAIN][SERVICE_SAY_ACTION],
+        schema=SERVICE_SCHEMA_SAY_ACTION)
 
     return True
 
