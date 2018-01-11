@@ -82,10 +82,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RPiRFSwitch(SwitchDevice):
     """Representation of a GPIO RF switch."""
 
-    def __init__(self, hass, name, rfdevice, lock, protocol, pulselength,
+    def __init__(self, name, rfdevice, lock, protocol, pulselength,
                  signal_repetitions, code_on, code_off):
         """Initialize the switch."""
-        self._hass = hass
         self._name = name
         self._state = False
         self._rfdevice = rfdevice
