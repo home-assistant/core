@@ -62,14 +62,6 @@ CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FILENAME): cv.template
 })
 
-CONF_REQUEST_IMAGE_WIDTH = 'request_image_width'
-REQUEST_IMAGE_WIDTH = "camera_request_image_width"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REQUEST_IMAGE_WIDTH): int,
-})
-
-
 @bind_hass
 def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
@@ -134,8 +126,6 @@ def async_setup(hass, config):
 
     hass.http.register_view(CameraImageView(component.entities))
     hass.http.register_view(CameraMjpegStream(component.entities))
-
-    hass.data[REQUEST_IMAGE_WIDTH] = 360
 
     yield from component.async_setup(config)
 
@@ -230,12 +220,6 @@ class Camera(Entity):
     def entity_picture(self):
         """Return a link to the camera feed as entity picture."""
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
-
-    @property
-    def request_image_width(self):
-        """Return the default image width to request."""
-        print("Image Width: {}".format(self.hass.data[REQUEST_IMAGE_WIDTH]))
-        return self.hass.data[REQUEST_IMAGE_WIDTH]
 
     @property
     def is_recording(self):
