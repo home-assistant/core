@@ -96,6 +96,12 @@ class UnifiVideoCamera(Camera):
         return caminfo['recordingSettings']['fullTimeRecordEnabled']
 
     @property
+    def motion_detection_enabled(self):
+        """Camera Motion Detection Status."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        return caminfo['recordingSettings']['motionRecordEnabled']
+
+    @property
     def brand(self):
         """Return the brand of this camera."""
         return 'Ubiquiti'
@@ -166,12 +172,6 @@ class UnifiVideoCamera(Camera):
                     raise
 
         return _get_image()
-
-    @property
-    def motion_detection_enabled(self):
-        """Camera Motion Detection Status."""
-        caminfo = self._nvr.get_camera(self._uuid)
-        return caminfo['recordingSettings']['motionRecordEnabled']
 
     def set_motion_detection(self, mode):
         """Set motion detection on or off."""
