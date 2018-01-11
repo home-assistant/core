@@ -528,7 +528,7 @@ class Group(Entity):
 
     @property
     def supported_features(self) -> int:
-        """Get common supported state from grouped entities"""
+        """Get common supported state from grouped entities."""
         return get_common_supported_features(self.hass, self.tracking)
 
     def update_tracked_entity_ids(self, entity_ids):
