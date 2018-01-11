@@ -117,19 +117,17 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def snips_say(call):
         """Send a Snips notification message."""
-        _LOGGER.debug("snips_say {}".format(call.data))
         notification = {'siteId': call.data.get('siteId', 'default'),
                         'customData': call.data.get('customData', ''),
                         'init': {'type': 'notification',
                                  'text': call.data.get('text')}}
         mqtt.async_publish(hass, 'hermes/dialogueManager/startSession',
-                                   json.dumps(notification))
+                           json.dumps(notification))
         return
 
     @asyncio.coroutine
     def snips_say_action(call):
         """Send a Snips action message."""
-        _LOGGER.debug("snips_say_action {}".format(call.data))
         notification = {'siteId': call.data.get('siteId', 'default'),
                         'customData': call.data.get('customData', ''),
                         'init': {'type': 'action',
@@ -138,9 +136,8 @@ def async_setup(hass, config):
                                      'canBeEnqueued', True),
                                  'intentFilter':
                                      call.data.get('intentFilter', [])}}
-        _LOGGER.debug("send_response %s", json.dumps(notification))
         mqtt.async_publish(hass, 'hermes/dialogueManager/startSession',
-                                   json.dumps(notification))
+                           json.dumps(notification))
         return
 
     descriptions = load_yaml_config_file(
