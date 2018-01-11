@@ -21,7 +21,12 @@ class CheckConfigView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request):
         """Validate configuration and return results."""
-        errors = yield from async_check_ha_config_file(request.app['hass'])
+        hass = request.app['hass']
+
+        if hass.components.hassio.is_hassio():
+            errors = yield from hass.components.hassio.async_check_config()
+        else:
+            errors = yield from async_check_ha_config_file(hass)
 
         state = 'invalid' if errors else 'valid'
 
