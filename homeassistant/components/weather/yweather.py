@@ -125,27 +125,28 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self._data.yahoo.Atmosphere['pressure']
+        return round(float(self._data.yahoo.Atmosphere['pressure'])/33.8637526,
+                     2)
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self._data.yahoo.Atmosphere['humidity']
+        return int(self._data.yahoo.Atmosphere['humidity'])
 
     @property
     def visibility(self):
         """Return the visibility."""
-        return self._data.yahoo.Atmosphere['visibility']
+        return round(float(self._data.yahoo.Atmosphere['visibility'])/1.61, 2)
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self._data.yahoo.Wind['speed']
+        return round(float(self._data.yahoo.Wind['speed'])/1.61, 2)
 
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return self._data.yahoo.Wind['direction']
+        return int(self._data.yahoo.Wind['direction'])
 
     @property
     def attribution(self):
