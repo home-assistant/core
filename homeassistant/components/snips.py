@@ -8,7 +8,6 @@ import asyncio
 import json
 import logging
 from datetime import timedelta
-from os import path
 
 import voluptuous as vol
 
