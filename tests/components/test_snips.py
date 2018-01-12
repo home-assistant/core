@@ -265,7 +265,7 @@ def test_snips_say_action(hass, caplog):
     calls = async_mock_service(hass, 'snips', 'say_action',
                                SERVICE_SCHEMA_SAY_ACTION)
 
-    data = {'text': 'Hello', 'intentFilter': ['myIntent']}
+    data = {'text': 'Hello', 'intent_filter': ['myIntent']}
     yield from hass.services.async_call('snips', 'say_action', data)
     yield from hass.async_block_till_done()
 
@@ -273,7 +273,7 @@ def test_snips_say_action(hass, caplog):
     assert calls[0].domain == 'snips'
     assert calls[0].service == 'say_action'
     assert calls[0].data['text'] == 'Hello'
-    assert calls[0].data['intentFilter'] == ['myIntent']
+    assert calls[0].data['intent_filter'] == ['myIntent']
 
 
 @asyncio.coroutine
@@ -297,7 +297,7 @@ def test_snips_say_action_invalid_config(hass, caplog):
     calls = async_mock_service(hass, 'snips', 'say_action',
                                SERVICE_SCHEMA_SAY_ACTION)
 
-    data = {'text': 'Hello', 'canBeEnqueued': 'notabool'}
+    data = {'text': 'Hello', 'can_be_enqueued': 'notabool'}
     yield from hass.services.async_call('snips', 'say_action', data)
     yield from hass.async_block_till_done()
 
