@@ -40,8 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sense sensor."""
-	from sense_energy import Senseable
-	
+    from sense_energy import Senseable
+
     username = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
 
