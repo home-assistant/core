@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['concord232==0.14']
+REQUIREMENTS = ['concord232==0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,4 +121,4 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._alarm.arm('auto')
+        self._alarm.arm('away')
