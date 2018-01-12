@@ -17,13 +17,16 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
 from homeassistant.const import (
-    CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT, CONF_TIME_ZONE)
+    CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT, CONF_TIME_ZONE,
+    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
+from homeassistant.components import SERVICE_CHECK_CONFIG
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SERVER_HOST, CONF_SSL_CERTIFICATE)
 from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +37,7 @@ DEPENDENCIES = ['http']
 X_HASSIO = 'X-HASSIO-KEY'
 
 DATA_HOMEASSISTANT_VERSION = 'hassio_hass_version'
-HASSIO_UPDATE_INTERVAL = timedelta(hours=1)
+HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = 'addon_start'
 SERVICE_ADDON_STOP = 'addon_stop'
@@ -120,10 +123,38 @@ MAP_SERVICE_API = {
 }
 
 
+@callback
 @bind_hass
 def get_homeassistant_version(hass):
-    """Return last available HomeAssistant version."""
+    """Return latest available HomeAssistant version.
+
+    Async friendly.
+    """
     return hass.data.get(DATA_HOMEASSISTANT_VERSION)
+
+
+@callback
+@bind_hass
+def is_hassio(hass):
+    """Return True if hass.io is loaded.
+
+    Async friendly.
+    """
+    return DOMAIN in hass.config.components
+
+
+@bind_hass
+@asyncio.coroutine
+def async_check_config(hass):
+    """Check config over Hass.io API."""
+    result = yield from hass.data[DOMAIN].send_command(
+        '/homeassistant/check', timeout=300)
+
+    if not result:
+        return "Hass.io config check API error"
+    elif result['result'] == "error":
+        return result['message']
+    return None
 
 
 @asyncio.coroutine
@@ -136,7 +167,7 @@ def async_setup(hass, config):
         return False
 
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
-    hassio = HassIO(hass.loop, websession, host)
+    hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not (yield from hassio.is_connected()):
         _LOGGER.error("Not connected with HassIO!")
@@ -170,10 +201,13 @@ def async_setup(hass, config):
             payload = data
 
         # Call API
-        yield from hassio.send_command(
+        ret = yield from hassio.send_command(
             api_command.format(addon=addon, snapshot=snapshot),
             payload=payload, timeout=MAP_SERVICE_API[service.service][2]
         )
+
+        if not ret or ret['result'] != "ok":
+            _LOGGER.error("Error on Hass.io API: %s", ret['message'])
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
@@ -193,7 +227,42 @@ def async_setup(hass, config):
     # Fetch last version
     yield from update_homeassistant_version(None)
 
+    @asyncio.coroutine
+    def async_handle_core_service(call):
+        """Service handler for handling core services."""
+        if call.service == SERVICE_HOMEASSISTANT_STOP:
+            yield from hassio.send_command('/homeassistant/stop')
+            return
+
+        error = yield from async_check_config(hass)
+        if error:
+            _LOGGER.error(error)
+            hass.components.persistent_notification.async_create(
+                "Config error. See dev-info panel for details.",
+                "Config validating", "{0}.check_config".format(HASS_DOMAIN))
+            return
+
+        if call.service == SERVICE_HOMEASSISTANT_RESTART:
+            yield from hassio.send_command('/homeassistant/restart')
+
+    # Mock core services
+    for service in (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
+                    SERVICE_CHECK_CONFIG):
+        hass.services.async_register(
+            HASS_DOMAIN, service, async_handle_core_service)
+
     return True
+
+
+def _api_bool(funct):
+    """API wrapper to return Boolean."""
+    @asyncio.coroutine
+    def _wrapper(*argv, **kwargs):
+        """Wrapper function."""
+        data = yield from funct(*argv, **kwargs)
+        return data and data['result'] == "ok"
+
+    return _wrapper
 
 
 class HassIO(object):
@@ -205,6 +274,7 @@ class HassIO(object):
         self.websession = websession
         self._ip = ip
 
+    @_api_bool
     def is_connected(self):
         """Return True if it connected to HassIO supervisor.
 
@@ -219,6 +289,7 @@ class HassIO(object):
         """
         return self.send_command("/homeassistant/info", method="get")
 
+    @_api_bool
     def update_hass_api(self, http_config):
         """Update Home-Assistant API data on HassIO.
 
@@ -238,6 +309,7 @@ class HassIO(object):
 
         return self.send_command("/homeassistant/options", payload=options)
 
+    @_api_bool
     def update_hass_timezone(self, core_config):
         """Update Home-Assistant timezone data on HassIO.
 
@@ -261,7 +333,7 @@ class HassIO(object):
                         X_HASSIO: os.environ.get('HASSIO_TOKEN')
                     })
 
-                if request.status != 200:
+                if request.status not in (200, 400):
                     _LOGGER.error(
                         "%s return code %d.", command, request.status)
                     return None
