@@ -6,15 +6,32 @@ https://home-assistant.io/components/light.rfxtrx/
 """
 import logging
 
+import voluptuous as vol
+
 import homeassistant.components.rfxtrx as rfxtrx
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_NAME
+from homeassistant.components.rfxtrx import (
+    CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT, DEFAULT_SIGNAL_REPETITIONS,
+    CONF_SIGNAL_REPETITIONS, CONF_DEVICES)
+from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean
+        })
+    },
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
+        vol.Coerce(int),
+})
 
 SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 

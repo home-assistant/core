@@ -4,12 +4,29 @@ Support for RFXtrx cover components.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.rfxtrx/
 """
+import voluptuous as vol
+
 import homeassistant.components.rfxtrx as rfxtrx
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
+from homeassistant.components.rfxtrx import (
+    CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT, DEFAULT_SIGNAL_REPETITIONS,
+    CONF_SIGNAL_REPETITIONS, CONF_DEVICES)
+from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ['rfxtrx']
 
-PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean
+        })
+    },
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
+        vol.Coerce(int),
+})
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
