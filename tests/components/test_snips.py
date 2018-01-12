@@ -5,9 +5,9 @@ import json
 from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
 from tests.common import (async_fire_mqtt_message, async_mock_intent,
-    async_mock_service)
+                          async_mock_service)
 from homeassistant.components.snips import (SERVICE_SCHEMA_SAY,
-    SERVICE_SCHEMA_SAY_ACTION)
+                                            SERVICE_SCHEMA_SAY_ACTION)
 
 
 @asyncio.coroutine
