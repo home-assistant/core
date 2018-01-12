@@ -33,6 +33,8 @@ from homeassistant.helpers import config_per_platform, extract_domain_configs
 _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
+RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
+RE_ASCII = re.compile(r"\033\[[^m]*m")
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
@@ -655,15 +657,19 @@ def async_check_ha_config_file(hass):
     proc = yield from asyncio.create_subprocess_exec(
         sys.executable, '-m', 'homeassistant', '--script',
         'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
+
     # Wait for the subprocess exit
-    stdout_data, dummy = yield from proc.communicate()
-    result = yield from proc.wait()
+    log, _ = yield from proc.communicate()
+    exit_code = yield from proc.wait()
 
-    if not result:
-        return None
+    # Convert to ASCII
+    log = RE_ASCII.sub('', log.decode())
 
-    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
+    if exit_code != 0 or RE_YAML_ERROR.search(log):
+        return log
+    return None
 
 
 @callback
