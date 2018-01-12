@@ -150,7 +150,7 @@ class Hyperion(Light):
 
         if ATTR_EFFECT in kwargs:
             self._skip_check = True
-			self._effect = kwargs[ATTR_EFFECT]
+            self._effect = kwargs[ATTR_EFFECT]
             if self._effect == 'HDMI':
                 self.json_request({'command': 'clearall'})
                 self._icon = 'mdi:video-input-hdmi'
