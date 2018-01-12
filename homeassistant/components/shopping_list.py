@@ -79,7 +79,6 @@ class ShoppingData:
     def async_update(self, item_id, info):
         """Update a shopping list item."""
         item = next((itm for itm in self.items if itm['id'] == item_id), None)
-        _LOGGER.debug('update: %s %s' % (item_id, info))
         if item is None:
             raise KeyError
 
@@ -108,7 +107,7 @@ class ShoppingData:
         self.items = yield from self.hass.async_add_job(load)
 
     def save(self):
-        """Save the items."""a
+        """Save the items."""
         with open(self.hass.config.path(PERSISTENCE), 'wt') as file:
             file.write(json.dumps(self.items, sort_keys=True, indent=4))
 
@@ -182,6 +181,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
     def post(self, request, item_id):
         """Update a shopping list item."""
         data = yield from request.json()
+
         try:
             item = request.app['hass'].data[DOMAIN].async_update(item_id, data)
             request.app['hass'].bus.async_fire(EVENT)

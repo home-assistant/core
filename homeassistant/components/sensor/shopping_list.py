@@ -11,7 +11,10 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['shopping_list']
 DOMAIN = 'shopping_list'
 
+ATTR_LIST = 'list'
+
 _LOGGER = logging.getLogger(__name__)
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -29,7 +32,7 @@ class ShoppingListSensor(Entity):
         self.hass = hass
         self._name = 'Shopping List'
         self._list = []
-        self._state = None
+        self._state = 'unknown'
 
     @property
     def name(self):
@@ -39,18 +42,13 @@ class ShoppingListSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return None
+        if self.hass.data[DOMAIN].items:
+            return 'not_empty'
+        return 'empty'
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attrs = {}
-
-        attrs['list'] = [item for item in self.hass.data[DOMAIN].items]
-
+        attrs[ATTR_LIST] = [item for item in self.hass.data[DOMAIN].items]
         return attrs
-
-    @asyncio.coroutine
-    def async_update(self):
-        """Retrieve latest state."""
-        return
