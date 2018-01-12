@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 from sense_energy import Senseable
 
-REQUIREMENTS = ['sense_energy==0.2.1']
+REQUIREMENTS = ['sense_energy==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
