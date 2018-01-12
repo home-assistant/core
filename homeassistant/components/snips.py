@@ -16,12 +16,20 @@ import homeassistant.components.mqtt as mqtt
 
 DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']
+
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'
+
 SERVICE_SAY = 'say'
 SERVICE_SAY_ACTION = 'say_action'
 
 INTENT_TOPIC = 'hermes/intent/#'
+
+ATTR_TEXT = 'text'
+ATTR_SITE_ID = 'site_id'
+ATTR_CUSTOM_DATA = 'custom_data'
+ATTR_CAN_BE_ENQUEUED = 'can_be_enqueued'
+ATTR_INTENT_FILTER = 'intent_filter'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,17 +53,17 @@ INTENT_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_SAY = vol.Schema({
-    vol.Required('text'): str,
-    vol.Optional('siteId', default='default'): str,
-    vol.Optional('customData', default=''): str
+    vol.Required(ATTR_TEXT): str,
+    vol.Optional(ATTR_SITE_ID, default='default'): str,
+    vol.Optional(ATTR_CUSTOM_DATA, default=''): str
 })
 
 SERVICE_SCHEMA_SAY_ACTION = vol.Schema({
-    vol.Required('text'): str,
-    vol.Optional('siteId', default='default'): str,
-    vol.Optional('customData', default=''): str,
-    vol.Optional('canBeEnqueued', default=True): cv.boolean,
-    vol.Optional('intentFilter'): vol.All(cv.ensure_list),
+    vol.Required(ATTR_TEXT): str,
+    vol.Optional(ATTR_SITE_ID, default='default'): str,
+    vol.Optional(ATTR_CUSTOM_DATA, default=''): str,
+    vol.Optional(ATTR_CAN_BE_ENQUEUED, default=True): cv.boolean,
+    vol.Optional(ATTR_INTENT_FILTER): vol.All(cv.ensure_list),
 })
 
 
@@ -114,10 +122,10 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def snips_say(call):
         """Send a Snips notification message."""
-        notification = {'siteId': call.data.get('siteId', 'default'),
-                        'customData': call.data.get('customData', ''),
+        notification = {'siteId': call.data.get(ATTR_SITE_ID, 'default'),
+                        'customData': call.data.get(ATTR_CUSTOM_DATA, ''),
                         'init': {'type': 'notification',
-                                 'text': call.data.get('text')}}
+                                 'text': call.data.get(ATTR_TEXT)}}
         mqtt.async_publish(hass, 'hermes/dialogueManager/startSession',
                            json.dumps(notification))
         return
@@ -125,14 +133,14 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def snips_say_action(call):
         """Send a Snips action message."""
-        notification = {'siteId': call.data.get('siteId', 'default'),
-                        'customData': call.data.get('customData', ''),
+        notification = {'siteId': call.data.get(ATTR_SITE_ID, 'default'),
+                        'customData': call.data.get(ATTR_CUSTOM_DATA, ''),
                         'init': {'type': 'action',
-                                 'text': call.data.get('text'),
+                                 'text': call.data.get(ATTR_TEXT),
                                  'canBeEnqueued': call.data.get(
-                                     'canBeEnqueued', True),
+                                     ATTR_CAN_BE_ENQUEUED, True),
                                  'intentFilter':
-                                     call.data.get('intentFilter', [])}}
+                                     call.data.get(ATTR_INTENT_FILTER, [])}}
         mqtt.async_publish(hass, 'hermes/dialogueManager/startSession',
                            json.dumps(notification))
         return

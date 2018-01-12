@@ -371,10 +371,10 @@ snips:
       text:
         description: Text to say.
         example: My name is snips
-      siteId:
+      site_id:
         description: Site to use to start session, defaults to default (optional)
         example: bedroom
-      customData:
+      custom_data:
         description: custom data that will be included with all messages in this session
         example: user=UserName
   say_action:
@@ -383,16 +383,16 @@ snips:
       text:
         description: Text to say
         example: My name is snips
-      siteId:
+      site_id:
         description: Site to use to start session, defaults to default (optional)
         example: bedroom
-      customData:
+      custom_data:
         description: custom data that will be included with all messages in this session
         example: user=UserName
-      canBeEnqueued:
+      can_be_enqueued:
         description: If True, session waits for an open session to end, if False session is dropped if one is running
         example: True
-      intentFilter:
+      intent_filter:
         description: Optional Array of Strings - A list of intents names to restrict the NLU resolution to on the first query.
         example: turnOnLights, turnOffLights
 
