@@ -65,7 +65,8 @@ class LutronCover(LutronDevice, CoverDevice):
         """Call when forcing a refresh of the device."""
         # Reading the property (rather than last_level()) fetchs value
         level = self._lutron_device.level
-        _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
+        _LOGGER.debug("Lutron ID: %d updated to %f",
+                      self._lutron_device.id, level)
 
     @property
     def device_state_attributes(self):
