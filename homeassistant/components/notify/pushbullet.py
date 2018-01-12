@@ -152,6 +152,7 @@ class PushBulletNotificationService(BaseNotificationService):
                     if filedata.get('file_type') == 'application/x-empty':
                         _LOGGER.error("Can not send an empty file")
                         return
+
                     pusher.push_file(title=title, body=message,
                                      **email_kwargs, **filedata)
             elif file_url:
