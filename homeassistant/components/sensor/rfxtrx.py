@@ -14,9 +14,9 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.rfxtrx import (ATTR_NAME, ATTR_FIRE_EVENT, ATTR_DATA_TYPE,
-                                             CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT,
-                                             CONF_DEVICES, DATA_TYPES, CONF_DATA_TYPE)
+from homeassistant.components.rfxtrx import (
+    ATTR_NAME, ATTR_FIRE_EVENT, ATTR_DATA_TYPE, CONF_AUTOMATIC_ADD,
+    CONF_FIRE_EVENT, CONF_DEVICES, DATA_TYPES, CONF_DATA_TYPE)
 
 DEPENDENCIES = ['rfxtrx']
 

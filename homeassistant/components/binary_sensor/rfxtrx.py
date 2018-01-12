@@ -10,19 +10,19 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF, CONF_NAME)
 from homeassistant.components import rfxtrx
-from homeassistant.util import slugify
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import event as evt
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.rfxtrx import (ATTR_NAME,
-    ATTR_DATA_BITS, ATTR_OFF_DELAY, ATTR_FIRE_EVENT,
+from homeassistant.components.rfxtrx import (
+    ATTR_NAME, ATTR_DATA_BITS, ATTR_OFF_DELAY, ATTR_FIRE_EVENT,
     CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT,
     CONF_DATA_BITS, CONF_DEVICES)
-from homeassistant.const import (
-    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF)
+from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util
 
 
 DEPENDENCIES = ["rfxtrx"]
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if entity[CONF_DATA_BITS] is not None:
             _LOGGER.debug("Masked device id: %s",
                           rfxtrx.get_pt2262_deviceid(device_id,
-                                                    entity[ATTR_DATA_BITS]))
+                                                     entity[ATTR_DATA_BITS]))
 
         _LOGGER.debug("Add %s rfxtrx.binary_sensor (class %s)",
                       entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
