@@ -16,6 +16,8 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['hbmqtt==0.9.1']
 DEPENDENCIES = ['http']
 
+# BLA TEST TRIGGER LABEL BOT
+
 # None allows custom config to be created through generate_config
 HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional('auth'): vol.Schema({
