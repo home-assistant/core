@@ -15,6 +15,11 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
+TAHOMA_STOP_COMMAND = {
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'my',
+    'io:RollerShutterVeluxIOComponent': 'my',
+}
+
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
@@ -73,7 +78,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.apply_action('stopIdentify')
+        self.apply_action(TAHOMA_STOP_COMMAND.get(self.tahoma_device.type,
+                                                  'stopIdentify'))
 
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
