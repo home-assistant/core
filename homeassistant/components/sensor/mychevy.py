@@ -10,6 +10,7 @@ from homeassistant.components.mychevy import (
 )
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import (slugify)
 
 
@@ -127,6 +128,8 @@ class EVSensor(Entity):
     @property
     def icon(self):
         """Return the icon."""
+        if self._icon == "mdi:battery":
+            return icon_for_battery_level(self.state)
         return self._icon
 
     @property
