@@ -665,7 +665,7 @@ def async_check_ha_config_file(hass):
     exit_code = yield from proc.wait()
 
     # Convert to ASCII
-    log = RE_ASCII.sub('', log.decode())
+    log = RE_ASCII.sub('', str(log, 'utf-8'))
 
     if exit_code != 0 or RE_YAML_ERROR.search(log):
         return log
