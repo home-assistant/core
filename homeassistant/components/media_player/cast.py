@@ -186,7 +186,7 @@ class CastDevice(MediaPlayerDevice):
 
         images = self.media_status.images
 
-        return images[0].url if images else None
+        return images[0].url if images and images[0].url else None
 
     @property
     def media_title(self):
