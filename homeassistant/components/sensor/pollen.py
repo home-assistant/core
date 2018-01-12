@@ -224,9 +224,9 @@ class AllergyAverageSensor(BaseSensor):
         ]
         average = average_of_list(indices)
 
+        self._attrs[ATTR_TREND] = calculate_trend(indices)
         self._attrs[ATTR_CITY] = data_attr['Location']['City'].title()
         self._attrs[ATTR_STATE] = data_attr['Location']['State']
-        self._attrs[ATTR_TREND] = calculate_trend(indices)
         self._attrs[ATTR_ZIP_CODE] = data_attr['Location']['ZIP']
 
         [rating] = [
@@ -252,7 +252,6 @@ class AllergyIndexSensor(BaseSensor):
             if p['Type'] == self._data_params['key']
         ]
 
-        self._attrs[ATTR_CITY] = location_data['City'].title()
         self._attrs[ATTR_ALLERGEN_GENUS] = period['Triggers'][0]['Genus']
         self._attrs[ATTR_ALLERGEN_NAME] = period['Triggers'][0]['Name']
         self._attrs[ATTR_ALLERGEN_TYPE] = period['Triggers'][0]['PlantType']
@@ -260,6 +259,7 @@ class AllergyIndexSensor(BaseSensor):
         self._attrs[ATTR_SEASON] = self.data.outlook_data['Season']
         self._attrs[ATTR_TREND] = self.data.outlook_data[
             'Trend'].title()
+        self._attrs[ATTR_CITY] = location_data['City'].title()
         self._attrs[ATTR_STATE] = location_data['State']
         self._attrs[ATTR_ZIP_CODE] = location_data['ZIP']
 
