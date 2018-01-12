@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation.
 https://home-assistant.io/components/ads/
 
 """
-import os
 import threading
 import struct
 import logging
@@ -14,7 +13,6 @@ from collections import namedtuple
 import voluptuous as vol
 from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS, \
     EVENT_HOMEASSISTANT_STOP
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyads==2.2.6']
@@ -107,13 +105,8 @@ def setup(hass, config):
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-    # load descriptions from services.yaml
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
         DOMAIN, SERVICE_WRITE_DATA_BY_NAME, handle_write_data_by_name,
-        descriptions[SERVICE_WRITE_DATA_BY_NAME],
         schema=SCHEMA_SERVICE_WRITE_DATA_BY_NAME
     )
 

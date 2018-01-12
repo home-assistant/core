@@ -6,7 +6,6 @@ https://home-assistant.io/components/lock.wink/
 """
 import asyncio
 import logging
-from os import path
 
 import voluptuous as vol
 
@@ -14,7 +13,6 @@ from homeassistant.components.lock import LockDevice
 from homeassistant.components.wink import WinkDevice, DOMAIN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, ATTR_CODE
-from homeassistant.config import load_yaml_config_file
 
 DEPENDENCIES = ['wink']
 
@@ -99,37 +97,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 code = service.data.get(ATTR_CODE)
                 lock.add_new_key(code, name)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(DOMAIN, SERVICE_SET_VACATION_MODE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_VACATION_MODE),
                            schema=SET_ENABLED_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_ALARM_STATE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_STATE),
                            schema=SET_ENABLED_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_BEEPER_STATE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_BEEPER_STATE),
                            schema=SET_ENABLED_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_ALARM_MODE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_MODE),
                            schema=SET_ALARM_MODES_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_ALARM_SENSITIVITY,
                            service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_SENSITIVITY),
                            schema=SET_SENSITIVITY_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_ADD_KEY,
                            service_handle,
-                           descriptions.get(SERVICE_ADD_KEY),
                            schema=ADD_KEY_SCHEMA)
 
 

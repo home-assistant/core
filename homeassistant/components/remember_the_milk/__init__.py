@@ -14,7 +14,6 @@ import os
 import json
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_API_KEY, STATE_OK, CONF_TOKEN,
                                  CONF_NAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
@@ -66,9 +65,6 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_RTM)
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
         account_name = rtm_config[CONF_NAME]
@@ -80,33 +76,31 @@ def setup(hass, config):
             _LOGGER.debug("found token for account %s", account_name)
             _create_instance(
                 hass, account_name, api_key, shared_secret, token,
-                stored_rtm_config, component, descriptions)
+                stored_rtm_config, component)
         else:
             _register_new_account(
                 hass, account_name, api_key, shared_secret,
-                stored_rtm_config, component, descriptions)
+                stored_rtm_config, component)
 
     _LOGGER.debug("Finished adding all Remember the milk accounts")
     return True
 
 
 def _create_instance(hass, account_name, api_key, shared_secret,
-                     token, stored_rtm_config, component, descriptions):
+                     token, stored_rtm_config, component):
     entity = RememberTheMilk(account_name, api_key, shared_secret,
                              token, stored_rtm_config)
     component.add_entity(entity)
     hass.services.register(
         DOMAIN, '{}_create_task'.format(account_name), entity.create_task,
-        description=descriptions.get(SERVICE_CREATE_TASK),
         schema=SERVICE_SCHEMA_CREATE_TASK)
     hass.services.register(
         DOMAIN, '{}_complete_task'.format(account_name), entity.complete_task,
-        description=descriptions.get(SERVICE_COMPLETE_TASK),
         schema=SERVICE_SCHEMA_COMPLETE_TASK)
 
 
 def _register_new_account(hass, account_name, api_key, shared_secret,
-                          stored_rtm_config, component, descriptions):
+                          stored_rtm_config, component):
     from rtmapi import Rtm
 
     request_id = None
@@ -131,7 +125,7 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
 
         _create_instance(
             hass, account_name, api_key, shared_secret, token,
-            stored_rtm_config, component, descriptions)
+            stored_rtm_config, component)
 
         configurator.request_done(request_id)
 

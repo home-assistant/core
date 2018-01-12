@@ -3,13 +3,15 @@ import asyncio
 import logging
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
+from os import path
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant  # NOQA
+import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component, bind_hass
+from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -20,6 +22,8 @@ CONF_SERVICE_DATA = 'data'
 CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_DESCRIPTION_CACHE = 'service_description_cache'
 
 
 @bind_hass
@@ -112,3 +116,76 @@ def extract_entity_ids(hass, service_call, expand_group=True):
             return [service_ent_id]
 
         return service_ent_id
+
+
+@asyncio.coroutine
+@bind_hass
+def async_get_all_descriptions(hass):
+    """Return descriptions (i.e. user documentation) for all service calls."""
+    if SERVICE_DESCRIPTION_CACHE not in hass.data:
+        hass.data[SERVICE_DESCRIPTION_CACHE] = {}
+    description_cache = hass.data[SERVICE_DESCRIPTION_CACHE]
+
+    format_cache_key = '{}.{}'.format
+
+    def domain_yaml_file(domain):
+        """Return the services.yaml location for a domain."""
+        if domain == ha.DOMAIN:
+            import homeassistant.components as components
+            component_path = path.dirname(components.__file__)
+        else:
+            component_path = path.dirname(get_component(domain).__file__)
+        return path.join(component_path, 'services.yaml')
+
+    def load_services_file(yaml_file):
+        """Load and cache a services.yaml file."""
+        try:
+            yaml_cache[yaml_file] = load_yaml(yaml_file)
+        except FileNotFoundError:
+            pass
+
+    services = hass.services.async_services()
+
+    # Load missing files
+    yaml_cache = {}
+    loading_tasks = []
+    for domain in services:
+        yaml_file = domain_yaml_file(domain)
+
+        for service in services[domain]:
+            if format_cache_key(domain, service) not in description_cache:
+                if yaml_file not in yaml_cache:
+                    yaml_cache[yaml_file] = {}
+                    task = hass.async_add_job(load_services_file, yaml_file)
+                    loading_tasks.append(task)
+
+    if loading_tasks:
+        yield from asyncio.wait(loading_tasks, loop=hass.loop)
+
+    # Build response
+    catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
+    descriptions = {}
+    for domain in services:
+        descriptions[domain] = {}
+        yaml_file = domain_yaml_file(domain)
+
+        for service in services[domain]:
+            cache_key = format_cache_key(domain, service)
+            description = description_cache.get(cache_key)
+
+            # Cache missing descriptions
+            if description is None:
+                if yaml_file == catch_all_yaml_file:
+                    yaml_services = yaml_cache[yaml_file].get(domain, {})
+                else:
+                    yaml_services = yaml_cache[yaml_file]
+                yaml_description = yaml_services.get(service, {})
+
+                description = description_cache[cache_key] = {
+                    'description': yaml_description.get('description', ''),
+                    'fields': yaml_description.get('fields', {})
+                }
+
+            descriptions[domain][service] = description
+
+    return descriptions

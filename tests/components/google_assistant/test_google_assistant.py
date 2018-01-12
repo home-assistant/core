@@ -36,6 +36,15 @@ def assistant_client(loop, hass, test_client):
                 'project_id': PROJECT_ID,
                 'client_id': CLIENT_ID,
                 'access_token': ACCESS_TOKEN,
+                'entity_config': {
+                    'light.ceiling_lights': {
+                        'aliases': ['top lights', 'ceiling lights'],
+                        'name': 'Roof Lights',
+                    },
+                    'switch.decorative_lights': {
+                        'type': 'light'
+                    }
+                }
             }
         }))
 
@@ -87,26 +96,6 @@ def hass_fixture(loop, hass):
                 'platform': 'demo'
             }]
         }))
-
-    # Kitchen light is explicitly excluded from being exposed
-    ceiling_lights_entity = hass.states.get('light.ceiling_lights')
-    attrs = dict(ceiling_lights_entity.attributes)
-    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_NAME] = "Roof Lights"
-    attrs[ga.const.CONF_ALIASES] = ['top lights', 'ceiling lights']
-    hass.states.async_set(
-        ceiling_lights_entity.entity_id,
-        ceiling_lights_entity.state,
-        attributes=attrs)
-
-    # By setting the google_assistant_type = 'light'
-    # we can override how a device is reported to GA
-    switch_light = hass.states.get('switch.decorative_lights')
-    attrs = dict(switch_light.attributes)
-    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_TYPE] = "light"
-    hass.states.async_set(
-        switch_light.entity_id,
-        switch_light.state,
-        attributes=attrs)
 
     return hass
 

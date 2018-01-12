@@ -55,7 +55,6 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._zone_type = zone_type
         self._state = None
         self._name = zone_name
-        self._type = zone_type
         self._rfid = zone_rfid
         self._rfstate = None
 
@@ -75,17 +74,6 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def icon(self):
-        """Icon for device by its type."""
-        if "window" in self._name.lower():
-            return "mdi:window-open" if self.is_on else "mdi:window-closed"
-
-        if self._type == 'smoke':
-            return "mdi:fire"
-
-        return None
 
     @property
     def should_poll(self):
