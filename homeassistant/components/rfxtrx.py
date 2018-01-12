@@ -176,8 +176,8 @@ def get_pt2262_device(device_id):
                 device.masked_id == get_pt2262_deviceid(device_id,
                                                         device.data_bits)):
             _LOGGER.debug("rfxtrx: found matching device %s for %s",
-                         device_id,
-                         device.masked_id)
+                          device_id,
+                          device.masked_id)
             return device
     return None
 
