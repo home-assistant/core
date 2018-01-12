@@ -138,11 +138,8 @@ class PushBulletNotificationService(BaseNotificationService):
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
         try:
-            email_kwargs = {}
-            if email:
-                email_kwargs['email'] = email
             if url:
-                pusher.push_link(title, url, body=message, **email_kwargs)
+                pusher.push_link(title, url, body=message, email=email)
             elif filepath:
                 if not self.hass.config.is_allowed_path(filepath):
                     _LOGGER.error("Filepath is not valid or allowed")
@@ -154,7 +151,7 @@ class PushBulletNotificationService(BaseNotificationService):
                         return
 
                     pusher.push_file(title=title, body=message,
-                                     **email_kwargs, **filedata)
+                                     email=email, **filedata)
             elif file_url:
                 if not file_url.startswith('http'):
                     _LOGGER.error("URL should start with http or https")
@@ -164,8 +161,8 @@ class PushBulletNotificationService(BaseNotificationService):
                                  file_type=(mimetypes
                                             .guess_type(file_url)[0]))
             elif data_list:
-                pusher.push_note(title, data_list, **email_kwargs)
+                pusher.push_note(title, data_list, email=email)
             else:
-                pusher.push_note(title, message, **email_kwargs)
+                pusher.push_note(title, message, email=email)
         except PushError as err:
             _LOGGER.error("Notify failed: %s", err)
