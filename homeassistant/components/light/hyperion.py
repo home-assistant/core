@@ -139,25 +139,23 @@ class Hyperion(Light):
     def turn_on(self, **kwargs):
         """Turn the lights on."""
         if ATTR_RGB_COLOR in kwargs:
-            self._rgb_color = kwargs[ATTR_RGB_COLOR]
-            self._rgb_mem = kwargs[ATTR_RGB_COLOR]
+            rgb_color = kwargs[ATTR_RGB_COLOR]
         elif self._rgb_mem == [0, 0, 0]:
-            self._rgb_color = self._default_color
-            self._rgb_mem = self._default_color
+            rgb_color = self._default_color
         else:
-            self._rgb_color = self._rgb_mem
+            rgb_color = self._rgb_mem
 
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_EFFECT in kwargs:
-            self._effect = kwargs[ATTR_EFFECT]
+            self._skip_check = True
+			self._effect = kwargs[ATTR_EFFECT]
             if self._effect == 'HDMI':
                 self.json_request({'command': 'clearall'})
                 self._icon = 'mdi:video-input-hdmi'
                 self._brightness = 255
                 self._rgb_color = [125, 125, 125]
-                self._skip_check = True
             else:
                 self.json_request({
                     'command': 'effect',
@@ -166,11 +164,10 @@ class Hyperion(Light):
                 })
                 self._icon = 'mdi:lava-lamp'
                 self._rgb_color = [175, 0, 255]
-                self._skip_check = True
             return
 
-        cal_color = [int(round(x*float(self._brightness)/255))
-                     for x in self._rgb_color]
+        cal_color = [int(round(x*float(brightness)/255))
+                     for x in rgb_color]
         self.json_request({
             'command': 'color',
             'priority': self._priority,
@@ -185,7 +182,6 @@ class Hyperion(Light):
             'priority': self._priority,
             'color': [0, 0, 0]
         })
-        self._rgb_color = [0, 0, 0]
 
     def update(self):
         """Get the lights status."""
