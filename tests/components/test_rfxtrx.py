@@ -59,6 +59,16 @@ class TestRFXTRX(unittest.TestCase):
                 'dummy': True,
                 'debug': True}}))
 
+    def test_valid_config3(self):
+        """Test configuration."""
+        self.assertTrue(setup_component(self.hass, 'rfxtrx', {
+            'rfxtrx': {
+                'device': '/dev/serial/by-id/usb' +
+                          '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
+                'dummy': True,
+                'debug': False,
+                'recv_modes': ['hideki', 'oregon', 'ac']}}))
+
     def test_invalid_config(self):
         """Test configuration."""
         self.assertFalse(setup_component(self.hass, 'rfxtrx', {
@@ -70,6 +80,18 @@ class TestRFXTRX(unittest.TestCase):
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'invalid_key': True}}))
+
+    def test_invalid_config2(self):
+        """Test configuration."""
+        self.assertFalse(setup_component(self.hass, 'rfxtrx', {
+            'rfxtrx': {}
+        }))
+
+        self.assertFalse(setup_component(self.hass, 'rfxtrx', {
+            'rfxtrx': {
+                'device': '/dev/serial/by-id/usb' +
+                          '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
+                'recv_modes': []}}))
 
     def test_fire_event(self):
         """Test fire event."""
@@ -85,8 +107,8 @@ class TestRFXTRX(unittest.TestCase):
                        'devices':
                            {'0b1100cd0213c7f210010f51': {
                                'name': 'Test',
-                               rfxtrx.ATTR_FIREEVENT: True}
-                            }}}))
+                               rfxtrx.ATTR_FIREEVENT: True}}}
+        }))
 
         calls = []
 
@@ -130,8 +152,8 @@ class TestRFXTRX(unittest.TestCase):
                        'devices':
                            {'0a520802060100ff0e0269': {
                                'name': 'Test',
-                               rfxtrx.ATTR_FIREEVENT: True}
-                            }}}))
+                               rfxtrx.ATTR_FIREEVENT: True}}}
+        }))
 
         calls = []
 

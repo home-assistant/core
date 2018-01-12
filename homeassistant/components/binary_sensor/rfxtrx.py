@@ -163,6 +163,8 @@ class RfxtrxBinarySensor(BinarySensorDevice):
             self._masked_id = rfxtrx.get_pt2262_deviceid(
                 event.device.id_string.lower(),
                 data_bits)
+        else:
+            self._masked_id = None
 
     def __str__(self):
         """Return the name of the sensor."""
