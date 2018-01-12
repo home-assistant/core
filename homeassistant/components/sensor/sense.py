@@ -45,11 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
 
-    try:
-        data = Senseable(username, password)
-    except:
-        _LOGGER.critical("Connection/Authentication Failure")
-        return
+    data = Senseable(username, password)
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     def update_daily():
