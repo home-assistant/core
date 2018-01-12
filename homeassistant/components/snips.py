@@ -12,7 +12,6 @@ from os import path
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import intent, config_validation as cv
 import homeassistant.components.mqtt as mqtt
 
@@ -139,16 +138,11 @@ def async_setup(hass, config):
                            json.dumps(notification))
         return
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_SAY, snips_say,
-        description=descriptions[DOMAIN][SERVICE_SAY],
         schema=SERVICE_SCHEMA_SAY)
     hass.services.async_register(
         DOMAIN, SERVICE_SAY_ACTION, snips_say_action,
-        description=descriptions[DOMAIN][SERVICE_SAY_ACTION],
         schema=SERVICE_SCHEMA_SAY_ACTION)
 
     return True
