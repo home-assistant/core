@@ -1,10 +1,8 @@
 """Support for MyChevy sensors."""
 
+import asyncio
 from logging import getLogger
 from datetime import datetime as dt
-from datetime import timedelta
-import time
-import threading
 
 from homeassistant.components.mychevy import (
     EVSensorConfig, DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
@@ -12,7 +10,7 @@ from homeassistant.components.mychevy import (
 )
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import (Throttle, slugify)
+from homeassistant.util import (slugify)
 
 
 SENSORS = [
@@ -24,6 +22,7 @@ SENSORS = [
 ]
 
 _LOGGER = getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MyChevy sensors."""
@@ -50,6 +49,15 @@ class MyChevyStatus(Entity):
         self._last_update = dt.now()
         self._conn = connection
         connection.status = self
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            DOMAIN, self.success)
+
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            DOMAIN + "_error", self.error)
 
     def success(self):
         """Update state, trigger updates."""
@@ -98,18 +106,24 @@ class EVSensor(Entity):
     built with just setting subclass attributes.
 
     """
+
     def __init__(self, connection, config):
         """Initialize sensor with car connection."""
         self._conn = connection
-        connection.sensors.append(self)
-        self.car = connection.car
         self._name = config.name
         self._attr = config.attr
         self._unit_of_measurement = config.unit_of_measurement
         self._icon = config.icon
+        self._state = None
 
         self.entity_id = ENTITY_ID_FORMAT.format(
             '{}_{}'.format(DOMAIN, slugify(self._name)))
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            DOMAIN, self.async_update_ha_state)
 
     @property
     def icon(self):
@@ -121,22 +135,27 @@ class EVSensor(Entity):
         """Return the name."""
         return self._name
 
+    @asyncio.coroutine
+    def async_update_callback(self):
+        """Update state."""
+        if self._conn.car is not None:
+            self._state = getattr(self._conn.car, self._attr, None)
+            yield from self.async_update_ha_state()
+
+    def update(self):
+        """Update state."""
+        if self._conn.car is not None:
+            self._state = getattr(self._conn.car, self._attr, None)
+
     @property
     def state(self):
         """Return the state."""
-        if self.car is not None:
-            return getattr(self.car, self._attr, None)
+        return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement the state is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def hidden(self):
-        if self.state == None:
-            return True
-        return False
 
     @property
     def should_poll(self):

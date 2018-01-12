@@ -1,23 +1,21 @@
 """
-Support for Chevy Bolt EV sensors.
+MyChevy Component.
 
 For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/mychevy/
 """
 
 from logging import getLogger
-from datetime import datetime as dt
 from datetime import timedelta
 import time
 import threading
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ["mychevy==0.1.1"]
@@ -44,14 +42,21 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 class EVSensorConfig(object):
+    """EV Sensor Config."""
+
     def __init__(self, name, attr, unit_of_measurement=None, icon=None):
+        """Create new Sensor Config."""
         self.name = name
         self.attr = attr
         self.unit_of_measurement = unit_of_measurement
         self.icon = icon
 
+
 class EVBinarySensorConfig(object):
+    """EV Binary Sensor Config."""
+
     def __init__(self, name, attr, device_class=None):
+        """Create new Binary Sensor Config."""
         self.name = name
         self.attr = attr
         self.device_class = device_class
@@ -95,27 +100,8 @@ class MyChevyHub(threading.Thread):
         super(MyChevyHub, self).__init__()
         self._client = client
         self.hass = hass
-        self._car = None
+        self.car = None
         self.status = None
-        self.sensors = []
-
-    @property
-    def car(self):
-        """An instance of mychevy.mychevy.EVCar."""
-        return self._car
-
-    @car.setter
-    def car(self, data):
-        """Update the EVCar.
-
-        Also update all linked sensors in hass and signal the platform
-        there are updates.
-
-        """
-        self._car = data
-        for sensor in self.sensors:
-            sensor.car = data
-            sensor.schedule_update_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -126,7 +112,6 @@ class MyChevyHub(threading.Thread):
 
         """
         self.car = self._client.data()
-        self.status.success()
 
     def run(self):
         """Thread run loop."""
@@ -137,91 +122,11 @@ class MyChevyHub(threading.Thread):
             try:
                 _LOGGER.info("Starting mychevy loop")
                 self.update()
+                self.hass.helpers.dispatcher.dispatcher_send(DOMAIN)
                 time.sleep(MIN_TIME_BETWEEN_UPDATES.seconds)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error updating mychevy data. "
                     "This probably means the OnStar link is down again")
-                self.status.error()
+                self.hass.helpers.dispatcher.dispatcher_send(DOMAIN + "_error")
                 time.sleep(ERROR_SLEEP_TIME.seconds)
-
-
-
-
-# class EVCharge(EVSensor):
-#     """EVCharge Sensor.
-
-#     The charge percentage of the EV battery. It is an integer from 0 -
-#     100.
-
-#     """
-
-#     _name = "EV Charge"
-#     _unit = "%"
-#     _attr = "percent"
-
-#     @property
-#     def icon(self):
-#         state = int(self.state / 10)
-#         if state == 10:
-#             return "mdi:battery"
-#         if state >= 1 and state < 10:
-#             return "mdi:battery-%d0" % state
-#         if state < 1:
-#             return "mdi:battery-alert"
-
-
-# class EVMileage(EVSensor):
-#     """EVMileage Sensor.
-
-#     The total odometer mileage on the car.
-#     """
-
-#     _name = "EV Mileage"
-#     _unit = "miles"
-#     _attr = "mileage"
-#     _icon = "mdi:speedometer"
-
-
-# class EVRange(EVSensor):
-#     """EV Range.
-
-#     The estimated average range of the car. This is going to depend on
-#     both charge percentage as well as recent driving conditions (for
-#     instance very cold temperatures drive down the range quite a bit).
-
-#     """
-
-#     _name = "EST Range"
-#     _unit = "miles"
-#     _attr = "range"
-#     _icon = "mdi:speedometer"
-
-
-# class EVPlugged(EVSensor):
-#     """EV Plugged in.
-
-#     Is the EV Plugged in. Returns True or False. This does not
-#     indicate whether or not it's currently charging.
-
-#     """
-
-#     _name = "EV Plugged In"
-#     _unit = None
-#     _attr = "plugged_in"
-
-
-# class EVCharging(EVSensor):
-#     """A string representing the charging state."""
-
-#     _name = "EV Charging"
-#     _unit = None
-#     _attr = "charging"
-
-
-# class EVChargeMode(EVSensor):
-#     """A string representing the charging mode."""
-
-#     _name = "EV Charge Mode"
-#     _unit = None
-#     _attr = "charge_mode"

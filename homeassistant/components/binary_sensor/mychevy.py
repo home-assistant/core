@@ -1,19 +1,14 @@
 """Support for MyChevy sensors."""
 
+import asyncio
 from logging import getLogger
-from datetime import datetime as dt
-from datetime import timedelta
-import time
-import threading
 
 from homeassistant.components.mychevy import (
-    EVBinarySensorConfig, DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
-    NOTIFICATION_ID, NOTIFICATION_TITLE
+    EVBinarySensorConfig, DOMAIN
 )
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import (Throttle, slugify)
+from homeassistant.util import (slugify)
 
 _LOGGER = getLogger(__name__)
 
@@ -35,7 +30,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-
 class EVBinarySensor(BinarySensorDevice):
     """Base EVSensor class.
 
@@ -44,14 +38,14 @@ class EVBinarySensor(BinarySensorDevice):
     built with just setting subclass attributes.
 
     """
+
     def __init__(self, connection, config):
         """Initialize sensor with car connection."""
         self._conn = connection
-        connection.sensors.append(self)
-        self.car = connection.car
         self._name = config.name
         self._attr = config.attr
         self._type = config.device_class
+        self._is_on = None
 
         self.entity_id = ENTITY_ID_FORMAT.format(
             '{}_{}'.format(DOMAIN, slugify(self._name)))
@@ -64,14 +58,20 @@ class EVBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return if on."""
-        if self.car is not None:
-            return getattr(self.car, self._attr, None)
+        return self._is_on
 
-    @property
-    def hidden(self):
-        if self.car == None:
-            return True
-        return False
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            DOMAIN, self.async_update_callback)
+
+    @asyncio.coroutine
+    def async_update_callback(self):
+        """Update state."""
+        if self._conn.car is not None:
+            self._is_on = getattr(self._conn.car, self._attr, None)
+            yield from self.async_update_ha_state()
 
     @property
     def should_poll(self):
