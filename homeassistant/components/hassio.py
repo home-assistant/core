@@ -126,7 +126,7 @@ MAP_SERVICE_API = {
 @callback
 @bind_hass
 def get_homeassistant_version(hass):
-    """Return last available HomeAssistant version.
+    """Return latest available HomeAssistant version.
 
     Async friendly.
     """
