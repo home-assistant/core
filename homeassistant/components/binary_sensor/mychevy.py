@@ -4,7 +4,7 @@ import asyncio
 from logging import getLogger
 
 from homeassistant.components.mychevy import (
-    EVBinarySensorConfig, DOMAIN
+    EVBinarySensorConfig, DOMAIN, UPDATE_TOPIC
 )
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
@@ -64,7 +64,7 @@ class EVBinarySensor(BinarySensorDevice):
     def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            DOMAIN, self.async_update_callback)
+            UPDATE_TOPIC, self.async_update_callback)
 
     @asyncio.coroutine
     def async_update_callback(self):

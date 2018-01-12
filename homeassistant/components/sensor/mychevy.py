@@ -6,7 +6,7 @@ from datetime import datetime as dt
 
 from homeassistant.components.mychevy import (
     EVSensorConfig, DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
-    NOTIFICATION_ID, NOTIFICATION_TITLE
+    NOTIFICATION_ID, NOTIFICATION_TITLE, UPDATE_TOPIC, ERROR_TOPIC
 )
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import Entity
@@ -54,10 +54,10 @@ class MyChevyStatus(Entity):
     def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            DOMAIN, self.success)
+            UPDATE_TOPIC, self.success)
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            DOMAIN + "_error", self.error)
+            ERROR_TOPIC, self.error)
 
     def success(self):
         """Update state, trigger updates."""
@@ -123,7 +123,7 @@ class EVSensor(Entity):
     def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            DOMAIN, self.async_update_ha_state)
+            UPDATE_TOPIC, self.async_update_callback)
 
     @property
     def icon(self):
@@ -141,11 +141,6 @@ class EVSensor(Entity):
         if self._conn.car is not None:
             self._state = getattr(self._conn.car, self._attr, None)
             yield from self.async_update_ha_state()
-
-    def update(self):
-        """Update state."""
-        if self._conn.car is not None:
-            self._state = getattr(self._conn.car, self._attr, None)
 
     @property
     def state(self):
