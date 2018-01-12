@@ -97,9 +97,9 @@ class MyChevyHub(threading.Thread):
     starts.
     """
 
-    def __init__(self, client, hass, **kwags):
+    def __init__(self, client, hass):
         """Initialize MyChevy Hub."""
-        super(MyChevyHub, self).__init__()
+        super().__init__()
         self._client = client
         self.hass = hass
         self.car = None

@@ -48,7 +48,6 @@ class MyChevyStatus(Entity):
         self._state = None
         self._last_update = dt.now()
         self._conn = connection
-        connection.status = self
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -140,7 +139,7 @@ class EVSensor(Entity):
         """Update state."""
         if self._conn.car is not None:
             self._state = getattr(self._conn.car, self._attr, None)
-            yield from self.async_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     @property
     def state(self):
