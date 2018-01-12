@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.sense/
 import logging
 from datetime import timedelta
 
-import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -15,7 +14,6 @@ from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from sense_energy import Senseable
 
 REQUIREMENTS = ['sense_energy==0.2.1']
@@ -71,7 +69,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         Sense(data, DAILY_NAME, DAILY_TYPE, update_daily)])
 
 
-
 class Sense(Entity):
     """Implementation of a Sense energy sensor."""
 
@@ -117,5 +114,4 @@ class Sense(Entity):
         elif self._sensor_type == ACTIVE_SOLAR_TYPE:
             self._state = round(self._data.active_solar_power)
         elif self._sensor_type == DAILY_TYPE:
-            self._state = round(self._data.get_daily_usage(),1)
-
+            self._state = round(self._data.get_daily_usage(), 1)
