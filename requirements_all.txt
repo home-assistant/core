@@ -7,7 +7,7 @@ jinja2>=2.9.6
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.3.7
-yarl==0.17.0
+yarl==0.18.0
 async_timeout==2.0.0
 chardet==3.0.4
 astral==1.4
@@ -35,7 +35,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.6.0
+PyXiaomiGateway==0.7.0
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -177,7 +177,7 @@ colorlog==3.0.1
 
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
-concord232==0.14
+concord232==0.15
 
 # homeassistant.scripts.credstash
 # credstash==1.14.0
@@ -349,7 +349,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180110.0
+home-assistant-frontend==20180112.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -419,7 +419,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
-keyring==10.3.2
+keyring==10.6.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==2.3
@@ -622,7 +622,7 @@ pyCEC==0.4.13
 pyHS100==0.3.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.20.1
+pyRFXtrx==0.21.1
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.2.1
@@ -723,7 +723,7 @@ pyhik==0.1.4
 pyhiveapi==0.2.10
 
 # homeassistant.components.homematic
-pyhomematic==0.1.36
+pyhomematic==0.1.37
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.1.0
@@ -1225,7 +1225,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.12.28
+youtube_dl==2017.12.31
 
 # homeassistant.components.light.zengge
 zengge==0.2
