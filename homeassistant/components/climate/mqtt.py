@@ -139,8 +139,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         value_template.hass = hass
         value_templates = {key: value_template for key in template_keys}
     for key in template_keys & config.keys():
-            value_templates[key] = config.get(key)
-            value_templates[key].hass = hass
+        value_templates[key] = config.get(key)
+        value_templates[key].hass = hass
 
     async_add_devices([
         MqttClimate(
