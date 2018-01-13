@@ -236,14 +236,18 @@ class XiaomiDevice(Entity):
             self._remove_unavailability_tracker()
         self._remove_unavailability_tracker = async_track_point_in_utc_time(
             self._hass, self._set_unavailable, utcnow() + TIME_TILL_UNAVAILABLE)
+        if self._state == STATE_UNAVAILABLE:
+            self._state = None
+            return True
+        return False
 
     def push_data(self, data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
-        self._track_unavailable()
+        was_unavailable = self._track_unavailable()
         is_data = self.parse_data(data)
         is_voltage = self.parse_voltage(data)
-        if is_data or is_voltage:
+        if is_data or is_voltage or was_unavailable:
             self.schedule_update_ha_state()
 
     def parse_voltage(self, data):
