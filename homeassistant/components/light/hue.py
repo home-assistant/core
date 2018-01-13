@@ -4,6 +4,7 @@ This component provides light support for the Philips Hue system.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.hue/
 """
+import asyncio
 from datetime import timedelta
 import logging
 import random
@@ -14,9 +15,6 @@ import voluptuous as vol
 
 import homeassistant.components.hue as hue
 
-import homeassistant.util as util
-from homeassistant.util import yaml
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
@@ -24,16 +22,14 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
-from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE_HIDDEN
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
+from homeassistant.util import yaml
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['hue']
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_KEY = 'hue_lights'
-DATA_LIGHTS = 'lights'
-DATA_LIGHTGROUPS = 'lightgroups'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -53,6 +49,7 @@ SUPPORT_HUE = {
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
     }
 
+ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 ATTR_IS_HUE_GROUP = 'is_hue_group'
 
 # Legacy configuration, will be removed in 0.60
@@ -87,13 +84,13 @@ This configuration is deprecated, please check the
 information.
 """
 
+SIGNAL_CALLBACK = 'hue_light_callback_{}_{}'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Hue lights."""
     if discovery_info is None or 'bridge_id' not in discovery_info:
         return
-
-    setup_data(hass)
 
     if config is not None and len(config) > 0:
         # Legacy configuration, will be removed in 0.60
@@ -108,12 +105,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bridge_id = discovery_info['bridge_id']
     bridge = hass.data[hue.DOMAIN][bridge_id]
     unthrottled_update_lights(hass, bridge, add_devices)
-
-
-def setup_data(hass):
-    """Initialize internal data. Useful from tests."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {DATA_LIGHTS: {}, DATA_LIGHTGROUPS: {}}
 
 
 @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
@@ -142,14 +133,12 @@ def unthrottled_update_lights(hass, bridge, add_devices):
         _LOGGER.exception('Cannot reach the bridge')
         return
 
-    bridge_type = get_bridge_type(api)
-
     new_lights = process_lights(
-        hass, api, bridge, bridge_type,
+        hass, api, bridge,
         lambda **kw: update_lights(hass, bridge, add_devices, **kw))
     if bridge.allow_hue_groups:
         new_lightgroups = process_groups(
-            hass, api, bridge, bridge_type,
+            hass, api, bridge,
             lambda **kw: update_lights(hass, bridge, add_devices, **kw))
         new_lights.extend(new_lightgroups)
 
@@ -157,16 +146,7 @@ def unthrottled_update_lights(hass, bridge, add_devices):
         add_devices(new_lights)
 
 
-def get_bridge_type(api):
-    """Return the bridge type."""
-    api_name = api.get('config').get('name')
-    if api_name in ('RaspBee-GW', 'deCONZ-GW'):
-        return 'deconz'
-    else:
-        return 'hue'
-
-
-def process_lights(hass, api, bridge, bridge_type, update_lights_cb):
+def process_lights(hass, api, bridge, update_lights_cb):
     """Set up HueLight objects for all lights."""
     api_lights = api.get('lights')
 
@@ -176,23 +156,25 @@ def process_lights(hass, api, bridge, bridge_type, update_lights_cb):
 
     new_lights = []
 
-    lights = hass.data[DATA_KEY][DATA_LIGHTS]
     for light_id, info in api_lights.items():
-        if light_id not in lights:
-            lights[light_id] = HueLight(
+        if light_id not in bridge.lights:
+            bridge.lights[light_id] = HueLight(
                 int(light_id), info, bridge,
                 update_lights_cb,
-                bridge_type, bridge.allow_unreachable,
+                bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue)
-            new_lights.append(lights[light_id])
+            new_lights.append(bridge.lights[light_id])
         else:
-            lights[light_id].info = info
-            lights[light_id].schedule_update_ha_state()
+            bridge.lights[light_id].info = info
+            hass.helpers.dispatcher.dispatcher_send(
+                SIGNAL_CALLBACK.format(
+                    bridge.bridge_id,
+                    bridge.lights[light_id].light_id))
 
     return new_lights
 
 
-def process_groups(hass, api, bridge, bridge_type, update_lights_cb):
+def process_groups(hass, api, bridge, update_lights_cb):
     """Set up HueLight objects for all groups."""
     api_groups = api.get('groups')
 
@@ -202,23 +184,25 @@ def process_groups(hass, api, bridge, bridge_type, update_lights_cb):
 
     new_lights = []
 
-    groups = hass.data[DATA_KEY][DATA_LIGHTGROUPS]
     for lightgroup_id, info in api_groups.items():
         if 'state' not in info:
             _LOGGER.warning('Group info does not contain state. '
                             'Please update your hub.')
             return []
 
-        if lightgroup_id not in groups:
-            groups[lightgroup_id] = HueLight(
+        if lightgroup_id not in bridge.lightgroups:
+            bridge.lightgroups[lightgroup_id] = HueLight(
                 int(lightgroup_id), info, bridge,
                 update_lights_cb,
-                bridge_type, bridge.allow_unreachable,
+                bridge.allow_unreachable,
                 bridge.allow_in_emulated_hue, True)
-            new_lights.append(groups[lightgroup_id])
+            new_lights.append(bridge.lightgroups[lightgroup_id])
         else:
-            groups[lightgroup_id].info = info
-            groups[lightgroup_id].schedule_update_ha_state()
+            bridge.lightgroups[lightgroup_id].info = info
+            hass.helpers.dispatcher.dispatcher_send(
+                SIGNAL_CALLBACK.format(
+                    bridge.bridge_id,
+                    bridge.lightgroups[lightgroup_id].light_id))
 
     return new_lights
 
@@ -227,14 +211,12 @@ class HueLight(Light):
     """Representation of a Hue light."""
 
     def __init__(self, light_id, info, bridge, update_lights_cb,
-                 bridge_type, allow_unreachable, allow_in_emulated_hue,
-                 is_group=False):
+                 allow_unreachable, allow_in_emulated_hue, is_group=False):
         """Initialize the light."""
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
         self.update_lights = update_lights_cb
-        self.bridge_type = bridge_type
         self.allow_unreachable = allow_unreachable
         self.is_group = is_group
         self.allow_in_emulated_hue = allow_in_emulated_hue
@@ -344,7 +326,7 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command['alert'] = 'select'
             del command['on']
-        elif self.bridge_type == 'hue':
+        else:
             command['alert'] = 'none'
 
         effect = kwargs.get(ATTR_EFFECT)
@@ -354,8 +336,7 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif (self.bridge_type == 'hue' and
-              self.info.get('manufacturername') == 'Philips'):
+        elif self.info.get('manufacturername') == 'Philips':
             command['effect'] = 'none'
 
         self._command_func(self.light_id, command)
@@ -375,7 +356,7 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command['alert'] = 'select'
             del command['on']
-        elif self.bridge_type == 'hue':
+        else:
             command['alert'] = 'none'
 
         self._command_func(self.light_id, command)
@@ -394,3 +375,11 @@ class HueLight(Light):
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
         return attributes
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register update callback."""
+        dev_id = self.bridge.bridge_id, self.light_id
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_CALLBACK.format(*dev_id),
+            self.async_schedule_update_ha_state)

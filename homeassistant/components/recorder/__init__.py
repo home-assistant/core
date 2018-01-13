@@ -10,7 +10,6 @@ https://home-assistant.io/components/recorder/
 import asyncio
 import concurrent.futures
 import logging
-from os import path
 import queue
 import threading
 import time
@@ -30,13 +29,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-from homeassistant import config as conf_util
 
 from . import purge, migration
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.1.15']
+REQUIREMENTS = ['sqlalchemy==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,13 +140,8 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(service.data[ATTR_KEEP_DAYS])
 
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, path.join(
-            path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(DOMAIN, SERVICE_PURGE,
                                  async_handle_purge_service,
-                                 descriptions.get(SERVICE_PURGE),
                                  schema=SERVICE_PURGE_SCHEMA)
 
     return (yield from instance.async_db_ready)

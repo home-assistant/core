@@ -180,16 +180,6 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
 
 
 @asyncio.coroutine
-def test_make_actions_response():
-    """Test make response helper."""
-    reqid = 1234
-    payload = 'hello'
-    result = ga.smart_home.make_actions_response(reqid, payload)
-    assert result['requestId'] == reqid
-    assert result['payload'] == payload
-
-
-@asyncio.coroutine
 def test_determine_service():
     """Test all branches of determine service."""
     for test in DETERMINE_SERVICE_TESTS:

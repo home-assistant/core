@@ -3,17 +3,15 @@
 # new version
 flake8==3.3
 pylint==1.6.5
-mypy==0.550
+mypy==0.560
 pydocstyle==1.1.1
-coveralls>=1.1
-pytest>=2.9.2
-pytest-aiohttp>=0.1.3
-pytest-cov>=2.3.1
-pytest-timeout>=1.2.0
-pytest-catchlog>=1.2.2
-pytest-sugar>=0.7.1
-requests_mock>=1.0
-mock-open>=1.3.1
+coveralls==1.2.0
+pytest==3.3.1
+pytest-aiohttp==0.3.0
+pytest-cov==2.5.1
+pytest-timeout>=1.2.1
+pytest-sugar==0.9.0
+requests_mock==1.4
+mock-open==1.3.1
 flake8-docstrings==1.0.2
-asynctest>=0.8.0
-freezegun>=0.3.8
+asynctest>=0.11.1

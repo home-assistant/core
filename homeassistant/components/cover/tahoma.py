@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tahoma/
 """
 import logging
+from datetime import timedelta
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (
@@ -13,6 +14,13 @@ from homeassistant.components.tahoma import (
 DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
+
+TAHOMA_STOP_COMMAND = {
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'my',
+    'io:RollerShutterVeluxIOComponent': 'my',
+}
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -70,4 +78,12 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.apply_action('stopIdentify')
+        self.apply_action(TAHOMA_STOP_COMMAND.get(self.tahoma_device.type,
+                                                  'stopIdentify'))
+
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
+            return 'window'
+        else:
+            return None

@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['luftdaten==0.1.1']
+REQUIREMENTS = ['luftdaten==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,16 +114,16 @@ class LuftdatenSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.luftdaten.data.meta is None:
+        try:
+            attr = {
+                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_SENSOR_ID: self._sensor_id,
+                'lat': self.luftdaten.data.meta['latitude'],
+                'long': self.luftdaten.data.meta['longitude'],
+            }
+            return attr
+        except KeyError:
             return
-
-        attr = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_SENSOR_ID: self._sensor_id,
-            'lat': self.luftdaten.data.meta['latitude'],
-            'long': self.luftdaten.data.meta['longitude'],
-        }
-        return attr
 
     @asyncio.coroutine
     def async_update(self):

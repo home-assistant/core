@@ -8,10 +8,13 @@ import logging
 import colorsys
 import time
 
+import voluptuous as vol
+
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, PLATFORM_SCHEMA)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
@@ -23,9 +26,16 @@ REQUIREMENTS = ['pyHS100==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_CONSUMPTION = 'current_consumption'
-ATTR_DAILY_CONSUMPTION = 'daily_consumption'
-ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
+ATTR_CURRENT_POWER_W = 'current_power_w'
+ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
+ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
+
+DEFAULT_NAME = 'TP-Link Light'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -156,17 +166,17 @@ class TPLinkSmartBulb(Light):
             if self._supported_features & SUPPORT_RGB_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
             if self.smartbulb.has_emeter:
-                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                    = "%.1f W" % self.smartbulb.current_consumption()
+                self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
+                    self.smartbulb.current_consumption())
                 daily_statistics = self.smartbulb.get_emeter_daily()
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
-                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                        = "%.2f kW" % daily_statistics[int(
-                            time.strftime("%d"))]
-                    self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
-                        = "%.2f kW" % monthly_statistics[int(
-                            time.strftime("%m"))]
+                    self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            daily_statistics[int(time.strftime("%d"))])
+                    self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            monthly_statistics[int(time.strftime("%m"))])
                 except KeyError:
                     # device returned no daily/monthly history
                     pass

@@ -15,7 +15,6 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
@@ -282,21 +281,17 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_light_service,
-        descriptions.get(SERVICE_TURN_ON), schema=LIGHT_TURN_ON_SCHEMA)
+        schema=LIGHT_TURN_ON_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_light_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=LIGHT_TURN_OFF_SCHEMA)
+        schema=LIGHT_TURN_OFF_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
-        descriptions.get(SERVICE_TOGGLE), schema=LIGHT_TOGGLE_SCHEMA)
+        schema=LIGHT_TOGGLE_SCHEMA)
 
     return True
 
