@@ -145,7 +145,8 @@ def autosetup_ihc_products(hass: HomeAssistantType, ihc_controller):
     for component in IHC_PLATFORMS:
         component_setup = auto_setup_conf[component]
         discovery_info = get_discovery_info(component_setup, groups)
-        discovery.load_platform(hass, component, DOMAIN, discovery_info)
+        if len(discovery_info) > 0:
+            discovery.load_platform(hass, component, DOMAIN, discovery_info)
     return True
 
 
