@@ -104,29 +104,34 @@ class TestPlant(unittest.TestCase):
         self.assertEquals(5, state.attributes[plant.READING_MOISTURE])
 
     def test_load_from_db(self):
-        """Test bootstrapping the brightness history from the database."""
-        init_recorder_component(self.hass)
-        plant_name = 'wise_plant'
-        for value in [20, 30, 10]:
+        """Test bootstrapping the brightness history from the database.
 
-            self.hass.states.set(BRIGHTNESS_ENTITY, value,
-                                 {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
+        This test can should only be executed if the loading of the history
+        is enabled via plant.ENABLE_LOAD_HISTORY.
+        """
+        if plant.ENABLE_LOAD_HISTORY:
+            init_recorder_component(self.hass)
+            plant_name = 'wise_plant'
+            for value in [20, 30, 10]:
+
+                self.hass.states.set(BRIGHTNESS_ENTITY, value,
+                                     {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
+                self.hass.block_till_done()
+            # wait for the recorder to really store the data
+            self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+
+            assert setup_component(self.hass, plant.DOMAIN, {
+                plant.DOMAIN: {
+                    plant_name: GOOD_CONFIG
+                }
+            })
             self.hass.block_till_done()
-        # wait for the recorder to really store the data
-        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
 
-        assert setup_component(self.hass, plant.DOMAIN, {
-            plant.DOMAIN: {
-                plant_name: GOOD_CONFIG
-            }
-        })
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('plant.'+plant_name)
-        self.assertEquals(STATE_UNKNOWN, state.state)
-        max_brightness = state.attributes.get(
-            plant.ATTR_MAX_BRIGHTNESS_HISTORY)
-        self.assertEquals(30, max_brightness)
+            state = self.hass.states.get('plant.'+plant_name)
+            self.assertEquals(STATE_UNKNOWN, state.state)
+            max_brightness = state.attributes.get(
+                plant.ATTR_MAX_BRIGHTNESS_HISTORY)
+            self.assertEquals(30, max_brightness)
 
     def test_brightness_history(self):
         """Test the min_brightness check."""

@@ -91,6 +91,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+# Flag for enabling/disabling the loading of the history from the database.
+# This feature is turned off right now as it's tests are not 100% stable.
+ENABLE_LOAD_HISTORY = False
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Plant component."""
@@ -243,7 +247,7 @@ class Plant(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """After being added to hass, load from history."""
-        if 'recorder' in self.hass.config.components:
+        if ENABLE_LOAD_HISTORY and 'recorder' in self.hass.config.components:
             # only use the database if it's configured
             self.hass.async_add_job(self._load_history_from_db)
 
