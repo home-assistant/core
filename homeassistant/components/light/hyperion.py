@@ -93,8 +93,8 @@ class Hyperion(Light):
         self._brightness = 255
         self._icon = 'mdi:lightbulb'
         self._effect_list = effect_list
-        self._effect = 'none'
-        self._skip_check = False
+        self._effect = None
+        self._skip_update = False
 
     @property
     def name(self):
@@ -149,7 +149,7 @@ class Hyperion(Light):
             brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_EFFECT in kwargs:
-            self._skip_check = True
+            self._skip_update = True
             self._effect = kwargs[ATTR_EFFECT]
             if self._effect == 'HDMI':
                 self.json_request({'command': 'clearall'})
@@ -186,8 +186,8 @@ class Hyperion(Light):
     def update(self):
         """Get the lights status."""
         # postpone the immediate state check for changes that take time
-        if self._skip_check:
-            self._skip_check = False
+        if self._skip_update:
+            self._skip_update = False
             return
         response = self.json_request({'command': 'serverinfo'})
         if response:
@@ -197,7 +197,7 @@ class Hyperion(Light):
                 self._rgb_mem = self._default_color
                 self._brightness = 255
                 self._icon = 'mdi:lightbulb'
-                self._effect = 'none'
+                self._effect = None
                 return
             # Check if Hyperion is in ambilight mode trough an HDMI grabber
             try:
@@ -222,12 +222,12 @@ class Hyperion(Light):
                         self._effect = [x for x in self._effect_list
                                         if s_name.lower() in x.lower()][0]
                     except (KeyError, IndexError):
-                        self._effect = 'none'
+                        self._effect = None
                 # Bulb off state
                 else:
                     self._rgb_color = [0, 0, 0]
                     self._icon = 'mdi:lightbulb'
-                    self._effect = 'none'
+                    self._effect = None
             else:
                 # Get the RGB color
                 self._rgb_color =\
@@ -236,7 +236,7 @@ class Hyperion(Light):
                 self._rgb_mem = [int(round(float(x)*255/self._brightness))
                                  for x in self._rgb_color]
                 self._icon = 'mdi:lightbulb'
-                self._effect = 'none'
+                self._effect = None
 
     def setup(self):
         """Get the hostname of the remote."""
