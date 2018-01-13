@@ -7,8 +7,8 @@ from xml.etree.ElementTree import Element
 
 import voluptuous as vol
 
-from homeassistant.components.ihc import validate_name, IHC_DATA
-from homeassistant.components.ihc.const import CONF_AUTOSETUP
+from homeassistant.components.ihc import (
+    validate_name, IHC_DATA, IHC_CONTROLLER)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -20,7 +20,6 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['ihc']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_AUTOSETUP, default=False): cv.boolean,
     vol.Optional(CONF_SENSORS, default=[]):
         vol.All(cv.ensure_list, [
             vol.All({
@@ -35,24 +34,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ihc sensor platform."""
-    ihc = hass.data[IHC_DATA]
+    ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     devices = []
-    if config[CONF_AUTOSETUP]:
-        def setup_product(ihc_id, name, product, product_cfg):
-            """Product setup callback."""
-            sensor = IHCSensor(ihc, name, ihc_id,
+    if discovery_info:
+        for name, device in discovery_info.items():
+            ihc_id = device['ihc_id']
+            product_cfg = device['product_cfg']
+            product = device['product']
+            sensor = IHCSensor(ihc_controller, name, ihc_id,
                                product_cfg[CONF_UNIT_OF_MEASUREMENT],
                                product)
             devices.append(sensor)
-        ihc.product_auto_setup('sensor', setup_product)
-
-    sensors = config[CONF_SENSORS]
-    for sensor_cfg in sensors:
-        ihc_id = sensor_cfg[CONF_ID]
-        name = sensor_cfg[CONF_NAME]
-        unit = sensor_cfg[CONF_UNIT_OF_MEASUREMENT]
-        sensor = IHCSensor(ihc, name, ihc_id, unit)
-        devices.append(sensor)
+    else:
+        sensors = config[CONF_SENSORS]
+        for sensor_cfg in sensors:
+            ihc_id = sensor_cfg[CONF_ID]
+            name = sensor_cfg[CONF_NAME]
+            unit = sensor_cfg[CONF_UNIT_OF_MEASUREMENT]
+            sensor = IHCSensor(ihc_controller, name, ihc_id, unit)
+            devices.append(sensor)
 
     add_devices(devices)
 
@@ -60,9 +60,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class IHCSensor(IHCDevice, Entity):
     """Implementation of the IHC sensor."""
 
-    def __init__(self, ihc, name, ihc_id, unit, product: Element=None):
+    def __init__(self, ihc_controller, name, ihc_id, unit,
+                 product: Element=None):
         """Initialize the IHC sensor."""
-        super().__init__(ihc, name, ihc_id, product)
+        super().__init__(ihc_controller, name, ihc_id, product)
         self._state = None
         self._unit_of_measurement = unit
 

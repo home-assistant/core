@@ -10,7 +10,7 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 
 from homeassistant.components.ihc.const import (
-    ATTR_IHC_ID, ATTR_VALUE, CONF_INFO,
+    ATTR_IHC_ID, ATTR_VALUE, CONF_INFO, CONF_AUTOSETUP,
     CONF_BINARY_SENSOR, CONF_LIGHT, CONF_SENSOR, CONF_SWITCH,
     CONF_XPATH, CONF_NODE, CONF_DIMMABLE, CONF_INVERTING,
     SERVICE_SET_RUNTIME_VALUE_BOOL, SERVICE_SET_RUNTIME_VALUE_INT,
@@ -19,22 +19,25 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_URL, CONF_USERNAME, CONF_PASSWORD, CONF_ID, CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT, CONF_TYPE)
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-REQUIREMENTS = ['ihcsdk==2.1.0']
+REQUIREMENTS = ['ihcsdk==2.1.1']
+
 DOMAIN = 'ihc'
 IHC_DATA = 'ihc'
-
+IHC_CONTROLLER = 'controller'
+IHC_INFO = 'info'
 AUTO_SETUP_YAML = 'ihc_auto_setup.yaml'
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_URL): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_INFO): cv.boolean
+        vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
+        vol.Optional(CONF_INFO, default=True): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -92,6 +95,8 @@ SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema({
 
 _LOGGER = logging.getLogger(__name__)
 
+IHC_PLATFORMS = ('binary_sensor', 'light', 'sensor', 'switch')
+
 
 def setup(hass, config):
     """Setup the IHC component."""
@@ -106,10 +111,25 @@ def setup(hass, config):
         _LOGGER.error("Unable to authenticate on ihc controller.")
         return False
 
-    project = ihc_controller.get_project()
-    if not project:
+    if (conf[CONF_AUTOSETUP] and
+            not autosetup_ihc_products(hass, ihc_controller)):
+        return False
+
+    hass.data[IHC_DATA] = {
+        IHC_CONTROLLER: ihc_controller,
+        IHC_INFO: conf[CONF_INFO]}
+
+    setup_service_functions(hass, ihc_controller)
+    return True
+
+
+def autosetup_ihc_products(hass: HomeAssistantType, ihc_controller):
+    """Auto setup of IHC products from the ihc project file."""
+    project_xml = ihc_controller.get_project()
+    if not project_xml:
         _LOGGER.error("Unable to read project from ihc controller.")
         return False
+    project = xml.etree.ElementTree.fromstring(project_xml)
 
     # if an auto setup file exist in the configuration it will override
     yaml_path = hass.config.path(AUTO_SETUP_YAML)
@@ -121,13 +141,35 @@ def setup(hass, config):
     except VoluptuousError as exception:
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
-
-    info = conf[CONF_INFO]
-    ihc = Ihc(hass, ihc_controller, project, auto_setup_conf, info)
-    hass.data[IHC_DATA] = ihc
-
-    setup_service_functions(hass, ihc_controller)
+    groups = project.findall('.//group')
+    for component in IHC_PLATFORMS:
+        component_setup = auto_setup_conf[component]
+        discovery_info = get_discovery_info(component_setup, groups)
+        discovery.load_platform(hass, component, DOMAIN, discovery_info)
     return True
+
+
+def get_discovery_info(component_setup, groups):
+    """Get discover info for specified component."""
+    discovery_data = {}
+    for group in groups:
+        groupname = group.attrib['name']
+        for product_cfg in component_setup:
+            products = group.findall(product_cfg[CONF_XPATH])
+            for product in products:
+                nodes = product.findall(product_cfg[CONF_NODE])
+                for node in nodes:
+                    if ('setting' in node.attrib
+                            and node.attrib['setting'] == 'yes'):
+                        continue
+                    ihc_id = int(node.attrib['id'].strip('_'), 0)
+                    name = '{}_{}'.format(groupname, ihc_id)
+                    device = {
+                        'ihc_id': ihc_id,
+                        'product': product,
+                        'product_cfg': product_cfg}
+                    discovery_data[name] = device
+    return discovery_data
 
 
 def setup_service_functions(hass: HomeAssistantType, ihc_controller):
@@ -165,37 +207,6 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
                            set_runtime_value_float,
                            descriptions[SERVICE_SET_RUNTIME_VALUE_FLOAT],
                            schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA)
-
-
-class Ihc:
-    """Wraps the IHCController for caching of ihc project and autosetup."""
-
-    def __init__(self, hass: HomeAssistantType, ihc_controller, project,
-                 auto_setup_conf, info: bool):
-        """Initialize the caching of the project."""
-        self.ihc_controller = ihc_controller
-        self.info = info
-        self.project = xml.etree.ElementTree.fromstring(project)
-        # We will cache the groups for faster autosetup
-        self._groups = self.project.findall('.//group')
-        self.auto_setup_conf = auto_setup_conf
-
-    def product_auto_setup(self, component, setup_product):
-        """Do autosetup of a component from the IHC project."""
-        component_setup = self.auto_setup_conf[component]
-        for group in self._groups:
-            groupname = group.attrib['name']
-            for product_cfg in component_setup:
-                products = group.findall(product_cfg['xpath'])
-                for product in products:
-                    nodes = product.findall(product_cfg['node'])
-                    for node in nodes:
-                        if ('setting' in node.attrib
-                                and node.attrib['setting'] == 'yes'):
-                            continue
-                        ihc_id = int(node.attrib['id'].strip('_'), 0)
-                        name = '{}_{}'.format(groupname, ihc_id)
-                        setup_product(ihc_id, name, product, product_cfg)
 
 
 def validate_name(config):

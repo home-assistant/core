@@ -7,8 +7,8 @@ from xml.etree.ElementTree import Element
 
 import voluptuous as vol
 
-from homeassistant.components.ihc import validate_name, IHC_DATA
-from homeassistant.components.ihc.const import CONF_AUTOSETUP
+from homeassistant.components.ihc import (
+    validate_name, IHC_DATA, IHC_CONTROLLER)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_SWITCHES
@@ -17,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 DEPENDENCIES = ['ihc']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_AUTOSETUP, default=False): cv.boolean,
     vol.Optional(CONF_SWITCHES, default=[]):
         vol.All(cv.ensure_list, [
             vol.All({
@@ -30,21 +29,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ihc switch platform."""
-    ihc = hass.data[IHC_DATA]
+    ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     devices = []
-    if config[CONF_AUTOSETUP]:
-        def setup_product(ihc_id, name, product, product_cfg):
-            """Product setup callback."""
-            sensor = IHCSwitch(ihc, name, ihc_id, product)
+    if discovery_info:
+        for name, device in discovery_info.items():
+            ihc_id = device['ihc_id']
+            product = device['product']
+            switch = IHCSwitch(ihc_controller, name, ihc_id, product)
+            devices.append(switch)
+    else:
+        switches = config[CONF_SWITCHES]
+        for switch in switches:
+            ihc_id = switch[CONF_ID]
+            name = switch[CONF_NAME]
+            sensor = IHCSwitch(ihc_controller, name, ihc_id)
             devices.append(sensor)
-        ihc.product_auto_setup('switch', setup_product)
-
-    switches = config[CONF_SWITCHES]
-    for switch in switches:
-        ihc_id = switch[CONF_ID]
-        name = switch[CONF_NAME]
-        sensor = IHCSwitch(ihc, name, ihc_id)
-        devices.append(sensor)
 
     add_devices(devices)
 
@@ -52,9 +51,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class IHCSwitch(IHCDevice, SwitchDevice):
     """IHC Switch."""
 
-    def __init__(self, ihc, name: str, ihc_id: int, product: Element=None):
+    def __init__(self, ihc_controller, name: str, ihc_id: int,
+                 product: Element=None):
         """Initialize the IHC switch."""
-        super().__init__(ihc, name, ihc_id, product)
+        super().__init__(ihc_controller, name, ihc_id, product)
         self._state = False
 
     @property
@@ -64,11 +64,11 @@ class IHCSwitch(IHCDevice, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.ihc.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
+        self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self.ihc.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
+        self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Callback when the ihc resource changes."""

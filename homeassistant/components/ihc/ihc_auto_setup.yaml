@@ -10,7 +10,7 @@ binary_sensor:
       inverting: True
     # Pir sensors
     - xpath: './/product_dataline[@product_identifier="_0x210e"]'
-      node: 'dataline_input'
+      node: 'dataline_input[1]'
       type: 'motion'
     # Pir sensors twilight sensor
     - xpath: './/product_dataline[@product_identifier="_0x0"]'

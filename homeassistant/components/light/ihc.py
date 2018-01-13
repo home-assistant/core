@@ -8,8 +8,9 @@ from xml.etree.ElementTree import Element
 
 import voluptuous as vol
 
-from homeassistant.components.ihc import validate_name, IHC_DATA
-from homeassistant.components.ihc.const import CONF_AUTOSETUP, CONF_DIMMABLE
+from homeassistant.components.ihc import (
+    validate_name, IHC_DATA, IHC_CONTROLLER)
+from homeassistant.components.ihc.const import CONF_DIMMABLE
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA, Light)
@@ -19,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 DEPENDENCIES = ['ihc']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_AUTOSETUP, default=False): cv.boolean,
     vol.Optional(CONF_LIGHTS, default=[]):
         vol.All(cv.ensure_list, [
             vol.All({
@@ -33,34 +33,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ihc lights platform."""
-    ihc = hass.data[IHC_DATA]
+    ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     devices = []
-    if config[CONF_AUTOSETUP]:
-        def setup_product(ihc_id, name, product, product_cfg):
-            """Product setup callback."""
-            sensor = IhcLight(ihc, name, ihc_id, product_cfg[CONF_DIMMABLE],
-                              product)
-            devices.append(sensor)
-        ihc.product_auto_setup('light', setup_product)
-
-    lights = config[CONF_LIGHTS]
-    for light in lights:
-        ihc_id = light[CONF_ID]
-        name = light[CONF_NAME]
-        dimmable = light[CONF_DIMMABLE]
-        device = IhcLight(ihc, name, ihc_id, dimmable)
-        devices.append(device)
+    if discovery_info:
+        for name, device in discovery_info.items():
+            ihc_id = device['ihc_id']
+            product_cfg = device['product_cfg']
+            product = device['product']
+            light = IhcLight(ihc_controller, name, ihc_id,
+                             product_cfg[CONF_DIMMABLE], product)
+            devices.append(light)
+    else:
+        lights = config[CONF_LIGHTS]
+        for light in lights:
+            ihc_id = light[CONF_ID]
+            name = light[CONF_NAME]
+            dimmable = light[CONF_DIMMABLE]
+            device = IhcLight(ihc_controller, name, ihc_id, dimmable)
+            devices.append(device)
 
     add_devices(devices)
 
 
 class IhcLight(IHCDevice, Light):
-    """Representation of a IHC light."""
+    """Representation of a IHC light.
 
-    def __init__(self, ihccontroller, name, ihcid, dimmable=False,
+    For dimmable lights, the associated IHC resource should be a light
+    level (integer). For non dimmable light the IHC resource should be
+    an on/off (boolean) resource
+    """
+
+    def __init__(self, ihc_controller, name, ihc_id, dimmable=False,
                  product: Element=None):
         """Initialize the light."""
-        super().__init__(ihccontroller, name, ihcid, product)
+        super().__init__(ihc_controller, name, ihc_id, product)
         self._brightness = 0
         self._dimmable = dimmable
         self._state = None
@@ -92,17 +98,17 @@ class IhcLight(IHCDevice, Light):
                 brightness = 255
 
         if self._dimmable:
-            self.ihc.ihc_controller.set_runtime_value_int(
+            self.ihc_controller.set_runtime_value_int(
                 self.ihc_id, int(brightness * 100 / 255))
         else:
-            self.ihc.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
+            self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         if self._dimmable:
-            self.ihc.ihc_controller.set_runtime_value_int(self.ihc_id, 0)
+            self.ihc_controller.set_runtime_value_int(self.ihc_id, 0)
         else:
-            self.ihc.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
+            self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Callback from Ihc notifications."""
