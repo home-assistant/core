@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
-    ATTR_ENTITY_ID, ATTR_DIR_H, ATTR_DIR_V, ATTR_ZOOM)
+    ATTR_ENTITY_ID)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, DOMAIN
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG)
@@ -34,6 +34,10 @@ DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
 
+ATTR_PAN = "pan"
+ATTR_TILT = "tilt"
+ATTR_ZOOM = "zoom"
+
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
 DIR_LEFT = "LEFT"
@@ -54,10 +58,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SERVICE_PTZ_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_DIR_H: vol.In([DIR_LEFT, DIR_RIGHT]),
-    ATTR_DIR_V: vol.In([DIR_UP, DIR_DOWN]),
+    ATTR_PAN: vol.In([DIR_LEFT, DIR_RIGHT]),
+    ATTR_TILT: vol.In([DIR_UP, DIR_DOWN]),
     ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN])
 })
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -69,12 +74,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entities = []
 
     def handle_ptz(service):
-        dir_v = service.data.get(ATTR_DIR_V, None)
-        if dir_v:
-            dir_v = dir_v.upper()
-        dir_h = service.data.get(ATTR_DIR_H, None)
-        if dir_h:
-            dir_h = dir_h.upper()
+        tilt = service.data.get(ATTR_TILT, None)
+        if tilt:
+            tilt = tilt.upper()
+        pan = service.data.get(ATTR_PAN, None)
+        if pan:
+            pan = pan.upper()
         zoom = service.data.get(ATTR_ZOOM, None)
         if zoom:
             zoom = zoom.upper()
@@ -85,13 +90,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 continue
             if not req:
                 req = camera._ptz.create_type('ContinuousMove')
-                if dir_v == DIR_UP:
+                if tilt == DIR_UP:
                     req.Velocity.PanTilt._y = 1
-                elif dir_v == DIR_DOWN:
+                elif tilt == DIR_DOWN:
                     req.Velocity.PanTilt._y = -1
-                if dir_h == DIR_LEFT:
+                if pan == DIR_LEFT:
                     req.Velocity.PanTilt._x = -1
-                elif dir_h == DIR_RIGHT:
+                elif pan == DIR_RIGHT:
                     req.Velocity.PanTilt._x = 1
                 if zoom == ZOOM_IN:
                     req.Velocity.Zoom._x = 1
