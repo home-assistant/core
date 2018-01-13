@@ -11,10 +11,13 @@ import os
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+    CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
+    ATTR_ENTITY_ID, ATTR_DIR_H, ATTR_DIR_V, ATTR_ZOOM)
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, DOMAIN
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG)
+from homeassistant.config import load_yaml_config_file
+from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
@@ -32,6 +35,16 @@ DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
 
+DIR_UP = "UP"
+DIR_DOWN = "DOWN"
+DIR_LEFT = "LEFT"
+DIR_RIGHT = "RIGHT"
+
+ZOOM_OUT = "ZOOM_OUT"
+ZOOM_IN = "ZOOM_IN"
+
+SERVICE_PTZ = "PTZ"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -40,13 +53,62 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
+SERVICE_PTZ_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_DIR_H: vol.In([DIR_LEFT, DIR_RIGHT]),
+    ATTR_DIR_V: vol.In([DIR_UP, DIR_DOWN]),
+    ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN])
+})
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
-    async_add_devices([ONVIFCamera(hass, config)])
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entities = []
+
+    def handle_ptz(service):
+        dir_v = service.data.get(ATTR_DIR_V, None)
+        if dir_v:
+            dir_v = dir_v.upper()
+        dir_h = service.data.get(ATTR_DIR_H, None)
+        if dir_h:
+            dir_h = dir_h.upper()
+        zoom = service.data.get(ATTR_ZOOM, None)
+        if zoom:
+            zoom = zoom.upper()
+        target_cameras = component.extract_from_service(service)
+        req = None
+        for camera in target_cameras:
+            if not camera._ptz:
+                continue
+            if not req:
+                req = camera._ptz.create_type('ContinuousMove')
+                if dir_v == DIR_UP:
+                    req.Velocity.PanTilt._y = 1
+                elif dir_v == DIR_DOWN:
+                    req.Velocity.PanTilt._y = -1
+                if dir_h == DIR_LEFT:
+                    req.Velocity.PanTilt._x = -1
+                elif dir_h == DIR_RIGHT:
+                    req.Velocity.PanTilt._x = 1
+                if zoom == ZOOM_IN:
+                    req.Velocity.Zoom._x = 1
+                elif zoom == ZOOM_OUT:
+                    req.Velocity.Zoom._x = -1
+            camera._ptz.ContinuousMove(req)
+
+
+    descriptions = load_yaml_config_file(
+            os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(DOMAIN, SERVICE_PTZ,
+            handle_ptz, descriptions.get(SERVICE_PTZ),
+            schema=SERVICE_PTZ_SCHEMA)
+    entities.append(ONVIFCamera(hass, config))
+    yield from component.async_add_entities(entities)
 
 
 class ONVIFCamera(Camera):
@@ -60,6 +122,17 @@ class ONVIFCamera(Camera):
 
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = '-q:v 2'
+        try:
+            self._ptz = ONVIFService(
+                'http://{}:{}/onvif/device_service'.format(
+                    config.get(CONF_HOST), config.get(CONF_PORT)),
+                config.get(CONF_USERNAME),
+                config.get(CONF_PASSWORD),
+                '{}/wsdl/ptz.wsdl'.format(os.path.dirname(onvif.__file__))
+            )
+        except onvif.exceptions.ONVIFError:
+            self._ptz = None
+            _LOGGER.warning("PTZ is not supported by camera")
         media = ONVIFService(
             'http://{}:{}/onvif/device_service'.format(
                 config.get(CONF_HOST), config.get(CONF_PORT)),

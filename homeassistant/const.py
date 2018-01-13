@@ -292,6 +292,11 @@ ATTR_DEVICE_CLASS = 'device_class'
 # Temperature attribute
 ATTR_TEMPERATURE = 'temperature'
 
+# for onvif platform's PTZ
+ATTR_DIR_H = 'dir_h'
+ATTR_DIR_V = 'dir_v'
+ATTR_ZOOM = 'zoom'
+
 # #### UNITS OF MEASUREMENT ####
 # Temperature units
 TEMP_CELSIUS = '°C'

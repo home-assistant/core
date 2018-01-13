@@ -23,3 +23,20 @@ snapshot:
     filename:
       description: Template of a Filename. Variable is entity_id.
       example: '/tmp/snapshot_{{ entity_id }}'
+
+PTZ:
+  description: Pan/Tilt/Zoom service for ONVIF camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to pan, tilt or zoom.
+      example: 'camera.living_room_camera'
+    dir_h:
+      description: "Direction of horizontal movement. Allowed values: LEFT, RIGHT."
+      example: 'LEFT'
+    dir_v:
+      description: "Direction of vertical movement. Allowed values: DOWN, UP."
+      example: 'DOWN'
+    zoom:
+      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
+      example: "ZOOM_IN"
+
