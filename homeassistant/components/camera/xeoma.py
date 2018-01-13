@@ -45,8 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Discover and setup Xeoma Cameras."""
     host = config[CONF_HOST]
-    login = config[CONF_USERNAME] if CONF_USERNAME in config else None
-    password = config[CONF_PASSWORD] if CONF_PASSWORD in config else None
+    login = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
     new_version = config[CONF_NEW_VERSION]
 
     from pyxeoma.xeoma import Xeoma, XeomaError
