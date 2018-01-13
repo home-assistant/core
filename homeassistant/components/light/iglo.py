@@ -72,12 +72,14 @@ class IGloLamp(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return math.ceil(color_util.color_temperature_kelvin_to_mired(self._lamp.max_kelvin))
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(
+            self._lamp.max_kelvin))
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return math.ceil(color_util.color_temperature_kelvin_to_mired(self._lamp.min_kelvin))
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(
+            self._lamp.min_kelvin))
 
     @property
     def rgb_color(self):
