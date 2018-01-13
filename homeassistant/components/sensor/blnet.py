@@ -100,11 +100,20 @@ class BLNETComponent(Entity):
         for sensor in analog_data:
             entity_id = self.entity_id + '_analog_' + sensor['id']
             value = sensor['value']
-            attributes = {
-                'unit_of_measurement' : sensor['unit_of_measurement'],
-                'friendly_name' : sensor['name'],
-                'icon' : 'mdi:thermometer'
-                }
+            
+            # retrieve old attributes
+            oldEntity = None
+            oldEntity = self._hass.states.get(entity_id)
+            
+            # initialize once
+            if oldEntity is None:
+                attributes = dict()
+            else:
+                attributes = dict(oldEntity.attributes)
+            
+            attributes.setdefault('unit_of_measurement', sensor['unit_of_measurement'])
+            attributes.setdefault('friendly_name', sensor['name'])
+            attributes.setdefault('icon', 'mdi:thermometer')
             
             self._hass.states.set(entity_id, value, attributes)
             sensor_list.append(entity_id)
@@ -112,10 +121,19 @@ class BLNETComponent(Entity):
                 #iterate through the list and create a sensor for every value
         for sensor in digital_data:
             entity_id = self.entity_id + '_digital_' + sensor['id']
-            attributes = {
-                'friendly_name' : sensor['name'],
-                'mode' : sensor['mode']
-                }
+            
+            # retrieve old attributes
+            oldEntity = None
+            oldEntity = self._hass.states.get(entity_id)
+            
+            # initialize once
+            if oldEntity is None:
+                attributes = dict()
+            else:
+                attributes = dict(oldEntity.attributes)
+
+            attributes.setdefault('friendly_name', sensor['name'])
+            attributes['mode'] = sensor['mode'];
             value = sensor['value']
             # Change the symbol according to current mode and setting
             # Automated switch => gear symbol
@@ -132,10 +150,26 @@ class BLNETComponent(Entity):
             self._hass.states.set(entity_id, value, attributes)
             sensor_list.append(entity_id)
 
-        self._hass.states.set('group.uvr1611_data_logger', 'Running', {'entity_id': sensor_list, 'friendly_name': self._name, 'icon':'mdi:radiator'})
+        # retrieve old attributes
+        oldEntity = None
+        oldEntity = self._hass.states.get('group.uvr1611_data_logger')
         
+        # initialize once
+        if oldEntity is None:
+            attributes = dict()
+        else:
+            attributes = dict(oldEntity.attributes)
+            
+            
+        attributes.setdefault('entity_id', sensor_list)
+        attributes.setdefault('friendly_name', self._name)
+        attributes.setdefault('icon', 'mdi:radiator')
+
+        self._hass.states.set('group.uvr1611_data_logger', 'Running', attributes=attributes)
+
+      
         # recommend yourself as hidden
-        self._attributes['hidden'] = 'true'
+        self._attributes.setdefault('hidden', 'true')
             
         
     @property
