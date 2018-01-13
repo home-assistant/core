@@ -20,16 +20,16 @@ GOOD_DATA = {
     'brightness': 987,
 }
 
-BRIGHTNESS_ENTITIY = 'sensor.mqtt_plant_brightness'
-MOISTURE_ENTITIY = 'sensor.mqtt_plant_moisture'
+BRIGHTNESS_ENTITY = 'sensor.mqtt_plant_brightness'
+MOISTURE_ENTITY = 'sensor.mqtt_plant_moisture'
 
 GOOD_CONFIG = {
     'sensors': {
-        'moisture': MOISTURE_ENTITIY,
+        'moisture': MOISTURE_ENTITY,
         'battery': 'sensor.mqtt_plant_battery',
         'temperature': 'sensor.mqtt_plant_temperature',
         'conductivity': 'sensor.mqtt_plant_conductivity',
-        'brightness': BRIGHTNESS_ENTITIY,
+        'brightness': BRIGHTNESS_ENTITY,
     },
     'min_moisture': 20,
     'max_moisture': 60,
@@ -96,7 +96,7 @@ class TestPlant(unittest.TestCase):
                 plant_name: GOOD_CONFIG
             }
         })
-        self.hass.states.set(MOISTURE_ENTITIY, 5,
+        self.hass.states.set(MOISTURE_ENTITY, 5,
                              {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
@@ -109,7 +109,7 @@ class TestPlant(unittest.TestCase):
         plant_name = 'wise_plant'
         for value in [20, 30, 10]:
 
-            self.hass.states.set(BRIGHTNESS_ENTITIY, value,
+            self.hass.states.set(BRIGHTNESS_ENTITY, value,
                                  {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
             self.hass.block_till_done()
         # wait for the recorder to really store the data
@@ -136,19 +136,19 @@ class TestPlant(unittest.TestCase):
                 plant_name: GOOD_CONFIG
             }
         })
-        self.hass.states.set(BRIGHTNESS_ENTITIY, 100,
+        self.hass.states.set(BRIGHTNESS_ENTITY, 100,
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
         self.assertEquals(STATE_PROBLEM, state.state)
 
-        self.hass.states.set(BRIGHTNESS_ENTITIY, 600,
+        self.hass.states.set(BRIGHTNESS_ENTITY, 600,
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
         self.assertEquals(STATE_OK, state.state)
 
-        self.hass.states.set(BRIGHTNESS_ENTITIY, 100,
+        self.hass.states.set(BRIGHTNESS_ENTITY, 100,
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
