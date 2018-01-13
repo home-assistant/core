@@ -91,5 +91,10 @@ class IotaNodeSensor(IotaDevice):
         """Fetch new attribures IRI node."""
         node_info = self.api.get_node_info()
         self._state = node_info.get('appVersion')
+
         # convert values to raw string formats
         self._attr = {k: str(v) for k, v in node_info.items()}
+
+        # add values of iri config
+        self._attr['url'] = self.iri
+        self._attr['testnet'] = self.is_testnet

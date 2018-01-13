@@ -53,10 +53,6 @@ def setup(hass, config):
         'wallets': iota_config[CONF_WALLETS]
     }
 
-    # Set states of IRI config
-    hass.states.set('iota.iri', hass.data[DOMAIN]['iri'])
-    hass.states.set('iota.is_testnet', hass.data[DOMAIN]['is_testnet'])
-
     # Load platforms
     for platform in IOTA_PLATFORMS:
         load_platform(hass, platform, DOMAIN, {}, iota_config)
