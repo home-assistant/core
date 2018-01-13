@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, DOMAIN
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
@@ -101,12 +100,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera._ptz.ContinuousMove(req)
 
 
-    descriptions = load_yaml_config_file(
-            os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(DOMAIN, SERVICE_PTZ,
-            handle_ptz, descriptions.get(SERVICE_PTZ),
-            schema=SERVICE_PTZ_SCHEMA)
+            handle_ptz, schema=SERVICE_PTZ_SCHEMA)
     entities.append(ONVIFCamera(hass, config))
     yield from component.async_add_entities(entities)
 
