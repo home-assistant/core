@@ -97,6 +97,14 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
+def unquote_from_mqtt(payload):
+    """Return a list of possible payloads after unquoting."""
+    if payload[0] == '"' and payload[-1] == '"':
+        return (payload[1:-1], payload)
+    else:
+        return (payload,)
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the MQTT climate devices."""
@@ -198,11 +206,13 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         @callback
         def handle_mode_received(topic, payload, qos):
             """Handle receiving mode via MQTT."""
-            if payload not in self._operation_list:
-                _LOGGER.error("Invalid mode: %s", payload)
-            else:
-                self._current_operation = payload
-                self.async_schedule_update_ha_state()
+            for unquoted_payload in unquote_from_mqtt(payload):
+                if unquoted_payload in self._operation_list:
+                    self._current_operation = unquoted_payload
+                    self.async_schedule_update_ha_state()
+                    return
+
+            _LOGGER.error("Invalid mode: %s", payload)
 
         if self._topic[CONF_MODE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -226,11 +236,13 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         @callback
         def handle_fan_mode_received(topic, payload, qos):
             """Handle receiving fan mode via MQTT."""
-            if payload not in self._fan_list:
-                _LOGGER.error("Invalid fan mode: %s", payload)
-            else:
-                self._current_fan_mode = payload
-                self.async_schedule_update_ha_state()
+            for unquoted_payload in unquote_from_mqtt(payload):
+                if unquoted_payload in self._fan_list:
+                    self._current_fan_mode = unquoted_payload
+                    self.async_schedule_update_ha_state()
+                    return
+
+            _LOGGER.error("Invalid fan mode: %s", payload)
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -240,11 +252,13 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         @callback
         def handle_swing_mode_received(topic, payload, qos):
             """Handle receiving swing mode via MQTT."""
-            if payload not in self._swing_list:
-                _LOGGER.error("Invalid swing mode: %s", payload)
-            else:
-                self._current_swing_mode = payload
-                self.async_schedule_update_ha_state()
+            for unquoted_payload in unquote_from_mqtt(payload):
+                if unquoted_payload in self._swing_list:
+                    self._current_swing_mode = unquoted_payload
+                    self.async_schedule_update_ha_state()
+                    return
+
+            _LOGGER.error("Invalid swing mode: %s", payload)
 
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -254,9 +268,9 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         @callback
         def handle_away_mode_received(topic, payload, qos):
             """Handle receiving away mode via MQTT."""
-            if payload == self._payload_on:
+            if self._payload_on in unquote_from_mqtt(payload):
                 self._away = True
-            elif payload == self._payload_off:
+            elif self._payload_off in unquote_from_mqtt(payload):
                 self._away = False
             else:
                 _LOGGER.error("Invalid away mode: %s", payload)
@@ -271,9 +285,9 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         @callback
         def handle_aux_mode_received(topic, payload, qos):
             """Handle receiving aux mode via MQTT."""
-            if payload == self._payload_on:
+            if self._payload_on in unquote_from_mqtt(payload):
                 self._aux = True
-            elif payload == self._payload_off:
+            elif self._payload_off in unquote_from_mqtt(payload):
                 self._aux = False
             else:
                 _LOGGER.error("Invalid aux mode: %s", payload)
@@ -288,7 +302,13 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         @callback
         def handle_hold_mode_received(topic, payload, qos):
             """Handle receiving hold mode via MQTT."""
-            self._hold = payload
+            # Since we don't have a fixed list of possible hold modes, we can't
+            # determine for sure whether a quoted payload should be unquoted
+            # or not. Unquoted seems very much more likely, though.
+            if payload[0] == '"' and payload[-1] == '"':
+                self._hold = payload[1:-1]
+            else:
+                self._hold = payload
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_HOLD_STATE_TOPIC] is not None:
