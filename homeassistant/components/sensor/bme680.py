@@ -1,9 +1,11 @@
 """
-Support for BME680 temperature, humidity, pressure and volitile gas sensor.
+Support for BME680 Sensor over SMBus.
+
+Temperature, humidity, pressure and volitile gas support.
+Air Qaulity calucaltion based on humidity and volatile gas.
 
 """
 import asyncio
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -13,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 REQUIREMENTS = ['bme680==1.0.4',
@@ -197,8 +198,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class BME680Handler:
     """BME680 sensor working in i2C bus."""
+
     class SensorData:
+        """Sensor data representation."""
+
         def __init__(self):
+            """Initialize the sensor data object."""
             self.temperature = None
             self.humidity = None
             self.pressure = None
@@ -226,7 +231,7 @@ class BME680Handler:
         self.update(first_read=True)
 
     def _run_gas_sensor(self, burn_in_time):
-        """Calibrate the Air Quality Gas Baseline"""
+        """Calibrate the Air Quality Gas Baseline."""
         if not self._gas_sensor_running:
             self._gas_sensor_running = True
             import time
@@ -257,13 +262,17 @@ class BME680Handler:
                           "\n\t{!r}").format(len(burn_in_data), burn_in_data))
             self._gas_baseline = sum(burn_in_data[-50:]) / 50.0
             _LOGGER.info("Completed gas sensor burn in for Air Quality")
-            _LOGGER.info("AQ Gas Resistance Baseline: {:f}".format(self._gas_baseline))
+            _LOGGER.info(
+                "AQ Gas Resistance Baseline: {:f}".format(self._gas_baseline)
+            )
             while True:
                 if (
                     self._sensor.get_sensor_data() and
                     self._sensor.data.heat_stable
                 ):
-                    self.sensor_data.gas_resistance = self._sensor.data.gas_resistance
+                    self.sensor_data.gas_resistance = (
+                        self._sensor.data.gas_resistance
+                    )
                     self.sensor_data.air_quality = self._calculate_aq_score()
                     time.sleep(1)
         else:
@@ -272,7 +281,7 @@ class BME680Handler:
     def update(self, first_read=False):
         """Read sensor data."""
         if first_read:
-            #Attempt first read, it almost always fails first attempt
+            # Attempt first read, it almost always fails first attempt
             self._sensor.get_sensor_data()
         if self._sensor.get_sensor_data():
             self.sensor_data.temperature = self._sensor.data.temperature
@@ -280,7 +289,7 @@ class BME680Handler:
             self.sensor_data.pressure = self._sensor.data.pressure
 
     def _calculate_aq_score(self):
-        """Calculate the Air Quality Score"""
+        """Calculate the Air Quality Score."""
         hum_baseline = self._hum_baseline
         hum_weighting = self._hum_weighting
         gas_baseline = self._gas_baseline
@@ -293,9 +302,17 @@ class BME680Handler:
 
         # Calculate hum_score as the distance from the hum_baseline.
         if hum_offset > 0:
-            hum_score = (100 - hum_baseline - hum_offset) / (100 - hum_baseline) * hum_weighting
+            hum_score = (
+                (100 - hum_baseline - hum_offset) /
+                (100 - hum_baseline) *
+                hum_weighting
+            )
         else:
-            hum_score = (hum_baseline + hum_offset) / hum_baseline * hum_weighting
+            hum_score = (
+                (hum_baseline + hum_offset) /
+                hum_baseline *
+                hum_weighting
+            )
 
         # Calculate gas_score as the distance from the gas_baseline.
         if gas_offset > 0:
@@ -349,7 +366,9 @@ class BME680Sensor(Entity):
         elif self.type == SENSOR_PRESS:
             self._state = round(self.bme680_client.sensor_data.pressure, 1)
         elif self.type == SENSOR_GAS:
-                self._state = int(round(self.bme680_client.sensor_data.gas_resistance, 0))
+                self._state = int(
+                    round(self.bme680_client.sensor_data.gas_resistance, 0)
+                )
         elif self.type == SENSOR_AQ:
             aq_score = self.bme680_client.sensor_data.air_quality
             if aq_score is not None:
