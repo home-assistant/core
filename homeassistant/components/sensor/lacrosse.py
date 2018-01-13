@@ -24,7 +24,7 @@ REQUIREMENTS = ['pylacrosse==0.3.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BAUD = 'baud'
-CONF_DATARATE= 'datarate'
+CONF_DATARATE = 'datarate'
 CONF_EXPIRE_AFTER = 'expire_after'
 CONF_FREQUENCY = 'frequency'
 CONF_JEELINK_LED = 'led'
