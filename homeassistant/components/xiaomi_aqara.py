@@ -225,7 +225,7 @@ class XiaomiDevice(Entity):
         return self._device_state_attributes
 
     @callback
-    def _set_unavailable(self):
+    def _set_unavailable(self, now):
         """Set state to UNAVAILABLE."""
         self._remove_unavailability_tracker = None
         self._state = STATE_UNAVAILABLE
