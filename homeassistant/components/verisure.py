@@ -6,7 +6,6 @@ https://home-assistant.io/components/verisure/
 """
 import logging
 import threading
-import os.path
 from datetime import timedelta
 
 import voluptuous as vol
@@ -15,7 +14,6 @@ from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
-import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['vsure==1.3.7', 'jsonpath==0.75']
@@ -78,9 +76,6 @@ def setup(hass, config):
                       'camera', 'binary_sensor'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
-    descriptions = conf_util.load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     def capture_smartcam(service):
         """Capture a new picture from a smartcam."""
         device_id = service.data.get(ATTR_DEVICE_SERIAL)
@@ -89,7 +84,6 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_CAPTURE_SMARTCAM,
                            capture_smartcam,
-                           descriptions[DOMAIN][SERVICE_CAPTURE_SMARTCAM],
                            schema=CAPTURE_IMAGE_SCHEMA)
 
     return True

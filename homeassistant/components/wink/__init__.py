@@ -25,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['python-wink==1.7.1', 'pubnubsub-handler==1.0.2']
@@ -232,9 +231,6 @@ def setup(hass, config):
     import pywink
     from pubnubsubhandler import PubNubSubscriptionHandler
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
             'unique_ids': [],
@@ -374,8 +370,7 @@ def setup(hass, config):
                 time.sleep(1)
                 entity.schedule_update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update,
-                           descriptions.get(SERVICE_REFRESH_STATES))
+    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update)
 
     def pull_new_devices(call):
         """Pull new devices added to users Wink account since startup."""
@@ -383,8 +378,7 @@ def setup(hass, config):
         for _component in WINK_COMPONENTS:
             discovery.load_platform(hass, _component, DOMAIN, {}, config)
 
-    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices,
-                           descriptions.get(SERVICE_ADD_NEW_DEVICES))
+    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices)
 
     def set_pairing_mode(call):
         """Put the hub in provided pairing mode."""
@@ -412,7 +406,6 @@ def setup(hass, config):
             found_device.wink.set_name(name)
 
     hass.services.register(DOMAIN, SERVICE_RENAME_DEVICE, rename_device,
-                           descriptions.get(SERVICE_RENAME_DEVICE),
                            schema=RENAME_DEVICE_SCHEMA)
 
     def delete_device(call):
@@ -430,7 +423,6 @@ def setup(hass, config):
             found_device.wink.remove_device()
 
     hass.services.register(DOMAIN, SERVICE_DELETE_DEVICE, delete_device,
-                           descriptions.get(SERVICE_DELETE_DEVICE),
                            schema=DELETE_DEVICE_SCHEMA)
 
     hubs = pywink.get_hubs()
@@ -441,7 +433,6 @@ def setup(hass, config):
     if WINK_HUBS:
         hass.services.register(
             DOMAIN, SERVICE_SET_PAIRING_MODE, set_pairing_mode,
-            descriptions.get(SERVICE_SET_PAIRING_MODE),
             schema=SET_PAIRING_MODE_SCHEMA)
 
     def service_handle(service):
@@ -508,44 +499,36 @@ def setup(hass, config):
 
         hass.services.register(DOMAIN, SERVICE_SET_AUTO_SHUTOFF,
                                service_handle,
-                               descriptions.get(SERVICE_SET_AUTO_SHUTOFF),
                                schema=SET_AUTO_SHUTOFF_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_ENABLE_SIREN,
                                service_handle,
-                               descriptions.get(SERVICE_ENABLE_SIREN),
                                schema=ENABLED_SIREN_SCHEMA)
 
     if has_dome_or_wink_siren:
 
         hass.services.register(DOMAIN, SERVICE_SET_SIREN_TONE,
                                service_handle,
-                               descriptions.get(SERVICE_SET_SIREN_TONE),
                                schema=SET_SIREN_TONE_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_ENABLE_CHIME,
                                service_handle,
-                               descriptions.get(SERVICE_ENABLE_CHIME),
                                schema=SET_CHIME_MODE_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_SET_SIREN_VOLUME,
                                service_handle,
-                               descriptions.get(SERVICE_SET_SIREN_VOLUME),
                                schema=SET_VOLUME_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_SET_CHIME_VOLUME,
                                service_handle,
-                               descriptions.get(SERVICE_SET_CHIME_VOLUME),
                                schema=SET_VOLUME_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_SIREN_STROBE_ENABLED,
                                service_handle,
-                               descriptions.get(SERVICE_SIREN_STROBE_ENABLED),
                                schema=SET_STROBE_ENABLED_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_CHIME_STROBE_ENABLED,
                                service_handle,
-                               descriptions.get(SERVICE_CHIME_STROBE_ENABLED),
                                schema=SET_STROBE_ENABLED_SCHEMA)
 
     component.add_entities(sirens)

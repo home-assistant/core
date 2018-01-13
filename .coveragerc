@@ -50,8 +50,14 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/coinbase.py
+    homeassistant/components/sensor/coinbase.py
+
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
+
+    homeassistant/components/deconz/*
+    homeassistant/components/*/deconz.py
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
@@ -263,6 +269,9 @@ omit =
     homeassistant/components/zoneminder.py
     homeassistant/components/*/zoneminder.py
 
+    homeassistant/components/daikin.py
+    homeassistant/components/*/daikin.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
@@ -296,6 +305,7 @@ omit =
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/synology.py
     homeassistant/components/camera/yi.py
+    homeassistant/components/climate/econet.py
     homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
@@ -307,6 +317,7 @@ omit =
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/climate/sensibo.py
+    homeassistant/components/climate/touchline.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py
@@ -368,6 +379,7 @@ omit =
     homeassistant/components/light/greenwave.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
+    homeassistant/components/light/iglo.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/lifx_legacy.py
     homeassistant/components/light/limitlessled.py
@@ -520,7 +532,6 @@ omit =
     homeassistant/components/sensor/etherscan.py
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
-    homeassistant/components/sensor/fido.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
@@ -583,6 +594,7 @@ omit =
     homeassistant/components/sensor/skybeacon.py
     homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
+    homeassistant/components/sensor/sochain.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/steam_online.py
@@ -651,9 +663,9 @@ omit =
     homeassistant/components/vacuum/xiaomi_miio.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
+    homeassistant/components/weather/darksky.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
-    homeassistant/components/weather/yweather.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py

@@ -4,27 +4,29 @@ Support for the OpenWeatherMap (OWM) service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.openweathermap/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_LATITUDE,
-                                 CONF_LONGITUDE, STATE_UNKNOWN, TEMP_CELSIUS)
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, STATE_UNKNOWN,
+    TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.7.1']
+REQUIREMENTS = ['pyowm==2.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'OpenWeatherMap'
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+DEFAULT_NAME = 'OpenWeatherMap'
+
 MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
     'cloudy': [804],

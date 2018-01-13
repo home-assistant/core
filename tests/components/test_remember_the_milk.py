@@ -1,6 +1,7 @@
 """Tests for the Remember The Milk component."""
 
 import logging
+import json
 import unittest
 from unittest.mock import patch, mock_open, Mock
 
@@ -19,7 +20,16 @@ class TestConfiguration(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.profile = "myprofile"
         self.token = "mytoken"
-        self.json_string = '{"myprofile": {"token": "mytoken"}}'
+        self.json_string = json.dumps(
+            {"myprofile": {
+                "token": "mytoken",
+                "id_map": {"1234": {
+                    "list_id": "0",
+                    "timeseries_id": "1",
+                    "task_id": "2"
+                }}
+            }
+            })
 
     def tearDown(self):
         """Exit home assistant."""
@@ -28,7 +38,8 @@ class TestConfiguration(unittest.TestCase):
     def test_create_new(self):
         """Test creating a new config file."""
         with patch("builtins.open", mock_open()), \
-                patch("os.path.isfile", Mock(return_value=False)):
+                patch("os.path.isfile", Mock(return_value=False)), \
+                patch.object(rtm.RememberTheMilkConfiguration, 'save_config'):
             config = rtm.RememberTheMilkConfiguration(self.hass)
             config.set_token(self.profile, self.token)
         self.assertEqual(config.get_token(self.profile), self.token)
@@ -47,3 +58,30 @@ class TestConfiguration(unittest.TestCase):
                 patch("os.path.isfile", Mock(return_value=True)):
             config = rtm.RememberTheMilkConfiguration(self.hass)
         self.assertIsNotNone(config)
+
+    def test_id_map(self):
+        """Test the hass to rtm task is mapping."""
+        hass_id = "hass-id-1234"
+        list_id = "mylist"
+        timeseries_id = "my_timeseries"
+        rtm_id = "rtm-id-4567"
+        with patch("builtins.open", mock_open()), \
+                patch("os.path.isfile", Mock(return_value=False)), \
+                patch.object(rtm.RememberTheMilkConfiguration, 'save_config'):
+            config = rtm.RememberTheMilkConfiguration(self.hass)
+
+            self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
+            config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id,
+                              rtm_id)
+            self.assertEqual((list_id, timeseries_id, rtm_id),
+                             config.get_rtm_id(self.profile, hass_id))
+            config.delete_rtm_id(self.profile, hass_id)
+            self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
+
+    def test_load_key_map(self):
+        """Test loading an existing key map from the file."""
+        with patch("builtins.open", mock_open(read_data=self.json_string)), \
+                patch("os.path.isfile", Mock(return_value=True)):
+            config = rtm.RememberTheMilkConfiguration(self.hass)
+        self.assertEqual(('0', '1', '2',),
+                         config.get_rtm_id(self.profile, "1234"))

@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.webostv/
 """
 import logging
-import os
 
 import voluptuous as vol
 
@@ -19,14 +18,11 @@ REQUIREMENTS = ['pylgtv==0.1.7']
 _LOGGER = logging.getLogger(__name__)
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
-HOME_ASSISTANT_ICON_PATH = os.path.join(os.path.dirname(__file__), '..',
-                                        'frontend', 'www_static', 'icons',
-                                        'favicon-1024x1024.png')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH): cv.string
+    vol.Optional(CONF_ICON): cv.string
 })
 
 
@@ -36,7 +32,8 @@ def get_service(hass, config, discovery_info=None):
     from pylgtv import PyLGTVPairException
 
     path = hass.config.path(config.get(CONF_FILENAME))
-    client = WebOsClient(config.get(CONF_HOST), key_file_path=path)
+    client = WebOsClient(config.get(CONF_HOST), key_file_path=path,
+                         timeout_connect=8)
 
     if not client.is_registered():
         try:
