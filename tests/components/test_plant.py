@@ -2,7 +2,6 @@
 import asyncio
 import unittest
 from datetime import datetime, timedelta
-from time import sleep
 
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
                                  STATE_PROBLEM, STATE_OK)
@@ -115,7 +114,6 @@ class TestPlant(unittest.TestCase):
             self.hass.block_till_done()
         # wait for the recorder to really store the data
         self.hass.data[recorder.DATA_INSTANCE].block_till_done()
-        sleep(0.1)
 
         assert setup_component(self.hass, plant.DOMAIN, {
             plant.DOMAIN: {
