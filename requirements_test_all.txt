@@ -135,7 +135,7 @@ pynx584==0.4
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
-pysnmp==4.4.2
+pysnmp==4.4.4
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
