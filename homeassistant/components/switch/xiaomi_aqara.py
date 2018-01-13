@@ -55,7 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                    False, hass, gateway))
             elif model == '86plug':
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
-                                                   'status', True, hass, gateway))
+                                                   'status', True, hass,
+                                                   gateway))
     add_devices(devices)
 
 

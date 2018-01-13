@@ -12,7 +12,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_MAC, CONF_HOST, CONF_PORT, STATE_UNAVAILABLE)
+                                 CONF_MAC, CONF_HOST, CONF_PORT,
+                                 STATE_UNAVAILABLE)
 
 REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
 
@@ -232,12 +233,13 @@ class XiaomiDevice(Entity):
         self._remove_unavailability_tracker = None
         self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
-
+        
     def _track_unavailable(self):
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
         self._remove_unavailability_tracker = async_track_point_in_utc_time(
-            self._hass, self._set_unavailable, utcnow() + TIME_TILL_UNAVAILABLE)
+            self._hass, self._set_unavailable,
+            utcnow() + TIME_TILL_UNAVAILABLE)
         if self._state == STATE_UNAVAILABLE:
             self._state = None
             return True
@@ -245,9 +247,10 @@ class XiaomiDevice(Entity):
 
     def push_data(self, data):
         """Push from Hub."""
-        # There is a chance this function will be called simultaneously by 2 different threads
-        # (SyncThreads) when 'heartbeat' and 'report' messages arrived at the same time.
-        # It causes an issue with _state set. Using lock queue state changes.
+        # There is a chance this function will be called simultaneously by 2
+        # different threads (SyncThreads) when 'heartbeat' and 'report'
+        # messages arrived at the same time. It causes an issue with _state
+        # set. Using lock queue state changes.
         with self._lock:
             _LOGGER.debug("PUSH >> %s: %s", self, data)
             was_unavailable = self._track_unavailable()
