@@ -122,12 +122,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         )
 
         yield from hass.async_add_job(
-                sensor.set_humidity_oversample,
-                os_lookup[config.get(CONF_OVERSAMPLING_HUM)]
+            sensor.set_humidity_oversample,
+            os_lookup[config.get(CONF_OVERSAMPLING_HUM)]
         )
         yield from hass.async_add_job(
-                sensor.set_pressure_oversample,
-                os_lookup[config.get(CONF_OVERSAMPLING_PRES)]
+            sensor.set_pressure_oversample,
+            os_lookup[config.get(CONF_OVERSAMPLING_PRES)]
         )
 
         # Configure IIR Filter
@@ -148,8 +148,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         # Configure the Gas Heater
         if (
-            SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
-            SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
+                SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
+                SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
         ):
             yield from hass.async_add_job(
                 sensor.set_gas_status, bme680.ENABLE_GAS_MEAS)
@@ -166,15 +166,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             yield from hass.async_add_job(
                 sensor.set_gas_status, bme680.DISABLE_GAS_MEAS
             )
-    except (RuntimeError, IOError) as e:
+    except (RuntimeError, IOError):
         _LOGGER.error("BME680 sensor not detected at %s", i2c_address)
         return False
 
     sensor_handler = yield from hass.async_add_job(
         BME680Handler, sensor,
         True if (
-                SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
-                SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
+            SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
+            SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
         ) else False,
         config[CONF_AQ_BURN_IN_TIME],
         config[CONF_AQ_HUM_BASELINE],
@@ -194,6 +194,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         pass
 
     async_add_devices(dev)
+    return True
 
 
 class BME680Handler:
@@ -211,8 +212,8 @@ class BME680Handler:
             self.air_quality = None
 
     def __init__(
-                 self, sensor, gas_measurement=False,
-                 burn_in_time=300, hum_baseline=40, hum_weighting=25
+            self, sensor, gas_measurement=False,
+            burn_in_time=300, hum_baseline=40, hum_weighting=25
     ):
         """Initialize the sensor handler."""
         self.sensor_data = BME680Handler.SensorData()
@@ -220,6 +221,7 @@ class BME680Handler:
         self._gas_sensor_running = False
         self._hum_baseline = hum_baseline
         self._hum_weighting = hum_weighting
+        self._gas_baseline = None
 
         if gas_measurement:
             import threading
@@ -243,13 +245,14 @@ class BME680Handler:
             curr_time = time.time()
             burn_in_data = []
 
-            _LOGGER.info(("Beginning {} second gas sensor burn in for"
-                         "Air Quality").format(burn_in_time))
+            _LOGGER.info(
+                "Beginning {} second gas sensor burn in forAir Quality"
+            ).format(burn_in_time)
             while curr_time - start_time < burn_in_time:
                 curr_time = time.time()
                 if (
-                    self._sensor.get_sensor_data() and
-                    self._sensor.data.heat_stable
+                        self._sensor.get_sensor_data() and
+                        self._sensor.data.heat_stable
                 ):
                     gas_resistance = self._sensor.data.gas_resistance
                     burn_in_data.append(gas_resistance)
@@ -259,7 +262,7 @@ class BME680Handler:
                     time.sleep(1)
 
             _LOGGER.debug(("AQ Gas Resistance Burn In Data (Size: {:d}): "
-                          "\n\t{!r}").format(len(burn_in_data), burn_in_data))
+                           "\n\t{!r}").format(len(burn_in_data), burn_in_data))
             self._gas_baseline = sum(burn_in_data[-50:]) / 50.0
             _LOGGER.info("Completed gas sensor burn in for Air Quality")
             _LOGGER.info(
@@ -267,8 +270,8 @@ class BME680Handler:
             )
             while True:
                 if (
-                    self._sensor.get_sensor_data() and
-                    self._sensor.data.heat_stable
+                        self._sensor.get_sensor_data() and
+                        self._sensor.data.heat_stable
                 ):
                     self.sensor_data.gas_resistance = (
                         self._sensor.data.gas_resistance
@@ -366,9 +369,9 @@ class BME680Sensor(Entity):
         elif self.type == SENSOR_PRESS:
             self._state = round(self.bme680_client.sensor_data.pressure, 1)
         elif self.type == SENSOR_GAS:
-                self._state = int(
-                    round(self.bme680_client.sensor_data.gas_resistance, 0)
-                )
+            self._state = int(
+                round(self.bme680_client.sensor_data.gas_resistance, 0)
+            )
         elif self.type == SENSOR_AQ:
             aq_score = self.bme680_client.sensor_data.air_quality
             if aq_score is not None:
