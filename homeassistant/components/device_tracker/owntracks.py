@@ -142,9 +142,8 @@ def _parse_see_args(message, subscribe_topic):
         kwargs['attributes']['tid'] = message['tid']
     if 'addr' in message:
         kwargs['attributes']['address'] = message['addr']
-    if 't' in message:
-        if message['t'] == 'b':
-            kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_BLUETOOTH_LE
+    if 't' in message and message['t'] == 'b':
+        kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_BLUETOOTH_LE
 
     return dev_id, kwargs
 
