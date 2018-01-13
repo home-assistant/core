@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.36']
+REQUIREMENTS = ['pyhomematic==0.1.37']
 DOMAIN = 'homematic'
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ HM_DEVICE_TYPES = {
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP'],
-    DISCOVER_COVER: ['Blind', 'KeyBlind']
+    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [

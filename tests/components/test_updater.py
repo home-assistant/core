@@ -8,7 +8,7 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components import updater
 import homeassistant.util.dt as dt_util
-from tests.common import async_fire_time_changed, mock_coro
+from tests.common import async_fire_time_changed, mock_coro, mock_component
 
 NEW_VERSION = '10000.0'
 MOCK_VERSION = '10.0'
@@ -174,3 +174,24 @@ def test_error_fetching_new_version_invalid_response(hass, aioclient_mock):
                Mock(return_value=mock_coro({'fake': 'bla'}))):
         res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res is None
+
+
+@asyncio.coroutine
+def test_new_version_shows_entity_after_hour_hassio(
+        hass, mock_get_uuid, mock_get_newest_version):
+    """Test if new entity is created if new version is available / hass.io."""
+    mock_get_uuid.return_value = MOCK_HUUID
+    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, ''))
+    mock_component(hass, 'hassio')
+    hass.data['hassio_hass_version'] = "999.0"
+
+    res = yield from async_setup_component(
+        hass, updater.DOMAIN, {updater.DOMAIN: {}})
+    assert res, 'Updater failed to setup'
+
+    with patch('homeassistant.components.updater.current_version',
+               MOCK_VERSION):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
+        yield from hass.async_block_till_done()
+
+    assert hass.states.is_state(updater.ENTITY_ID, "999.0")

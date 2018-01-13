@@ -18,8 +18,10 @@ ATTR_DEVICE = 'device'
 ATTR_NAME = 'name'
 ATTR_ZONE = 'zone'
 
-SENSOR_TYPES = ['temperature', 'humidity', 'power',
-                'link', 'heating', 'tado mode', 'overlay']
+CLIMATE_SENSOR_TYPES = ['temperature', 'humidity', 'power',
+                        'link', 'heating', 'tado mode', 'overlay']
+
+HOT_WATER_SENSOR_TYPES = ['power', 'link', 'tado mode', 'overlay']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -35,10 +37,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor_items = []
     for zone in zones:
         if zone['type'] == 'HEATING':
-            for variable in SENSOR_TYPES:
+            for variable in CLIMATE_SENSOR_TYPES:
                 sensor_items.append(create_zone_sensor(
                     tado, zone, zone['name'], zone['id'],
                     variable))
+        elif zone['type'] == 'HOT_WATER':
+            for variable in HOT_WATER_SENSOR_TYPES:
+                sensor_items.append(create_zone_sensor(
+                    tado, zone, zone['name'], zone['id'],
+                    variable
+                ))
 
     me_data = tado.get_me()
     sensor_items.append(create_device_sensor(
