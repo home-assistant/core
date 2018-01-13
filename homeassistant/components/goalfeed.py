@@ -38,7 +38,7 @@ def setup(hass, config):
         """Handle goal events."""
         goal = json.loads(json.loads(data))
 
-        hass.bus.async_fire('goal', event_data=goal)
+        hass.bus.fire('goal', event_data=goal)
 
     def connect_handler(data):
         """Handle connection."""
@@ -49,10 +49,10 @@ def setup(hass, config):
         resp = requests.post(GOALFEED_AUTH_ENDPOINT, post_data).json()
 
         channel = pusher.subscribe('private-goals', resp['auth'])
-        channel.bind('goal', goal_handler)
+        channel.bind('goalfeed_goal', goal_handler)
 
     pusher = pysher.Pusher(GOALFEED_APP_ID, secure=False, port=8080,
-                           custom_host=GOALFEED_HOST)
+                           custom_host=GOALFEED_HOST, timeout=30)
 
     pusher.connection.bind('pusher:connection_established', connect_handler)
     pusher.connect()
