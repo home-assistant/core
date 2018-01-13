@@ -233,7 +233,7 @@ class XiaomiDevice(Entity):
         self._remove_unavailability_tracker = None
         self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
-        
+
     def _track_unavailable(self):
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
