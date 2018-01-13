@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
+from homeassistant.const import STATE_UNAVAILABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +74,13 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
     def is_on(self):
         """Return true if sensor is on."""
         return self._state is True
+
+    @property
+    def state(self):
+        """Return the state of the xiaomi binary sensor."""
+        if self._state == STATE_UNAVAILABLE:
+            return self._state
+        return super(XiaomiBinarySensor, self).state
 
     @property
     def device_class(self):

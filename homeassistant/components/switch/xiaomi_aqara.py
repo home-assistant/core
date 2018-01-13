@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
+from homeassistant.const import STATE_UNAVAILABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +83,13 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
     def is_on(self):
         """Return true if it is on."""
         return self._state is True
+
+    @property
+    def state(self):
+        """Return the state of the xiaomi switch."""
+        if self._state == STATE_UNAVAILABLE:
+            return self._state
+        return super(XiaomiGenericSwitch, self).state
 
     @property
     def device_state_attributes(self):
