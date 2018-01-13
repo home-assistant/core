@@ -1,6 +1,8 @@
 """The tests for the Tomato device tracker platform."""
 from unittest import mock
 import pytest
+import requests
+import requests_mock
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN, tomato as tomato
@@ -66,7 +68,7 @@ def test_config_missing_optional_params(hass, mock_session_send):
         'Content-Length': '32',
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic Zm9vOnBhc3N3b3Jk'
-        }
+    }
     assert "_http_id=1234567890" in result.req.body
     assert "exec=devlist" in result.req.body
 
@@ -93,7 +95,7 @@ def test_config_verify_ssl_but_no_ssl_enabled(hass, mock_session_send):
         'Content-Length': '32',
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic Zm9vOnBhc3N3b3Jk'
-        }
+    }
     assert "_http_id=1234567890" in result.req.body
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
@@ -126,7 +128,7 @@ def test_config_valid_verify_ssl_path(hass, mock_session_send):
         'Content-Length': '32',
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic YmFyOmZvbw=='
-        }
+    }
     assert "_http_id=0987654321" in result.req.body
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
@@ -154,7 +156,7 @@ def test_config_valid_verify_ssl_bool(hass, mock_session_send):
         'Content-Length': '32',
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic YmFyOmZvbw=='
-        }
+    }
     assert "_http_id=0987654321" in result.req.body
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
@@ -223,10 +225,7 @@ def test_config_errors():
 
 @mock.patch('requests.Session.send', side_effect=mock_session_response)
 def test_config_bad_credentials(hass, mock_exception_logger):
-    """Test the setup with bad credentials.
-
-    Representing the absolute path to a CA certificate bundle.
-    """
+    """Test the setup with bad credentials."""
     config = {
         DOMAIN: tomato.PLATFORM_SCHEMA({
             CONF_PLATFORM: tomato.DOMAIN,
@@ -246,11 +245,28 @@ def test_config_bad_credentials(hass, mock_exception_logger):
 
 
 @mock.patch('requests.Session.send', side_effect=mock_session_response)
-def test_scan_devices(hass, mock_exception_logger):
-    """Test the setup with bad credentials.
+def test_bad_response(hass, mock_exception_logger):
+    """Test the setup with bad response from router."""
+    config = {
+        DOMAIN: tomato.PLATFORM_SCHEMA({
+            CONF_PLATFORM: tomato.DOMAIN,
+            CONF_HOST: 'tomato-router',
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'bar',
+            tomato.CONF_HTTP_ID: 'gimmie_bad_data'
+        })
+    }
 
-    Representing the absolute path to a CA certificate bundle.
-    """
+    tomato.get_scanner(hass, config)
+
+    assert mock_exception_logger.call_count == 1
+    assert mock_exception_logger.mock_calls[0] == \
+        mock.call("Failed to parse response from router")
+
+
+@mock.patch('requests.Session.send', side_effect=mock_session_response)
+def test_scan_devices(hass, mock_exception_logger):
+    """Test scanning for new devices."""
     config = {
         DOMAIN: tomato.PLATFORM_SCHEMA({
             CONF_PLATFORM: tomato.DOMAIN,
@@ -266,11 +282,53 @@ def test_scan_devices(hass, mock_exception_logger):
 
 
 @mock.patch('requests.Session.send', side_effect=mock_session_response)
-def test_get_device_name(hass, mock_exception_logger):
-    """Test the setup with bad credentials.
+def test_bad_connection(hass, mock_exception_logger):
+    """Test the router with a connection error."""
+    config = {
+        DOMAIN: tomato.PLATFORM_SCHEMA({
+            CONF_PLATFORM: tomato.DOMAIN,
+            CONF_HOST: 'tomato-router',
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'bar',
+            tomato.CONF_HTTP_ID: 'gimmie_good_data'
+        })
+    }
 
-    Representing the absolute path to a CA certificate bundle.
-    """
+    with requests_mock.Mocker() as adapter:
+        adapter.register_uri('POST', 'http://tomato-router:80/update.cgi',
+                             exc=requests.exceptions.ConnectionError),
+        tomato.get_scanner(hass, config)
+    assert mock_exception_logger.call_count == 1
+    assert mock_exception_logger.mock_calls[0] == \
+        mock.call("Failed to connect to the router "
+                  "or invalid http_id supplied")
+
+
+@mock.patch('requests.Session.send', side_effect=mock_session_response)
+def test_router_timeout(hass, mock_exception_logger):
+    """Test the router with a timeout error."""
+    config = {
+        DOMAIN: tomato.PLATFORM_SCHEMA({
+            CONF_PLATFORM: tomato.DOMAIN,
+            CONF_HOST: 'tomato-router',
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'bar',
+            tomato.CONF_HTTP_ID: 'gimmie_good_data'
+        })
+    }
+
+    with requests_mock.Mocker() as adapter:
+        adapter.register_uri('POST', 'http://tomato-router:80/update.cgi',
+                             exc=requests.exceptions.Timeout),
+        tomato.get_scanner(hass, config)
+    assert mock_exception_logger.call_count == 1
+    assert mock_exception_logger.mock_calls[0] == \
+        mock.call("Connection to the router timed out")
+
+
+@mock.patch('requests.Session.send', side_effect=mock_session_response)
+def test_get_device_name(hass, mock_exception_logger):
+    """Test getting device names."""
     config = {
         DOMAIN: tomato.PLATFORM_SCHEMA({
             CONF_PLATFORM: tomato.DOMAIN,
@@ -284,3 +342,4 @@ def test_get_device_name(hass, mock_exception_logger):
     scanner = tomato.get_scanner(hass, config)
     assert scanner.get_device_name('F4:F5:D8:AA:AA:AA') == 'chromecast'
     assert scanner.get_device_name('58:EF:68:00:00:00') == 'wemo'
+    assert scanner.get_device_name('AA:BB:CC:00:00:00') is None
