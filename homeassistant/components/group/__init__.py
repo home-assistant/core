@@ -6,11 +6,10 @@ https://home-assistant.io/components/group/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 
-from homeassistant import config as conf_util, core as ha
+from homeassistant import core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
@@ -42,6 +41,8 @@ ATTR_OBJECT_ID = 'object_id'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
+
+DATA_ALL_GROUPS = 'data_all_groups'
 
 SERVICE_SET_VISIBILITY = 'set_visibility'
 SERVICE_SET = 'set'
@@ -146,7 +147,7 @@ def set_visibility(hass, entity_id=None, visible=True):
 @bind_hass
 def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
               icon=None, view=None, control=None, add=None):
-    """Create a new user group."""
+    """Create/Update a group."""
     hass.add_job(
         async_set_group, hass, object_id, name, entity_ids, visible, icon,
         view, control, add)
@@ -156,7 +157,7 @@ def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
 @bind_hass
 def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
                     icon=None, view=None, control=None, add=None):
-    """Create a new user group."""
+    """Create/Update a group."""
     data = {
         key: value for key, value in [
             (ATTR_OBJECT_ID, object_id),
@@ -250,14 +251,9 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 def async_setup(hass, config):
     """Set up all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    service_groups = {}
+    hass.data[DATA_ALL_GROUPS] = {}
 
     yield from _async_process_config(hass, config, component)
-
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
 
     @asyncio.coroutine
     def reload_service_handler(service):
@@ -269,12 +265,13 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
-        descriptions[SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
+        schema=RELOAD_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def groups_service_handler(service):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
+        service_groups = hass.data[DATA_ALL_GROUPS]
 
         # new group
         if service.service == SERVICE_SET and object_id not in service_groups:
@@ -285,7 +282,7 @@ def async_setup(hass, config):
                 ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
             ) if service.data.get(attr) is not None}
 
-            new_group = yield from Group.async_create_group(
+            yield from Group.async_create_group(
                 hass, service.data.get(ATTR_NAME, object_id),
                 object_id=object_id,
                 entity_ids=entity_ids,
@@ -293,7 +290,6 @@ def async_setup(hass, config):
                 **extra_arg
             )
 
-            service_groups[object_id] = new_group
             return
 
         # update group
@@ -346,11 +342,11 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET, groups_service_handler,
-        descriptions[SERVICE_SET], schema=SET_SERVICE_SCHEMA)
+        schema=SET_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE, groups_service_handler,
-        descriptions[SERVICE_REMOVE], schema=REMOVE_SERVICE_SCHEMA)
+        schema=REMOVE_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def visibility_service_handler(service):
@@ -368,7 +364,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
-        descriptions[SERVICE_SET_VISIBILITY],
         schema=SET_VISIBILITY_SERVICE_SCHEMA)
 
     return True
@@ -456,6 +451,11 @@ class Group(Entity):
         else:
             yield from group.async_update_ha_state(True)
 
+        # If called before the platform async_setup is called (test cases)
+        if DATA_ALL_GROUPS not in hass.data:
+            hass.data[DATA_ALL_GROUPS] = {}
+
+        hass.data[DATA_ALL_GROUPS][object_id] = group
         return group
 
     @property

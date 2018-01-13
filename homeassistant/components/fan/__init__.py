@@ -8,12 +8,10 @@ import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID,
                                  STATE_UNKNOWN)
@@ -225,16 +223,10 @@ def async_setup(hass, config: dict):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    # Listen for fan service calls.
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for service_name in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service_name].get('schema')
         hass.services.async_register(
-            DOMAIN, service_name, async_handle_fan_service,
-            descriptions.get(service_name), schema=schema)
+            DOMAIN, service_name, async_handle_fan_service, schema=schema)
 
     return True
 

@@ -33,6 +33,8 @@ from homeassistant.helpers import config_per_platform, extract_domain_configs
 _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
+RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
+RE_ASCII = re.compile(r"\033\[[^m]*m")
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
@@ -233,68 +235,21 @@ def create_default_config(config_dir, detect_location=True):
 
             config_file.write(DEFAULT_CONFIG)
 
-        timestamp = date_util.now().strftime('%Y%m%dT%H%M%S')
-        # Check for existing secrets file.
-        # If it exists, back it up before recreating it.
-        if os.path.isfile(secret_path):
-            backup_secret_path = "{}.{}.bak".format(
-                secret_path,
-                timestamp
-            )
-            print("Found existing secrets file. Backing up and re-creating.")
-            os.rename(secret_path, backup_secret_path)
         with open(secret_path, 'wt') as secret_file:
             secret_file.write(DEFAULT_SECRETS)
 
         with open(version_path, 'wt') as version_file:
             version_file.write(__version__)
 
-        # Check for existing group file.
-        # If it exists, back it up before recreating it.
-        if os.path.isfile(group_yaml_path):
-            backup_group_path = "{}.{}.bak".format(
-                group_yaml_path,
-                timestamp
-            )
-            print("Found existing group file. Backing up and re-creating.")
-            os.rename(group_yaml_path, backup_group_path)
         with open(group_yaml_path, 'wt'):
             pass
 
-        # Check for existing automation file.
-        # If it exists, back it up before recreating it.
-        if os.path.isfile(automation_yaml_path):
-            backup_automation_path = "{}.{}.bak".format(
-                automation_yaml_path,
-                timestamp
-            )
-            print("Found existing automation file. Backing up and",
-                  "re-creating.")
-            os.rename(automation_yaml_path, backup_automation_path)
         with open(automation_yaml_path, 'wt') as fil:
             fil.write('[]')
 
-        # Check for existing group file.
-        # If it exists, back it up before recreating it.
-        if os.path.isfile(script_yaml_path):
-            backup_script_path = "{}.{}.bak".format(
-                script_yaml_path,
-                timestamp
-            )
-            print("Found existing script file. Backing up and re-creating.")
-            os.rename(script_yaml_path, backup_script_path)
         with open(script_yaml_path, 'wt'):
             pass
 
-        # Check for existing customize file.
-        # If it exists, back it up before recreating it.
-        if os.path.isfile(customize_yaml_path):
-            backup_customize_path = "{}.{}.bak".format(
-                customize_yaml_path,
-                timestamp
-            )
-            print("Found existing customize file. Backing up and re-creating.")
-            os.rename(customize_yaml_path, backup_customize_path)
         with open(customize_yaml_path, 'wt'):
             pass
 
@@ -702,15 +657,19 @@ def async_check_ha_config_file(hass):
     proc = yield from asyncio.create_subprocess_exec(
         sys.executable, '-m', 'homeassistant', '--script',
         'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
+
     # Wait for the subprocess exit
-    stdout_data, dummy = yield from proc.communicate()
-    result = yield from proc.wait()
+    log, _ = yield from proc.communicate()
+    exit_code = yield from proc.wait()
 
-    if not result:
-        return None
+    # Convert to ASCII
+    log = RE_ASCII.sub('', log.decode())
 
-    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
+    if exit_code != 0 or RE_YAML_ERROR.search(log):
+        return log
+    return None
 
 
 @callback

@@ -8,12 +8,12 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-etherscan-api==0.0.1']
+REQUIREMENTS = ['python-etherscan-api==0.0.2']
 
 CONF_ADDRESS = 'address'
 CONF_ATTRIBUTION = "Data provided by etherscan.io"

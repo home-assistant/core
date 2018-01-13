@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['concord232==0.14']
+REQUIREMENTS = ['concord232==0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +61,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
         return False
+
+    # The order of zones returned by client.list_zones() can vary.
+    # When the zones are not named, this can result in the same entity
+    # name mapping to different sensors in an unpredictable way.  Sort
+    # the zones by zone number to prevent this.
+
+    client.zones.sort(key=lambda zone: zone['number'])
 
     for zone in client.zones:
         _LOGGER.info("Loading Zone found: %s", zone['name'])
@@ -118,7 +125,7 @@ class Concord232ZoneSensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
-        return bool(self._zone['state'] == 'Normal')
+        return bool(self._zone['state'] != 'Normal')
 
     def update(self):
         """Get updated stats from API."""

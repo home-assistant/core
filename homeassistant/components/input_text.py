@@ -4,14 +4,12 @@ Component to offer a way to enter a value into a text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_text/
 """
-import os
 import asyncio
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 from homeassistant.loader import bind_hass
@@ -112,13 +110,8 @@ def async_setup(hass, config):
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
-        description=descriptions[DOMAIN][SERVICE_SET_VALUE],
         schema=SERVICE_SET_VALUE_SCHEMA)
 
     yield from component.async_add_entities(entities)

@@ -80,11 +80,6 @@ class NetatmoThermostat(ClimateDevice):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return self._target_temperature
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
