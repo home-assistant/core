@@ -99,9 +99,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     req.Velocity.Zoom._x = -1
             camera._ptz.ContinuousMove(req)
 
-
-    hass.services.async_register(DOMAIN, SERVICE_PTZ,
-            handle_ptz, schema=SERVICE_PTZ_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
+                                 schema=SERVICE_PTZ_SCHEMA)
     entities.append(ONVIFCamera(hass, config))
     yield from component.async_add_entities(entities)
 
