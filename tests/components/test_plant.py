@@ -1,6 +1,7 @@
 """Unit tests for platform/plant.py."""
 import asyncio
 import unittest
+import pytest
 from datetime import datetime, timedelta
 
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
@@ -103,35 +104,38 @@ class TestPlant(unittest.TestCase):
         self.assertEquals(STATE_PROBLEM, state.state)
         self.assertEquals(5, state.attributes[plant.READING_MOISTURE])
 
+    @pytest.mark.skipif(plant.ENABLE_LOAD_HISTORY is False,
+                        reason="tests for loading from DB are instable, thus"
+                               "this feature is turned of until tests become"
+                               "stable")
     def test_load_from_db(self):
         """Test bootstrapping the brightness history from the database.
 
         This test can should only be executed if the loading of the history
         is enabled via plant.ENABLE_LOAD_HISTORY.
         """
-        if plant.ENABLE_LOAD_HISTORY:
-            init_recorder_component(self.hass)
-            plant_name = 'wise_plant'
-            for value in [20, 30, 10]:
+        init_recorder_component(self.hass)
+        plant_name = 'wise_plant'
+        for value in [20, 30, 10]:
 
-                self.hass.states.set(BRIGHTNESS_ENTITY, value,
-                                     {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
-                self.hass.block_till_done()
-            # wait for the recorder to really store the data
-            self.hass.data[recorder.DATA_INSTANCE].block_till_done()
-
-            assert setup_component(self.hass, plant.DOMAIN, {
-                plant.DOMAIN: {
-                    plant_name: GOOD_CONFIG
-                }
-            })
+            self.hass.states.set(BRIGHTNESS_ENTITY, value,
+                                 {ATTR_UNIT_OF_MEASUREMENT: 'Lux'})
             self.hass.block_till_done()
+        # wait for the recorder to really store the data
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
 
-            state = self.hass.states.get('plant.'+plant_name)
-            self.assertEquals(STATE_UNKNOWN, state.state)
-            max_brightness = state.attributes.get(
-                plant.ATTR_MAX_BRIGHTNESS_HISTORY)
-            self.assertEquals(30, max_brightness)
+        assert setup_component(self.hass, plant.DOMAIN, {
+            plant.DOMAIN: {
+                plant_name: GOOD_CONFIG
+            }
+        })
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('plant.'+plant_name)
+        self.assertEquals(STATE_UNKNOWN, state.state)
+        max_brightness = state.attributes.get(
+            plant.ATTR_MAX_BRIGHTNESS_HISTORY)
+        self.assertEquals(30, max_brightness)
 
     def test_brightness_history(self):
         """Test the min_brightness check."""
