@@ -20,7 +20,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['venstarcolortouch==0.1']
+REQUIREMENTS = ['venstarcolortouch==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,9 +71,9 @@ class VenstarThermostat(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         _LOGGER.info("Refreshing data from your Venstar Thermostat.")
-        infoSuccess = self._client.update_info()
-        sensorSuccess = self._client.update_sensors()
-        if not infoSuccess or not sensorSuccess:
+        info_success = self._client.update_info()
+        sensor_success = self._client.update_sensors()
+        if not info_success or not sensor_success:
             _LOGGER.error("Failed to update data from your Thermostat.")
 
 # Thermostat config
