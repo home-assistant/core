@@ -1,6 +1,7 @@
 """Support for Xiaomi Gateways."""
 import asyncio
 import logging
+import threading
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from datetime import timedelta
@@ -197,6 +198,7 @@ class XiaomiDevice(Entity):
     def __init__(self, device, name, hass, xiaomi_hub):
         """Initialize the xiaomi device."""
         self._state = None
+        self._lock = threading.Lock()
         self._hass = hass
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
@@ -243,12 +245,16 @@ class XiaomiDevice(Entity):
 
     def push_data(self, data):
         """Push from Hub."""
-        _LOGGER.debug("PUSH >> %s: %s", self, data)
-        was_unavailable = self._track_unavailable()
-        is_data = self.parse_data(data)
-        is_voltage = self.parse_voltage(data)
-        if is_data or is_voltage or was_unavailable:
-            self.schedule_update_ha_state()
+        # There is a chance this function will be called simultaneously by 2 different threads
+        # (SyncThreads) when 'heartbeat' and 'report' messages arrived at the same time.
+        # It causes an issue with _state set. Using lock queue state changes.
+        with self._lock:
+            _LOGGER.debug("PUSH >> %s: %s", self, data)
+            was_unavailable = self._track_unavailable()
+            is_data = self.parse_data(data)
+            is_voltage = self.parse_voltage(data)
+            if is_data or is_voltage or was_unavailable:
+                self.schedule_update_ha_state()
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
