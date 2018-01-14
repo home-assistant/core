@@ -39,7 +39,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         """Return true if it is on."""
         return self._state
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
         if value is None:

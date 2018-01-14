@@ -14,7 +14,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
                                  CONF_MAC, CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
+REQUIREMENTS = ['PyXiaomiGateway==0.7.1']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
@@ -111,8 +111,8 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
 
-    from PyXiaomiGateway import PyXiaomiGateway
-    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(
+    from PyXiaomiGateway import XiaomiGatewayDiscovery
+    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
         hass.add_job, gateways, interface)
 
     _LOGGER.debug("Expecting %s gateways", len(gateways))
@@ -200,7 +200,7 @@ class XiaomiDevice(Entity):
         self._state = None
         self._lock = threading.Lock()
         self._hass = hass
-        self._is_available = False
+        self._is_available = True
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
@@ -209,7 +209,7 @@ class XiaomiDevice(Entity):
         self._remove_unavailability_tracker = None
         self._track_unavailable()
         xiaomi_hub.callbacks[self._sid].append(self.push_data)
-        self.parse_data(device['data'])
+        self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
 
     @property
@@ -250,7 +250,7 @@ class XiaomiDevice(Entity):
             return True
         return False
 
-    def push_data(self, data):
+    def push_data(self, data, raw_data):
         """Push from Hub."""
         # There is a chance this function will be called simultaneously by 2
         # different threads (SyncThreads) when 'read' response and 'report'
@@ -259,7 +259,7 @@ class XiaomiDevice(Entity):
         with self._lock:
             _LOGGER.debug("PUSH >> %s: %s", self, data)
             was_unavailable = self._track_unavailable()
-            is_data = self.parse_data(data)
+            is_data = self.parse_data(data, raw_data)
             is_voltage = self.parse_voltage(data)
             if is_data or is_voltage or was_unavailable:
                 self.schedule_update_ha_state()
@@ -277,7 +277,7 @@ class XiaomiDevice(Entity):
         self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
         return True
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         raise NotImplementedError()
 
