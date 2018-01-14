@@ -409,6 +409,40 @@ class TestAutomationState(unittest.TestCase):
             self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_entity_change_with_for_multiple_force_update(self):
+        """Test for firing on entity change with for and force update."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.force_entity',
+                    'to': 'world',
+                    'for': {
+                        'seconds': 5
+                    },
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        utcnow = dt_util.utcnow()
+        with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
+            mock_utcnow.return_value = utcnow
+            self.hass.states.set('test.force_entity', 'world', None, True)
+            self.hass.block_till_done()
+            for _ in range(0, 4):
+                mock_utcnow.return_value += timedelta(seconds=1)
+                fire_time_changed(self.hass, mock_utcnow.return_value)
+                self.hass.states.set('test.force_entity', 'world', None, True)
+                self.hass.block_till_done()
+            self.assertEqual(0, len(self.calls))
+            mock_utcnow.return_value += timedelta(seconds=4)
+            fire_time_changed(self.hass, mock_utcnow.return_value)
+            self.hass.block_till_done()
+            self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_entity_change_with_for(self):
         """Test for firing on entity change with for."""
         assert setup_component(self.hass, automation.DOMAIN, {

@@ -14,8 +14,8 @@ import os
 import json
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (CONF_API_KEY, STATE_OK, CONF_TOKEN, CONF_NAME)
+from homeassistant.const import (CONF_API_KEY, STATE_OK, CONF_TOKEN,
+                                 CONF_NAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -31,6 +31,10 @@ DEFAULT_NAME = DOMAIN
 GROUP_NAME_RTM = 'remember the milk accounts'
 
 CONF_SHARED_SECRET = 'shared_secret'
+CONF_ID_MAP = 'id_map'
+CONF_LIST_ID = 'list_id'
+CONF_TIMESERIES_ID = 'timeseries_id'
+CONF_TASK_ID = 'task_id'
 
 RTM_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -44,9 +48,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 CONFIG_FILE_NAME = '.remember_the_milk.conf'
 SERVICE_CREATE_TASK = 'create_task'
+SERVICE_COMPLETE_TASK = 'complete_task'
 
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_ID): cv.string,
+})
+
+SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({
+    vol.Required(CONF_ID): cv.string,
 })
 
 
@@ -54,9 +64,6 @@ def setup(hass, config):
     """Set up the remember_the_milk component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_RTM)
-
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
@@ -69,29 +76,31 @@ def setup(hass, config):
             _LOGGER.debug("found token for account %s", account_name)
             _create_instance(
                 hass, account_name, api_key, shared_secret, token,
-                stored_rtm_config, component, descriptions)
+                stored_rtm_config, component)
         else:
             _register_new_account(
                 hass, account_name, api_key, shared_secret,
-                stored_rtm_config, component, descriptions)
+                stored_rtm_config, component)
 
     _LOGGER.debug("Finished adding all Remember the milk accounts")
     return True
 
 
 def _create_instance(hass, account_name, api_key, shared_secret,
-                     token, stored_rtm_config, component, descriptions):
+                     token, stored_rtm_config, component):
     entity = RememberTheMilk(account_name, api_key, shared_secret,
                              token, stored_rtm_config)
     component.add_entity(entity)
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, '{}_create_task'.format(account_name), entity.create_task,
-        description=descriptions.get(SERVICE_CREATE_TASK),
         schema=SERVICE_SCHEMA_CREATE_TASK)
+    hass.services.register(
+        DOMAIN, '{}_complete_task'.format(account_name), entity.complete_task,
+        schema=SERVICE_SCHEMA_COMPLETE_TASK)
 
 
 def _register_new_account(hass, account_name, api_key, shared_secret,
-                          stored_rtm_config, component, descriptions):
+                          stored_rtm_config, component):
     from rtmapi import Rtm
 
     request_id = None
@@ -116,7 +125,7 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
 
         _create_instance(
             hass, account_name, api_key, shared_secret, token,
-            stored_rtm_config, component, descriptions)
+            stored_rtm_config, component)
 
         configurator.request_done(request_id)
 
@@ -168,8 +177,7 @@ class RememberTheMilkConfiguration(object):
 
     def set_token(self, profile_name, token):
         """Store a new server token for a profile."""
-        if profile_name not in self._config:
-            self._config[profile_name] = dict()
+        self._initialize_profile(profile_name)
         self._config[profile_name][CONF_TOKEN] = token
         self.save_config()
 
@@ -180,6 +188,44 @@ class RememberTheMilkConfiguration(object):
         """
         self._config.pop(profile_name, None)
         self.save_config()
+
+    def _initialize_profile(self, profile_name):
+        """Initialize the data structures for a profile."""
+        if profile_name not in self._config:
+            self._config[profile_name] = dict()
+        if CONF_ID_MAP not in self._config[profile_name]:
+            self._config[profile_name][CONF_ID_MAP] = dict()
+
+    def get_rtm_id(self, profile_name, hass_id):
+        """Get the rtm ids for a home assistant task id.
+
+        The id of a rtm tasks consists of the tuple:
+        list id, timeseries id and the task id.
+        """
+        self._initialize_profile(profile_name)
+        ids = self._config[profile_name][CONF_ID_MAP].get(hass_id)
+        if ids is None:
+            return None
+        return ids[CONF_LIST_ID], ids[CONF_TIMESERIES_ID], ids[CONF_TASK_ID]
+
+    def set_rtm_id(self, profile_name, hass_id, list_id, time_series_id,
+                   rtm_task_id):
+        """Add/Update the rtm task id for a home assistant task id."""
+        self._initialize_profile(profile_name)
+        id_tuple = {
+            CONF_LIST_ID: list_id,
+            CONF_TIMESERIES_ID: time_series_id,
+            CONF_TASK_ID: rtm_task_id,
+        }
+        self._config[profile_name][CONF_ID_MAP][hass_id] = id_tuple
+        self.save_config()
+
+    def delete_rtm_id(self, profile_name, hass_id):
+        """Delete a key mapping."""
+        self._initialize_profile(profile_name)
+        if hass_id in self._config[profile_name][CONF_ID_MAP]:
+            del self._config[profile_name][CONF_ID_MAP][hass_id]
+            self.save_config()
 
 
 class RememberTheMilk(Entity):
@@ -225,17 +271,63 @@ class RememberTheMilk(Entity):
         import rtmapi
 
         try:
-            task_name = call.data.get('name')
+            task_name = call.data.get(CONF_NAME)
+            hass_id = call.data.get(CONF_ID)
+            rtm_id = None
+            if hass_id is not None:
+                rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
             result = self._rtm_api.rtm.timelines.create()
             timeline = result.timeline.value
-            self._rtm_api.rtm.tasks.add(
-                timeline=timeline, name=task_name, parse='1')
-            _LOGGER.debug('created new task "%s" in account %s',
-                          task_name, self.name)
+
+            if hass_id is None or rtm_id is None:
+                result = self._rtm_api.rtm.tasks.add(
+                    timeline=timeline, name=task_name, parse='1')
+                _LOGGER.debug('created new task "%s" in account %s',
+                              task_name, self.name)
+                self._rtm_config.set_rtm_id(self._name,
+                                            hass_id,
+                                            result.list.id,
+                                            result.list.taskseries.id,
+                                            result.list.taskseries.task.id)
+            else:
+                self._rtm_api.rtm.tasks.setName(name=task_name,
+                                                list_id=rtm_id[0],
+                                                taskseries_id=rtm_id[1],
+                                                task_id=rtm_id[2],
+                                                timeline=timeline)
+                _LOGGER.debug('updated task with id "%s" in account '
+                              '%s to name %s',
+                              hass_id, self.name, task_name)
         except rtmapi.RtmRequestFailedException as rtm_exception:
             _LOGGER.error('Error creating new Remember The Milk task for '
                           'account %s: %s', self._name, rtm_exception)
             return False
+        return True
+
+    def complete_task(self, call):
+        """Complete a task that was previously created by this component."""
+        import rtmapi
+
+        hass_id = call.data.get(CONF_ID)
+        rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
+        if rtm_id is None:
+            _LOGGER.error('Could not find task with id %s in account %s. '
+                          'So task could not be closed.',
+                          hass_id, self._name)
+            return False
+        try:
+            result = self._rtm_api.rtm.timelines.create()
+            timeline = result.timeline.value
+            self._rtm_api.rtm.tasks.complete(list_id=rtm_id[0],
+                                             taskseries_id=rtm_id[1],
+                                             task_id=rtm_id[2],
+                                             timeline=timeline)
+            self._rtm_config.delete_rtm_id(self._name, hass_id)
+            _LOGGER.debug('Completed task with id %s in account %s',
+                          hass_id, self._name)
+        except rtmapi.RtmRequestFailedException as rtm_exception:
+            _LOGGER.error('Error creating new Remember The Milk task for '
+                          'account %s: %s', self._name, rtm_exception)
         return True
 
     @property

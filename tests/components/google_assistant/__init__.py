@@ -95,7 +95,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -107,7 +107,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -116,7 +116,7 @@ DEMO_DEVICES = [{
         'name': 'Garage Door'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id': 'cover.kitchen_window',
@@ -124,7 +124,7 @@ DEMO_DEVICES = [{
         'name': 'Kitchen Window'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id': 'group.all_covers',
@@ -143,7 +143,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -155,7 +155,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -164,7 +164,7 @@ DEMO_DEVICES = [{
         'name': 'Lounge room'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id':
@@ -175,7 +175,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {

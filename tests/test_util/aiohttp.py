@@ -7,6 +7,8 @@ from unittest import mock
 from urllib.parse import urlparse, parse_qs
 import yarl
 
+from aiohttp.client_exceptions import ClientResponseError
+
 
 class AiohttpClientMocker:
     """Mock Aiohttp client requests."""
@@ -81,7 +83,7 @@ class AiohttpClientMocker:
         data = data or json
         for response in self._mocks:
             if response.match_request(method, url, params):
-                self.mock_calls.append((method, url, data))
+                self.mock_calls.append((method, url, data, headers))
 
                 if response.exc:
                     raise response.exc
@@ -188,6 +190,12 @@ class AiohttpClientMockResponse:
     def release(self):
         """Mock release."""
         pass
+
+    def raise_for_status(self):
+        """Raise error if status is 400 or higher."""
+        if self.status >= 400:
+            raise ClientResponseError(
+                None, None, code=self.status, headers=self.headers)
 
     def close(self):
         """Mock close."""

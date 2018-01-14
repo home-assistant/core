@@ -10,21 +10,28 @@ import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT, CONF_DEVICES, DATA_TYPES,
-    ATTR_DATA_TYPE, ATTR_ENTITY_ID)
+    ATTR_NAME, ATTR_FIRE_EVENT, ATTR_DATA_TYPE, CONF_AUTOMATIC_ADD,
+    CONF_FIRE_EVENT, CONF_DEVICES, DATA_TYPES, CONF_DATA_TYPE)
 
 DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): rfxtrx.DOMAIN,
-    vol.Optional(CONF_DEVICES, default={}): vol.All(dict, rfxtrx.valid_sensor),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+            vol.Optional(CONF_DATA_TYPE, default=[]):
+            vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
+        })
+    },
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -49,7 +56,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     break
         for _data_type in data_types:
             new_sensor = RfxtrxSensor(None, entity_info[ATTR_NAME],
-                                      _data_type, entity_info[ATTR_FIREEVENT])
+                                      _data_type, entity_info[ATTR_FIRE_EVENT])
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
@@ -78,7 +85,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             return
 
         # Add entity if not exist and the automatic_add is True
-        if not config[ATTR_AUTOMATIC_ADD]:
+        if not config[CONF_AUTOMATIC_ADD]:
             return
 
         pkt_id = "".join("{0:02x}".format(x) for x in event.data)

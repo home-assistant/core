@@ -5,13 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.monoprice/
 """
 import logging
-from os import path
 
 import voluptuous as vol
 
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_NAME, CONF_PORT,
                                  STATE_OFF, STATE_ON)
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     DOMAIN, MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA,
@@ -83,9 +81,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(hass.data[DATA_MONOPRICE], True)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
@@ -104,11 +99,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.services.register(
         DOMAIN, SERVICE_SNAPSHOT, service_handle,
-        descriptions.get(SERVICE_SNAPSHOT), schema=MEDIA_PLAYER_SCHEMA)
+        schema=MEDIA_PLAYER_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_RESTORE, service_handle,
-        descriptions.get(SERVICE_RESTORE), schema=MEDIA_PLAYER_SCHEMA)
+        schema=MEDIA_PLAYER_SCHEMA)
 
 
 class MonopriceZone(MediaPlayerDevice):

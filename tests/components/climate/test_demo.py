@@ -250,3 +250,20 @@ class TestDemoClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('aux_heat'))
+
+    def test_set_on_off(self):
+        """Test on/off service."""
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('auto', state.state)
+
+        self.hass.services.call(climate.DOMAIN, climate.SERVICE_TURN_OFF,
+                                {climate.ATTR_ENTITY_ID: ENTITY_ECOBEE})
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('off', state.state)
+
+        self.hass.services.call(climate.DOMAIN, climate.SERVICE_TURN_ON,
+                                {climate.ATTR_ENTITY_ID: ENTITY_ECOBEE})
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('auto', state.state)

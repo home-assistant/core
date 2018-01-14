@@ -55,7 +55,7 @@ def async_trigger(hass, config, action):
 
         # Ignore changes to state attributes if from/to is in use
         if (not match_all and from_s is not None and to_s is not None and
-                from_s.last_changed == to_s.last_changed):
+                from_s.state == to_s.state):
             return
 
         if not time_delta:

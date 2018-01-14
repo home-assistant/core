@@ -1,0 +1,10 @@
+
+configure:
+  description: Set attribute of device in Deconz. See Dresden Elektroniks REST API documentation for details http://dresden-elektronik.github.io/deconz-rest-doc/rest/
+  fields:
+    field:
+      description: Field is a string representing a specific device in Deconz.
+      example: '/lights/1/state'
+    data:
+      description: Data is a json object with what data you want to alter.
+      example: '{"on": true}'

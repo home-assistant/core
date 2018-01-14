@@ -531,7 +531,7 @@ class TestConfig(unittest.TestCase):
         """Check that restart propagates to stop."""
         process_mock = mock.MagicMock()
         attrs = {
-            'communicate.return_value': mock_coro(('output', 'error')),
+            'communicate.return_value': mock_coro((b'output', None)),
             'wait.return_value': mock_coro(0)}
         process_mock.configure_mock(**attrs)
         mock_create.return_value = mock_coro(process_mock)
@@ -546,7 +546,7 @@ class TestConfig(unittest.TestCase):
         process_mock = mock.MagicMock()
         attrs = {
             'communicate.return_value':
-                mock_coro(('\033[34mhello'.encode('utf-8'), 'error')),
+                mock_coro(('\033[34mhello'.encode('utf-8'), None)),
             'wait.return_value': mock_coro(1)}
         process_mock.configure_mock(**attrs)
         mock_create.return_value = mock_coro(process_mock)

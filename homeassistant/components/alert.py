@@ -7,12 +7,10 @@ https://home-assistant.io/components/alert/
 import asyncio
 from datetime import datetime, timedelta
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
@@ -129,22 +127,16 @@ def async_setup(hass, config):
                        alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
         all_alerts[entity.entity_id] = entity
 
-    # Read descriptions
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-    descriptions = descriptions.get(DOMAIN, {})
-
     # Setup service calls
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=ALERT_SERVICE_SCHEMA)
+        schema=ALERT_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_alert_service,
-        descriptions.get(SERVICE_TURN_ON), schema=ALERT_SERVICE_SCHEMA)
+        schema=ALERT_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
-        descriptions.get(SERVICE_TOGGLE), schema=ALERT_SERVICE_SCHEMA)
+        schema=ALERT_SERVICE_SCHEMA)
 
     tasks = [alert.async_update_ha_state() for alert in all_alerts.values()]
     if tasks:

@@ -640,10 +640,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         """Test services."""
-        expected = {
-            'test_domain': {'test_service': {'description': '', 'fields': {}}}
-        }
-        self.assertEqual(expected, self.services.services)
+        assert len(self.services.services) == 1
 
     def test_call_with_blocking_done_in_time(self):
         """Test call with blocking."""
@@ -800,8 +797,10 @@ class TestConfig(unittest.TestCase):
     def test_is_allowed_path(self):
         """Test is_allowed_path method."""
         with TemporaryDirectory() as tmp_dir:
+            # The created dir is in /tmp. This is a symlink on OS X
+            # causing this test to fail unless we resolve path first.
             self.config.whitelist_external_dirs = set((
-                tmp_dir,
+                os.path.realpath(tmp_dir),
             ))
 
             test_file = os.path.join(tmp_dir, "test.jpg")
