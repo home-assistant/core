@@ -216,7 +216,7 @@ class VenstarThermostat(ClimateDevice):
 
 # Commands
     def _set_operation_mode(self, operation_mode):
-        """Internal method for changing operation mode."""
+        """Change the operation mode (internal)."""
         if operation_mode == STATE_HEAT:
             success = self._client.set_mode(self._client.MODE_HEAT)
         elif operation_mode == STATE_COOL:
@@ -242,7 +242,7 @@ class VenstarThermostat(ClimateDevice):
         if operation_mode != self._client.mode:
             set_temp = self._set_operation_mode(operation_mode)
 
-        if set_temp: 
+        if set_temp:
             if operation_mode == self._client.MODE_HEAT:
                 success = self._client.set_setpoints(temperature,
                                                      self._client.cooltemp)
@@ -253,7 +253,7 @@ class VenstarThermostat(ClimateDevice):
                 success = self._client.set_setpoints(temp_low, temp_high)
             else:
                 _LOGGER.error("The thermostat is currently not "
-                          "in a mode that supports target temperature.")
+                              "in a mode that supports target temperature.")
 
             if not success:
                 _LOGGER.error("Failed to change the "
