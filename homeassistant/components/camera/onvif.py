@@ -33,6 +33,9 @@ DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
 DEFAULT_ARGUMENTS = '-q:v 2'
+DEFAULT_PROFILE = 0
+
+CONF_PROFILE = "profile"
 
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"
@@ -57,6 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+    vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
 })
 
 SERVICE_PTZ_SCHEMA = vol.Schema({
@@ -114,10 +119,18 @@ class ONVIFHassCamera(Camera):
                 config.get(CONF_USERNAME), config.get(CONF_PASSWORD)
             )
             media_service = camera.create_media_service()
-            stream_uri = media_service.GetStreamUri(
-                {'StreamSetup': {'Stream': 'RTP-Unicast', 'Transport': 'RTSP'}}
-                )
-            self._input = stream_uri.Uri.replace(
+            
+            self._profiles = media.GetProfiles()
+            self._profile_index = config.get(CONF_PROFILE)
+            if self._profile_index >= len(self._profiles):
+                _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
+                                " Using the last profile.",
+                                self._name, self._profile_index)
+                self._profile_index = -1
+            req = media_service.create_type('GetStreamUri')
+            # pylint: disable=protected-access
+            req.ProfileToken = self._profiles[self._profile_index]._token
+            self._input = media_service.GetStreamUri(req).Uri.replace(
                 'rtsp://', 'rtsp://{}:{}@'.format(
                     config.get(CONF_USERNAME),
                     config.get(CONF_PASSWORD)), 1)
@@ -183,3 +196,23 @@ class ONVIFHassCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = super().device_state_attributes
+        custom_attrs = {}
+        i = 0
+        for profile in self._profiles:
+            bounds = profile.VideoSourceConfiguration.Bounds.__dict__
+            custom_attrs.update({"Profile #" + str(i):
+                                 str(bounds["_width"])
+                                 + " x "
+                                 + str(bounds["_height"])})
+            i = i + 1
+        custom_attrs.update({"Active profile": str(self._profile_index)})
+        if attrs:
+            attrs.update(custom_attrs)
+        else:
+            attrs = custom_attrs
+        return attrs
