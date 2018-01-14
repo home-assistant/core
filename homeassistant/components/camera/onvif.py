@@ -1,5 +1,4 @@
-"""
-Support for ONVIF Cameras with FFmpeg as decoder.
+""" Support for ONVIF Cameras with FFmpeg as decoder.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.onvif/
@@ -16,10 +15,10 @@ from homeassistant.const import (
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, DOMAIN
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG)
-from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
+from homeassistant.helpers.service import extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,11 +41,13 @@ DIR_UP = "UP"
 DIR_DOWN = "DOWN"
 DIR_LEFT = "LEFT"
 DIR_RIGHT = "RIGHT"
-
 ZOOM_OUT = "ZOOM_OUT"
 ZOOM_IN = "ZOOM_IN"
 
-SERVICE_PTZ = "PTZ"
+SERVICE_PTZ = "ptz"
+
+ONVIF_DATA = "onvif"
+ENTITIES = "entities"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -70,21 +71,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
 
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    entities = []
-
     def handle_ptz(service):
         """Handle PTZ service call."""
         tilt = service.data.get(ATTR_TILT, None)
-        if tilt:
-            tilt = tilt.upper()
         pan = service.data.get(ATTR_PAN, None)
-        if pan:
-            pan = pan.upper()
         zoom = service.data.get(ATTR_ZOOM, None)
-        if zoom:
-            zoom = zoom.upper()
-        target_cameras = component.extract_from_service(service)
+        all_cameras = hass.data[ONVIF_DATA][ENTITIES]
+        entity_ids = extract_entity_ids(hass, service)
+        target_cameras = []
+        if not entity_ids:
+            target_cameras = all_cameras
+        else:
+            target_cameras = [camera for camera in all_cameras
+                              if camera.entity_id in entity_ids]
         req = None
         for camera in target_cameras:
             if not camera._ptz:
@@ -107,8 +106,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
                                  schema=SERVICE_PTZ_SCHEMA)
-    entities.append(ONVIFCamera(hass, config))
-    yield from component.async_add_entities(entities)
+    async_add_devices([ONVIFCamera(hass, config)])
 
 
 class ONVIFCamera(Camera):
@@ -143,6 +141,14 @@ class ONVIFCamera(Camera):
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        if ONVIF_DATA not in self.hass.data:
+            self.hass.data[ONVIF_DATA] = {}
+            self.hass.data[ONVIF_DATA][ENTITIES] = []
+        self.hass.data[ONVIF_DATA][ENTITIES].append(self)
 
     @asyncio.coroutine
     def async_camera_image(self):
