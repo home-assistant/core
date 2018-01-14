@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # request personal profile to check api connection
     profile = api.get_profile()
-    if profile.get('error_code', None) != None:
+    if profile.get('error_code', None) is not None:
         _LOGGER.error("Can't setup XboxAPI connection. Check your account or "
                       + " api key on xboxapi.com. Code: %s Description: %s ",
                       profile.get('error_code', STATE_UNKNOWN),
