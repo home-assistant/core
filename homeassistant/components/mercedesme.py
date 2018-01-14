@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['mercedesmejsonpy==0.1.1']
+REQUIREMENTS = ['mercedesmejsonpy==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,17 +35,17 @@ NOTIFICATION_TITLE = 'Mercedes me integration setup'
 
 def setup(hass, config):
     """Set up MercedesMe System."""
-    from mercedesmejsonpy import controller as mbmeAPI
-    from mercedesmejsonpy import Exceptions as mbmeExc
+    from mercedesmejsonpy import controller
+    from mercedesmejsonpy import Exceptions
 
     try:
         hass.data[DATA_MME] = {
-            'controller': mbmeAPI.Controller(
+            'controller': controller.Controller(
                 config[DATA_MME][CONF_USERNAME],
                 config[DATA_MME][CONF_PASSWORD],
                 config[DATA_MME][CONF_SCAN_INTERVAL])
         }
-    except mbmeExc.MercedesMeException as ex:
+    except Exceptions.MercedesMeException as ex:
         if ex.code == 401:
             hass.components.persistent_notification.create(
                 "Error:<br />Please check username and password."
