@@ -6,10 +6,10 @@ import logging
 # Typing imports
 # pylint: disable=using-constant-test,unused-import,ungrouped-imports
 # if False:
-from homeassistant.core import HomeAssistant  # NOQA
 from aiohttp.web import Request, Response  # NOQA
 from typing import Dict, Any  # NOQA
 
+from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     HTTP_BAD_REQUEST,

@@ -7,30 +7,40 @@ tested. Other types may need some work.
 """
 
 import logging
+
 import voluptuous as vol
+
+from homeassistant.const import (
+    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF, CONF_NAME)
 from homeassistant.components import rfxtrx
+from homeassistant.helpers import event as evt
+from homeassistant.helpers import config_validation as cv
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.rfxtrx import (
+    ATTR_NAME, ATTR_DATA_BITS, ATTR_OFF_DELAY, ATTR_FIRE_EVENT,
+    CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT,
+    CONF_DATA_BITS, CONF_DEVICES)
 from homeassistant.util import slugify
 from homeassistant.util import dt as dt_util
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import event as evt
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_OFF_DELAY, ATTR_FIREEVENT,
-    ATTR_DATA_BITS, CONF_DEVICES
-)
-from homeassistant.const import (
-    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
-)
+
 
 DEPENDENCIES = ["rfxtrx"]
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required("platform"): rfxtrx.DOMAIN,
-    vol.Optional(CONF_DEVICES, default={}): vol.All(
-        dict, rfxtrx.valid_binary_sensor),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+            vol.Optional(CONF_DATA_BITS): cv.positive_int,
+            vol.Optional(CONF_COMMAND_ON): cv.byte,
+            vol.Optional(CONF_COMMAND_OFF): cv.byte
+        })
+    },
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -46,17 +56,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if device_id in rfxtrx.RFX_DEVICES:
             continue
 
-        if entity[ATTR_DATA_BITS] is not None:
-            _LOGGER.info("Masked device id: %s",
-                         rfxtrx.get_pt2262_deviceid(device_id,
-                                                    entity[ATTR_DATA_BITS]))
+        if entity[CONF_DATA_BITS] is not None:
+            _LOGGER.debug("Masked device id: %s",
+                          rfxtrx.get_pt2262_deviceid(device_id,
+                                                     entity[ATTR_DATA_BITS]))
 
-        _LOGGER.info("Add %s rfxtrx.binary_sensor (class %s)",
-                     entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
+        _LOGGER.debug("Add %s rfxtrx.binary_sensor (class %s)",
+                      entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
 
         device = RfxtrxBinarySensor(event, entity[ATTR_NAME],
                                     entity[CONF_DEVICE_CLASS],
-                                    entity[ATTR_FIREEVENT],
+                                    entity[ATTR_FIRE_EVENT],
                                     entity[ATTR_OFF_DELAY],
                                     entity[ATTR_DATA_BITS],
                                     entity[CONF_COMMAND_ON],
@@ -82,15 +92,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         if sensor is None:
             # Add the entity if not exists and automatic_add is True
-            if not config[ATTR_AUTOMATIC_ADD]:
+            if not config[CONF_AUTOMATIC_ADD]:
                 return
 
             if event.device.packettype == 0x13:
                 poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
                 if poss_dev is not None:
                     poss_id = slugify(poss_dev.event.device.id_string.lower())
-                    _LOGGER.info("Found possible matching deviceid %s.",
-                                 poss_id)
+                    _LOGGER.debug("Found possible matching deviceid %s.",
+                                  poss_id)
 
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
@@ -107,11 +117,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         elif not isinstance(sensor, RfxtrxBinarySensor):
             return
         else:
-            _LOGGER.info("Binary sensor update "
-                         "(Device_id: %s Class: %s Sub: %s)",
-                         slugify(event.device.id_string.lower()),
-                         event.device.__class__.__name__,
-                         event.device.subtype)
+            _LOGGER.debug("Binary sensor update "
+                          "(Device_id: %s Class: %s Sub: %s)",
+                          slugify(event.device.id_string.lower()),
+                          event.device.__class__.__name__,
+                          event.device.subtype)
 
         if sensor.is_lighting4:
             if sensor.data_bits is not None:
@@ -163,10 +173,8 @@ class RfxtrxBinarySensor(BinarySensorDevice):
             self._masked_id = rfxtrx.get_pt2262_deviceid(
                 event.device.id_string.lower(),
                 data_bits)
-
-    def __str__(self):
-        """Return the name of the sensor."""
-        return self._name
+        else:
+            self._masked_id = None
 
     @property
     def name(self):

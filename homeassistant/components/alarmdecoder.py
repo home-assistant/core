@@ -13,6 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import dt as dt_util
+from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 
 REQUIREMENTS = ['alarmdecoder==1.13.2']
 
@@ -68,7 +69,8 @@ DEVICE_USB_SCHEMA = vol.Schema({
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_NAME): cv.string,
-    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string,
+    vol.Optional(CONF_ZONE_TYPE,
+                 default=DEFAULT_ZONE_TYPE): vol.Any(DEVICE_CLASSES_SCHEMA),
     vol.Optional(CONF_ZONE_RFID): cv.string})
 
 CONFIG_SCHEMA = vol.Schema({

@@ -2,7 +2,7 @@
 Support for Xiaomi Philips Lights (LED Ball & Ceiling Lamp, Eyecare Lamp 2).
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/light.xiaomi_philipslight/
+https://home-assistant.io/components/light.xiaomi_miio/
 """
 import asyncio
 from functools import partial

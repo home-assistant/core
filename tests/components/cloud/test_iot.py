@@ -317,6 +317,13 @@ def test_handler_google_actions(hass):
                     'filter': {
                         'exclude_entities': 'switch.test2'
                     },
+                    'entity_config': {
+                        'switch.test': {
+                            'name': 'Config name',
+                            'type': 'light',
+                            'aliases': 'Config alias'
+                        }
+                    }
                 }
             }
         })
@@ -340,4 +347,6 @@ def test_handler_google_actions(hass):
 
     device = devices[0]
     assert device['id'] == 'switch.test'
-    assert device['name']['name'] == 'Test switch'
+    assert device['name']['name'] == 'Config name'
+    assert device['name']['nicknames'] == ['Config alias']
+    assert device['type'] == 'action.devices.types.LIGHT'
