@@ -172,7 +172,7 @@ class ShoppingListView(http.HomeAssistantView):
 
 
 class UpdateShoppingListItemView(http.HomeAssistantView):
-    """View to retrieve shopping list content."""
+    """View to update shopping list content."""
 
     url = '/api/shopping_list/item/{item_id}'
     name = "api:shopping_list:item:id"
