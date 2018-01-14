@@ -55,7 +55,7 @@ def setup(hass, config):
 
     # Load platforms
     for platform in IOTA_PLATFORMS:
-        load_platform(hass, platform, DOMAIN, {}, iota_config)
+        load_platform(hass, platform, DOMAIN)
 
     return True
 
