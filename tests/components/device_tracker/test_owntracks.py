@@ -671,31 +671,31 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         # Location update processed
         self.assert_location_state('outer')
 
-    def test_event_gps_source_type_entry_exit(self):
-        """Test the entry event of gps source type."""
+    def test_event_source_type_entry_exit(self):
+        """Test the entry and exit events of source type."""
         # Entering the owntrack circular region named "inner"
         self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
-
-        # Enter uses the zone's gps co-ords
-        self.assert_location_latitude(INNER_ZONE['latitude'])
-        self.assert_location_accuracy(INNER_ZONE['radius'])
-        self.assert_location_state('inner')
 
         # source_type should be gps when enterings using gps.
         self.assert_location_source_type('gps')
 
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_ENTER_MESSAGE))
+
+        # We should be able to enter a beacon zone even inside a gps zone
+        self.assert_location_source_type('bluetooth_le')
+
         self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
-
-        # Exit switches back to GPS
-        self.assert_location_latitude(REGION_GPS_LEAVE_MESSAGE['lat'])
-        self.assert_location_accuracy(REGION_GPS_LEAVE_MESSAGE['acc'])
-        self.assert_location_state('outer')
-
-        # Left clean zone state
-        self.assertFalse(self.context.regions_entered[USER])
 
         # source_type should be gps when leaving using gps.
         self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_LEAVE_MESSAGE))
+
+        self.assert_location_source_type('bluetooth_le')
 
     # Region Beacon based event entry / exit testing
 
@@ -872,34 +872,6 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
             REGION_BEACON_ENTER_MESSAGE)
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('inner')
-
-    def test_event_beacon_source_type_region_entry_exit(self):
-        """Test the entry event."""
-        # Seeing a beacon named "inner"
-        self.send_message(EVENT_TOPIC, REGION_BEACON_ENTER_MESSAGE)
-
-        # Enter uses the zone's gps co-ords
-        self.assert_location_latitude(INNER_ZONE['latitude'])
-        self.assert_location_accuracy(INNER_ZONE['radius'])
-        self.assert_location_state('inner')
-
-        # source_type should be bluetooth_le when entering using beacon.
-        self.assert_location_source_type('bluetooth_le')
-
-        self.send_message(EVENT_TOPIC, REGION_BEACON_LEAVE_MESSAGE)
-
-        # Exit switches back to GPS but the beacon has no coords
-        # so I am still located at the center of the inner region
-        # until I receive a location update.
-        self.assert_location_latitude(INNER_ZONE['latitude'])
-        self.assert_location_accuracy(INNER_ZONE['radius'])
-        self.assert_location_state('inner')
-
-        # source_type should be bluetooth_le when leaving using beacon.
-        self.assert_location_source_type('bluetooth_le')
-
-        # Left clean zone state
-        self.assertFalse(self.context.regions_entered[USER])
 
     # ------------------------------------------------------------------------
     # Mobile Beacon based event entry / exit testing
