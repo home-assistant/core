@@ -1,6 +1,5 @@
 """The tests for the Shopping List sensor platform."""
 import asyncio
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -8,7 +7,6 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.helpers import intent
-#from tests.common import get_test_home_assistant
 
 
 @pytest.fixture(autouse=True)
@@ -20,17 +18,6 @@ def mock_shopping_list_io():
         yield
 
 
-# def setup_function():
-#     """Initialize a Home Assistant server."""
-#     global hass
-#
-#     hass = get_test_home_assistant()
-#
-# def teardown_function():
-#     """Stop the Home Assistant server."""
-#     hass.stop()
-#
-#
 @asyncio.coroutine
 def test_shopping_list_setup(hass):
     """Test the setup via shopping_list."""
@@ -40,19 +27,6 @@ def test_shopping_list_setup(hass):
         }
     })
     assert result
-
-
-@asyncio.coroutine
-def test_shopping_list_setup_name(hass):
-    """Test the setup via shopping_list."""
-    yield from async_setup_component(hass, sensor.DOMAIN, {
-        sensor.DOMAIN: {
-            'platform': 'shopping_list',
-            'name': 'test_list'
-        }
-    })
-    state = hass.states.get('sensor.test_list')
-    assert state.state == 'empty'
 
 
 @asyncio.coroutine
