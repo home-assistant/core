@@ -32,11 +32,14 @@ homeassistant/components/zone.py @home-assistant/core
 # To monitor non-pypi additions
 requirements_all.txt @andrey-git
 
+# HomeAssistant developer Teams
 Dockerfile @home-assistant/docker
 virtualization/Docker/* @home-assistant/docker
 
 homeassistant/components/zwave/* @home-assistant/z-wave
 homeassistant/components/*/zwave.py @home-assistant/z-wave
+
+homeassistant/components/hassio.py @home-assistant/hassio
 
 # Indiviudal components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
