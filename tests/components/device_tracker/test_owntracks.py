@@ -684,7 +684,6 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         # source_type should be gps when enterings using gps.
         self.assert_location_source_type('gps')
 
-
         self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
 
         # Exit switches back to GPS
@@ -697,7 +696,6 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
         # source_type should be gps when leaving using gps.
         self.assert_location_source_type('gps')
-
 
     # Region Beacon based event entry / exit testing
 
