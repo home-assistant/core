@@ -11,7 +11,10 @@ from homeassistant.components.climate import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_AUTO,
     ClimateDevice, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE)
+    SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME, CONF_TIMEOUT,
@@ -80,10 +83,19 @@ class VenstarThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE |
-                SUPPORT_TARGET_HUMIDITY |
-                SUPPORT_FAN_MODE |
-                SUPPORT_OPERATION_MODE)
+        if self._client.mode == self._client.MODE_AUTO:
+            return (SUPPORT_TARGET_TEMPERATURE |
+                    SUPPORT_TARGET_TEMPERATURE_HIGH |
+                    SUPPORT_TARGET_TEMPERATURE_LOW |
+                    SUPPORT_TARGET_HUMIDITY |
+                    SUPPORT_FAN_MODE |
+                    SUPPORT_OPERATION_MODE)
+
+        else:
+            return (SUPPORT_TARGET_TEMPERATURE |
+                    SUPPORT_TARGET_HUMIDITY |
+                    SUPPORT_FAN_MODE |
+                    SUPPORT_OPERATION_MODE)
 
     @property
     def name(self):
@@ -168,6 +180,22 @@ class VenstarThermostat(ClimateDevice):
             return None
 
     @property
+    def target_temperature_low(self):
+        """Return the lower bound temp if auto mode is on."""
+        if self._client.mode == self._client.MODE_AUTO:
+            return self._client.heattemp
+        else:
+            return None
+
+    @property
+    def target_temperature_high(self):
+        """Return the upper bound temp if auto mode is on."""
+        if self._client.mode == self._client.MODE_AUTO:
+            return self._client.cooltemp
+        else:
+            return None
+
+    @property
     def target_humidity(self):
         """Return the humidity we try to reach."""
         return self._client.hum_setpoint
@@ -185,13 +213,19 @@ class VenstarThermostat(ClimateDevice):
 # Commands
     def set_temperature(self, **kwargs):
         """Set a new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if self._client.mode == self._client.MODE_AUTO:
+            temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        else:
+            temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if self._client.mode == self._client.MODE_HEAT:
             _LOGGER.info("Currently operating in heat mode. "
-                         "Setting target heat temperature to %s %s.",
+                         "Setting target heat temperature to %s %s. "
+                         "The cool temp is at: %s",
                          temperature,
-                         self.temperature_unit)
+                         self.temperature_unit,
+                         self._client.cooltemp)
             success = self._client.set_setpoints(temperature,
                                                  self._client.cooltemp)
         elif self._client.mode == self._client.MODE_COOL:
@@ -200,6 +234,11 @@ class VenstarThermostat(ClimateDevice):
                          temperature, self.temperature_unit)
             success = self._client.set_setpoints(self._client.heattemp,
                                                  temperature)
+        elif self._client.mode == self._client.MODE_AUTO:
+            _LOGGER.info("Current in auto mode. "
+                         "Setting temp range to %s - %s %s.",
+                         temp_low, temp_high, self.temperature_unit)
+            success = self._client.set_setpoints(temp_low, temp_high)
         else:
             _LOGGER.error("The thermostat is currently not "
                           "in a mode that supports target temperature.")
