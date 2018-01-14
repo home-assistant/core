@@ -23,7 +23,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['venstarcolortouch==0.2']
+REQUIREMENTS = ['venstarcolortouch==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
