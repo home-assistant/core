@@ -74,6 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entities = []
 
     def handle_ptz(service):
+        """Handle PTZ service call."""
         tilt = service.data.get(ATTR_TILT, None)
         if tilt:
             tilt = tilt.upper()
