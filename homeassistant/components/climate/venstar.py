@@ -207,8 +207,6 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the "
                           "temperature of your thermostat.")
-        else:
-            self._force_update = True
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
@@ -221,8 +219,6 @@ class VenstarThermostat(ClimateDevice):
 
         if not success:
             _LOGGER.error("Failed to change the fan mode of your thermostat.")
-        else:
-            self._force_update = True
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -240,8 +236,6 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the "
                           "operation mode of your thermostat.")
-        else:
-            self._force_update = True
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
@@ -252,5 +246,3 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the target "
                           "humidity level of your thermostat.")
-        else:
-            self._force_update = True
