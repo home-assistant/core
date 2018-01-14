@@ -160,7 +160,9 @@ class WemoDimmer(Light):
         """Register update callback."""
         wemo = get_component('wemo')
         # The register method uses a threading condition, so call via executor.
-        self.hass.async_add_job(wemo.SUBSCRIPTION_REGISTRY.register, self.wemo)
+        # and yield from to wait until the task is done.
+        yield from self.hass.async_add_job(
+            wemo.SUBSCRIPTION_REGISTRY.register, self.wemo)
         # The on method just appends to a defaultdict list.
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
