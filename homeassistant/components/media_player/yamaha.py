@@ -4,12 +4,10 @@ Support for Yamaha Receivers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.yamaha/
 """
-import os
 import logging
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_STOP,
@@ -98,7 +96,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if receiver.zone in zone_ignore:
             continue
 
-        device = YamahaDevice(name, receiver, source_ignore, source_names, zone_names)
+        device = YamahaDevice(name, receiver, source_ignore,
+                              source_names, zone_names)
 
         # Only add device if it's not already added
         if device.unique_id not in hass.data[DATA_YAMAHA]:
