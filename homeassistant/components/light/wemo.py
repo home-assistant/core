@@ -220,8 +220,8 @@ class WemoDimmer(Light):
         # Wemo dimmer switches use a range of [0, 100] to control
         # brightness. Level 255 might mean to set it to previous value
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            brightness = int((self._brightness / 255) * 100)
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = int((brightness / 255) * 100)
         else:
             brightness = 255
         self.wemo.set_brightness(brightness)
