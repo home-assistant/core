@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW,
+    ATTR_OPERATION_MODE,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
 
 from homeassistant.const import (
@@ -28,11 +29,16 @@ REQUIREMENTS = ['venstarcolortouch==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = False
+ATTR_FAN_STATE = 'fan_state'
+ATTR_HVAC_STATE = 'hvac_state'
+VALID_FAN_STATES = [STATE_ON, STATE_AUTO]
+VALID_THERMOSTAT_MODES = [STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO]
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_USERNAME, default=None): cv.string,
-    vol.Optional(CONF_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=5):
         vol.All(vol.Coerce(int), vol.Range(min=1))
@@ -57,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                  password=password,
                                                  proto=proto)
 
-    add_devices([VenstarThermostat(client)])
+    add_devices([VenstarThermostat(client)], True)
 
 
 class VenstarThermostat(ClimateDevice):
@@ -66,10 +72,8 @@ class VenstarThermostat(ClimateDevice):
     def __init__(self, client):
         """Initialize the thermostat."""
         self._client = client
-        self._client.update_info()
-        self._client.update_sensors()
-        self._fan_list = [STATE_ON, STATE_AUTO]
-        self._operation_list = [STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO]
+        self._fan_list = VALID_FAN_STATES
+        self._operation_list = VALID_THERMOSTAT_MODES
 
     def update(self):
         """Update the data from the thermostat."""
@@ -161,12 +165,12 @@ class VenstarThermostat(ClimateDevice):
             return STATE_ON
 
     @property
-    def state_attributes(self):
-        """Extend the pre-packaged state attributes for extra info."""
-        orig_data = super(VenstarThermostat, self).state_attributes
-        orig_data['fan_state'] = self._client.fanstate
-        orig_data['hvac_state'] = self._client.state
-        return orig_data
+    def device_state_attributes(self):
+        """Return the optional state attributes."""
+        return {
+            ATTR_FAN_STATE: self._client.fanstate,
+            ATTR_HVAC_STATE: self._client.state
+        }
 
 # Target Values
     @property
@@ -211,58 +215,8 @@ class VenstarThermostat(ClimateDevice):
         return 60
 
 # Commands
-    def set_temperature(self, **kwargs):
-        """Set a new target temperature."""
-        if self._client.mode == self._client.MODE_AUTO:
-            temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        else:
-            temperature = kwargs.get(ATTR_TEMPERATURE)
-
-        if self._client.mode == self._client.MODE_HEAT:
-            _LOGGER.info("Currently operating in heat mode. "
-                         "Setting target heat temperature to %s %s. "
-                         "The cool temp is at: %s",
-                         temperature,
-                         self.temperature_unit,
-                         self._client.cooltemp)
-            success = self._client.set_setpoints(temperature,
-                                                 self._client.cooltemp)
-        elif self._client.mode == self._client.MODE_COOL:
-            _LOGGER.info("Currently operating in cool mode. "
-                         "Setting target cool temperature to %s %s.",
-                         temperature, self.temperature_unit)
-            success = self._client.set_setpoints(self._client.heattemp,
-                                                 temperature)
-        elif self._client.mode == self._client.MODE_AUTO:
-            _LOGGER.info("Current in auto mode. "
-                         "Setting temp range to %s - %s %s.",
-                         temp_low, temp_high, self.temperature_unit)
-            success = self._client.set_setpoints(temp_low, temp_high)
-        else:
-            _LOGGER.error("The thermostat is currently not "
-                          "in a mode that supports target temperature.")
-
-        if not success:
-            _LOGGER.error("Failed to change the "
-                          "temperature of your thermostat.")
-
-    def set_fan_mode(self, fan):
-        """Set new target fan mode."""
-        _LOGGER.info("Contacting your thermostat to "
-                     "set the fan state to %s.", fan)
-        if fan == STATE_ON:
-            success = self._client.set_fan(self._client.FAN_ON)
-        else:
-            success = self._client.set_fan(self._client.FAN_AUTO)
-
-        if not success:
-            _LOGGER.error("Failed to change the fan mode of your thermostat.")
-
-    def set_operation_mode(self, operation_mode):
-        """Set new target operation mode."""
-        _LOGGER.info("Contacting your thermostat to set "
-                     "it's operating mode to %s.", operation_mode)
+    def _set_operation_mode(self, operation_mode):
+        """Internal method for changing operation mode."""
         if operation_mode == STATE_HEAT:
             success = self._client.set_mode(self._client.MODE_HEAT)
         elif operation_mode == STATE_COOL:
@@ -275,11 +229,52 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the "
                           "operation mode of your thermostat.")
+        return success
+
+    def set_temperature(self, **kwargs):
+        """Set a new target temperature."""
+        set_temp = True
+        operation_mode = kwargs.get(ATTR_OPERATION_MODE, self._client.mode)
+        temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+
+        if operation_mode != self._client.mode:
+            set_temp = self._set_operation_mode(operation_mode)
+
+        if set_temp: 
+            if operation_mode == self._client.MODE_HEAT:
+                success = self._client.set_setpoints(temperature,
+                                                     self._client.cooltemp)
+            elif operation_mode == self._client.MODE_COOL:
+                success = self._client.set_setpoints(self._client.heattemp,
+                                                     temperature)
+            elif operation_mode == self._client.MODE_AUTO:
+                success = self._client.set_setpoints(temp_low, temp_high)
+            else:
+                _LOGGER.error("The thermostat is currently not "
+                          "in a mode that supports target temperature.")
+
+            if not success:
+                _LOGGER.error("Failed to change the "
+                              "temperature of your thermostat.")
+
+    def set_fan_mode(self, fan):
+        """Set new target fan mode."""
+        if fan == STATE_ON:
+            success = self._client.set_fan(self._client.FAN_ON)
+        else:
+            success = self._client.set_fan(self._client.FAN_AUTO)
+
+        if not success:
+            _LOGGER.error("Failed to change the fan mode of your thermostat.")
+
+    def set_operation_mode(self, operation_mode):
+        """Set new target operation mode."""
+        self._set_operation_mode(operation_mode)
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
-        _LOGGER.info("Contacting your thermostat to set it's "
-                     "target humidity to %s", humidity)
         success = self._client.set_hum_setpoint(humidity)
 
         if not success:
