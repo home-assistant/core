@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     excludes = config.get(CONF_EXCLUDES)
     days_offset = config.get(CONF_OFFSET)
 
-    year = (datetime.now() + timedelta(days=days_offset)).year
+    year = (get_date(datetime.today()) + timedelta(days=days_offset)).year
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
@@ -97,6 +97,11 @@ def day_to_string(day):
         return ALLOWED_DAYS[day]
     except IndexError:
         return None
+
+
+def get_date(date):
+    """Return date. Needed for testing."""
+    return date
 
 
 class IsWorkdaySensor(BinarySensorDevice):
@@ -156,7 +161,7 @@ class IsWorkdaySensor(BinarySensorDevice):
         self._state = False
 
         # Get iso day of the week (1 = Monday, 7 = Sunday)
-        date = datetime.today() + timedelta(days=self._days_offset)
+        date = get_date(datetime.today()) + timedelta(days=self._days_offset)
         day = date.isoweekday() - 1
         day_of_week = day_to_string(day)
 

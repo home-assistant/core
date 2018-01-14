@@ -7,10 +7,8 @@ https://home-assistant.io/components/deconz/
 
 import asyncio
 import logging
-import os
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.discovery import SERVICE_DECONZ
@@ -107,10 +105,6 @@ def async_setup_deconz(hass, config, deconz_config):
             hass, component, DOMAIN, {}, config))
     deconz.start()
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_configure(call):
         """Set attribute of device in deCONZ.
@@ -132,7 +126,7 @@ def async_setup_deconz(hass, config, deconz_config):
         yield from deconz.async_put_state(field, data)
     hass.services.async_register(
         DOMAIN, 'configure', async_configure,
-        descriptions['configure'], schema=SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz.close)
     return True

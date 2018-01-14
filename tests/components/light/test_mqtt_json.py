@@ -76,7 +76,18 @@ light:
   name: mqtt_json_light_1
   state_topic: "home/rgb1"
   command_topic: "home/rgb1/set"
+
+Config with brightness and scale:
+
+light:
+  platform: mqtt_json
+  name: test
+  state_topic: "mqtt_json_light_1"
+  command_topic: "mqtt_json_light_1/set"
+  brightness: true
+  brightness_scale: 99
 """
+
 import json
 import unittest
 
@@ -402,6 +413,43 @@ class TestLightMQTTJSON(unittest.TestCase):
         message_json = json.loads(self.mock_publish.mock_calls[-2][1][1])
         self.assertEqual(10, message_json["transition"])
         self.assertEqual("OFF", message_json["state"])
+
+    def test_brightness_scale(self):
+        """Test for brightness scaling."""
+        assert setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_bright_scale',
+                'command_topic': 'test_light_bright_scale/set',
+                'brightness': True,
+                'brightness_scale': 99
+            }
+        })
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('brightness'))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        # Turn on the light
+        fire_mqtt_message(self.hass, 'test_light_bright_scale',
+                          '{"state":"ON"}')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(255, state.attributes.get('brightness'))
+
+        # Turn on the light with brightness
+        fire_mqtt_message(self.hass, 'test_light_bright_scale',
+                          '{"state":"ON",'
+                          '"brightness": 99}')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(255, state.attributes.get('brightness'))
 
     def test_invalid_color_brightness_and_white_values(self): \
             # pylint: disable=invalid-name

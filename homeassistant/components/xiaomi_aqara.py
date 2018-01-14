@@ -111,7 +111,7 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
 
-    from PyXiaomiGateway import XiaomiGatewayDiscovery
+    from xiaomi_gateway import XiaomiGatewayDiscovery
     xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
         hass.add_job, gateways, interface)
 

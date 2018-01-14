@@ -8,7 +8,6 @@ import logging
 import asyncio
 import sys
 import math
-from os import path
 from functools import partial
 from datetime import timedelta
 
@@ -22,7 +21,6 @@ from homeassistant.components.light import (
     SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT,
     VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT,
     preprocess_turn_on_alternatives)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant import util
 from homeassistant.core import callback
@@ -210,13 +208,10 @@ class LIFXManager(object):
         self.async_add_devices = async_add_devices
         self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
 
-        descriptions = load_yaml_config_file(
-            path.join(path.dirname(__file__), 'services.yaml'))
+        self.register_set_state()
+        self.register_effects()
 
-        self.register_set_state(descriptions)
-        self.register_effects(descriptions)
-
-    def register_set_state(self, descriptions):
+    def register_set_state(self):
         """Register the LIFX set_state service call."""
         @asyncio.coroutine
         def async_service_handle(service):
@@ -231,10 +226,9 @@ class LIFXManager(object):
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_LIFX_SET_STATE, async_service_handle,
-            descriptions.get(SERVICE_LIFX_SET_STATE),
             schema=LIFX_SET_STATE_SCHEMA)
 
-    def register_effects(self, descriptions):
+    def register_effects(self):
         """Register the LIFX effects as hass service calls."""
         @asyncio.coroutine
         def async_service_handle(service):
@@ -246,17 +240,14 @@ class LIFXManager(object):
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_PULSE, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_PULSE),
             schema=LIFX_EFFECT_PULSE_SCHEMA)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_COLORLOOP, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_COLORLOOP),
             schema=LIFX_EFFECT_COLORLOOP_SCHEMA)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_STOP, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_STOP),
             schema=LIFX_EFFECT_STOP_SCHEMA)
 
     @asyncio.coroutine
