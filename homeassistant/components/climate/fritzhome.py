@@ -6,6 +6,8 @@ http://home-assistant.io/components/climate.fritzhome/
 """
 import logging
 
+import requests
+
 from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_HEAT, STATE_MANUAL,
@@ -125,8 +127,12 @@ class FritzhomeThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        self._device.update()
-        self._current_temperature = self._device.actual_temperature
-        self._target_temperature = self._device.target_temperature
-        self._comfort_temperature = self._device.comfort_temperature
-        self._eco_temperature = self._device.eco_temperature
+        try:
+            self._device.update()
+            self._current_temperature = self._device.actual_temperature
+            self._target_temperature = self._device.target_temperature
+            self._comfort_temperature = self._device.comfort_temperature
+            self._eco_temperature = self._device.eco_temperature
+        except requests.exceptions.HTTPError as ex:
+            _LOGGER.warning("Fritzhome connection error: %s", ex)
+            self._device._fritz.login()  # pylint: disable=protected-access
