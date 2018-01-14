@@ -354,10 +354,10 @@ omit =
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/ifttt.py
-    homeassistant/components/iota.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/image_processing/seven_segments.py
+    homeassistant/components/iota.py
     homeassistant/components/keyboard.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/light/avion.py
