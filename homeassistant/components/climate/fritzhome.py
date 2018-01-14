@@ -26,6 +26,10 @@ OPERATION_LIST = [STATE_HEAT, STATE_ECO, STATE_MANUAL]
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
 
+ATTR_STATE_DEVICE_LOCKED = 'device_locked'
+ATTR_STATE_LOCKED = 'locked'
+ATTR_STATE_LOW_BAT = 'low_battery'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome thermostat platform."""
@@ -124,6 +128,17 @@ class FritzhomeThermostat(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return MAX_TEMPERATURE
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        dev_specific = {
+            ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,
+            ATTR_STATE_LOCKED: self._device.lock,
+            ATTR_STATE_LOW_BAT: self._device.battery_low,
+        }
+
+        return dev_specific
 
     def update(self):
         """Update the data from the thermostat."""
