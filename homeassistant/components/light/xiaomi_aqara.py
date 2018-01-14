@@ -7,7 +7,6 @@ from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
                                             SUPPORT_BRIGHTNESS,
                                             SUPPORT_RGB_COLOR, Light)
-from homeassistant.const import STATE_UNAVAILABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +37,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
     @property
     def is_on(self):
         """Return true if it is on."""
-        return self._state is True
-
-    @property
-    def state(self):
-        """Return the state of the xiaomi light."""
-        if self._state == STATE_UNAVAILABLE:
-            return self._state
-        return super(XiaomiGatewayLight, self).state
+        return self._state
 
     def parse_data(self, data):
         """Parse data sent by gateway."""

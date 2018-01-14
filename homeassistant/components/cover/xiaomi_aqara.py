@@ -4,7 +4,6 @@ import logging
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
-from homeassistant.const import STATE_UNAVAILABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,13 +37,6 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     def current_cover_position(self):
         """Return the current position of the cover."""
         return self._pos
-
-    @property
-    def state(self):
-        """Return the state of the xiaomi cover."""
-        if self._state == STATE_UNAVAILABLE:
-            return self._state
-        return super(XiaomiGenericCover, self).state
 
     @property
     def is_closed(self):
