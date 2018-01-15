@@ -35,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_DEVICE_CLASS): cv.string,
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+            vol.Optional(ATTR_OFF_DELAY, default=None):
+            vol.Any(cv.time_period, cv.positive_timedelta),
             vol.Optional(CONF_DATA_BITS): cv.positive_int,
             vol.Optional(CONF_COMMAND_ON): cv.byte,
             vol.Optional(CONF_COMMAND_OFF): cv.byte
