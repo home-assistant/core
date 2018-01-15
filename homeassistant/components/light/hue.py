@@ -4,6 +4,7 @@ This component provides light support for the Philips Hue system.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.hue/
 """
+import asyncio
 from datetime import timedelta
 import logging
 import random
@@ -14,9 +15,6 @@ import voluptuous as vol
 
 import homeassistant.components.hue as hue
 
-import homeassistant.util as util
-from homeassistant.util import yaml
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
@@ -24,8 +22,10 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
-from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE_HIDDEN
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
+from homeassistant.util import yaml
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['hue']
 
@@ -49,6 +49,7 @@ SUPPORT_HUE = {
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
     }
 
+ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 ATTR_IS_HUE_GROUP = 'is_hue_group'
 
 # Legacy configuration, will be removed in 0.60
@@ -82,6 +83,8 @@ This configuration is deprecated, please check the
 [Hue component](https://home-assistant.io/components/hue/) page for more
 information.
 """
+
+SIGNAL_CALLBACK = 'hue_light_callback_{}_{}'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -163,7 +166,10 @@ def process_lights(hass, api, bridge, update_lights_cb):
             new_lights.append(bridge.lights[light_id])
         else:
             bridge.lights[light_id].info = info
-            bridge.lights[light_id].schedule_update_ha_state()
+            hass.helpers.dispatcher.dispatcher_send(
+                SIGNAL_CALLBACK.format(
+                    bridge.bridge_id,
+                    bridge.lights[light_id].light_id))
 
     return new_lights
 
@@ -193,7 +199,10 @@ def process_groups(hass, api, bridge, update_lights_cb):
             new_lights.append(bridge.lightgroups[lightgroup_id])
         else:
             bridge.lightgroups[lightgroup_id].info = info
-            bridge.lightgroups[lightgroup_id].schedule_update_ha_state()
+            hass.helpers.dispatcher.dispatcher_send(
+                SIGNAL_CALLBACK.format(
+                    bridge.bridge_id,
+                    bridge.lightgroups[lightgroup_id].light_id))
 
     return new_lights
 
@@ -366,3 +375,11 @@ class HueLight(Light):
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
         return attributes
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register update callback."""
+        dev_id = self.bridge.bridge_id, self.light_id
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_CALLBACK.format(*dev_id),
+            self.async_schedule_update_ha_state)

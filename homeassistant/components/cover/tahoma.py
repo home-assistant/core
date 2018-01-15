@@ -73,4 +73,15 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.apply_action('stopIdentify')
+        if self.tahoma_device.type == \
+           'io:RollerShutterWithLowSpeedManagementIOComponent':
+            self.apply_action('setPosition', 'secured')
+        else:
+            self.apply_action('stopIdentify')
+
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
+            return 'window'
+        else:
+            return None

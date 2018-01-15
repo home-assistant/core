@@ -7,12 +7,10 @@ https://home-assistant.io/components/climate/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 import functools as ft
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
@@ -245,10 +243,6 @@ def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_away_mode_set_service(service):
         """Set away mode on target climate devices."""
@@ -272,7 +266,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
-        descriptions.get(SERVICE_SET_AWAY_MODE),
         schema=SET_AWAY_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -295,7 +288,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_HOLD_MODE, async_hold_mode_set_service,
-        descriptions.get(SERVICE_SET_HOLD_MODE),
         schema=SET_HOLD_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -321,7 +313,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AUX_HEAT, async_aux_heat_set_service,
-        descriptions.get(SERVICE_SET_AUX_HEAT),
         schema=SET_AUX_HEAT_SCHEMA)
 
     @asyncio.coroutine
@@ -353,7 +344,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_TEMPERATURE, async_temperature_set_service,
-        descriptions.get(SERVICE_SET_TEMPERATURE),
         schema=SET_TEMPERATURE_SCHEMA)
 
     @asyncio.coroutine
@@ -375,7 +365,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_HUMIDITY, async_humidity_set_service,
-        descriptions.get(SERVICE_SET_HUMIDITY),
         schema=SET_HUMIDITY_SCHEMA)
 
     @asyncio.coroutine
@@ -397,7 +386,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_FAN_MODE, async_fan_mode_set_service,
-        descriptions.get(SERVICE_SET_FAN_MODE),
         schema=SET_FAN_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -419,7 +407,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_OPERATION_MODE, async_operation_set_service,
-        descriptions.get(SERVICE_SET_OPERATION_MODE),
         schema=SET_OPERATION_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -441,7 +428,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SWING_MODE, async_swing_set_service,
-        descriptions.get(SERVICE_SET_SWING_MODE),
         schema=SET_SWING_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -465,10 +451,10 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_on_off_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=ON_OFF_SERVICE_SCHEMA)
+        schema=ON_OFF_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_on_off_service,
-        descriptions.get(SERVICE_TURN_ON), schema=ON_OFF_SERVICE_SCHEMA)
+        schema=ON_OFF_SERVICE_SCHEMA)
 
     return True
 

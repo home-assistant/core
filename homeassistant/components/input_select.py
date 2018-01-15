@@ -6,14 +6,12 @@ at https://home-assistant.io/components/input_select/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -131,11 +129,6 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     @asyncio.coroutine
     def async_select_option_service(call):
         """Handle a calls to the input select option service."""
@@ -148,7 +141,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_OPTION, async_select_option_service,
-        descriptions[DOMAIN][SERVICE_SELECT_OPTION],
         schema=SERVICE_SELECT_OPTION_SCHEMA)
 
     @asyncio.coroutine
@@ -163,7 +155,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_NEXT, async_select_next_service,
-        descriptions[DOMAIN][SERVICE_SELECT_NEXT],
         schema=SERVICE_SELECT_NEXT_SCHEMA)
 
     @asyncio.coroutine
@@ -178,7 +169,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
-        descriptions[DOMAIN][SERVICE_SELECT_PREVIOUS],
         schema=SERVICE_SELECT_PREVIOUS_SCHEMA)
 
     @asyncio.coroutine
@@ -193,7 +183,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_OPTIONS, async_set_options_service,
-        descriptions[DOMAIN][SERVICE_SET_OPTIONS],
         schema=SERVICE_SET_OPTIONS_SCHEMA)
 
     yield from component.async_add_entities(entities)
