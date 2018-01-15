@@ -1,4 +1,8 @@
-"""Support for MyChevy sensors."""
+"""Support for MyChevy sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/mychevy/
+"""
 
 import asyncio
 from logging import getLogger
@@ -8,6 +12,7 @@ from homeassistant.components.mychevy import (
 )
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
+from homeassistant.core import callback
 from homeassistant.util import (slugify)
 
 _LOGGER = getLogger(__name__)
@@ -17,7 +22,8 @@ SENSORS = [
 ]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:
         return
@@ -27,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sconfig in SENSORS:
         sensors.append(EVBinarySensor(hub, sconfig))
 
-    add_devices(sensors)
+    async_add_devices(sensors)
 
 
 class EVBinarySensor(BinarySensorDevice):
@@ -66,7 +72,7 @@ class EVBinarySensor(BinarySensorDevice):
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.async_update_callback)
 
-    @asyncio.coroutine
+    @callback
     def async_update_callback(self):
         """Update state."""
         if self._conn.car is not None:

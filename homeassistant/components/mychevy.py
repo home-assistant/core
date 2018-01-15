@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/mychevy/
 """
 
-from logging import getLogger
 from datetime import timedelta
+import logging
 import time
 import threading
 
@@ -24,13 +24,13 @@ DOMAIN = 'mychevy'
 UPDATE_TOPIC = DOMAIN
 ERROR_TOPIC = DOMAIN + "_error"
 
-MYCHEVY_SUCCESS = "Success"
-MYCHEVY_ERROR = "Error"
+MYCHEVY_SUCCESS = "success"
+MYCHEVY_ERROR = "error"
 
 NOTIFICATION_ID = 'mychevy_website_notification'
 NOTIFICATION_TITLE = 'MyChevy website status'
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 ERROR_SLEEP_TIME = timedelta(minutes=30)
@@ -73,9 +73,8 @@ def setup(hass, base_config):
 
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    if hass.data.get(DOMAIN) is None:
-        hass.data[DOMAIN] = MyChevyHub(mc.MyChevy(email, password), hass)
-        hass.data[DOMAIN].start()
+    hass.data[DOMAIN] = MyChevyHub(mc.MyChevy(email, password), hass)
+    hass.data[DOMAIN].start()
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)

@@ -1,17 +1,21 @@
-"""Support for MyChevy sensors."""
+"""Support for MyChevy sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/mychevy/
+"""
 
 import asyncio
 from logging import getLogger
-from datetime import datetime as dt
 
 from homeassistant.components.mychevy import (
     EVSensorConfig, DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
     NOTIFICATION_ID, NOTIFICATION_TITLE, UPDATE_TOPIC, ERROR_TOPIC
 )
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.util import (slugify)
+from homeassistant.util import slugify
 
 
 SENSORS = [
@@ -31,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     hub = hass.data[DOMAIN]
-    sensors = [MyChevyStatus(hub)]
+    sensors = [MyChevyStatus()]
     for sconfig in SENSORS:
         sensors.append(EVSensor(hub, sconfig))
 
@@ -44,11 +48,9 @@ class MyChevyStatus(Entity):
     _name = "MyChevy Status"
     _icon = "mdi:car-connected"
 
-    def __init__(self, connection):
+    def __init__(self):
         """Initialize sensor with car connection."""
         self._state = None
-        self._last_update = dt.now()
-        self._conn = connection
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -59,13 +61,15 @@ class MyChevyStatus(Entity):
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             ERROR_TOPIC, self.error)
 
+    @callback
     def success(self):
         """Update state, trigger updates."""
         if self._state != MYCHEVY_SUCCESS:
             _LOGGER.info("Successfully connected to mychevy website")
             self._state = MYCHEVY_SUCCESS
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
+    @callback
     def error(self):
         """Update state, trigger updates."""
         if self._state != MYCHEVY_ERROR:
@@ -75,7 +79,7 @@ class MyChevyStatus(Entity):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
             self._state = MYCHEVY_ERROR
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def icon(self):
@@ -137,7 +141,7 @@ class EVSensor(Entity):
         """Return the name."""
         return self._name
 
-    @asyncio.coroutine
+    @callback
     def async_update_callback(self):
         """Update state."""
         if self._conn.car is not None:
