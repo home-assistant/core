@@ -24,8 +24,6 @@ DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
 
-_LOGGER = logging.getLogger(__name__)
-
 # Platform specific data
 ATTR_DATA = 'params'
 
@@ -151,9 +149,6 @@ def async_setup(hass, config):
 
         code = service.data.get(ATTR_CODE)
         params = service.data.get(ATTR_DATA)
-
-        _LOGGER.error("async_alarm_service_handler code: %s type:%s", code, type(code))
-        _LOGGER.error("async_alarm_service_handler data: %s type:%s", params, type(params))
 
         method = "async_{}".format(SERVICE_TO_METHOD[service.service])
 
