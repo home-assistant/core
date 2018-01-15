@@ -156,7 +156,6 @@ def async_setup(hass, config):
         for alarm in target_alarms:
             yield from getattr(alarm, method)(code, params)
 
-
             if not alarm.should_poll:
                 continue
             update_tasks.append(alarm.async_update_ha_state(True))
