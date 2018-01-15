@@ -17,7 +17,6 @@ from homeassistant.util import slugify
 DEPENDENCIES = ['deconz']
 
 ATTR_EVENT_ID = 'event_id'
-ATTR_ZHASWITCH = 'ZHASwitch'
 
 
 @asyncio.coroutine
@@ -26,13 +25,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    from pydeconz.sensor import DECONZ_SENSOR
+    from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
     sensors = hass.data[DECONZ_DATA].sensors
     entities = []
 
     for sensor in sensors.values():
         if sensor.type in DECONZ_SENSOR:
-            if sensor.type == ATTR_ZHASWITCH:
+            if sensor.type in DECONZ_REMOTE:
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))
