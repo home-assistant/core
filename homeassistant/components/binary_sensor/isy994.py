@@ -12,16 +12,14 @@ from typing import Callable  # noqa
 
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
-import homeassistant.components.isy994 as isy
+from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
+                                             ISYDevice)
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-UOM = ['2', '78']
-STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 ISY_DEVICE_TYPES = {
     'moisture': ['16.8', '16.13', '16.14'],
@@ -34,16 +32,11 @@ ISY_DEVICE_TYPES = {
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 binary sensor platform."""
-    if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error("A connection has not been made to the ISY controller")
-        return False
-
     devices = []
     devices_by_nid = {}
     child_nodes = []
 
-    for node in isy.filter_nodes(isy.SENSOR_NODES, units=UOM,
-                                 states=STATES):
+    for node in hass.data[ISY994_NODES][DOMAIN]:
         if node.parent_node is None:
             device = ISYBinarySensorDevice(node)
             devices.append(device)
@@ -87,13 +80,8 @@ def setup_platform(hass, config: ConfigType,
                 device = ISYBinarySensorDevice(node)
                 devices.append(device)
 
-    for program in isy.PROGRAMS.get(DOMAIN, []):
-        try:
-            status = program[isy.KEY_STATUS]
-        except (KeyError, AssertionError):
-            pass
-        else:
-            devices.append(ISYBinarySensorProgram(program.name, status))
+    for name, status, _ in hass.data[ISY994_PROGRAMS][DOMAIN]:
+        devices.append(ISYBinarySensorProgram(name, status))
 
     add_devices(devices)
 
@@ -118,7 +106,7 @@ def _is_val_unknown(val):
     return val == -1*float('inf')
 
 
-class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
+class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
     """Representation of an ISY994 binary sensor device.
 
     Often times, a single device is represented by multiple nodes in the ISY,
@@ -258,7 +246,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
         return self._device_class_from_type
 
 
-class ISYBinarySensorHeartbeat(isy.ISYDevice, BinarySensorDevice):
+class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
     """Representation of the battery state of an ISY994 sensor."""
 
     def __init__(self, node, parent_device) -> None:
@@ -361,7 +349,7 @@ class ISYBinarySensorHeartbeat(isy.ISYDevice, BinarySensorDevice):
         return attr
 
 
-class ISYBinarySensorProgram(isy.ISYDevice, BinarySensorDevice):
+class ISYBinarySensorProgram(ISYDevice, BinarySensorDevice):
     """Representation of an ISY994 binary sensor program.
 
     This does not need all of the subnode logic in the device version of binary

@@ -9,7 +9,7 @@ from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
                                  CONF_MAC, CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
+REQUIREMENTS = ['PyXiaomiGateway==0.7.0']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
@@ -105,8 +105,8 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
 
-    from PyXiaomiGateway import PyXiaomiGateway
-    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(
+    from xiaomi_gateway import XiaomiGatewayDiscovery
+    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
         hass.add_job, gateways, interface)
 
     _LOGGER.debug("Expecting %s gateways", len(gateways))

@@ -41,7 +41,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self.current_cover_position < 0
+        return self.current_cover_position <= 0
 
     def close_cover(self, **kwargs):
         """Close the cover."""

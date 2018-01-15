@@ -1,4 +1,5 @@
 """Support for Google Assistant Smart Home API."""
+import asyncio
 import logging
 
 # Typing imports
@@ -10,12 +11,13 @@ from homeassistant.helpers.entity import Entity  # NOQA
 from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.util import color
 from homeassistant.util.unit_system import UnitSystem  # NOQA
+from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
-    CONF_FRIENDLY_NAME, STATE_OFF,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
+    CONF_NAME, CONF_TYPE
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate
@@ -23,8 +25,7 @@ from homeassistant.components import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
-    ATTR_GOOGLE_ASSISTANT_NAME, COMMAND_COLOR,
-    ATTR_GOOGLE_ASSISTANT_TYPE,
+    COMMAND_COLOR,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
     COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, COMMAND_THERMOSTAT_SET_MODE,
@@ -34,6 +35,7 @@ from .const import (
     CONF_ALIASES, CLIMATE_SUPPORTED_MODES
 )
 
+HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 # Mapping is [actions schema, primary trait, optional features]
@@ -52,12 +54,12 @@ MAPPING_COMPONENT = {
         }
     ],
     cover.DOMAIN: [
-        TYPE_LIGHT, TRAIT_ONOFF, {
+        TYPE_SWITCH, TRAIT_ONOFF, {
             cover.SUPPORT_SET_POSITION: TRAIT_BRIGHTNESS
         }
     ],
     media_player.DOMAIN: [
-        TYPE_LIGHT, TRAIT_ONOFF, {
+        TYPE_SWITCH, TRAIT_ONOFF, {
             media_player.SUPPORT_VOLUME_SET: TRAIT_BRIGHTNESS
         }
     ],
@@ -65,15 +67,22 @@ MAPPING_COMPONENT = {
 }  # type: Dict[str, list]
 
 
-def make_actions_response(request_id: str, payload: dict) -> dict:
-    """Make response message."""
-    return {'requestId': request_id, 'payload': payload}
+class Config:
+    """Hold the configuration for Google Assistant."""
+
+    def __init__(self, should_expose, agent_user_id, entity_config=None):
+        """Initialize the configuration."""
+        self.should_expose = should_expose
+        self.agent_user_id = agent_user_id
+        self.entity_config = entity_config or {}
 
 
-def entity_to_device(entity: Entity, units: UnitSystem):
+def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     """Convert a hass entity into an google actions device."""
+    entity_config = config.entity_config.get(entity.entity_id, {})
     class_data = MAPPING_COMPONENT.get(
-        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) or entity.domain)
+        entity_config.get(CONF_TYPE) or entity.domain)
+
     if class_data is None:
         return None
 
@@ -88,17 +97,12 @@ def entity_to_device(entity: Entity, units: UnitSystem):
     device['traits'].append(class_data[1])
 
     # handle custom names
-    device['name']['name'] = \
-        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_NAME) or \
-        entity.attributes.get(CONF_FRIENDLY_NAME)
+    device['name']['name'] = entity_config.get(CONF_NAME) or entity.name
 
     # use aliases
-    aliases = entity.attributes.get(CONF_ALIASES)
+    aliases = entity_config.get(CONF_ALIASES)
     if aliases:
-        if isinstance(aliases, list):
-            device['name']['nicknames'] = aliases
-        else:
-            _LOGGER.warning("%s must be a list", CONF_ALIASES)
+        device['name']['nicknames'] = aliases
 
     # add trait if entity supports feature
     if class_data[2]:
@@ -286,3 +290,98 @@ def determine_service(
         return (SERVICE_TURN_OFF, service_data)
 
     return (None, service_data)
+
+
+@asyncio.coroutine
+def async_handle_message(hass, config, message):
+    """Handle incoming API messages."""
+    request_id = message.get('requestId')  # type: str
+    inputs = message.get('inputs')  # type: list
+
+    if len(inputs) > 1:
+        _LOGGER.warning('Got unexpected more than 1 input. %s', message)
+
+    # Only use first input
+    intent = inputs[0].get('intent')
+    payload = inputs[0].get('payload')
+
+    handler = HANDLERS.get(intent)
+
+    if handler:
+        result = yield from handler(hass, config, payload)
+    else:
+        result = {'errorCode': 'protocolError'}
+
+    return {'requestId': request_id, 'payload': result}
+
+
+@HANDLERS.register('action.devices.SYNC')
+@asyncio.coroutine
+def async_devices_sync(hass, config, payload):
+    """Handle action.devices.SYNC request."""
+    devices = []
+    for entity in hass.states.async_all():
+        if not config.should_expose(entity):
+            continue
+
+        device = entity_to_device(entity, config, hass.config.units)
+        if device is None:
+            _LOGGER.warning("No mapping for %s domain", entity.domain)
+            continue
+
+        devices.append(device)
+
+    return {
+        'agentUserId': config.agent_user_id,
+        'devices': devices,
+    }
+
+
+@HANDLERS.register('action.devices.QUERY')
+@asyncio.coroutine
+def async_devices_query(hass, config, payload):
+    """Handle action.devices.QUERY request."""
+    devices = {}
+    for device in payload.get('devices', []):
+        devid = device.get('id')
+        # In theory this should never happpen
+        if not devid:
+            _LOGGER.error('Device missing ID: %s', device)
+            continue
+
+        state = hass.states.get(devid)
+        if not state:
+            # If we can't find a state, the device is offline
+            devices[devid] = {'online': False}
+
+        devices[devid] = query_device(state, hass.config.units)
+
+    return {'devices': devices}
+
+
+@HANDLERS.register('action.devices.EXECUTE')
+@asyncio.coroutine
+def handle_devices_execute(hass, config, payload):
+    """Handle action.devices.EXECUTE request."""
+    commands = []
+    for command in payload.get('commands', []):
+        ent_ids = [ent.get('id') for ent in command.get('devices', [])]
+        for execution in command.get('execution'):
+            for eid in ent_ids:
+                success = False
+                domain = eid.split('.')[0]
+                (service, service_data) = determine_service(
+                    eid, execution.get('command'), execution.get('params'),
+                    hass.config.units)
+                if domain == "group":
+                    domain = "homeassistant"
+                success = yield from hass.services.async_call(
+                    domain, service, service_data, blocking=True)
+                result = {"ids": [eid], "states": {}}
+                if success:
+                    result['status'] = 'SUCCESS'
+                else:
+                    result['status'] = 'ERROR'
+                commands.append(result)
+
+    return {'commands': commands}

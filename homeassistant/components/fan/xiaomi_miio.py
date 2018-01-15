@@ -7,14 +7,12 @@ https://home-assistant.io/components/fan.xiaomi_miio/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
                                           SUPPORT_SET_SPEED, DOMAIN)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
                                  ATTR_ENTITY_ID, )
 from homeassistant.exceptions import PlatformNotReady
@@ -31,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.2']
+REQUIREMENTS = ['python-miio==0.3.3']
 
 ATTR_TEMPERATURE = 'temperature'
 ATTR_HUMIDITY = 'humidity'
@@ -131,16 +129,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'xiaomi_miio_services.yaml'))
-
     for air_purifier_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[air_purifier_service].get(
             'schema', AIRPURIFIER_SERVICE_SCHEMA)
         hass.services.async_register(
-            DOMAIN, air_purifier_service, async_service_handler,
-            description=descriptions.get(air_purifier_service), schema=schema)
+            DOMAIN, air_purifier_service, async_service_handler, schema=schema)
 
 
 class XiaomiAirPurifier(FanEntity):

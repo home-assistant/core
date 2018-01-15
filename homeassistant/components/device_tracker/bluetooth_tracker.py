@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    load_config, PLATFORM_SCHEMA, DEFAULT_TRACK_NEW)
+    load_config, PLATFORM_SCHEMA, DEFAULT_TRACK_NEW, SOURCE_TYPE_BLUETOOTH)
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     def see_device(device):
         """Mark a device as seen."""
-        see(mac=BT_PREFIX + device[0], host_name=device[1])
+        see(mac=BT_PREFIX + device[0], host_name=device[1],
+            source_type=SOURCE_TYPE_BLUETOOTH)
 
     def discover_devices():
         """Discover Bluetooth devices."""
