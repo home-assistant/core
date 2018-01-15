@@ -35,7 +35,7 @@ class IotaBalanceSensor(IotaDevice):
                          seed=wallet_config['seed'],
                          iri=iota_config['iri'],
                          is_testnet=iota_config['is_testnet'])
-        self._state = 0
+        self._state = None
 
     @property
     def name(self):
