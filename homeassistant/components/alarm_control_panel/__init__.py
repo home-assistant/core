@@ -27,7 +27,7 @@ ATTR_CHANGED_BY = 'changed_by'
 _LOGGER = logging.getLogger(__name__)
 
 # Platform specific data
-ATTR_DATA = 'data'
+ATTR_DATA = 'params'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -159,10 +159,7 @@ def async_setup(hass, config):
 
         update_tasks = []
         for alarm in target_alarms:
-            if params==None:
-                yield from getattr(alarm, method)(code)
-            else:
-                yield from getattr(alarm, method)(code, params)
+            yield from getattr(alarm, method)(code, params)
 
 
             if not alarm.should_poll:
@@ -203,7 +200,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_disarm, code)
+        return self.hass.async_add_job(self.alarm_disarm, code, params)
 
     def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
@@ -214,7 +211,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_home, code)
+        return self.hass.async_add_job(self.alarm_arm_home, code, params)
 
     def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
@@ -225,7 +222,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_away, code)
+        return self.hass.async_add_job(self.alarm_arm_away, code, params)
 
     def alarm_arm_night(self, code=None, params=None):
         """Send arm night command."""
@@ -236,7 +233,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_night, code)
+        return self.hass.async_add_job(self.alarm_arm_night, code, params)
 
     def alarm_trigger(self, code=None, params=None):
         """Send alarm trigger command."""
@@ -247,7 +244,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_trigger, code)
+        return self.hass.async_add_job(self.alarm_trigger, code, params)
 
     def alarm_arm_custom_bypass(self, code=None, params=None):
         """Send arm custom bypass command."""
@@ -258,7 +255,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_custom_bypass, code)
+        return self.hass.async_add_job(self.alarm_arm_custom_bypass, code, params)
 
     @property
     def state_attributes(self):
