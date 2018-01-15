@@ -15,8 +15,8 @@ import voluptuous as vol
 
 from homeassistant.util.dt import utcnow
 from homeassistant.util import Throttle
-from homeassistant.components.switch import (SwitchDevice, DOMAIN,
-    PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_SWITCHES,
     CONF_COMMAND_OFF, CONF_COMMAND_ON,
