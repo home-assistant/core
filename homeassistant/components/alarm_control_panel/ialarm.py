@@ -94,14 +94,14 @@ class IAlarmPanel(alarm.AlarmControlPanel):
 
         self._state = state
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         self._client.disarm()
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         self._client.arm_away()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         self._client.arm_stay()

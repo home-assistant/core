@@ -192,7 +192,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         status = self._egardiasystem.getstate()
         self.parsestatus(status)
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         try:
             self._egardiasystem.alarm_disarm()
@@ -200,7 +200,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
             _LOGGER.error("Egardia device exception occurred when "
                           "sending disarm command: %s", err)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         try:
             self._egardiasystem.alarm_arm_home()
@@ -208,7 +208,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
             _LOGGER.error("Egardia device exception occurred when "
                           "sending arm home command: %s", err)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         try:
             self._egardiasystem.alarm_arm_away()
