@@ -33,9 +33,8 @@ ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_FIRE_EVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
-ATTR_DATA_BITS = 'data_bits'
 ATTR_DUMMY = 'dummy'
-ATTR_OFF_DELAY = 'off_delay'
+CONF_DATA_BITS = 'data_bits'
 CONF_AUTOMATIC_ADD = 'automatic_add'
 CONF_DATA_TYPE = 'data_type'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
@@ -44,6 +43,7 @@ CONF_DATA_BITS = 'data_bits'
 CONF_DUMMY = 'dummy'
 CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
+CONF_OFF_DELAY = 'off_delay'
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
 DATA_TYPES = OrderedDict([
@@ -143,12 +143,13 @@ def get_rfx_object(packetid):
 
 def get_pt2262_deviceid(device_id, nb_data_bits):
     """Extract and return the address bits from a Lighting4/PT2262 packet."""
+    if nb_data_bits is None:
+        return
     import binascii
     try:
         data = bytearray.fromhex(device_id)
     except ValueError:
         return None
-
     mask = 0xFF & ~((1 << nb_data_bits) - 1)
 
     data[len(data)-1] &= mask
