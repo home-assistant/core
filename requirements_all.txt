@@ -753,7 +753,7 @@ pykira==0.1.1
 pykwb==0.0.8
 
 # homeassistant.components.sensor.lacrosse
-pylacrosse==0.2.7
+pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
 pylast==2.0.0
