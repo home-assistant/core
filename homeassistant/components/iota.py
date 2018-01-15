@@ -45,15 +45,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Setup IOTA component."""
-    # Set domain sepecific data
-    iota_config = config[DOMAIN]
-    hass.data[DOMAIN] = {
-        'iri': iota_config[CONF_IRI],
-        'is_testnet': iota_config[CONF_TESTNET],
-        'wallets': iota_config[CONF_WALLETS]
-    }
 
     # Load platforms
+    iota_config = config[DOMAIN]
     for platform in IOTA_PLATFORMS:
         load_platform(hass, platform, DOMAIN, iota_config, config)
 

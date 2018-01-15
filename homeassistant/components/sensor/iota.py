@@ -5,18 +5,21 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/iota
 """
 import logging
+from datetime import timedelta
 
-from homeassistant.components.iota import DOMAIN as IOTA_DOMAIN, IotaDevice
+from homeassistant.components.iota import IotaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['iota']
 
+SCAN_INTERVAL = timedelta(minutes=10)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the IOTA sensor."""
     # Add sensors for wallet balance
-    iota_config = hass.data[IOTA_DOMAIN]
+    iota_config = discovery_info
     sensors = [IotaBalanceSensor(wallet, iota_config)
                for wallet in iota_config['wallets']]
 
@@ -34,7 +37,7 @@ class IotaBalanceSensor(IotaDevice):
         super().__init__(name=wallet_config['name'],
                          seed=wallet_config['seed'],
                          iri=iota_config['iri'],
-                         is_testnet=iota_config['is_testnet'])
+                         is_testnet=iota_config['testnet'])
         self._state = None
 
     @property
@@ -63,7 +66,7 @@ class IotaNodeSensor(IotaDevice):
     def __init__(self, iota_config):
         """Initialize the sensor."""
         super().__init__(name='Node Info', seed=None, iri=iota_config['iri'],
-                         is_testnet=iota_config['is_testnet'])
+                         is_testnet=iota_config['testnet'])
         self._state = None
         self._attr = {}
 
