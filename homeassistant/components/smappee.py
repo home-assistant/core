@@ -1,5 +1,5 @@
 """
-Support for Smappee energy monitor
+Support for Smappee energy monitor.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/smappee/
