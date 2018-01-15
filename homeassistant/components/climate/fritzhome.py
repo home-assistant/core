@@ -33,12 +33,13 @@ ATTR_STATE_LOW_BAT = 'low_battery'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome thermostat platform."""
-    device_list = hass.data[FRITZHOME_DOMAIN]
+    fritz = hass.data[FRITZHOME_DOMAIN]
+    device_list = fritz.get_devices()
 
     devices = []
     for device in device_list:
         if device.has_thermostat:
-            devices.append(FritzhomeThermostat(device))
+            devices.append(FritzhomeThermostat(device, fritz))
 
     add_devices(devices)
 
@@ -46,9 +47,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FritzhomeThermostat(ClimateDevice):
     """The thermostat class for Fritzhome thermostates."""
 
-    def __init__(self, device):
+    def __init__(self, device, fritz):
         """Initialize the thermostat."""
         self._device = device
+        self._fritz = fritz
         self._current_temperature = self._device.actual_temperature
         self._target_temperature = self._device.target_temperature
         self._comfort_temperature = self._device.comfort_temperature
@@ -150,4 +152,4 @@ class FritzhomeThermostat(ClimateDevice):
             self._eco_temperature = self._device.eco_temperature
         except requests.exceptions.HTTPError as ex:
             _LOGGER.warning("Fritzhome connection error: %s", ex)
-            self._device._fritz.login()  # pylint: disable=protected-access
+            self._fritz.login()

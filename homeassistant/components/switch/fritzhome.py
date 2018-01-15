@@ -18,12 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzhome switch platform."""
-    device_list = hass.data[FRITZHOME_DOMAIN]
+    fritz = hass.data[FRITZHOME_DOMAIN]
+    device_list = fritz.get_devices()
 
     devices = []
     for device in device_list:
         if device.has_switch:
-            devices.append(FritzhomeSwitch(device))
+            devices.append(FritzhomeSwitch(device, fritz))
 
     add_devices(devices)
 
@@ -31,9 +32,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FritzhomeSwitch(SwitchDevice):
     """The switch class for Fritzhome switches."""
 
-    def __init__(self, device):
+    def __init__(self, device, fritz):
         """Initialize the switch."""
         self._device = device
+        self._fritz = fritz
 
     @property
     def available(self):
@@ -64,7 +66,7 @@ class FritzhomeSwitch(SwitchDevice):
             self._device.update()
         except requests.exceptions.HTTPError as ex:
             _LOGGER.warning("Fritzhome connection error: %s", ex)
-            self._device._fritz.login()  # pylint: disable=protected-access
+            self.fritz.login()
 
     @property
     def current_power_w(self):
