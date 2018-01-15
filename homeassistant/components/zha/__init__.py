@@ -315,3 +315,21 @@ def get_discovery_info(hass, discovery_info):
     all_discovery_info = hass.data.get(DISCOVERY_KEY, {})
     discovery_info = all_discovery_info.get(discovery_key, None)
     return discovery_info
+
+
+@asyncio.coroutine
+def safe_read(cluster, attributes):
+    """Swallow all exceptions from network read.
+
+    If we throw during initialization, setup fails. Rather have an entity that
+    exists, but is in a maybe wrong state, than no entity. This method should
+    probably only be used during initialization.
+    """
+    try:
+        result, _ = yield from cluster.read_attributes(
+            attributes,
+            allow_cache=False,
+        )
+        return result
+    except Exception:  # pylint: disable=broad-except
+        return {}
