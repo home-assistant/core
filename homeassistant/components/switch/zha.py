@@ -22,6 +22,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
+    from bellows.zigbee.zcl.clusters.general import OnOff
+    in_clusters = discovery_info['in_clusters']
+    cluster = in_clusters[OnOff.cluster_id]
+    yield from cluster.bind()
+    yield from cluster.configure_reporting(0, 0, 600, 1,)
+
     async_add_devices([Switch(**discovery_info)], update_before_add=True)
 
 
@@ -29,6 +35,14 @@ class Switch(zha.Entity, SwitchDevice):
     """ZHA switch."""
 
     _domain = DOMAIN
+    value_attribute = 0
+
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
+        if attribute == self.value_attribute:
+            self._state = value
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self) -> bool:
