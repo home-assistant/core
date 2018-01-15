@@ -313,7 +313,7 @@ def get_attributes(cluster, attributes):
             allow_cache=False,
         )
         return result
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         return {}
 
 
