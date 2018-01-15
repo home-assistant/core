@@ -111,7 +111,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
         devices = [device for device in hass.data[DATA_YAMAHA].values()
-                   if device.entity_id and device.entity_id in entity_ids]
+                   if not device or device.entity_id in entity_ids]
 
         for device in devices:
             port = service.data[ATTR_PORT]
