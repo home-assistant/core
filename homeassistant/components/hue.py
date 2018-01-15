@@ -152,6 +152,7 @@ class HueBridge(object):
                  allow_in_emulated_hue=True, allow_hue_groups=True):
         """Initialize the system."""
         self.host = host
+        self.bridge_id = socket.gethostbyname(host)
         self.hass = hass
         self.filename = filename
         self.allow_unreachable = allow_unreachable
@@ -165,7 +166,7 @@ class HueBridge(object):
         self.configured = False
         self.config_request_id = None
 
-        hass.data[DOMAIN][socket.gethostbyname(host)] = self
+        hass.data[DOMAIN][self.bridge_id] = self
 
     def setup(self):
         """Set up a phue bridge based on host parameter."""
@@ -196,7 +197,7 @@ class HueBridge(object):
 
         discovery.load_platform(
             self.hass, 'light', DOMAIN,
-            {'bridge_id': socket.gethostbyname(self.host)})
+            {'bridge_id': self.bridge_id})
 
         # create a service for calling run_scene directly on the bridge,
         # used to simplify automation rules.
