@@ -8,11 +8,9 @@ import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
-import os
 
 import async_timeout
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
     EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
@@ -132,14 +130,9 @@ def async_setup(hass, config):
                 call.data.get(CONF_COMMAND))):
             _LOGGER.error('Failed Rflink command for %s', str(call.data))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_send_command,
-        descriptions[DOMAIN][SERVICE_SEND_COMMAND], SEND_COMMAND_SCHEMA)
+        schema=SEND_COMMAND_SCHEMA)
 
     @callback
     def event_callback(event):
