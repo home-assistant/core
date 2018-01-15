@@ -18,9 +18,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.rfxtrx import (
-    ATTR_NAME, ATTR_FIRE_EVENT,
-    CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT, CONF_OFF_DELAY,
-    CONF_DATA_BITS, CONF_DEVICES)
+    ATTR_NAME, CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT,
+    CONF_OFF_DELAY, CONF_DATA_BITS, CONF_DEVICES)
 from homeassistant.util import slugify
 from homeassistant.util import dt as dt_util
 
