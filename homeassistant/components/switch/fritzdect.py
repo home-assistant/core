@@ -14,7 +14,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 REQUIREMENTS = ['fritzhome==1.0.4']
 
@@ -170,7 +170,7 @@ class FritzDectSwitchData(object):
         """Initialize the data object."""
         self.fritz = fritz
         self.ain = ain
-        self.state = STATE_UNKNOWN
+        self.state = None
         self.temperature = None
         self.current_consumption = None
         self.total_consumption = None
@@ -189,7 +189,7 @@ class FritzDectSwitchData(object):
             actor = self.fritz.get_actor_by_ain(self.ain)
         except (RequestException, HTTPError):
             _LOGGER.error("Request to actor registry failed")
-            self.state = STATE_UNKNOWN
+            self.state = None
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
@@ -197,7 +197,7 @@ class FritzDectSwitchData(object):
 
         if actor is None:
             _LOGGER.error("Actor could not be found")
-            self.state = STATE_UNKNOWN
+            self.state = None
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
@@ -209,7 +209,7 @@ class FritzDectSwitchData(object):
             self.total_consumption = (actor.get_energy() or 0.0) / 100000
         except (RequestException, HTTPError):
             _LOGGER.error("Request to actor failed")
-            self.state = STATE_UNKNOWN
+            self.state = None
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
