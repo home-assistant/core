@@ -10,8 +10,8 @@ alarm_disarm:
       description: An optional code to disarm the alarm control panel with.
       example: 1234
     params:
-      description: Optional platform-specific parameters
-      example: 'silent'
+      description: Optional platform specific parameter dict
+      example: platform specific
 
 alarm_arm_home:
   description: Send the alarm the command for arm home.
@@ -23,8 +23,8 @@ alarm_arm_home:
       description: An optional code to arm home the alarm control panel with.
       example: 1234
     params:
-      description: Optional platform-specific parameters
-      example: 'silent'
+      description: Optional platform specific parameter dict
+      example: platform specific
 
 alarm_arm_away:
   description: Send the alarm the command for arm away.
@@ -36,8 +36,8 @@ alarm_arm_away:
       description: An optional code to arm away the alarm control panel with.
       example: 1234
     params:
-      description: Optional platform-specific parameters
-      example: 'silent'
+      description: Optional platform specific parameter dict
+      example: platform specific
 
 alarm_arm_night:
   description: Send the alarm the command for arm night.
@@ -49,8 +49,8 @@ alarm_arm_night:
       description: An optional code to arm night the alarm control panel with.
       example: 1234
     params:
-      description: Optional platform-specific parameters
-      example: 'silent'
+      description: Optional platform specific parameter dict
+      example: platform specific
 
 alarm_trigger:
   description: Send the alarm the command for trigger.
@@ -62,8 +62,8 @@ alarm_trigger:
       description: An optional code to trigger the alarm control panel with.
       example: 1234
     params:
-      description: Optional platform-specific parameters
-      example: 'silent'
+      description: Optional platform specific parameter dict
+      example: platform specific
 
 envisalink_alarm_keypress:
   description: Send custom keypresses to the alarm.
