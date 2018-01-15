@@ -123,22 +123,22 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             'zone_bypassed': self._zone_bypassed
         }
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         if code:
             self.hass.data[DATA_AD].send("{!s}1".format(code))
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         if code:
             self.hass.data[DATA_AD].send("{!s}2".format(code))
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         if code:
             self.hass.data[DATA_AD].send("{!s}3".format(code))
 
-    def alarm_toggle_chime(self, code=None):
+    def alarm_toggle_chime(self, code=None, params=None):
         """Send toggle chime command."""
         if code:
             self.hass.data[DATA_AD].send("{!s}9".format(code))

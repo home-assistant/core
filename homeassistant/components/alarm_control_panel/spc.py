@@ -89,19 +89,19 @@ class SpcAlarm(alarm.AlarmControlPanel):
         return self._state
 
     @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    def async_alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         yield from self._api.send_area_command(
             self._area_id, SpcWebGateway.AREA_COMMAND_UNSET)
 
     @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    def async_alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         yield from self._api.send_area_command(
             self._area_id, SpcWebGateway.AREA_COMMAND_PART_SET)
 
     @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    def async_alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         yield from self._api.send_area_command(
             self._area_id, SpcWebGateway.AREA_COMMAND_SET)

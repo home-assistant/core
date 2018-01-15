@@ -201,7 +201,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """One or more characters."""
         return None if self._code is None else '.+'
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
             return
@@ -210,35 +210,35 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._state_ts = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_HOME):
             return
 
         self._update_state(STATE_ALARM_ARMED_HOME)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
             return
 
         self._update_state(STATE_ALARM_ARMED_AWAY)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code=None, params=None):
         """Send arm night command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
             return
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
 
-    def alarm_arm_custom_bypass(self, code=None):
+    def alarm_arm_custom_bypass(self, code=None, params=None):
         """Send arm custom bypass command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_CUSTOM_BYPASS):
             return
 
         self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, code=None, params=None):
         """
         Send alarm trigger command.
 

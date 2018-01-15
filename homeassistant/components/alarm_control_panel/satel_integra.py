@@ -75,19 +75,19 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         return self._state
 
     @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    def async_alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         if code:
             yield from self.hass.data[DATA_SATEL].disarm(code)
 
     @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    def async_alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         if code:
             yield from self.hass.data[DATA_SATEL].arm(code)
 
     @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    def async_alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         if code:
             yield from self.hass.data[DATA_SATEL].arm(code,

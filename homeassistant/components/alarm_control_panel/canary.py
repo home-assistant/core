@@ -70,23 +70,23 @@ class CanaryAlarm(AlarmControlPanel):
             'private': location.is_private
         }
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         location = self._data.get_location(self._location_id)
         self._data.set_location_mode(self._location_id, location.mode.name,
                                      True)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         from canary.api import LOCATION_MODE_HOME
         self._data.set_location_mode(self._location_id, LOCATION_MODE_HOME)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         from canary.api import LOCATION_MODE_AWAY
         self._data.set_location_mode(self._location_id, LOCATION_MODE_AWAY)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code=None, params=None):
         """Send arm night command."""
         from canary.api import LOCATION_MODE_NIGHT
         self._data.set_location_mode(self._location_id, LOCATION_MODE_NIGHT)

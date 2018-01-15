@@ -95,19 +95,19 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         return STATE_UNKNOWN
 
     @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    def async_alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         if self._validate_code(code):
             yield from self._alarm.async_alarm_disarm()
 
     @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    def async_alarm_arm_home(self, code=None, params=None):
         """Send arm hom command."""
         if self._validate_code(code):
             yield from self._alarm.async_alarm_arm_home()
 
     @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    def async_alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         if self._validate_code(code):
             yield from self._alarm.async_alarm_arm_away()
