@@ -69,7 +69,6 @@ def setup(hass, base_config):
     import mychevy.mychevy as mc
 
     config = base_config.get(DOMAIN)
-    _LOGGER.debug('Received configuration: %s', config)
 
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)

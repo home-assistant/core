@@ -1,14 +1,14 @@
 """Support for MyChevy sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/mychevy/
+https://home-assistant.io/components/sensor.mychevy/
 """
 
 import asyncio
-from logging import getLogger
+import logging
 
 from homeassistant.components.mychevy import (
-    EVSensorConfig, DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
+    EVSensorConfig, DOMAIN as MYCHEVY_DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
     NOTIFICATION_ID, NOTIFICATION_TITLE, UPDATE_TOPIC, ERROR_TOPIC
 )
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
@@ -17,16 +17,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
+BATTERY_SENSOR = "percent"
 
 SENSORS = [
     EVSensorConfig("Mileage", "mileage", "miles", "mdi:speedometer"),
     EVSensorConfig("Range", "range", "miles", "mdi:speedometer"),
     EVSensorConfig("Charging", "charging"),
     EVSensorConfig("Charge Mode", "charge_mode"),
-    EVSensorConfig("EVCharge", "percent", "%", "mdi:battery")
+    EVSensorConfig("EVCharge", BATTERY_SENSOR, "%", "mdi:battery")
 ]
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -34,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    hub = hass.data[DOMAIN]
+    hub = hass.data[MYCHEVY_DOMAIN]
     sensors = [MyChevyStatus()]
     for sconfig in SENSORS:
         sensors.append(EVSensor(hub, sconfig))
@@ -65,7 +66,7 @@ class MyChevyStatus(Entity):
     def success(self):
         """Update state, trigger updates."""
         if self._state != MYCHEVY_SUCCESS:
-            _LOGGER.info("Successfully connected to mychevy website")
+            _LOGGER.debug("Successfully connected to mychevy website")
             self._state = MYCHEVY_SUCCESS
         self.async_schedule_update_ha_state()
 
@@ -121,7 +122,7 @@ class EVSensor(Entity):
         self._state = None
 
         self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}'.format(DOMAIN, slugify(self._name)))
+            '{}_{}'.format(MYCHEVY_DOMAIN, slugify(self._name)))
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -132,7 +133,7 @@ class EVSensor(Entity):
     @property
     def icon(self):
         """Return the icon."""
-        if self._icon == "mdi:battery":
+        if self._attr == BATTERY_SENSOR:
             return icon_for_battery_level(self.state)
         return self._icon
 

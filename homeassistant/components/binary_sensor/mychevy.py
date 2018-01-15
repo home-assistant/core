@@ -1,21 +1,21 @@
 """Support for MyChevy sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/mychevy/
+https://home-assistant.io/components/binary_sensor.mychevy/
 """
 
 import asyncio
-from logging import getLogger
+import logging
 
 from homeassistant.components.mychevy import (
-    EVBinarySensorConfig, DOMAIN, UPDATE_TOPIC
+    EVBinarySensorConfig, DOMAIN as MYCHEVY_DOMAIN, UPDATE_TOPIC
 )
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
 from homeassistant.core import callback
-from homeassistant.util import (slugify)
+from homeassistant.util import slugify
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 SENSORS = [
     EVBinarySensorConfig("Plugged In", "plugged_in", "plug")
@@ -29,7 +29,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     sensors = []
-    hub = hass.data[DOMAIN]
+    hub = hass.data[MYCHEVY_DOMAIN]
     for sconfig in SENSORS:
         sensors.append(EVBinarySensor(hub, sconfig))
 
@@ -54,7 +54,7 @@ class EVBinarySensor(BinarySensorDevice):
         self._is_on = None
 
         self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}'.format(DOMAIN, slugify(self._name)))
+            '{}_{}'.format(MYCHEVY_DOMAIN, slugify(self._name)))
 
     @property
     def name(self):
