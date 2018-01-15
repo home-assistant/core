@@ -51,7 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         pass
 
     sensor = BinarySensor(device_class, **discovery_info)
-    async_add_devices([sensor])
+    async_add_devices([sensor], update_before_add=True)
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):
@@ -87,3 +87,31 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         elif command_id == 1:
             _LOGGER.debug("Enroll requested")
             self.hass.add_job(self._ias_zone_cluster.enroll_response(0, 0))
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug("%s async_update", self.entity_id)
+
+        @asyncio.coroutine
+        def safe_read(cluster, attributes):
+            """Swallow all exceptions from network read.
+
+            If we throw during initialization, setup fails. Rather have an
+            entity that exists, but is in a maybe wrong state, than no entity.
+            """
+            try:
+                result, _ = yield from cluster.read_attributes(
+                    attributes,
+                    allow_cache=False,
+                )
+                return result
+            except Exception:  # pylint: disable=broad-except
+                return {}
+
+        from bellows.types.basic import uint16_t
+
+        result = yield from safe_read(self._endpoint.ias_zone, ['zone_status'])
+        state = result.get('zone_status', self._state)
+        if isinstance(state, (int, uint16_t)):
+            self._state = result.get('zone_status', self._state) & 3
