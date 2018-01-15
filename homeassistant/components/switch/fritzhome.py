@@ -66,7 +66,7 @@ class FritzhomeSwitch(SwitchDevice):
             self._device.update()
         except requests.exceptions.HTTPError as ex:
             _LOGGER.warning("Fritzhome connection error: %s", ex)
-            self.fritz.login()
+            self._fritz.login()
 
     @property
     def current_power_w(self):
