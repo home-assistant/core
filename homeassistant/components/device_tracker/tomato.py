@@ -20,7 +20,7 @@ from homeassistant.const import (
 
 CONF_HTTP_ID = 'http_id'
 
-_LOGGER = logging.getLogger("{}.{}".format(__name__, "Tomato"))
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
