@@ -6,7 +6,8 @@ https://home-assistant.io/components/cover.homematic/
 """
 import logging
 
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION, ATTR_TILT_POSITION
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION,\
+    ATTR_TILT_POSITION
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import STATE_UNKNOWN
 
@@ -71,7 +72,8 @@ class HMCover(HMDevice, CoverDevice):
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
         try:
-            self._data.update({'LEVEL_2': self._hmdevice.get_cover_tilt_position()})
+            self._data.update(
+                {'LEVEL_2': self._hmdevice.get_cover_tilt_position()})
         except:
             pass
 
@@ -81,7 +83,7 @@ class HMCover(HMDevice, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if not 'LEVEL_2' in self._data:
+        if 'LEVEL_2' not in self._data:
             return None
 
         return int(self._data.get('LEVEL_2', 0) * 100)
@@ -103,4 +105,5 @@ class HMCover(HMDevice, CoverDevice):
         self._hmdevice.close_slats()
 
     def stop_cover_tilt(self, **kwargs):
+        """Stop cover tilt."""
         self.stop_cover(**kwargs)
