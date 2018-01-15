@@ -51,7 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         pass
 
     sensor = BinarySensor(device_class, **discovery_info)
-    async_add_devices([sensor])
+    async_add_devices([sensor], update_before_add=True)
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):
@@ -65,6 +65,11 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         self._device_class = device_class
         from bellows.zigbee.zcl.clusters.security import IasZone
         self._ias_zone_cluster = self._in_clusters[IasZone.cluster_id]
+
+    @property
+    def should_poll(self) -> bool:
+        """Let zha handle polling."""
+        return False
 
     @property
     def is_on(self) -> bool:
@@ -87,3 +92,14 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         elif command_id == 1:
             _LOGGER.debug("Enroll requested")
             self.hass.add_job(self._ias_zone_cluster.enroll_response(0, 0))
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve latest state."""
+        from bellows.types.basic import uint16_t
+
+        result = yield from zha.get_attributes(self._endpoint.ias_zone,
+                                               ['zone_status'])
+        state = result.get('zone_status', self._state)
+        if isinstance(state, (int, uint16_t)):
+            self._state = result.get('zone_status', self._state) & 3

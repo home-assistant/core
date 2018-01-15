@@ -299,6 +299,24 @@ def _discover_endpoint_info(endpoint):
     return extra_info
 
 
+@asyncio.coroutine
+def get_attributes(cluster, attributes):
+    """Read attributes from cluster.
+
+    Swallow all exceptions from network read. If we throw during
+    initialization, setup fails. Rather have an entity that exists, but is
+    in a maybe wrong state, than no entity.
+    """
+    try:
+        result, _ = yield from cluster.read_attributes(
+            attributes,
+            allow_cache=False,
+        )
+        return result
+    except Exception as err:  # pylint: disable=broad-except
+        return {}
+
+
 def get_discovery_info(hass, discovery_info):
     """Get the full discovery info for a device.
 

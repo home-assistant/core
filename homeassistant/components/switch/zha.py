@@ -15,19 +15,25 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zha']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Zigbee Home Automation switches."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the Zigbee Home Automation switches."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
-    add_devices([Switch(**discovery_info)])
+    async_add_devices([Switch(**discovery_info)], update_before_add=True)
 
 
 class Switch(zha.Entity, SwitchDevice):
     """ZHA switch."""
 
     _domain = DOMAIN
+
+    @property
+    def should_poll(self) -> bool:
+        """Let zha handle polling."""
+        return False
 
     @property
     def is_on(self) -> bool:
@@ -41,9 +47,18 @@ class Switch(zha.Entity, SwitchDevice):
         """Turn the entity on."""
         yield from self._endpoint.on_off.on()
         self._state = 1
+        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         yield from self._endpoint.on_off.off()
         self._state = 0
+        self.schedule_update_ha_state()
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve latest state."""
+        result = yield from zha.get_attributes(self._endpoint.on_off,
+                                               ['on_off'])
+        self._state = result.get('on_off', self._state)
