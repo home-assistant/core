@@ -250,7 +250,8 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_custom_bypass, code, params)
+        return self.hass.async_add_job(self.alarm_arm_custom_bypass, code,
+                                       params)
 
     @property
     def state_attributes(self):
