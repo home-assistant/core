@@ -122,7 +122,8 @@ class Concord232Alarm(alarm.AlarmControlPanel):
             if params['arming_option'] is not None:
                 option = params['arming_option']
             else:
-                _LOGGER.error("Unknown parameter(s) in concord232 alarm_arm_home: %s", params)
+                _LOGGER.error("Unknown param in concord232 alarm_arm_home: %s",
+                              params)
         self._alarm.arm('stay', option)
 
     def alarm_arm_away(self, code=None, params=None):
@@ -132,5 +133,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
             if params['arming_option'] is not None:
                 option = params['arming_option']
             else:
-                _LOGGER.error("Unknown parameter(s) in concord232 alarm_arm_away: %s", params)
+                _LOGGER.error("Unknown parameter in concord232 alarm_arm_away: %s",
+                              params)
         self._alarm.arm('away', option)
