@@ -117,8 +117,20 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
-        self._alarm.arm('stay')
+        option = None
+        if params is not None:
+            if params['arming_option'] is not None:
+                option = params['arming_option']
+            else:
+                _LOGGER.error("Unknown parameter(s) sent to concord232 alarm_arm_home: %s", params)
+        self._alarm.arm('stay',option)
 
     def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
-        self._alarm.arm('away')
+        option = None
+        if params is not None:
+            if params['arming_option'] is not None:
+                option = params['arming_option']
+            else:
+                _LOGGER.error("Unknown parameter(s) sent to concord232 alarm_arm_away: %s", params)
+        self._alarm.arm('away',option)
