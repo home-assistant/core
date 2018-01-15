@@ -8,7 +8,6 @@ import asyncio
 import datetime
 import functools as ft
 import logging
-from os import path
 import socket
 import urllib
 
@@ -23,7 +22,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
     CONF_HOSTS, ATTR_TIME)
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -171,9 +169,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices(slaves, True)
         _LOGGER.info("Added %s Sonos speakers", len(players))
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get('entity_id')
@@ -207,36 +202,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.services.register(
         DOMAIN, SERVICE_JOIN, service_handle,
-        descriptions.get(SERVICE_JOIN), schema=SONOS_JOIN_SCHEMA)
+        schema=SONOS_JOIN_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_UNJOIN, service_handle,
-        descriptions.get(SERVICE_UNJOIN), schema=SONOS_SCHEMA)
+        schema=SONOS_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_SNAPSHOT, service_handle,
-        descriptions.get(SERVICE_SNAPSHOT), schema=SONOS_STATES_SCHEMA)
+        schema=SONOS_STATES_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_RESTORE, service_handle,
-        descriptions.get(SERVICE_RESTORE), schema=SONOS_STATES_SCHEMA)
+        schema=SONOS_STATES_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_TIMER, service_handle,
-        descriptions.get(SERVICE_SET_TIMER), schema=SONOS_SET_TIMER_SCHEMA)
+        schema=SONOS_SET_TIMER_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_CLEAR_TIMER, service_handle,
-        descriptions.get(SERVICE_CLEAR_TIMER), schema=SONOS_SCHEMA)
+        schema=SONOS_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_UPDATE_ALARM, service_handle,
-        descriptions.get(SERVICE_UPDATE_ALARM),
         schema=SONOS_UPDATE_ALARM_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_OPTION, service_handle,
-        descriptions.get(SERVICE_SET_OPTION),
         schema=SONOS_SET_OPTION_SCHEMA)
 
 

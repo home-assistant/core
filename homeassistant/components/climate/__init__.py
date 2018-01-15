@@ -7,12 +7,10 @@ https://home-assistant.io/components/climate/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 import functools as ft
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
@@ -21,9 +19,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELSIUS, PRECISION_WHOLE, PRECISION_TENTHS)
-
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
+    PRECISION_TENTHS, )
 DOMAIN = 'climate'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -63,6 +61,7 @@ SUPPORT_HOLD_MODE = 256
 SUPPORT_SWING_MODE = 512
 SUPPORT_AWAY_MODE = 1024
 SUPPORT_AUX_HEAT = 2048
+SUPPORT_ON_OFF = 4096
 
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
@@ -91,6 +90,10 @@ CONVERTIBLE_ATTRIBUTE = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+ON_OFF_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -240,10 +243,6 @@ def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_away_mode_set_service(service):
         """Set away mode on target climate devices."""
@@ -267,7 +266,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
-        descriptions.get(SERVICE_SET_AWAY_MODE),
         schema=SET_AWAY_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -290,7 +288,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_HOLD_MODE, async_hold_mode_set_service,
-        descriptions.get(SERVICE_SET_HOLD_MODE),
         schema=SET_HOLD_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -316,7 +313,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AUX_HEAT, async_aux_heat_set_service,
-        descriptions.get(SERVICE_SET_AUX_HEAT),
         schema=SET_AUX_HEAT_SCHEMA)
 
     @asyncio.coroutine
@@ -348,7 +344,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_TEMPERATURE, async_temperature_set_service,
-        descriptions.get(SERVICE_SET_TEMPERATURE),
         schema=SET_TEMPERATURE_SCHEMA)
 
     @asyncio.coroutine
@@ -370,7 +365,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_HUMIDITY, async_humidity_set_service,
-        descriptions.get(SERVICE_SET_HUMIDITY),
         schema=SET_HUMIDITY_SCHEMA)
 
     @asyncio.coroutine
@@ -392,7 +386,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_FAN_MODE, async_fan_mode_set_service,
-        descriptions.get(SERVICE_SET_FAN_MODE),
         schema=SET_FAN_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -414,7 +407,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_OPERATION_MODE, async_operation_set_service,
-        descriptions.get(SERVICE_SET_OPERATION_MODE),
         schema=SET_OPERATION_MODE_SCHEMA)
 
     @asyncio.coroutine
@@ -436,8 +428,33 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SWING_MODE, async_swing_set_service,
-        descriptions.get(SERVICE_SET_SWING_MODE),
         schema=SET_SWING_MODE_SCHEMA)
+
+    @asyncio.coroutine
+    def async_on_off_service(service):
+        """Handle on/off calls."""
+        target_climate = component.async_extract_from_service(service)
+
+        update_tasks = []
+        for climate in target_climate:
+            if service.service == SERVICE_TURN_ON:
+                yield from climate.async_turn_on()
+            elif service.service == SERVICE_TURN_OFF:
+                yield from climate.async_turn_off()
+
+            if not climate.should_poll:
+                continue
+            update_tasks.append(climate.async_update_ha_state(True))
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_on_off_service,
+        schema=ON_OFF_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_ON, async_on_off_service,
+        schema=ON_OFF_SERVICE_SCHEMA)
 
     return True
 
@@ -449,8 +466,12 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
+        if self.is_on is False:
+            return STATE_OFF
         if self.current_operation:
             return self.current_operation
+        if self.is_on:
+            return STATE_ON
         return STATE_UNKNOWN
 
     @property
@@ -595,6 +616,11 @@ class ClimateDevice(Entity):
         return None
 
     @property
+    def is_on(self):
+        """Return true if on."""
+        return None
+
+    @property
     def is_aux_heat_on(self):
         """Return true if aux heater."""
         return None
@@ -729,6 +755,28 @@ class ClimateDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.turn_aux_heat_off)
+
+    def turn_on(self):
+        """Turn device on."""
+        raise NotImplementedError()
+
+    def async_turn_on(self):
+        """Turn device on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.turn_on)
+
+    def turn_off(self):
+        """Turn device off."""
+        raise NotImplementedError()
+
+    def async_turn_off(self):
+        """Turn device off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.turn_off)
 
     @property
     def supported_features(self):

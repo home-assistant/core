@@ -21,8 +21,9 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
     STATE_CLOSED, STATE_UNKNOWN)
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC,
-    CONF_QOS, CONF_RETAIN, valid_publish_topic, valid_subscribe_topic)
+    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    valid_publish_topic, valid_subscribe_topic, MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,8 +38,6 @@ CONF_SET_POSITION_TEMPLATE = 'set_position_template'
 CONF_PAYLOAD_OPEN = 'payload_open'
 CONF_PAYLOAD_CLOSE = 'payload_close'
 CONF_PAYLOAD_STOP = 'payload_stop'
-CONF_PAYLOAD_AVAILABLE = 'payload_available'
-CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 CONF_STATE_OPEN = 'state_open'
 CONF_STATE_CLOSED = 'state_closed'
 CONF_TILT_CLOSED_POSITION = 'tilt_closed_value'
@@ -52,8 +51,6 @@ DEFAULT_NAME = 'MQTT Cover'
 DEFAULT_PAYLOAD_OPEN = 'OPEN'
 DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
 DEFAULT_PAYLOAD_STOP = 'STOP'
-DEFAULT_PAYLOAD_AVAILABLE = 'online'
-DEFAULT_PAYLOAD_NOT_AVAILABLE = 'offline'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_RETAIN = False
 DEFAULT_TILT_CLOSED_POSITION = 0
@@ -73,16 +70,11 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-    vol.Optional(CONF_AVAILABILITY_TOPIC, default=None): valid_subscribe_topic,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
     vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
     vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
-    vol.Optional(CONF_PAYLOAD_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
-    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
     vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -98,7 +90,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_INVERT_STATE,
                  default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -143,7 +135,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     )])
 
 
-class MqttCover(CoverDevice):
+class MqttCover(MqttAvailability, CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
     def __init__(self, name, state_topic, command_topic, availability_topic,
@@ -154,21 +146,19 @@ class MqttCover(CoverDevice):
                  tilt_closed_position, tilt_min, tilt_max, tilt_optimistic,
                  tilt_invert, position_topic, set_position_template):
         """Initialize the cover."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._position = None
         self._state = None
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
-        self._availability_topic = availability_topic
-        self._available = True if availability_topic is None else False
         self._tilt_command_topic = tilt_command_topic
         self._tilt_status_topic = tilt_status_topic
         self._qos = qos
         self._payload_open = payload_open
         self._payload_close = payload_close
         self._payload_stop = payload_stop
-        self._payload_available = payload_available
-        self._payload_not_available = payload_not_available
         self._state_open = state_open
         self._state_closed = state_closed
         self._retain = retain
@@ -186,10 +176,9 @@ class MqttCover(CoverDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe MQTT events.
+        """Subscribe MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
         @callback
         def tilt_updated(topic, payload, qos):
             """Handle tilt updates."""
@@ -265,11 +254,6 @@ class MqttCover(CoverDevice):
     def name(self):
         """Return the name of the cover."""
         return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return if cover is available."""
-        return self._available
 
     @property
     def is_closed(self):

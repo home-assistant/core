@@ -175,15 +175,20 @@ class StatisticsSensor(Entity):
             self._purge_old()
 
         if not self.is_binary:
-            try:
+            try:  # require only one data point
                 self.mean = round(statistics.mean(self.states), 2)
                 self.median = round(statistics.median(self.states), 2)
+            except statistics.StatisticsError as err:
+                _LOGGER.error(err)
+                self.mean = self.median = STATE_UNKNOWN
+
+            try:  # require at least two data points
                 self.stdev = round(statistics.stdev(self.states), 2)
                 self.variance = round(statistics.variance(self.states), 2)
             except statistics.StatisticsError as err:
                 _LOGGER.error(err)
-                self.mean = self.median = STATE_UNKNOWN
                 self.stdev = self.variance = STATE_UNKNOWN
+
             if self.states:
                 self.total = round(sum(self.states), 2)
                 self.min = min(self.states)

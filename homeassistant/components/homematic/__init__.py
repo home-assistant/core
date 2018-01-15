@@ -8,12 +8,10 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
-import os
 import socket
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
     CONF_HOSTS, CONF_HOST, ATTR_ENTITY_ID, STATE_UNKNOWN)
@@ -22,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.36']
+REQUIREMENTS = ['pyhomematic==0.1.37']
 DOMAIN = 'homematic'
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,10 +75,10 @@ HM_DEVICE_TYPES = {
         'ThermostatGroup'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
-        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
-        'HMWIOSwitch', 'MaxShutterContact', 'Rain', 'WiredSensor',
-        'PresenceIP'],
-    DISCOVER_COVER: ['Blind', 'KeyBlind']
+        'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
+        'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
+        'WiredSensor', 'PresenceIP'],
+    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -90,6 +88,7 @@ HM_IGNORE_DISCOVERY_NODE = [
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
+    'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
@@ -105,6 +104,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'POWER': ['power', {}],
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
+    'OPERATING_VOLTAGE': ['voltage', {}],
     'WORKING': ['working', {0: 'No', 1: 'Yes'}],
 }
 
@@ -328,10 +328,6 @@ def setup(hass, config):
     for hub_name in conf[CONF_HOSTS].keys():
         entity_hubs.append(HMHub(hass, homematic, hub_name))
 
-    # Register HomeMatic services
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     def _hm_service_virtualkey(service):
         """Service to handle virtualkey servicecalls."""
         address = service.data.get(ATTR_ADDRESS)
@@ -360,7 +356,7 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_VIRTUALKEY, _hm_service_virtualkey,
-        descriptions[SERVICE_VIRTUALKEY], schema=SCHEMA_SERVICE_VIRTUALKEY)
+        schema=SCHEMA_SERVICE_VIRTUALKEY)
 
     def _service_handle_value(service):
         """Service to call setValue method for HomeMatic system variable."""
@@ -383,7 +379,6 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_VARIABLE_VALUE, _service_handle_value,
-        descriptions[SERVICE_SET_VARIABLE_VALUE],
         schema=SCHEMA_SERVICE_SET_VARIABLE_VALUE)
 
     def _service_handle_reconnect(service):
@@ -392,7 +387,7 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_RECONNECT, _service_handle_reconnect,
-        descriptions[SERVICE_RECONNECT], schema=SCHEMA_SERVICE_RECONNECT)
+        schema=SCHEMA_SERVICE_RECONNECT)
 
     def _service_handle_device(service):
         """Service to call setValue method for HomeMatic devices."""
@@ -411,7 +406,6 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_DEVICE_VALUE, _service_handle_device,
-        descriptions[SERVICE_SET_DEVICE_VALUE],
         schema=SCHEMA_SERVICE_SET_DEVICE_VALUE)
 
     def _service_handle_install_mode(service):
@@ -425,7 +419,6 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_INSTALL_MODE, _service_handle_install_mode,
-        descriptions[SERVICE_SET_INSTALL_MODE],
         schema=SCHEMA_SERVICE_SET_INSTALL_MODE)
 
     return True
