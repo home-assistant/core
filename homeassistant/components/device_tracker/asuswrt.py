@@ -67,6 +67,15 @@ _IP_NEIGH_REGEX = re.compile(
     r'\s?(router)?'
     r'(?P<status>(\w+))')
 
+_ARP_CMD = 'arp -n'
+_ARP_REGEX = re.compile(
+    r'.+\s' +
+    r'\((?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\)\s' +
+    r'.+\s' +
+    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))' +
+    r'\s' +
+    r'.*')
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
@@ -76,7 +85,22 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases')
+def _parse_lines(lines, regex):
+    """Parse the lines using the given regular expression.
+
+    If a line can't be parsed it is logged and skipped in the output.
+    """
+    results = []
+    for line in lines:
+        match = regex.search(line)
+        if not match:
+            _LOGGER.debug("Could not parse row: %s", line)
+            continue
+        results.append(match.groupdict())
+    return results
+
+
+Device = namedtuple('Device', ['mac', 'ip', 'name'])
 
 
 class AsusWrtDeviceScanner(DeviceScanner):
@@ -121,16 +145,13 @@ class AsusWrtDeviceScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client['mac'] for client in self.last_results]
+        return list(self.last_results.keys())
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        if not self.last_results:
+        if device not in self.last_results:
             return None
-        for client in self.last_results:
-            if client['mac'] == device:
-                return client['host']
-        return None
+        return self.last_results[device].name
 
     def _update_info(self):
         """Ensure the information from the ASUSWRT router is up to date.
@@ -145,73 +166,87 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if not data:
             return False
 
-        active_clients = [client for client in data.values() if
-                          client['status'] == 'REACHABLE' or
-                          client['status'] == 'DELAY' or
-                          client['status'] == 'STALE' or
-                          client['status'] == 'IN_ASSOCLIST']
-        self.last_results = active_clients
+        self.last_results = data
         return True
 
     def get_asuswrt_data(self):
-        """Retrieve data from ASUSWRT and return parsed result."""
-        result = self.connection.get_result()
+        """Retrieve data from ASUSWRT.
 
-        if not result:
-            return {}
-
+        Calls various commands on the router and returns the superset of all
+        responses. Some commands will not work on some routers.
+        """
         devices = {}
-        if self.mode == 'ap':
-            for lease in result.leases:
-                match = _WL_REGEX.search(lease.decode('utf-8'))
-
-                if not match:
-                    _LOGGER.warning("Could not parse wl row: %s", lease)
-                    continue
-
-                host = ''
-
-                devices[match.group('mac').upper()] = {
-                    'host': host,
-                    'status': 'IN_ASSOCLIST',
-                    'ip': '',
-                    'mac': match.group('mac').upper(),
-                    }
-
-        else:
-            for lease in result.leases:
-                if lease.startswith(b'duid '):
-                    continue
-                match = _LEASES_REGEX.search(lease.decode('utf-8'))
-
-                if not match:
-                    _LOGGER.warning("Could not parse lease row: %s", lease)
-                    continue
-
-                # For leases where the client doesn't set a hostname, ensure it
-                # is blank and not '*', which breaks entity_id down the line.
-                host = match.group('host')
-                if host == '*':
-                    host = ''
-
-                devices[match.group('mac')] = {
-                    'host': host,
-                    'status': '',
-                    'ip': match.group('ip'),
-                    'mac': match.group('mac').upper(),
-                    }
-
-            for neighbor in result.neighbors:
-                match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
-                if not match:
-                    _LOGGER.warning("Could not parse neighbor row: %s",
-                                    neighbor)
-                    continue
-                if match.group('mac') in devices:
-                    devices[match.group('mac')]['status'] = (
-                        match.group('status'))
-
+        devices.update(self._get_wl())
+        devices = self._get_arp(devices)
+        devices = self._get_neigh(devices)
+        if not self.mode == 'ap':
+            devices.update(self._get_leases(devices))
         return devices
+
+    def _get_wl(self):
+        lines = self.connection.run_command(_WL_CMD)
+        if not lines:
+            return {}
+        result = _parse_lines(lines, _WL_REGEX)
+        devices = {}
+        for device in result:
+            mac = device['mac'].upper()
+            devices[mac] = Device(mac, None, None)
+        return devices
+
+    def _get_leases(self, cur_devices):
+        lines = self.connection.run_command(_LEASES_CMD)
+        if not lines:
+            return {}
+        lines = [line for line in lines if not line.startswith('duid ')]
+        result = _parse_lines(lines, _LEASES_REGEX)
+        devices = {}
+        for device in result:
+            # For leases where the client doesn't set a hostname, ensure it
+            # is blank and not '*', which breaks entity_id down the line.
+            host = device['host']
+            if host == '*':
+                host = ''
+            mac = device['mac'].upper()
+            if mac in cur_devices:
+                devices[mac] = Device(mac, device['ip'], host)
+        return devices
+
+    def _get_neigh(self, cur_devices):
+        lines = self.connection.run_command(_IP_NEIGH_CMD)
+        if not lines:
+            return {}
+        result = _parse_lines(lines, _IP_NEIGH_REGEX)
+        devices = {}
+        for device in result:
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, None, None)
+            else:
+                cur_devices = {
+                    k: v for k, v in
+                    cur_devices.items() if v.ip != device['ip']
+                }
+        cur_devices.update(devices)
+        return cur_devices
+
+    def _get_arp(self, cur_devices):
+        lines = self.connection.run_command(_ARP_CMD)
+        if not lines:
+            return {}
+        result = _parse_lines(lines, _ARP_REGEX)
+        devices = {}
+        for device in result:
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, device['ip'], None)
+            else:
+                cur_devices = {
+                    k: v for k, v in
+                    cur_devices.items() if v.ip != device['ip']
+                }
+        cur_devices.update(devices)
+        return cur_devices
 
 
 class _Connection:
@@ -247,8 +282,8 @@ class SshConnection(_Connection):
         self._ssh_key = ssh_key
         self._ap = ap
 
-    def get_result(self):
-        """Retrieve a single AsusWrtResult through an SSH connection.
+    def run_command(self, command):
+        """Run commands through an SSH connection.
 
         Connect to the SSH server if not currently connected, otherwise
         use the existing connection.
@@ -258,19 +293,10 @@ class SshConnection(_Connection):
         try:
             if not self.connected:
                 self.connect()
-            if self._ap:
-                neighbors = ['']
-                self._ssh.sendline(_WL_CMD)
-                self._ssh.prompt()
-                leases_result = self._ssh.before.split(b'\n')[1:-1]
-            else:
-                self._ssh.sendline(_IP_NEIGH_CMD)
-                self._ssh.prompt()
-                neighbors = self._ssh.before.split(b'\n')[1:-1]
-                self._ssh.sendline(_LEASES_CMD)
-                self._ssh.prompt()
-                leases_result = self._ssh.before.split(b'\n')[1:-1]
-            return AsusWrtResult(neighbors, leases_result)
+            self._ssh.sendline(command)
+            self._ssh.prompt()
+            lines = self._ssh.before.split(b'\n')[1:-1]
+            return [line.decode('utf-8') for line in lines]
         except exceptions.EOF as err:
             _LOGGER.error("Connection refused. SSH enabled?")
             self.disconnect()
@@ -326,8 +352,8 @@ class TelnetConnection(_Connection):
         self._ap = ap
         self._prompt_string = None
 
-    def get_result(self):
-        """Retrieve a single AsusWrtResult through a Telnet connection.
+    def run_command(self, command):
+        """Run a command through a Telnet connection.
 
         Connect to the Telnet server if not currently connected, otherwise
         use the existing connection.
@@ -336,18 +362,10 @@ class TelnetConnection(_Connection):
             if not self.connected:
                 self.connect()
 
-            self._telnet.write('{}\n'.format(_IP_NEIGH_CMD).encode('ascii'))
-            neighbors = (self._telnet.read_until(self._prompt_string).
-                         split(b'\n')[1:-1])
-            if self._ap:
-                self._telnet.write('{}\n'.format(_WL_CMD).encode('ascii'))
-                leases_result = (self._telnet.read_until(self._prompt_string).
-                                 split(b'\n')[1:-1])
-            else:
-                self._telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
-                leases_result = (self._telnet.read_until(self._prompt_string).
-                                 split(b'\n')[1:-1])
-            return AsusWrtResult(neighbors, leases_result)
+            self._telnet.write('{}\n'.format(command).encode('ascii'))
+            data = (self._telnet.read_until(self._prompt_string).
+                    split(b'\n')[1:-1])
+            return [line.decode('utf-8') for line in data]
         except EOFError:
             _LOGGER.error("Unexpected response from router")
             self.disconnect()

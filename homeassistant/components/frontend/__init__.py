@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171216.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180112.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -49,7 +49,7 @@ MANIFEST_JSON = {
     'lang': 'en-US',
     'name': 'Home Assistant',
     'short_name': 'Assistant',
-    'start_url': '/',
+    'start_url': '/states',
     'theme_color': DEFAULT_THEME_COLOR
 }
 
@@ -376,12 +376,11 @@ def async_setup(hass, config):
     for url in conf.get(CONF_EXTRA_HTML_URL_ES5, []):
         add_extra_html_url(hass, url, True)
 
-    yield from async_setup_themes(hass, conf.get(CONF_THEMES))
+    async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-@asyncio.coroutine
 def async_setup_themes(hass, themes):
     """Set up themes data and services."""
     hass.http.register_view(ThemesView)
@@ -428,16 +427,9 @@ def async_setup_themes(hass, themes):
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
         update_theme_and_fire_event()
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(DOMAIN, SERVICE_SET_THEME,
-                                 set_theme,
-                                 descriptions[SERVICE_SET_THEME],
-                                 SERVICE_SET_THEME_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
-                                 descriptions[SERVICE_RELOAD_THEMES])
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_THEME, set_theme, schema=SERVICE_SET_THEME_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
 
 
 class IndexView(HomeAssistantView):
@@ -579,8 +571,12 @@ def _is_latest(js_option, request):
     if js_option != 'auto':
         return js_option == 'latest'
 
+    useragent = request.headers.get('User-Agent')
+    if not useragent:
+        return False
+
     from user_agents import parse
-    useragent = parse(request.headers.get('User-Agent'))
+    useragent = parse(useragent)
 
     # on iOS every browser is a Safari which we support from version 11.
     if useragent.os.family == 'iOS':
