@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+    DOMAIN, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST,
     CONF_PORT, ATTR_ENTITY_ID)
@@ -22,7 +22,7 @@ REQUIREMENTS = ['snapcast==2.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'snapcast'
+DATA_KEY = 'snapcast'
 
 SERVICE_SNAPSHOT = 'snapcast_snapshot'
 SERVICE_RESTORE = 'snapcast_restore'
@@ -59,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def _handle_service(service):
         """Handle services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        devices = [device for device in hass.data[DOMAIN]
+        devices = [device for device in hass.data[DATA_KEY]
                    if device.entity_id in entity_ids]
         for device in devices:
             if service.service == SERVICE_SNAPSHOT:
@@ -84,7 +84,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     groups = [SnapcastGroupDevice(group) for group in server.groups]
     clients = [SnapcastClientDevice(client) for client in server.clients]
     devices = groups + clients
-    hass.data[DOMAIN] = devices
+    hass.data[DATA_KEY] = devices
     async_add_devices(devices)
     return True
 
