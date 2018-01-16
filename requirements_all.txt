@@ -144,7 +144,7 @@ blockchain==1.4.0
 # bluepy==1.1.1
 
 # homeassistant.components.sensor.bme680
-bme680==1.0.4
+# bme680==1.0.4
 
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
