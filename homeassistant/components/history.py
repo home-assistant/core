@@ -31,7 +31,7 @@ CONF_ORDER = 'use_include_order'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: recorder.FILTER_SCHEMA.extend({
-        vol.Optional(CONF_ORDER, default='false'): cv.boolean,
+        vol.Optional(CONF_ORDER, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
