@@ -407,7 +407,7 @@ class Group(Entity):
         if entity_ids:
             self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         else:
-            self.tracking = []
+            self.tracking = tuple()
         self.group_on = None
         self.group_off = None
         self.visible = visible
