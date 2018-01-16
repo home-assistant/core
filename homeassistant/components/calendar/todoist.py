@@ -13,7 +13,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    CalendarEventDevice, PLATFORM_SCHEMA)
+    CalendarEventDevice, DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.components.google import (
     CONF_DEVICE_ID)
 from homeassistant.const import (
@@ -26,7 +26,6 @@ from homeassistant.util import Throttle
 REQUIREMENTS = ['todoist-python==7.0.17']
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'todoist'
 
 # Calendar Platform: Does this calendar event last all day?
 ALL_DAY = 'all_day'
@@ -78,7 +77,7 @@ SUMMARY = 'summary'
 # Todoist API: Fetch all Tasks
 TASKS = 'items'
 
-SERVICE_NEW_TASK = 'new_task'
+SERVICE_NEW_TASK = 'todoist_new_task'
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Required(CONTENT): cv.string,
     vol.Optional(PROJECT_NAME, default='inbox'): vol.All(cv.string, vol.Lower),
