@@ -23,8 +23,6 @@ CONF_SCENARIO = 'scenario'
 
 CONF_SCS_ID = 'scs_id'
 
-DOMAIN = 'scsgate'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES): vol.Schema({cv.slug: scsgate.SCSGATE_SCHEMA}),
 })
