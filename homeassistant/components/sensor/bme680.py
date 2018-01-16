@@ -245,9 +245,8 @@ class BME680Handler:
             curr_time = time.time()
             burn_in_data = []
 
-            _LOGGER.info(
-                "Beginning {} second gas sensor burn in forAir Quality"
-            ).format(burn_in_time)
+            _LOGGER.info(("Beginning {:d} second gas sensor burn in for "
+                          "Air Quality").format(burn_in_time))
             while curr_time - start_time < burn_in_time:
                 curr_time = time.time()
                 if (
