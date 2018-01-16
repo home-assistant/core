@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CRITICAL_TEMP = 'Est. Crit. Temp'
+ATTR_CRITICAL_TEMP = 'EstimatedCriticalTemp'
 ATTR_DEWPOINT = 'Dewpoint'
 
 CONF_CALIBRATION_FACTOR = 'calibration_factor'
