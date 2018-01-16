@@ -10,7 +10,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME)
 from homeassistant.core import callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import (
