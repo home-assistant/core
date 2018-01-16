@@ -248,7 +248,7 @@ def async_setup(hass, config):
         filters.included_entities = include[CONF_ENTITIES]
         filters.included_domains = include[CONF_DOMAINS]
     use_include_order = config[DOMAIN].get(CONF_ORDER)
-    
+
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     yield from hass.components.frontend.async_register_built_in_panel(
         'history', 'history', 'mdi:poll-box')
@@ -326,7 +326,7 @@ class HistoryPeriodView(HomeAssistantView):
                         break
             sorted_result.extend(result)
             result = sorted_result
-            
+
         return self.json(result)
 
 
