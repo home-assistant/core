@@ -140,6 +140,7 @@ class FluxLight(Light):
         self._protocol = device[CONF_PROTOCOL]
         self._mode = device[ATTR_MODE]
         self._bulb = None
+        self._state = None
         self._error_reported = False
 
     def _connect(self):
@@ -180,7 +181,7 @@ class FluxLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._bulb.isOn()
+        return self._state
 
     @property
     def brightness(self):
@@ -227,12 +228,10 @@ class FluxLight(Light):
                               random.randint(0, 255))
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
-        self._bulb.update_state(retry=2)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self._bulb.turnOff()
-        self._bulb.update_state(retry=2)
 
     def update(self):
         """Synchronize state with bulb."""
@@ -249,3 +248,4 @@ class FluxLight(Light):
                 return
 
         self._bulb.update_state(retry=2)
+        self._state = self._bulb.isOn()
