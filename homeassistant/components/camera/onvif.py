@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import (
-    DATA_FFMPEG)
+    DATA_FFMPEG, CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
@@ -31,6 +31,7 @@ DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
+DEFAULT_ARGUMENTS = '-q:v 2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -38,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
 })
 
 
@@ -59,7 +61,7 @@ class ONVIFCamera(Camera):
         super().__init__()
 
         self._name = config.get(CONF_NAME)
-        self._ffmpeg_arguments = '-q:v 2'
+        self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         media = ONVIFService(
             'http://{}:{}/onvif/device_service'.format(
                 config.get(CONF_HOST), config.get(CONF_PORT)),
