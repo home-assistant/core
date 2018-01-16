@@ -75,20 +75,28 @@ class FoscamCam(Camera):
 
     def enable_motion_detection(self):
         """Enable motion detection in camera."""
-        ret, err = self._foscam_session.enable_motion_detection()
-        if ret == FOSCAM_COMM_ERROR:
-            _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
-            self._motion_status = True
-        else:
+        try:
+            ret, err = self._foscam_session.enable_motion_detection()
+            if ret == FOSCAM_COMM_ERROR:
+                _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
+                self._motion_status = True
+            else:
+                self._motion_status = False
+        except:
+            _LOGGER.debug("An exception occured when communicating with the Foscam Camera")
             self._motion_status = False
 
     def disable_motion_detection(self):
         """Disable motion detection."""
-        ret, err = self._foscam_session.disable_motion_detection()
-        if ret == FOSCAM_COMM_ERROR:
-            _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
-            self._motion_status = True
-        else:
+        try:
+            ret, err = self._foscam_session.disable_motion_detection()
+            if ret == FOSCAM_COMM_ERROR:
+                _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
+                self._motion_status = True
+            else:
+                self._motion_status = False
+        except:
+            _LOGGER.debug("An exception occured when communicating with the Foscam Camera")
             self._motion_status = False
 
     @property
