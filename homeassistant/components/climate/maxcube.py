@@ -103,11 +103,17 @@ class MaxCubeClimate(ClimateDevice):
         return self._operation_list
 
     @property
+    def valve_position(self):
+        """Return current position of the valve."""
+        device = self._cubehandle.cube.device_by_rf(self._rf_address)
+        return self.map_valvepos_max_hass(device.valve_position)
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         return self.map_temperature_max_hass(device.target_temperature)
-
+    
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is None:
@@ -145,13 +151,21 @@ class MaxCubeClimate(ClimateDevice):
         self._cubehandle.update()
 
     @staticmethod
+    def map_valvepos_max_hass(position):
+        """Map Valveposition from MAX! to HASS."""
+        if position is None:
+            return 0.0
+
+        return position
+
+    @staticmethod
     def map_temperature_max_hass(temperature):
         """Map Temperature from MAX! to HASS."""
         if temperature is None:
             return 0.0
 
         return temperature
-
+    
     @staticmethod
     def map_mode_hass_max(operation_mode):
         """Map Home Assistant Operation Modes to MAX! Operation Modes."""
