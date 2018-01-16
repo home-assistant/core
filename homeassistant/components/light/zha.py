@@ -163,18 +163,18 @@ class Light(zha.Entity, light.Light):
 
         if self._supported_features & light.SUPPORT_BRIGHTNESS:
             result = yield from zha.get_attributes(self._endpoint.level,
-                                                    ['current_level'])
+                                                   ['current_level'])
             self._brightness = result.get('current_level', self._brightness)
 
         if self._supported_features & light.SUPPORT_COLOR_TEMP:
             result = yield from zha.get_attributes(self._endpoint.light_color,
-                                                    ['color_temperature'])
+                                                   ['color_temperature'])
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
         if self._supported_features & light.SUPPORT_XY_COLOR:
             result = yield from zha.get_attributes(self._endpoint.light_color,
-                                                    ['current_x', 'current_y'])
+                                                   ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:
                 self._xy_color = (result['current_x'], result['current_y'])
 
