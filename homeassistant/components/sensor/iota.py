@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['iota']
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=3)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -68,7 +68,7 @@ class IotaNodeSensor(IotaDevice):
         super().__init__(name='Node Info', seed=None, iri=iota_config['iri'],
                          is_testnet=iota_config['testnet'])
         self._state = None
-        self._attr = {}
+        self._attr = {'url': self.iri, 'testnet': self.is_testnet}
 
     @property
     def name(self):
@@ -85,19 +85,10 @@ class IotaNodeSensor(IotaDevice):
         """Return the state attributes of the device."""
         return self._attr
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ''
-
     def update(self):
-        """Fetch new attribures IRI node."""
+        """Fetch new attributes IRI node."""
         node_info = self.api.get_node_info()
         self._state = node_info.get('appVersion')
 
         # convert values to raw string formats
-        self._attr = {k: str(v) for k, v in node_info.items()}
-
-        # add values of iri config
-        self._attr['url'] = self.iri
-        self._attr['testnet'] = self.is_testnet
+        self._attr.update({k: str(v) for k, v in node_info.items()})
