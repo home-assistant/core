@@ -66,7 +66,7 @@ class Entity(object):
     # this class. These may be used to customize the behavior of the entity.
     entity_id = None  # type: str
 
-    # Owning hass instance. Will be set by EntityComponent
+    # Owning hass instance. Will be set by EntityPlatform
     hass = None  # type: Optional[HomeAssistant]
 
     # If we reported if this entity was slow
@@ -310,20 +310,6 @@ class Entity(object):
                 update_warn.cancel()
             if self.parallel_updates:
                 self.parallel_updates.release()
-
-    def remove(self) -> None:
-        """Remove entity from HASS."""
-        run_coroutine_threadsafe(
-            self.async_remove(), self.hass.loop
-        ).result()
-
-    @asyncio.coroutine
-    def async_remove(self) -> None:
-        """Remove entity from async HASS.
-
-        This method must be run in the event loop.
-        """
-        self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Populate attributes based on properties."""

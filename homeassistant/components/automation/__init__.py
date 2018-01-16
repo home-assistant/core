@@ -338,10 +338,9 @@ class AutomationEntity(ToggleEntity):
             yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_remove(self):
-        """Remove automation from HASS."""
+    def async_will_remove_from_hass(self):
+        """Remove listeners when removing automation from HASS."""
         yield from self.async_turn_off()
-        yield from super().async_remove()
 
     @asyncio.coroutine
     def async_enable(self):

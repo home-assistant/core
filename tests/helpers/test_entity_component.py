@@ -214,7 +214,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 0 == len(self.hass.states.entity_ids())
 
-        component.add_entities([None, EntityTest(unique_id='not_very_unique')])
+        component.add_entities([EntityTest(unique_id='not_very_unique')])
 
         assert 1 == len(self.hass.states.entity_ids())
 
