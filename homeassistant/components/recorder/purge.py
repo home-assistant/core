@@ -22,11 +22,10 @@ def purge_old_data(instance, purge_days):
         # updated in a long time
         protected_states = session.query(States.state_id, States.event_id,
                                          func.max(States.last_updated)) \
-                              .group_by(States.entity_id).subquery()
+                              .group_by(States.entity_id).all()
 
-        protected_state_ids = session.query(States.state_id).join(
-            protected_states, States.state_id == protected_states.c.state_id)\
-            .subquery()
+        protected_state_ids = tuple((state[0] for state in protected_states))
+        protected_event_ids = tuple((state[1] for state in protected_states))
 
         deleted_rows = session.query(States) \
                               .filter((States.last_updated < purge_before)) \
@@ -39,11 +38,6 @@ def purge_old_data(instance, purge_days):
         # Otherwise, if the SQL server has "ON DELETE CASCADE" as default, it
         # will delete the protected state when deleting its associated
         # event. Also, we would be producing NULLed foreign keys otherwise.
-
-        protected_event_ids = session.query(States.event_id).join(
-            protected_states, States.state_id == protected_states.c.state_id)\
-            .filter(~States.event_id is not None).subquery()
-
         deleted_rows = session.query(Events) \
             .filter((Events.time_fired < purge_before)) \
             .filter(~Events.event_id.in_(
