@@ -490,6 +490,9 @@ motorparts==1.0.2
 # homeassistant.components.tts
 mutagen==1.39
 
+# homeassistant.components.mychevy
+mychevy==0.1.1
+
 # homeassistant.components.mycroft
 mycroftapi==2.0
 
@@ -750,10 +753,10 @@ pykira==0.1.1
 pykwb==0.0.8
 
 # homeassistant.components.sensor.lacrosse
-pylacrosse==0.2.7
+pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
-pylast==2.0.0
+pylast==2.1.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
@@ -1095,7 +1098,7 @@ speedtest-cli==1.0.7
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.2.0
+sqlalchemy==1.2.1
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1225,7 +1228,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.12.31
+youtube_dl==2018.01.14
 
 # homeassistant.components.light.zengge
 zengge==0.2

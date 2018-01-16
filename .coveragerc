@@ -145,6 +145,9 @@ omit =
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
+    homeassistant/components/mychevy.py
+    homeassistant/components/*/mychevy.py
+
     homeassistant/components/mysensors.py
     homeassistant/components/*/mysensors.py
 
