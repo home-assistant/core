@@ -1,0 +1,15 @@
+#!/bin/bash
+# Sets up phantomjs.
+
+# Stop on errors
+set -e
+
+PHANTOMJS_VERSION="2.1.1"
+
+cd /usr/src/app/
+mkdir -p build && cd build
+
+curl -LSO https://github.com/fg2it/phantomjs-on-raspberry/raw/master/rpi-2-3/wheezy-jessie/v2.1.1/phantomjs_2.1.1_armhf.deb
+dpkg -i phantomjs_2.1.1_armhf.deb
+ln -nfs /usr/local/bin/phantomjs /usr/bin/phantomjs
+/usr/bin/phantomjs -v
