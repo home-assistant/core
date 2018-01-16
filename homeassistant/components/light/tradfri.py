@@ -11,8 +11,8 @@ from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_RGB_COLOR, Light)
+    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
+    SUPPORT_RGB_COLOR, SUPPORT_XY_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -121,7 +121,7 @@ class TradfriGroup(Light):
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
         # pylint: disable=import-error
-        from pytradfri.error import PyTradFriError
+        from pytradfri.error import PytradfriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
@@ -131,7 +131,7 @@ class TradfriGroup(Light):
                                       err_callback=self._async_start_observe,
                                       duration=0)
             self.hass.async_add_job(self._api(cmd))
-        except PyTradFriError as err:
+        except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
@@ -157,7 +157,7 @@ class TradfriLight(Light):
         self._light_control = None
         self._light_data = None
         self._name = None
-        self._rgb_color = None
+        self._xy_color = None
         self._features = SUPPORTED_FEATURES
         self._temp_supported = False
         self._available = True
@@ -167,18 +167,22 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self._light_control.max_kelvin is not None:
-            return color_util.color_temperature_kelvin_to_mired(
-                self._light_control.max_kelvin
-            )
+        if SUPPORTED_FEATURES & SUPPORT_COLOR_TEMP > 0:
+            from pytradfri.const import MIN_MIREDS_WS
+            return MIN_MIREDS_WS
+        else:
+            from pytradfri.const import MIN_MIREDS
+            return MIN_MIREDS
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self._light_control.min_kelvin is not None:
-            return color_util.color_temperature_kelvin_to_mired(
-                self._light_control.min_kelvin
-            )
+        if SUPPORTED_FEATURES & SUPPORT_COLOR_TEMP > 0:
+            from pytradfri.const import MAX_MIREDS_WS
+            return MAX_MIREDS_WS
+        else:
+            from pytradfri.const import MAX_MIREDS
+            return MAX_MIREDS
 
     @property
     def device_state_attributes(self):
@@ -229,17 +233,13 @@ class TradfriLight(Light):
 
     @property
     def color_temp(self):
-        """Return the CT color value in mireds."""
-        kelvin_color = self._light_data.kelvin_color_inferred
-        if kelvin_color is not None:
-            return color_util.color_temperature_kelvin_to_mired(
-                kelvin_color
-            )
+        """Color temperature of the light."""
+        return self._light_data.color_temp
 
     @property
-    def rgb_color(self):
-        """RGB color of the light."""
-        return self._rgb_color
+    def xy_color(self):
+        """XY color of the light."""
+        return self._xy_color
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -254,18 +254,23 @@ class TradfriLight(Light):
         After adding "self._light_data.hexcolor is not None"
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
-        if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
+        if ATTR_XY_COLOR in kwargs and self._light_data.hex_color is not None:
             yield from self._api(
-                self._light.light_control.set_rgb_color(
-                    *kwargs[ATTR_RGB_COLOR]))
+                self._light.light_control.set_xy_color(
+                    *kwargs[ATTR_XY_COLOR]))
+
+        elif ATTR_RGB_COLOR in kwargs and \
+                self._light_data.hex_color is not None:
+            xy_color = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
+            yield from self._api(
+                self._light.light_control.set_xy_color(
+                    xy_color[0], xy_color[1]))
 
         elif ATTR_COLOR_TEMP in kwargs and \
                 self._light_data.hex_color is not None and \
                 self._temp_supported:
-            kelvin = color_util.color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP])
             yield from self._api(
-                self._light_control.set_kelvin_color(kelvin))
+                self._light_control.set_color_temp(kwargs[ATTR_COLOR_TEMP]))
 
         keys = {}
         if ATTR_TRANSITION in kwargs:
@@ -286,7 +291,7 @@ class TradfriLight(Light):
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
         # pylint: disable=import-error
-        from pytradfri.error import PyTradFriError
+        from pytradfri.error import PytradfriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
@@ -296,7 +301,7 @@ class TradfriLight(Light):
                                       err_callback=self._async_start_observe,
                                       duration=0)
             self.hass.async_add_job(self._api(cmd))
-        except PyTradFriError as err:
+        except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
@@ -309,17 +314,19 @@ class TradfriLight(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
-        self._rgb_color = None
+        self._xy_color = None
         self._features = SUPPORTED_FEATURES
 
         if self._light.device_info.manufacturer == IKEA:
-            if self._light_control.can_set_kelvin:
+            if self._light_control.can_set_mireds:
                 self._features |= SUPPORT_COLOR_TEMP
             if self._light_control.can_set_color:
                 self._features |= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_XY_COLOR
         else:
             if self._light_data.hex_color is not None:
                 self._features |= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_XY_COLOR
 
         self._temp_supported = self._light.device_info.manufacturer \
             in ALLOWED_TEMPERATURES
@@ -328,7 +335,5 @@ class TradfriLight(Light):
     def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
-        self._rgb_color = color_util.rgb_hex_to_rgb_list(
-            self._light_data.hex_color_inferred
-        )
+        self._xy_color = self._light_data.xy_color
         self.async_schedule_update_ha_state()
