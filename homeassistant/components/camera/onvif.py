@@ -91,17 +91,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if not req:
                 req = camera._ptz.create_type('ContinuousMove')
                 if tilt == DIR_UP:
-                    req.Velocity.PanTilt._y = 1
+                    req.Velocity.PanTilt = {"_x": 0, "_y": 1}
                 elif tilt == DIR_DOWN:
-                    req.Velocity.PanTilt._y = -1
+                    req.Velocity.PanTilt = {"_x": 0, "_y": -1}
                 if pan == DIR_LEFT:
-                    req.Velocity.PanTilt._x = -1
+                    req.Velocity.PanTilt = {"_x": -1, "_y": 0}
                 elif pan == DIR_RIGHT:
-                    req.Velocity.PanTilt._x = 1
+                    req.Velocity.PanTilt = {"_x": 1, "_y": 0}
                 if zoom == ZOOM_IN:
-                    req.Velocity.Zoom._x = 1
+                    req.Velocity.Zoom = {"_x": 1}
                 elif zoom == ZOOM_OUT:
-                    req.Velocity.Zoom._x = -1
+                    req.Velocity.Zoom = {"_x": -1}
             camera._ptz.ContinuousMove(req)
 
     hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
