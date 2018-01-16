@@ -286,7 +286,7 @@ freesms==0.1.2
 # fritzconnection==0.6.5
 
 # homeassistant.components.switch.fritzdect
-fritzhome==1.0.3
+fritzhome==1.0.4
 
 # homeassistant.components.media_player.frontier_silicon
 fsapi==0.0.7
