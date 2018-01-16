@@ -73,6 +73,6 @@ class Switch(zha.Entity, SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        result = yield from zha.get_attributes(self._endpoint.on_off,
-                                               ['on_off'])
+        result = yield from zha.safe_read(self._endpoint.on_off,
+                                          ['on_off'])
         self._state = result.get('on_off', self._state)
