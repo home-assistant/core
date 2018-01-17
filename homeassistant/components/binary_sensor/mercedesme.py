@@ -99,7 +99,6 @@ class BinarySensor(BinarySensorDevice):
 
     def update(self):
         """Fetch new state data for the sensor."""
-
         self.controller.update()
 
         if self._name == "windowsClosed":
