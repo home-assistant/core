@@ -135,8 +135,8 @@ class ONVIFCamera(Camera):
             tilt_val = 1 if tilt == DIR_UP else -1 if tilt == DIR_DOWN else 0
             zoom_val = 1 if zoom == ZOOM_IN else -1 if zoom == ZOOM_OUT else 0
             req = {"Velocity": {
-                    "PanTilt": {"_x": pan_val, "_y": tilt_val},
-                    "Zoom": {"_x": zoom_val}}}
+                "PanTilt": {"_x": pan_val, "_y": tilt_val},
+                "Zoom": {"_x": zoom_val}}}
             self._ptz.ContinuousMove(req)
 
     @asyncio.coroutine
