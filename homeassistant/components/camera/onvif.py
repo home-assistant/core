@@ -131,19 +131,24 @@ class ONVIFCamera(Camera):
     def perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
         if self._ptz:
-            req = self._ptz.create_type('ContinuousMove')
+            pan_val = 0
+            tilt_val = 0
+            zoom_val = 0
             if pan == DIR_LEFT:
-                req.Velocity.PanTilt = {"_x": -1, "_y": 0}
+                pan_val = -1
             elif pan == DIR_RIGHT:
-                req.Velocity.PanTilt = {"_x": 1, "_y": 0}
+                pan_val = 1
             if tilt == DIR_UP:
-                req.Velocity.PanTilt = {"_x": 0, "_y": 1}
+                tilt_val = 1
             elif tilt == DIR_DOWN:
-                req.Velocity.PanTilt = {"_x": 0, "_y": -1}
+                tilt_val = -1
             if zoom == ZOOM_IN:
-                req.Velocity.Zoom = {"_x": 1}
+                zoom_val = 1
             elif zoom == ZOOM_OUT:
-                req.Velocity.Zoom = {"_x": -1}
+                zoom_val = -1
+            req = {"Velocity": {
+                    "PanTilt": {"_x": pan_val, "_y": tilt_val},
+                    "Zoom": {"_x": zoom_val}}}
             self._ptz.ContinuousMove(req)
 
     @asyncio.coroutine
