@@ -24,7 +24,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['venstarcolortouch==0.3']
+REQUIREMENTS = ['venstarcolortouch==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,19 +87,18 @@ class VenstarThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if self._client.mode == self._client.MODE_AUTO:
-            return (SUPPORT_TARGET_TEMPERATURE |
-                    SUPPORT_TARGET_TEMPERATURE_HIGH |
-                    SUPPORT_TARGET_TEMPERATURE_LOW |
-                    SUPPORT_TARGET_HUMIDITY |
+        features = (SUPPORT_TARGET_TEMPERATURE |
                     SUPPORT_FAN_MODE |
                     SUPPORT_OPERATION_MODE)
 
-        else:
-            return (SUPPORT_TARGET_TEMPERATURE |
-                    SUPPORT_TARGET_HUMIDITY |
-                    SUPPORT_FAN_MODE |
-                    SUPPORT_OPERATION_MODE)
+        if self._client.mode == self._client.MODE_AUTO:
+            features |= (SUPPORT_TARGET_TEMPERATURE_HIGH |
+                         SUPPORT_TARGET_TEMPERATURE_LOW)
+
+        if self._client.hum_active == 1:
+            features |= SUPPORT_TARGET_HUMIDITY
+
+        return features
 
     @property
     def name(self):
