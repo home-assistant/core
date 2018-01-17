@@ -25,15 +25,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     controller = hass.data[DATA_MME]['controller']
 
     if not controller.cars:
-        return False
+        return
 
     for car in controller.cars:
         add_devices([BinarySensor('doorsClosed', car, controller)], True)
         add_devices([BinarySensor('windowsClosed', car, controller)], True)
         add_devices([BinarySensor('locked', car, controller)], True)
         add_devices([BinarySensor('tireWarningLight', car, controller)], True)
-
-    return True
 
 
 class BinarySensor(BinarySensorDevice):
@@ -100,10 +98,8 @@ class BinarySensor(BinarySensorDevice):
         }
 
     def update(self):
-        """Fetch new state data for the sensor.
+        """Fetch new state data for the sensor."""
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
         self.controller.update()
 
         if self._name == "windowsClosed":

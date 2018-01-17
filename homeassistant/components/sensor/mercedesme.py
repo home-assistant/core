@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     controller = hass.data[DATA_MME]['controller']
 
     if not controller.cars:
-        return False
+        return
 
     for car in controller.cars:
         add_devices([Sensor('fuelLevelPercent', car, controller, "%")], True)
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([Sensor('odometerKm', car, controller, "Km")], True)
         add_devices([Sensor('latestTrip', car, controller, None)], True)
 
-    return True
+    return
 
 
 class Sensor(Entity):
@@ -91,10 +91,7 @@ class Sensor(Entity):
         }
 
     def update(self):
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
+        """Fetch new state data for the sensor."""
         self.controller.update()
 
         if self.__name == "latestTrip":

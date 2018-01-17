@@ -15,16 +15,14 @@ DATA_MME = 'mercedesme'
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Mercedes ME tracker."""
     if discovery_info is None:
-        return False
+        return
 
     controller = hass.data[DATA_MME]['controller']
 
     if not controller.cars:
-        return False
+        return
 
     MercedesMEDeviceTracker(hass, config, see, controller)
-
-    return True
 
 
 class MercedesMEDeviceTracker(object):

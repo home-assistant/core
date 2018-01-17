@@ -63,12 +63,9 @@ def setup(hass, config):
 
         _LOGGER.error("Unable to communicate with Mercedes me API: %s",
                       ex.message)
-        return False
+        return
 
     if hass.data[DATA_MME]["controller"].is_valid_session:
         discovery.load_platform(hass, 'sensor', DATA_MME, {}, config)
         discovery.load_platform(hass, 'device_tracker', DATA_MME, {}, config)
         discovery.load_platform(hass, 'binary_sensor', DATA_MME, {}, config)
-        return True
-
-    return False
