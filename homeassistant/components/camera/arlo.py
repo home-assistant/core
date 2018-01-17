@@ -76,7 +76,8 @@ class ArloCam(Camera):
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         if self._camera.base_station:
-            self._camera.base_station.refresh_rate = SCAN_INTERVAL.total_seconds()
+            self._camera.base_station.refresh_rate = \
+                SCAN_INTERVAL.total_seconds()
         self.attrs = {}
 
     def camera_image(self):
