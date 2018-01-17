@@ -79,7 +79,6 @@ class ShoppingData:
     def async_update(self, item_id, info):
         """Update a shopping list item."""
         item = next((itm for itm in self.items if itm['id'] == item_id), None)
-
         if item is None:
             raise KeyError
 
@@ -173,7 +172,7 @@ class ShoppingListView(http.HomeAssistantView):
 
 
 class UpdateShoppingListItemView(http.HomeAssistantView):
-    """View to retrieve shopping list content."""
+    """View to update shopping list content."""
 
     url = '/api/shopping_list/item/{item_id}'
     name = "api:shopping_list:item:id"
@@ -190,7 +189,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
         except KeyError:
             return self.json_message('Item not found', HTTP_NOT_FOUND)
         except vol.Invalid:
-            return self.json_message('Item not found', HTTP_BAD_REQUEST)
+            return self.json_message('Invalid data', HTTP_BAD_REQUEST)
 
 
 class CreateShoppingListItemView(http.HomeAssistantView):
