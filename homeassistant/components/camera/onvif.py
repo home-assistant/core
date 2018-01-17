@@ -47,10 +47,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
-    async_add_devices([ONVIFCamera(hass, config)])
+    async_add_devices([ONVIFHassCamera(hass, config)])
 
 
-class ONVIFCamera(Camera):
+class ONVIFHassCamera(Camera):
     """An implementation of an ONVIF camera."""
 
     def __init__(self, hass, config):
