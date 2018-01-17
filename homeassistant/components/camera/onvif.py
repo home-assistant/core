@@ -131,21 +131,9 @@ class ONVIFCamera(Camera):
     def perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
         if self._ptz:
-            pan_val = 0
-            tilt_val = 0
-            zoom_val = 0
-            if pan == DIR_LEFT:
-                pan_val = -1
-            elif pan == DIR_RIGHT:
-                pan_val = 1
-            if tilt == DIR_UP:
-                tilt_val = 1
-            elif tilt == DIR_DOWN:
-                tilt_val = -1
-            if zoom == ZOOM_IN:
-                zoom_val = 1
-            elif zoom == ZOOM_OUT:
-                zoom_val = -1
+            pan_val = 1 if pan == DIR_RIGHT else -1 if pan == DIR_LEFT else 0
+            tilt_val = 1 if tilt == DIR_UP else -1 if tilt == DIR_DOWN else 0
+            zoom_val = 1 if zoom == ZOOM_IN else -1 if zoom == ZOOM_OUT else 0
             req = {"Velocity": {
                     "PanTilt": {"_x": pan_val, "_y": tilt_val},
                     "Zoom": {"_x": zoom_val}}}
