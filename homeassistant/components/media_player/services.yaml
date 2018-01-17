@@ -107,6 +107,20 @@ media_seek:
       description: Position to seek to. The format is platform dependent.
       example: 100
 
+monoprice_snapshot:
+  description: Take a snapshot of the media player zone.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be snapshot. Platform dependent.
+      example: 'media_player.living_room'
+
+monoprice_restore:
+  description: Restore a snapshot of the media player zone.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be restored. Platform dependent.
+      example: 'media_player.living_room'
+
 play_media:
   description: Send the media player the command for playing media.
   fields:
@@ -215,6 +229,18 @@ sonos_clear_sleep_timer:
       description: Name(s) of entities that will have the timer cleared.
       example: 'media_player.living_room_sonos'
 
+sonos_set_option:
+  description: Set Sonos sound options.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have options set.
+      example: 'media_player.living_room_sonos'
+    night_sound:
+      description: Enable Night Sound mode
+      example: 'true'
+    speech_enhance:
+      description: Enable Speech Enhancement mode
+      example: 'true'
 
 soundtouch_play_everywhere:
   description: Play on all Bose Soundtouch devices.
@@ -281,3 +307,16 @@ kodi_call_method:
     method:
       description: Name of the Kodi JSONRPC API method to be called.
       example: 'VideoLibrary.GetRecentlyAddedEpisodes'
+
+squeezebox_call_method:
+  description: 'Call a Squeezebox JSON/RPC API method.'
+  fields:
+    entity_id:
+      description: Name(s) of the Squeexebox entities where to run the API method.
+      example: 'media_player.squeezebox_radio'
+    command:
+      description: Name of the Squeezebox command.
+      example: 'playlist'
+    parameters:
+      description: Optional array of parameters to be appended to the command. See 'Command Line Interface' official help page from Logitech for details.
+      example: '["loadtracks", "track.titlesearch=highway to hell"]'

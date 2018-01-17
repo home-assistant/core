@@ -6,7 +6,7 @@ https://home-assistant.io/components/climate.hive/
 """
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, STATE_HEAT, STATE_OFF, STATE_ON,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+    SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.components.hive import DATA_HIVE
 
@@ -16,7 +16,9 @@ HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
 HASS_TO_HIVE_STATE = {STATE_AUTO: 'SCHEDULE', STATE_HEAT: 'MANUAL',
                       STATE_ON: 'ON', STATE_OFF: 'OFF'}
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
+                 SUPPORT_OPERATION_MODE |
+                 SUPPORT_AUX_HEAT)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -133,6 +135,43 @@ class HiveClimateEntity(ClimateDevice):
 
             for entity in self.session.entities:
                 entity.handle_update(self.data_updatesource)
+
+    @property
+    def is_aux_heat_on(self):
+        """Return true if auxiliary heater is on."""
+        boost_status = None
+        if self.device_type == "Heating":
+            boost_status = self.session.heating.get_boost(self.node_id)
+        elif self.device_type == "HotWater":
+            boost_status = self.session.hotwater.get_boost(self.node_id)
+        return boost_status == "ON"
+
+    def turn_aux_heat_on(self):
+        """Turn auxiliary heater on."""
+        target_boost_time = 30
+        if self.device_type == "Heating":
+            curtemp = self.session.heating.current_temperature(self.node_id)
+            curtemp = round(curtemp * 2) / 2
+            target_boost_temperature = curtemp + 0.5
+            self.session.heating.turn_boost_on(self.node_id,
+                                               target_boost_time,
+                                               target_boost_temperature)
+        elif self.device_type == "HotWater":
+            self.session.hotwater.turn_boost_on(self.node_id,
+                                                target_boost_time)
+
+        for entity in self.session.entities:
+            entity.handle_update(self.data_updatesource)
+
+    def turn_aux_heat_off(self):
+        """Turn auxiliary heater off."""
+        if self.device_type == "Heating":
+            self.session.heating.turn_boost_off(self.node_id)
+        elif self.device_type == "HotWater":
+            self.session.hotwater.turn_boost_off(self.node_id)
+
+        for entity in self.session.entities:
+            entity.handle_update(self.data_updatesource)
 
     def update(self):
         """Update all Node data frome Hive."""

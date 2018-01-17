@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import (
-    DATA_FFMPEG)
+    DATA_FFMPEG, CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
@@ -30,6 +30,7 @@ DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
+DEFAULT_ARGUMENTS = '-q:v 2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -37,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
 })
 
 
@@ -45,10 +47,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
-    async_add_devices([ONVIFCameraHASS(hass, config)])
+    async_add_devices([ONVIFCamera(hass, config)])
 
 
-class ONVIFCameraHASS(Camera):
+class ONVIFCamera(Camera):
     """An implementation of an ONVIF camera."""
 
     def __init__(self, hass, config):
@@ -57,7 +59,7 @@ class ONVIFCameraHASS(Camera):
         super().__init__()
 
         self._name = config.get(CONF_NAME)
-        self._ffmpeg_arguments = '-q:v 2'
+        self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._input = None
         try:
             _LOGGER.debug("Connecting with ONVIF Camera: %s on port %s",

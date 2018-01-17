@@ -74,6 +74,7 @@ pip-selfcheck.json
 venv
 .venv
 Pipfile*
+share/*
 
 # vimmy stuff
 *.swp

@@ -6,7 +6,6 @@ https://home-assistant.io/components/remote.harmony/
 """
 import logging
 import asyncio
-from os import path
 import time
 
 import voluptuous as vol
@@ -19,7 +18,6 @@ from homeassistant.components.remote import (
     PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_ACTIVITY, ATTR_NUM_REPEATS,
     ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 from homeassistant.util import slugify
-from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['pyharmony==1.0.18']
 
@@ -105,11 +103,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def register_services(hass):
     """Register all services for harmony devices."""
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
-        DOMAIN, SERVICE_SYNC, _sync_service, descriptions.get(SERVICE_SYNC),
+        DOMAIN, SERVICE_SYNC, _sync_service,
         schema=HARMONY_SYNC_SCHEMA)
 
 
