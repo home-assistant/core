@@ -272,7 +272,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             _LOGGER.error("media type %s is not supported", media_type)
             return
         if not media_id.startswith('spotify:'):
-            _LOGGER.error("media id must be spotify uri")
+            _LOGGER.error("{media_id} is not a valid spotify uri".format(media_id=media_id))
             return
         self._player.start_playback(**kwargs)
 
