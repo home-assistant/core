@@ -78,7 +78,7 @@ EFFECT_MAP = {
 
 FLUX_EFFECT_LIST = [
     EFFECT_RANDOM,
-    ].extend(EFFECT_MAP.keys())
+    ] + list(EFFECT_MAP)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
