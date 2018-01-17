@@ -1,28 +1,22 @@
 """
-Support for TekSavvy.
-
-Get bandwidth comsumption data using Teksavvy API
-You can get your API key here:
-https://myaccount.teksavvy.com/ApiKey/ApiKeyManagement
-
-TekSavvy only counts download only as part of the bandwidth
+Support for TekSavvy Bandwidth Monitor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.teksavvy/
 """
-import logging
 from datetime import timedelta
-import asyncio
-import async_timeout
-import voluptuous as vol
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_MONITORED_VARIABLES)
+import logging
 
+import async_timeout
+import asyncio
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_VARIABLES):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_TOTAL_BANDWIDTH): cv.string,
+    vol.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -68,14 +62,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
-    bandwidthcapstr = config.get(CONF_TOTAL_BANDWIDTH)
-    try:
-        bandwidthcap = int(bandwidthcapstr)
-        ts_data = TekSavvyData(hass.loop, websession, apikey, bandwidthcap)
-        ret = yield from ts_data.async_update()
-    except ValueError as error:
-        _LOGGER.error("Failed conversion %s %s", CONF_TOTAL_BANDWIDTH, error)
+    bandwidthcap = config.get(CONF_TOTAL_BANDWIDTH)
+
+    ts_data = TekSavvyData(hass.loop, websession, apikey, bandwidthcap)
+    ret = yield from ts_data.async_update()
     if ret is False:
+        _LOGGER.error("Invalid Teksavvy API key:%s", apikey)
         return
 
     name = config.get(CONF_NAME)
@@ -135,15 +127,14 @@ class TekSavvyData(object):
         self.websession = websession
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
-        self.data = dict()
-        self.data["limit"] = self.bandwidth_cap
+        self.data = {"limit": self.bandwidth_cap}
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def async_update(self):
         """Get the TekSavvy bandwidth data from the web service."""
         headers = {"TekSavvy-APIKey": self.api_key}
-        _LOGGER.info("Updaing TekSavvy data")
+        _LOGGER.debug("Updating TekSavvy data")
         url = "https://api.teksavvy.com/"\
               "web/Usage/UsageSummaryRecords?$filter=IsCurrent%20eq%20true"
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
