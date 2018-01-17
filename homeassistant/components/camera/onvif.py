@@ -87,7 +87,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         else:
             target_cameras = [camera for camera in all_cameras
                               if camera.entity_id in entity_ids]
-        req = None
         for camera in target_cameras:
             camera.perform_ptz(pan, tilt, zoom)
 
@@ -132,7 +131,7 @@ class ONVIFCamera(Camera):
     def perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
         if self._ptz:
-            req = camera._ptz.create_type('ContinuousMove')
+            req = self._ptz.create_type('ContinuousMove')
             if pan == DIR_LEFT:
                 req.Velocity.PanTilt = {"_x": -1, "_y": 0}
             elif pan == DIR_RIGHT:
