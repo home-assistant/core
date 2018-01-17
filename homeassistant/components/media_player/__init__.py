@@ -77,6 +77,7 @@ ATTR_MEDIA_SEASON = 'media_season'
 ATTR_MEDIA_EPISODE = 'media_episode'
 ATTR_MEDIA_CHANNEL = 'media_channel'
 ATTR_MEDIA_PLAYLIST = 'media_playlist'
+ATTR_MEDIA_AVAILABLE_PLAYLISTS = 'media_available_playlists'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
@@ -107,6 +108,7 @@ SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
 SUPPORT_SHUFFLE_SET = 32768
+SUPPORT_AVAILABLE_PLAYLISTS = 65536
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -196,6 +198,7 @@ ATTR_TO_PROPERTY = [
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_AVAILABLE_PLAYLISTS,
 ]
 
 
@@ -580,6 +583,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def available_playlists(self):
+        """List of available playlists."""
+        return None
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return 0
@@ -799,6 +807,11 @@ class MediaPlayerDevice(Entity):
     def support_shuffle_set(self):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
+
+    @property
+    def support_available_playlists(self):
+        """Boolean if available playlists command supported."""
+        return bool(self.supported_features & SUPPORT_AVAILABLE_PLAYLISTS)
 
     def async_toggle(self):
         """Toggle the power on the media player.
