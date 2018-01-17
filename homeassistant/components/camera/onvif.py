@@ -76,8 +76,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     def handle_ptz(service):
         """Handle PTZ service call."""
-        tilt = service.data.get(ATTR_TILT, None)
         pan = service.data.get(ATTR_PAN, None)
+        tilt = service.data.get(ATTR_TILT, None)
         zoom = service.data.get(ATTR_ZOOM, None)
         all_cameras = hass.data[ONVIF_DATA][ENTITIES]
         entity_ids = extract_entity_ids(hass, service)
@@ -89,23 +89,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                               if camera.entity_id in entity_ids]
         req = None
         for camera in target_cameras:
-            if not camera._ptz:
-                continue
-            if not req:
-                req = camera._ptz.create_type('ContinuousMove')
-                if tilt == DIR_UP:
-                    req.Velocity.PanTilt = {"_x": 0, "_y": 1}
-                elif tilt == DIR_DOWN:
-                    req.Velocity.PanTilt = {"_x": 0, "_y": -1}
-                if pan == DIR_LEFT:
-                    req.Velocity.PanTilt = {"_x": -1, "_y": 0}
-                elif pan == DIR_RIGHT:
-                    req.Velocity.PanTilt = {"_x": 1, "_y": 0}
-                if zoom == ZOOM_IN:
-                    req.Velocity.Zoom = {"_x": 1}
-                elif zoom == ZOOM_OUT:
-                    req.Velocity.Zoom = {"_x": -1}
-            camera._ptz.ContinuousMove(req)
+            camera.perform_ptz(pan, tilt, zoom)
 
     hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
                                  schema=SERVICE_PTZ_SCHEMA)
@@ -144,6 +128,24 @@ class ONVIFCamera(Camera):
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
+
+    def perform_ptz(self, pan, tilt, zoom):
+        """Perform a PTZ action on the camera."""
+        if self._ptz:
+            req = camera._ptz.create_type('ContinuousMove')
+            if pan == DIR_LEFT:
+                req.Velocity.PanTilt = {"_x": -1, "_y": 0}
+            elif pan == DIR_RIGHT:
+                req.Velocity.PanTilt = {"_x": 1, "_y": 0}
+            if tilt == DIR_UP:
+                req.Velocity.PanTilt = {"_x": 0, "_y": 1}
+            elif tilt == DIR_DOWN:
+                req.Velocity.PanTilt = {"_x": 0, "_y": -1}
+            if zoom == ZOOM_IN:
+                req.Velocity.Zoom = {"_x": 1}
+            elif zoom == ZOOM_OUT:
+                req.Velocity.Zoom = {"_x": -1}
+            self._ptz.ContinuousMove(req)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
