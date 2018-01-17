@@ -90,6 +90,7 @@ def async_setup_deconz(hass, config, deconz_config):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
+    _LOGGER.debug('deCONZ config %s', deconz_config)
     from pydeconz import DeconzSession
     websession = async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, websession, **deconz_config)
