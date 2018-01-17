@@ -90,10 +90,12 @@ class SmartPlugSwitch(SwitchDevice):
         from pyHS100 import SmartDeviceException
         try:
             self._available = True
+
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
 
-            if self._name is None:
+            # Pull the name from the device if a name was not specified
+            if self._name == DEFAULT_NAME:
                 self._name = self.smartplug.alias
 
             if self.smartplug.has_emeter:
