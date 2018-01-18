@@ -34,8 +34,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([Sensor('odometerKm', car, controller, "Km")], True)
         add_devices([Sensor('latestTrip', car, controller, None)], True)
 
-    return
-
 
 class Sensor(Entity):
     """Representation of a Sensor."""
