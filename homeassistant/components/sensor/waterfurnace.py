@@ -46,6 +46,19 @@ SENSORS = [
 ]
 
 
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Waterfurnace sensor."""
+    if discovery_info is None:
+        return
+
+    sensors = []
+    client = hass.data[WF_DOMAIN]
+    for sconfig in SENSORS:
+        sensors.append(WaterFurnaceSensor(client, sconfig))
+
+    add_devices(sensors)
+
+
 class WaterFurnaceSensor(Entity):
     """Implementing the Waterfurnace sensor."""
 
@@ -99,16 +112,3 @@ class WaterFurnaceSensor(Entity):
         if self.client.data is not None:
             self._state = getattr(self.client.data, self._attr, None)
             self.async_schedule_update_ha_state()
-
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Waterfurnace sensor."""
-    if discovery_info is None:
-        return
-
-    sensors = []
-    client = hass.data[WF_DOMAIN]
-    for sconfig in SENSORS:
-        sensors.append(WaterFurnaceSensor(client, sconfig))
-
-    add_devices(sensors)

@@ -8,11 +8,13 @@ from datetime import timedelta
 import logging
 import time
 import threading
+
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD
+    CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
@@ -44,6 +46,8 @@ def setup(hass, base_config):
     unit = config.get(CONF_UNIT)
 
     wfconn = wf.WaterFurnace(username, password, unit)
+    # NOTE(sdague): login will throw an exception if this doesn't
+    # work, which will abort the setup.
     wfconn.login()
     hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
     hass.data[DOMAIN].start()
@@ -70,9 +74,23 @@ class WaterFurnaceData(threading.Thread):
         self.client = client
         self.unit = client.unit
         self.data = None
+        self._shutdown = False
 
     def run(self):
         """Thread run loop."""
+        @callback
+        def register():
+            """Connect to hass for shutdown."""
+            def shutdown(event):
+                """Shutdown the thread."""
+                _LOGGER.debug("Signaled to shutdown.")
+                self._shutdown = True
+                self.join()
+
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
+        self.hass.add_job(register)
+
         # This does a tight loop in sending read calls to the
         # websocket. That's a blocking call, which returns pretty
         # quickly (1 second). It's important that we do this
@@ -80,12 +98,20 @@ class WaterFurnaceData(threading.Thread):
         # least every 30 seconds the server side closes the
         # connection.
         while True:
+            if self._shutdown:
+                _LOGGER.debug("Graceful shutdown")
+                return
+
             try:
                 self.data = self.client.read()
                 self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
                 time.sleep(SCAN_INTERVAL.seconds)
             except ConnectionError:
+                # note, if this fails, it's an exception, which breaks
+                # out of the loop.
                 self.client.login()
                 _LOGGER.error("Lost our connection to websocket, trying again")
+                time.sleep(SCAN_INTERVAL.seconds)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error updating waterfurnace data.")
+                time.sleep(SCAN_INTERVAL.seconds)
