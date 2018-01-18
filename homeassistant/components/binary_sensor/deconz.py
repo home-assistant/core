@@ -25,8 +25,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = hass.data[DECONZ_DATA].sensors
     entities = []
 
-    for sensor in sensors.values():
-        if sensor.type in DECONZ_BINARY_SENSOR:
+    for key in sorted(sensors.keys(), key=int):
+        sensor = sensors[key]
+        if sensor and sensor.type in DECONZ_BINARY_SENSOR:
             entities.append(DeconzBinarySensor(sensor))
     async_add_devices(entities, True)
 
