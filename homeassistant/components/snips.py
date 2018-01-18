@@ -104,7 +104,6 @@ def async_setup(hass, config):
         except intent.UnknownIntent as err:
             _LOGGER.warning("Received unknown intent %s",
                             request['intent']['intentName'])
-            snips_response = "Unknown Intent"
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s.", intent_type)
             snips_response = "Error while handling intent"
