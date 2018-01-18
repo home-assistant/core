@@ -191,7 +191,7 @@ class AlphaVantageForeignExchange(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.values['5. Exchange Rate']
+        return round(float(self.values['5. Exchange Rate']), 4)
 
     @property
     def icon(self):
