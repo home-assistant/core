@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
     bandwidthcap = config.get(CONF_TOTAL_BANDWIDTH)
@@ -67,7 +67,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     ts_data = TekSavvyData(hass.loop, websession, apikey, bandwidthcap)
     ret = yield from ts_data.async_update()
     if ret is False:
-        _LOGGER.error("Invalid Teksavvy API key:%s", apikey)
+        _LOGGER.error("Invalid Teksavvy API key: %s", apikey)
         return
 
     name = config.get(CONF_NAME)
@@ -78,7 +78,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class TekSavvySensor(Entity):
-    """TekSavvy Bandwidth sensor."""
+    """Representation of TekSavvy Bandwidth sensor."""
 
     def __init__(self, teksavvydata, sensor_type, name):
         """Initialize the sensor."""
