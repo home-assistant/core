@@ -20,14 +20,19 @@ from homeassistant.components import recorder, script
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_HIDDEN
 from homeassistant.components.recorder.util import session_scope, execute
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
+CONF_ORDER = 'use_include_order'
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: recorder.FILTER_SCHEMA,
+    DOMAIN: recorder.FILTER_SCHEMA.extend({
+        vol.Optional(CONF_ORDER, default=False): cv.boolean,
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
@@ -242,8 +247,9 @@ def async_setup(hass, config):
     if include:
         filters.included_entities = include[CONF_ENTITIES]
         filters.included_domains = include[CONF_DOMAINS]
+    use_include_order = config[DOMAIN].get(CONF_ORDER)
 
-    hass.http.register_view(HistoryPeriodView(filters))
+    hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     yield from hass.components.frontend.async_register_built_in_panel(
         'history', 'history', 'mdi:poll-box')
 
@@ -257,9 +263,10 @@ class HistoryPeriodView(HomeAssistantView):
     name = 'api:history:view-period'
     extra_urls = ['/api/history/period/{datetime}']
 
-    def __init__(self, filters):
+    def __init__(self, filters, use_include_order):
         """Initialize the history period view."""
         self.filters = filters
+        self.use_include_order = use_include_order
 
     @asyncio.coroutine
     def get(self, request, datetime=None):
@@ -304,6 +311,22 @@ class HistoryPeriodView(HomeAssistantView):
             elapsed = time.perf_counter() - timer_start
             _LOGGER.debug(
                 'Extracted %d states in %fs', sum(map(len, result)), elapsed)
+
+        # Optionally reorder the result to respect the ordering given
+        # by any entities explicitly included in the configuration.
+
+        if self.use_include_order:
+            result = list(result)
+            sorted_result = []
+            for order_entity in self.filters.included_entities:
+                for state_list in result:
+                    if state_list[0].entity_id == order_entity:
+                        sorted_result.append(state_list)
+                        result.remove(state_list)
+                        break
+            sorted_result.extend(result)
+            result = sorted_result
+
         return self.json(result)
 
 

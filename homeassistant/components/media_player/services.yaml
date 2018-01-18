@@ -107,6 +107,20 @@ media_seek:
       description: Position to seek to. The format is platform dependent.
       example: 100
 
+monoprice_snapshot:
+  description: Take a snapshot of the media player zone.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be snapshot. Platform dependent.
+      example: 'media_player.living_room'
+
+monoprice_restore:
+  description: Restore a snapshot of the media player zone.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be restored. Platform dependent.
+      example: 'media_player.living_room'
+
 play_media:
   description: Send the media player the command for playing media.
   fields:
@@ -293,3 +307,30 @@ kodi_call_method:
     method:
       description: Name of the Kodi JSONRPC API method to be called.
       example: 'VideoLibrary.GetRecentlyAddedEpisodes'
+
+squeezebox_call_method:
+  description: 'Call a Squeezebox JSON/RPC API method.'
+  fields:
+    entity_id:
+      description: Name(s) of the Squeexebox entities where to run the API method.
+      example: 'media_player.squeezebox_radio'
+    command:
+      description: Name of the Squeezebox command.
+      example: 'playlist'
+    parameters:
+      description: Optional array of parameters to be appended to the command. See 'Command Line Interface' official help page from Logitech for details.
+      example: '["loadtracks", "track.titlesearch=highway to hell"]'
+
+yamaha_enable_output:
+  description: Enable or disable an output port
+
+  fields:
+    entity_id:
+      description: Name(s) of entites to enable/disable port on.
+      example: 'media_player.yamaha'
+    port:
+      description: Name of port to enable/disable.
+      example: 'hdmi1'
+    enabled:
+      description: Boolean indicating if port should be enabled or not.
+      example: true

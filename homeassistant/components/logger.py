@@ -6,12 +6,10 @@ https://home-assistant.io/components/logger/
 """
 import asyncio
 import logging
-import os
 from collections import OrderedDict
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'logger'
@@ -123,13 +121,8 @@ def async_setup(hass, config):
         """Handle logger services."""
         set_log_levels(service.data)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_SET_LEVEL, async_service_handler,
-        descriptions[DOMAIN].get(SERVICE_SET_LEVEL),
         schema=SERVICE_SET_LEVEL_SCHEMA)
 
     return True

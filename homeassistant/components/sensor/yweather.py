@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['yahooweather==0.9']
+REQUIREMENTS = ['yahooweather==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 

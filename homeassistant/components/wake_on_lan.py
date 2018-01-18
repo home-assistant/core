@@ -7,11 +7,9 @@ https://home-assistant.io/components/wake_on_lan/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_MAC
 import homeassistant.helpers.config_validation as cv
 
@@ -50,13 +48,8 @@ def async_setup(hass, config):
             yield from hass.async_add_job(
                 partial(wol.send_magic_packet, mac_address))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_MAGIC_PACKET, send_magic_packet,
-        description=descriptions.get(DOMAIN).get(SERVICE_SEND_MAGIC_PACKET),
         schema=WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA)
 
     return True
