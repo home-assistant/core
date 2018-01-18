@@ -170,7 +170,7 @@ def test_unknown_intent(hass, mqtt_mock, caplog):
     }
     """
     async_fire_mqtt_message(hass,
-                          'hermes/intent/unknownIntent', payload)
+                            'hermes/intent/unknownIntent', payload)
     yield from hass.async_block_till_done()
     assert 'Received unknown intent unknownIntent' in caplog.text
 
