@@ -7,7 +7,6 @@ https://home-assistant.io/components/light.xiaomi_philipslight/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
