@@ -199,7 +199,7 @@ class Timer(Entity):
     @property
     def should_poll(self):
         """If entity should be polled."""
-        return False
+        return True
 
     @property
     def name(self):
@@ -219,10 +219,22 @@ class Timer(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_DURATION: str(self._duration),
-            ATTR_REMAINING: str(self._remaining)
-        }
+        if self._remaining:
+            return {
+                ATTR_DURATION: str(self._duration),
+                # Round time remaining to nearest second
+                ATTR_REMAINING: str(timedelta(seconds=
+                                              self._remaining.seconds,
+                                              microseconds=
+                                              (round
+                                               (self._remaining.microseconds
+                                                / 1000000)) * 1000000))
+            }
+        else:
+            return {
+                ATTR_DURATION: str(self._duration),
+                ATTR_REMAINING: None
+            }
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -313,3 +325,9 @@ class Timer(Entity):
         self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
                                   {"entity_id": self.entity_id})
         yield from self.async_update_ha_state()
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Update time remaining."""
+        if self._remaining:
+            self._remaining = self._end - dt_util.utcnow()
