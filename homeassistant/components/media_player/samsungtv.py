@@ -124,7 +124,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Update state of device."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(5)
+            sock.settimeout(self._config[CONF_TIMEOUT])
             sock.connect((self._config['host'], self._config['port']))
             self._state = STATE_ON
         except socket.error:
