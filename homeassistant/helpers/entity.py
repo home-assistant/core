@@ -35,10 +35,10 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
                 current_ids, hass
             ).result()
 
-    name = (name or DEVICE_DEFAULT_NAME).lower()
+    name = (slugify(name) or slugify(DEVICE_DEFAULT_NAME)).lower()
 
     return ensure_unique_string(
-        entity_id_format.format(slugify(name)), current_ids)
+        entity_id_format.format(name), current_ids)
 
 
 @callback

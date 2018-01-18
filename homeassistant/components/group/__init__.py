@@ -42,6 +42,8 @@ ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
 
+DATA_ALL_GROUPS = 'data_all_groups'
+
 SERVICE_SET_VISIBILITY = 'set_visibility'
 SERVICE_SET = 'set'
 SERVICE_REMOVE = 'remove'
@@ -145,7 +147,7 @@ def set_visibility(hass, entity_id=None, visible=True):
 @bind_hass
 def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
               icon=None, view=None, control=None, add=None):
-    """Create a new user group."""
+    """Create/Update a group."""
     hass.add_job(
         async_set_group, hass, object_id, name, entity_ids, visible, icon,
         view, control, add)
@@ -155,7 +157,7 @@ def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
 @bind_hass
 def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
                     icon=None, view=None, control=None, add=None):
-    """Create a new user group."""
+    """Create/Update a group."""
     data = {
         key: value for key, value in [
             (ATTR_OBJECT_ID, object_id),
@@ -249,7 +251,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 def async_setup(hass, config):
     """Set up all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    service_groups = {}
+    hass.data[DATA_ALL_GROUPS] = {}
 
     yield from _async_process_config(hass, config, component)
 
@@ -269,6 +271,7 @@ def async_setup(hass, config):
     def groups_service_handler(service):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
+        service_groups = hass.data[DATA_ALL_GROUPS]
 
         # new group
         if service.service == SERVICE_SET and object_id not in service_groups:
@@ -279,7 +282,7 @@ def async_setup(hass, config):
                 ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
             ) if service.data.get(attr) is not None}
 
-            new_group = yield from Group.async_create_group(
+            yield from Group.async_create_group(
                 hass, service.data.get(ATTR_NAME, object_id),
                 object_id=object_id,
                 entity_ids=entity_ids,
@@ -287,7 +290,6 @@ def async_setup(hass, config):
                 **extra_arg
             )
 
-            service_groups[object_id] = new_group
             return
 
         # update group
@@ -449,6 +451,11 @@ class Group(Entity):
         else:
             yield from group.async_update_ha_state(True)
 
+        # If called before the platform async_setup is called (test cases)
+        if DATA_ALL_GROUPS not in hass.data:
+            hass.data[DATA_ALL_GROUPS] = {}
+
+        hass.data[DATA_ALL_GROUPS][object_id] = group
         return group
 
     @property
