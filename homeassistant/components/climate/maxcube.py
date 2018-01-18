@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_HUMIDITY)
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
@@ -19,7 +19,7 @@ STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_TARGET_HUMIDITY
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -103,7 +103,7 @@ class MaxCubeClimate(ClimateDevice):
         return self._operation_list
 
     @property
-    def valve_position(self):
+    def current_humidity(self):
         """Return current position of the valve."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         return self.map_valvepos_max_hass(device.valve_position)
