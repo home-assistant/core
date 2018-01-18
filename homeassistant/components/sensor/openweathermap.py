@@ -174,7 +174,7 @@ class OpenWeatherMapSensor(Entity):
                 self._state = 'not snowing'
                 self._unit_of_measurement = ''
         elif self.type == 'forecast':
-            self._state = fc_data.get_weathers()[0].get_status()
+            self._state = fc_data.get_weathers()[0].get_detailed_status()
 
 
 class WeatherData(object):
