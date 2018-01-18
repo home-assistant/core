@@ -4,8 +4,9 @@ Support for Pollen.com allergen and disease sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pollen/
 """
-from logging import getLogger
+import logging
 from datetime import timedelta
+from statistics import mean
 
 import voluptuous as vol
 
@@ -18,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pypollencom==1.1.1']
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_GENUS = 'primary_allergen_genus'
 ATTR_ALLERGEN_NAME = 'primary_allergen_name'
@@ -129,7 +130,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         data.update()
 
     sensors = []
-    for condition in config.get(CONF_MONITORED_CONDITIONS, []):
+    for condition in config[CONF_MONITORED_CONDITIONS]:
         name, sensor_class, data_key, params, icon = CONDITIONS[condition]
         sensors.append(globals()[sensor_class](
             datas[data_key],
@@ -141,30 +142,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-def average_of_list(list_of_nums, decimal_places=1):
-    """Return the average of a list of ints."""
-    return round(sum(list_of_nums, 0.0)/len(list_of_nums), decimal_places)
-
-
 def calculate_trend(list_of_nums):
-    """Return the average of a list of ints."""
+    """Calculate the most common rating as a trend."""
     ratings = list(
-        map(
-            (lambda n: [
-                r['label'] for r in RATING_MAPPING
-                if r['minimum'] <= n <= r['maximum']
-            ][0]),
-            list_of_nums
-        )
-    )
+        r['label'] for n in list_of_nums
+        for r in RATING_MAPPING
+        if r['minimum'] <= n <= r['maximum'])
     return max(set(ratings), key=ratings.count)
-
-
-def merge_two_dicts(dict1, dict2):
-    """Merge two dicts into a new dict as a shallow copy."""
-    final = dict1.copy()
-    final.update(dict2)
-    return final
 
 
 class BaseSensor(Entity):
@@ -183,11 +167,8 @@ class BaseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return merge_two_dicts(
-            self._attrs, {
-                ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-            }
-        )
+        self._attrs.update({ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION})
+        return self._attrs
 
     @property
     def icon(self):
@@ -222,7 +203,7 @@ class AllergyAverageSensor(BaseSensor):
             p['Index']
             for p in data_attr['Location']['periods']
         ]
-        average = average_of_list(indices)
+        average = round(mean(indices), 1)
 
         self._attrs[ATTR_TREND] = calculate_trend(indices)
         self._attrs[ATTR_CITY] = data_attr['Location']['City'].title()
@@ -273,77 +254,69 @@ class AllergyIndexSensor(BaseSensor):
         self._unit = 'index'
 
 
-class AllergyAveragesData(object):
-    """Define an object to averages on future and historical allergy data."""
+class DataBase(object):
+    """Define a generic data object."""
 
     def __init__(self, client):
         """Initialize."""
         self._client = client
+
+    def _get_client_data(self, module, operation):
+        """Get data from a particular point in the API."""
+        from pypollencom.exceptions import HTTPError
+
+        try:
+            data = getattr(getattr(self._client, module), operation)()
+            _LOGGER.debug('Received "%s_%s" data: %s', module,
+                          operation, data)
+        except HTTPError as exc:
+            _LOGGER.error('An error occurred while retrieving data')
+            _LOGGER.debug(exc)
+
+        return data
+
+
+class AllergyAveragesData(DataBase):
+    """Define an object to averages on future and historical allergy data."""
+
+    def __init__(self, client):
+        """Initialize."""
+        super().__init__(client)
         self.extended_data = None
         self.historic_data = None
 
     @Throttle(MIN_TIME_UPDATE_AVERAGES)
     def update(self):
         """Update with new data."""
-        from pypollencom.exceptions import HTTPError
-
-        try:
-            self.extended_data = self._client.allergens.extended()
-            _LOGGER.debug('Received "extended" allergy data: %s',
-                          self.extended_data)
-
-            self.historic_data = self._client.allergens.historic()
-            _LOGGER.debug('Received "historic" allergy data: %s',
-                          self.historic_data)
-        except HTTPError as exc:
-            _LOGGER.error('An error occurred while retrieving allergen data')
-            _LOGGER.debug(exc)
+        self.extended_data = self._get_client_data('allergens', 'extended')
+        self.historic_data = self._get_client_data('allergens', 'historic')
 
 
-class AllergyIndexData(object):
+class AllergyIndexData(DataBase):
     """Define an object to retrieve current allergy index info."""
 
     def __init__(self, client):
         """Initialize."""
-        self._client = client
+        super().__init__(client)
         self.current_data = None
         self.outlook_data = None
 
     @Throttle(MIN_TIME_UPDATE_INDICES)
     def update(self):
-        """Update with new AirVisual data."""
-        from pypollencom.exceptions import HTTPError
-
-        try:
-            self.current_data = self._client.allergens.current()
-            _LOGGER.debug('Received "current" allergy data: %s',
-                          self.current_data)
-
-            self.outlook_data = self._client.allergens.outlook()
-            _LOGGER.debug('Received "outlook" allergy data: %s',
-                          self.outlook_data)
-        except HTTPError as exc:
-            _LOGGER.error('An error occurred while retrieving allergen data')
-            _LOGGER.debug(exc)
+        """Update with new index data."""
+        self.current_data = self._get_client_data('allergens', 'current')
+        self.outlook_data = self._get_client_data('allergens', 'outlook')
 
 
-class DiseaseData(object):
+class DiseaseData(DataBase):
     """Define an object to retrieve current disease index info."""
 
     def __init__(self, client):
         """Initialize."""
-        self._client = client
+        super().__init__(client)
         self.extended_data = None
 
     @Throttle(MIN_TIME_UPDATE_INDICES)
     def update(self):
-        """Update with new AirVisual data."""
-        from pypollencom.exceptions import HTTPError
-
-        try:
-            self.extended_data = self._client.disease.extended()
-            _LOGGER.debug('Received "extended" disease data: %s',
-                          self.extended_data)
-        except HTTPError as exc:
-            _LOGGER.error('An error occurred while retrieving disease data')
-            _LOGGER.debug(exc)
+        """Update with new cold/flu data."""
+        self.extended_data = self._get_client_data('disease', 'extended')
