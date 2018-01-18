@@ -220,17 +220,19 @@ class Timer(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         if self._remaining:
-           return {
-            ATTR_DURATION: str(self._duration),
-            #Round time remaining to nearest second
-            ATTR_REMAINING: str(timedelta(seconds=self._remaining.seconds,
-                                          microseconds=(round(self._remaining.microseconds
-                                          /1000000))*1000000))
+            return {
+                ATTR_DURATION: str(self._duration),
+                #Round time remaining to nearest second
+                ATTR_REMAINING: str(timedelta(seconds =
+                                    self._remaining.seconds,
+                                    microseconds =
+                                    (round(self._remaining.microseconds
+                                     /1000000))*1000000))
             }
         else:
             return {
-            ATTR_DURATION: str(self._duration),
-            ATTR_REMAINING: None
+                ATTR_DURATION: str(self._duration),
+                ATTR_REMAINING: None
             }
 
     @asyncio.coroutine
