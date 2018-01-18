@@ -228,7 +228,7 @@ class Timer(Entity):
                                               microseconds=
                                               (round
                                                (self._remaining.microseconds
-                                                /1000000))*1000000))
+                                                / 1000000)) * 1000000))
             }
         else:
             return {
