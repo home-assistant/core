@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
     SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    SUPPORT_AVAILABLE_PLAYLISTS, PLATFORM_SCHEMA, MediaPlayerDevice)
+    PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
-    SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET | SUPPORT_AVAILABLE_PLAYLISTS
+    SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
 
 SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private playlist-read-private'
 DEFAULT_CACHE_PATH = '.spotify-token-cache'

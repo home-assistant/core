@@ -108,7 +108,6 @@ SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
 SUPPORT_SHUFFLE_SET = 32768
-SUPPORT_AVAILABLE_PLAYLISTS = 65536
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -807,11 +806,6 @@ class MediaPlayerDevice(Entity):
     def support_shuffle_set(self):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
-
-    @property
-    def support_available_playlists(self):
-        """Boolean if available playlists command supported."""
-        return bool(self.supported_features & SUPPORT_AVAILABLE_PLAYLISTS)
 
     def async_toggle(self):
         """Toggle the power on the media player.
