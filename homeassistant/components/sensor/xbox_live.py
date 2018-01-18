@@ -51,8 +51,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if devices:
         add_devices(devices, True)
 
-    return
-
 
 class XboxSensor(Entity):
     """A class for the Xbox account."""
