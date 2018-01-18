@@ -17,7 +17,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==24']
+REQUIREMENTS = ['pydeconz==25']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +90,7 @@ def async_setup_deconz(hass, config, deconz_config):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
+    _LOGGER.debug('deCONZ config %s', deconz_config)
     from pydeconz import DeconzSession
     websession = async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, websession, **deconz_config)
