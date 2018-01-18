@@ -200,7 +200,7 @@ class DenonDevice(MediaPlayerDevice):
                 url = ('http://' + str(self._host) +
                        '/goform/formMainZone_MainZoneXml.xml')
                 XML_data = urllib.request.urlopen(url)
-            except URLError:
+            except urllib.error.URLError:
                 return
             parsed_data = ET.parse(XML_data).getroot()
             sound_mode_raw = parsed_data.find('selectSurround/value')
