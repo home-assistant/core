@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.3.0', 'PyJWT==1.5.3']
+REQUIREMENTS = ['pywebpush==1.5.0', 'PyJWT==1.5.3']
 
 DEPENDENCIES = ['frontend']
 
@@ -169,15 +169,35 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = ensure_unique_string('unnamed device', self.registrations)
+        name = self.find_registration_name(data)
+        previous_registration = self.registrations.get(name)
 
         self.registrations[name] = data
 
-        if not save_json(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            yield from hass.async_add_job(save_json, self.json_path,
+                                          self.registrations)
+            return self.json_message(
+                'Push notification subscriber registered.')
+        except HomeAssistantError:
+            if previous_registration is not None:
+                self.registrations[name] = previous_registration
+            else:
+                self.registrations.pop(name)
+
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
-        return self.json_message('Push notification subscriber registered.')
+    def find_registration_name(self, data):
+        """Find a registration name matching data or generate a unique one."""
+        endpoint = data.get(ATTR_SUBSCRIPTION).get(ATTR_ENDPOINT)
+        for key, registration in self.registrations.items():
+            subscription = registration.get(ATTR_SUBSCRIPTION)
+            if subscription.get(ATTR_ENDPOINT) == endpoint:
+                return key
+        return ensure_unique_string('unnamed device', self.registrations)
 
     @asyncio.coroutine
     def delete(self, request):
@@ -202,7 +222,12 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         reg = self.registrations.pop(found)
 
-        if not save_json(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            yield from hass.async_add_job(save_json, self.json_path,
+                                          self.registrations)
+        except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)

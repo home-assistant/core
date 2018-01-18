@@ -6,15 +6,17 @@ https://home-assistant.io/components/switch.fritzdect/
 """
 import logging
 
+from requests.exceptions import RequestException, HTTPError
+
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
-REQUIREMENTS = ['fritzhome==1.0.3']
+REQUIREMENTS = ['fritzhome==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,15 +48,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    # Hack: fritzhome only throws Exception. To prevent pylint from
-    # complaining, we disable the warning here:
-    # pylint: disable=W0703
-
     # Log into Fritz Box
     fritz = FritzBox(host, username, password)
     try:
         fritz.login()
-    except Exception:
+    except Exception:  # pylint: disable=W0703
         _LOGGER.error("Login to Fritz!Box failed")
         return
 
@@ -63,6 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Only add devices that support switching
         if actor.has_switch:
             data = FritzDectSwitchData(fritz, actor.actor_id)
+            data.is_online = True
             add_devices([FritzDectSwitch(hass, data, actor.name)], True)
 
 
@@ -86,8 +85,8 @@ class FritzDectSwitch(SwitchDevice):
         attrs = {}
 
         if self.data.has_powermeter and \
-           self.data.current_consumption != STATE_UNKNOWN and \
-           self.data.total_consumption != STATE_UNKNOWN:
+           self.data.current_consumption is not None and \
+           self.data.total_consumption is not None:
             attrs[ATTR_CURRENT_CONSUMPTION] = "{:.1f}".format(
                 self.data.current_consumption)
             attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "{}".format(
@@ -98,7 +97,7 @@ class FritzDectSwitch(SwitchDevice):
                 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE)
 
         if self.data.has_temperature and \
-           self.data.temperature != STATE_UNKNOWN:
+           self.data.temperature is not None:
             attrs[ATTR_TEMPERATURE] = "{}".format(
                 self.units.temperature(self.data.temperature, TEMP_CELSIUS))
             attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
@@ -120,17 +119,48 @@ class FritzDectSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        actor = self.data.fritz.get_actor_by_ain(self.data.ain)
-        actor.switch_on()
+        if not self.data.is_online:
+            _LOGGER.error("turn_on: Not online skipping request")
+            return
+
+        try:
+            actor = self.data.fritz.get_actor_by_ain(self.data.ain)
+            actor.switch_on()
+        except (RequestException, HTTPError):
+            _LOGGER.error("Fritz!Box query failed, triggering relogin")
+            self.data.is_online = False
 
     def turn_off(self):
         """Turn the switch off."""
-        actor = self.data.fritz.get_actor_by_ain(self.data.ain)
-        actor.switch_off()
+        if not self.data.is_online:
+            _LOGGER.error("turn_off: Not online skipping request")
+            return
+
+        try:
+            actor = self.data.fritz.get_actor_by_ain(self.data.ain)
+            actor.switch_off()
+        except (RequestException, HTTPError):
+            _LOGGER.error("Fritz!Box query failed, triggering relogin")
+            self.data.is_online = False
 
     def update(self):
         """Get the latest data from the fritz box and updates the states."""
-        self.data.update()
+        if not self.data.is_online:
+            _LOGGER.error("update: Not online, logging back in")
+
+            try:
+                self.data.fritz.login()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.error("Login to Fritz!Box failed")
+                return
+
+            self.data.is_online = True
+
+        try:
+            self.data.update()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error("Fritz!Box query failed, triggering relogin")
+            self.data.is_online = False
 
 
 class FritzDectSwitchData(object):
@@ -140,32 +170,52 @@ class FritzDectSwitchData(object):
         """Initialize the data object."""
         self.fritz = fritz
         self.ain = ain
-        self.state = STATE_UNKNOWN
-        self.temperature = STATE_UNKNOWN
-        self.current_consumption = STATE_UNKNOWN
-        self.total_consumption = STATE_UNKNOWN
-        self.has_switch = STATE_UNKNOWN
-        self.has_temperature = STATE_UNKNOWN
-        self.has_powermeter = STATE_UNKNOWN
+        self.state = None
+        self.temperature = None
+        self.current_consumption = None
+        self.total_consumption = None
+        self.has_switch = False
+        self.has_temperature = False
+        self.has_powermeter = False
+        self.is_online = False
 
     def update(self):
         """Get the latest data from the fritz box."""
-        from requests.exceptions import RequestException
+        if not self.is_online:
+            _LOGGER.error("Not online skipping request")
+            return
 
         try:
             actor = self.fritz.get_actor_by_ain(self.ain)
+        except (RequestException, HTTPError):
+            _LOGGER.error("Request to actor registry failed")
+            self.state = None
+            self.temperature = None
+            self.current_consumption = None
+            self.total_consumption = None
+            raise Exception('Request to actor registry failed')
+
+        if actor is None:
+            _LOGGER.error("Actor could not be found")
+            self.state = None
+            self.temperature = None
+            self.current_consumption = None
+            self.total_consumption = None
+            raise Exception('Actor could not be found')
+
+        try:
             self.state = actor.get_state()
-        except RequestException:
+            self.current_consumption = (actor.get_power() or 0.0) / 1000
+            self.total_consumption = (actor.get_energy() or 0.0) / 100000
+        except (RequestException, HTTPError):
             _LOGGER.error("Request to actor failed")
-            self.state = STATE_UNKNOWN
-            self.temperature = STATE_UNKNOWN
-            self.current_consumption = STATE_UNKNOWN
-            self.total_consumption = STATE_UNKNOWN
-            return
+            self.state = None
+            self.temperature = None
+            self.current_consumption = None
+            self.total_consumption = None
+            raise Exception('Request to actor failed')
 
         self.temperature = actor.temperature
-        self.current_consumption = (actor.get_power() or 0.0) / 1000
-        self.total_consumption = (actor.get_energy() or 0.0) / 100000
         self.has_switch = actor.has_switch
         self.has_temperature = actor.has_temperature
         self.has_powermeter = actor.has_powermeter

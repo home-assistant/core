@@ -29,7 +29,8 @@ If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 import homeassistant.components.light as light
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
@@ -463,3 +464,33 @@ class TestLightMQTTTemplate(unittest.TestCase):
         # effect should not have changed
         state = self.hass.states.get('light.test')
         self.assertEqual('rainbow', state.attributes.get('effect'))
+
+    def test_custom_availability_payload(self):
+        """Test availability by custom payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_template',
+                'name': 'test',
+                'command_topic': 'test_light_rgb/set',
+                'command_on_template': 'on,{{ transition }}',
+                'command_off_template': 'off,{{ transition|d }}',
+                'availability_topic': 'availability-topic',
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)

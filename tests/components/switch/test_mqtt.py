@@ -167,22 +167,22 @@ class TestSwitchMQTT(unittest.TestCase):
                 'availability_topic': 'availability_topic',
                 'payload_on': 1,
                 'payload_off': 0,
-                'payload_available': 'online',
-                'payload_not_available': 'offline'
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
             }
         })
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'online')
+        fire_mqtt_message(self.hass, 'availability_topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
         self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'offline')
+        fire_mqtt_message(self.hass, 'availability_topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
@@ -194,7 +194,7 @@ class TestSwitchMQTT(unittest.TestCase):
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'online')
+        fire_mqtt_message(self.hass, 'availability_topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')

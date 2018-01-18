@@ -7,10 +7,8 @@ https://home-assistant.io/components/deconz/
 
 import asyncio
 import logging
-import os
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.discovery import SERVICE_DECONZ
@@ -19,7 +17,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==23']
+REQUIREMENTS = ['pydeconz==25']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +90,7 @@ def async_setup_deconz(hass, config, deconz_config):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
+    _LOGGER.debug('deCONZ config %s', deconz_config)
     from pydeconz import DeconzSession
     websession = async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, websession, **deconz_config)
@@ -106,10 +105,6 @@ def async_setup_deconz(hass, config, deconz_config):
         hass.async_add_job(discovery.async_load_platform(
             hass, component, DOMAIN, {}, config))
     deconz.start()
-
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
     def async_configure(call):
@@ -132,7 +127,7 @@ def async_setup_deconz(hass, config, deconz_config):
         yield from deconz.async_put_state(field, data)
     hass.services.async_register(
         DOMAIN, 'configure', async_configure,
-        descriptions['configure'], schema=SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz.close)
     return True

@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_URL = 'url'
 ATTR_FILE = 'file'
 ATTR_FILE_URL = 'file_url'
+ATTR_LIST = 'list'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -99,7 +100,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 continue
 
             # Target is email, send directly, don't use a target object.
-            # This also seems works to send to all devices in own account.
+            # This also seems to work to send to all devices in own account.
             if ttype == 'email':
                 self._push_data(message, title, data, self.pushbullet, tname)
                 _LOGGER.info("Sent notification to email %s", tname)
@@ -127,20 +128,18 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
 
-    def _push_data(self, message, title, data, pusher, tname=None):
+    def _push_data(self, message, title, data, pusher, email=None):
         """Helper for creating the message content."""
         from pushbullet import PushError
         if data is None:
             data = {}
+        data_list = data.get(ATTR_LIST)
         url = data.get(ATTR_URL)
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
         try:
             if url:
-                if tname:
-                    pusher.push_link(title, url, body=message, email=tname)
-                else:
-                    pusher.push_link(title, url, body=message)
+                pusher.push_link(title, url, body=message, email=email)
             elif filepath:
                 if not self.hass.config.is_allowed_path(filepath):
                     _LOGGER.error("Filepath is not valid or allowed")
@@ -150,18 +149,20 @@ class PushBulletNotificationService(BaseNotificationService):
                     if filedata.get('file_type') == 'application/x-empty':
                         _LOGGER.error("Can not send an empty file")
                         return
-                    pusher.push_file(title=title, body=message, **filedata)
+
+                    pusher.push_file(title=title, body=message,
+                                     email=email, **filedata)
             elif file_url:
                 if not file_url.startswith('http'):
                     _LOGGER.error("URL should start with http or https")
                     return
-                pusher.push_file(title=title, body=message, file_name=file_url,
-                                 file_url=file_url,
-                                 file_type=mimetypes.guess_type(file_url)[0])
+                pusher.push_file(title=title, body=message, email=email,
+                                 file_name=file_url, file_url=file_url,
+                                 file_type=(mimetypes
+                                            .guess_type(file_url)[0]))
+            elif data_list:
+                pusher.push_note(title, data_list, email=email)
             else:
-                if tname:
-                    pusher.push_note(title, message, email=tname)
-                else:
-                    pusher.push_note(title, message)
+                pusher.push_note(title, message, email=email)
         except PushError as err:
             _LOGGER.error("Notify failed: %s", err)
