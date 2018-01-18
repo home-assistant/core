@@ -101,6 +101,8 @@ def request_configuration(hass, config, name, host, serialnumber):
             return False
 
         if setup_device(hass, config, device_config):
+            del device_config['events']
+            del device_config['signal']
             config_file = load_json(hass.config.path(CONFIG_FILE))
             config_file[serialnumber] = dict(device_config)
             save_json(hass.config.path(CONFIG_FILE), config_file)
