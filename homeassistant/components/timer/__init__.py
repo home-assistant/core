@@ -222,10 +222,10 @@ class Timer(Entity):
         if self._remaining:
             return {
                 ATTR_DURATION: str(self._duration),
-                #Round time remaining to nearest second
-                ATTR_REMAINING: str(timedelta(seconds =
+                # Round time remaining to nearest second
+                ATTR_REMAINING: str(timedelta(seconds=
                                     self._remaining.seconds,
-                                    microseconds =
+                                    microseconds=
                                     (round(self._remaining.microseconds
                                      /1000000))*1000000))
             }
