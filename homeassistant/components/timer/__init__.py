@@ -224,10 +224,10 @@ class Timer(Entity):
                 ATTR_DURATION: str(self._duration),
                 # Round time remaining to nearest second
                 ATTR_REMAINING: str(timedelta(seconds=
-                                    self._remaining.seconds,
-                                    microseconds=
-                                    (round(self._remaining.microseconds
-                                     /1000000))*1000000))
+                                              self._remaining.seconds,
+                                              microseconds=
+                                              (round(self._remaining.microseconds
+                                                     /1000000))*1000000))
             }
         else:
             return {
