@@ -226,8 +226,9 @@ class Timer(Entity):
                 ATTR_REMAINING: str(timedelta(seconds=
                                               self._remaining.seconds,
                                               microseconds=
-                                              (round(self._remaining.microseconds
-                                                     /1000000))*1000000))
+                                              (round
+                                               (self._remaining.microseconds
+                                                /1000000))*1000000))
             }
         else:
             return {
