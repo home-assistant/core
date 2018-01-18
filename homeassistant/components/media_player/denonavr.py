@@ -7,9 +7,9 @@ https://home-assistant.io/components/media_player.denon/
 
 import logging
 from collections import (namedtuple, OrderedDict)
-import voluptuous as vol
 import urllib
 import xml.etree.ElementTree as ET
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
@@ -199,16 +199,16 @@ class DenonDevice(MediaPlayerDevice):
             try:
                 url = ('http://' + str(self._host) +
                        '/goform/formMainZone_MainZoneXml.xml')
-                XML_data = urllib.request.urlopen(url)
+                xml_data = urllib.request.urlopen(url)
             except urllib.error.URLError:
                 return
-            parsed_data = ET.parse(XML_data).getroot()
+            parsed_data = ET.parse(xml_data).getroot()
             sound_mode_raw = parsed_data.find('selectSurround/value')
             sound_mode_raw = sound_mode_raw.text.rstrip()
             try:
                 mode_list = list(self._sound_mode_dict.values())
-                Index = mode_list.index(sound_mode_raw.upper())
-                sound_mode = list(self._sound_mode_dict.keys())[Index]
+                mode_index = mode_list.index(sound_mode_raw.upper())
+                sound_mode = list(self._sound_mode_dict.keys())[mode_index]
                 self._current_sound_mode = sound_mode
             except ValueError:
                 self._current_sound_mode = sound_mode_raw
