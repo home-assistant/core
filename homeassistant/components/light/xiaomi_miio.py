@@ -16,7 +16,6 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
     ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP, Light, ATTR_ENTITY_ID, DOMAIN, )
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
 
@@ -127,16 +126,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'xiaomi_miio_services.yaml'))
-
     for xiaomi_miio_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[xiaomi_miio_service].get(
             'schema', XIAOMI_MIIO_SERVICE_SCHEMA)
         hass.services.async_register(
-            DOMAIN, xiaomi_miio_service, async_service_handler,
-            description=descriptions.get(xiaomi_miio_service), schema=schema)
+            DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema)
 
 
 class XiaomiPhilipsGenericLight(Light):
