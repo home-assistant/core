@@ -20,8 +20,7 @@ CONF_ENTITIES = 'entities'
 DOMAIN = 'weblink'
 
 ENTITIES_SCHEMA = vol.Schema({
-    # pylint: disable=no-value-for-parameter
-    vol.Required(CONF_URL): vol.Url(),
+    vol.Required(CONF_URL): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 })
@@ -42,7 +41,6 @@ def setup(hass, config):
              link.get(CONF_ICON))
 
     return True
-
 
 class Link(Entity):
     """Representation of a link."""
