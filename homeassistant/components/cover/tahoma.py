@@ -64,7 +64,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
+        """Return the class of the device."""
         if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
             return 'window'
         else:
