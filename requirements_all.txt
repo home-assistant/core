@@ -275,7 +275,7 @@ fitbit==0.3.0
 fixerio==0.1.1
 
 # homeassistant.components.light.flux_led
-flux_led==0.20
+flux_led==0.21
 
 # homeassistant.components.notify.free_mobile
 freesms==0.1.2
@@ -286,7 +286,7 @@ freesms==0.1.2
 # fritzconnection==0.6.5
 
 # homeassistant.components.switch.fritzdect
-fritzhome==1.0.3
+fritzhome==1.0.4
 
 # homeassistant.components.media_player.frontier_silicon
 fsapi==0.0.7
@@ -370,7 +370,7 @@ https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f8
 https://github.com/jabesq/netatmo-api-python/archive/v0.9.2.1.zip#lnetatmo==0.9.2.1
 
 # homeassistant.components.neato
-https://github.com/jabesq/pybotvac/archive/v0.0.4.zip#pybotvac==0.0.4
+https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
@@ -501,7 +501,7 @@ myusps==1.2.2
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
-netdisco==1.2.3
+netdisco==1.2.4
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -680,7 +680,8 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==23
+pydeconz==25
+
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1130,7 +1131,7 @@ tellduslive==0.10.4
 temperusb==1.5.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.0.18
+teslajsonpy==0.0.19
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1

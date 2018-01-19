@@ -609,6 +609,7 @@ omit =
     homeassistant/components/sensor/sytadin.py
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/ted5000.py
+    homeassistant/components/sensor/teksavvy.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py

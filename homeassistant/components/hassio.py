@@ -330,7 +330,7 @@ class HassIO(object):
                 request = yield from self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
                     json=payload, headers={
-                        X_HASSIO: os.environ.get('HASSIO_TOKEN')
+                        X_HASSIO: os.environ.get('HASSIO_TOKEN', "")
                     })
 
                 if request.status not in (200, 400):
@@ -359,7 +359,7 @@ class HassIO(object):
 
         try:
             data = None
-            headers = {X_HASSIO: os.environ.get('HASSIO_TOKEN')}
+            headers = {X_HASSIO: os.environ.get('HASSIO_TOKEN', "")}
             with async_timeout.timeout(10, loop=self.loop):
                 data = yield from request.read()
                 if data:
