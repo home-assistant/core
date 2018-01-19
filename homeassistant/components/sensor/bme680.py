@@ -92,21 +92,41 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=import-error
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BME680 sensor."""
-    from smbus import SMBus
-    import bme680
-
-    sensor_handler = None
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
 
-    bus = SMBus(config.get(CONF_I2C_BUS))
+    sensor_handler = yield from hass.async_add_job(_setup_bme680, config)
+    if sensor_handler is None:
+        return False
+
+    dev = []
     try:
-        sensor = yield from hass.async_add_job(bme680.BME680, i2c_address, bus)
+        for variable in config[CONF_MONITORED_CONDITIONS]:
+            dev.append(BME680Sensor(
+                sensor_handler, variable, SENSOR_TYPES[variable][1], name))
+    except KeyError:
+        pass
+
+    async_add_devices(dev)
+    return True
+
+
+# pylint: disable=import-error
+def _setup_bme680(config):
+    """Set up and configure the BME680 sensor."""
+    from smbus import SMBus
+    import bme680
+    from time import sleep
+
+    sensor_handler = None
+    sensor = None
+    try:
+        i2c_address = config.get(CONF_I2C_ADDRESS)
+        bus = SMBus(config.get(CONF_I2C_BUS))
+        sensor = bme680.BME680(i2c_address, bus)
 
         # Configure Oversampling
         os_lookup = {
@@ -117,17 +137,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             8: bme680.OS_8X,
             16: bme680.OS_16X
         }
-        yield from hass.async_add_job(
-            sensor.set_temperature_oversample,
+        sensor.set_temperature_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_TEMP)]
         )
-
-        yield from hass.async_add_job(
-            sensor.set_humidity_oversample,
+        sensor.set_humidity_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_HUM)]
         )
-        yield from hass.async_add_job(
-            sensor.set_pressure_oversample,
+        sensor.set_pressure_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_PRES)]
         )
 
@@ -142,8 +158,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             63: bme680.FILTER_SIZE_63,
             127: bme680.FILTER_SIZE_127
         }
-        yield from hass.async_add_job(
-            sensor.set_filter,
+        sensor.set_filter(
             filter_lookup[config.get(CONF_FILTER_SIZE)]
         )
 
@@ -152,27 +167,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
                 SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
         ):
-            yield from hass.async_add_job(
-                sensor.set_gas_status, bme680.ENABLE_GAS_MEAS)
-            yield from hass.async_add_job(
-                sensor.set_gas_heater_duration,
-                config[CONF_GAS_HEATER_DURATION]
-            )
-            yield from hass.async_add_job(
-                sensor.set_gas_heater_temperature,
-                config[CONF_GAS_HEATER_TEMP]
-            )
-            yield from hass.async_add_job(sensor.select_gas_heater_profile, 0)
+            sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
+            sensor.set_gas_heater_duration(config[CONF_GAS_HEATER_DURATION])
+            sensor.set_gas_heater_temperature(config[CONF_GAS_HEATER_TEMP])
+            sensor.select_gas_heater_profile(0)
         else:
-            yield from hass.async_add_job(
-                sensor.set_gas_status, bme680.DISABLE_GAS_MEAS
-            )
+            sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
     except (RuntimeError, IOError):
         _LOGGER.error("BME680 sensor not detected at %s", i2c_address)
-        return False
+        return None
 
-    sensor_handler = yield from hass.async_add_job(
-        BME680Handler, sensor,
+    sensor_handler = BME680Handler(
+        sensor,
         True if (
             SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
             SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
@@ -181,21 +187,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config[CONF_AQ_HUM_BASELINE],
         config[CONF_AQ_HUM_WEIGHTING]
     )
-    yield from asyncio.sleep(0.5)  # Wait for device to stabilize
+    sleep(0.5)  # Wait for device to stabilize
     if not sensor_handler.sensor_data.temperature:
         _LOGGER.error("BME680 sensor failed to Initialize")
-        return False
+        return None
 
-    dev = []
-    try:
-        for variable in config[CONF_MONITORED_CONDITIONS]:
-            dev.append(BME680Sensor(
-                sensor_handler, variable, SENSOR_TYPES[variable][1], name))
-    except KeyError:
-        pass
-
-    async_add_devices(dev)
-    return True
+    return sensor_handler
 
 
 class BME680Handler:
