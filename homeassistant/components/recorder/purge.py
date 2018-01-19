@@ -31,7 +31,8 @@ def purge_old_data(instance, purge_days):
             .all()
 
         protected_state_ids = tuple((state[0] for state in protected_states))
-        protected_event_ids = tuple((state[1] for state in protected_states))
+        protected_event_ids = tuple((state[1] for state in protected_states
+                                     if state[1] is not None))
 
         deleted_rows = session.query(States) \
                               .filter((States.last_updated < purge_before)) \
