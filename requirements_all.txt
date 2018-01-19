@@ -35,7 +35,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.7.1
+PyXiaomiGateway==0.7.0
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -170,7 +170,7 @@ ciscosparkapi==0.4.2
 coinbase==2.0.6
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.1.2
+coinmarketcap==4.1.1
 
 # homeassistant.scripts.check_config
 colorlog==3.0.1
@@ -419,7 +419,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
-keyring==10.6.0
+keyring==10.3.2
 
 # homeassistant.scripts.keyring
 keyrings.alt==2.3
@@ -489,9 +489,6 @@ motorparts==1.0.2
 
 # homeassistant.components.tts
 mutagen==1.39
-
-# homeassistant.components.mychevy
-mychevy==0.1.1
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
@@ -598,9 +595,11 @@ psutil==5.4.3
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
 
-# homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
 pushbullet.py==0.11.0
+
+# homeassistant.components.notify.pushbullet
+pushbullet==0.11.0
 
 # homeassistant.components.notify.pushetta
 pushetta==1.0.15
@@ -681,7 +680,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==24
+pydeconz==23
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -753,10 +752,10 @@ pykira==0.1.1
 pykwb==0.0.8
 
 # homeassistant.components.sensor.lacrosse
-pylacrosse==0.3.1
+pylacrosse==0.2.7
 
 # homeassistant.components.sensor.lastfm
-pylast==2.1.0
+pylast==2.0.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
@@ -1098,7 +1097,7 @@ speedtest-cli==1.0.7
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.2.1
+sqlalchemy==1.2.0
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1228,7 +1227,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.01.14
+youtube_dl==2017.12.28
 
 # homeassistant.components.light.zengge
 zengge==0.2
