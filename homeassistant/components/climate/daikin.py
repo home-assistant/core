@@ -9,25 +9,18 @@ import re
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
-    ATTR_OPERATION_MODE, ATTR_FAN_MODE, ATTR_SWING_MODE,
-    ATTR_CURRENT_TEMPERATURE, ClimateDevice, PLATFORM_SCHEMA,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE, STATE_OFF, STATE_AUTO, STATE_HEAT, STATE_COOL,
-    STATE_DRY, STATE_FAN_ONLY
-)
+    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE, ATTR_OPERATION_MODE,
+    ATTR_SWING_MODE, PLATFORM_SCHEMA, STATE_AUTO, STATE_COOL, STATE_DRY,
+    STATE_FAN_ONLY, STATE_HEAT, STATE_OFF, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice)
 from homeassistant.components.daikin import (
-    daikin_api_setup,
-    ATTR_TARGET_TEMPERATURE,
-    ATTR_INSIDE_TEMPERATURE,
-    ATTR_OUTSIDE_TEMPERATURE
-)
+    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, ATTR_TARGET_TEMPERATURE,
+    daikin_api_setup)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME,
-    TEMP_CELSIUS,
-    ATTR_TEMPERATURE
-)
+    ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pydaikin==0.4']
 
@@ -60,15 +53,15 @@ HA_ATTR_TO_DAIKIN = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Daikin HVAC platform."""
+    """Set up the Daikin HVAC platform."""
     if discovery_info is not None:
         host = discovery_info.get('ip')
         name = None
-        _LOGGER.info("Discovered a Daikin AC on %s", host)
+        _LOGGER.debug("Discovered a Daikin AC on %s", host)
     else:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-        _LOGGER.info("Added Daikin AC on %s", host)
+        _LOGGER.debug("Added Daikin AC on %s", host)
 
     api = daikin_api_setup(hass, host, name)
     add_devices([DaikinClimate(api)], True)
@@ -130,7 +123,7 @@ class DaikinClimate(ClimateDevice):
             ).title()
 
         if value is None:
-            _LOGGER.warning("Invalid value requested for key %s", key)
+            _LOGGER.error("Invalid value requested for key %s", key)
         else:
             if value == "-" or value == "--":
                 value = None

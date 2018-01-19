@@ -4,20 +4,19 @@ import logging
 import math
 from uuid import uuid4
 
-import homeassistant.core as ha
+from homeassistant.components import (
+    alert, automation, cover, fan, group, input_boolean, light, lock,
+    media_player, scene, script, switch)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_LOCK,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_NAME, SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET)
-from homeassistant.components import (
-    alert, automation, cover, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch)
+import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 
-HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 API_DIRECTIVE = 'directive'
@@ -28,8 +27,8 @@ API_PAYLOAD = 'payload'
 
 CONF_DESCRIPTION = 'description'
 CONF_DISPLAY_CATEGORIES = 'display_categories'
-CONF_NAME = 'name'
 
+HANDLERS = Registry()
 
 MAPPING_COMPONENT = {
     alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
@@ -174,8 +173,8 @@ def async_api_discovery(hass, config, request):
             scene_fmt = '{} (Scene connected via Home Assistant)'
             description = scene_fmt.format(description)
 
-        display_categories = entity_conf.get(CONF_DISPLAY_CATEGORIES,
-                                             class_data[0])
+        display_categories = entity_conf.get(
+            CONF_DISPLAY_CATEGORIES, class_data[0])
 
         endpoint = {
             'displayCategories': [display_categories],
@@ -216,7 +215,7 @@ def async_api_discovery(hass, config, request):
 
 
 def extract_entity(funct):
-    """Decorator for extract entity object from request."""
+    """Decorate for extract entity object from request."""
     @asyncio.coroutine
     def async_api_entity_wrapper(hass, config, request):
         """Process a turn on request."""

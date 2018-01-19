@@ -4,14 +4,12 @@ Support for Keene Electronics IR-IP devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.kira/
 """
-import logging
 import functools as ft
+import logging
 
 import homeassistant.components.remote as remote
+from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
-
-from homeassistant.const import (
-    CONF_DEVICE, CONF_NAME)
 
 DOMAIN = 'kira'
 

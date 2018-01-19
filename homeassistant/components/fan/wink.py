@@ -7,20 +7,18 @@ https://home-assistant.io/components/fan.wink/
 import asyncio
 import logging
 
-from homeassistant.components.fan import (FanEntity, SPEED_HIGH,
-                                          SPEED_LOW, SPEED_MEDIUM,
-                                          STATE_UNKNOWN, SUPPORT_SET_SPEED,
-                                          SUPPORT_DIRECTION)
+from homeassistant.components.fan import (
+    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, STATE_UNKNOWN, SUPPORT_DIRECTION,
+    SUPPORT_SET_SPEED, FanEntity)
+from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components.wink import WinkDevice, DOMAIN
-
-DEPENDENCIES = ['wink']
 
 _LOGGER = logging.getLogger(__name__)
 
-SPEED_LOWEST = 'lowest'
-SPEED_AUTO = 'auto'
+DEPENDENCIES = ['wink']
 
+SPEED_AUTO = 'auto'
+SPEED_LOWEST = 'lowest'
 SUPPORTED_FEATURES = SUPPORT_DIRECTION + SUPPORT_SET_SPEED
 
 
@@ -38,7 +36,7 @@ class WinkFanDevice(WinkDevice, FanEntity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['fan'].append(self)
 
     def set_direction(self: ToggleEntity, direction: str) -> None:

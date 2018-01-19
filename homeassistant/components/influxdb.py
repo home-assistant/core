@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
 from datetime import timedelta
-from functools import wraps, partial
+from functools import partial, wraps
 import logging
 import re
 
@@ -13,13 +13,13 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
-    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
-    CONF_EXCLUDE, CONF_INCLUDE, CONF_DOMAINS, CONF_ENTITIES)
+    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE,
+    CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
+    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.util import utcnow
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['influxdb==4.1.1']
 
@@ -227,6 +227,7 @@ def setup(hass, config):
     @RetryOnError(hass, retry_limit=max_tries, retry_delay=20,
                   queue_limit=queue_limit)
     def _write_data(json_body):
+        """Write the data."""
         try:
             influx.write_points(json_body)
         except exceptions.InfluxDBClientError:
@@ -268,7 +269,7 @@ class RetryOnError(object):
 
         @wraps(method)
         def wrapper(*args, **kwargs):
-            """Wrapped method."""
+            """Wrap method."""
             # pylint: disable=protected-access
             if not hasattr(wrapper, "_retry_queue"):
                 wrapper._retry_queue = []

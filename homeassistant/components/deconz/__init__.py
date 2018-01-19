@@ -60,7 +60,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_deconz_discovered(service, discovery_info):
-        """Called when deCONZ gateway has been found."""
+        """Call when deCONZ gateway has been found."""
         deconz_config = {}
         deconz_config[CONF_HOST] = discovery_info.get(CONF_HOST)
         deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
@@ -90,13 +90,13 @@ def async_setup_deconz(hass, config, deconz_config):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    _LOGGER.debug('deCONZ config %s', deconz_config)
+    _LOGGER.debug("deCONZ config %s", deconz_config)
     from pydeconz import DeconzSession
     websession = async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, websession, **deconz_config)
     result = yield from deconz.async_load_parameters()
     if result is False:
-        _LOGGER.error("Failed to communicate with deCONZ.")
+        _LOGGER.error("Failed to communicate with deCONZ")
         return False
 
     hass.data[DOMAIN] = deconz
@@ -126,8 +126,7 @@ def async_setup_deconz(hass, config, deconz_config):
         data = call.data.get(SERVICE_DATA)
         yield from deconz.async_put_state(field, data)
     hass.services.async_register(
-        DOMAIN, 'configure', async_configure,
-        schema=SERVICE_SCHEMA)
+        DOMAIN, 'configure', async_configure, schema=SERVICE_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz.close)
     return True

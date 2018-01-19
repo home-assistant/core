@@ -260,10 +260,10 @@ def async_register_panel(hass, component_name, path, md5=None,
     component_name: name of the web component
     path: path to the HTML of the web component
           (required unless url is provided)
-    md5: the md5 hash of the web component (for versioning in url, optional)
+    md5: the md5 hash of the web component (for versioning in URL, optional)
     sidebar_title: title to show in the sidebar (optional)
     sidebar_icon: icon to show next to title in sidebar (optional)
-    url_path: name to use in the url (defaults to component_name)
+    url_path: name to use in the URL (defaults to component_name)
     config: config to be passed into the web component
     """
     panel = ExternalPanel(component_name, path, md5, sidebar_title,

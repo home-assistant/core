@@ -1,5 +1,5 @@
 """
-Bluesound.
+Support for Bluesound devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.bluesound/
@@ -16,14 +16,14 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_PLAY, SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_PREVIOUS_TRACK,
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_HOSTS, STATE_IDLE, STATE_PAUSED,
-    STATE_PLAYING, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
+    CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -60,6 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def _add_player(hass, async_add_devices, host, port=None, name=None):
+    """Add Bluesound players."""
     if host in [x.host for x in hass.data[DATA_BLUESOUND]]:
         return
 
@@ -108,8 +109,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_BLUESOUND] = []
 
     if discovery_info:
-        _add_player(hass, async_add_devices, discovery_info.get('host'),
-                    discovery_info.get('port', None))
+        _add_player(hass, async_add_devices, discovery_info.get(CONF_HOST),
+                    discovery_info.get(CONF_PORT, None))
         return
 
     hosts = config.get(CONF_HOSTS, None)
@@ -117,11 +118,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for host in hosts:
             _add_player(
                 hass, async_add_devices, host.get(CONF_HOST),
-                host.get(CONF_PORT), host.get(CONF_NAME, None))
+                host.get(CONF_PORT), host.get(CONF_NAME))
 
 
 class BluesoundPlayer(MediaPlayerDevice):
-    """Bluesound Player Object."""
+    """Represenatation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -150,6 +151,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     @staticmethod
     def _try_get_index(string, seach_string):
+        """Get the index."""
         try:
             return string.index(seach_string)
         except ValueError:
@@ -158,6 +160,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     @asyncio.coroutine
     def _internal_update_sync_status(
             self, on_updated_cb=None, raise_timeout=False):
+        """Update the internal status."""
         resp = None
         try:
             resp = yield from self.send_bluesound_command(
@@ -186,7 +189,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     @asyncio.coroutine
     def _start_poll_command(self):
-        """"Loop which polls the status of the player."""
+        """Loop which polls the status of the player."""
         try:
             while True:
                 yield from self.async_update_status()
@@ -214,7 +217,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_init(self):
-        """Initiate the player async."""
+        """Initialize the player async."""
         try:
             if self._retry_remove is not None:
                 self._retry_remove()
@@ -284,7 +287,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_update_status(self):
-        """Using the poll session to always get the status of the player."""
+        """Use the poll session to always get the status of the player."""
         import xmltodict
         response = None
 
