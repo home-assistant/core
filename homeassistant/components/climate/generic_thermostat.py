@@ -17,7 +17,8 @@ from homeassistant.components.climate import (
     SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
-    CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    STATE_UNKNOWN)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
@@ -30,7 +31,6 @@ DEPENDENCIES = ['switch', 'sensor']
 
 DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = 'Generic Thermostat'
-DEFAULT_AWAY_TEMP = 16
 
 CONF_HEATER = 'heater'
 CONF_SENSOR = 'target_sensor'
@@ -44,7 +44,7 @@ CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 CONF_INITIAL_OPERATION_MODE = 'initial_operation_mode'
 CONF_AWAY_TEMP = 'away_temp'
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_OPERATION_MODE)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -64,8 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_INITIAL_OPERATION_MODE):
         vol.In([STATE_AUTO, STATE_OFF]),
-    vol.Optional(CONF_AWAY_TEMP,
-                 default=DEFAULT_AWAY_TEMP): vol.Coerce(float)
+    vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float)
 })
 
 
@@ -119,6 +118,7 @@ class GenericThermostat(ClimateDevice):
             self._operation_list = [STATE_HEAT, STATE_OFF]
         if initial_operation_mode == STATE_OFF:
             self._enabled = False
+            self._current_operation = STATE_OFF
         else:
             self._enabled = True
         self._active = False
@@ -127,6 +127,9 @@ class GenericThermostat(ClimateDevice):
         self._max_temp = max_temp
         self._target_temp = target_temp
         self._unit = hass.config.units.temperature_unit
+        self._support_flags = SUPPORT_FLAGS
+        if away_temp is not None:
+            self._support_flags = SUPPORT_FLAGS | SUPPORT_AWAY_MODE
         self._away_temp = away_temp
         self._is_away = False
 
@@ -138,6 +141,10 @@ class GenericThermostat(ClimateDevice):
         if self._keep_alive:
             async_track_time_interval(
                 hass, self._async_keep_alive, self._keep_alive)
+
+        sensor_state = hass.states.get(sensor_entity_id)
+        if sensor_state and sensor_state.state != STATE_UNKNOWN:
+            self._async_update_temp(sensor_state)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -154,19 +161,33 @@ class GenericThermostat(ClimateDevice):
                         self._target_temp = self.max_temp
                     else:
                         self._target_temp = self.min_temp
-                    _LOGGER.warning('Undefined target temperature, \
-                                    falling back to %s', self._target_temp)
+                    _LOGGER.warning('Undefined target temperature,'
+                                    'falling back to %s', self._target_temp)
                 else:
                     self._target_temp = float(
                         old_state.attributes[ATTR_TEMPERATURE])
-            self._is_away = True if str(
-                old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON else False
+            if old_state.attributes[ATTR_AWAY_MODE] is not None:
+                self._is_away = True if str(
+                    old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON \
+                    else False
             if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
                 self._current_operation = STATE_OFF
                 self._enabled = False
             if self._initial_operation_mode is None:
-                if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
-                    self._enabled = False
+                if old_state.attributes[ATTR_OPERATION_MODE] is not None:
+                    self._current_operation = \
+                        old_state.attributes[ATTR_OPERATION_MODE]
+                    if self._current_operation != STATE_OFF:
+                        self._enabled = True
+        else:
+            # No previous state, try and restore defaults
+            if self._target_temp is None:
+                if self.ac_mode:
+                    self._target_temp = self.max_temp
+                else:
+                    self._target_temp = self.min_temp
+            _LOGGER.warning("No previously saved temperature, setting to %s",
+                            self._target_temp)
 
     @property
     def state(self):
@@ -308,7 +329,8 @@ class GenericThermostat(ClimateDevice):
                                              self._target_temp):
             self._active = True
             _LOGGER.info('Obtained current and target temperature. '
-                         'Generic thermostat active.')
+                         'Generic thermostat active. %s, %s',
+                         self._cur_temp, self._target_temp)
 
         if not self._active:
             return
@@ -365,7 +387,7 @@ class GenericThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return self._support_flags
 
     @callback
     def _heater_turn_on(self):
