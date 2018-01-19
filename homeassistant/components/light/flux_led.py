@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['flux_led==0.20']
+REQUIREMENTS = ['flux_led==0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
