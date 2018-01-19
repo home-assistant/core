@@ -30,7 +30,6 @@ DEPENDENCIES = ['switch', 'sensor']
 
 DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = 'Generic Thermostat'
-DEFAULT_AWAY_TEMP = 16
 
 CONF_HEATER = 'heater'
 CONF_SENSOR = 'target_sensor'
@@ -44,7 +43,7 @@ CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 CONF_INITIAL_OPERATION_MODE = 'initial_operation_mode'
 CONF_AWAY_TEMP = 'away_temp'
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_OPERATION_MODE)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -64,8 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_INITIAL_OPERATION_MODE):
         vol.In([STATE_AUTO, STATE_OFF]),
-    vol.Optional(CONF_AWAY_TEMP,
-                 default=DEFAULT_AWAY_TEMP): vol.Coerce(float)
+    vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float)
 })
 
 
@@ -119,6 +117,7 @@ class GenericThermostat(ClimateDevice):
             self._operation_list = [STATE_HEAT, STATE_OFF]
         if initial_operation_mode == STATE_OFF:
             self._enabled = False
+            self._current_operation = STATE_OFF
         else:
             self._enabled = True
         self._active = False
@@ -127,6 +126,9 @@ class GenericThermostat(ClimateDevice):
         self._max_temp = max_temp
         self._target_temp = target_temp
         self._unit = hass.config.units.temperature_unit
+        self._support_flags = SUPPORT_FLAGS
+        if away_temp is not None:
+          self._support_flags = SUPPORT_FLAGS | SUPPORT_AWAY_MODE
         self._away_temp = away_temp
         self._is_away = False
 
@@ -165,8 +167,15 @@ class GenericThermostat(ClimateDevice):
                 self._current_operation = STATE_OFF
                 self._enabled = False
             if self._initial_operation_mode is None:
-                if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
-                    self._enabled = False
+                if old_state.attributes[ATTR_OPERATION_MODE] is not None:
+                    self._current_operation = old_state.attributes[ATTR_OPERATION_MODE]
+        else:
+          # No previous state, try and restore defaults
+          if self._target_temp is None:
+            if self.ac_mode:
+                self._target_temp = self.max_temp
+            else:
+                self._target_temp = self.min_temp
 
     @property
     def state(self):
@@ -365,7 +374,7 @@ class GenericThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return self._support_flags
 
     @callback
     def _heater_turn_on(self):
