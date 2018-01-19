@@ -8,8 +8,10 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
-    service, condition, template, config_validation as cv)
+    service, condition, template as template,
+    config_validation as cv)
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_template)
 from homeassistant.helpers.typing import ConfigType
@@ -25,6 +27,7 @@ CONF_SERVICE_DATA = 'data'
 CONF_SEQUENCE = 'sequence'
 CONF_EVENT = 'event'
 CONF_EVENT_DATA = 'event_data'
+CONF_EVENT_DATA_TEMPLATE = 'event_data_template'
 CONF_DELAY = 'delay'
 CONF_WAIT_TEMPLATE = 'wait_template'
 
@@ -145,7 +148,7 @@ class Script():
                     break
 
             elif CONF_EVENT in action:
-                self._async_fire_event(action)
+                self._async_fire_event(action, variables)
 
             else:
                 yield from self._async_call_service(action, variables)
@@ -180,12 +183,20 @@ class Script():
         yield from service.async_call_from_config(
             self.hass, action, True, variables, validate_config=False)
 
-    def _async_fire_event(self, action):
+    def _async_fire_event(self, action, variables):
         """Fire an event."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
         self._log("Executing step %s" % self.last_action)
+        event_data = dict(action.get(CONF_EVENT_DATA, {}))
+        if CONF_EVENT_DATA_TEMPLATE in action:
+            try:
+                event_data.update(template.render_complex(
+                    action[CONF_EVENT_DATA_TEMPLATE], variables))
+            except TemplateError as ex:
+                _LOGGER.error('Error rendering event data template: %s', ex)
+
         self.hass.bus.async_fire(action[CONF_EVENT],
-                                 action.get(CONF_EVENT_DATA))
+                                 event_data)
 
     def _async_check_condition(self, action, variables):
         """Test if condition is matching."""

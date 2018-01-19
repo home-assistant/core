@@ -316,6 +316,11 @@ class BaseMQTT(unittest.TestCase):
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
+    def assert_location_source_type(self, source_type):
+        """Test the assertion of source_type."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('source_type'), source_type)
+
 
 class TestDeviceTrackerOwnTracks(BaseMQTT):
     """Test the OwnTrack sensor."""
@@ -665,6 +670,32 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
         # Location update processed
         self.assert_location_state('outer')
+
+    def test_event_source_type_entry_exit(self):
+        """Test the entry and exit events of source type."""
+        # Entering the owntrack circular region named "inner"
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
+
+        # source_type should be gps when enterings using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_ENTER_MESSAGE))
+
+        # We should be able to enter a beacon zone even inside a gps zone
+        self.assert_location_source_type('bluetooth_le')
+
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
+
+        # source_type should be gps when leaving using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_LEAVE_MESSAGE))
+
+        self.assert_location_source_type('bluetooth_le')
 
     # Region Beacon based event entry / exit testing
 

@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     STATE_HEAT_PUMP, STATE_HIGH_DEMAND,
     STATE_OFF, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE,
+    STATE_PERFORMANCE,
     ClimateDevice)
 from homeassistant.const import (ATTR_ENTITY_ID,
                                  CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT,
@@ -59,6 +60,7 @@ HA_STATE_TO_ECONET = {
     STATE_GAS: 'gas',
     STATE_HIGH_DEMAND: 'High Demand',
     STATE_OFF: 'Off',
+    STATE_PERFORMANCE: 'Performance'
 }
 
 ECONET_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_ECONET.items()}
