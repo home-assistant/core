@@ -3,10 +3,6 @@ Support for Xiaomi Mi Flora BLE plant sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.miflora/
-
-Unfortunately there is no universal bluetooth library available. So depending
-on the platform different backends are used. On most linux systems bluepy
-should cause the least problems.
 """
 import logging
 
