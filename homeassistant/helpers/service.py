@@ -137,30 +137,29 @@ def async_get_all_descriptions(hass):
             component_path = path.dirname(get_component(domain).__file__)
         return path.join(component_path, 'services.yaml')
 
-    def load_services_file(yaml_file):
-        """Load and cache a services.yaml file."""
-        try:
-            yaml_cache[yaml_file] = load_yaml(yaml_file)
-        except FileNotFoundError:
-            pass
+    def load_services_files(yaml_files):
+        """Load and parse services.yaml files."""
+        loaded = {}
+        for yaml_file in yaml_files:
+            try:
+                loaded[yaml_file] = load_yaml(yaml_file)
+            except FileNotFoundError:
+                loaded[yaml_file] = {}
+
+        return loaded
 
     services = hass.services.async_services()
 
     # Load missing files
-    yaml_cache = {}
-    loading_tasks = []
+    missing = set()
     for domain in services:
-        yaml_file = domain_yaml_file(domain)
-
         for service in services[domain]:
             if format_cache_key(domain, service) not in description_cache:
-                if yaml_file not in yaml_cache:
-                    yaml_cache[yaml_file] = {}
-                    task = hass.async_add_job(load_services_file, yaml_file)
-                    loading_tasks.append(task)
+                missing.add(domain_yaml_file(domain))
+                break
 
-    if loading_tasks:
-        yield from asyncio.wait(loading_tasks, loop=hass.loop)
+    if missing:
+        loaded = yield from hass.async_add_job(load_services_files, missing)
 
     # Build response
     catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
@@ -176,9 +175,9 @@ def async_get_all_descriptions(hass):
             # Cache missing descriptions
             if description is None:
                 if yaml_file == catch_all_yaml_file:
-                    yaml_services = yaml_cache[yaml_file].get(domain, {})
+                    yaml_services = loaded[yaml_file].get(domain, {})
                 else:
-                    yaml_services = yaml_cache[yaml_file]
+                    yaml_services = loaded[yaml_file]
                 yaml_description = yaml_services.get(service, {})
 
                 description = description_cache[cache_key] = {
