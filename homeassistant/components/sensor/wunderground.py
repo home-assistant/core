@@ -656,7 +656,7 @@ class WUndergroundSensor(Entity):
         self.rest = rest
         self._condition = condition
         self._state = None
-        self._attributes = self._init_attrs
+        self._attributes = self._init_attrs()
         self._icon = None
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
@@ -688,7 +688,7 @@ class WUndergroundSensor(Entity):
         """Parse and update device state attributes."""
         attrs = self._cfg_expand("device_state_attributes", {})
 
-        self._attributes = self._init_attrs
+        self._attributes = self._init_attrs()
         self._attributes[ATTR_FRIENDLY_NAME] = self._cfg_expand(
             "friendly_name")
 
