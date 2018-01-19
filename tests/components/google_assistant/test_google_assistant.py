@@ -238,7 +238,7 @@ def test_query_climate_request(hass_fixture, assistant_client):
         'climate.ecobee': {
             'thermostatTemperatureSetpointHigh': 24,
             'thermostatTemperatureAmbient': 23,
-            'thermostatMode': 'on',
+            'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': 21
         },
         'climate.hvac': {
@@ -286,7 +286,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
         'climate.ecobee': {
             'thermostatTemperatureSetpointHigh': -4.4,
             'thermostatTemperatureAmbient': -5,
-            'thermostatMode': 'on',
+            'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': -6.1,
         },
         'climate.hvac': {
