@@ -138,8 +138,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for air_purifier_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[air_purifier_service].get(
             'schema', AIRPURIFIER_SERVICE_SCHEMA)
-        hass.services.async_register(DOMAIN, air_purifier_service,
-                                     async_service_handler, schema=schema)
+        hass.services.async_register(
+            DOMAIN, air_purifier_service, async_service_handler, schema=schema)
 
 
 class XiaomiAirPurifier(FanEntity):
