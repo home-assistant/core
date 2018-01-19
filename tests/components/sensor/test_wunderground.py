@@ -374,7 +374,7 @@ class TestWundergroundSetup(unittest.TestCase):
         side_effect=partial(
             wunderground.WUndergroundData.update,
             no_throttle=True))
-    def test_alert_data(self, req_mock):
+    def test_alert_data(self, req_mock, upd_mock):
         """Test the WUnderground invalid data."""
         wunderground.setup_platform(self.hass, VALID_CONFIG_ALERT,
                                     self.add_devices, None)
