@@ -6,7 +6,7 @@ FROM python:3.6
 LABEL maintainer="Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
 
 # Uncomment any of the following lines to disable the installation.
-#ENV INSTALL_TELLSTICK no
+ENV INSTALL_TELLSTICK no
 #ENV INSTALL_OPENALPR no
 #ENV INSTALL_FFMPEG no
 #ENV INSTALL_LIBCEC no
