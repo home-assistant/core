@@ -186,7 +186,7 @@ class GenericThermostat(ClimateDevice):
                     self._target_temp = self.max_temp
                 else:
                     self._target_temp = self.min_temp
-            _LOGGER.warn("No previously saved temperature, setting to %s",
+            _LOGGER.warning("No previously saved temperature, setting to %s",
                          self._target_temp)
 
     @property
