@@ -370,9 +370,9 @@ class TestWundergroundSetup(unittest.TestCase):
     @unittest.mock.patch('requests.get',
                          side_effect=mocked_requests_get_alerts)
     @unittest.mock.patch('wunderground.WUndergroundData.update',
-                         side_effect=
-                         partial(wundergroundWUndergroundData.update,
-                                 no_throttle=True))
+                         side_effect=partial(
+                             wunderground.WUndergroundData.update,
+                             no_throttle=True))
     def test_alert_data(self, req_mock):
         """Test the WUnderground invalid data."""
         wunderground.setup_platform(self.hass, VALID_CONFIG_ALERT,
