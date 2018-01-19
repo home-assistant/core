@@ -76,7 +76,7 @@ class FoscamCam(Camera):
     def enable_motion_detection(self):
         """Enable motion detection in camera."""
         try:
-            ret, err = self._foscam_session.enable_motion_detection()
+            ret = self._foscam_session.enable_motion_detection()
             if ret == FOSCAM_COMM_ERROR:
                 self._motion_status = True
             else:
@@ -89,7 +89,7 @@ class FoscamCam(Camera):
     def disable_motion_detection(self):
         """Disable motion detection."""
         try:
-            ret, err = self._foscam_session.disable_motion_detection()
+            ret = self._foscam_session.disable_motion_detection()
             if ret == FOSCAM_COMM_ERROR:
                 self._motion_status = True
             else:
