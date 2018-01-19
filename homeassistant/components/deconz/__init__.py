@@ -4,14 +4,14 @@ Support for deCONZ devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/deconz/
 """
-
 import asyncio
 import logging
+
 import voluptuous as vol
 
+from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,8 +27,8 @@ CONFIG_FILE = 'deconz.conf'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -53,7 +53,7 @@ Unlock your deCONZ gateway to register with Home Assistant.
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup services and configuration for deCONZ component."""
+    """Set up services and configuration for deCONZ component."""
     result = False
     config_file = yield from hass.async_add_job(
         load_json, hass.config.path(CONFIG_FILE))
@@ -85,7 +85,7 @@ def async_setup(hass, config):
 
 @asyncio.coroutine
 def async_setup_deconz(hass, config, deconz_config):
-    """Setup deCONZ session.
+    """Set up a deCONZ session.
 
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
@@ -147,9 +147,8 @@ def async_request_configuration(hass, config, deconz_config):
             deconz_config[CONF_API_KEY] = api_key
             result = yield from async_setup_deconz(hass, config, deconz_config)
             if result:
-                yield from hass.async_add_job(save_json,
-                                              hass.config.path(CONFIG_FILE),
-                                              deconz_config)
+                yield from hass.async_add_job(
+                    save_json, hass.config.path(CONFIG_FILE), deconz_config)
                 configurator.async_request_done(request_id)
                 return
             else:
