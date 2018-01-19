@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["waterfurnace==0.1.0"]
+REQUIREMENTS = ["waterfurnace==0.2.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,12 @@ def setup(hass, base_config):
     wfconn = wf.WaterFurnace(username, password, unit)
     # NOTE(sdague): login will throw an exception if this doesn't
     # work, which will abort the setup.
-    wfconn.login()
+    try:
+        wfconn.login()
+    except wf.WFCredentialError:
+        _LOGGER.error("Invalid credentials for waterfurnace login.")
+        return False
+
     hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
     hass.data[DOMAIN].start()
 
@@ -104,14 +109,28 @@ class WaterFurnaceData(threading.Thread):
 
             try:
                 self.data = self.client.read()
-                self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
-                time.sleep(SCAN_INTERVAL.seconds)
+
             except ConnectionError:
-                # note, if this fails, it's an exception, which breaks
-                # out of the loop.
-                self.client.login()
-                _LOGGER.error("Lost our connection to websocket, trying again")
-                time.sleep(SCAN_INTERVAL.seconds)
+                # attempt to log back in if there was a session expiration.
+                try:
+                    self.client.login()
+                except Exception:  # pylint: disable=broad-except
+                    # nested exception handling, something really bad
+                    # happened during the login, which means we're not
+                    # in a recoverable state. Stop the thread so we
+                    # don't do just keep poking at the service.
+                    _LOGGER.error(
+                        "Failed to refresh login credentials. Thread stopped.")
+                    return
+                else:
+                    _LOGGER.error(
+                        "Lost our connection to websocket, trying again")
+                    time.sleep(SCAN_INTERVAL.seconds)
+
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error updating waterfurnace data.")
+                time.sleep(SCAN_INTERVAL.seconds)
+
+            else:
+                self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
                 time.sleep(SCAN_INTERVAL.seconds)
