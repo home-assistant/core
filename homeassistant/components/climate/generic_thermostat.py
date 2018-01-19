@@ -166,8 +166,10 @@ class GenericThermostat(ClimateDevice):
                 else:
                     self._target_temp = float(
                         old_state.attributes[ATTR_TEMPERATURE])
-            self._is_away = True if str(
-                old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON else False
+            if old_state.attributes[ATTR_AWAY_MODE] is not None:
+                self._is_away = True if str(
+                    old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON \
+                    else False
             if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
                 self._current_operation = STATE_OFF
                 self._enabled = False
