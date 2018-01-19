@@ -44,6 +44,7 @@ def setup(hass, config):
 
     return True
 
+
 class Link(Entity):
     """Representation of a link."""
 
