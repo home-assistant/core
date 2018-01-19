@@ -75,6 +75,7 @@ ATTR_MEDIA_SEASON = 'media_season'
 ATTR_MEDIA_EPISODE = 'media_episode'
 ATTR_MEDIA_CHANNEL = 'media_channel'
 ATTR_MEDIA_PLAYLIST = 'media_playlist'
+ATTR_MEDIA_AVAILABLE_PLAYLISTS = 'media_available_playlists'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
@@ -194,6 +195,7 @@ ATTR_TO_PROPERTY = [
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_AVAILABLE_PLAYLISTS,
 ]
 
 
@@ -571,6 +573,11 @@ class MediaPlayerDevice(Entity):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
+        return None
+
+    @property
+    def available_playlists(self):
+        """List of available playlists."""
         return None
 
     @property

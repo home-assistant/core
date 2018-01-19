@@ -20,9 +20,8 @@ from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-COMMIT = '544614f4b1d508201d363e84e871f86c90aa26b2'
-REQUIREMENTS = ['https://github.com/happyleavesaoc/spotipy/'
-                'archive/%s.zip#spotipy==2.4.4' % COMMIT]
+REQUIREMENTS = ['https://github.com/plamere/spotipy/'
+                'archive/master.zip#spotipy==2.4.4']
 
 DEPENDENCIES = ['http']
 
@@ -32,7 +31,7 @@ SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
 
-SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
+SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private playlist-read-private'
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
 AUTH_CALLBACK_PATH = '/api/spotify'
 AUTH_CALLBACK_NAME = 'api:spotify'
@@ -137,6 +136,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._user = None
         self._aliases = aliases
         self._token_info = self._oauth.get_cached_token()
+        self._available_playlists = {}
 
     def refresh_spotify_instance(self):
         """Fetch a new spotify instance."""
@@ -210,6 +210,21 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 self._volume = device.get('volume_percent') / 100
             if device.get('name'):
                 self._current_device = device.get('name')
+        # Discover owned and starred playlists
+        available_playlists = self._player.current_user_playlists()
+        if available_playlists is not None:
+            new_playlists = {}
+            for discovered_playlist in available_playlists['items']:
+                new_playlists[discovered_playlist['name']] = discovered_playlist['uri']
+                if discovered_playlist['name'] not in self._available_playlists:
+                    self._available_playlists[discovered_playlist['name']] = discovered_playlist['uri']
+                    _LOGGER.info("New playlist discovered: {name} ({uri})".format(name=discovered_playlist['name'], uri=discovered_playlist['uri']))
+            playlist_diff = set(self._available_playlists.keys()) - set(new_playlists.keys()) 
+        
+        if playlist_diff is not None:
+            for removed_playlist in playlist_diff:
+                del self._available_playlists[removed_playlist]
+                _LOGGER.info("Removed playlist: {name}".format(name=removed_playlist))
 
     def set_volume_level(self, volume):
         """Set the volume level."""
@@ -247,12 +262,16 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs['uris'] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
+            if media_id in self._available_playlists:
+                media_id = self._available_playlists.get(media_id)
+                kwargs['context_uri'] = media_id
+            else:
             kwargs['context_uri'] = media_id
         else:
             _LOGGER.error("media type %s is not supported", media_type)
             return
         if not media_id.startswith('spotify:'):
-            _LOGGER.error("media id must be spotify uri")
+            _LOGGER.error("{media_id} is not a valid spotify uri".format(media_id=media_id))
             return
         self._player.start_playback(**kwargs)
 
@@ -328,3 +347,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def media_content_type(self):
         """Return the media type."""
         return MEDIA_TYPE_MUSIC
+
+    @property
+    def media_available_playlists(self):
+        """Return a list of available playlists."""
+        if self._available_playlists:
+            return list(self._available_playlists.keys())
