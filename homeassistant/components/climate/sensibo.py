@@ -294,14 +294,14 @@ class SensiboClimate(ClimateDevice):
                 self._id, 'swing', swing_mode, self._ac_states)
 
     @asyncio.coroutine
-    def async_on(self):
+    def async_turn_on(self):
         """Turn Sensibo unit on."""
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
                 self._id, 'on', True, self._ac_states)
 
     @asyncio.coroutine
-    def async_off(self):
+    def async_turn_off(self):
         """Turn Sensibo unit on."""
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
