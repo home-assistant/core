@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.util import utcnow
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['influxdb==4.1.1']
+REQUIREMENTS = ['influxdb==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
