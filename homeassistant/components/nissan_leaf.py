@@ -7,6 +7,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.discovery import load_platform
+import asyncio
+
 
 REQUIREMENTS = ['https://github.com/BenWoodford/pycarwings2/archive/master.zip'
                 '#pycarwings']
@@ -36,15 +38,18 @@ LEAF_COMPONENTS = [
     'sensor', 'switch'#, 'device_tracker',
 ]
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
 
     import pycarwings2
 
+    _LOGGER.debug("Logging into You+Nissan...")
+
     try:
         s = pycarwings2.Session(username, password, "NE")
-        _LOGGER.info("Logging into CarWings/NissanConnect Account")
+        _LOGGER.Info("Fetching Leaf Data")
         leaf = s.get_leaf()
     except(RuntimeError, urllib.error.HTTPError):
         _LOGGER.error("Unable to connect to Nissan Connect with username and password")
@@ -52,7 +57,10 @@ def setup(hass, config):
     except(KeyError):
         _LOGGER.error("Unable to fetch car details... do you actually have a Leaf connected to your account?")
         return False
+    except:
+        _LOGGER.error("An unknown error occurred while connecting to Nissan's servers: " + sys.exc_info()[0])
 
+    _LOGGER.Info("Successfully logged in and fetched Leaf info")
     _LOGGER.Info("WARNING: This component may poll your Leaf too often, and drain the 12V. If you drain your car's 12V it won't start as the drive train battery won't connect, so you have been warned.")
 
     hass.data[DATA_LEAF] = LeafDataStore(leaf)
