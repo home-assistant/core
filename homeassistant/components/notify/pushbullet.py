@@ -159,10 +159,11 @@ class PushBulletNotificationService(BaseNotificationService):
                 if not file_url.startswith('http'):
                     _LOGGER.error("URL should start with http or https")
                     return
-                pusher.push_file(title=title, body=message, **email_kwargs,
+                pusher.push_file(title=title, body=message,
                                  file_name=file_url, file_url=file_url,
                                  file_type=(mimetypes
-                                            .guess_type(file_url)[0]))
+                                            .guess_type(file_url)[0]),
+                                 **email_kwargs)
             elif data_list:
                 pusher.push_list(title, data_list, **email_kwargs)
             else:
