@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['influxdb==4.1.1']
+REQUIREMENTS = ['influxdb==5.0.0']
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
