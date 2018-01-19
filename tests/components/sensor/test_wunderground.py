@@ -372,8 +372,8 @@ class TestWundergroundSetup(unittest.TestCase):
         wunderground.setup_platform(self.hass, VALID_CONFIG_ALERT,
                                     self.add_devices, None)
         for device in self.DEVICES:
-            device.update()
-            device.update()
+            device.update(no_throttle=True)
+            device.update(no_throttle=True)
             self.assertEqual(1, device.state)
             self.assertEqual(ALERT_MESSAGE,
                              device.device_state_attributes['Message'])
