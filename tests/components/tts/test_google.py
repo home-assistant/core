@@ -22,7 +22,7 @@ class TestTTSGooglePlatform(object):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-        self.url = "http://translate.google.com/translate_tts"
+        self.url = "https://translate.google.com/translate_tts"
         self.url_param = {
             'tl': 'en',
             'q':
