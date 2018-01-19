@@ -147,6 +147,8 @@ class Hyperion(Light):
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
+        else:
+            brightness = self._brightness
 
         if ATTR_EFFECT in kwargs:
             self._skip_update = True
