@@ -622,7 +622,7 @@ def setup(hass, config):
                 next_check = now + timedelta(seconds=1)
                 track_point_in_utc_time(hass, _check_awaked, next_check)
 
-        _check_awaked(dt_util.utcnow())
+        _check_awaked(start_time)
 
     def _finalize_start():
         """Perform final initializations after Z-Wave network is awaked."""
