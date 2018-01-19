@@ -41,6 +41,7 @@ TAHOMA_TYPES = {
     'rts:CurtainRTSComponent': 'cover',
     'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
     'io:RollerShutterVeluxIOComponent': 'cover',
+    'io:RollerShutterGenericIOComponent': 'cover',
     'io:WindowOpenerVeluxIOComponent': 'cover',
     'io:LightIOSystemSensor': 'sensor',
 }
