@@ -20,9 +20,8 @@ from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-COMMIT = '544614f4b1d508201d363e84e871f86c90aa26b2'
-REQUIREMENTS = ['https://github.com/happyleavesaoc/spotipy/'
-                'archive/%s.zip#spotipy==2.4.4' % COMMIT]
+REQUIREMENTS = ['https://github.com/plamere/spotipy/'
+                'archive/master.zip#spotipy==2.4.4']
 
 DEPENDENCIES = ['http']
 
