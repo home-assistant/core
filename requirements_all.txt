@@ -35,7 +35,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.7.0
+PyXiaomiGateway==0.7.1
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -170,7 +170,7 @@ ciscosparkapi==0.4.2
 coinbase==2.0.6
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.1.1
+coinmarketcap==4.1.2
 
 # homeassistant.scripts.check_config
 colorlog==3.0.1
@@ -275,7 +275,7 @@ fitbit==0.3.0
 fixerio==0.1.1
 
 # homeassistant.components.light.flux_led
-flux_led==0.20
+flux_led==0.21
 
 # homeassistant.components.notify.free_mobile
 freesms==0.1.2
@@ -286,7 +286,7 @@ freesms==0.1.2
 # fritzconnection==0.6.5
 
 # homeassistant.components.switch.fritzdect
-fritzhome==1.0.3
+fritzhome==1.0.4
 
 # homeassistant.components.media_player.frontier_silicon
 fsapi==0.0.7
@@ -370,7 +370,7 @@ https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f8
 https://github.com/jabesq/netatmo-api-python/archive/v0.9.2.1.zip#lnetatmo==0.9.2.1
 
 # homeassistant.components.neato
-https://github.com/jabesq/pybotvac/archive/v0.0.4.zip#pybotvac==0.0.4
+https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
@@ -419,7 +419,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
-keyring==10.3.2
+keyring==10.6.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==2.3
@@ -490,6 +490,9 @@ motorparts==1.0.2
 # homeassistant.components.tts
 mutagen==1.39
 
+# homeassistant.components.mychevy
+mychevy==0.1.1
+
 # homeassistant.components.mycroft
 mycroftapi==2.0
 
@@ -501,7 +504,7 @@ myusps==1.2.2
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
-netdisco==1.2.3
+netdisco==1.2.4
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -595,11 +598,9 @@ psutil==5.4.3
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
 
+# homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
 pushbullet.py==0.11.0
-
-# homeassistant.components.notify.pushbullet
-pushbullet==0.11.0
 
 # homeassistant.components.notify.pushetta
 pushetta==1.0.15
@@ -680,7 +681,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==23
+pydeconz==25
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -752,10 +753,10 @@ pykira==0.1.1
 pykwb==0.0.8
 
 # homeassistant.components.sensor.lacrosse
-pylacrosse==0.2.7
+pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
-pylast==2.0.0
+pylast==2.1.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
@@ -1097,7 +1098,7 @@ speedtest-cli==1.0.7
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.2.0
+sqlalchemy==1.2.1
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1130,7 +1131,7 @@ tellduslive==0.10.4
 temperusb==1.5.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.0.18
+teslajsonpy==0.0.19
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1
@@ -1227,7 +1228,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.12.28
+youtube_dl==2018.01.14
 
 # homeassistant.components.light.zengge
 zengge==0.2
