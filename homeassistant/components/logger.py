@@ -141,7 +141,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_list_loggers(service):
-        """Returns a list of available loggers."""
+        """Return a dictionary of available loggers with their log levels."""
         loggers = {k: v.getEffectiveLevel()
                    for k, v in logging.Logger.manager.loggerDict.items()
                    if isinstance(v, logging.Logger)}
