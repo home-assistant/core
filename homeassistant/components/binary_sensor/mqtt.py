@@ -94,6 +94,8 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
                 self._state = True
             elif payload == self._payload_off:
                 self._state = False
+            else: #Payload is not for this entity
+                return
 
             self.async_schedule_update_ha_state()
 
