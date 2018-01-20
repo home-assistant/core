@@ -94,7 +94,7 @@ class DaikinClimate(ClimateDevice):
             ATTR_SWING_MODE: list(
                 map(
                     str.title,
-                    appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE])
+                    appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])
                 )
             ),
         }
