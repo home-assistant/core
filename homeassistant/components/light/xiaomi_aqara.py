@@ -19,20 +19,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             model = device['model']
             if model == 'gateway':
                 devices.append(XiaomiGatewayLight(device, 'Gateway Light',
-                                                  hass, gateway))
+                                                  gateway))
     add_devices(devices)
 
 
 class XiaomiGatewayLight(XiaomiDevice, Light):
     """Representation of a XiaomiGatewayLight."""
 
-    def __init__(self, device, name, hass, xiaomi_hub):
+    def __init__(self, device, name, xiaomi_hub):
         """Initialize the XiaomiGatewayLight."""
         self._data_key = 'rgb'
         self._rgb = (255, 255, 255)
         self._brightness = 180
 
-        XiaomiDevice.__init__(self, device, name, hass, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
     @property
     def is_on(self):

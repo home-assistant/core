@@ -195,11 +195,10 @@ def setup(hass, config):
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
-    def __init__(self, device, name, hass, xiaomi_hub):
+    def __init__(self, device, name, xiaomi_hub):
         """Initialize the xiaomi device."""
         self._state = None
         self._lock = threading.Lock()
-        self._hass = hass
         self._is_available = True
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
@@ -211,6 +210,11 @@ class XiaomiDevice(Entity):
         xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Start unavailability tracking."""
+        self._track_unavailable()
 
     @property
     def name(self):
@@ -243,7 +247,7 @@ class XiaomiDevice(Entity):
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
         self._remove_unavailability_tracker = async_track_point_in_utc_time(
-            self._hass, self._set_unavailable,
+            self.hass, self._set_unavailable,
             utcnow() + TIME_TILL_UNAVAILABLE)
         if not self._is_available:
             self._is_available = True

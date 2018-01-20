@@ -28,13 +28,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if model in ['motion', 'sensor_motion.aq2']:
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
             elif model in ['magnet', 'sensor_magnet.aq2']:
-                devices.append(XiaomiDoorSensor(device, hass, gateway))
+                devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_wleak.aq1':
-                devices.append(XiaomiWaterLeakSensor(device, hass, gateway))
+                devices.append(XiaomiWaterLeakSensor(device, gateway))
             elif model == 'smoke':
-                devices.append(XiaomiSmokeSensor(device, hass, gateway))
+                devices.append(XiaomiSmokeSensor(device, gateway))
             elif model == 'natgas':
-                devices.append(XiaomiNatgasSensor(device, hass, gateway))
+                devices.append(XiaomiNatgasSensor(device, gateway))
             elif model in ['switch', 'sensor_switch.aq2', 'sensor_switch.aq3']:
                 devices.append(XiaomiButton(device, 'Switch', 'status',
                                             hass, gateway))
@@ -56,13 +56,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
     """Representation of a base XiaomiBinarySensor."""
 
-    def __init__(self, device, name, hass, xiaomi_hub, data_key, device_class):
+    def __init__(self, device, name, xiaomi_hub, data_key, device_class):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
         self._device_class = device_class
         self._should_poll = False
         self._density = 0
-        XiaomiDevice.__init__(self, device, name, hass, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
     @property
     def should_poll(self):
@@ -88,11 +88,11 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
 class XiaomiNatgasSensor(XiaomiBinarySensor):
     """Representation of a XiaomiNatgasSensor."""
 
-    def __init__(self, device, hass, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._density = None
-        XiaomiBinarySensor.__init__(self, device, 'Natgas Sensor', hass,
-                                    xiaomi_hub, 'alarm', 'gas')
+        XiaomiBinarySensor.__init__(self, device, 'Natgas Sensor', xiaomi_hub,
+                                    'alarm', 'gas')
 
     @property
     def device_state_attributes(self):
@@ -129,8 +129,8 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
-        XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', hass,
-                                    xiaomi_hub, 'status', 'motion')
+        XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub,
+                                    'status', 'motion')
 
     @property
     def device_state_attributes(self):
@@ -181,11 +181,11 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
 class XiaomiDoorSensor(XiaomiBinarySensor):
     """Representation of a XiaomiDoorSensor."""
 
-    def __init__(self, device, hass, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
         XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor',
-                                    hass, xiaomi_hub, 'status', 'opening')
+                                    xiaomi_hub, 'status', 'opening')
 
     @property
     def device_state_attributes(self):
@@ -222,10 +222,10 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
 class XiaomiWaterLeakSensor(XiaomiBinarySensor):
     """Representation of a XiaomiWaterLeakSensor."""
 
-    def __init__(self, device, hass, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiWaterLeakSensor."""
         XiaomiBinarySensor.__init__(self, device, 'Water Leak Sensor',
-                                    hass, xiaomi_hub, 'status', 'moisture')
+                                    xiaomi_hub, 'status', 'moisture')
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -251,11 +251,11 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 class XiaomiSmokeSensor(XiaomiBinarySensor):
     """Representation of a XiaomiSmokeSensor."""
 
-    def __init__(self, device, hass, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._density = 0
-        XiaomiBinarySensor.__init__(self, device, 'Smoke Sensor', hass,
-                                    xiaomi_hub, 'alarm', 'smoke')
+        XiaomiBinarySensor.__init__(self, device, 'Smoke Sensor', xiaomi_hub,
+                                    'alarm', 'smoke')
 
     @property
     def device_state_attributes(self):
@@ -291,8 +291,8 @@ class XiaomiButton(XiaomiBinarySensor):
         """Initialize the XiaomiButton."""
         self._hass = hass
         self._last_action = None
-        XiaomiBinarySensor.__init__(self, device, name, hass,
-                                    xiaomi_hub, data_key, None)
+        XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub,
+                                    data_key, None)
 
     @property
     def device_state_attributes(self):
@@ -341,8 +341,8 @@ class XiaomiCube(XiaomiBinarySensor):
         self._hass = hass
         self._last_action = None
         self._state = False
-        XiaomiBinarySensor.__init__(self, device, 'Cube', hass,
-                                    xiaomi_hub, None, None)
+        XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub,
+                                    None, None)
 
     @property
     def device_state_attributes(self):

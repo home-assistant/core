@@ -15,32 +15,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['sensor']:
             if device['model'] == 'sensor_ht':
                 devices.append(XiaomiSensor(device, 'Temperature',
-                                            'temperature', hass, gateway))
+                                            'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
-                                            'humidity', hass, gateway))
+                                            'humidity', gateway))
             elif device['model'] == 'weather.v1':
                 devices.append(XiaomiSensor(device, 'Temperature',
-                                            'temperature', hass, gateway))
+                                            'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
-                                            'humidity', hass, gateway))
+                                            'humidity', gateway))
                 devices.append(XiaomiSensor(device, 'Pressure',
-                                            'pressure', hass, gateway))
+                                            'pressure', gateway))
             elif device['model'] == 'sensor_motion.aq2':
                 devices.append(XiaomiSensor(device, 'Illumination',
-                                            'lux', hass, gateway))
+                                            'lux', gateway))
             elif device['model'] == 'gateway':
                 devices.append(XiaomiSensor(device, 'Illumination',
-                                            'illumination', hass, gateway))
+                                            'illumination', gateway))
     add_devices(devices)
 
 
 class XiaomiSensor(XiaomiDevice):
     """Representation of a XiaomiSensor."""
 
-    def __init__(self, device, name, data_key, hass, xiaomi_hub):
+    def __init__(self, device, name, data_key, xiaomi_hub):
         """Initialize the XiaomiSensor."""
         self._data_key = data_key
-        XiaomiDevice.__init__(self, device, name, hass, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
     @property
     def unit_of_measurement(self):
