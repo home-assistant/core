@@ -141,7 +141,7 @@ blinkstick==1.1.8
 blockchain==1.4.0
 
 # homeassistant.components.light.decora
-# bluepy==1.1.1
+# bluepy==1.1.4
 
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
