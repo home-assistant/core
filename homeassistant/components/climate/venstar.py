@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_AUTO,
+    STATE_COOL, STATE_HEAT, STATE_AUTO,
     ClimateDevice, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
@@ -20,7 +20,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME, CONF_TIMEOUT,
     TEMP_FAHRENHEIT, ATTR_TEMPERATURE, TEMP_CELSIUS,
-    PRECISION_WHOLE, STATE_ON)
+    PRECISION_WHOLE, STATE_ON, STATE_OFF)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -32,7 +32,7 @@ DEFAULT_SSL = False
 ATTR_FAN_STATE = 'fan_state'
 ATTR_HVAC_STATE = 'hvac_state'
 VALID_FAN_STATES = [STATE_ON, STATE_AUTO]
-VALID_THERMOSTAT_MODES = [STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO]
+VALID_THERMOSTAT_MODES = [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_AUTO]
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -72,12 +72,9 @@ class VenstarThermostat(ClimateDevice):
     def __init__(self, client):
         """Initialize the thermostat."""
         self._client = client
-        self._fan_list = VALID_FAN_STATES
-        self._operation_list = VALID_THERMOSTAT_MODES
 
     def update(self):
         """Update the data from the thermostat."""
-        _LOGGER.info("Refreshing data from your Venstar Thermostat.")
         info_success = self._client.update_info()
         sensor_success = self._client.update_sensors()
         if not info_success or not sensor_success:
@@ -125,12 +122,12 @@ class VenstarThermostat(ClimateDevice):
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
-        return self._fan_list
+        return VALID_FAN_STATES
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return self._operation_list
+        return VALID_THERMOSTAT_MODES
 
 # Current Values
     @property
@@ -153,7 +150,7 @@ class VenstarThermostat(ClimateDevice):
         elif self._client.mode == self._client.MODE_AUTO:
             return STATE_AUTO
         else:
-            return STATE_IDLE
+            return STATE_OFF
 
     @property
     def current_fan_mode(self):
