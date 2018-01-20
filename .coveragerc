@@ -97,6 +97,9 @@ omit =
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/ihc/*
+    homeassistant/components/*/ihc.py
+
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 

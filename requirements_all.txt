@@ -398,6 +398,9 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 # homeassistant.components.light.iglo
 iglo==1.1.3
 
+# homeassistant.components.ihc
+ihcsdk==2.1.1
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==4.1.1
