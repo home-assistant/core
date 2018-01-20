@@ -34,6 +34,7 @@ ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
 CONF_CLOCK_FORMAT = 'clock_format'
+CONF_UNIT_SYSTEM = 'unit_system'
 CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
 
 DEPENDENCIES = ['http']
@@ -144,7 +145,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
     vol.Optional(CONF_CLOCK_FORMAT, default='24H'):
-        vol.In(['12H', '24H'])
+        vol.In(['12H', '24H']),
+    vol.Optional(CONF_UNIT_SYSTEM, default='default'):
+        vol.In(['en_GB', 'en_US', 'metric','default'])
 })
 
 
@@ -248,12 +251,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
-        authd_client.system = authd_client.user_profile_get()["user"]["locale"]
-        if authd_client.system != 'en_GB':
-            if hass.config.units.is_metric:
-                authd_client.system = 'metric'
-            else:
-                authd_client.system = 'en_US'
+        unit_system = config.get(CONF_UNIT_SYSTEM)
+        if unit_system == 'default':
+            authd_client.system = authd_client.user_profile_get()["user"]["locale"]
+            if authd_client.system != 'en_GB':
+                if hass.config.units.is_metric:
+                    authd_client.system = 'metric'
+                else:
+                    authd_client.system = 'en_US'
+        else:
+            authd_client.system = unit_system
 
         dev = []
         registered_devs = authd_client.get_devices()
