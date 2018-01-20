@@ -18,6 +18,7 @@ DATA_LOGGER = 'logger'
 
 SERVICE_SET_LEVEL = 'set_level'
 SERVICE_DUMP_CONFIG = 'dump_config'
+SERVICE_LIST_LOGGERS = 'list_loggers'
 
 LOGSEVERITY = {
     'CRITICAL': 50,
@@ -137,5 +138,18 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_DUMP_CONFIG, async_dump_config)
+
+    @asyncio.coroutine
+    def async_list_loggers(service):
+        """Returns a list of available loggers."""
+        loggers = {k: v.getEffectiveLevel()
+                   for k, v in logging.Logger.manager.loggerDict.items()
+                   if isinstance(v, logging.Logger)}
+
+        logger.info("Available loggers: %s", loggers)
+        return loggers
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_LIST_LOGGERS, async_list_loggers)
 
     return True
