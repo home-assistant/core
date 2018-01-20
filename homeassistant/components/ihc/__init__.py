@@ -7,7 +7,6 @@ import logging
 import os.path
 import xml.etree.ElementTree
 import voluptuous as vol
-from voluptuous.error import Error as VoluptuousError
 
 from homeassistant.components.ihc.const import (
     ATTR_IHC_ID, ATTR_VALUE, CONF_INFO, CONF_AUTOSETUP,
@@ -18,7 +17,7 @@ from homeassistant.components.ihc.const import (
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_URL, CONF_USERNAME, CONF_PASSWORD, CONF_ID, CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT, CONF_TYPE)
+    CONF_UNIT_OF_MEASUREMENT, CONF_TYPE, TEMP_CELSIUS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -64,9 +63,8 @@ AUTO_SETUP_SCHEMA = vol.Schema({
             vol.All({
                 vol.Required(CONF_XPATH): cv.string,
                 vol.Required(CONF_NODE): cv.string,
-                vol.Optional(CONF_TYPE, default='Temperature'): cv.string,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT,
-                             default='°C'): cv.string,
+                             default=TEMP_CELSIUS): cv.string,
             })
         ]),
     vol.Optional(CONF_SWITCH, default=[]):
@@ -112,7 +110,7 @@ def setup(hass, config):
         return False
 
     if (conf[CONF_AUTOSETUP] and
-            not autosetup_ihc_products(hass, ihc_controller)):
+            not autosetup_ihc_products(hass, config, ihc_controller)):
         return False
 
     hass.data[IHC_DATA] = {
@@ -123,7 +121,7 @@ def setup(hass, config):
     return True
 
 
-def autosetup_ihc_products(hass: HomeAssistantType, ihc_controller):
+def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller):
     """Auto setup of IHC products from the ihc project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
@@ -138,20 +136,21 @@ def autosetup_ihc_products(hass: HomeAssistantType, ihc_controller):
     yaml = load_yaml_config_file(yaml_path)
     try:
         auto_setup_conf = AUTO_SETUP_SCHEMA(yaml)
-    except VoluptuousError as exception:
+    except vol.Invalid as exception:
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
     groups = project.findall('.//group')
     for component in IHC_PLATFORMS:
         component_setup = auto_setup_conf[component]
         discovery_info = get_discovery_info(component_setup, groups)
-        if len(discovery_info) > 0:
-            discovery.load_platform(hass, component, DOMAIN, discovery_info)
+        if discovery_info:
+            discovery.load_platform(hass, component, DOMAIN, discovery_info,
+                                    config)
     return True
 
 
 def get_discovery_info(component_setup, groups):
-    """Get discover info for specified component."""
+    """Get discovery info for specified component."""
     discovery_data = {}
     for group in groups:
         groupname = group.attrib['name']
@@ -193,20 +192,14 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
         value = call.data[ATTR_VALUE]
         ihc_controller.set_runtime_value_float(ihc_id, value)
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_BOOL,
                            set_runtime_value_bool,
-                           descriptions[SERVICE_SET_RUNTIME_VALUE_BOOL],
                            schema=SET_RUNTIME_VALUE_BOOL_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_INT,
                            set_runtime_value_int,
-                           descriptions[SERVICE_SET_RUNTIME_VALUE_INT],
                            schema=SET_RUNTIME_VALUE_INT_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_FLOAT,
                            set_runtime_value_float,
-                           descriptions[SERVICE_SET_RUNTIME_VALUE_FLOAT],
                            schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA)
 
 

@@ -3,13 +3,12 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.ihc/
 """
-# pylint: disable=unidiomatic-typecheck
 from xml.etree.ElementTree import Element
 
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
-    validate_name, IHC_DATA, IHC_CONTROLLER)
+    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import CONF_DIMMABLE
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
@@ -34,13 +33,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ihc lights platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
+    info = hass.data[IHC_DATA][IHC_INFO]
     devices = []
     if discovery_info:
         for name, device in discovery_info.items():
             ihc_id = device['ihc_id']
             product_cfg = device['product_cfg']
             product = device['product']
-            light = IhcLight(ihc_controller, name, ihc_id,
+            light = IhcLight(ihc_controller, name, ihc_id, info,
                              product_cfg[CONF_DIMMABLE], product)
             devices.append(light)
     else:
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ihc_id = light[CONF_ID]
             name = light[CONF_NAME]
             dimmable = light[CONF_DIMMABLE]
-            device = IhcLight(ihc_controller, name, ihc_id, dimmable)
+            device = IhcLight(ihc_controller, name, ihc_id, info, dimmable)
             devices.append(device)
 
     add_devices(devices)
@@ -63,10 +63,10 @@ class IhcLight(IHCDevice, Light):
     an on/off (boolean) resource
     """
 
-    def __init__(self, ihc_controller, name, ihc_id, dimmable=False,
-                 product: Element=None):
+    def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
+                 dimmable=False, product: Element=None):
         """Initialize the light."""
-        super().__init__(ihc_controller, name, ihc_id, product)
+        super().__init__(ihc_controller, name, ihc_id, info, product)
         self._brightness = 0
         self._dimmable = dimmable
         self._state = None
@@ -112,12 +112,12 @@ class IhcLight(IHCDevice, Light):
 
     def on_ihc_change(self, ihc_id, value):
         """Callback from Ihc notifications."""
-        if type(value) is int:
+        if isinstance(value, bool):
+            self._dimmable = False
+            self._state = value != 0
+        else:
             self._dimmable = True
             self._state = value > 0
             if self._state:
                 self._brightness = int(value * 255 / 100)
-        else:
-            self._dimmable = False
-            self._state = value != 0
         self.schedule_update_ha_state()

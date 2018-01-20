@@ -8,9 +8,9 @@ from xml.etree.ElementTree import Element
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
-    validate_name, IHC_DATA, IHC_CONTROLLER)
+    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_SWITCHES
 import homeassistant.helpers.config_validation as cv
 
@@ -30,19 +30,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ihc switch platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
+    info = hass.data[IHC_DATA][IHC_INFO]
     devices = []
     if discovery_info:
         for name, device in discovery_info.items():
             ihc_id = device['ihc_id']
             product = device['product']
-            switch = IHCSwitch(ihc_controller, name, ihc_id, product)
+            switch = IHCSwitch(ihc_controller, name, ihc_id, info, product)
             devices.append(switch)
     else:
         switches = config[CONF_SWITCHES]
         for switch in switches:
             ihc_id = switch[CONF_ID]
             name = switch[CONF_NAME]
-            sensor = IHCSwitch(ihc_controller, name, ihc_id)
+            sensor = IHCSwitch(ihc_controller, name, ihc_id, info)
             devices.append(sensor)
 
     add_devices(devices)
@@ -52,7 +53,7 @@ class IHCSwitch(IHCDevice, SwitchDevice):
     """IHC Switch."""
 
     def __init__(self, ihc_controller, name: str, ihc_id: int,
-                 product: Element=None):
+                 info: bool, product: Element=None):
         """Initialize the IHC switch."""
         super().__init__(ihc_controller, name, ihc_id, product)
         self._state = False

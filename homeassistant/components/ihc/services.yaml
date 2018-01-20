@@ -9,7 +9,7 @@ set_runtime_value_bool:
       description: The boolean value to set
 
 set_runtime_value_int:
-  description: Set a integer runtime value on the ihc controller
+  description: Set an integer runtime value on the ihc controller
   fields:
     ihc_id:
       description: The integer ihc resource id
