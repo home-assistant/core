@@ -39,13 +39,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # New parameters for Nodon NOD_SIN-2-2-01 can work
     command = config.get(CONF_COMMAND)
     entity = config.get(CONF_CUSTOMIZE)
-    add_devices([EnOceanSwitch(dev_id, devname,command,entity)])
+    add_devices([EnOceanSwitch(dev_id, devname, command, entity)])
 
 
 class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
     """Representation of an EnOcean switch device."""
 
-    def __init__(self, dev_id, devname, command,entity):
+    def __init__(self, dev_id, devname, command, entity):
         """Initialize the EnOcean switch device."""
         enocean.EnOceanDevice.__init__(self)
         self.dev_id = dev_id
