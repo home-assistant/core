@@ -147,7 +147,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CLOCK_FORMAT, default='24H'):
         vol.In(['12H', '24H']),
     vol.Optional(CONF_UNIT_SYSTEM, default='default'):
-        vol.In(['en_GB', 'en_US', 'metric','default'])
+        vol.In(['en_GB', 'en_US', 'metric', 'default'])
 })
 
 
@@ -253,7 +253,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         unit_system = config.get(CONF_UNIT_SYSTEM)
         if unit_system == 'default':
-            authd_client.system = authd_client.user_profile_get()["user"]["locale"]
+            authd_client.system = authd_client. \
+                    user_profile_get()["user"]["locale"]
             if authd_client.system != 'en_GB':
                 if hass.config.units.is_metric:
                     authd_client.system = 'metric'
