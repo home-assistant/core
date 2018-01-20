@@ -1,7 +1,6 @@
 """Support for Xiaomi Gateways."""
 import asyncio
 import logging
-import threading
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from datetime import timedelta
@@ -198,7 +197,6 @@ class XiaomiDevice(Entity):
     def __init__(self, device, name, xiaomi_hub):
         """Initialize the xiaomi device."""
         self._state = None
-        self._lock = threading.Lock()
         self._is_available = True
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
@@ -206,10 +204,12 @@ class XiaomiDevice(Entity):
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
         self._remove_unavailability_tracker = None
-        self._track_unavailable()
-        xiaomi_hub.callbacks[self._sid].append(self.push_data)
+        xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
+
+    def _add_push_data_job(self, *args):
+        self.hass.async_add_job(self.push_data, *args)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -241,7 +241,7 @@ class XiaomiDevice(Entity):
         """Set state to UNAVAILABLE."""
         self._remove_unavailability_tracker = None
         self._is_available = False
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     def _track_unavailable(self):
         if self._remove_unavailability_tracker:
@@ -254,19 +254,15 @@ class XiaomiDevice(Entity):
             return True
         return False
 
+    @callback
     def push_data(self, data, raw_data):
         """Push from Hub."""
-        # There is a chance this function will be called simultaneously by 2
-        # different threads (SyncThreads) when 'read' response and 'report'
-        # message arrived at the same time. It causes an issue at least with
-        # unavailability tracker setups. Using lock queue state changes.
-        with self._lock:
-            _LOGGER.debug("PUSH >> %s: %s", self, data)
-            was_unavailable = self._track_unavailable()
-            is_data = self.parse_data(data, raw_data)
-            is_voltage = self.parse_voltage(data)
-            if is_data or is_voltage or was_unavailable:
-                self.schedule_update_ha_state()
+        _LOGGER.debug("PUSH >> %s: %s", self, data)
+        was_unavailable = self._track_unavailable()
+        is_data = self.parse_data(data, raw_data)
+        is_voltage = self.parse_voltage(data)
+        if is_data or is_voltage or was_unavailable:
+            self.async_schedule_update_ha_state()
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
