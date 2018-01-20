@@ -38,6 +38,11 @@ SENSOR_SCHEMA = vol.Schema({
         vol.All(cv.time_period, cv.positive_timedelta),
 })
 
+SENSOR_SCHEMA = vol.All(
+    cv.deprecated(ATTR_ENTITY_ID),
+    SENSOR_SCHEMA,
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
 })

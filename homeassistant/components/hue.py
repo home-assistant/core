@@ -12,7 +12,6 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_HUE
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
@@ -153,6 +152,7 @@ class HueBridge(object):
                  allow_in_emulated_hue=True, allow_hue_groups=True):
         """Initialize the system."""
         self.host = host
+        self.bridge_id = socket.gethostbyname(host)
         self.hass = hass
         self.filename = filename
         self.allow_unreachable = allow_unreachable
@@ -166,7 +166,7 @@ class HueBridge(object):
         self.configured = False
         self.config_request_id = None
 
-        hass.data[DOMAIN][socket.gethostbyname(host)] = self
+        hass.data[DOMAIN][self.bridge_id] = self
 
     def setup(self):
         """Set up a phue bridge based on host parameter."""
@@ -197,7 +197,7 @@ class HueBridge(object):
 
         discovery.load_platform(
             self.hass, 'light', DOMAIN,
-            {'bridge_id': socket.gethostbyname(self.host)})
+            {'bridge_id': self.bridge_id})
 
         # create a service for calling run_scene directly on the bridge,
         # used to simplify automation rules.
@@ -207,11 +207,8 @@ class HueBridge(object):
             scene_name = call.data[ATTR_SCENE_NAME]
             self.bridge.run_scene(group_name, scene_name)
 
-        descriptions = load_yaml_config_file(
-            os.path.join(os.path.dirname(__file__), 'services.yaml'))
         self.hass.services.register(
             DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
-            descriptions.get(SERVICE_HUE_SCENE),
             schema=SCENE_SCHEMA)
 
     def request_configuration(self):

@@ -6,12 +6,10 @@ https://home-assistant.io/components/axis/
 """
 
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_AXIS
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
                                  CONF_EVENT, CONF_HOST, CONF_INCLUDE,
                                  CONF_NAME, CONF_PASSWORD, CONF_PORT,
@@ -103,6 +101,8 @@ def request_configuration(hass, config, name, host, serialnumber):
             return False
 
         if setup_device(hass, config, device_config):
+            del device_config['events']
+            del device_config['signal']
             config_file = load_json(hass.config.path(CONFIG_FILE))
             config_file[serialnumber] = dict(device_config)
             save_json(hass.config.path(CONFIG_FILE), config_file)
@@ -195,10 +195,6 @@ def setup(hass, config):
             if not setup_device(hass, config, device_config):
                 _LOGGER.error("Couldn\'t set up %s", device_config[CONF_NAME])
 
-    # Services to communicate with device.
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     def vapix_service(call):
         """Service to send a message."""
         for _, device in AXIS_DEVICES.items():
@@ -216,7 +212,6 @@ def setup(hass, config):
     hass.services.register(DOMAIN,
                            SERVICE_VAPIX_CALL,
                            vapix_service,
-                           descriptions[DOMAIN][SERVICE_VAPIX_CALL],
                            schema=SERVICE_SCHEMA)
     return True
 

@@ -9,7 +9,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PIN,
                                  ATTR_ATTRIBUTION, ATTR_COMMAND,
@@ -23,9 +23,8 @@ REQUIREMENTS = ['motorparts==1.0.2']
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(days=7)
-DOMAIN = 'mopar'
 ATTR_VEHICLE_INDEX = 'vehicle_index'
-SERVICE_REMOTE_COMMAND = 'remote_command'
+SERVICE_REMOTE_COMMAND = 'mopar_remote_command'
 COOKIE_FILE = 'mopar_cookies.pickle'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

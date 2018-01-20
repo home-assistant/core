@@ -9,15 +9,13 @@ https://home-assistant.io/components/calendar.todoist/
 from datetime import datetime
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    CalendarEventDevice, PLATFORM_SCHEMA)
+    CalendarEventDevice, DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.components.google import (
     CONF_DEVICE_ID)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
@@ -28,7 +26,6 @@ from homeassistant.util import Throttle
 REQUIREMENTS = ['todoist-python==7.0.17']
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'todoist'
 
 # Calendar Platform: Does this calendar event last all day?
 ALL_DAY = 'all_day'
@@ -80,7 +77,7 @@ SUMMARY = 'summary'
 # Todoist API: Fetch all Tasks
 TASKS = 'items'
 
-SERVICE_NEW_TASK = 'new_task'
+SERVICE_NEW_TASK = 'todoist_new_task'
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Required(CONTENT): cv.string,
     vol.Optional(PROJECT_NAME, default='inbox'): vol.All(cv.string, vol.Lower),
@@ -178,10 +175,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(project_devices)
 
-    # Services:
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     def handle_new_task(call):
         """Called when a user creates a new Todoist Task from HASS."""
         project_name = call.data[PROJECT_NAME]
@@ -215,7 +208,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
     hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
-                           descriptions[DOMAIN][SERVICE_NEW_TASK],
                            schema=NEW_TASK_SERVICE_SCHEMA)
 
 

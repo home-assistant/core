@@ -18,7 +18,7 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['flux_led==0.20']
+REQUIREMENTS = ['flux_led==0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ EFFECT_MAP = {
 
 FLUX_EFFECT_LIST = [
     EFFECT_RANDOM,
-    ].extend(EFFECT_MAP.keys())
+    ] + list(EFFECT_MAP)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,

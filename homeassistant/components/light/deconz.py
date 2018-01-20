@@ -4,15 +4,14 @@ Support for deCONZ light.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
-
 import asyncio
 
 from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
-    ATTR_HS_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_COLOR, SUPPORT_TRANSITION)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
+    ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
 import homeassistant.util.color as color_util
 
@@ -23,7 +22,7 @@ ATTR_LIGHT_GROUP = 'LightGroup'
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup light for deCONZ component."""
+    """Set up the deCONZ light."""
     if discovery_info is None:
         return
 
@@ -44,7 +43,7 @@ class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
     def __init__(self, light):
-        """Setup light and add update callback to get data from websocket."""
+        """Set up light and add update callback to get data from websocket."""
         self._light = light
 
         self._features = SUPPORT_BRIGHTNESS
