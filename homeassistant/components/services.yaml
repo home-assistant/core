@@ -177,6 +177,12 @@ ffmpeg:
 logger:
   set_level:
     description: Set log level for components.
+    fields:
+      config:
+        description: A dictionary presenting the logging levels to be set.
+        example: '{"homeassistant": "DEBUG", "homeassistant.components.media_player": "ERROR"}'
+  dump_config:
+    description: Dumps logger configuration.
 
 hassio:
   host_reboot:
