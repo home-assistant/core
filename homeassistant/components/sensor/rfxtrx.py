@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)
-        device_id = "sensor_" + slugify(event.device.id_string.lower())
+        device_id = "sensor_{}".format(slugify(event.device.id_string.lower()))
         if device_id in rfxtrx.RFX_DEVICES:
             continue
         _LOGGER.info("Add %s rfxtrx.sensor", entity_info[ATTR_NAME])

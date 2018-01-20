@@ -31,7 +31,7 @@ _CHANNELS_SCHEMA = vol.Schema([{
 _I2C_HATS_SCHEMA = vol.Schema([{
     vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
     vol.Required(CONF_ADDRESS): vol.Coerce(int),
-    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
+    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA,
 }])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -118,7 +118,7 @@ class I2CHatSwitch(ToggleEntity):
             state = self.I2C_HATS_MANAGER.read_dq(self._address, self._channel)
             return state != self._invert_logic
         except I2CHatsException as ex:
-            _LOGGER.error(self._log_message("Is ON check failed: %s", str(ex)))
+            _LOGGER.error(self._log_message("Is ON check failed, " + str(ex)))
             return False
 
     def turn_on(self):
@@ -128,7 +128,7 @@ class I2CHatSwitch(ToggleEntity):
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
-            _LOGGER.error(self._log_message("Turn ON failed: %s", str(ex)))
+            _LOGGER.error(self._log_message("Turn ON failed, " + str(ex)))
 
     def turn_off(self):
         """Turn the device off."""
@@ -138,4 +138,4 @@ class I2CHatSwitch(ToggleEntity):
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
             _LOGGER.error(
-                self._log_message("Turn OFF failed: %s", str(ex)))
+                self._log_message("Turn OFF failed:, " + str(ex)))

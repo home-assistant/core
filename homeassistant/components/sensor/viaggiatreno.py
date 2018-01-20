@@ -98,7 +98,7 @@ class ViaggiaTrenoSensor(Entity):
         self._name = name
 
         self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id,  train_id=train_id)
+            station_id=station_id, train_id=train_id)
 
     @property
     def name(self):

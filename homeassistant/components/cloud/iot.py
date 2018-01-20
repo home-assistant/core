@@ -12,7 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
 from .const import MESSAGE_EXPIRATION
 
-
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +132,7 @@ class CloudIoT:
                 yield from client.send_json(response)
 
         except auth_api.CloudError:
-            _LOGGER.warning("Unable to connect: Unable to refresh token")
+            _LOGGER.warning("Unable to connect: Unable to refresh token.")
 
         except client_exceptions.WSServerHandshakeError as err:
             if err.code == 401:

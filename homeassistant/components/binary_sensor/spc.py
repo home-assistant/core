@@ -26,19 +26,22 @@ SPC_INPUT_TO_SENSOR_STATE = {
 
 
 def _get_device_class(spc_type):
+    """Get the device class."""
     return SPC_TYPE_TO_DEVICE_CLASS.get(spc_type, None)
 
 
 def _get_sensor_state(spc_input):
+    """Get the sensor state."""
     return SPC_INPUT_TO_SENSOR_STATE.get(spc_input, STATE_UNAVAILABLE)
 
 
 def _create_sensor(hass, zone):
-    return SpcBinarySensor(zone_id=zone['id'],
-                           name=zone['zone_name'],
-                           state=_get_sensor_state(zone['input']),
-                           device_class=_get_device_class(zone['type']),
-                           spc_registry=hass.data[DATA_REGISTRY])
+    """Create a SPC sensor."""
+    return SpcBinarySensor(
+        zone_id=zone['id'], name=zone['zone_name'],
+        state=_get_sensor_state(zone['input']),
+        device_class=_get_device_class(zone['type']),
+        spc_registry=hass.data[DATA_REGISTRY])
 
 
 @asyncio.coroutine

@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     )
                 )
         except I2CHatsException as ex:
-            _LOGGER.error("Failed to register %s I2CHat@%s",
+            _LOGGER.error("Failed to register %s I2CHat@%s %s",
                           board, hex(address), str(ex))
     add_devices(binary_sensors)
 
