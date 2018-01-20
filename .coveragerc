@@ -247,6 +247,9 @@ omit =
     homeassistant/components/volvooncall.py
     homeassistant/components/*/volvooncall.py
 
+    homeassistant/components/waterfurnace.py
+    homeassistant/components/*/waterfurnace.py
+
     homeassistant/components/*/webostv.py
 
     homeassistant/components/wemo.py
