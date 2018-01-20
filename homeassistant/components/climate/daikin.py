@@ -33,11 +33,6 @@ REQUIREMENTS = ['pydaikin==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE |
-                 SUPPORT_SWING_MODE)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=None): cv.string,
@@ -56,6 +51,9 @@ HA_ATTR_TO_DAIKIN = {
     ATTR_OPERATION_MODE: 'mode',
     ATTR_FAN_MODE: 'f_rate',
     ATTR_SWING_MODE: 'f_dir',
+    ATTR_INSIDE_TEMPERATURE: 'htemp',
+    ATTR_OUTSIDE_TEMPERATURE: 'otemp',
+    ATTR_TARGET_TEMPERATURE: 'stemp'
 }
 
 
@@ -96,10 +94,21 @@ class DaikinClimate(ClimateDevice):
             ATTR_SWING_MODE: list(
                 map(
                     str.title,
-                    appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])
+                    appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE])
                 )
             ),
         }
+
+        self._supported_features = SUPPORT_TARGET_TEMPERATURE \
+            | SUPPORT_OPERATION_MODE
+
+        daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE]
+        if self._api.device.values.get(daikin_attr) is not None:
+            self._supported_features |= SUPPORT_FAN_MODE
+
+        daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]
+        if self._api.device.values.get(daikin_attr) is not None:
+            self._supported_features |= SUPPORT_SWING_MODE
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -108,25 +117,30 @@ class DaikinClimate(ClimateDevice):
 
         if key in [ATTR_TEMPERATURE, ATTR_INSIDE_TEMPERATURE,
                    ATTR_CURRENT_TEMPERATURE]:
-            value = self._api.device.values.get('htemp')
+            key = ATTR_INSIDE_TEMPERATURE
+
+        daikin_attr = HA_ATTR_TO_DAIKIN.get(key)
+
+        if key == ATTR_INSIDE_TEMPERATURE:
+            value = self._api.device.values.get(daikin_attr)
             cast_to_float = True
-        if key == ATTR_TARGET_TEMPERATURE:
-            value = self._api.device.values.get('stemp')
+        elif key == ATTR_TARGET_TEMPERATURE:
+            value = self._api.device.values.get(daikin_attr)
             cast_to_float = True
         elif key == ATTR_OUTSIDE_TEMPERATURE:
-            value = self._api.device.values.get('otemp')
+            value = self._api.device.values.get(daikin_attr)
             cast_to_float = True
         elif key == ATTR_FAN_MODE:
-            value = self._api.device.represent('f_rate')[1].title()
+            value = self._api.device.represent(daikin_attr)[1].title()
         elif key == ATTR_SWING_MODE:
-            value = self._api.device.represent('f_dir')[1].title()
+            value = self._api.device.represent(daikin_attr)[1].title()
         elif key == ATTR_OPERATION_MODE:
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
             value = re.sub(
                 '[^a-z]',
                 '',
-                self._api.device.represent('mode')[1]
+                self._api.device.represent(daikin_attr)[1]
             ).title()
 
         if value is None:
@@ -178,7 +192,7 @@ class DaikinClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return self._supported_features
 
     @property
     def name(self):
