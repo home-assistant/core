@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_ID)
+from homeassistant.const import (CONF_NAME, CONF_ID, CONF_COMMAND, CONF_CUSTOMIZE)
 from homeassistant.components import enocean
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
