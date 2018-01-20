@@ -511,34 +511,40 @@ class ClimateDevice(Entity):
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 self.precision)
 
-        humidity = self.target_humidity
-        if humidity is not None:
-            data[ATTR_HUMIDITY] = humidity
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
-            data[ATTR_MIN_HUMIDITY] = self.min_humidity
-            data[ATTR_MAX_HUMIDITY] = self.max_humidity
+        supported_features = self.supported_features
+        if supported_features & SUPPORT_TARGET_HUMIDITY:
+            humidity = self.target_humidity
+            if humidity is not None:
+                data[ATTR_HUMIDITY] = humidity
+                data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+                data[ATTR_MIN_HUMIDITY] = self.min_humidity
+                data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
-        fan_mode = self.current_fan_mode
-        if fan_mode is not None:
-            data[ATTR_FAN_MODE] = fan_mode
-            if self.fan_list:
-                data[ATTR_FAN_LIST] = self.fan_list
+        if supported_features & SUPPORT_FAN_MODE:
+            fan_mode = self.current_fan_mode
+            if fan_mode is not None:
+                data[ATTR_FAN_MODE] = fan_mode
+                if self.fan_list:
+                    data[ATTR_FAN_LIST] = self.fan_list
 
-        operation_mode = self.current_operation
-        if operation_mode is not None:
-            data[ATTR_OPERATION_MODE] = operation_mode
-            if self.operation_list:
-                data[ATTR_OPERATION_LIST] = self.operation_list
+        if supported_features & SUPPORT_OPERATION_MODE:
+            operation_mode = self.current_operation
+            if operation_mode is not None:
+                data[ATTR_OPERATION_MODE] = operation_mode
+                if self.operation_list:
+                    data[ATTR_OPERATION_LIST] = self.operation_list
 
-        is_hold = self.current_hold_mode
-        if is_hold is not None:
-            data[ATTR_HOLD_MODE] = is_hold
+        if supported_features & SUPPORT_HOLD_MODE:
+            is_hold = self.current_hold_mode
+            if is_hold is not None:
+                data[ATTR_HOLD_MODE] = is_hold
 
-        swing_mode = self.current_swing_mode
-        if swing_mode is not None:
-            data[ATTR_SWING_MODE] = swing_mode
-            if self.swing_list:
-                data[ATTR_SWING_LIST] = self.swing_list
+        if supported_features & SUPPORT_SWING_MODE:
+            swing_mode = self.current_swing_mode
+            if swing_mode is not None:
+                data[ATTR_SWING_MODE] = swing_mode
+                if self.swing_list:
+                    data[ATTR_SWING_LIST] = self.swing_list
 
         is_away = self.is_away_mode_on
         if is_away is not None:
