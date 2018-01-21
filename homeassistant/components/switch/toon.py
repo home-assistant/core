@@ -6,20 +6,20 @@ https://home-assistant.io/components/switch.toon/
 """
 import logging
 
-import homeassistant.components.toon as toon_main
 from homeassistant.components.switch import SwitchDevice
+import homeassistant.components.toon as toon_main
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the discovered Toon Smart Plugs."""
     _toon_main = hass.data[toon_main.TOON_HANDLE]
     switch_items = []
     for plug in _toon_main.toon.smartplugs:
         switch_items.append(EnecoSmartPlug(hass, plug))
 
-    add_devices_callback(switch_items)
+    add_devices(switch_items)
 
 
 class EnecoSmartPlug(SwitchDevice):
@@ -42,12 +42,12 @@ class EnecoSmartPlug(SwitchDevice):
 
     @property
     def current_power_w(self):
-        """Current power usage in W."""
+        """Return the current power usage in W."""
         return self.toon_data_store.get_data('current_power', self.name)
 
     @property
     def today_energy_kwh(self):
-        """Today total energy usage in kWh."""
+        """Return the today total energy usage in kWh."""
         return self.toon_data_store.get_data('today_energy', self.name)
 
     @property
@@ -57,7 +57,7 @@ class EnecoSmartPlug(SwitchDevice):
 
     @property
     def available(self):
-        """True if switch is available."""
+        """Return true if switch is available."""
         return self.smartplug.can_toggle
 
     def turn_on(self, **kwargs):

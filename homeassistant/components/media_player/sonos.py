@@ -14,14 +14,14 @@ import urllib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP,
-    SUPPORT_PLAY, SUPPORT_SHUFFLE_SET)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
-    CONF_HOSTS, ATTR_TIME)
+    ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info:
         player = soco.SoCo(discovery_info.get('host'))
 
-        # if device already exists by config
+        # If device already exists by config
         if player.uid in [x.unique_id for x in hass.data[DATA_SONOS]]:
             return
 
@@ -167,7 +167,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices(coordinators, True)
         if slaves:
             add_devices(slaves, True)
-        _LOGGER.info("Added %s Sonos speakers", len(players))
+        _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
         """Handle for services."""
@@ -242,10 +242,11 @@ def _parse_timespan(timespan):
         reversed(timespan.split(':'))))
 
 
-class _ProcessSonosEventQueue():
+class _ProcessSonosEventQueue(object):
     """Queue like object for dispatching sonos events."""
 
     def __init__(self, sonos_device):
+        """Initialize Sonos event queue."""
         self._sonos_device = sonos_device
 
     def put(self, item, block=True, timeout=None):
@@ -266,7 +267,7 @@ def _get_entity_from_soco(hass, soco):
 def soco_error(errorcodes=None):
     """Filter out specified UPnP errors from logs and avoid exceptions."""
     def decorator(funct):
-        """Decorator function."""
+        """Decorate functions."""
         @ft.wraps(funct)
         def wrapper(*args, **kwargs):
             """Wrap for all soco UPnP exception."""

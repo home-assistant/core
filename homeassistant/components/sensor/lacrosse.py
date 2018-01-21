@@ -4,17 +4,17 @@ Support for LaCrosse sensor components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.lacrosse/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
-from homeassistant.components.sensor import (ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_ID,
-    CONF_SENSORS, CONF_TYPE, TEMP_CELSIUS)
+    CONF_DEVICE, CONF_ID, CONF_NAME, CONF_SENSORS, CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -147,7 +147,7 @@ class LaCrosseSensor(Entity):
         return attributes
 
     def _callback_lacrosse(self, lacrosse_sensor, user_data):
-        """Callback function that is called from pylacrosse with new values."""
+        """Handle a function that is called from pylacrosse with new values."""
         if self._expire_after is not None and self._expire_after > 0:
             # Reset old trigger
             if self._expiration_trigger:

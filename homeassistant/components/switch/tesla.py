@@ -7,8 +7,9 @@ https://home-assistant.io/components/switch.tesla/
 import logging
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
+from homeassistant.components.tesla import TeslaDevice
+from homeassistant.const import STATE_OFF, STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tesla']
@@ -25,7 +26,7 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla charger switch."""
 
     def __init__(self, tesla_device, controller):
-        """Initialisation of the switch."""
+        """Initialise of the switch."""
         self._state = None
         super().__init__(tesla_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
@@ -46,7 +47,7 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         return self._state == STATE_ON
 
     def update(self):
-        """Updating state of the switch."""
+        """Update the state of the switch."""
         _LOGGER.debug("Updating state for: %s", self._name)
         self.tesla_device.update()
         self._state = STATE_ON if self.tesla_device.is_charging() \
