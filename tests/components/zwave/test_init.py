@@ -165,7 +165,7 @@ def test_zwave_ready_wait(hass, mock_openzwave):
     def sleep(duration, loop):
         if duration > 0:
             sleeps.append(duration)
-        yield from asyncio_sleep(0, loop)
+        yield from asyncio_sleep(0, loop=loop)
 
     with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
         with patch('asyncio.sleep', new=sleep):
