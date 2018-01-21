@@ -12,7 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
 from .const import MESSAGE_EXPIRATION
 
-
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +84,7 @@ class CloudIoT:
                 })
             self.tries = 0
 
-            _LOGGER.info('Connected')
+            _LOGGER.info("Connected")
             self.state = STATE_CONNECTED
 
             while not client.closed:
@@ -107,7 +106,7 @@ class CloudIoT:
                     disconnect_warn = 'Received invalid JSON.'
                     break
 
-                _LOGGER.debug('Received message: %s', msg)
+                _LOGGER.debug("Received message: %s", msg)
 
                 response = {
                     'msgid': msg['msgid'],
@@ -126,14 +125,14 @@ class CloudIoT:
                     response['error'] = 'unknown-handler'
 
                 except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception('Error handling message')
+                    _LOGGER.exception("Error handling message")
                     response['error'] = 'exception'
 
-                _LOGGER.debug('Publishing message: %s', response)
+                _LOGGER.debug("Publishing message: %s", response)
                 yield from client.send_json(response)
 
         except auth_api.CloudError:
-            _LOGGER.warning('Unable to connect: Unable to refresh token.')
+            _LOGGER.warning("Unable to connect: Unable to refresh token.")
 
         except client_exceptions.WSServerHandshakeError as err:
             if err.code == 401:
@@ -141,18 +140,18 @@ class CloudIoT:
                 self.close_requested = True
                 # Should we notify user?
             else:
-                _LOGGER.warning('Unable to connect: %s', err)
+                _LOGGER.warning("Unable to connect: %s", err)
 
         except client_exceptions.ClientError as err:
-            _LOGGER.warning('Unable to connect: %s', err)
+            _LOGGER.warning("Unable to connect: %s", err)
 
         except Exception:  # pylint: disable=broad-except
             if not self.close_requested:
-                _LOGGER.exception('Unexpected error')
+                _LOGGER.exception("Unexpected error")
 
         finally:
             if disconnect_warn is not None:
-                _LOGGER.warning('Connection closed: %s', disconnect_warn)
+                _LOGGER.warning("Connection closed: %s", disconnect_warn)
 
             if remove_hass_stop_listener is not None:
                 remove_hass_stop_listener()
@@ -169,7 +168,7 @@ class CloudIoT:
                 self.tries += 1
 
                 try:
-                    # Sleep 0, 5, 10, 15 … up to 30 seconds between retries
+                    # Sleep 0, 5, 10, 15 ... up to 30 seconds between retries
                     self.retry_task = hass.async_add_job(asyncio.sleep(
                         min(30, (self.tries - 1) * 5), loop=hass.loop))
                     yield from self.retry_task
@@ -205,8 +204,8 @@ def async_handle_message(hass, cloud, handler_name, payload):
 @asyncio.coroutine
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
-    result = yield from alexa.async_handle_message(hass, cloud.alexa_config,
-                                                   payload)
+    result = yield from alexa.async_handle_message(
+        hass, cloud.alexa_config, payload)
     return result
 
 
@@ -214,8 +213,8 @@ def async_handle_alexa(hass, cloud, payload):
 @asyncio.coroutine
 def async_handle_google_actions(hass, cloud, payload):
     """Handle an incoming IoT message for Google Actions."""
-    result = yield from ga.async_handle_message(hass, cloud.gactions_config,
-                                                payload)
+    result = yield from ga.async_handle_message(
+        hass, cloud.gactions_config, payload)
     return result
 
 
@@ -227,9 +226,9 @@ def async_handle_cloud(hass, cloud, payload):
 
     if action == 'logout':
         yield from cloud.logout()
-        _LOGGER.error('You have been logged out from Home Assistant cloud: %s',
+        _LOGGER.error("You have been logged out from Home Assistant cloud: %s",
                       payload['reason'])
     else:
-        _LOGGER.warning('Received unknown cloud action: %s', action)
+        _LOGGER.warning("Received unknown cloud action: %s", action)
 
     return None

@@ -143,7 +143,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
 
     def select_source(self, source):
         """Set the input source."""
-        self._state = source
+        self._source = source
 
     def clear_playlist(self):
         """Clear players playlist."""

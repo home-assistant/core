@@ -4,30 +4,26 @@ Support for interface with an LG webOS Smart TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
-import logging
 import asyncio
 from datetime import timedelta
+import logging
 from urllib.parse import urlparse
 
 import voluptuous as vol
 
-import homeassistant.util as util
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_CUSTOMIZE, CONF_TIMEOUT, STATE_OFF,
-    STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
+    CONF_CUSTOMIZE, CONF_FILENAME, CONF_HOST, CONF_NAME, CONF_TIMEOUT,
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
+import homeassistant.util as util
 
-REQUIREMENTS = ['pylgtv==0.1.7',
-                'websockets==3.2',
-                'wakeonlan==0.2.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2', 'wakeonlan==0.2.2']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -48,17 +44,16 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SOURCES):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SOURCES): vol.All(cv.ensure_list, [cv.string]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int,
 })
 
 
@@ -142,7 +137,7 @@ def request_configuration(
 
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Handle actions when configuration callback is called."""
         setup_tv(host, name, customize, config, timeout, hass,
                  add_devices, turn_on_action)
 

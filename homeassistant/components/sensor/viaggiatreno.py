@@ -4,17 +4,16 @@ Support for information about the Italian train system using ViaggiaTreno API.
 For more details about this platform please refer to the documentation at
 https://home-assistant.io/components/sensor.viaggiatreno
 """
+import asyncio
 import logging
 
-import asyncio
-import async_timeout
 import aiohttp
-
+import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,9 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config,
-                         async_add_devices, discovery_info=None):
-    """Setup the ViaggiaTreno platform."""
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the ViaggiaTreno platform."""
     train_id = config.get(CONF_TRAIN_ID)
     station_id = config.get(CONF_STATION_ID)
     name = config.get(CONF_NAME)
@@ -100,8 +98,7 @@ class ViaggiaTrenoSensor(Entity):
         self._name = name
 
         self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id,
-            train_id=train_id)
+            station_id=station_id, train_id=train_id)
 
     @property
     def name(self):

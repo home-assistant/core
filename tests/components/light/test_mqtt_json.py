@@ -522,6 +522,33 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual(255, state.attributes.get('white_value'))
 
+    def test_default_availability_payload(self):
+        """Test availability by default payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_rgb',
+                'command_topic': 'test_light_rgb/set',
+                'availability_topic': 'availability-topic'
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
         self.assertTrue(setup_component(self.hass, light.DOMAIN, {
