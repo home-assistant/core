@@ -39,7 +39,7 @@ def _create_sensor(hass, sensor):
                                name=sensor['name'],
                                state=_get_sensor_state(sensor['cond']),
                                device_class=_get_device_class(sensor['type'])
-                              )
+                               )
 
 
 @asyncio.coroutine
