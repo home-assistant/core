@@ -15,6 +15,7 @@ from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import CONF_UNIT_SYSTEM
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
@@ -34,7 +35,6 @@ ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
 CONF_CLOCK_FORMAT = 'clock_format'
-CONF_UNIT_SYSTEM = 'unit_system'
 CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
 
 DEPENDENCIES = ['http']
