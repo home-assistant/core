@@ -15,7 +15,8 @@ from homeassistant.components.climate import (
     ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, )
+    CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, STATE_ON, STATE_OFF,
+    STATE_IDLE, )
 
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval, )
@@ -36,6 +37,14 @@ DEFAULT_RETRY = 3
 DEFAULT_MIN_TMEP = 16
 DEFAULT_MAX_TMEP = 30
 DEFAULT_STEP = 1
+
+STATE_HEAT = 'heat'
+STATE_COOL = 'cool'
+STATE_AUTO = 'auto'
+
+STATE_LOW = 'low'
+STATE_MEDIUM = 'medium'
+STATE_HIGH = 'high'
 
 CONF_SENSOR = 'target_sensor'
 # CONF_TARGET_TEMP = 'target_temp'
@@ -131,8 +140,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     customize = config.get(CONF_CUSTOMIZE)
 
     add_devices_callback([MiAcPartner(
-        hass, name, None, None, None, 'auto', None,
-        'off', 'off', None, DEFAULT_MAX_TMEP, DEFAULT_MIN_TMEP, host,
+        hass, name, None, None, None, STATE_AUTO, None,
+        STATE_OFF, STATE_OFF, None, DEFAULT_MAX_TMEP, DEFAULT_MIN_TMEP, host,
         token, sensor_entity_id, sync, customize)])
 
 
@@ -140,7 +149,7 @@ class MiAcPartner(ClimateDevice):
     """Representation of a demo climate device."""
 
     # FIXME: Mismatch at the naming of the OperationModes (heating vs. heat)
-    # FIXME: OperationMode doesn't return 'off' anymore (self.data[1][2:3] == '0')
+    # FIXME: OperationMode doesn't return 'off' anymore
 
     def __init__(self, hass, name, target_humidity,
                  away, hold, current_fan_mode, current_humidity,
@@ -160,7 +169,8 @@ class MiAcPartner(ClimateDevice):
         self._customize = customize
 
         from miio import AirConditioningCompanion
-        _LOGGER.info("initializing with host %s token %s", self.host, self.token)
+        _LOGGER.info("initializing with host %s token %s", self.host,
+                     self.token)
         self._climate = AirConditioningCompanion(self.host, self.token)
 
         self._state = None
@@ -172,23 +182,24 @@ class MiAcPartner(ClimateDevice):
 
         self._current_humidity = current_humidity
         self._aux = aux
-        self._operation_list = ['heat', 'cool', 'auto', 'off']
+        self._operation_list = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_OFF]
 
         if self._customize and ('fan' in self._customize):
             self._customize_fan_list = list(self._customize['fan'])
             self._fan_list = self._customize_fan_list
-            self._current_fan_mode = 'idle'
+            self._current_fan_mode = STATE_IDLE
         else:
-            self._fan_list = ['low', 'medium', 'high', 'auto']
+            self._fan_list = [STATE_LOW, STATE_MEDIUM, STATE_HIGH, STATE_AUTO]
             self._current_fan_mode = self._state.fan_speed.name.tolower()
 
         if self._customize and ('swing' in self._customize):
             self._customize_swing_list = list(self._customize['swing'])
             self._swing_list = self._customize_swing_list
-            self._current_swing_mode = 'idle'
+            self._current_swing_mode = STATE_IDLE
         else:
-            self._swing_list = ['on', 'off']
-            self._current_swing_mode = 'on' if self._state.swing_mode else 'off'
+            self._swing_list = [STATE_ON, STATE_OFF]
+            self._current_swing_mode = \
+                STATE_ON if self._state.swing_mode else STATE_OFF
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
         self._max_temp = target_temp_high + 1
@@ -239,13 +250,16 @@ class MiAcPartner(ClimateDevice):
             self._current_fan_mode = self._state.fan_speed.name.tolower()
         if (not self._customize) or (self._customize
                                      and 'swing' not in self._customize):
-            self._current_swing_mode = 'on' if self._state.swing_mode else 'off'
+            self._current_swing_mode = \
+                STATE_ON if self._state.swing_mode else STATE_OFF
         if not self._sensor_entity_id:
             self._current_temperature = self._state.temperature
-        _LOGGER.info('Sync climate status, air_condition_model: %s, operation: %s,\
-                     temperature: %s, fan: %s, swing: %s',
-                     self._state.air_condition_model, self._state.operation.name.tolower(),
-                     self._state.temperature, self._state.fan_speed.name.tolower(),
+        _LOGGER.info('Sync climate status, air_condition_model: %s, '
+                     'operation: %s, temperature: %s, fan: %s, swing: %s',
+                     self._state.air_condition_model,
+                     self._state.operation.name.tolower(),
+                     self._state.temperature,
+                     self._state.fan_speed.name.tolower(),
                      self._state.sweep)
         self.schedule_update_ha_state()
 
@@ -354,15 +368,15 @@ class MiAcPartner(ClimateDevice):
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
         if self._target_temperature < self._target_temperature_low:
-            self._current_operation = 'off'
+            self._current_operation = STATE_OFF
             self._target_temperature = self._target_temperature_low
         elif self._target_temperature > self._target_temperature_high:
-            self._current_operation = 'off'
+            self._current_operation = STATE_OFF
             self._target_temperature = self._target_temperature_high
         elif self._current_temperature and (
-                        self._current_operation == "off" or
-                        self._current_operation == "idle"):
-            self.set_operation_mode('auto')
+                        self._current_operation == STATE_OFF or
+                        self._current_operation == STATE_IDLE):
+            self.set_operation_mode(STATE_AUTO)
             return
 
         self.sendcmd()
@@ -443,10 +457,10 @@ class MiAcPartner(ClimateDevice):
             maincode = model + "pomowiswtta0"
         else:
             maincode = __Presets__[model]['main']
-        if (model in __Presets__) and ('off' in __Presets__[model]) and (
-                    (self._current_operation == 'off') or (
-                            self._current_operation == 'idle')):
-            maincode = __Presets__[model]['off']
+        if (model in __Presets__) and (STATE_OFF in __Presets__[model]) and (
+                    (self._current_operation == STATE_OFF) or (
+                            self._current_operation == STATE_IDLE)):
+            maincode = __Presets__[model][STATE_OFF]
         else:
             codeconfig = __Presets__['default']
             valuecont = __Presets__['default']['VALUE']
@@ -457,37 +471,37 @@ class MiAcPartner(ClimateDevice):
                     temp = hex(int(self._target_temperature))[2:]
                     maincode = maincode.replace('tt', temp)
                 if tep == "po":
-                    if (self._current_operation == 'idle') or (
-                                self._current_operation == 'off'):
-                        pocode = codeconfig['po']['off']
+                    if (self._current_operation == STATE_IDLE) or (
+                                self._current_operation == STATE_OFF):
+                        pocode = codeconfig['po'][STATE_OFF]
                     else:
-                        pocode = codeconfig['po']['on']
+                        pocode = codeconfig['po'][STATE_ON]
                     maincode = maincode.replace('po', pocode)
                 if tep == "mo":
-                    if self._current_operation == 'heat':
+                    if self._current_operation == STATE_HEAT:
                         mocode = codeconfig['mo']['heater']
-                    elif self._current_operation == 'cool':
+                    elif self._current_operation == STATE_COOL:
                         mocode = codeconfig['mo']['cooler']
                     else:
                         mocode = '2'
                     maincode = maincode.replace('mo', mocode)
                 if tep == "wi":
-                    if self._current_fan_mode == 'low':
+                    if self._current_fan_mode == STATE_LOW:
                         wicode = '0'
-                    elif self._current_fan_mode == 'medium':
+                    elif self._current_fan_mode == STATE_MEDIUM:
                         wicode = '1'
-                    elif self._current_fan_mode == 'high':
+                    elif self._current_fan_mode == STATE_HIGH:
                         wicode = '2'
                     else:
                         wicode = '3'
                     maincode = maincode.replace('wi', wicode)
                 if tep == "sw":
-                    if self._current_swing_mode == 'on':
+                    if self._current_swing_mode == STATE_ON:
                         maincode = maincode.replace(
-                            'sw', codeconfig['sw']['on'])
+                            'sw', codeconfig['sw'][STATE_ON])
                     else:
                         maincode = maincode.replace(
-                            'sw', codeconfig['sw']['off'])
+                            'sw', codeconfig['sw'][STATE_OFF])
                 if tep == "li":
                     maincode = maincode
                 index += 1
@@ -531,9 +545,10 @@ class MiAcPartner(ClimateDevice):
 
     def _customize_sendcmd(self, customize_mode):
         model = self._state.acmodel
-        if customize_mode == 'fan' and self._current_fan_mode != 'idle':
+        if customize_mode == 'fan' and self._current_fan_mode != STATE_IDLE:
             maincode = self._customize['fan'][self._current_fan_mode]
-        elif customize_mode == 'swing' and self._current_swing_mode != 'idle':
+        elif customize_mode == 'swing' and \
+                        self._current_swing_mode != STATE_IDLE:
             maincode = self._customize['swing'][self._current_swing_mode]
         else:
             return
