@@ -5,11 +5,17 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mercedesme/
 """
 import logging
+from datetime import timedelta
+
+from homeassistant.components.mercedesme import DATA_MME
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_MME = 'mercedesme'
+DEPENDENCIES = ['mercedesme']
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
@@ -40,12 +46,14 @@ class MercedesMEDeviceTracker(object):
         track_utc_time_change(
             self.hass, self.update_info, second=range(0, 60, 30))
 
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_info(self, now=None):
         """Update the device info."""
         for device in self.controller.cars:
+            _LOGGER.debug("Updating %s", device["vin"])
             location = self.controller.get_location(device["vin"])
             if location is None:
-                return
+                return False
             dev_id = device["vin"]
             name = device["license"]
 
@@ -60,3 +68,5 @@ class MercedesMEDeviceTracker(object):
                 dev_id=dev_id, host_name=name,
                 gps=(lat, lon), attributes=attrs
             )
+
+        return True

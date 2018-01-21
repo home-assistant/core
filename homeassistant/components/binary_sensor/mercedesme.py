@@ -9,12 +9,18 @@ import datetime
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
+from homeassistant.components.mercedesme import DATA_MME
 
 DEPENDENCIES = ['mercedesme']
 
-DATA_MME = 'mercedesme'
-
 _LOGGER = logging.getLogger(__name__)
+
+SENSOR_TYPES = [
+    'doorsClosed',
+    'windowsClosed',
+    'locked',
+    'tireWarningLight'
+]
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -25,25 +31,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     controller = hass.data[DATA_MME]['controller']
 
     if not controller.cars:
+        _LOGGER.error("setup_platform controller.cars is none")
         return
 
+    devices = []
     for car in controller.cars:
-        add_devices([BinarySensor('doorsClosed', car, controller)], True)
-        add_devices([BinarySensor('windowsClosed', car, controller)], True)
-        add_devices([BinarySensor('locked', car, controller)], True)
-        add_devices([BinarySensor('tireWarningLight', car, controller)], True)
+        for dev in SENSOR_TYPES:
+            devices.append(MercedesMEBinarySensor(dev, car, controller))
+
+    add_devices(devices, True)
 
 
-class BinarySensor(BinarySensorDevice):
+class MercedesMEBinarySensor(BinarySensorDevice):
     """Representation of a Sensor."""
 
-    def __init__(self, SensorName, Car, Controller):
+    def __init__(self, sensor_name, car, controller):
         """Initialize the sensor."""
         self._state = None
-        self._name = SensorName
+        self._name = sensor_name
         self._sensor_type = None
-        self.__car = Car
-        self.controller = Controller
+        self._car = car
+        self.controller = controller
 
     @property
     def device_class(self):
@@ -65,45 +73,47 @@ class BinarySensor(BinarySensorDevice):
         """Return the state attributes."""
         if self._name == "windowsClosed":
             return {
-                "windowStatusFrontLeft": self.__car["windowStatusFrontLeft"],
-                "windowStatusFrontRight": self.__car["windowStatusFrontRight"],
-                "windowStatusRearLeft": self.__car["windowStatusRearLeft"],
-                "windowStatusRearRight": self.__car["windowStatusRearRight"],
-                "originalValue": self.__car[self._name],
+                "windowStatusFrontLeft": self._car["windowStatusFrontLeft"],
+                "windowStatusFrontRight": self._car["windowStatusFrontRight"],
+                "windowStatusRearLeft": self._car["windowStatusRearLeft"],
+                "windowStatusRearRight": self._car["windowStatusRearRight"],
+                "originalValue": self._car[self._name],
                 "lastUpdate": datetime.datetime.fromtimestamp(
-                    self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-                "car": self.__car["license"]
+                    self._car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
+                "car": self._car["license"]
             }
         elif self._name == "tireWarningLight":
             return {
                 "frontRightTirePressureKpa":
-                    self.__car["frontRightTirePressureKpa"],
+                    self._car["frontRightTirePressureKpa"],
                 "frontLeftTirePressureKpa":
-                    self.__car["frontLeftTirePressureKpa"],
+                    self._car["frontLeftTirePressureKpa"],
                 "rearRightTirePressureKpa":
-                    self.__car["rearRightTirePressureKpa"],
+                    self._car["rearRightTirePressureKpa"],
                 "rearLeftTirePressureKpa":
-                    self.__car["rearLeftTirePressureKpa"],
-                "originalValue": self.__car[self._name],
+                    self._car["rearLeftTirePressureKpa"],
+                "originalValue": self._car[self._name],
                 "lastUpdate": datetime.datetime.fromtimestamp(
-                    self.__car["lastUpdate"]
+                    self._car["lastUpdate"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
-                "car": self.__car["license"]
+                "car": self._car["license"]
             }
         return {
-            "originalValue": self.__car[self._name],
+            "originalValue": self._car[self._name],
             "lastUpdate": datetime.datetime.fromtimestamp(
-                self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-            "car": self.__car["license"]
+                self._car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
+            "car": self._car["license"]
         }
 
     def update(self):
         """Fetch new state data for the sensor."""
+        _LOGGER.debug("Updating %s", self._name)
+
         self.controller.update()
 
         if self._name == "windowsClosed":
-            self._state = bool(self.__car[self._name] == "CLOSED")
+            self._state = bool(self._car[self._name] == "CLOSED")
         elif self._name == "tireWarningLight":
-            self._state = bool(self.__car[self._name] != "INACTIVE")
+            self._state = bool(self._car[self._name] != "INACTIVE")
         else:
-            self._state = self.__car[self._name]
+            self._state = self._car[self._name]

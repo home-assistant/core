@@ -41,9 +41,9 @@ def setup(hass, config):
     try:
         hass.data[DATA_MME] = {
             'controller': controller.Controller(
-                config[DATA_MME][CONF_USERNAME],
-                config[DATA_MME][CONF_PASSWORD],
-                config[DATA_MME][CONF_SCAN_INTERVAL])
+                config[DOMAIN][CONF_USERNAME],
+                config[DOMAIN][CONF_PASSWORD],
+                config[DOMAIN][CONF_SCAN_INTERVAL])
         }
     except Exceptions.MercedesMeException as ex:
         if ex.code == 401:
@@ -65,9 +65,12 @@ def setup(hass, config):
                       ex.message)
         return False
 
-    if hass.data[DATA_MME]["controller"].is_valid_session:
-        discovery.load_platform(hass, 'sensor', DATA_MME, {}, config)
-        discovery.load_platform(hass, 'device_tracker', DATA_MME, {}, config)
-        discovery.load_platform(hass, 'binary_sensor', DATA_MME, {}, config)
+    if not hass.data[DATA_MME]["controller"].is_valid_session:
+        # should be logged already, the API should be raise an exception
+        return False
+
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'device_tracker', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
     return True

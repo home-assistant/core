@@ -7,13 +7,21 @@ https://home-assistant.io/components/mercedesme/
 import logging
 import datetime
 
+from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.components.mercedesme import DATA_MME
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['mercedesme']
 
-DATA_MME = 'mercedesme'
-
 _LOGGER = logging.getLogger(__name__)
+
+SENSOR_TYPES = {
+    'fuelLevelPercent': ['Fuel Level', '%'],
+    'fuelRangeKm': ['Fuel Range', LENGTH_KILOMETERS],
+    'latestTrip': ['Latest Trip', None],
+    'odometerKm': ['Odometer', LENGTH_KILOMETERS],
+    'serviceIntervalDays': ['Next Service', 'days'],
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,30 +34,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not controller.cars:
         return
 
+    devices = []
     for car in controller.cars:
-        add_devices([Sensor('fuelLevelPercent', car, controller, "%")], True)
-        add_devices([Sensor('fuelRangeKm', car, controller, "Km")], True)
-        add_devices([Sensor('serviceIntervalDays',
-                            car, controller, "days")], True)
-        add_devices([Sensor('odometerKm', car, controller, "Km")], True)
-        add_devices([Sensor('latestTrip', car, controller, None)], True)
+        for key, value in sorted(SENSOR_TYPES.items()):
+            devices.append(
+                MercedesMESensor(key, value[0], car, controller, value[1]))
+
+    add_devices(devices, True)
 
 
-class Sensor(Entity):
+class MercedesMESensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, SensorName, Car, Controller, Unit):
+    def __init__(self, internal_name, sensor_name, car, controller, unit):
         """Initialize the sensor."""
         self._state = None
-        self.__name = SensorName
-        self.__car = Car
-        self.controller = Controller
-        self.__unit = Unit
+        self._name = sensor_name
+        self._internal_name = internal_name
+        self._car = car
+        self.controller = controller
+        self._unit = unit
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.__name
+        return self._name
 
     @property
     def state(self):
@@ -59,40 +68,42 @@ class Sensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self.__unit
+        return self._unit
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.__name == "latestTrip":
+        if self._internal_name == "latestTrip":
             return {
                 "durationSeconds":
-                    self.__car["latestTrip"]["durationSeconds"],
+                    self._car["latestTrip"]["durationSeconds"],
                 "distanceTraveledKm":
-                    self.__car["latestTrip"]["distanceTraveledKm"],
+                    self._car["latestTrip"]["distanceTraveledKm"],
                 "startedAt": datetime.datetime.fromtimestamp(
-                    self.__car["latestTrip"]["startedAt"]
+                    self._car["latestTrip"]["startedAt"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
                 "averageSpeedKmPerHr":
-                    self.__car["latestTrip"]["averageSpeedKmPerHr"],
-                "finished": self.__car["latestTrip"]["finished"],
+                    self._car["latestTrip"]["averageSpeedKmPerHr"],
+                "finished": self._car["latestTrip"]["finished"],
                 "lastUpdate": datetime.datetime.fromtimestamp(
-                    self.__car["lastUpdate"]
+                    self._car["lastUpdate"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
-                "car": self.__car["license"]
+                "car": self._car["license"]
             }
 
         return {
             "lastUpdate": datetime.datetime.fromtimestamp(
-                self.__car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
-            "car": self.__car["license"]
+                self._car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
+            "car": self._car["license"]
         }
 
     def update(self):
         """Fetch new state data for the sensor."""
+        _LOGGER.debug("Updating %s", self._internal_name)
+
         self.controller.update()
 
-        if self.__name == "latestTrip":
-            self._state = self.__car["latestTrip"]["id"]
+        if self._internal_name == "latestTrip":
+            self._state = self._car["latestTrip"]["id"]
         else:
-            self._state = self.__car[self.__name]
+            self._state = self._car[self._internal_name]
