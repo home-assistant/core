@@ -130,7 +130,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Set up the smart mi acpartner platform."""
+    """Set up the air conditioning companion from config."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME) or DEFAULT_NAME
     token = config.get(CONF_TOKEN)
@@ -139,14 +139,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     sync = config.get(CONF_SYNC)
     customize = config.get(CONF_CUSTOMIZE)
 
-    add_devices_callback([MiAcPartner(
+    add_devices_callback([XiaomiAirConditioningCompanion(
         hass, name, None, None, None, STATE_AUTO, None,
         STATE_OFF, STATE_OFF, None, DEFAULT_MAX_TMEP, DEFAULT_MIN_TMEP, host,
         token, sensor_entity_id, sync, customize)])
 
 
-class MiAcPartner(ClimateDevice):
-    """Representation of a demo climate device."""
+class XiaomiAirConditioningCompanion(ClimateDevice):
+    """Representation of a Xiaomi Air Conditioning Companion."""
 
     # FIXME: Mismatch at the naming of the OperationModes (heating vs. heat)
     # FIXME: OperationMode doesn't return 'off' anymore
@@ -238,7 +238,6 @@ class MiAcPartner(ClimateDevice):
         if new_state is None:
             return
         self._async_update_temp(new_state)
-        # yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def _async_get_states(self, now=None):
@@ -346,7 +345,7 @@ class MiAcPartner(ClimateDevice):
 
     @property
     def is_aux_heat_on(self):
-        """Return true if away mode is on."""
+        """Return true if aux heat is on."""
         return self._aux
 
     @property
@@ -441,12 +440,12 @@ class MiAcPartner(ClimateDevice):
         self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
-        """Turn away auxillary heater on."""
+        """Turn auxillary heater on."""
         self._aux = True
         self.schedule_update_ha_state()
 
     def turn_aux_heat_off(self):
-        """Turn auxillary heater off."""
+        """Turn auxiliary heater off."""
         self._aux = False
         self.schedule_update_ha_state()
 
