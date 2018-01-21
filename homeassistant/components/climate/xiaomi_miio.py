@@ -51,75 +51,6 @@ CONF_SENSOR = 'target_sensor'
 CONF_SYNC = 'sync'
 CONF_CUSTOMIZE = 'customize'
 
-__Presets__ = {
-    "default": {
-        "description": "The Default Replacement of AC Partner",
-        "defaultMain": "AC model(10)+po+mo+wi+sw+tt",
-        "VALUE": ["po", "mo", "wi", "sw", "tt", "li"],
-        "po": {
-            "type": "switch",
-            "on": "1",
-            "off": "0"
-        },
-        "mo": {
-            "heater": "0",
-            "cooler": "1",
-            "auto": "2",
-            "dehum": "3",
-            "airSup": "4"
-        },
-        "wi": {
-            "auto": "3",
-            "1": "0",
-            "2": "1",
-            "3": "2"
-        },
-        "sw": {
-            "on": "0",
-            "off": "1"
-        },
-        "tt": "1",
-        "li": {
-            "off": "a0"
-        }
-    },
-    "0180111111": {
-        "des": "media_1",
-        "main": "0180111111pomowiswtt02"
-    },
-    "0180222221": {
-        "des": "gree_1",
-        "main": "0180222221pomowiswtt02"
-    },
-    "0100010727": {
-        "des": "gree_2",
-        "main": "0100010727pomowiswtt1100190t0t20500\
-                2102000t6t0190t0t207002000000t4wt0",
-        "off": "010001072701011101004000205002112000\
-                D04000207002000000A0",
-        "EXTRA_VALUE": ["t0t", "t6t", "t4wt"],
-        "t0t": "1",
-        "t6t": "7",
-        "t4wt": "4"
-    },
-    "0100004795": {
-        "des": "gree_8",
-        "main": "0100004795pomowiswtt0100090900005002"
-    },
-    "0180333331": {
-        "des": "haier_1",
-        "main": "0180333331pomowiswtt12"
-    },
-    "0180666661": {
-        "des": "aux_1",
-        "main": "0180666661pomowiswtt12"
-    },
-    "0180777771": {
-        "des": "chigo_1",
-        "main": "0180777771pomowiswtt12"
-    }
-}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -382,7 +313,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                             self._current_operation == STATE_IDLE):
                 self._current_operation = STATE_AUTO
 
-        self.sendcmd()
+        self.send_configuration()
         self.schedule_update_ha_state()
 
     def set_humidity(self, humidity):
@@ -393,25 +324,25 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def set_swing_mode(self, swing_mode):
         """Set target temperature."""
         self._current_swing_mode = swing_mode
-        if self._customize and ('swing' in self._customize):
-            self._customize_sendcmd('swing')
+        if self._customize and ('swing' in self._customize) and (self._current_swing_mode in self._customize['swing']):
+            self.send_custom_command(self._customize['swing'][self._current_swing_mode])
         else:
-            self.sendcmd()
+            self.send_configuration()
         self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set the fan mode."""
         self._current_fan_mode = fan
-        if self._customize and ('fan' in self._customize):
-            self._customize_sendcmd('fan')
+        if self._customize and ('fan' in self._customize) and (self._current_fan_mode in self._customize['fan']):
+            self.send_custom_command(self._customize['fan'][self._current_fan_mode])
         else:
-            self.sendcmd()
+            self.send_configuration()
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         self._current_operation = operation_mode
-        self.sendcmd()
+        self.send_configuration()
         self.schedule_update_ha_state()
 
     @property
@@ -449,124 +380,25 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         self._aux = False
         self.schedule_update_ha_state()
 
-    def sendcmd(self):
-        """
-        model[10]+on/off[1]+mode[1]+wi[1]+sw[1]+temp[2]+scode[2]
-        0180111111 po mo wi sw tt 02
-        """
-        model = self._state.air_condition_model
-
-        if model not in __Presets__:
-            maincode = model + "pomowiswtta0"
-        else:
-            maincode = __Presets__[model]['main']
-        if (model in __Presets__) and (STATE_OFF in __Presets__[model]) and (
-                    (self._current_operation == STATE_OFF) or (
-                            self._current_operation == STATE_IDLE)):
-            maincode = __Presets__[model][STATE_OFF]
-        else:
-            codeconfig = __Presets__['default']
-            valuecont = __Presets__['default']['VALUE']
-            index = 0
-            while index < len(valuecont):
-                tep = valuecont[index]
-                if tep == "tt":
-                    temp = hex(int(self._target_temperature))[2:]
-                    maincode = maincode.replace('tt', temp)
-                if tep == "po":
-                    if (self._current_operation == STATE_IDLE) or (
-                                self._current_operation == STATE_OFF):
-                        pocode = codeconfig['po'][STATE_OFF]
-                    else:
-                        pocode = codeconfig['po'][STATE_ON]
-                    maincode = maincode.replace('po', pocode)
-                if tep == "mo":
-                    if self._current_operation == STATE_HEAT:
-                        mocode = codeconfig['mo']['heater']
-                    elif self._current_operation == STATE_COOL:
-                        mocode = codeconfig['mo']['cooler']
-                    else:
-                        mocode = '2'
-                    maincode = maincode.replace('mo', mocode)
-                if tep == "wi":
-                    if self._current_fan_mode == STATE_LOW:
-                        wicode = '0'
-                    elif self._current_fan_mode == STATE_MEDIUM:
-                        wicode = '1'
-                    elif self._current_fan_mode == STATE_HIGH:
-                        wicode = '2'
-                    else:
-                        wicode = '3'
-                    maincode = maincode.replace('wi', wicode)
-                if tep == "sw":
-                    if self._current_swing_mode == STATE_ON:
-                        maincode = maincode.replace(
-                            'sw', codeconfig['sw'][STATE_ON])
-                    else:
-                        maincode = maincode.replace(
-                            'sw', codeconfig['sw'][STATE_OFF])
-                if tep == "li":
-                    maincode = maincode
-                index += 1
-
-            if (model in __Presets__) and (
-                        'EXTRA_VALUE' in __Presets__[model]):
-                codeconfig = __Presets__[model]
-                valuecont = __Presets__[model]['EXTRA_VALUE']
-                index = 0
-                while index < len(valuecont):
-                    tep = valuecont[index]
-                    if tep == "t0t":
-                        temp = (
-                                   int(codeconfig['t0t']) + int(
-                                       self._target_temperature) - 17) % 16
-                        temp = hex(temp)[2:].upper()
-                        maincode = maincode.replace('t0t', temp)
-                    if tep == "t6t":
-                        temp = (int(codeconfig['t6t']) + int(
-                            self._target_temperature) - 17) % 16
-                        temp = hex(temp)[2:].upper()
-                        maincode = maincode.replace('t6t', temp)
-                    if tep == "t4wt":
-                        temp = (int(codeconfig['t4wt']) + int(
-                            self._target_temperature) - 17) % 16
-                        temp = hex(temp)[2:].upper()
-                        maincode = maincode.replace('t4wt', temp)
-                    index += 1
-
+    def send_configuration(self):
         try:
-            self._climate.send_command(maincode)
-            _LOGGER.info(
-                'Change Climate Successful: acmodel: %s,\
-                operation: %s , temperature: %s, fan: %s,\
-                swing: %s, sendCode: %s',
-                model, self._current_operation,
-                self._target_temperature, self._current_fan_mode,
-                self._current_swing_mode, maincode)
+            self._climate.send_configuration(
+                self._state.air_condition_model,
+                self._state.power,
+                self._current_operation,
+                self._target_temperature,
+                self._current_fan_mode,
+                self._current_swing_mode)
+            _LOGGER.info('Climate device configuration updated.')
         except ValueError as ex:
-            _LOGGER.error('Change Climate Fail: %s', ex)
+            _LOGGER.error('Climate device configuration update failed: %s', ex)
 
-    def _customize_sendcmd(self, customize_mode):
-        model = self._state.acmodel
-        if customize_mode == 'fan' and self._current_fan_mode != STATE_IDLE:
-            maincode = self._customize['fan'][self._current_fan_mode]
-        elif customize_mode == 'swing' and \
-                self._current_swing_mode != STATE_IDLE:
-            maincode = self._customize['swing'][self._current_swing_mode]
-        else:
-            return
-
+    def send_custom_command(self, command: str):
         try:
-            if str(maincode)[0:2] == "01":
-                self._climate.send_command(maincode)
+            if command[0:2] == "01":
+                self._climate.send_command(command)
             else:
-                self._climate.send_ir_code(maincode)
-            _LOGGER.info(
-                'Send Customize Code: acmodel: %s,\
-                operation: %s , temperature: %s, fan: %s,\
-                swing: %s, sendCode: %s',
-                model, self._current_operation,
-                self._target_temperature, self._current_fan_mode,
-                self._current_swing_mode, maincode)
+                self._climate.send_ir_code(command)
+            _LOGGER.info('Climate device configuration updated.')
         except ValueError as ex:
-            _LOGGER.error('Change Climate Fail: %s', ex)
+            _LOGGER.error('Climate device configuration update failed: %s', ex)
