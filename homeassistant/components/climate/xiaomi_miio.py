@@ -1,5 +1,5 @@
 """
-Support SmartMi acpartner.
+Support for Xiaomi Mi Home Air Conditioner Companion (AC Partner)
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.xiaomi_miio
@@ -12,22 +12,23 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
-    ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
+    ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT)
+    CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, )
 # from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
-    async_track_state_change, async_track_time_interval)
+    async_track_state_change, async_track_time_interval, )
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.3.2']
 _LOGGER = logging.getLogger(__name__)
+
+REQUIREMENTS = ['python-miio==0.3.4']
 
 DEPENDENCIES = ['sensor']
 
 DEFAULT_TOLERANCE = 0.3
-DEFAULT_NAME = 'Mi ACpartner'
+DEFAULT_NAME = 'Xiaomi AC Companion'
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_RETRY = 3
@@ -137,6 +138,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class ClimateStatus(ClimateDevice):
     """Container for status reports from the climate."""
+
     def __init__(self, data):
         self.data = data
 
@@ -412,7 +414,7 @@ class MiAcPartner(ClimateDevice):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
-           kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
+                        kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
@@ -423,8 +425,8 @@ class MiAcPartner(ClimateDevice):
             self._current_operation = 'off'
             self._target_temperature = self._target_temperature_high
         elif self._current_temperature and (
-                self._current_operation == "off" or
-                self._current_operation == "idle"):
+                        self._current_operation == "off" or
+                        self._current_operation == "idle"):
             self.set_operation_mode('auto')
             return
 
@@ -514,8 +516,8 @@ class MiAcPartner(ClimateDevice):
         else:
             maincode = __Presets__[model]['main']
         if (model in __Presets__) and ('off' in __Presets__[model]) and (
-                (self._current_operation == 'off') or (
-                    self._current_operation == 'idle')):
+                    (self._current_operation == 'off') or (
+                            self._current_operation == 'idle')):
             maincode = __Presets__[model]['off']
         else:
             codeconfig = __Presets__['default']
@@ -528,7 +530,7 @@ class MiAcPartner(ClimateDevice):
                     maincode = maincode.replace('tt', temp)
                 if tep == "po":
                     if (self._current_operation == 'idle') or (
-                            self._current_operation == 'off'):
+                                self._current_operation == 'off'):
                         pocode = codeconfig['po']['off']
                     else:
                         pocode = codeconfig['po']['on']
@@ -563,7 +565,7 @@ class MiAcPartner(ClimateDevice):
                 index += 1
 
             if (model in __Presets__) and (
-                    'EXTRA_VALUE' in __Presets__[model]):
+                        'EXTRA_VALUE' in __Presets__[model]):
                 codeconfig = __Presets__[model]
                 valuecont = __Presets__[model]['EXTRA_VALUE']
                 index = 0
@@ -571,8 +573,8 @@ class MiAcPartner(ClimateDevice):
                     tep = valuecont[index]
                     if tep == "t0t":
                         temp = (
-                            int(codeconfig['t0t']) + int(
-                                self._target_temperature) - 17) % 16
+                                   int(codeconfig['t0t']) + int(
+                                       self._target_temperature) - 17) % 16
                         temp = hex(temp)[2:].upper()
                         maincode = maincode.replace('t0t', temp)
                     if tep == "t6t":
