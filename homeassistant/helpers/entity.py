@@ -68,6 +68,9 @@ class Entity(object):
     # Owning hass instance. Will be set by EntityPlatform
     hass = None  # type: Optional[HomeAssistant]
 
+    # Owning platform instance. Will be set by EntityPlatform
+    platform = None
+
     # If we reported if this entity was slow
     _slow_reported = False
 
@@ -309,6 +312,14 @@ class Entity(object):
                 update_warn.cancel()
             if self.parallel_updates:
                 self.parallel_updates.release()
+
+    @asyncio.coroutine
+    def async_remove(self):
+        """Remove entity from Home Assistant."""
+        if self.platform is not None:
+            yield from self.platform.async_remove_entity(self.entity_id)
+        else:
+            self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Populate attributes based on properties."""

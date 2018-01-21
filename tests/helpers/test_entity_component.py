@@ -671,3 +671,14 @@ def test_raise_error_on_update(hass):
 
     assert len(updates) == 1
     assert 1 in updates
+
+
+@asyncio.coroutine
+def test_async_remove_with_platform(hass):
+    """Remove an entity from a platform."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity1 = EntityTest(name='test_1')
+    yield from component.async_add_entities([entity1])
+    assert len(hass.states.async_entity_ids()) == 1
+    yield from entity1.async_remove()
+    assert len(hass.states.async_entity_ids()) == 0
