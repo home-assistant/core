@@ -365,7 +365,7 @@ class MiAcPartner(ClimateDevice):
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
-                        kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
+                kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
@@ -552,7 +552,7 @@ class MiAcPartner(ClimateDevice):
         if customize_mode == 'fan' and self._current_fan_mode != STATE_IDLE:
             maincode = self._customize['fan'][self._current_fan_mode]
         elif customize_mode == 'swing' and \
-                        self._current_swing_mode != STATE_IDLE:
+                self._current_swing_mode != STATE_IDLE:
             maincode = self._customize['swing'][self._current_swing_mode]
         else:
             return
