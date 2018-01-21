@@ -8,7 +8,6 @@ import asyncio
 import copy
 import logging
 from pprint import pprint
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -20,8 +19,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.event import (
-    track_time_change, track_point_in_utc_time)
+from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -594,35 +592,37 @@ def setup(hass, config):
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
-        start_time = dt_util.utcnow()
-
-        def _check_awaked(now):
+        @asyncio.coroutine
+        def _check_awaked():
             """Wait for Z-wave awaked state (or timeout) and finalize start."""
             _LOGGER.debug(
                 "network state: %d %s", network.state,
                 network.state_str)
 
-            waited = int((dt_util.utcnow()-start_time).total_seconds())
+            start_time = dt_util.utcnow()
+            while True:
+                waited = int((dt_util.utcnow()-start_time).total_seconds())
 
-            if network.state >= network.STATE_AWAKED:
-                # Need to be in STATE_AWAKED before talking to nodes.
-                _LOGGER.info("Z-Wave ready after %d seconds", waited)
-                _finalize_start()
-            elif waited >= const.NETWORK_READY_WAIT_SECS:
-                # Wait up to NETWORK_READY_WAIT_SECS seconds for the Z-Wave
-                # network to be ready.
-                _LOGGER.warning(
-                    "Z-Wave not ready after %d seconds, continuing anyway",
-                    waited)
-                _LOGGER.info(
-                    "final network state: %d %s", network.state,
-                    network.state_str)
-                _finalize_start()
-            else:
-                next_check = now + timedelta(seconds=1)
-                track_point_in_utc_time(hass, _check_awaked, next_check)
+                if network.state >= network.STATE_AWAKED:
+                    # Need to be in STATE_AWAKED before talking to nodes.
+                    _LOGGER.info("Z-Wave ready after %d seconds", waited)
+                    break
+                elif waited >= const.NETWORK_READY_WAIT_SECS:
+                    # Wait up to NETWORK_READY_WAIT_SECS seconds for the Z-Wave
+                    # network to be ready.
+                    _LOGGER.warning(
+                        "Z-Wave not ready after %d seconds, continuing anyway",
+                        waited)
+                    _LOGGER.info(
+                        "final network state: %d %s", network.state,
+                        network.state_str)
+                    break
+                else:
+                    yield from asyncio.sleep(1)
 
-        _check_awaked(start_time)
+            hass.async_add_job(_finalize_start)
+
+        hass.add_job(_check_awaked)
 
     def _finalize_start():
         """Perform final initializations after Z-Wave network is awaked."""

@@ -154,28 +154,30 @@ def test_zwave_ready_wait(hass, mock_openzwave):
     yield from async_setup_component(hass, 'zwave', {'zwave': {}})
     yield from hass.async_block_till_done()
 
-    track_calls = []
+    sleeps = []
 
     def utcnow():
-        return datetime.fromtimestamp(len(track_calls))
+        return datetime.fromtimestamp(len(sleeps))
 
-    def track(hass, action, point_in_time):
-        track_calls.append(point_in_time)
-        action(point_in_time)
+    asyncio_sleep = asyncio.sleep
+    @asyncio.coroutine
+    def sleep(duration, loop=None):
+        if duration > 0:
+            sleeps.append(duration)
+        yield from asyncio_sleep(0, loop)
 
     with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
-        with patch.object(zwave, 'track_point_in_utc_time', new=track):
-            with patch.object(zwave.const, 'NETWORK_READY_WAIT_SECS', 10):
-                with patch.object(zwave, '_LOGGER') as mock_logger:
-                    hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
-                    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-                    yield from hass.async_block_till_done()
+        with patch('asyncio.sleep', new=sleep):
+            with patch.object(zwave, '_LOGGER') as mock_logger:
+                hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
+                hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+                yield from hass.async_block_till_done()
 
-                    assert len(track_calls) == const.NETWORK_READY_WAIT_SECS
-                    assert mock_logger.warning.called
-                    assert len(mock_logger.warning.mock_calls) == 1
-                    assert mock_logger.warning.mock_calls[0][1][1] == \
-                        const.NETWORK_READY_WAIT_SECS
+                assert len(sleeps) == const.NETWORK_READY_WAIT_SECS
+                assert mock_logger.warning.called
+                assert len(mock_logger.warning.mock_calls) == 1
+                assert mock_logger.warning.mock_calls[0][1][1] == \
+                    const.NETWORK_READY_WAIT_SECS
 
 
 @asyncio.coroutine
