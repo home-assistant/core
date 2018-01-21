@@ -4,28 +4,27 @@ Support for Todoist task management (https://todoist.com).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar.todoist/
 """
-
-
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    CalendarEventDevice, DOMAIN, PLATFORM_SCHEMA)
-from homeassistant.components.google import (
-    CONF_DEVICE_ID)
-from homeassistant.const import (
-    CONF_ID, CONF_NAME, CONF_TOKEN)
+    DOMAIN, PLATFORM_SCHEMA, CalendarEventDevice)
+from homeassistant.components.google import CONF_DEVICE_ID
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import dt
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 REQUIREMENTS = ['todoist-python==7.0.17']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_EXTRA_PROJECTS = 'custom_projects'
+CONF_PROJECT_DUE_DATE = 'due_date_days'
+CONF_PROJECT_LABEL_WHITELIST = 'labels'
+CONF_PROJECT_WHITELIST = 'include_projects'
 
 # Calendar Platform: Does this calendar event last all day?
 ALL_DAY = 'all_day'
@@ -78,19 +77,14 @@ SUMMARY = 'summary'
 TASKS = 'items'
 
 SERVICE_NEW_TASK = 'todoist_new_task'
+
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Required(CONTENT): cv.string,
     vol.Optional(PROJECT_NAME, default='inbox'): vol.All(cv.string, vol.Lower),
     vol.Optional(LABELS): cv.ensure_list_csv,
-    vol.Optional(PRIORITY): vol.All(vol.Coerce(int),
-                                    vol.Range(min=1, max=4)),
-    vol.Optional(DUE_DATE): cv.string
+    vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+    vol.Optional(DUE_DATE): cv.string,
 })
-
-CONF_EXTRA_PROJECTS = 'custom_projects'
-CONF_PROJECT_DUE_DATE = 'due_date_days'
-CONF_PROJECT_WHITELIST = 'include_projects'
-CONF_PROJECT_LABEL_WHITELIST = 'labels'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
@@ -111,8 +105,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Todoist platform."""
-    # Check token:
+    """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
 
     # Look up IDs based on (lowercase) names.
@@ -176,7 +169,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(project_devices)
 
     def handle_new_task(call):
-        """Called when a user creates a new Todoist Task from HASS."""
+        """Call when a user creates a new Todoist Task from HASS."""
         project_name = call.data[PROJECT_NAME]
         project_id = project_id_lookup[project_name]
 
@@ -528,8 +521,7 @@ class TodoistProjectData(object):
                 # Let's set our "due date" to tomorrow
                 self.event[END] = {
                     DATETIME: (
-                        datetime.utcnow() +
-                        timedelta(days=1)
+                        datetime.utcnow() + timedelta(days=1)
                     ).strftime(DATE_STR_FORMAT)
                 }
         _LOGGER.debug("Updated %s", self._name)

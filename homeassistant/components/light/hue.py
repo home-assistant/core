@@ -14,13 +14,12 @@ import socket
 import voluptuous as vol
 
 import homeassistant.components.hue as hue
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
+    FLASH_LONG, FLASH_SHORT, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
 from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -114,7 +113,7 @@ def update_lights(hass, bridge, add_devices):
 
 
 def unthrottled_update_lights(hass, bridge, add_devices):
-    """Internal version of update_lights."""
+    """Update the lights (Internal version of update_lights)."""
     import phue
 
     if not bridge.configured:
@@ -123,14 +122,14 @@ def unthrottled_update_lights(hass, bridge, add_devices):
     try:
         api = bridge.get_api()
     except phue.PhueRequestTimeout:
-        _LOGGER.warning('Timeout trying to reach the bridge')
+        _LOGGER.warning("Timeout trying to reach the bridge")
         return
     except ConnectionRefusedError:
-        _LOGGER.error('The bridge refused the connection')
+        _LOGGER.error("The bridge refused the connection")
         return
     except socket.error:
         # socket.error when we cannot reach Hue
-        _LOGGER.exception('Cannot reach the bridge')
+        _LOGGER.exception("Cannot reach the bridge")
         return
 
     new_lights = process_lights(
@@ -151,7 +150,7 @@ def process_lights(hass, api, bridge, update_lights_cb):
     api_lights = api.get('lights')
 
     if not isinstance(api_lights, dict):
-        _LOGGER.error('Got unexpected result from Hue API')
+        _LOGGER.error("Got unexpected result from Hue API")
         return []
 
     new_lights = []
@@ -186,8 +185,8 @@ def process_groups(hass, api, bridge, update_lights_cb):
 
     for lightgroup_id, info in api_groups.items():
         if 'state' not in info:
-            _LOGGER.warning('Group info does not contain state. '
-                            'Please update your hub.')
+            _LOGGER.warning(
+                "Group info does not contain state. Please update your hub")
             return []
 
         if lightgroup_id not in bridge.lightgroups:

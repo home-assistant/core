@@ -4,12 +4,13 @@ Sensors for the Tesla sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tesla/
 """
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
+from homeassistant.components.tesla import TeslaDevice
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class TeslaSensor(TeslaDevice, Entity):
     """Representation of Tesla sensors."""
 
     def __init__(self, tesla_device, controller, sensor_type=None):
-        """Initialisation of the sensor."""
+        """Initialize of the sensor."""
         self.current_value = None
         self._unit = None
         self.last_changed_time = None

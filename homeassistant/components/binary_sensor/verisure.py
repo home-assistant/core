@@ -6,15 +6,15 @@ https://home-assistant.io/components/binary_sensor.verisure/
 """
 import logging
 
-from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.verisure import CONF_DOOR_WINDOW
+from homeassistant.components.verisure import HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Verisure binary sensors."""
+    """Set up the Verisure binary sensors."""
     sensors = []
     hub.update_overview()
 
@@ -27,10 +27,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class VerisureDoorWindowSensor(BinarySensorDevice):
-    """Verisure door window sensor."""
+    """Representation of a Verisure door window sensor."""
 
     def __init__(self, device_label):
-        """Initialize the modbus coil sensor."""
+        """Initialize the Verisure door window sensor."""
         self._device_label = device_label
 
     @property

@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, CONF_HOST, CONF_PORT, CONF_TIMEOUT)
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
@@ -37,14 +37,15 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
-    """Setup insteon hub."""
+    """Set up the local Insteon hub."""
     from insteonlocal.Hub import Hub
+
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
@@ -62,20 +63,16 @@ def setup(hass, config):
         # Check for successful connection
         insteonhub.get_buffer_status()
     except requests.exceptions.ConnectTimeout:
-        _LOGGER.error(
-            "Could not connect. Check config",
-            exc_info=True)
+        _LOGGER.error("Could not connect", exc_info=True)
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error(
-            "Could not connect. Check config",
-            exc_info=True)
+        _LOGGER.error("Could not connect", exc_info=True)
         return False
     except requests.exceptions.RequestException:
         if insteonhub.http_code == 401:
-            _LOGGER.error("Bad user/pass for insteon_local hub")
+            _LOGGER.error("Bad username or password for Insteon_local hub")
         else:
-            _LOGGER.error("Error on insteon_local hub check", exc_info=True)
+            _LOGGER.error("Error on Insteon_local hub check", exc_info=True)
         return False
 
     linked = insteonhub.get_linked()
