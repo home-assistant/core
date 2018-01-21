@@ -11,17 +11,15 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DOMAIN, CONF_UID, CONF_TITLE, CONF_AUDIO, CONF_TEXT, CONF_DISPLAY_URL)
 from . import flash_briefings, intent
+from .const import (
+    CONF_AUDIO, CONF_DISPLAY_URL, CONF_TEXT, CONF_TITLE, CONF_UID, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-
-DEPENDENCIES = ['http']
-
 CONF_FLASH_BRIEFINGS = 'flash_briefings'
 
+DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {

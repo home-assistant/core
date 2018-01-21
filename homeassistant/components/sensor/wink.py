@@ -7,12 +7,13 @@ at https://home-assistant.io/components/sensor.wink/
 import asyncio
 import logging
 
+from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.wink import WinkDevice, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['wink']
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 
@@ -61,7 +62,7 @@ class WinkSensorDevice(WinkDevice, Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['sensor'].append(self)
 
     @property

@@ -1,39 +1,50 @@
-"""Support for Xiaomi Gateways."""
+"""
+Support for Xiaomi Gateways.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/xiaomi_aqara/
+"""
 import asyncio
 import logging
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
+
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
-from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_MAC, CONF_HOST, CONF_PORT)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, CONF_HOST, CONF_MAC, CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['PyXiaomiGateway==0.7.1']
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_RINGTONE_VOL = 'ringtone_vol'
 ATTR_DEVICE_ID = 'device_id'
+
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
+
 DOMAIN = 'xiaomi_aqara'
-PY_XIAOMI_GATEWAY = "xiaomi_gw"
+
+PY_XIAOMI_GATEWAY = 'xiaomi_gw'
 
 SERVICE_PLAY_RINGTONE = 'play_ringtone'
 SERVICE_STOP_RINGTONE = 'stop_ringtone'
 SERVICE_ADD_DEVICE = 'add_device'
 SERVICE_REMOVE_DEVICE = 'remove_device'
 
-
 GW_MAC = vol.All(
     cv.string,
     lambda value: value.replace(':', '').lower(),
     vol.Length(min=12, max=12)
 )
-
 
 SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema({
     vol.Required(ATTR_RINGTONE_ID):
@@ -58,13 +69,13 @@ GATEWAY_CONFIG = vol.Schema({
 
 
 def _fix_conf_defaults(config):
-    """Update some config defaults."""
+    """Update some configuration defaults."""
     config['sid'] = config.pop(CONF_MAC, None)
 
     if config.get(CONF_KEY) is None:
         _LOGGER.warning(
             'Key is not provided for gateway %s. Controlling the gateway '
-            'will not be possible.', config['sid'])
+            'will not be possible', config['sid'])
 
     if config.get(CONF_HOST) is None:
         config.pop(CONF_PORT)
@@ -83,8 +94,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup(hass, config):
     """Set up the Xiaomi component."""
@@ -98,8 +107,8 @@ def setup(hass, config):
 
     @asyncio.coroutine
     def xiaomi_gw_discovered(service, discovery_info):
-        """Called when Xiaomi Gateway device(s) has been found."""
-        # We don't need to do anything here, the purpose of HA's
+        """Perform action when Xiaomi Gateway device(s) has been found."""
+        # We don't need to do anything here, the purpose of Home Assistant's
         # discovery service is to just trigger loading of this
         # component, and then its own discovery process kicks in.
 
@@ -111,7 +120,7 @@ def setup(hass, config):
 
     _LOGGER.debug("Expecting %s gateways", len(gateways))
     for k in range(discovery_retry):
-        _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', k + 1)
+        _LOGGER.info("Discovering Xiaomi Gateways (Try %s)", k + 1)
         xiaomi.discover_gateways()
         if len(xiaomi.gateways) >= len(gateways):
             break
@@ -127,7 +136,7 @@ def setup(hass, config):
 
     def stop_xiaomi(event):
         """Stop Xiaomi Socket."""
-        _LOGGER.info("Shutting down Xiaomi Hub.")
+        _LOGGER.info("Shutting down Xiaomi Hub")
         xiaomi.stop_listen()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
@@ -190,7 +199,7 @@ class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
     def __init__(self, device, name, xiaomi_hub):
-        """Initialize the xiaomi device."""
+        """Initialize the Xiaomi device."""
         self._state = None
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
@@ -208,7 +217,7 @@ class XiaomiDevice(Entity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state. No polling needed."""
         return False
 
     @property

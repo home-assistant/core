@@ -4,16 +4,14 @@ MyChevy Component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/mychevy/
 """
-
 from datetime import timedelta
 import logging
-import time
 import threading
+import time
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
@@ -38,16 +36,16 @@ ERROR_SLEEP_TIME = timedelta(minutes=30)
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
+        vol.Required(CONF_PASSWORD): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 class EVSensorConfig(object):
-    """EV Sensor Config."""
+    """The EV sensor configuration."""
 
     def __init__(self, name, attr, unit_of_measurement=None, icon=None):
-        """Create new Sensor Config."""
+        """Create new sensor configuration."""
         self.name = name
         self.attr = attr
         self.unit_of_measurement = unit_of_measurement
@@ -55,17 +53,17 @@ class EVSensorConfig(object):
 
 
 class EVBinarySensorConfig(object):
-    """EV Binary Sensor Config."""
+    """The EV binary sensor configuration."""
 
     def __init__(self, name, attr, device_class=None):
-        """Create new Binary Sensor Config."""
+        """Create new binary sensor configuration."""
         self.name = name
         self.attr = attr
         self.device_class = device_class
 
 
 def setup(hass, base_config):
-    """Setup mychevy platform."""
+    """Set up the mychevy component."""
     import mychevy.mychevy as mc
 
     config = base_config.get(DOMAIN)
