@@ -4,23 +4,22 @@ Support for Vanderbilt (formerly Siemens) SPC alarm systems.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/spc/
 """
-import logging
 import asyncio
 import json
+import logging
 from urllib.parse import urljoin
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.const import (
-    STATE_UNKNOWN, STATE_ON, STATE_OFF, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
-    STATE_UNAVAILABLE)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED, STATE_OFF, STATE_ON, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = 'spc'
 REQUIREMENTS = ['websockets==3.2']
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +32,7 @@ CONF_API_URL = 'api_url'
 
 DATA_REGISTRY = 'spc_registry'
 DATA_API = 'spc_api'
+DOMAIN = 'spc'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the SPC platform."""
+    """Set up the SPC platform."""
     hass.data[DATA_REGISTRY] = SpcRegistry()
 
     api = SpcWebGateway(hass,
@@ -96,29 +96,31 @@ def _async_process_message(sia_message, spc_registry):
         if len(data) == 3:
             extra['changed_by'] = data[1]
     else:
-        # change in zone status, notify sensor device
+        # Change in zone status, notify sensor device
         device = spc_registry.get_sensor_device(spc_id)
 
-    sia_code_to_state_map = {'BA': STATE_ALARM_TRIGGERED,
-                             'CG': STATE_ALARM_ARMED_AWAY,
-                             'NL': STATE_ALARM_ARMED_HOME,
-                             'OG': STATE_ALARM_DISARMED,
-                             'ZO': STATE_ON,
-                             'ZC': STATE_OFF,
-                             'ZX': STATE_UNKNOWN,
-                             'ZD': STATE_UNAVAILABLE}
+    sia_code_to_state_map = {
+        'BA': STATE_ALARM_TRIGGERED,
+        'CG': STATE_ALARM_ARMED_AWAY,
+        'NL': STATE_ALARM_ARMED_HOME,
+        'OG': STATE_ALARM_DISARMED,
+        'ZO': STATE_ON,
+        'ZC': STATE_OFF,
+        'ZX': STATE_UNKNOWN,
+        'ZD': STATE_UNAVAILABLE,
+    }
 
     new_state = sia_code_to_state_map.get(sia_code, None)
 
     if new_state and not device:
-        _LOGGER.warning("No device mapping found for SPC area/zone id %s.",
-                        spc_id)
+        _LOGGER.warning(
+            "No device mapping found for SPC area/zone id %s", spc_id)
     elif new_state:
         yield from device.async_update_from_spc(new_state, extra)
 
 
 class SpcRegistry:
-    """Maintains mappings between SPC zones/areas and HA entities."""
+    """Maintain mappings between SPC zones/areas and HA entities."""
 
     def __init__(self):
         """Initialize the registry."""
@@ -145,12 +147,12 @@ class SpcRegistry:
 @asyncio.coroutine
 def _ws_process_message(message, async_callback, *args):
     if message.get('status', '') != 'success':
-        _LOGGER.warning("Unsuccessful websocket message "
-                        "delivered, ignoring: %s", message)
+        _LOGGER.warning(
+            "Unsuccessful websocket message delivered, ignoring: %s", message)
     try:
         yield from async_callback(message['data']['sia'], *args)
     except:    # pylint: disable=bare-except
-        _LOGGER.exception("Exception in callback, ignoring.")
+        _LOGGER.exception("Exception in callback, ignoring")
 
 
 class SpcWebGateway:
@@ -180,8 +182,8 @@ class SpcWebGateway:
     @asyncio.coroutine
     def send_area_command(self, area_id, command):
         """Send an area command."""
-        _LOGGER.debug("Sending SPC area command '%s' to area %s.",
-                      command, area_id)
+        _LOGGER.debug(
+            "Sending SPC area command '%s' to area %s", command, area_id)
         resource = "area/{}/{}".format(area_id, command)
         return (yield from self._call_web_gateway(resource, use_get=False))
 
@@ -199,37 +201,39 @@ class SpcWebGateway:
 
     @asyncio.coroutine
     def _get_data(self, resource):
+        """Get the data from the resource."""
         data = yield from self._call_web_gateway(resource)
         if not data:
             return False
         if data['status'] != 'success':
-            _LOGGER.error("SPC Web Gateway call unsuccessful "
-                          "for resource '%s'.", resource)
+            _LOGGER.error(
+                "SPC Web Gateway call unsuccessful for resource: %s", resource)
             return False
         return [item for item in data['data'][resource]]
 
     @asyncio.coroutine
     def _call_web_gateway(self, resource, use_get=True):
+        """Call web gateway for data."""
         response = None
         session = None
         url = self._build_url(resource)
         try:
-            _LOGGER.debug("Attempting to retrieve SPC data from %s.", url)
+            _LOGGER.debug("Attempting to retrieve SPC data from %s", url)
             session = aiohttp.ClientSession()
             with async_timeout.timeout(10, loop=self._hass.loop):
                 action = session.get if use_get else session.put
                 response = yield from action(url)
             if response.status != 200:
-                _LOGGER.error("SPC Web Gateway returned http "
-                              "status %d, response %s.",
-                              response.status, (yield from response.text()))
+                _LOGGER.error(
+                    "SPC Web Gateway returned http status %d, response %s",
+                    response.status, (yield from response.text()))
                 return False
             result = yield from response.json()
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout getting SPC data from %s.", url)
+            _LOGGER.error("Timeout getting SPC data from %s", url)
             return False
         except aiohttp.ClientError:
-            _LOGGER.exception("Error getting SPC data from %s.", url)
+            _LOGGER.exception("Error getting SPC data from %s", url)
             return False
         finally:
             if session:
@@ -241,12 +245,13 @@ class SpcWebGateway:
 
     @asyncio.coroutine
     def _ws_read(self):
+        """Read from websocket."""
         import websockets as wslib
 
         try:
             if not self._ws:
                 self._ws = yield from wslib.connect(self._ws_url)
-                _LOGGER.info("Connected to websocket at %s.", self._ws_url)
+                _LOGGER.info("Connected to websocket at %s", self._ws_url)
         except Exception as ws_exc:    # pylint: disable=broad-except
             _LOGGER.error("Failed to connect to websocket: %s", ws_exc)
             return
@@ -267,15 +272,16 @@ class SpcWebGateway:
 
     @asyncio.coroutine
     def _ws_listen(self, async_callback, *args):
+        """Listen on websocket."""
         try:
             while True:
                 result = yield from self._ws_read()
 
                 if result:
-                    yield from _ws_process_message(json.loads(result),
-                                                   async_callback, *args)
+                    yield from _ws_process_message(
+                        json.loads(result), async_callback, *args)
                 else:
-                    _LOGGER.info("Trying again in 30 seconds.")
+                    _LOGGER.info("Trying again in 30 seconds")
                     yield from asyncio.sleep(30)
 
         finally:

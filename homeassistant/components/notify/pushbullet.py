@@ -129,7 +129,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 continue
 
     def _push_data(self, message, title, data, pusher, email=None):
-        """Helper for creating the message content."""
+        """Create the message content."""
         from pushbullet import PushError
         if data is None:
             data = {}

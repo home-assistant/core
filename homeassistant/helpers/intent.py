@@ -113,7 +113,7 @@ class IntentHandler:
         raise NotImplementedError()
 
     def __repr__(self):
-        """String representation of intent handler."""
+        """Represent a string of an intent handler."""
         return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
 
 

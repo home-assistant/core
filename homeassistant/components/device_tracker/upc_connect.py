@@ -84,7 +84,7 @@ class UPCDeviceScanner(DeviceScanner):
 
     @asyncio.coroutine
     def async_get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Get the device name (the name of the wireless device not used)."""
         return None
 
     @asyncio.coroutine
