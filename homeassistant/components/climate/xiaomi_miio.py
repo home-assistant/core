@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, )
+    PLATFORM_SCHEMA, ClimateDevice, ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW, ATTR_OPERATION_MODE, )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, STATE_ON, STATE_OFF,
@@ -228,6 +228,7 @@ class MiAcPartner(ClimateDevice):
         try:
             self._current_temperature = self.hass.config.units.temperature(
                 float(state.state), unit)
+            self.schedule_update_ha_state()
         except ValueError as ex:
             _LOGGER.error('Unable to update from sensor: %s', ex)
 
@@ -362,22 +363,25 @@ class MiAcPartner(ClimateDevice):
         """Set target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
+
         if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
                         kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        if self._target_temperature < self._target_temperature_low:
-            self._current_operation = STATE_OFF
-            self._target_temperature = self._target_temperature_low
-        elif self._target_temperature > self._target_temperature_high:
-            self._current_operation = STATE_OFF
-            self._target_temperature = self._target_temperature_high
-        elif self._current_temperature and (
-                        self._current_operation == STATE_OFF or
-                        self._current_operation == STATE_IDLE):
-            self.set_operation_mode(STATE_AUTO)
-            return
+        if kwargs.get(ATTR_OPERATION_MODE) is not None:
+            self._current_operation = kwargs.get(ATTR_OPERATION_MODE)
+        else:
+            if self._target_temperature < self._target_temperature_low:
+                self._current_operation = STATE_OFF
+                self._target_temperature = self._target_temperature_low
+            elif self._target_temperature > self._target_temperature_high:
+                self._current_operation = STATE_OFF
+                self._target_temperature = self._target_temperature_high
+            elif self._current_temperature and (
+                            self._current_operation == STATE_OFF or
+                            self._current_operation == STATE_IDLE):
+                self._current_operation = STATE_AUTO
 
         self.sendcmd()
         self.schedule_update_ha_state()
