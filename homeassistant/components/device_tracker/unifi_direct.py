@@ -105,11 +105,11 @@ class UnifiDeviceScanner(DeviceScanner):
                 self._connect()
             # If we still aren't connected at this point
             # don't try to send anything to the AP.
-            if self.connected:
-                self.ssh.sendline(UNIFI_COMMAND)
-                self.ssh.prompt()
-                return self.ssh.before
-            return None
+            if not self.connected:
+                return None
+            self.ssh.sendline(UNIFI_COMMAND)
+            self.ssh.prompt()
+            return self.ssh.before
         except pxssh.ExceptionPxssh as err:
             _LOGGER.error("Unexpected SSH error: %s", str(err))
             self._disconnect()
