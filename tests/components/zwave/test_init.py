@@ -160,8 +160,9 @@ def test_zwave_ready_wait(hass, mock_openzwave):
         return datetime.fromtimestamp(len(sleeps))
 
     asyncio_sleep = asyncio.sleep
+
     @asyncio.coroutine
-    def sleep(duration, loop=None):
+    def sleep(duration, loop):
         if duration > 0:
             sleeps.append(duration)
         yield from asyncio_sleep(0, loop)

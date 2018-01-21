@@ -618,7 +618,7 @@ def setup(hass, config):
                         network.state_str)
                     break
                 else:
-                    yield from asyncio.sleep(1)
+                    yield from asyncio.sleep(1, loop=hass.loop)
 
             hass.async_add_job(_finalize_start)
 
