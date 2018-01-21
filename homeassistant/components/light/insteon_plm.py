@@ -22,18 +22,14 @@ MAX_BRIGHTNESS = 255
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Insteon PLM device."""
-    plm = hass.data['insteon_plm']
 
     device_list = []
     for device in discovery_info:
-        name = device.get('address')
-        address = device.get('address_hex')
-        dimmable = bool('dimmable' in device.get('capabilities'))
 
-        _LOGGER.info("Registered %s with light platform", name)
+        _LOGGER.info("Registered %s with light platform", device.id)
 
         device_list.append(
-            InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)
+            InsteonPLMDimmerDevice(hass, device)
         )
 
     async_add_devices(device_list)
@@ -42,16 +38,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMDimmerDevice(Light):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, plm, address, name, dimmable):
+    def __init__(self, hass, device):
         """Initialize the light."""
         self._hass = hass
-        self._plm = plm.protocol
-        self._address = address
-        self._name = name
-        self._dimmable = dimmable
+        self._device = device
 
-        self._plm.add_update_callback(
-            self.async_light_update, {'address': self._address})
+        self._device.lightOnLevel.connect(self.async_light_update)
 
     @property
     def should_poll(self):
@@ -61,47 +53,46 @@ class InsteonPLMDimmerDevice(Light):
     @property
     def address(self):
         """Return the address of the node."""
-        return self._address
+        return self._device.address.human
+
+    @property
+    def id(self):
+        """Return the name of the node."""
+        return self._device.id
 
     @property
     def name(self):
-        """Return the name of the node."""
-        return self._name
+        """Return the name of the node. (used for Entity_ID)"""
+        return self._device.id
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.debug("on level for %s is %s", self._address, onlevel)
+        onlevel = self._device.lightOnLevel.value
+        _LOGGER.debug("on level for %s is %s", self._device.address, onlevel)
         return int(onlevel)
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.debug("on level for %s is %s", self._address, onlevel)
-        return bool(onlevel)
+        _LOGGER.debug("on level for %s is %s", self._device.id, self.brightness)
+        return bool(self.brightness)
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._dimmable:
-            return SUPPORT_BRIGHTNESS
+        return SUPPORT_BRIGHTNESS
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self)
-
-    def get_attr(self, key):
-        """Return specified attribute for this device."""
-        return self._plm.get_device_attr(self.address, key)
+        return insteon_plm.common_attributes(self._device)
 
     @callback
-    def async_light_update(self, message):
+    def async_light_update(self, entity_id, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info("Received update calback from PLM for %s", self._address)
+        _LOGGER.info("Received update calback from PLM for %s", self.id)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
@@ -111,9 +102,9 @@ class InsteonPLMDimmerDevice(Light):
             brightness = int(kwargs[ATTR_BRIGHTNESS])
         else:
             brightness = MAX_BRIGHTNESS
-        self._plm.turn_on(self._address, brightness=brightness)
+        self._device.light_on(brightness)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn device off."""
-        self._plm.turn_off(self._address)
+        self._device.light_off()

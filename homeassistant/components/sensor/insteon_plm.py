@@ -8,7 +8,7 @@ import logging
 import asyncio
 
 from homeassistant.core import callback
-from homeassistant.components.switch import (SwitchDevice)
+from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['insteon_plm']
@@ -22,25 +22,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     device_list = []
     for device in discovery_info:
-
-        _LOGGER.info('Registered %s with switch platform.', device.id)
+       
+        _LOGGER.info('Registered %s with binary_sensor platform.', device.id)
 
         device_list.append(
-            InsteonPLMSwitchDevice(hass, device)
+            InsteonPLMSensorDevice(hass, device)
         )
 
     async_add_devices(device_list)
 
 
-class InsteonPLMSwitchDevice(SwitchDevice):
+class InsteonPLMSensorDevice(Entity):
     """A Class for an Insteon device."""
 
     def __init__(self, hass, device):
-        """Initialize the switch."""
+        """Initialize the binarysensor."""
         self._hass = hass
         self._device = device
 
-        self._device.lightOnLevel.connect(self.async_switch_update)
+        self._device.sensor.connect(self.async_sensor_update)
 
     @property
     def should_poll(self):
@@ -63,14 +63,11 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         return self._device.id
 
     @property
-    def is_on(self):
-        """Return the boolean response if the node is on."""
-        if self._device.cat == 0x07: # I/O Linc
-            onlevel = self._device.relay.value
-        else:
-            onlevel = self._device.lightOnLevel.value
-        _LOGGER.debug('on level for %s is %s', self._device.id, onlevel)
-        return bool(onlevel)
+    def state(self):
+        """Return the state of the sensor."""
+        sensorstate = self._device.sensor.value
+        _LOGGER.info("Sensor state for {} is {}", self.id, sensorstate)
+        return sensorstate
 
     @property
     def device_state_attributes(self):
@@ -79,23 +76,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         return insteon_plm.common_attributes(self._device)
 
     @callback
-    def async_switch_update(self, deviceid, statename, val):
+    def async_sensor_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for %s', self._device.id)
+        _LOGGER.info("Received update calback from PLM for %s", self.id)
         self._hass.async_add_job(self.async_update_ha_state())
-
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
-        """Turn device on."""
-        if self._device.cat == 0x07: # I/O Linc
-            self._device.relay_open()
-        else:
-            self._device.light_on()
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn device off"""
-        if self._device.cat == 0x07: # I/O Linc
-            self._device.relay_close()
-        else:
-            self._device.light_off()
