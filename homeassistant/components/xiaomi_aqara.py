@@ -7,15 +7,20 @@ https://home-assistant.io/components/xiaomi_aqara/
 import asyncio
 import logging
 
+from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, CONF_HOST, CONF_MAC, CONF_PORT,
     EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['PyXiaomiGateway==0.7.1']
 
