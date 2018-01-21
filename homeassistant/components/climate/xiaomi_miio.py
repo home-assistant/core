@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, )
-# from homeassistant.helpers import condition
+
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval, )
 import homeassistant.helpers.config_validation as cv
@@ -159,10 +159,13 @@ class MiAcPartner(ClimateDevice):
         self.sync = sync
         self._customize = customize
 
-        self._climate = None
+        from miio import AirConditioningCompanion
+        _LOGGER.info("initializing with host %s token %s", self.host, self.token)
+        self._climate = AirConditioningCompanion(self.host, self.token)
+
         self._state = None
         # FIXME: Should the state updated here? Currently it's needed later on.
-        self.climate.status()
+        self._climate.status()
 
         self._target_temperature = self._state.temperature
         self._current_operation = self._state.operation.name.tolower()
@@ -228,7 +231,7 @@ class MiAcPartner(ClimateDevice):
     @asyncio.coroutine
     def _async_get_states(self, now=None):
         """Update the state of this climate device."""
-        self.climate.status()
+        self._climate.status()
         self._current_operation = self._state.operation.name.tolower()
         self._target_temperature = self._state.temperature
         if (not self._customize) or (self._customize
@@ -245,17 +248,6 @@ class MiAcPartner(ClimateDevice):
                      self._state.temperature, self._state.fan_speed.name.tolower(),
                      self._state.sweep)
         self.schedule_update_ha_state()
-
-    @property
-    def climate(self):
-        """install device"""
-        from miio import AirConditioningCompanion
-
-        if not self._climate:
-            _LOGGER.info("initializing with host %s token %s",
-                         self.host, self.token)
-            self._climate = AirConditioningCompanion(self.host, self.token)
-        return self._climate
 
     @property
     def min_temp(self):
@@ -299,12 +291,12 @@ class MiAcPartner(ClimateDevice):
 
     @property
     def target_temperature_high(self):
-        """Return the highbound target temperature we try to reach."""
+        """Return the upper bound of the target temperature we try to reach."""
         return self._target_temperature_high
 
     @property
     def target_temperature_low(self):
-        """Return the lowbound target temperature we try to reach."""
+        """Return the lower bound of the target temperature we try to reach."""
         return self._target_temperature_low
 
     @property
@@ -344,7 +336,7 @@ class MiAcPartner(ClimateDevice):
 
     @property
     def current_fan_mode(self):
-        """Return the fan setting."""
+        """Return the current fan mode."""
         return self._current_fan_mode
 
     @property
@@ -353,7 +345,7 @@ class MiAcPartner(ClimateDevice):
         return self._fan_list
 
     def set_temperature(self, **kwargs):
-        """Set new target temperatures."""
+        """Set target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
@@ -377,12 +369,12 @@ class MiAcPartner(ClimateDevice):
         self.schedule_update_ha_state()
 
     def set_humidity(self, humidity):
-        """Set new target temperature."""
+        """Set the target humidity."""
         self._target_humidity = humidity
         self.schedule_update_ha_state()
 
     def set_swing_mode(self, swing_mode):
-        """Set new target temperature."""
+        """Set target temperature."""
         self._current_swing_mode = swing_mode
         if self._customize and ('swing' in self._customize):
             self._customize_sendcmd('swing')
@@ -391,7 +383,7 @@ class MiAcPartner(ClimateDevice):
         self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
-        """Set new target temperature."""
+        """Set the fan mode."""
         self._current_fan_mode = fan
         if self._customize and ('fan' in self._customize):
             self._customize_sendcmd('fan')
@@ -400,14 +392,14 @@ class MiAcPartner(ClimateDevice):
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
-        """Set new target temperature."""
+        """Set operation mode."""
         self._current_operation = operation_mode
         self.sendcmd()
         self.schedule_update_ha_state()
 
     @property
     def current_swing_mode(self):
-        """Return the swing setting."""
+        """Return the current swing setting."""
         return self._current_swing_mode
 
     @property
@@ -526,7 +518,7 @@ class MiAcPartner(ClimateDevice):
                     index += 1
 
         try:
-            self.climate.send_command(maincode)
+            self._climate.send_command(maincode)
             _LOGGER.info(
                 'Change Climate Successful: acmodel: %s,\
                 operation: %s , temperature: %s, fan: %s,\
@@ -548,9 +540,9 @@ class MiAcPartner(ClimateDevice):
 
         try:
             if str(maincode)[0:2] == "01":
-                self.climate.send_command(maincode)
+                self._climate.send_command(maincode)
             else:
-                self.climate.send_ir_code(maincode)
+                self._climate.send_ir_code(maincode)
             _LOGGER.info(
                 'Send Customize Code: acmodel: %s,\
                 operation: %s , temperature: %s, fan: %s,\
