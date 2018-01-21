@@ -151,7 +151,7 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
     if entity.domain == climate.DOMAIN:
         mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
         if mode not in CLIMATE_SUPPORTED_MODES:
-            mode = 'on'
+            mode = 'heat'
         response = {
             'thermostatMode': mode,
             'thermostatTemperatureSetpoint':
