@@ -992,6 +992,9 @@ pywebpush==1.5.0
 # homeassistant.components.wemo
 pywemo==0.4.25
 
+# homeassistant.components.sensor.xcel
+pyxcel==1.2.1
+
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
 
