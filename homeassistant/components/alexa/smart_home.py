@@ -27,6 +27,8 @@ API_EVENT = 'event'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
 
+SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
+
 CONF_DESCRIPTION = 'description'
 CONF_DISPLAY_CATEGORIES = 'display_categories'
 
@@ -134,7 +136,7 @@ def async_setup(hass, config):
 class SmartHomeView(http.HomeAssistantView):
     """Expose Smart Home v3 payload interface via HTTP POST."""
 
-    url = '/api/alexa/smart_home'
+    url = SMART_HOME_HTTP_ENDPOINT
     name = 'api:alexa:smart_home'
 
     def __init__(self, smart_home_config):
