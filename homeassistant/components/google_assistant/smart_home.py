@@ -198,7 +198,7 @@ def query_device(entity: Entity, config: Config, units: UnitSystem) -> dict:
                 raise SmartHomeError(
                     ERROR_NOT_SUPPORTED,
                     "Invalid value {} for the climate sensor"
-                        .format(entity.state)
+                    .format(entity.state)
                 )
 
             # detect if we report temperature or humidity
@@ -215,7 +215,7 @@ def query_device(entity: Entity, config: Config, units: UnitSystem) -> dict:
                 raise SmartHomeError(
                     ERROR_NOT_SUPPORTED,
                     "Unit {} is not supported by the climate sensor"
-                        .format(unit_of_measurement)
+                    .format(unit_of_measurement)
                 )
 
             return {attr: value}
