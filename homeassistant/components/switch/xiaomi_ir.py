@@ -168,4 +168,3 @@ class ChuangmiIrSwitch(SwitchDevice):
                 return False
             return self._sendpacket(packet, retry-1)
         return True
-        
