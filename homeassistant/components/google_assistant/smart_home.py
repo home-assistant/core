@@ -68,6 +68,22 @@ MAPPING_COMPONENT = {
 }  # type: Dict[str, list]
 
 
+"""Error code used for SmartHomeError class."""
+ERROR_NOT_SUPPORTED = "notSupported"
+
+
+class SmartHomeError(Exception):
+    """Google Assistant Smart Home errors."""
+
+    def __init__(self, error_code, error_msg):
+        """Log error code."""
+        super(SmartHomeError, self).__init__(error_msg)
+        _LOGGER.error(
+            "An error has ocurred in Google SmartHome: {}."
+            "Error code: {}".format(error_msg, error_code)
+        )
+        self.error_code = error_code
+
 class Config:
     """Hold the configuration for Google Assistant."""
 
@@ -157,13 +173,57 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     return device
 
 
-def query_device(entity: Entity, units: UnitSystem) -> dict:
+def query_device(entity: Entity, config: Config, units: UnitSystem) -> dict:
     """Take an entity and return a properly formatted device object."""
     def celsius(deg: Optional[float]) -> Optional[float]:
         """Convert a float to Celsius and rounds to one decimal place."""
         if deg is None:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+
+    if entity.domain == sensor.DOMAIN:
+        entity_config = config.entity_config.get(entity.entity_id, {})
+        google_domain = entity_config.get(CONF_TYPE)
+
+        if google_domain == climate.DOMAIN:
+            # check if we have a string value to convert it to number
+            value = entity.state
+            if isinstance(entity.state, str):
+                try:
+                    value = float(value)
+                except ValueError:
+                    value = None
+
+            if value is None:
+                raise SmartHomeError(
+                    ERROR_NOT_SUPPORTED,
+                    "Invalid value {} for the climate sensor"
+                        .format(entity.state)
+                )
+
+            # detect if we report temperature or humidity
+            unit_of_measurement = entity.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT,
+                units.temperature_unit
+            )
+            if unit_of_measurement in [TEMP_FAHRENHEIT, TEMP_CELSIUS]:
+                value = celsius(value)
+                attr = 'thermostatTemperatureAmbient'
+            elif unit_of_measurement == '%':
+                attr = 'thermostatHumidityAmbient'
+            else:
+                raise SmartHomeError(
+                    ERROR_NOT_SUPPORTED,
+                    "Unit {} is not supported by the climate sensor"
+                        .format(unit_of_measurement)
+                )
+
+            return {attr: value}
+
+        raise SmartHomeError(
+            ERROR_NOT_SUPPORTED,
+            "Sensor type {} is not supported".format(google_domain)
+        )
 
     if entity.domain == climate.DOMAIN:
         mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
@@ -371,7 +431,10 @@ def async_devices_query(hass, config, payload):
             # If we can't find a state, the device is offline
             devices[devid] = {'online': False}
 
-        devices[devid] = query_device(state, hass.config.units)
+        try:
+            devices[devid] = query_device(state, config, hass.config.units)
+        except SmartHomeError as e:
+            devices[devid] = {'errorCode': e.error_code}
 
     return {'devices': devices}
 
