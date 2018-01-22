@@ -15,16 +15,13 @@ from homeassistant.components.switch import (
     DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME,
-    CONF_SWITCHES, CONF_HOST, CONF_NAME, CONF_TOKEN)
+    CONF_SWITCHES, CONF_HOST, CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['python-miio==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Chuangmi IR"
-PLATFORM = 'xiaomi_miio'
 
 SERVICE_LEARN = 'chuangmiIr_learn_command'
 SERVICE_SEND = 'chuangmiIr_send_packet'
@@ -38,7 +35,6 @@ SWITCH_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SWITCHES, default={}):
         vol.Schema({cv.slug: SWITCH_SCHEMA}),
 }, extra=vol.ALLOW_EXTRA)
@@ -46,7 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
-    from miio import ChuangmiIr
+    from miio import ChuangmiIr, DeviceException
+    from construct import ChecksumError
 
     @asyncio.coroutine
     def _learn_command(call):
@@ -79,9 +76,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         packets = call.data.get('packet', [])
         for packet in packets:
             payload = str(packet)
-            _LOGGER.info(payload)
-            yield from hass.async_add_job(
-                remote.play, payload, 1)  # What should this magic constant be?
+            _LOGGER.debug(payload)
+            try:
+                yield from hass.async_add_job(
+                    remote.play, payload, None)
+            except DeviceException as ex:
+                _LOGGER.error(
+                    "Failed to send packet, %s, exception: %s", payload, ex)
 
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
@@ -89,6 +90,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
     remote = ChuangmiIr(host, token)
+
+    try:
+        remote.info()
+    except ChecksumError as ex:
+        _LOGGER.error("Token is wrong : %s", ex)
+        return
 
     hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
                            host.replace('.', '_'), _learn_command)
@@ -141,19 +148,24 @@ class ChuangmiIrSwitch(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        if self._sendpacket(self._command_on):
+        success = yield from self._sendpacket(self._command_on)
+        if success:
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        if self._sendpacket(self._command_off):
+        success = yield from self._sendpacket(self._command_off)
+        if success:
             self._state = False
             self.schedule_update_ha_state()
 
-    def _sendpacket(self, packet, retry=2):
+    @asyncio.coroutine
+    def _sendpacket(self, packet):
         """Send packet to device."""
         from miio import DeviceException
 
@@ -161,10 +173,9 @@ class ChuangmiIrSwitch(SwitchDevice):
             _LOGGER.debug("Empty packet")
             return True
         try:
-            self._device.play(packet, 1)  # What should this magic constant be?
+            yield from self.hass.async_add_job(
+                self._device.play, packet, None)
         except DeviceException as exc:
-            if retry < 1:
-                _LOGGER.error(exc)
-                return False
-            return self._sendpacket(packet, retry-1)
+            _LOGGER.error(exc)
+            return False
         return True
