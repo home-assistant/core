@@ -154,7 +154,7 @@ class ChuangmiIrSwitch(SwitchDevice):
         success = yield from self._sendpacket(self._command_on)
         if success:
             self._state = True
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -162,7 +162,7 @@ class ChuangmiIrSwitch(SwitchDevice):
         success = yield from self._sendpacket(self._command_off)
         if success:
             self._state = False
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def _sendpacket(self, packet):
