@@ -76,7 +76,7 @@ def test_config_missing_optional_params(hass, mock_session_send):
 @mock.patch('os.access', return_value=True)
 @mock.patch('os.path.isfile', mock.Mock(return_value=True))
 def test_config_default_nonssl_port(hass, mock_session_send):
-    """Test the setup with a string with ssl_verify but ssl not enabled."""
+    """Test the setup without a default port set without ssl enabled."""
     config = {
         DOMAIN: tomato.PLATFORM_SCHEMA({
             CONF_PLATFORM: tomato.DOMAIN,
@@ -93,7 +93,7 @@ def test_config_default_nonssl_port(hass, mock_session_send):
 @mock.patch('os.access', return_value=True)
 @mock.patch('os.path.isfile', mock.Mock(return_value=True))
 def test_config_default_ssl_port(hass, mock_session_send):
-    """Test the setup with a string with ssl_verify but ssl not enabled."""
+    """Test the setup without a default port set with ssl enabled."""
     config = {
         DOMAIN: tomato.PLATFORM_SCHEMA({
             CONF_PLATFORM: tomato.DOMAIN,
