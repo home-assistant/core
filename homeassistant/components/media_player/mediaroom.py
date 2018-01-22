@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 NOTIFICATION_TITLE = 'Mediaroom Media Player Setup'
 NOTIFICATION_ID = 'mediaroom_notification'
 DEFAULT_NAME = 'Mediaroom STB'
-DEFAULT_TIMEOUT = 9 
+DEFAULT_TIMEOUT = 9
 
 KNOWN_HOSTS = []
 
@@ -40,14 +40,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Mediaroom platform."""
     hosts = []
-    
+
     host = config.get(CONF_HOST, None)
-    if host == None:
+    if host is None:
         _LOGGER.info("Trying to discover Mediaroom STB")
-        
+
         from pymediaroom import Remote
 
         host = Remote.discover(KNOWN_HOSTS)
@@ -57,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hosts.append(host)
     KNOWN_HOSTS.append(host)
 
-stbs = []
+    stbs = []
 
     try:
         for host in hosts:
@@ -108,12 +109,14 @@ class MediaroomDevice(MediaPlayerDevice):
             self._state = STATE_STANDBY
         elif self._state not in [STATE_PLAYING, STATE_PAUSED]:
             self._state = STATE_PLAYING
-        _LOGGER.debug("{}({}) is [{}]".format(self._name, self.stb.stb_ip, self._state))
+        _LOGGER.debug("{}({}) is [{}]".format(
+            self._name, self.stb.stb_ip, self._state)
+        )
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
         _LOGGER.debug("{}({}) Play media: {} ({})".format(
-            self._name, self.stb.stb_ip,media_id, media_type)
+            self._name, self.stb.stb_ip, media_id, media_type)
         )
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error('invalid media type')
