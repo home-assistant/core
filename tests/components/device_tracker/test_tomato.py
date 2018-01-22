@@ -75,6 +75,41 @@ def test_config_missing_optional_params(hass, mock_session_send):
 
 @mock.patch('os.access', return_value=True)
 @mock.patch('os.path.isfile', mock.Mock(return_value=True))
+def test_config_default_nonssl_port(hass, mock_session_send):
+    """Test the setup with a string with ssl_verify but ssl not enabled."""
+    config = {
+        DOMAIN: tomato.PLATFORM_SCHEMA({
+            CONF_PLATFORM: tomato.DOMAIN,
+            CONF_HOST: 'tomato-router',
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'password',
+            tomato.CONF_HTTP_ID: '1234567890'
+        })
+    }
+    result = tomato.get_scanner(hass, config)
+    assert result.req.url == "http://tomato-router:80/update.cgi"
+
+
+@mock.patch('os.access', return_value=True)
+@mock.patch('os.path.isfile', mock.Mock(return_value=True))
+def test_config_default_ssl_port(hass, mock_session_send):
+    """Test the setup with a string with ssl_verify but ssl not enabled."""
+    config = {
+        DOMAIN: tomato.PLATFORM_SCHEMA({
+            CONF_PLATFORM: tomato.DOMAIN,
+            CONF_HOST: 'tomato-router',
+            CONF_SSL: True,
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'password',
+            tomato.CONF_HTTP_ID: '1234567890'
+        })
+    }
+    result = tomato.get_scanner(hass, config)
+    assert result.req.url == "https://tomato-router:443/update.cgi"
+
+
+@mock.patch('os.access', return_value=True)
+@mock.patch('os.path.isfile', mock.Mock(return_value=True))
 def test_config_verify_ssl_but_no_ssl_enabled(hass, mock_session_send):
     """Test the setup with a string with ssl_verify but ssl not enabled."""
     config = {
