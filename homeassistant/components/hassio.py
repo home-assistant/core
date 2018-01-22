@@ -71,7 +71,7 @@ NO_TIMEOUT = {
 }
 
 NO_AUTH = {
-    re.compile(r'^panel_(es5|latest)$'), re.compile(r'^addons/[^/]*/logo$')
+    re.compile(r'^app-(es5|latest)$'), re.compile(r'^addons/[^/]*/logo$')
 }
 
 SCHEMA_NO_DATA = vol.Schema({})
