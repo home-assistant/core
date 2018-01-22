@@ -6,37 +6,45 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-import custom_components.leaf as LeafCore
+import homeassistant.components.nissan_leaf as LeafCore
+from homeassistant.components.nissan_leaf import LeafEntity
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
+import asyncio
+
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['nissan_leaf']
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    controller = hass.data[LeafCore.DATA_LEAF].leaf
     devices = []
 
-    devices.append(LeafSensor(controller, hass.data[LeafCore.DATA_LEAF]))
+    for key, value in hass.data[LeafCore.DATA_LEAF].items():
+        devices.append(LeafBatterySensor(value.leaf, value))
+
+    _LOGGER.debug("Adding sensors")
 
     add_devices(devices, True)
 
-class LeafSensor(Entity):
-    def __init__(self, controller, data):
-        self.controller = controller
-        self.data = data
+    return True
 
+
+class LeafBatterySensor(LeafCore.LeafEntity):
     @property
     def name(self):
         return "Leaf Charge %"
-    
+
+    def log_registration(self):
+        _LOGGER.debug(
+            "Registered LeafBatterySensor component with HASS for VIN " + self.controller.vin)
+
     @property
     def state(self):
-        return self.data[LeafCore.DATA_BATTERY]
+        return self.data.data[LeafCore.DATA_BATTERY]
 
     @property
     def unit_of_measurement(self):
         return '%'
-
-    def update(self):
-        self.data.update()
