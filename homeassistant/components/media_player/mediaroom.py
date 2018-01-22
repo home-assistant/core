@@ -48,23 +48,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if host == None:
         _LOGGER.info("Trying to discover Mediaroom STB")
         
-        from pymediaroom import Remote 
+        from pymediaroom import Remote
 
         host = Remote.discover(KNOWN_HOSTS)
-        if host == None:
-            #Can't find any STB
-            return False 
+        if host is None:
+            # Can't find any STB
+            return False
     hosts.append(host)
     KNOWN_HOSTS.append(host)
-        
-    stbs = []
+
+stbs = []
 
     try:
         for host in hosts:
             stbs.append(
                 MediaroomDevice(config.get(CONF_NAME),
                 host, 
-                config.get(CONF_OPTIMISTIC), 
+                config.get(CONF_OPTIMISTIC),
                 config.get(CONF_TIMEOUT))
             )
 
@@ -88,16 +88,16 @@ class MediaroomDevice(MediaPlayerDevice):
 
     def __init__(self, name, host, optimistic=False, timeout=DEFAULT_TIMEOUT):
         """Initialize the device."""
-        from pymediaroom import Remote 
+        from pymediaroom import Remote
 
-        self.stb = Remote(host,timeout=timeout)
+        self.stb = Remote(host, timeout=timeout)
         _LOGGER.info("Found {} at {}{}".format(
             name, host, " - I'm optimistic" if optimistic else "")
         )
         self._name = name
-        self._is_standby = not optimistic 
+        self._is_standby = not optimistic
         self._current = None
-        self._optimistic = optimistic 
+        self._optimistic = optimistic
         self._state = STATE_STANDBY
 
     def update(self):
@@ -106,9 +106,9 @@ class MediaroomDevice(MediaPlayerDevice):
             self._is_standby = self.stb.get_standby()
         if self._is_standby:
             self._state = STATE_STANDBY
-        elif not self._state in [STATE_PLAYING, STATE_PAUSED]:
+        elif self._state not in [STATE_PLAYING, STATE_PAUSED]:
             self._state = STATE_PLAYING
-        _LOGGER.debug("{}({}) is [{}]".format(self._name, self.stb.stb_ip,self._state))
+        _LOGGER.debug("{}({}) is [{}]".format(self._name, self.stb.stb_ip, self._state))
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
@@ -134,7 +134,7 @@ class MediaroomDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state 
+        return self._state
 
     @property
     def supported_features(self):
