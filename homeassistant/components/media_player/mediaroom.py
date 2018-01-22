@@ -1,24 +1,6 @@
 """
 Support for the Mediaroom Set-up-box.
 
-WORK IN PROGRESS!!!
-
-You need to place this file in ~/.homeassistant/custom_components/media_player
-and install pymediaroom:
-
-pip install pymediaroom
-
-in your configuration, just add the platform:
-
-media_player:
-  - platform: mediaroom
-    host: 192.168.1.64
-    name: "vodafone STB"
-    optimistic: True
-
-If you don't type "host", auto discovery will look up a box in your network
-"optimistic" will assure that the media player is enabled even if a status can't be retrieved
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mediaroom/
 """
