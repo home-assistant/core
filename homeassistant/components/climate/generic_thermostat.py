@@ -161,24 +161,20 @@ class GenericThermostat(ClimateDevice):
                         self._target_temp = self.max_temp
                     else:
                         self._target_temp = self.min_temp
-                    _LOGGER.warning('Undefined target temperature,'
-                                    'falling back to %s', self._target_temp)
+                    _LOGGER.warning("Undefined target temperature,"
+                                    "falling back to %s", self._target_temp)
                 else:
                     self._target_temp = float(
                         old_state.attributes[ATTR_TEMPERATURE])
             if old_state.attributes[ATTR_AWAY_MODE] is not None:
-                self._is_away = True if str(
-                    old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON \
-                    else False
-            if old_state.attributes[ATTR_OPERATION_MODE] == STATE_OFF:
-                self._current_operation = STATE_OFF
-                self._enabled = False
-            if self._initial_operation_mode is None:
-                if old_state.attributes[ATTR_OPERATION_MODE] is not None:
-                    self._current_operation = \
-                        old_state.attributes[ATTR_OPERATION_MODE]
-                    if self._current_operation != STATE_OFF:
-                        self._enabled = True
+                self._is_away = str(
+                    old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON
+            if (self._initial_operation_mode is None and
+                    old_state.attributes[ATTR_OPERATION_MODE] is not None):
+                self._current_operation = \
+                    old_state.attributes[ATTR_OPERATION_MODE]
+                if self._current_operation != STATE_OFF:
+                    self._enabled = True
         else:
             # No previous state, try and restore defaults
             if self._target_temp is None:
@@ -251,7 +247,7 @@ class GenericThermostat(ClimateDevice):
             if self._is_device_active:
                 self._heater_turn_off()
         else:
-            _LOGGER.error('Unrecognized operation mode: %s', operation_mode)
+            _LOGGER.error("Unrecognized operation mode: %s", operation_mode)
             return
         # Ensure we updae the current operation after changing the mode
         self.schedule_update_ha_state()
@@ -320,7 +316,7 @@ class GenericThermostat(ClimateDevice):
             self._cur_temp = self.hass.config.units.temperature(
                 float(state.state), unit)
         except ValueError as ex:
-            _LOGGER.error('Unable to update from sensor: %s', ex)
+            _LOGGER.error("Unable to update from sensor: %s", ex)
 
     @callback
     def _async_control_heating(self):
@@ -328,8 +324,8 @@ class GenericThermostat(ClimateDevice):
         if not self._active and None not in (self._cur_temp,
                                              self._target_temp):
             self._active = True
-            _LOGGER.info('Obtained current and target temperature. '
-                         'Generic thermostat active. %s, %s',
+            _LOGGER.info("Obtained current and target temperature. "
+                         "Generic thermostat active. %s, %s",
                          self._cur_temp, self._target_temp)
 
         if not self._active:
@@ -355,13 +351,13 @@ class GenericThermostat(ClimateDevice):
                 too_cold = self._target_temp - self._cur_temp >= \
                     self._cold_tolerance
                 if too_cold:
-                    _LOGGER.info('Turning off AC %s', self.heater_entity_id)
+                    _LOGGER.info("Turning off AC %s", self.heater_entity_id)
                     self._heater_turn_off()
             else:
                 too_hot = self._cur_temp - self._target_temp >= \
                     self._hot_tolerance
                 if too_hot:
-                    _LOGGER.info('Turning on AC %s', self.heater_entity_id)
+                    _LOGGER.info("Turning on AC %s", self.heater_entity_id)
                     self._heater_turn_on()
         else:
             is_heating = self._is_device_active
@@ -369,14 +365,14 @@ class GenericThermostat(ClimateDevice):
                 too_hot = self._cur_temp - self._target_temp >= \
                     self._hot_tolerance
                 if too_hot:
-                    _LOGGER.info('Turning off heater %s',
+                    _LOGGER.info("Turning off heater %s",
                                  self.heater_entity_id)
                     self._heater_turn_off()
             else:
                 too_cold = self._target_temp - self._cur_temp >= \
                     self._cold_tolerance
                 if too_cold:
-                    _LOGGER.info('Turning on heater %s', self.heater_entity_id)
+                    _LOGGER.info("Turning on heater %s", self.heater_entity_id)
                     self._heater_turn_on()
 
     @property
