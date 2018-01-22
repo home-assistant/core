@@ -61,7 +61,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         for host in hosts:
-            stbs.append(MediaroomDevice(config.get(CONF_NAME), host, config.get(CONF_OPTIMISTIC), config.get(CONF_TIMEOUT)))
+            stbs.append(
+                MediaroomDevice(config.get(CONF_NAME),
+                host, 
+                config.get(CONF_OPTIMISTIC), 
+                config.get(CONF_TIMEOUT))
+            )
+
     except ConnectionRefusedError:
         hass.components.persistent_notification.create(
                 'Error: Unable to initialize mediaroom at {}<br />'
@@ -85,7 +91,9 @@ class MediaroomDevice(MediaPlayerDevice):
         from pymediaroom import Remote 
 
         self.stb = Remote(host,timeout=timeout)
-        _LOGGER.info("Found {} at {}{}".format(name, host, " - I'm optimistic" if optimistic else ""))
+        _LOGGER.info("Found {} at {}{}".format(
+            name, host, " - I'm optimistic" if optimistic else "")
+        )
         self._name = name
         self._is_standby = not optimistic 
         self._current = None
@@ -104,7 +112,9 @@ class MediaroomDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
-        _LOGGER.debug("{}({}) Play media: {} ({})".format(self._name, self.stb.stb_ip,media_id, media_type))
+        _LOGGER.debug("{}({}) Play media: {} ({})".format(
+            self._name, self.stb.stb_ip,media_id, media_type)
+        )
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error('invalid media type')
             return
