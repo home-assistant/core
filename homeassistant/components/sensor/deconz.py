@@ -6,7 +6,8 @@ https://home-assistant.io/components/sensor.deconz/
 """
 import asyncio
 
-from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
+from homeassistant.components.deconz import (
+    DOMAIN as DECONZ_DATA, DECONZ_ENTITIES)
 from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers.entity import Entity
@@ -38,6 +39,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             else:
                 entities.append(DeconzSensor(sensor))
     async_add_devices(entities, True)
+    hass.data[DECONZ_ENTITIES] = hass.data[DECONZ_ENTITIES] + entities
 
 
 class DeconzSensor(Entity):
@@ -112,6 +114,14 @@ class DeconzSensor(Entity):
         }
         return attr
 
+    @property
+    def deconz_id(self):
+        """Return the deconz id of the sensor.
+
+        E.g. /sensor/1.
+        """
+        return self._sensor._deconz_id
+
 
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
@@ -176,6 +186,14 @@ class DeconzBattery(Entity):
             ATTR_EVENT_ID: slugify(self._device.name),
         }
         return attr
+
+    @property
+    def deconz_id(self):
+        """Return the deconz id of the battery sensor.
+
+        E.g. /sensor/1.
+        """
+        return self._device._deconz_id
 
 
 class DeconzEvent(object):

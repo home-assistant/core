@@ -6,7 +6,8 @@ https://home-assistant.io/components/light.deconz/
 """
 import asyncio
 
-from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
+from homeassistant.components.deconz import (
+    DOMAIN as DECONZ_DATA, DECONZ_ENTITIES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -16,8 +17,6 @@ from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
 DEPENDENCIES = ['deconz']
-
-ATTR_LIGHT_GROUP = 'LightGroup'
 
 
 @asyncio.coroutine
@@ -37,6 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if group.lights:  # Don't create entity for group not containing light
             entities.append(DeconzLight(group))
     async_add_devices(entities, True)
+    hass.data[DECONZ_ENTITIES] = hass.data[DECONZ_ENTITIES] + entities
 
 
 class DeconzLight(Light):
@@ -177,3 +177,11 @@ class DeconzLight(Light):
                 del data['on']
 
         yield from self._light.async_set_state(data)
+
+    @property
+    def deconz_id(self):
+        """Return the deconz id of the light.
+
+        E.g. /lights/1.
+        """
+        return self._light._deconz_id

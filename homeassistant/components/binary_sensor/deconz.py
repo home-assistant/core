@@ -7,7 +7,8 @@ https://home-assistant.io/components/binary_sensor.deconz/
 import asyncio
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
+from homeassistant.components.deconz import (
+    DOMAIN as DECONZ_DATA, DECONZ_ENTITIES)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 
@@ -29,6 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if sensor and sensor.type in DECONZ_BINARY_SENSOR:
             entities.append(DeconzBinarySensor(sensor))
     async_add_devices(entities, True)
+    hass.data[DECONZ_ENTITIES] = hass.data[DECONZ_ENTITIES] + entities
 
 
 class DeconzBinarySensor(BinarySensorDevice):
@@ -100,3 +102,11 @@ class DeconzBinarySensor(BinarySensorDevice):
         if self._sensor.type == PRESENCE:
             attr['dark'] = self._sensor.dark
         return attr
+
+    @property
+    def deconz_id(self):
+        """Return the deconz id of the sensor.
+
+        E.g. /sensor/1.
+        """
+        return self._sensor._deconz_id
