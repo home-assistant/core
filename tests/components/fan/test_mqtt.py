@@ -21,6 +21,46 @@ class TestMqttFan(unittest.TestCase):
         """"Stop everything that was started."""
         self.hass.stop()
 
+    def test_default_availability_payload(self):
+        """Test the availability payload."""
+        assert setup_component(self.hass, fan.DOMAIN, {
+            fan.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'availability_topic': 'availability_topic'
+            }
+        })
+
+        state = self.hass.states.get('fan.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability_topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('fan.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        fire_mqtt_message(self.hass, 'availability_topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('fan.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'state-topic', '1')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('fan.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability_topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('fan.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
     def test_custom_availability_payload(self):
         """Test the availability payload."""
         assert setup_component(self.hass, fan.DOMAIN, {

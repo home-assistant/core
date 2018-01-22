@@ -1,7 +1,6 @@
 """Package to communicate with the authentication API."""
 import logging
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -22,7 +21,7 @@ class UserNotConfirmed(CloudError):
 
 
 class ExpiredCode(CloudError):
-    """Raised when an expired code is encoutered."""
+    """Raised when an expired code is encountered."""
 
 
 class InvalidCode(CloudError):
@@ -38,7 +37,7 @@ class PasswordChangeRequired(CloudError):
 
 
 class UnknownError(CloudError):
-    """Raised when an unknown error occurrs."""
+    """Raised when an unknown error occurs."""
 
 
 AWS_EXCEPTIONS = {
@@ -98,7 +97,7 @@ def resend_email_confirm(cloud, email):
 
 
 def forgot_password(cloud, email):
-    """Initiate forgotten password flow."""
+    """Initialize forgotten password flow."""
     from botocore.exceptions import ClientError
 
     cognito = _cognito(cloud, username=email)

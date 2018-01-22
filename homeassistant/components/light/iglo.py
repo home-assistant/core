@@ -5,19 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.iglo/
 """
 import logging
+import math
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    Light, PLATFORM_SCHEMA
-)
-
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['iglo==1.0.0']
+REQUIREMENTS = ['iglo==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,17 +64,19 @@ class IGloLamp(Light):
     @property
     def color_temp(self):
         """Return the color temperature."""
-        return self._color_temp
+        return color_util.color_temperature_kelvin_to_mired(self._color_temp)
 
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return 1
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(
+            self._lamp.max_kelvin))
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return 255
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(
+            self._lamp.min_kelvin))
 
     @property
     def rgb_color(self):
@@ -107,8 +108,9 @@ class IGloLamp(Light):
             return
 
         if ATTR_COLOR_TEMP in kwargs:
-            color_temp = 255 - kwargs[ATTR_COLOR_TEMP]
-            self._lamp.white(color_temp)
+            kelvin = int(color_util.color_temperature_mired_to_kelvin(
+                kwargs[ATTR_COLOR_TEMP]))
+            self._lamp.white(kelvin)
             return
 
     def turn_off(self, **kwargs):
@@ -121,4 +123,4 @@ class IGloLamp(Light):
         self._on = state['on']
         self._brightness = state['brightness']
         self._rgb = state['rgb']
-        self._color_temp = 255 - state['white']
+        self._color_temp = state['white']

@@ -8,16 +8,16 @@ import asyncio
 import logging
 
 from homeassistant.components.climate import (
-    STATE_ECO, STATE_GAS, STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ELECTRIC,
-    STATE_FAN_ONLY, STATE_HEAT_PUMP, ATTR_TEMPERATURE, STATE_HIGH_DEMAND,
-    STATE_PERFORMANCE, ATTR_TARGET_TEMP_LOW, ATTR_CURRENT_HUMIDITY,
-    ATTR_TARGET_TEMP_HIGH, ClimateDevice, SUPPORT_TARGET_TEMPERATURE,
+    ATTR_CURRENT_HUMIDITY, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_TEMPERATURE, STATE_AUTO, STATE_COOL, STATE_ECO, STATE_ELECTRIC,
+    STATE_FAN_ONLY, STATE_GAS, STATE_HEAT, STATE_HEAT_PUMP, STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
-    SUPPORT_AUX_HEAT)
+    ClimateDevice)
 from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, TEMP_CELSIUS, STATE_UNKNOWN, PRECISION_TENTHS)
+    PRECISION_TENTHS, STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS)
 from homeassistant.helpers.temperature import display_temp as show_temp
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['climate'].append(self)
 
     @property
@@ -104,7 +104,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the optional state attributes."""
+        """Return the optional device state attributes."""
         data = {}
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
@@ -385,7 +385,7 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the optional state attributes."""
+        """Return the optional device state attributes."""
         data = {}
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
@@ -508,7 +508,7 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the optional state attributes."""
+        """Return the optional device state attributes."""
         data = {}
         data[ATTR_VACATION_MODE] = self.wink.vacation_mode_enabled()
         data[ATTR_RHEEM_TYPE] = self.wink.rheem_type()

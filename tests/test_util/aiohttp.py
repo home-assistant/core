@@ -83,7 +83,7 @@ class AiohttpClientMocker:
         data = data or json
         for response in self._mocks:
             if response.match_request(method, url, params):
-                self.mock_calls.append((method, url, data))
+                self.mock_calls.append((method, url, data, headers))
 
                 if response.exc:
                     raise response.exc

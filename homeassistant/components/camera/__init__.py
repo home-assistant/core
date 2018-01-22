@@ -12,7 +12,6 @@ from datetime import timedelta
 import logging
 import hashlib
 from random import SystemRandom
-import os
 
 import aiohttp
 from aiohttp import web
@@ -21,7 +20,6 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -190,19 +188,14 @@ def async_setup(hass, config):
             except OSError as err:
                 _LOGGER.error("Can't write image to file: %s", err)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_ENABLE_MOTION, async_handle_camera_service,
-        descriptions.get(SERVICE_ENABLE_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+        schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_DISABLE_MOTION, async_handle_camera_service,
-        descriptions.get(SERVICE_DISABLE_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+        schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_SNAPSHOT, async_handle_snapshot_service,
-        descriptions.get(SERVICE_SNAPSHOT),
         schema=CAMERA_SERVICE_SNAPSHOT)
 
     return True

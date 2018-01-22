@@ -11,11 +11,11 @@ import re
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_DHCP_SOFTWARE,
-                 default=DEFAULT_DHCP_SOFTWARE): vol.In(DHCP_SOFTWARES)
+    vol.Optional(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE):
+        vol.In(DHCP_SOFTWARES),
 })
 
 
@@ -49,14 +49,14 @@ def get_scanner(hass, config):
 def _refresh_on_acccess_denied(func):
     """If remove rebooted, it lost our session so rebuld one and try again."""
     def decorator(self, *args, **kwargs):
-        """Wrapper function to refresh session_id on PermissionError."""
+        """Wrap the function to refresh session_id on PermissionError."""
         try:
             return func(self, *args, **kwargs)
         except PermissionError:
             _LOGGER.warning("Invalid session detected." +
-                            " Tryign to refresh session_id and re-run the rpc")
-            self.session_id = _get_session_id(self.url, self.username,
-                                              self.password)
+                            " Trying to refresh session_id and re-run RPC")
+            self.session_id = _get_session_id(
+                self.url, self.username, self.password)
 
             return func(self, *args, **kwargs)
 
@@ -80,8 +80,8 @@ class UbusDeviceScanner(DeviceScanner):
         self.last_results = {}
         self.url = 'http://{}/ubus'.format(host)
 
-        self.session_id = _get_session_id(self.url, self.username,
-                                          self.password)
+        self.session_id = _get_session_id(
+            self.url, self.username, self.password)
         self.hostapd = []
         self.mac2name = None
         self.success_init = self.session_id is not None

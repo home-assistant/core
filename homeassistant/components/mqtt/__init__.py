@@ -17,7 +17,6 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
@@ -423,13 +422,9 @@ def async_setup(hass, config):
         yield from hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service,
-        descriptions.get(SERVICE_PUBLISH), schema=MQTT_PUBLISH_SCHEMA)
+        schema=MQTT_PUBLISH_SCHEMA)
 
     if conf.get(CONF_DISCOVERY):
         yield from _async_setup_discovery(hass, config)
