@@ -7,7 +7,6 @@ https://home-assistant.io/components/ir_remote.xiaomi_miio/
 import asyncio
 import logging
 
-from base64 import b64decode, b64encode
 from datetime import timedelta
 
 import voluptuous as vol
@@ -43,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SWITCHES, default={}):
         vol.Schema({cv.slug: SWITCH_SCHEMA}),
 }, extra=vol.ALLOW_EXTRA)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
@@ -81,10 +81,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             payload = str(packet)
             _LOGGER.info(payload)
             yield from hass.async_add_job(
-                remote.play, payload, 1) #What should this magic constant be?
+                remote.play, payload, 1)  # What should this magic constant be?
 
     host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
 
     # Create handler
@@ -97,7 +96,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                            host.replace('.', '_'), _send_packet)
 
     devices = config.get(CONF_SWITCHES)
-    friendly_name = config.get(CONF_FRIENDLY_NAME)
 
     switches = []
     for object_id, device_config in devices.items():
@@ -110,6 +108,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
     add_devices(switches)
+
 
 class ChuangmiIrSwitch(SwitchDevice):
     """Representation of a ChuangmiIr switch."""
@@ -162,10 +161,11 @@ class ChuangmiIrSwitch(SwitchDevice):
             _LOGGER.debug("Empty packet")
             return True
         try:
-            self._device.play(packet, 1) #What should this magic constant be?
+            self._device.play(packet, 1)  # What should this magic constant be?
         except DeviceException as exc:
             if retry < 1:
                 _LOGGER.error(exc)
                 return False
             return self._sendpacket(packet, retry-1)
         return True
+        
