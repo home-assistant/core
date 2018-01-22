@@ -7,13 +7,13 @@ https://home-assistant.io/components/media_player.mediaroom/
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_VIDEO, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_CHANNEL, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA,
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
     SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_MUTE,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, CONF_OPTIMISTIC, CONF_TIMEOUT,
+    CONF_HOST, CONF_NAME, CONF_OPTIMISTIC, CONF_TIMEOUT,
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 import logging
@@ -62,12 +62,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         for host in hosts:
-            stbs.append(
-                MediaroomDevice(config.get(CONF_NAME),
-                host, 
-                config.get(CONF_OPTIMISTIC),
-                config.get(CONF_TIMEOUT))
-            )
+            stbs.append(MediaroomDevice(
+                    config.get(CONF_NAME),
+                    host,
+                    config.get(CONF_OPTIMISTIC),
+                    config.get(CONF_TIMEOUT)
+                ))
 
     except ConnectionRefusedError:
         hass.components.persistent_notification.create(
