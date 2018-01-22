@@ -75,14 +75,15 @@ ERROR_NOT_SUPPORTED = "notSupported"
 class SmartHomeError(Exception):
     """Google Assistant Smart Home errors."""
 
-    def __init__(self, error_code, error_msg):
+    def __init__(self, code, msg):
         """Log error code."""
-        super(SmartHomeError, self).__init__(error_msg)
+        super(SmartHomeError, self).__init__(msg)
         _LOGGER.error(
-            "An error has ocurred in Google SmartHome: {}."
-            "Error code: {}".format(error_msg, error_code)
+            "An error has ocurred in Google SmartHome: %s."
+            "Error code: %s", msg, code
         )
-        self.error_code = error_code
+        self.code = code
+
 
 class Config:
     """Hold the configuration for Google Assistant."""
@@ -433,8 +434,8 @@ def async_devices_query(hass, config, payload):
 
         try:
             devices[devid] = query_device(state, config, hass.config.units)
-        except SmartHomeError as e:
-            devices[devid] = {'errorCode': e.error_code}
+        except SmartHomeError as error:
+            devices[devid] = {'errorCode': error.code}
 
     return {'devices': devices}
 
