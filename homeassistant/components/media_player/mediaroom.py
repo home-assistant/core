@@ -14,7 +14,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_OPTIMISTIC, CONF_TIMEOUT,
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 import logging
 REQUIREMENTS = ['pymediaroom==0.5']
