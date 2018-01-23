@@ -35,19 +35,23 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
+LEARN_COMMAND_SCHEMA = vol.Schema({
+    vol.Optional("timeout", default=10):
+        vol.All(int, vol.Range(min=0)),
+    vol.Optional("slot", default=1):
+        vol.All(int, vol.Range(min=1, max=1000000)),
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-        vol.All(int, vol.Range(min=0)),
-    vol.Optional(CONF_SLOT, default=DEFAULT_SLOT):
-        vol.All(int, vol.Range(min=1, max=1000000)),
     vol.Optional(CONF_SWITCHES, default={}):
         vol.Schema({cv.slug: SWITCH_SCHEMA}),
-}, extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA).extend(LEARN_COMMAND_SCHEMA.schema)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
     from miio import ChuangmiIr, DeviceException
     from construct import ChecksumError
@@ -57,17 +61,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Handle a learn command."""
         slot = int(call.data.get('slot', config.get(CONF_SLOT)))
 
-        try:
-            vol.All(int, vol.Range(min=1, max=1000000))(slot)
-        except vol.error.MultipleInvalid as ex:
-            _LOGGER.error(
-                "slot value should be between 1 and 1000000, but was: %i",
-                slot)
-            return
-
         yield from hass.async_add_job(remote.learn, slot)
 
-        timeout = config.get(CONF_TIMEOUT)
+        timeout = int(call.data.get('timeout', config.get(CONF_TIMEOUT)))
+
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
@@ -114,10 +111,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Token not accepted by device : %s", ex)
         return
 
-    hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
-                           host.replace('.', '_'), _learn_command)
-    hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                           host.replace('.', '_'), _send_command)
+    hass.services.async_register(DOMAIN, SERVICE_LEARN + '_' +
+                                 host.replace('.', '_'), _learn_command,
+                                 schema=LEARN_COMMAND_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SEND + '_' +
+                                 host.replace('.', '_'), _send_command)
 
     devices = config.get(CONF_SWITCHES)
 
@@ -131,7 +129,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_OFF)
             )
         )
-    add_devices(switches)
+    async_add_devices(switches)
 
 
 class ChuangmiIrSwitch(SwitchDevice):
