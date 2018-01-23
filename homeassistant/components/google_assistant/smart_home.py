@@ -395,7 +395,7 @@ def async_handle_message(hass, config, message):
 
 @HANDLERS.register('action.devices.SYNC')
 @asyncio.coroutine
-def async_devices_sync(hass, config, payload):
+def async_devices_sync(hass, config: Config, payload):
     """Handle action.devices.SYNC request."""
     devices = []
     for entity in hass.states.async_all():
