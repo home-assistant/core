@@ -60,7 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             vol.All(int, vol.Range(min=1, max=1000000))(slot)
         except vol.error.MultipleInvalid as ex:
-            _LOGGER.error("slot value should be between 1 and 1000000, but was: %i", slot)
+            _LOGGER.error(
+                "slot value should be between 1 and 1000000, but was: %i",
+                slot)
             return
 
         yield from hass.async_add_job(remote.learn, slot)
