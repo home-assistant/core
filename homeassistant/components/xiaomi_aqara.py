@@ -7,17 +7,22 @@ https://home-assistant.io/components/xiaomi_aqara/
 import asyncio
 import logging
 
+from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, CONF_HOST, CONF_MAC, CONF_PORT,
     EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['PyXiaomiGateway==0.7.1']
+REQUIREMENTS = ['PyXiaomiGateway==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +38,9 @@ CONF_KEY = 'key'
 
 DOMAIN = 'xiaomi_aqara'
 
-PY_XIAOMI_GATEWAY = 'xiaomi_gw'
+PY_XIAOMI_GATEWAY = "xiaomi_gw"
+
+TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
 SERVICE_PLAY_RINGTONE = 'play_ringtone'
 SERVICE_STOP_RINGTONE = 'stop_ringtone'
@@ -201,19 +208,34 @@ class XiaomiDevice(Entity):
     def __init__(self, device, name, xiaomi_hub):
         """Initialize the Xiaomi device."""
         self._state = None
+        self._is_available = True
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
-        xiaomi_hub.callbacks[self._sid].append(self.push_data)
-        self.parse_data(device['data'])
+        self._remove_unavailability_tracker = None
+        xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
+        self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
+
+    def _add_push_data_job(self, *args):
+        self.hass.async_add_job(self.push_data, *args)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Start unavailability tracking."""
+        self._async_track_unavailable()
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._is_available
 
     @property
     def should_poll(self):
@@ -225,13 +247,34 @@ class XiaomiDevice(Entity):
         """Return the state attributes."""
         return self._device_state_attributes
 
-    def push_data(self, data):
+    @callback
+    def _async_set_unavailable(self, now):
+        """Set state to UNAVAILABLE."""
+        self._remove_unavailability_tracker = None
+        self._is_available = False
+        self.async_schedule_update_ha_state()
+
+    @callback
+    def _async_track_unavailable(self):
+        if self._remove_unavailability_tracker:
+            self._remove_unavailability_tracker()
+        self._remove_unavailability_tracker = async_track_point_in_utc_time(
+            self.hass, self._async_set_unavailable,
+            utcnow() + TIME_TILL_UNAVAILABLE)
+        if not self._is_available:
+            self._is_available = True
+            return True
+        return False
+
+    @callback
+    def push_data(self, data, raw_data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
-        is_data = self.parse_data(data)
+        was_unavailable = self._async_track_unavailable()
+        is_data = self.parse_data(data, raw_data)
         is_voltage = self.parse_voltage(data)
-        if is_data or is_voltage:
-            self.schedule_update_ha_state()
+        if is_data or is_voltage or was_unavailable:
+            self.async_schedule_update_ha_state()
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
@@ -246,7 +289,7 @@ class XiaomiDevice(Entity):
         self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
         return True
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         raise NotImplementedError()
 
