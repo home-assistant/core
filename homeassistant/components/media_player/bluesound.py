@@ -1002,7 +1002,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return
 
         url = 'Play?url={}'.format(media_id)
-        _LOGGER.error("playing %s on", url)
+
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             return self.send_bluesound_command(url)
         else:
