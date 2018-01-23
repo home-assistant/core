@@ -206,7 +206,7 @@ class LeafDataStore:
 
             self.signal_components()
 
-            return climate_result.is_hvac_running
+            return climate_result.is_hvac_running == False
 
     def get_location(self):
         request = self.leaf.request_location()
