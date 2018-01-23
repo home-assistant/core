@@ -1,9 +1,12 @@
 """Test for smart home alexa support."""
 import asyncio
+import json
 from uuid import uuid4
 
 import pytest
 
+from homeassistant.setup import async_setup_component
+from homeassistant.components import alexa
 from homeassistant.components.alexa import smart_home
 from homeassistant.helpers import entityfilter
 
@@ -1155,3 +1158,45 @@ def test_entity_config(hass):
     assert len(appliance['capabilities']) == 1
     assert appliance['capabilities'][-1]['interface'] == \
         'Alexa.PowerController'
+
+
+@asyncio.coroutine
+def do_http_discovery(config, hass, test_client):
+    """Submit a request to the Smart Home HTTP API."""
+    yield from async_setup_component(hass, alexa.DOMAIN, config)
+    http_client = yield from test_client(hass.http.app)
+
+    request = get_new_request('Alexa.Discovery', 'Discover')
+    response = yield from http_client.post(
+        smart_home.SMART_HOME_HTTP_ENDPOINT,
+        data=json.dumps(request),
+        headers={'content-type': 'application/json'})
+    return response
+
+
+@asyncio.coroutine
+def test_http_api(hass, test_client):
+    """With `smart_home:` HTTP API is exposed."""
+    config = {
+        'alexa': {
+            'smart_home': None
+        }
+    }
+
+    response = yield from do_http_discovery(config, hass, test_client)
+    response_data = yield from response.json()
+
+    # Here we're testing just the HTTP view glue -- details of discovery are
+    # covered in other tests.
+    assert response_data['event']['header']['name'] == 'Discover.Response'
+
+
+@asyncio.coroutine
+def test_http_api_disabled(hass, test_client):
+    """Without `smart_home:`, the HTTP API is disabled."""
+    config = {
+        'alexa': {}
+    }
+    response = yield from do_http_discovery(config, hass, test_client)
+
+    assert response.status == 404
