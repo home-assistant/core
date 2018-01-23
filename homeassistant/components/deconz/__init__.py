@@ -106,7 +106,7 @@ def async_setup_deconz(hass, config, deconz_config):
         return False
 
     hass.data[DOMAIN] = deconz
-    hass.data[DECONZ_ENTITIES] = []
+    hass.data[DECONZ_ENTITIES] = {}
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(discovery.async_load_platform(
@@ -130,15 +130,12 @@ def async_setup_deconz(hass, config, deconz_config):
         http://dresden-elektronik.github.io/deconz-rest-doc/rest/
         """
         deconz = hass.data[DOMAIN]
-        entities = hass.data[DECONZ_ENTITIES]
+        entity_registry = hass.data[DECONZ_ENTITIES]
         field = call.data.get(SERVICE_FIELD)
         entity_id = call.data.get(SERVICE_ENTITY)
         data_string = call.data.get(SERVICE_DATA)
         data = ast.literal_eval(data_string)  # String to dict
-        for entity in entities:
-            if entity_id == entity.entity_id:
-                field = entity.deconz_id
-                break
+        field = entity_registry.get(entity_id, field)
         if field:
             yield from deconz.async_put_state(field, data)
         elif entity_id:

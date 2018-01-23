@@ -27,24 +27,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     lights = hass.data[DECONZ_DATA].lights
     groups = hass.data[DECONZ_DATA].groups
+    entity_registry = hass.data[DECONZ_ENTITIES]
     entities = []
 
     for light in lights.values():
-        entities.append(DeconzLight(light))
+        entities.append(DeconzLight(light, entity_registry))
 
     for group in groups.values():
         if group.lights:  # Don't create entity for group not containing light
-            entities.append(DeconzLight(group))
+            entities.append(DeconzLight(group, entity_registry))
     async_add_devices(entities, True)
-    hass.data[DECONZ_ENTITIES] = hass.data[DECONZ_ENTITIES] + entities
 
 
 class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
-    def __init__(self, light):
+    def __init__(self, light, registry):
         """Set up light and add update callback to get data from websocket."""
         self._light = light
+        self._registry = registry
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
@@ -64,6 +65,7 @@ class DeconzLight(Light):
     def async_added_to_hass(self):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
+        self._registry[self.entity_id] = self._light._deconz_id
 
     @callback
     def async_update_callback(self, reason):
@@ -177,11 +179,3 @@ class DeconzLight(Light):
                 del data['on']
 
         yield from self._light.async_set_state(data)
-
-    @property
-    def deconz_id(self):
-        """Return the deconz id of the light.
-
-        E.g. /lights/1.
-        """
-        return self._light._deconz_id

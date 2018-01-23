@@ -27,6 +27,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
     sensors = hass.data[DECONZ_DATA].sensors
+    entity_registry = hass.data[DECONZ_ENTITIES]
     entities = []
 
     for key in sorted(sensors.keys(), key=int):
@@ -37,22 +38,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))
             else:
-                entities.append(DeconzSensor(sensor))
+                entities.append(DeconzSensor(sensor, entity_registry))
     async_add_devices(entities, True)
-    hass.data[DECONZ_ENTITIES] = hass.data[DECONZ_ENTITIES] + entities
 
 
 class DeconzSensor(Entity):
     """Representation of a sensor."""
 
-    def __init__(self, sensor):
+    def __init__(self, sensor, registry):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
+        self._registry = registry
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
+        self._registry[self.entity_id] = self._sensor._deconz_id
 
     @callback
     def async_update_callback(self, reason):
@@ -113,14 +115,6 @@ class DeconzSensor(Entity):
             ATTR_BATTERY_LEVEL: self._sensor.battery,
         }
         return attr
-
-    @property
-    def deconz_id(self):
-        """Return the deconz id of the sensor.
-
-        E.g. /sensor/1.
-        """
-        return self._sensor._deconz_id
 
 
 class DeconzBattery(Entity):
@@ -186,14 +180,6 @@ class DeconzBattery(Entity):
             ATTR_EVENT_ID: slugify(self._device.name),
         }
         return attr
-
-    @property
-    def deconz_id(self):
-        """Return the deconz id of the battery sensor.
-
-        E.g. /sensor/1.
-        """
-        return self._device._deconz_id
 
 
 class DeconzEvent(object):

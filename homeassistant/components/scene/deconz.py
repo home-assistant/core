@@ -20,20 +20,26 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     scenes = hass.data[DECONZ_DATA].scenes
+    entity_registry = hass.data[DECONZ_ENTITIES]
     entities = []
 
     for scene in scenes.values():
-        entities.append(DeconzScene(scene))
+        entities.append(DeconzScene(scene, entity_registry))
     async_add_devices(entities)
-    hass.data[DECONZ_ENTITIES] = hass.data[DECONZ_ENTITIES] + entities
 
 
 class DeconzScene(Scene):
     """Representation of a deCONZ scene."""
 
-    def __init__(self, scene):
+    def __init__(self, scene, registry):
         """Set up a scene."""
         self._scene = scene
+        self._registry = registry
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Add scene entity id and deconz id to entity registry."""
+        self._registry[self.entity_id] = self._scene._deconz_id
 
     @asyncio.coroutine
     def async_activate(self):
@@ -44,11 +50,3 @@ class DeconzScene(Scene):
     def name(self):
         """Return the name of the scene."""
         return self._scene.full_name
-
-    @property
-    def deconz_id(self):
-        """Return the deconz id of the scene.
-
-        E.g. /groups/1/scenes/1.
-        """
-        return self._scene._deconz_id
