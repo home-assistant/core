@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['nad_receiver==0.0.9']
+REQUIREMENTS = ['nad_receiver==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,19 +87,23 @@ class NADTelnet(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        if self._nad_receiver.main_power('?') == 'Off':
-            self._state = STATE_OFF
-        else:
-            self._state = STATE_ON
+        try:
+            if self._nad_receiver.main_power('?') == 'Off':
+                self._state = STATE_OFF
+            else:
+                self._state = STATE_ON
 
-        if self._nad_receiver.main_mute('?') == 'Off':
-            self._mute = False
-        else:
-            self._mute = True
+            if self._nad_receiver.main_mute('?') == 'Off':
+                self._mute = False
+            else:
+                self._mute = True
 
-        self._volume = self._nad_receiver.main_volume('?')
-        self._source = self._source_dict.get(
-            self._nad_receiver.main_source('?'))
+            self._volume = self._nad_receiver.main_volume('?')
+            self._source = self._source_dict.get(
+                self._nad_receiver.main_source('?'))
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     @property
     def volume_level(self):
@@ -118,27 +122,51 @@ class NADTelnet(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn the media player off."""
-        self._nad_receiver.main_power('=', 'Off')
+        try:
+            self._nad_receiver.main_power('=', 'Off')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def turn_on(self):
         """Turn the media player on."""
-        self._nad_receiver.main_power('=', 'On')
+        try:
+            self._nad_receiver.main_power('=', 'On')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def volume_up(self):
         """Volume up the media player."""
-        self._nad_receiver.main_volume('+')
+        try:
+            self._nad_receiver.main_volume('+')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def volume_down(self):
         """Volume down the media player."""
-        self._nad_receiver.main_volume('-')
+        try:
+            self._nad_receiver.main_volume('-')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._nad_receiver.main_volume('=', volume)
+        try:
+            self._nad_receiver.main_volume('=', volume)
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def select_source(self, source):
         """Select input source."""
-        self._nad_receiver.main_source('=', self._reverse_mapping.get(source))
+        try:
+            self._nad_receiver.main_source('=', self._reverse_mapping.get(source))
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     @property
     def source(self):
@@ -152,7 +180,11 @@ class NADTelnet(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        if mute:
-            self._nad_receiver.main_mute('=', 'On')
-        else:
-            self._nad_receiver.main_mute('=', 'Off')
+        try:
+            if mute:
+                self._nad_receiver.main_mute('=', 'On')
+            else:
+                self._nad_receiver.main_mute('=', 'Off')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass

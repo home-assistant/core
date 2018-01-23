@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['nad_receiver==0.0.9']
+REQUIREMENTS = ['nad_receiver==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
