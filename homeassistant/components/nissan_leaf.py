@@ -28,16 +28,22 @@ DATA_LEAF = 'nissan_leaf_data'
 DATA_BATTERY = 'battery'
 DATA_LOCATION = 'location'
 DATA_CHARGING = 'charging'
+DATA_PLUGGED_IN = 'plugged_in'
 DATA_CLIMATE = 'climate'
+DATA_RANGE_AC = 'range_ac_on'
+DATA_RANGE_AC_OFF = 'range_ac_off'
 
 CONF_NCONNECT = 'nissan_connect'
 CONF_INTERVAL = 'update_interval'
-DEFAULT_INTERVAL = timedelta(minutes=30)
+CONF_REGION = 'region'
+CONF_VALID_REGIONS = ['NNA', 'NE', 'NCI', 'NMA', 'NML']
+DEFAULT_INTERVAL = 30
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
         vol.Optional(CONF_NCONNECT, default=True): cv.boolean,
         vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int
     })
@@ -59,7 +65,8 @@ def setup(hass, config):
     _LOGGER.debug("Logging into You+Nissan...")
 
     try:
-        s = pycarwings2.Session(username, password, "NE")
+        s = pycarwings2.Session(
+            username, password, config[DOMAIN][CONF_REGION])
         _LOGGER.debug("Fetching Leaf Data")
         leaf = s.get_leaf()
     except(RuntimeError, urllib.error.HTTPError):
@@ -79,7 +86,7 @@ def setup(hass, config):
 
     hass.data[DATA_LEAF] = {}
     hass.data[DATA_LEAF][leaf.vin] = LeafDataStore(
-        leaf, hass, config[DOMAIN][CONF_NCONNECT])
+        leaf, hass, config)
 
     for component in LEAF_COMPONENTS:
         if (component != 'device_tracker') or (config[DOMAIN][CONF_NCONNECT] == True):
@@ -92,39 +99,45 @@ def setup(hass, config):
 
 class LeafDataStore:
 
-    def __init__(self, leaf, hass, use_nissan_connect):
+    def __init__(self, leaf, hass, config):
         self.leaf = leaf
-        self.nissan_connect = use_nissan_connect
+        self.config = config
+        self.nissan_connect = config[DOMAIN][CONF_NCONNECT]
         self.hass = hass
         self.data = {}
         self.data[DATA_CLIMATE] = False
-        self.data[DATA_BATTERY] = 0
+        self.data[DATA_BATTERY] = 1
         self.data[DATA_CHARGING] = False
         self.data[DATA_LOCATION] = False
         track_time_interval(
-            hass, self.refresh_leaf_if_necessary, DEFAULT_INTERVAL)
+            hass, self.refresh_leaf_if_necessary, timedelta(minutes=config[DOMAIN][CONF_INTERVAL]))
 
     def refresh_leaf_if_necessary(self, event_time):
         _LOGGER.debug("Interval fired, refreshing data...")
-        self.update_leaf()
+        self.refresh_data()
 
-    def update_leaf(self):
+    def refresh_data(self):
         _LOGGER.debug("Updating Nissan Leaf Data")
 
-        batteryResponse = yield from self.get_battery()
+        batteryResponse = self.get_battery()
         _LOGGER.debug("Got battery data for Leaf")
 
-        if batteryResponse.answer == 200:
-            self.data[DATA_BATTERY] = round(batteryResponse.battery_percent, 0)
-            # self.data[DATA_BATTERY] = 1
+        if batteryResponse.answer['status'] == 200:
+            self.data[DATA_BATTERY] = batteryResponse.battery_percent
             self.data[DATA_CHARGING] = batteryResponse.is_charging
+            self.data[DATA_PLUGGED_IN] = batteryResponse.is_connected
+            self.data[DATA_RANGE_AC] = batteryResponse.cruising_range_ac_on_km
+            self.data[DATA_RANGE_AC_OFF] = batteryResponse.cruising_range_ac_off_km
 
         _LOGGER.debug("Battery Response: ")
         _LOGGER.debug(batteryResponse.__dict__)
 
         climateResponse = self.get_climate()
-        _LOGGER.debug("Got climate data for Leaf")
-        self.data[DATA_CLIMATE] = climateResponse
+
+        if climateResponse is not None:
+            _LOGGER.debug("Got climate data for Leaf")
+            _LOGGER.debug(climateResponse.__dict__)
+            self.data[DATA_CLIMATE] = climateResponse.is_hvac_running
 
         if self.nissan_connect:
             try:
@@ -157,10 +170,7 @@ class LeafDataStore:
 
     def get_climate(self):
         request = self.leaf.get_latest_hvac_status()
-        if request is None:
-            return False
-        else:
-            return request.is_hvac_running
+        return request
 
     def set_climate(self, toggle):
         if toggle:
@@ -203,17 +213,17 @@ class LeafDataStore:
 
 
 class LeafEntity(Entity):
-    def __init__(self, controller, data):
-        self.controller = controller
-        self.data = data
+    def __init__(self, car):
+        self.car = car
 
-    def added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
         async_dispatcher_connect(
-            self.data.hass, SIGNAL_UPDATE_LEAF, self._update_callback)
+            self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback)
 
     def _update_callback(self):
         """Callback update method."""
-        _LOGGER.debug("Got dispatcher update from Leaf platform")
+        #_LOGGER.debug("Got dispatcher update from Leaf platform")
         self.schedule_update_ha_state(True)
