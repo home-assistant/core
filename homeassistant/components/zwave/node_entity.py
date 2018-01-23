@@ -8,8 +8,10 @@ from homeassistant.util import slugify
 
 from .const import (
     ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
-    ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN,
-    COMMAND_CLASS_CENTRAL_SCENE)
+    ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED,
+    EVENT_VALUE_CHANGED_EVENT, DOMAIN, COMMAND_CLASS_CENTRAL_SCENE,
+    ATTR_VALUE_ID, ATTR_VALUE_DATA)
+
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +118,23 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
             self.central_scene_activated(value.index, value.data)
 
+        # Fire event for nodes that are not polled
+        if value is not None and not value.is_polled:
+            self.fire_value_changed_event(value)
+
         self.node_changed()
+
+    def fire_value_changed_event(self, value):
+        if self.hass is None:
+            return
+
+        """Fire a value_changed event when a value changes."""
+        self.hass.bus.fire(EVENT_VALUE_CHANGED_EVENT, {
+            ATTR_ENTITY_ID:  self.entity_id,
+            ATTR_NODE_ID:    self.node_id,
+            ATTR_VALUE_ID:   value.index,
+            ATTR_VALUE_DATA: value.data
+        })
 
     def get_node_statistics(self):
         """Retrieve statistics from the node."""

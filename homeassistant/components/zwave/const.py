@@ -20,6 +20,7 @@ ATTR_CONFIG_VALUE = "value"
 ATTR_POLL_INTENSITY = "poll_intensity"
 ATTR_VALUE_INDEX = "value_index"
 ATTR_VALUE_INSTANCE = "value_instance"
+ATTR_VALUE_DATA = "value_data"
 NETWORK_READY_WAIT_SECS = 30
 
 DISCOVERY_DEVICE = 'device'
@@ -59,6 +60,7 @@ EVENT_NETWORK_READY = "zwave.network_ready"
 EVENT_NETWORK_COMPLETE = "zwave.network_complete"
 EVENT_NETWORK_START = "zwave.network_start"
 EVENT_NETWORK_STOP = "zwave.network_stop"
+EVENT_VALUE_CHANGED_EVENT = 'zwave.value_changed'
 
 COMMAND_CLASS_ALARM = 113
 COMMAND_CLASS_ANTITHEFT = 93
