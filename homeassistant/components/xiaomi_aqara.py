@@ -220,7 +220,7 @@ class XiaomiDevice(Entity):
         self.parse_voltage(device['data'])
 
     def _add_push_data_job(self, *args):
-        self.hass.async_add_job(self.push_data, *args)
+        self.hass.add_job(self.push_data, *args)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
