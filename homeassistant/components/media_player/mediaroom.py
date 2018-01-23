@@ -4,6 +4,7 @@ Support for the Mediaroom Set-up-box.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mediaroom/
 """
+import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -17,7 +18,6 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
     STATE_ON)
 import homeassistant.helpers.config_validation as cv
-import logging
 REQUIREMENTS = ['pymediaroom==0.5']
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,21 +64,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         for host in hosts:
             stbs.append(MediaroomDevice(
-                    config.get(CONF_NAME),
-                    host,
-                    config.get(CONF_OPTIMISTIC),
-                    config.get(CONF_TIMEOUT)
-                ))
+                config.get(CONF_NAME),
+                host,
+                config.get(CONF_OPTIMISTIC),
+                config.get(CONF_TIMEOUT)
+            ))
 
     except ConnectionRefusedError:
         hass.components.persistent_notification.create(
-                'Error: Unable to initialize mediaroom at {}<br />'
-                'Check its network connection or consider '
-                'using auto discovery.<br />'
-                'You will need to restart hass after fixing.'
-                ''.format(host),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+            'Error: Unable to initialize mediaroom at {}<br />'
+            'Check its network connection or consider '
+            'using auto discovery.<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(host),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
 
     add_devices(stbs)
 
@@ -93,9 +93,9 @@ class MediaroomDevice(MediaPlayerDevice):
         from pymediaroom import Remote
 
         self.stb = Remote(host, timeout=timeout)
-        _LOGGER.info("Found {} at {}{}".format(
-            name, host, " - I'm optimistic" if optimistic else "")
-        )
+        _LOGGER.info(
+            "Found %s at %s%s", name, host,
+            " - I'm optimistic" if optimistic else "")
         self._name = name
         self._is_standby = not optimistic
         self._current = None
@@ -110,15 +110,15 @@ class MediaroomDevice(MediaPlayerDevice):
             self._state = STATE_STANDBY
         elif self._state not in [STATE_PLAYING, STATE_PAUSED]:
             self._state = STATE_PLAYING
-        _LOGGER.debug("{}({}) is [{}]".format(
+        _LOGGER.debug(
+            "%s(%s) is [%s]",
             self._name, self.stb.stb_ip, self._state)
-        )
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
-        _LOGGER.debug("{}({}) Play media: {} ({})".format(
+        _LOGGER.debug(
+            "%s(%s) Play media: %s (%s)",
             self._name, self.stb.stb_ip, media_id, media_type)
-        )
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error('invalid media type')
             return
