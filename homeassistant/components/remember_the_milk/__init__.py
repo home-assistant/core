@@ -86,7 +86,7 @@ def _create_instance(hass, account_name, api_key, shared_secret,
                      token, stored_rtm_config, component):
     entity = RememberTheMilk(account_name, api_key, shared_secret,
                              token, stored_rtm_config)
-    component.add_entity(entity)
+    component.add_entities([entity])
     hass.services.register(
         DOMAIN, '{}_create_task'.format(account_name), entity.create_task,
         schema=SERVICE_SCHEMA_CREATE_TASK)
