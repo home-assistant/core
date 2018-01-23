@@ -194,6 +194,7 @@ def test_query_request(hass_fixture, assistant_client):
     assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
     assert devices['light.kitchen_lights']['color']['temperature'] == 4166
 
+
 @asyncio.coroutine
 def test_query_climate_request(hass_fixture, assistant_client):
     """Test a query request."""
