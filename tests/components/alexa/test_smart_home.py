@@ -739,7 +739,9 @@ def test_api_activate(hass, domain):
 
     assert len(call) == 1
     assert call[0].data['entity_id'] == '{}.test'.format(domain)
-    assert msg['header']['name'] == 'Response'
+    assert msg['header']['name'] == 'ActivationStarted'
+    assert msg['payload']['cause']['type'] == 'VOICE_INTERACTION'
+    assert 'timestamp' in msg['payload']
 
 
 @asyncio.coroutine
