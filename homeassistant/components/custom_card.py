@@ -1,5 +1,8 @@
 """
 Show custom ha-cards and sate-cards on Home Assistant frontend
+
+For more details about this component, please refer to the documentation
+at https://home-assistant.io/components/custom_card/
 """
 import asyncio
 import logging
@@ -49,47 +52,50 @@ def async_setup(hass, config):
         state_card = cfg.get(CONF_STATE_CARD)
         more_info_card = cfg.get(CONF_MORE_INFO_CARD)
         config = cfg.get(CONF_CONFIG)
-        entities.append(CustomCard(object_id, ha_card, state_card, more_info_card, config))
 
+        if ha_card == None and state_card == None:
+            _LOGGER.error("Entity config must contain ha_card and/or state_card ({}).".format(object_id))
+            return False
+
+        entities.append(CustomCard(object_id, ha_card, state_card,
+                                    more_info_card, config))
 
     if not entities:
-        return False    
+        return False
 
     yield from component.async_add_entities(entities)
 
     return True
 
+
 class CustomCard(Entity):
     """Representation of a custom card."""
 
     def __init__(self, object_id, ha_card, state_card, more_info_card, config):
-        """Initialize a boolean input."""
-        self._ha_card = ha_card
-        self._state_card = state_card
-        if self._ha_card:
+        """Initialize a custom card."""        
+        if ha_card:
             self.entity_id = ENTITY_ID_FORMAT_HA_CARD.format(object_id)
+            self._state = ha_card
         else:
             self.entity_id = ENTITY_ID_FORMAT_STATE_CARD.format(object_id)
-        self._more_info_card = more_info_card
-        self._config = config
+            self._state = state_card
+        
+        self._attributes = {}
+        if ha_card:
+            self._attributes['ha_card'] = ha_card
+        if state_card:
+            self._attributes['state_card'] = state_card
+        if more_info_card:
+            self._attributes['more_info_card'] = more_info_card
+        if config:
+            self._attributes['config'] = config
 
     @property
     def state(self):
         """Return card as state."""
-        if self._ha_card:
-            return self._ha_card
-        return self._state_card
+        return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        _attributes = {}
-        if self._ha_card:
-            _attributes['ha_card'] = self._ha_card
-        if self._state_card:
-            _attributes['state_card'] = self._state_card
-        if self._more_info_card:
-            _attributes['more_info_card'] = self._more_info_card
-        if self._config:
-            _attributes['config'] = self._config
-        return _attributes
+        return self._attributes
