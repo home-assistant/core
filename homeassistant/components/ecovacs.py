@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
     CONF_DEVICES, EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['sucks==0.8.3']
+REQUIREMENTS = ['sucks==0.8.4']
 
 _LOGGER = logging.getLogger(__name__)
 
