@@ -149,6 +149,7 @@ CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
 CONF_WHITE_VALUE = 'white_value'
 CONF_XY = 'xy'
 CONF_ZONE = 'zone'
+CONF_SLOT = 'slot'
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = 'homeassistant_start'

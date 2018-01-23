@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
     DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME,
-    CONF_SWITCHES, CONF_HOST, CONF_TOKEN)
+    CONF_SWITCHES, CONF_HOST, CONF_TOKEN, CONF_SLOT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -23,8 +23,11 @@ REQUIREMENTS = ['python-miio==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_LEARN = 'chuangmiIr_learn_command'
-SERVICE_SEND = 'chuangmiIr_send_packet'
+SERVICE_LEARN = 'xiaomi_miio_learn_command'
+SERVICE_SEND = 'xiaomi_miio_send_command'
+
+DEFAULT_TIMEOUT = 10
+DEFAULT_SLOT = 1
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
@@ -35,6 +38,10 @@ SWITCH_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+        vol.All(int, vol.Range(min=0)),
+    vol.Optional(CONF_SLOT, default=DEFAULT_SLOT):
+        vol.All(int, vol.Range(min=1, max=1000000)),
     vol.Optional(CONF_SWITCHES, default={}):
         vol.Schema({cv.slug: SWITCH_SCHEMA}),
 }, extra=vol.ALLOW_EXTRA)
@@ -48,32 +55,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     @asyncio.coroutine
     def _learn_command(call):
         """Handle a learn command."""
-        from random import randint
-        slot = randint(1, 1000000)
+        slot = config.get(CONF_SLOT)
 
         yield from hass.async_add_job(remote.learn, slot)
 
+        timeout = config.get(CONF_TIMEOUT)
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
-        while (utcnow() - start_time) < timedelta(seconds=20):
+        while (utcnow() - start_time) < timedelta(seconds=timeout):
             packet = yield from hass.async_add_job(
                 remote.read, slot)
             if packet['code']:
-                log_msg = "Recieved packet is: {}".\
+                log_msg = "Recieved command is: {}".\
                           format(packet['code'])
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(
-                    log_msg, title='ChuangmiIr')
+                    log_msg, title='Xiaomi IR Remote Controller')
                 return
             yield from asyncio.sleep(1, loop=hass.loop)
-        _LOGGER.error("Did not received any signal")
+        _LOGGER.error("Timeout. No infrared command captured")
         hass.components.persistent_notification.async_create(
-            "Did not received any signal", title='ChuangmiIr')
+            "Timeout. No infrared command captured",
+            title='Xiaomi IR Remote Controller')
 
     @asyncio.coroutine
-    def _send_packet(call):
+    def _send_command(call):
         """Send a packet."""
-        packets = call.data.get('packet', [])
+        packets = call.data.get('command', [])
         for packet in packets:
             payload = str(packet)
             _LOGGER.debug(payload)
@@ -82,7 +90,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     remote.play, payload, None)
             except DeviceException as ex:
                 _LOGGER.error(
-                    "Failed to send packet, %s, exception: %s", payload, ex)
+                    "Transmit of IR command failed, %s, exception: %s",
+                    payload, ex)
 
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
@@ -94,13 +103,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         remote.info()
     except ChecksumError as ex:
-        _LOGGER.error("Token is wrong : %s", ex)
+        _LOGGER.error("Token not accepted by device : %s", ex)
         return
 
     hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
                            host.replace('.', '_'), _learn_command)
     hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                           host.replace('.', '_'), _send_packet)
+                           host.replace('.', '_'), _send_command)
 
     devices = config.get(CONF_SWITCHES)
 
@@ -151,7 +160,7 @@ class ChuangmiIrSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        success = yield from self._sendpacket(self._command_on)
+        success = yield from self._sendcommand(self._command_on)
         if success:
             self._state = True
             self.async_schedule_update_ha_state()
@@ -159,23 +168,23 @@ class ChuangmiIrSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        success = yield from self._sendpacket(self._command_off)
+        success = yield from self._sendcommand(self._command_off)
         if success:
             self._state = False
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
-    def _sendpacket(self, packet):
+    def _sendcommand(self, command):
         """Send packet to device."""
         from miio import DeviceException
 
-        if packet is None:
-            _LOGGER.debug("Empty packet")
+        if command is None:
+            _LOGGER.debug("Empty infrared command skipped.")
             return True
         try:
             yield from self.hass.async_add_job(
-                self._device.play, packet, None)
-        except DeviceException as exc:
-            _LOGGER.error(exc)
+                self._device.play, command, None)
+        except DeviceException as ex:
+            _LOGGER.error(ex)
             return False
         return True
