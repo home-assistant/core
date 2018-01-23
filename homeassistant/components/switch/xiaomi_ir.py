@@ -55,7 +55,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     @asyncio.coroutine
     def _learn_command(call):
         """Handle a learn command."""
-        slot = config.get(CONF_SLOT)
+        slot = int(call.data.get('slot', config.get(CONF_SLOT)))
+
+        try:
+            vol.All(int, vol.Range(min=1, max=1000000))(slot)
+        except vol.error.MultipleInvalid as ex:
+            _LOGGER.error("slot value should be between 1 and 1000000, but was: %i", slot)
+            return
 
         yield from hass.async_add_job(remote.learn, slot)
 
@@ -66,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             packet = yield from hass.async_add_job(
                 remote.read, slot)
             if packet['code']:
-                log_msg = "Recieved command is: {}".\
+                log_msg = "Received command is: {}".\
                           format(packet['code'])
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(

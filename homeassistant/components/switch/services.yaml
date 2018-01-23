@@ -32,11 +32,15 @@ mysensors_send_ir_code:
       example: '0xC284'
 
 xiaomi_miio_learn_command:
-  description: Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.
+  description: 'Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.'
+  fields:
+      slot:
+        description: 'Define the slot used to save the IR command (Value from 1 to 1000000)'
+        example: '"slot": "1"'
 
 xiaomi_miio_send_command:
-  description: Send one or more IR commands
+  description: 'Send one or more IR commands'
   fields:
     command:
-      description: Takes a list of base64 encoded commands to send.
+      description: 'Takes a list of base64 encoded commands to send.'
       example: "[ base64 encoded command, base64 encoded command ]"
