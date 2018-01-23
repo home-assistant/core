@@ -85,15 +85,7 @@ def setup(hass, config):
         if (component != 'device_tracker') or (config[DOMAIN][CONF_NCONNECT] == True):
             load_platform(hass, component, DOMAIN, {}, config)
 
-    def refresh_leaf_if_necessary(event_time):
-        _LOGGER.debug("Interval fired, refreshing data...")
-        fire_coroutine_threadsafe(
-            hass.data[DATA_LEAF][leaf.vin].async_update_leaf(), hass.loop)
-
-    track_time_interval(
-        hass, refresh_leaf_if_necessary, DEFAULT_INTERVAL)
-
-    refresh_leaf_if_necessary(0)
+    hass.data[DATA_LEAF][leaf.vin].refresh_leaf_if_necessary(0)
 
     return True
 
@@ -109,9 +101,14 @@ class LeafDataStore:
         self.data[DATA_BATTERY] = 0
         self.data[DATA_CHARGING] = False
         self.data[DATA_LOCATION] = False
+        track_time_interval(
+            hass, self.refresh_leaf_if_necessary, DEFAULT_INTERVAL)
 
-    @asyncio.coroutine
-    def async_update_leaf(self):
+    def refresh_leaf_if_necessary(self, event_time):
+        _LOGGER.debug("Interval fired, refreshing data...")
+        self.update_leaf()
+
+    def update_leaf(self):
         _LOGGER.debug("Updating Nissan Leaf Data")
 
         batteryResponse = yield from self.get_battery()
@@ -119,7 +116,7 @@ class LeafDataStore:
 
         if batteryResponse.answer == 200:
             self.data[DATA_BATTERY] = round(batteryResponse.battery_percent, 0)
-            #self.data[DATA_BATTERY] = 1
+            # self.data[DATA_BATTERY] = 1
             self.data[DATA_CHARGING] = batteryResponse.is_charging
 
         _LOGGER.debug("Battery Response: ")
@@ -148,13 +145,12 @@ class LeafDataStore:
         _LOGGER.debug("Notifying Components")
         dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
-    @asyncio.coroutine
     def get_battery(self):
         request = self.leaf.request_update()
         battery_status = self.leaf.get_status_from_update(request)
         while battery_status is None:
             _LOGGER.debug("Battery data not in yet.")
-            yield from asyncio.sleep(5)
+            time.sleep(5)
             battery_status = self.leaf.get_status_from_update(request)
 
         return battery_status
@@ -197,7 +193,7 @@ class LeafDataStore:
 
         while location_status is None:
             _LOGGER.debug("Location data not in yet.")
-            yield from asyncio.sleep(5)
+            time.sleep(5)
             location_status = self.leaf.get_status_from_location(request)
 
         return location_status
