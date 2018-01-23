@@ -39,9 +39,9 @@ CONF_SLOTS = 'slots'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
-            'rm2_pro_plus_bl', 'rm_mini_shate','rm_mini_3']
+            'rm2_pro_plus_bl', 'rm_mini_shate', 'rm_mini_3']
 SP1_TYPES = ['sp1']
-SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus','sp3mini']
+SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus', 'sp3mini']
 MP1_TYPES = ['mp1']
 
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
@@ -108,7 +108,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 data = format(b64encode(packet).decode('utf8'))
                 log_msg = "Recieved packet is: " + data
                 _LOGGER.info(log_msg)
-                _save_packet(call,data,title)
+                _save_packet(call, data, title)
                 return
             yield from asyncio.sleep(1, loop=hass.loop)
         _LOGGER.error("Did not received any signal")
@@ -148,7 +148,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not auth:
             _LOGGER.error("Failed to connect to device")
             return
-        
+
         packet_id = call.data.get('packet_id')
         if packet_id:
             with open(SAVE_PATH, 'r') as fs:
@@ -166,7 +166,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Need the 'packet_id' in body.")
 
     '''auto save the packet when packet_id is set'''
-    def _save_packet(call,data,title):
+    def _save_packet(call, data, title):
         """save a packet by id in known_packets.yaml """
         packet_id = call.data.get('packet_id')
         if packet_id:
@@ -178,7 +178,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 fs.close()
             _LOGGER.info("Save packet to 'known_packets.yaml' by id:"+packet_id)
             title = title + " and Saved"
-        
+
         hass.components.persistent_notification.async_create(
         data, title=title)
 
@@ -198,7 +198,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.services.register(DOMAIN, device_id + '_' +
                                SERVICE_SEND, _send_packet)
         hass.services.register(DOMAIN, device_id + '_' +
-                               SERVICE_SEND_BY_ID , _send_packet_by_id)
+                               SERVICE_SEND_BY_ID, _send_packet_by_id)
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
@@ -265,7 +265,7 @@ class BroadlinkRMSwitch(SwitchDevice):
         """Return true if device is on."""
         self.update()
         return self._state
-    
+
     def update(self):
         """Synchronize state with switch."""
         pass
