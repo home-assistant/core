@@ -225,7 +225,7 @@ class XiaomiDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Start unavailability tracking."""
-        self._track_unavailable()
+        self._async_track_unavailable()
 
     @property
     def name(self):
@@ -248,17 +248,18 @@ class XiaomiDevice(Entity):
         return self._device_state_attributes
 
     @callback
-    def _set_unavailable(self, now):
+    def _async_set_unavailable(self, now):
         """Set state to UNAVAILABLE."""
         self._remove_unavailability_tracker = None
         self._is_available = False
         self.async_schedule_update_ha_state()
 
-    def _track_unavailable(self):
+    @callback
+    def _async_track_unavailable(self):
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
         self._remove_unavailability_tracker = async_track_point_in_utc_time(
-            self.hass, self._set_unavailable,
+            self.hass, self._async_set_unavailable,
             utcnow() + TIME_TILL_UNAVAILABLE)
         if not self._is_available:
             self._is_available = True
@@ -269,7 +270,7 @@ class XiaomiDevice(Entity):
     def push_data(self, data, raw_data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
-        was_unavailable = self._track_unavailable()
+        was_unavailable = self._async_track_unavailable()
         is_data = self.parse_data(data, raw_data)
         is_voltage = self.parse_voltage(data)
         if is_data or is_voltage or was_unavailable:
