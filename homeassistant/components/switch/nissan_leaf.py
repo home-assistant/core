@@ -42,14 +42,16 @@ class LeafClimateSwitch(LeafCore.LeafEntity, ToggleEntity):
         return self.car.data[LeafCore.DATA_CLIMATE] == True
 
     def turn_on(self, **kwargs):
-        # if self.controller.set_climate(True):
-            # self.data[LeafCore.DATA_CLIMATE] = True
-        _LOGGER.info("Climate Control is not implemented yet.")
+        if self.car.set_climate(True):
+            self.car.data[LeafCore.DATA_CLIMATE] = True
+
+        self._update_callback()
 
     def turn_off(self, **kwargs):
-        _LOGGER.info("Climate Control is not implemented yet.")
-        # if self.controller.set_climate(False):
-        # self.data[LeafCore.DATA_CLIMATE] = False
+        if self.car.set_climate(False):
+            self.car.data[LeafCore.DATA_CLIMATE] = False
+
+        self._update_callback()
 
 
 class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
@@ -65,11 +67,12 @@ class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
     def is_on(self):
         return self.car.data[LeafCore.DATA_CHARGING] == True
 
-    def turn_on(self, entity_id):
-        _LOGGER.info("Charging is not implemented yet.")
-        # if self.controller.start_charging():
-        # self.data[LeafCore.DATA_CHARGING] = True
+    def turn_on(self, **kwargs):
+        if self.car.start_charging():
+            self.car.data[LeafCore.DATA_CHARGING] = True
 
-    def turn_off(self, entity_id):
+        self._update_callback()
+
+    def turn_off(self, **kwargs):
         _LOGGER.debug(
             "Cannot turn off Leaf charging - Nissan does not support that remotely.")

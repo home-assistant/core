@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LeafBatterySensor(LeafCore.LeafEntity):
     @property
     def name(self):
-        return "Leaf Charge %"
+        return "Leaf Charge"
 
     def log_registration(self):
         _LOGGER.debug(
@@ -74,7 +74,10 @@ class LeafRangeSensor(LeafCore.LeafEntity):
 
     @property
     def name(self):
-        return "Range (" + ("AC On" if self.ac_on == True else "AC Off") + ")"
+        if self.ac_on == True:
+            return "Leaf Range (AC)"
+        else:
+            return "Leaf Range"
 
     def log_registration(self):
         _LOGGER.debug(

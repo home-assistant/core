@@ -156,6 +156,9 @@ class LeafDataStore:
                 _LOGGER.error("Error fetching location info")
 
         _LOGGER.debug("Notifying Components")
+        self.signal_components()
+
+    def signal_components(self):
         dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
     def get_battery(self):
@@ -184,6 +187,10 @@ class LeafDataStore:
                 climate_result = self.leaf.get_start_climate_control_result(
                     request)
 
+            _LOGGER.debug(climate_result.__dict__)
+
+            self.signal_components()
+
             return climate_result.is_hvac_running
         else:
             request = self.leaf.stop_climate_control()
@@ -194,6 +201,10 @@ class LeafDataStore:
                 time.sleep(5)
                 climate_result = self.leaf.get_stop_climate_control_result(
                     request)
+
+            _LOGGER.debug(climate_result.__dict__)
+
+            self.signal_components()
 
             return climate_result.is_hvac_running
 
