@@ -230,4 +230,20 @@ DEMO_DEVICES = [{
     'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False
+}, {
+    'id': 'sensor.outside_temperature',
+    'name': {
+        'name': 'Outside Temperature'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'sensor.outside_humidity',
+    'name': {
+        'name': 'Outside Humidity'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
 }]
