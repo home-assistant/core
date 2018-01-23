@@ -53,12 +53,13 @@ def async_setup(hass, config):
         more_info_card = cfg.get(CONF_MORE_INFO_CARD)
         config = cfg.get(CONF_CONFIG)
 
-        if ha_card == None and state_card == None:
-            _LOGGER.error("Entity config must contain ha_card and/or state_card ({}).".format(object_id))
+        if ha_card is None and state_card is None:
+            _LOGGER.error("Entity config must contain ha_card " +
+                "and/or state_card ({}).".format(object_id))
             return False
 
         entities.append(CustomCard(object_id, ha_card, state_card,
-                                    more_info_card, config))
+            more_info_card, config))
 
     if not entities:
         return False
@@ -72,7 +73,7 @@ class CustomCard(Entity):
     """Representation of a custom card."""
 
     def __init__(self, object_id, ha_card, state_card, more_info_card, config):
-        """Initialize a custom card."""        
+        """Initialize a custom card."""
         if ha_card:
             self.entity_id = ENTITY_ID_FORMAT_HA_CARD.format(object_id)
             self._state = ha_card
