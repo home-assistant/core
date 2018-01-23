@@ -86,6 +86,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert len(self.hass.states.entity_ids()) == 0
 
         component.add_entities([EntityTest()])
+        self.hass.block_till_done()
 
         # group exists
         assert len(self.hass.states.entity_ids()) == 2
@@ -98,6 +99,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         # group extended
         component.add_entities([EntityTest(name='goodbye')])
+        self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
