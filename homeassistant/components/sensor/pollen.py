@@ -1,5 +1,5 @@
 """
-Support for Pollen.com allergen and disease sensors.
+Support for Pollen.com allergen and cold/flu sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pollen/
