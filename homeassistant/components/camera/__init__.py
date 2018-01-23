@@ -124,15 +124,15 @@ def async_setup(hass, config):
     """Set up the camera component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(CameraImageView(component.entities))
-    hass.http.register_view(CameraMjpegStream(component.entities))
+    hass.http.register_view(CameraImageView(component))
+    hass.http.register_view(CameraMjpegStream(component))
 
     yield from component.async_setup(config)
 
     @callback
     def update_tokens(time):
         """Update tokens of the entities."""
-        for entity in component.entities.values():
+        for entity in component.entities:
             entity.async_update_token()
             hass.async_add_job(entity.async_update_ha_state())
 
@@ -358,14 +358,14 @@ class CameraView(HomeAssistantView):
 
     requires_auth = False
 
-    def __init__(self, entities):
+    def __init__(self, component):
         """Initialize a basic camera view."""
-        self.entities = entities
+        self.component = component
 
     @asyncio.coroutine
     def get(self, request, entity_id):
         """Start a GET request."""
-        camera = self.entities.get(entity_id)
+        camera = self.component.get_entity(entity_id)
 
         if camera is None:
             status = 404 if request[KEY_AUTHENTICATED] else 401
