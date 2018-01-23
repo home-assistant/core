@@ -135,7 +135,7 @@ class WazeTravelTime(Entity):
                     "Retreived route is %s = %s %s",
                     self.type,
                     self._state,
-                    self._unit_of_measuremen
+                    self._unit_of_measurement
                     )
 
 
