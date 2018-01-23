@@ -27,16 +27,10 @@ def _get_device_class(egardia_type):
 
 
 def _get_sensor_state(egardia_input):
-    print("egardia input: ",egardia_input)
-    print("type: ",type(egardia_input))
     if egardia_input:
         return STATE_ON
-    else: 
+    else:
         return STATE_OFF
-    # if len(egardia_input) > 0:
-    #    return STATE_ON
-    # else:
-    #    return STATE_OFF
 #    return EGARDIA_INPUT_TO_STATES.get(egardia_input, STATE_UNAVAILABLE)
 
 
