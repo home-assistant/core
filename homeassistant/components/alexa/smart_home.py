@@ -7,16 +7,17 @@ from uuid import uuid4
 
 from homeassistant.components import (
     alert, automation, cover, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch)
+    media_player, scene, script, switch, http)
+import homeassistant.core as ha
+import homeassistant.util.color as color_util
+from homeassistant.util.decorator import Registry
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_NAME, SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET)
-import homeassistant.core as ha
-import homeassistant.util.color as color_util
-from homeassistant.util.decorator import Registry
+from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,8 @@ API_ENDPOINT = 'endpoint'
 API_EVENT = 'event'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
+
+SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
 CONF_DESCRIPTION = 'description'
 CONF_DISPLAY_CATEGORIES = 'display_categories'
@@ -111,6 +114,51 @@ class Config:
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
+
+
+@ha.callback
+def async_setup(hass, config):
+    """Activate Smart Home functionality of Alexa component.
+
+    This is optional, triggered by having a `smart_home:` sub-section in the
+    alexa configuration.
+
+    Even if that's disabled, the functionality in this module may still be used
+    by the cloud component which will call async_handle_message directly.
+    """
+    smart_home_config = Config(
+        should_expose=config[CONF_FILTER],
+        entity_config=config.get(CONF_ENTITY_CONFIG),
+    )
+    hass.http.register_view(SmartHomeView(smart_home_config))
+
+
+class SmartHomeView(http.HomeAssistantView):
+    """Expose Smart Home v3 payload interface via HTTP POST."""
+
+    url = SMART_HOME_HTTP_ENDPOINT
+    name = 'api:alexa:smart_home'
+
+    def __init__(self, smart_home_config):
+        """Initialize."""
+        self.smart_home_config = smart_home_config
+
+    @asyncio.coroutine
+    def post(self, request):
+        """Handle Alexa Smart Home requests.
+
+        The Smart Home API requires the endpoint to be implemented in AWS
+        Lambda, which will need to forward the requests to here and pass back
+        the response.
+        """
+        hass = request.app['hass']
+        message = yield from request.json()
+
+        _LOGGER.debug("Received Alexa Smart Home request: %s", message)
+
+        response = yield from async_handle_message(
+            hass, self.smart_home_config, message)
+        return b'' if response is None else self.json(response)
 
 
 @asyncio.coroutine
