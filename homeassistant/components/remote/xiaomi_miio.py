@@ -11,7 +11,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.components.remote as remote
+from homeassistant.components.remote import (
+    PLATFORM_SCHEMA, DOMAIN, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT,
@@ -33,7 +34,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_SLOT = 1
 
 LEARN_COMMAND_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.string,
+    vol.Required(ATTR_ENTITY_ID): vol.All(str),
     vol.Optional(CONF_TIMEOUT, default=10):
         vol.All(int, vol.Range(min=0)),
     vol.Optional(CONF_SLOT, default=1):
@@ -44,7 +45,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])
     })
 
-PLATFORM_SCHEMA = remote.PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
@@ -92,29 +93,36 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     xiaomi_miio_remote = XiaomiMiioRemote(
         entity_id, device, slot, timeout, hidden, config.get(CONF_COMMANDS))
 
-    hass.data[PLATFORM][
-        entity_id.replace(' ', '_').lower()] = xiaomi_miio_remote
+    hass.data[PLATFORM][host] = xiaomi_miio_remote
 
     async_add_devices([xiaomi_miio_remote])
 
     @asyncio.coroutine
-    def _learn_command(call):
+    def async_service_handler(service):
         """Handle a learn command."""
-        entity_id = call.data.get('entity_id').split('.')[1]
+        if service.service != SERVICE_LEARN:
+            _LOGGER.error("We should not handle service: %s", service.service)
+            return
 
-        if entity_id not in hass.data[PLATFORM]:
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+
+        entity = None
+
+        for remote in hass.data[PLATFORM].values():
+            if remote.entity_id == entity_id:
+                entity = remote
+
+        if entity is None:
             _LOGGER.error("entity_id: '%s' not found", entity_id)
             return
 
-        entity = hass.data[PLATFORM][entity_id]
-
         device = entity.device
 
-        slot = call.data.get(CONF_SLOT, entity.slot)
+        slot = service.data.get(CONF_SLOT, entity.slot)
 
         yield from hass.async_add_job(device.learn, slot)
 
-        timeout = call.data.get(CONF_TIMEOUT, entity.timeout)
+        timeout = service.data.get(CONF_TIMEOUT, entity.timeout)
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
@@ -134,7 +142,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             "Timeout. No infrared command captured",
             title='Xiaomi Miio Remote')
 
-    hass.services.async_register(remote.DOMAIN, SERVICE_LEARN, _learn_command,
+    hass.services.async_register(DOMAIN, SERVICE_LEARN, async_service_handler,
                                  schema=LEARN_COMMAND_SCHEMA)
 
 
@@ -227,9 +235,9 @@ class XiaomiMiioRemote(Entity):
     @asyncio.coroutine
     def async_send_command(self, command, **kwargs):
         """Wrapper for _send_command."""
-        num_repeats = kwargs.get(remote.ATTR_NUM_REPEATS)
+        num_repeats = kwargs.get(ATTR_NUM_REPEATS)
 
-        delay = kwargs.get(remote.ATTR_DELAY_SECS)
+        delay = kwargs.get(ATTR_DELAY_SECS)
 
         for _ in range(num_repeats):
             for payload in command:
