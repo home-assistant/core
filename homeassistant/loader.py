@@ -1,5 +1,5 @@
 """
-Provides methods for loading Home Assistant components.
+The methods for loading Home Assistant components.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
@@ -16,10 +16,10 @@ import logging
 import os
 import pkgutil
 import sys
-
 from types import ModuleType
+
 # pylint: disable=unused-import
-from typing import Optional, Sequence, Set, Dict  # NOQA
+from typing import Dict, Optional, Sequence, Set  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
@@ -224,7 +224,7 @@ class ModuleWrapper:
 
 
 def bind_hass(func):
-    """Decorator to indicate that first argument is hass."""
+    """Decorate function to indicate that first argument is hass."""
     # pylint: disable=protected-access
     func.__bind_hass = True
     return func
@@ -290,4 +290,4 @@ def _check_prepared() -> None:
     if not PREPARED:
         _LOGGER.warning((
             "You did not call loader.prepare() yet. "
-            "Certain functionality might not be working."))
+            "Certain functionality might not be working"))

@@ -288,12 +288,15 @@ class ZigBeeDigitalIn(Entity):
             """
             if not frame_is_relevant(self, frame):
                 return
-            sample = frame['samples'].pop()
+            sample = next(iter(frame['samples']))
             pin_name = DIGITAL_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
-            self._state = self._config.state2bool[sample[pin_name]]
+            # Set state to the value of sample, respecting any inversion
+            # logic from the on_state config variable.
+            self._state = self._config.state2bool[
+                self._config.bool2state[sample[pin_name]]]
             self.schedule_update_ha_state()
 
         async_dispatcher_connect(

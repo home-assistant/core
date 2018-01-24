@@ -32,11 +32,14 @@ homeassistant/components/zone.py @home-assistant/core
 # To monitor non-pypi additions
 requirements_all.txt @andrey-git
 
+# HomeAssistant developer Teams
 Dockerfile @home-assistant/docker
 virtualization/Docker/* @home-assistant/docker
 
 homeassistant/components/zwave/* @home-assistant/z-wave
 homeassistant/components/*/zwave.py @home-assistant/z-wave
+
+homeassistant/components/hassio.py @home-assistant/hassio
 
 # Indiviudal components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
@@ -65,9 +68,11 @@ homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
+homeassistant/components/*/axis.py @kane610
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/hive.py @Rendili @KJonline
 homeassistant/components/*/hive.py @Rendili @KJonline
+homeassistant/components/*/deconz.py @kane610
 homeassistant/components/*/rfxtrx.py @danielhiversen
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342

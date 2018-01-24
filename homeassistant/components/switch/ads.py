@@ -3,21 +3,24 @@ Support for ADS switch platform.
 
 For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/switch.ads/
-
 """
 import asyncio
 import logging
+
 import voluptuous as vol
+
+from homeassistant.components.ads import CONF_ADS_VAR, DATA_ADS
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['ads']
+
 DEFAULT_NAME = 'ADS Switch'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_NAME): cv.string,
@@ -49,15 +52,13 @@ class AdsSwitch(ToggleEntity):
         """Register device notification."""
         def update(name, value):
             """Handle device notification."""
-            _LOGGER.debug('Variable %s changed its value to %d',
-                          name, value)
+            _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._on_state = value
             self.schedule_update_ha_state()
 
         self.hass.async_add_job(
             self._ads_hub.add_device_notification,
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update
-        )
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
 
     @property
     def is_on(self):
@@ -76,10 +77,10 @@ class AdsSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._ads_hub.write_by_name(self.ads_var, True,
-                                    self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(
+            self.ads_var, True, self._ads_hub.PLCTYPE_BOOL)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._ads_hub.write_by_name(self.ads_var, False,
-                                    self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(
+            self.ads_var, False, self._ads_hub.PLCTYPE_BOOL)

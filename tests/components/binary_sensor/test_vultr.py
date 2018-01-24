@@ -1,5 +1,8 @@
 """Test the Vultr binary sensor platform."""
+import json
 import unittest
+from unittest.mock import patch
+
 import requests_mock
 import pytest
 import voluptuous as vol
@@ -50,10 +53,6 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
         """Stop our started services."""
         self.hass.stop()
 
-    def test_failed_hub(self):
-        """Test a hub setup failure."""
-        base_vultr.setup(self.hass, VALID_CONFIG)
-
     @requests_mock.Mocker()
     def test_binary_sensor(self, mock):
         """Test successful instance."""
@@ -61,12 +60,12 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
 
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
-
-        # Setup hub
-        base_vultr.setup(self.hass, VALID_CONFIG)
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(
+                load_fixture('vultr_server_list.json'))):
+            # Setup hub
+            base_vultr.setup(self.hass, VALID_CONFIG)
 
         # Setup each of our test configs
         for config in self.configs:
@@ -137,11 +136,12 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
 
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
-
-        base_vultr.setup(self.hass, VALID_CONFIG)
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(
+                load_fixture('vultr_server_list.json'))):
+            # Setup hub
+            base_vultr.setup(self.hass, VALID_CONFIG)
 
         bad_conf = {}  # No subscription
 

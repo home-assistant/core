@@ -10,30 +10,32 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS)
+    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
-
 REQUIREMENTS = ['greenwavereality==0.5.1']
 _LOGGER = logging.getLogger(__name__)
 
+CONF_VERSION = 'version'
+
+SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required("version"): cv.positive_int,
+    vol.Required(CONF_VERSION): cv.positive_int,
 })
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Greenwave Reality Platform."""
+    """Set up the Greenwave Reality Platform."""
     import greenwavereality as greenwave
     import os
     host = config.get(CONF_HOST)
     tokenfile = hass.config.path('.greenwave')
-    if config.get("version") == 3:
+    if config.get(CONF_VERSION) == 3:
         if os.path.exists(tokenfile):
             tokenfile = open(tokenfile)
             token = tokenfile.read()

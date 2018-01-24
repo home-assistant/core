@@ -6,13 +6,11 @@ https://home-assistant.io/components/eight_sleep/
 """
 import asyncio
 import logging
-import os
 from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS, CONF_BINARY_SENSORS,
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP)
@@ -159,10 +157,6 @@ def async_setup(hass, config):
             CONF_BINARY_SENSORS: binary_sensors,
         }, config))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_service_handler(service):
         """Handle eight sleep service calls."""
@@ -183,7 +177,6 @@ def async_setup(hass, config):
     # Register services
     hass.services.async_register(
         DOMAIN, SERVICE_HEAT_SET, async_service_handler,
-        descriptions[DOMAIN].get(SERVICE_HEAT_SET),
         schema=SERVICE_EIGHT_SCHEMA)
 
     @asyncio.coroutine

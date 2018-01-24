@@ -4,31 +4,28 @@ Support for the LIFX platform that implements lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
-import logging
 import asyncio
-import sys
-import math
-from os import path
-from functools import partial
 from datetime import timedelta
+from functools import partial
+import logging
+import math
+import sys
 
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    Light, DOMAIN, PLATFORM_SCHEMA, LIGHT_TURN_ON_SCHEMA,
-    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
-    ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_TRANSITION, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT,
-    VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT,
-    preprocess_turn_on_alternatives)
-from homeassistant.config import load_yaml_config_file
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant import util
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_COLOR_TEMP,
+    ATTR_EFFECT, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_XY_COLOR,
+    DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+    SUPPORT_XY_COLOR, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
+    preprocess_turn_on_alternatives)
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import extract_entity_ids
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -210,13 +207,10 @@ class LIFXManager(object):
         self.async_add_devices = async_add_devices
         self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
 
-        descriptions = load_yaml_config_file(
-            path.join(path.dirname(__file__), 'services.yaml'))
+        self.register_set_state()
+        self.register_effects()
 
-        self.register_set_state(descriptions)
-        self.register_effects(descriptions)
-
-    def register_set_state(self, descriptions):
+    def register_set_state(self):
         """Register the LIFX set_state service call."""
         @asyncio.coroutine
         def async_service_handle(service):
@@ -231,10 +225,9 @@ class LIFXManager(object):
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_LIFX_SET_STATE, async_service_handle,
-            descriptions.get(SERVICE_LIFX_SET_STATE),
             schema=LIFX_SET_STATE_SCHEMA)
 
-    def register_effects(self, descriptions):
+    def register_effects(self):
         """Register the LIFX effects as hass service calls."""
         @asyncio.coroutine
         def async_service_handle(service):
@@ -246,17 +239,14 @@ class LIFXManager(object):
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_PULSE, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_PULSE),
             schema=LIFX_EFFECT_PULSE_SCHEMA)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_COLORLOOP, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_COLORLOOP),
             schema=LIFX_EFFECT_COLORLOOP_SCHEMA)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_STOP, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_STOP),
             schema=LIFX_EFFECT_STOP_SCHEMA)
 
     @asyncio.coroutine
@@ -305,12 +295,12 @@ class LIFXManager(object):
 
     @callback
     def register(self, device):
-        """Handler for newly detected bulb."""
+        """Handle newly detected bulb."""
         self.hass.async_add_job(self.async_register(device))
 
     @asyncio.coroutine
     def async_register(self, device):
-        """Handler for newly detected bulb."""
+        """Handle newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             entity.registered = True

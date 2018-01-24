@@ -8,10 +8,11 @@ import asyncio
 import logging
 
 from homeassistant.components.scene import Scene
-from homeassistant.components.wink import WinkDevice, DOMAIN
+from homeassistant.components.wink import DOMAIN, WinkDevice
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['wink']
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -34,7 +35,7 @@ class WinkScene(WinkDevice, Scene):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['scene'].append(self)
 
     @property

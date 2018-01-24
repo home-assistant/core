@@ -76,13 +76,25 @@ light:
   name: mqtt_json_light_1
   state_topic: "home/rgb1"
   command_topic: "home/rgb1/set"
+
+Config with brightness and scale:
+
+light:
+  platform: mqtt_json
+  name: test
+  state_topic: "mqtt_json_light_1"
+  command_topic: "mqtt_json_light_1/set"
+  brightness: true
+  brightness_scale: 99
 """
+
 import json
 import unittest
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
-        STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE, ATTR_SUPPORTED_FEATURES)
+    STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE,
+    ATTR_SUPPORTED_FEATURES)
 import homeassistant.components.light as light
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
@@ -402,6 +414,43 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(10, message_json["transition"])
         self.assertEqual("OFF", message_json["state"])
 
+    def test_brightness_scale(self):
+        """Test for brightness scaling."""
+        assert setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_bright_scale',
+                'command_topic': 'test_light_bright_scale/set',
+                'brightness': True,
+                'brightness_scale': 99
+            }
+        })
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('brightness'))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        # Turn on the light
+        fire_mqtt_message(self.hass, 'test_light_bright_scale',
+                          '{"state":"ON"}')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(255, state.attributes.get('brightness'))
+
+        # Turn on the light with brightness
+        fire_mqtt_message(self.hass, 'test_light_bright_scale',
+                          '{"state":"ON",'
+                          '"brightness": 99}')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(255, state.attributes.get('brightness'))
+
     def test_invalid_color_brightness_and_white_values(self): \
             # pylint: disable=invalid-name
         """Test that invalid color/brightness/white values are ignored."""
@@ -472,3 +521,59 @@ class TestLightMQTTJSON(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual(255, state.attributes.get('white_value'))
+
+    def test_default_availability_payload(self):
+        """Test availability by default payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_rgb',
+                'command_topic': 'test_light_rgb/set',
+                'availability_topic': 'availability-topic'
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_custom_availability_payload(self):
+        """Test availability by custom payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_rgb',
+                'command_topic': 'test_light_rgb/set',
+                'availability_topic': 'availability-topic',
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)

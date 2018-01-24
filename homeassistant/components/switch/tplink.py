@@ -24,12 +24,11 @@ ATTR_CURRENT_A = 'current_a'
 CONF_LEDS = 'enable_leds'
 
 DEFAULT_NAME = 'TP-Link Switch'
-DEFAULT_LEDS = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_LEDS, default=DEFAULT_LEDS): cv.boolean,
+    vol.Optional(CONF_LEDS): cv.boolean,
 })
 
 
@@ -51,7 +50,8 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
-        self._leds_on = leds_on
+        if leds_on is not None:
+            self.smartplug.led = leds_on
         self._state = None
         self._available = True
         # Set up emeter cache
@@ -90,13 +90,13 @@ class SmartPlugSwitch(SwitchDevice):
         from pyHS100 import SmartDeviceException
         try:
             self._available = True
+
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
 
-            if self._name is None:
+            # Pull the name from the device if a name was not specified
+            if self._name == DEFAULT_NAME:
                 self._name = self.smartplug.alias
-
-            self.smartplug.led = self._leds_on
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()

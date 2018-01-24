@@ -1,21 +1,21 @@
 """Script to run benchmarks."""
-import asyncio
 import argparse
+import asyncio
 from contextlib import suppress
 from datetime import datetime
 import logging
 from timeit import default_timer as timer
 
-from homeassistant.const import (
-    EVENT_TIME_CHANGED, ATTR_NOW, EVENT_STATE_CHANGED)
 from homeassistant import core
+from homeassistant.const import (
+    ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED)
 from homeassistant.util import dt as dt_util
 
 BENCHMARKS = {}
 
 
 def run(args):
-    """Handle ensure config commandline script."""
+    """Handle ensure configuration commandline script."""
     # Disable logging
     logging.getLogger('homeassistant.core').setLevel(logging.CRITICAL)
 
@@ -44,7 +44,7 @@ def run(args):
 
 
 def benchmark(func):
-    """Decorator to mark a benchmark."""
+    """Decorate to mark a benchmark."""
     BENCHMARKS[func.__name__] = func
     return func
 

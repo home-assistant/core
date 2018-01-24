@@ -1,24 +1,24 @@
 """Support for alexa Smart Home Skill API."""
 import asyncio
-from collections import namedtuple
 import logging
 import math
+from datetime import datetime
 from uuid import uuid4
 
+from homeassistant.components import (
+    alert, automation, cover, fan, group, input_boolean, light, lock,
+    media_player, scene, script, switch, http)
 import homeassistant.core as ha
+import homeassistant.util.color as color_util
+from homeassistant.util.decorator import Registry
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_LOCK,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_NAME, SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET)
-from homeassistant.components import (
-    alert, automation, cover, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch)
-import homeassistant.util.color as color_util
-from homeassistant.util.decorator import Registry
+from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
-HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 API_DIRECTIVE = 'directive'
@@ -27,11 +27,12 @@ API_EVENT = 'event'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
 
-ATTR_ALEXA_DESCRIPTION = 'alexa_description'
-ATTR_ALEXA_DISPLAY_CATEGORIES = 'alexa_display_categories'
-ATTR_ALEXA_HIDDEN = 'alexa_hidden'
-ATTR_ALEXA_NAME = 'alexa_name'
+SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
+CONF_DESCRIPTION = 'description'
+CONF_DISPLAY_CATEGORIES = 'display_categories'
+
+HANDLERS = Registry()
 
 MAPPING_COMPONENT = {
     alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
@@ -73,7 +74,91 @@ MAPPING_COMPONENT = {
 }
 
 
-Config = namedtuple('AlexaConfig', 'filter')
+class _Cause(object):
+    """Possible causes for property changes.
+
+    https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#cause-object
+    """
+
+    # Indicates that the event was caused by a customer interaction with an
+    # application. For example, a customer switches on a light, or locks a door
+    # using the Alexa app or an app provided by a device vendor.
+    APP_INTERACTION = 'APP_INTERACTION'
+
+    # Indicates that the event was caused by a physical interaction with an
+    # endpoint. For example manually switching on a light or manually locking a
+    # door lock
+    PHYSICAL_INTERACTION = 'PHYSICAL_INTERACTION'
+
+    # Indicates that the event was caused by the periodic poll of an appliance,
+    # which found a change in value. For example, you might poll a temperature
+    # sensor every hour, and send the updated temperature to Alexa.
+    PERIODIC_POLL = 'PERIODIC_POLL'
+
+    # Indicates that the event was caused by the application of a device rule.
+    # For example, a customer configures a rule to switch on a light if a
+    # motion sensor detects motion. In this case, Alexa receives an event from
+    # the motion sensor, and another event from the light to indicate that its
+    # state change was caused by the rule.
+    RULE_TRIGGER = 'RULE_TRIGGER'
+
+    # Indicates that the event was caused by a voice interaction with Alexa.
+    # For example a user speaking to their Echo device.
+    VOICE_INTERACTION = 'VOICE_INTERACTION'
+
+
+class Config:
+    """Hold the configuration for Alexa."""
+
+    def __init__(self, should_expose, entity_config=None):
+        """Initialize the configuration."""
+        self.should_expose = should_expose
+        self.entity_config = entity_config or {}
+
+
+@ha.callback
+def async_setup(hass, config):
+    """Activate Smart Home functionality of Alexa component.
+
+    This is optional, triggered by having a `smart_home:` sub-section in the
+    alexa configuration.
+
+    Even if that's disabled, the functionality in this module may still be used
+    by the cloud component which will call async_handle_message directly.
+    """
+    smart_home_config = Config(
+        should_expose=config[CONF_FILTER],
+        entity_config=config.get(CONF_ENTITY_CONFIG),
+    )
+    hass.http.register_view(SmartHomeView(smart_home_config))
+
+
+class SmartHomeView(http.HomeAssistantView):
+    """Expose Smart Home v3 payload interface via HTTP POST."""
+
+    url = SMART_HOME_HTTP_ENDPOINT
+    name = 'api:alexa:smart_home'
+
+    def __init__(self, smart_home_config):
+        """Initialize."""
+        self.smart_home_config = smart_home_config
+
+    @asyncio.coroutine
+    def post(self, request):
+        """Handle Alexa Smart Home requests.
+
+        The Smart Home API requires the endpoint to be implemented in AWS
+        Lambda, which will need to forward the requests to here and pass back
+        the response.
+        """
+        hass = request.app['hass']
+        message = yield from request.json()
+
+        _LOGGER.debug("Received Alexa Smart Home request: %s", message)
+
+        response = yield from async_handle_message(
+            hass, self.smart_home_config, message)
+        return b'' if response is None else self.json(response)
 
 
 @asyncio.coroutine
@@ -150,13 +235,8 @@ def async_api_discovery(hass, config, request):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
-        if not config.filter(entity.entity_id):
+        if not config.should_expose(entity.entity_id):
             _LOGGER.debug("Not exposing %s because filtered by config",
-                          entity.entity_id)
-            continue
-
-        if entity.attributes.get(ATTR_ALEXA_HIDDEN, False):
-            _LOGGER.debug("Not exposing %s because alexa_hidden is true",
                           entity.entity_id)
             continue
 
@@ -165,17 +245,18 @@ def async_api_discovery(hass, config, request):
         if not class_data:
             continue
 
-        friendly_name = entity.attributes.get(ATTR_ALEXA_NAME, entity.name)
-        description = entity.attributes.get(ATTR_ALEXA_DESCRIPTION,
-                                            entity.entity_id)
+        entity_conf = config.entity_config.get(entity.entity_id, {})
+
+        friendly_name = entity_conf.get(CONF_NAME, entity.name)
+        description = entity_conf.get(CONF_DESCRIPTION, entity.entity_id)
 
         # Required description as per Amazon Scene docs
         if entity.domain == scene.DOMAIN:
             scene_fmt = '{} (Scene connected via Home Assistant)'
             description = scene_fmt.format(description)
 
-        cat_key = ATTR_ALEXA_DISPLAY_CATEGORIES
-        display_categories = entity.attributes.get(cat_key, class_data[0])
+        display_categories = entity_conf.get(
+            CONF_DISPLAY_CATEGORIES, class_data[0])
 
         endpoint = {
             'displayCategories': [display_categories],
@@ -216,7 +297,7 @@ def async_api_discovery(hass, config, request):
 
 
 def extract_entity(funct):
-    """Decorator for extract entity object from request."""
+    """Decorate for extract entity object from request."""
     @asyncio.coroutine
     def async_api_entity_wrapper(hass, config, request):
         """Process a turn on request."""
@@ -249,7 +330,7 @@ def async_api_turn_on(hass, config, request, entity):
 
     yield from hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -269,7 +350,7 @@ def async_api_turn_off(hass, config, request, entity):
 
     yield from hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -284,7 +365,7 @@ def async_api_set_brightness(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -308,7 +389,7 @@ def async_api_adjust_brightness(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -329,14 +410,14 @@ def async_api_set_color(hass, config, request, entity):
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
             light.ATTR_RGB_COLOR: rgb,
-        }, blocking=True)
+        }, blocking=False)
     else:
         xyz = color_util.color_RGB_to_xy(*rgb)
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
             light.ATTR_XY_COLOR: (xyz[0], xyz[1]),
             light.ATTR_BRIGHTNESS: xyz[2],
-        }, blocking=True)
+        }, blocking=False)
 
     return api_message(request)
 
@@ -351,7 +432,7 @@ def async_api_set_color_temperature(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_KELVIN: kelvin,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -369,7 +450,7 @@ def async_api_decrease_color_temp(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_COLOR_TEMP: value,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -387,7 +468,7 @@ def async_api_increase_color_temp(hass, config, request, entity):
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_COLOR_TEMP: value,
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -399,9 +480,19 @@ def async_api_activate(hass, config, request, entity):
     """Process a activate request."""
     yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
-    return api_message(request)
+    payload = {
+        'cause': {'type': _Cause.VOICE_INTERACTION},
+        'timestamp': '%sZ' % (datetime.utcnow().isoformat(),)
+    }
+
+    return api_message(
+        request,
+        name='ActivationStarted',
+        namespace='Alexa.SceneController',
+        payload=payload,
+    )
 
 
 @HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))
@@ -429,8 +520,8 @@ def async_api_set_percentage(hass, config, request, entity):
         service = SERVICE_SET_COVER_POSITION
         data[cover.ATTR_POSITION] = percentage
 
-    yield from hass.services.async_call(entity.domain, service,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, service, data, blocking=False)
 
     return api_message(request)
 
@@ -477,8 +568,8 @@ def async_api_adjust_percentage(hass, config, request, entity):
 
         data[cover.ATTR_POSITION] = max(0, percentage_delta + current)
 
-    yield from hass.services.async_call(entity.domain, service,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, service, data, blocking=False)
 
     return api_message(request)
 
@@ -490,7 +581,7 @@ def async_api_lock(hass, config, request, entity):
     """Process a lock request."""
     yield from hass.services.async_call(entity.domain, SERVICE_LOCK, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -503,7 +594,7 @@ def async_api_unlock(hass, config, request, entity):
     """Process a unlock request."""
     yield from hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
         ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    }, blocking=False)
 
     return api_message(request)
 
@@ -520,8 +611,9 @@ def async_api_set_volume(hass, config, request, entity):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_VOLUME_SET,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_VOLUME_SET,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -548,9 +640,9 @@ def async_api_adjust_volume(hass, config, request, entity):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_VOLUME_SET,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, media_player.SERVICE_VOLUME_SET,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -567,9 +659,9 @@ def async_api_set_mute(hass, config, request, entity):
         media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        media_player.SERVICE_VOLUME_MUTE,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, media_player.SERVICE_VOLUME_MUTE,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -583,8 +675,9 @@ def async_api_play(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PLAY,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_PLAY,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -598,8 +691,9 @@ def async_api_pause(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_PAUSE,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_PAUSE,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -613,8 +707,9 @@ def async_api_stop(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain, SERVICE_MEDIA_STOP,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_STOP,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -628,9 +723,9 @@ def async_api_next(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        SERVICE_MEDIA_NEXT_TRACK,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_NEXT_TRACK,
+        data, blocking=False)
 
     return api_message(request)
 
@@ -644,8 +739,8 @@ def async_api_previous(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    yield from hass.services.async_call(entity.domain,
-                                        SERVICE_MEDIA_PREVIOUS_TRACK,
-                                        data, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
+        data, blocking=False)
 
     return api_message(request)

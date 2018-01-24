@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.mqtt import MqttAvailability
 from homeassistant.components.vacuum import (
     DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
@@ -18,6 +18,7 @@ from homeassistant.components.vacuum import (
     VacuumDevice)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,7 +136,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FAN_SPEED_LIST, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -187,6 +188,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     send_command_topic = config.get(CONF_SEND_COMMAND_TOPIC)
 
+    availability_topic = config.get(mqtt.CONF_AVAILABILITY_TOPIC)
+    payload_available = config.get(mqtt.CONF_PAYLOAD_AVAILABLE)
+    payload_not_available = config.get(mqtt.CONF_PAYLOAD_NOT_AVAILABLE)
+
     async_add_devices([
         MqttVacuum(
             name, supported_features, qos, retain, command_topic,
@@ -196,12 +201,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             charging_topic, charging_template, cleaning_topic,
             cleaning_template, docked_topic, docked_template, fan_speed_topic,
             fan_speed_template, set_fan_speed_topic, fan_speed_list,
-            send_command_topic
+            send_command_topic, availability_topic, payload_available,
+            payload_not_available
         ),
     ])
 
 
-class MqttVacuum(VacuumDevice):
+class MqttVacuum(MqttAvailability, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
     # pylint: disable=no-self-use
@@ -213,8 +219,12 @@ class MqttVacuum(VacuumDevice):
             charging_topic, charging_template, cleaning_topic,
             cleaning_template, docked_topic, docked_template, fan_speed_topic,
             fan_speed_template, set_fan_speed_topic, fan_speed_list,
-            send_command_topic):
+            send_command_topic, availability_topic, payload_available,
+            payload_not_available):
         """Initialize the vacuum."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
+
         self._name = name
         self._supported_features = supported_features
         self._qos = qos
@@ -257,10 +267,9 @@ class MqttVacuum(VacuumDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe MQTT events.
+        """Subscribe MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT message."""

@@ -78,9 +78,7 @@ class TPLinkSmartBulb(Light):
     def __init__(self, smartbulb: 'SmartBulb', name):
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-        self._name = None
-        if name is not None:
-            self._name = name
+        self._name = name
         self._state = None
         self._available = True
         self._color_temp = None
@@ -149,34 +147,42 @@ class TPLinkSmartBulb(Light):
         from pyHS100 import SmartDeviceException
         try:
             self._available = True
+
             if self._supported_features == 0:
                 self.get_features()
+
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
-            if self._name is None:
+
+            # Pull the name from the device if a name was not specified
+            if self._name == DEFAULT_NAME:
                 self._name = self.smartbulb.alias
+
             if self._supported_features & SUPPORT_BRIGHTNESS:
                 self._brightness = brightness_from_percentage(
                     self.smartbulb.brightness)
+
             if self._supported_features & SUPPORT_COLOR_TEMP:
                 if (self.smartbulb.color_temp is not None and
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
+
             if self._supported_features & SUPPORT_RGB_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
+
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
-                    self.smartbulb.current_consumption() / 1e3)
+                    self.smartbulb.current_consumption())
                 daily_statistics = self.smartbulb.get_emeter_daily()
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
                     self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
                         = "{:.3f}".format(
-                            daily_statistics[int(time.strftime("%d"))] / 1e3)
+                            daily_statistics[int(time.strftime("%d"))])
                     self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
                         = "{:.3f}".format(
-                            monthly_statistics[int(time.strftime("%m"))] / 1e3)
+                            monthly_statistics[int(time.strftime("%m"))])
                 except KeyError:
                     # device returned no daily/monthly history
                     pass

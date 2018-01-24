@@ -17,12 +17,12 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.entity import Entity
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
@@ -59,6 +59,8 @@ CONF_WILL_MESSAGE = 'will_message'
 CONF_STATE_TOPIC = 'state_topic'
 CONF_COMMAND_TOPIC = 'command_topic'
 CONF_AVAILABILITY_TOPIC = 'availability_topic'
+CONF_PAYLOAD_AVAILABLE = 'payload_available'
+CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
@@ -73,6 +75,8 @@ DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_DISCOVERY = False
 DEFAULT_DISCOVERY_PREFIX = 'homeassistant'
 DEFAULT_TLS_PROTOCOL = 'auto'
+DEFAULT_PAYLOAD_AVAILABLE = 'online'
+DEFAULT_PAYLOAD_NOT_AVAILABLE = 'offline'
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
@@ -144,6 +148,14 @@ CONFIG_SCHEMA = vol.Schema({
 SCHEMA_BASE = {
     vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
 }
+
+MQTT_AVAILABILITY_SCHEMA = vol.Schema({
+    vol.Optional(CONF_AVAILABILITY_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
+    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
+})
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
@@ -410,13 +422,9 @@ def async_setup(hass, config):
         yield from hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service,
-        descriptions.get(SERVICE_PUBLISH), schema=MQTT_PUBLISH_SCHEMA)
+        schema=MQTT_PUBLISH_SCHEMA)
 
     if conf.get(CONF_DISCOVERY):
         yield from _async_setup_discovery(hass, config)
@@ -653,3 +661,41 @@ def _match_topic(subscription, topic):
     reg = re.compile(reg_ex)
 
     return reg.match(topic) is not None
+
+
+class MqttAvailability(Entity):
+    """Mixin used for platforms that report availability."""
+
+    def __init__(self, availability_topic, qos, payload_available,
+                 payload_not_available):
+        """Initialize the availability mixin."""
+        self._availability_topic = availability_topic
+        self._availability_qos = qos
+        self._available = availability_topic is None
+        self._payload_available = payload_available
+        self._payload_not_available = payload_not_available
+
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        @callback
+        def availability_message_received(topic, payload, qos):
+            """Handle a new received MQTT availability message."""
+            if payload == self._payload_available:
+                self._available = True
+            elif payload == self._payload_not_available:
+                self._available = False
+
+            self.async_schedule_update_ha_state()
+
+        if self._availability_topic is not None:
+            yield from async_subscribe(
+                self.hass, self._availability_topic,
+                availability_message_received, self. _availability_qos)
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available

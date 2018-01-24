@@ -15,7 +15,7 @@ CONTRACT = "123456789"
 class HydroQuebecClientMock():
     """Fake Hydroquebec client."""
 
-    def __init__(self, username, password, contract=None):
+    def __init__(self, username, password, contract=None, httpsession=None):
         """Fake Hydroquebec client init."""
         pass
 
@@ -36,14 +36,30 @@ class HydroQuebecClientMock():
 class HydroQuebecClientMockError(HydroQuebecClientMock):
     """Fake Hydroquebec client error."""
 
+    def get_contracts(self):
+        """Return fake hydroquebec contracts."""
+        return []
+
     @asyncio.coroutine
     def fetch_data(self):
         """Return fake fetching data."""
-        raise hydroquebec.PyHydroQuebecError("Fake Error")
+        raise PyHydroQuebecErrorMock("Fake Error")
 
 
 class PyHydroQuebecErrorMock(BaseException):
     """Fake PyHydroquebec Error."""
+
+
+class PyHydroQuebecClientFakeModule():
+    """Fake pyfido.client module."""
+
+    PyHydroQuebecError = PyHydroQuebecErrorMock
+
+
+class PyHydroQuebecFakeModule():
+    """Fake pyfido module."""
+
+    HydroQuebecClient = HydroQuebecClientMockError
 
 
 @asyncio.coroutine
@@ -79,11 +95,11 @@ def test_hydroquebec_sensor(loop, hass):
 def test_error(hass, caplog):
     """Test the Hydroquebec sensor errors."""
     caplog.set_level(logging.ERROR)
-    sys.modules['pyhydroquebec'] = MagicMock()
-    sys.modules['pyhydroquebec.client'] = MagicMock()
-    import pyhydroquebec.client
-    pyhydroquebec.HydroQuebecClient = HydroQuebecClientMockError
-    pyhydroquebec.client.PyHydroQuebecError = BaseException
-    hydro_data = hydroquebec.HydroquebecData('username', 'password')
-    yield from hydro_data._fetch_data()
-    assert "Error on receive last Hydroquebec data: " in caplog.text
+    sys.modules['pyhydroquebec'] = PyHydroQuebecFakeModule()
+    sys.modules['pyhydroquebec.client'] = PyHydroQuebecClientFakeModule()
+
+    config = {}
+    fake_async_add_devices = MagicMock()
+    yield from hydroquebec.async_setup_platform(hass, config,
+                                                fake_async_add_devices)
+    assert fake_async_add_devices.called is False
