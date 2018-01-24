@@ -178,7 +178,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 fs.close()
             _LOGGER.info("Save packet to 'known_packets.yaml' by id:"+packet_id)
             title = title + " and Saved"
-
         hass.components.persistent_notification.async_create(
         data, title=title)
 
