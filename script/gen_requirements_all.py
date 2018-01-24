@@ -63,6 +63,7 @@ TEST_REQUIREMENTS = (
     'pilight',
     'pmsensor',
     'prometheus_client',
+    'pushbullet.py',
     'py-canary',
     'pydispatcher',
     'PyJWT',
