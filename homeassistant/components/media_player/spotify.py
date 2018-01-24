@@ -187,7 +187,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 device_diff = {name: id for name, id in self._devices.items()
                                if old_devices.get(name, None) is None}
                 if device_diff:
-                    _LOGGER.info("New Devices: %s", str(device_diff))
+                    _LOGGER.info("New Devices: {device}"
+                                 .format(device=str(device_diff)))
         # Current playback state
         current = self._player.current_playback()
         if current is None:
@@ -291,10 +292,12 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                     media_id = val["uri"]
             kwargs['context_uri'] = media_id
         else:
-            _LOGGER.error("media type %s is not supported", media_type)
+            _LOGGER.error("media type {media_type} is not supported"
+                          .format(media_type=media_type))
             return
         if not media_id.startswith('spotify:'):
-            _LOGGER.error("media id must be spotify uri")
+            _LOGGER.error("media id {media_id} is not a valid spotify uri"
+                          .format(media_id=media_id))
             return
         self._player.start_playback(**kwargs)
 
