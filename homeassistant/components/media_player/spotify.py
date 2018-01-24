@@ -287,9 +287,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs['uris'] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
-            for key, val in self._playlistdata.playlists.items():
-                if media_id in str(val):
-                    media_id = val["uri"]
+            for playlist in self._playlistdata.playlists.values():
+                if media_id in str(playlist):
+                    media_id = playlist["uri"]
             kwargs['context_uri'] = media_id
         else:
             _LOGGER.error("media type {media_type} is not supported"
