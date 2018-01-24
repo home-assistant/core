@@ -12,7 +12,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
+    PLATFORM_SCHEMA, DOMAIN, ATTR_NUM_REPEATS, ATTR_DELAY_SECS,
+    DEFAULT_DELAY_SECS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT,
@@ -112,7 +113,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if remote.entity_id == entity_id:
                 entity = remote
 
-        if entity is None:
+        if not entity:
             _LOGGER.error("entity_id: '%s' not found", entity_id)
             return
 
@@ -127,15 +128,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
-            command = yield from hass.async_add_job(
+            message = yield from hass.async_add_job(
                 device.read, slot)
-            if command['code']:
+            _LOGGER.debug("Message recieved from device: '%s'", message)
+            if 'code' in message and message['code']:
                 log_msg = "Received command is: {}".\
-                          format(command['code'])
+                          format(message['code'])
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(
                     log_msg, title='Xiaomi Miio Remote')
                 return
+            if ('error' in message and
+                    message['error']['message'] == "learn timeout"):
+                yield from hass.async_add_job(device.learn, slot)
             yield from asyncio.sleep(1, loop=hass.loop)
         _LOGGER.error("Timeout. No infrared command captured")
         hass.components.persistent_notification.async_create(
@@ -237,7 +242,7 @@ class XiaomiMiioRemote(Entity):
         """Wrapper for _send_command."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
 
-        delay = kwargs.get(ATTR_DELAY_SECS)
+        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
         for _ in range(num_repeats):
             for payload in command:
