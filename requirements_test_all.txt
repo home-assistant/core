@@ -116,6 +116,10 @@ pmsensor==0.4
 # homeassistant.components.prometheus
 prometheus_client==0.1.0
 
+# homeassistant.components.notify.pushbullet
+# homeassistant.components.sensor.pushbullet
+pushbullet.py==0.11.0
+
 # homeassistant.components.canary
 py-canary==0.2.3
 
