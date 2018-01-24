@@ -166,9 +166,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         else:
             _LOGGER.error("Need the 'packet_id' in body.")
 
-    '''Auto save the packet when packet_id is set'''
     def _save_packet(call, data, title):
-        """Save a packet by id in file."""
+        """Save a packet by id in file  when packet_id is set."""
         packet_id = call.data.get(CONF_PACKET_ID)
         path = hass.config.path(SAVE_PATH)
         if packet_id:
