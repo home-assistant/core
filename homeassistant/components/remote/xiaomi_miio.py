@@ -188,8 +188,8 @@ class XiaomiMiioRemote(Entity):
             return False
 
     @property
-    def should_poll(self)
-        """We should be polled for device up state"""
+    def should_poll(self):
+        """We should be polled for device up state."""
         return True
 
     @property
@@ -238,4 +238,4 @@ class XiaomiMiioRemote(Entity):
                         yield from self._send_command(local_payload)
                 else:
                     yield from self._send_command(payload)
-                yield from asyncio.sleep(delay, loop=hass.loop)
+                yield from asyncio.sleep(delay, loop=self.hass.loop)
