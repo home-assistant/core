@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
 import asyncio
-from datetime import timedelta, dt
+from datetime import timedelta, datetime
 import logging
 from urllib.parse import urlparse
 
@@ -41,8 +41,8 @@ SUPPORT_WEBOSTV = SUPPORT_TURN_OFF | \
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
 
-MIN_TIME_BETWEEN_SCANS = dt.timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = dt.timedelta(seconds=1)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_SOURCES): vol.All(cv.ensure_list, [cv.string]),
@@ -317,9 +317,9 @@ class LgWebOSDevice(MediaPlayerDevice):
         """Position of current playing media in seconds."""
         if not self.media_title:
             return None
-        start_time = pytz.utc.localize(dt.datetime.strptime(
+        start_time = pytz.utc.localize(datetime.strptime(
             self._now_playing.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
-        return (dt.datetime.now(pytz.UTC) - start_time).total_seconds()
+        return (datetime.now(pytz.UTC) - start_time).total_seconds()
 
     @property
     def media_position_updated_at(self):
@@ -422,9 +422,9 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._current_channel_id = info.get('channel', {}) \
             .get('channelId')
         for program in info.get('programList', []):
-            start_time = pytz.utc.localize(dt.datetime.strptime(
+            start_time = pytz.utc.localize(datetime.strptime(
                 program.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
-            end_time = pytz.utc.localize(dt.datetime.strptime(
+            end_time = pytz.utc.localize(datetime.strptime(
                 program.get('endTime'), '%Y,%m,%d,%H,%M,%S'))
-            if start_time <= dt.datetime.now(pytz.UTC) < end_time:
+            if start_time <= datetime.now(pytz.UTC) < end_time:
                 self._now_playing = program
