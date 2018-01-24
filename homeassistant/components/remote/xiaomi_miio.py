@@ -24,8 +24,7 @@ REQUIREMENTS = ['python-miio==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_LEARN = 'xiaomi_miio_learn_command'
-SERVICE_SEND = 'xiaomi_miio_send_command'
-PLATFORM = 'python_miio'
+PLATFORM = 'xiaomi_miio'
 
 CONF_SLOT = 'slot'
 CONF_COMMANDS = 'commands'
@@ -42,15 +41,15 @@ LEARN_COMMAND_SCHEMA = vol.Schema({
 })
 
 COMMAND_SCHEMA = vol.Schema({
-    vol.Required(CONF_COMMAND): cv.ensure_list
+    vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])
     })
 
 PLATFORM_SCHEMA = remote.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=10):
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
         vol.All(int, vol.Range(min=0)),
-    vol.Optional(CONF_SLOT, default=1):
+    vol.Optional(CONF_SLOT, default=DEFAULT_SLOT):
         vol.All(int, vol.Range(min=1, max=1000000)),
     vol.Optional(ATTR_HIDDEN, default=True): cv.boolean,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
@@ -189,6 +188,11 @@ class XiaomiMiioRemote(Entity):
             return False
 
     @property
+    def should_poll(self)
+        """We should be polled for device up state"""
+        return True
+
+    @property
     def device_state_attributes(self):
         """Hide remote by default."""
         if self._is_hidden:
@@ -223,9 +227,15 @@ class XiaomiMiioRemote(Entity):
     @asyncio.coroutine
     def async_send_command(self, command, **kwargs):
         """Wrapper for _send_command."""
-        for payload in command:
-            if payload in self._commands:
-                for local_payload in self._commands[payload][CONF_COMMAND]:
-                    yield from self._send_command(local_payload)
-            else:
-                yield from self._send_command(payload)
+        num_repeats = kwargs.get(remote.ATTR_NUM_REPEATS)
+
+        delay = kwargs.get(remote.ATTR_DELAY_SECS)
+
+        for _ in range(num_repeats):
+            for payload in command:
+                if payload in self._commands:
+                    for local_payload in self._commands[payload][CONF_COMMAND]:
+                        yield from self._send_command(local_payload)
+                else:
+                    yield from self._send_command(payload)
+                yield from asyncio.sleep(delay, loop=hass.loop)
