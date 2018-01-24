@@ -21,6 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['broadlink==0.5']
@@ -153,12 +154,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         path = hass.config.path(SAVE_PATH)
         if packet_id:
             packets = _load_packets(path)
-            for each_id,each_data in packets.items():
+            for each_id, each_data in packets.items():
                 if each_id == packet_id:
                     payload = b64decode(each_data)
                     yield from hass.async_add_job(
                                 broadlink_device.send_data, payload)
-                    _LOGGER.info("Send '%s' successfully.",packet_id)
+                    _LOGGER.info("Send '%s' successfully.", packet_id)
                     return
             _LOGGER.error("Cannot find %s in %s.", packet_id, SAVE_PATH)
         else:
