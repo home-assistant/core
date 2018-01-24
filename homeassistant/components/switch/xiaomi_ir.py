@@ -89,7 +89,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         packets = call.data.get('command', [])
         for packet in packets:
             payload = str(packet)
-            _LOGGER.debug(payload)
+            _LOGGER.debug("Sending payload: '%s'", payload)
             try:
                 yield from hass.async_add_job(
                     remote.play, payload, None)
@@ -166,7 +166,7 @@ class ChuangmiIrSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        success = yield from self._sendcommand(self._command_on)
+        success = yield from self._send_command(self._command_on)
         if success:
             self._state = True
             self.async_schedule_update_ha_state()
@@ -174,13 +174,13 @@ class ChuangmiIrSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        success = yield from self._sendcommand(self._command_off)
+        success = yield from self._send_command(self._command_off)
         if success:
             self._state = False
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
-    def _sendcommand(self, command):
+    def _send_command(self, command):
         """Send packet to device."""
         from miio import DeviceException
 
