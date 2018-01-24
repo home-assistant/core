@@ -18,19 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the melissa sensor platform."""
     sensors = []
-    connection = hass.data[DATA_MELISSA]
-    devices = connection.fetch_devices().values()
+    api = hass.data[DATA_MELISSA]
+    devices = api.fetch_devices().values()
+
     for device in devices:
-        sensors += [
-            MelissaTemperatureSensor(
-                device,
-                connection
-            ),
-            MelissaHumiditySensor(
-                device,
-                connection
-            )
-        ]
+        sensors.append(MelissaTemperatureSensor(device, api))
+        sensors.append(MelissaHumiditySensor(device, api))
     add_devices(sensors)
 
 
@@ -39,9 +32,9 @@ class MelissaSensor(Entity):
 
     _type = 'generic'
 
-    def __init__(self, device, connection):
+    def __init__(self, device, api):
         """Initialize the sensor."""
-        self._connection = connection
+        self._api = api
         self._state = STATE_UNKNOWN
         self._name = '{0} {1}'.format(
             device['name'],
@@ -62,7 +55,7 @@ class MelissaSensor(Entity):
 
     def update(self):
         """Fetch status from melissa."""
-        self._data = self._connection.status(cached=True)
+        self._data = self._api.status(cached=True)
 
 
 class MelissaTemperatureSensor(MelissaSensor):
@@ -78,8 +71,11 @@ class MelissaTemperatureSensor(MelissaSensor):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        super(MelissaTemperatureSensor, self).update()
-        self._state = self._data[self._serial]['temp']
+        super().update()
+        try:
+            self._state = self._data[self._serial]['temp']
+        except KeyError:
+            _LOGGER.warning("Unable to get temperature for %s", self.entity_id)
 
 
 class MelissaHumiditySensor(MelissaSensor):
@@ -95,5 +91,8 @@ class MelissaHumiditySensor(MelissaSensor):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        super(MelissaHumiditySensor, self).update()
-        self._state = self._data[self._serial]['humidity']
+        super().update()
+        try:
+            self._state = self._data[self._serial]['humidity']
+        except KeyError:
+            _LOGGER.warning("Unable to get humidity for %s", self.entity_id)
