@@ -210,10 +210,10 @@ class XiaomiMiioRemote(Entity):
             yield from self.hass.async_add_job(
                 self.device.play, payload, None)
             return True
-        except DeviceException as e:
+        except DeviceException as ex:
             _LOGGER.error(
                 "Transmit of IR command failed, %s, exception: %s",
-                payload, e)
+                payload, ex)
             return False
 
     @asyncio.coroutine
