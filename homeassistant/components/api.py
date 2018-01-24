@@ -19,7 +19,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_NOT_FOUND,
     MATCH_ALL, URL_API, URL_API_COMPONENTS,
     URL_API_CONFIG, URL_API_DISCOVERY_INFO, URL_API_ERROR_LOG,
-    URL_API_EVENTS, URL_API_SERVICES,
+    URL_API_EVENTS, URL_API_SERVICES, URL_API_WRITE_ERROR_LOG,
     URL_API_STATES, URL_API_STATES_ENTITY, URL_API_STREAM, URL_API_TEMPLATE,
     __version__)
 from homeassistant.exceptions import TemplateError
@@ -51,6 +51,7 @@ def setup(hass, config):
     hass.http.register_view(APIDomainServicesView)
     hass.http.register_view(APIComponentsView)
     hass.http.register_view(APITemplateView)
+    hass.http.register_view(APIWriteErrorLogView)
 
     log_path = hass.data.get(DATA_LOGGING, None)
     if log_path:
@@ -355,6 +356,29 @@ class APITemplateView(HomeAssistantView):
         except (ValueError, TemplateError) as ex:
             return self.json_message('Error rendering template: {}'.format(ex),
                                      HTTP_BAD_REQUEST)
+
+
+class APIWriteErrorLogView(HomeAssistantView):
+    """View write errors to log."""
+
+    url = URL_API_WRITE_ERROR_LOG
+    name = 'api:write_error_log'
+
+    @asyncio.coroutine
+    def post(self, request):
+        """Write to error log."""
+        try:
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+        if 'message' not in data:
+            return self.json_message('Missing message', HTTP_BAD_REQUEST)
+
+        logger = logging.getLogger(
+            data.get('logger', '{}.external'.format(__name__)))
+        logger.error(data['message'])
+
+        return self.json_message('ok')
 
 
 @asyncio.coroutine

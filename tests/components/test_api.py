@@ -2,9 +2,9 @@
 # pylint: disable=protected-access
 import asyncio
 import json
+from unittest.mock import patch, MagicMock
 
 import pytest
-
 from homeassistant import const
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -372,6 +372,63 @@ def test_stream_with_restricted(hass, mock_api_client):
     hass.bus.async_fire('test_event3')
     data = yield from _stream_next_event(resp.content)
     assert data['event_type'] == 'test_event3'
+
+
+@asyncio.coroutine
+def test_write_error_log_logs_error(mock_api_client):
+    """Test that error propagates to logger."""
+    logger = MagicMock()
+    with patch('logging.getLogger', return_value=logger):
+        resp = yield from mock_api_client.post(
+            const.URL_API_WRITE_ERROR_LOG,
+            json={"message": "test_message"})
+    assert resp.status == 200
+    body = yield from resp.json()
+    assert body.get('message') == 'ok'
+    assert logger.method_calls[0] == ('error', ('test_message',))
+
+
+@asyncio.coroutine
+def test_write_error_log_logger_name(mock_api_client):
+    """Test that correct logger name is used."""
+    with patch('logging.getLogger') as mock_logging:
+        resp = yield from mock_api_client.post(
+            const.URL_API_WRITE_ERROR_LOG,
+            json={"message": "test_message"})
+    assert resp.status == 200
+    body = yield from resp.json()
+    assert body.get('message') == 'ok'
+    mock_logging.assert_called_once_with(
+        'homeassistant.components.api.external')
+
+    with patch('logging.getLogger') as mock_logging:
+        resp = yield from mock_api_client.post(
+            const.URL_API_WRITE_ERROR_LOG,
+            json={"message": "test_message", "logger": "myLogger"})
+    assert resp.status == 200
+    body = yield from resp.json()
+    assert body.get('message') == 'ok'
+    mock_logging.assert_called_once_with('myLogger')
+
+
+@asyncio.coroutine
+def test_write_error_log_bad_json(mock_api_client):
+    """Test bad json returns 500."""
+    resp = yield from mock_api_client.post(const.URL_API_WRITE_ERROR_LOG)
+    assert resp.status == 400
+    body = yield from resp.json()
+    assert body.get('message') == 'Invalid JSON'
+
+
+@asyncio.coroutine
+def test_write_error_log_missing_message(mock_api_client):
+    """Test bad json returns 500."""
+    resp = yield from mock_api_client.post(
+        const.URL_API_WRITE_ERROR_LOG,
+        json={})
+    assert resp.status == 400
+    body = yield from resp.json()
+    assert body.get('message') == 'Missing message'
 
 
 @asyncio.coroutine
