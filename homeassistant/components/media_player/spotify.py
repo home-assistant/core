@@ -6,6 +6,8 @@ https://home-assistant.io/components/media_player.spotify/
 """
 import logging
 from datetime import timedelta
+import json
+import os
 
 import voluptuous as vol
 
@@ -31,7 +33,8 @@ SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
 
-SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
+SCOPE = 'user-read-playback-state user-modify-playback-state \
+            user-read-private playlist-read-private'
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
 AUTH_CALLBACK_PATH = '/api/spotify'
 AUTH_CALLBACK_NAME = 'api:spotify'
@@ -56,6 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
+PERSISTENCE = '.spotify_playlists.json'
 
 
 def request_configuration(hass, config, add_devices, oauth):
@@ -89,8 +93,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         configurator = hass.components.configurator
         configurator.request_done(hass.data.get(DOMAIN))
         del hass.data[DOMAIN]
+    playlistdata = hass.data[DOMAIN] = PlaylistData(hass)
+    hass.http.register_view(SpotifyPlaylistView)
     player = SpotifyMediaPlayer(oauth, config.get(CONF_NAME, DEFAULT_NAME),
-                                config[CONF_ALIASES])
+                                config[CONF_ALIASES], playlistdata)
     add_devices([player], True)
 
 
@@ -118,7 +124,7 @@ class SpotifyAuthCallbackView(HomeAssistantView):
 class SpotifyMediaPlayer(MediaPlayerDevice):
     """Representation of a Spotify controller."""
 
-    def __init__(self, oauth, name, aliases):
+    def __init__(self, oauth, name, aliases, playlistdata):
         """Initialize."""
         self._name = name
         self._oauth = oauth
@@ -136,6 +142,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._user = None
         self._aliases = aliases
         self._token_info = self._oauth.get_cached_token()
+        self._playlistdata = playlistdata
 
     def refresh_spotify_instance(self):
         """Fetch a new spotify instance."""
@@ -209,6 +216,39 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 self._volume = device.get('volume_percent') / 100
             if device.get('name'):
                 self._current_device = device.get('name')
+        # Discover playlists
+        discovered_playlists = self._player.current_user_playlists()
+        if discovered_playlists is not None:
+            new_playlists = {}
+            for discovered_playlist in discovered_playlists['items']:
+                playlist = {
+                    'name': discovered_playlist['name'],
+                    'id': discovered_playlist['id'],
+                    'collaborative': discovered_playlist['collaborative'],
+                    'public': discovered_playlist['public'],
+                    'owner': discovered_playlist['owner']['id'],
+                    'uri': discovered_playlist['uri'],
+                    'snapshot_id': discovered_playlist['snapshot_id'],
+                    'images': discovered_playlist['images']
+                }
+                new_playlists[discovered_playlist['id']] = playlist
+                if not (discovered_playlist['id']
+                        in self._playlistdata.playlists):
+                    self._playlistdata.update(playlist)
+                    _LOGGER.info("New playlist discovered: {name} ({uri})"
+                                 .format(name=discovered_playlist['name'],
+                                         uri=discovered_playlist['uri']))
+            playlist_diff = set(self._playlistdata.playlists.keys()) - \
+                set(new_playlists.keys())
+        if playlist_diff is not None:
+            for removed_playlist in playlist_diff:
+                _LOGGER.info("Playlist removed: {name} ({uri})"
+                             .format(name=self._playlistdata.playlists
+                                     [removed_playlist]['name'],
+                                     uri=self._playlistdata.playlists
+                                     [removed_playlist]['uri']))
+                del self._playlistdata.playlists[removed_playlist]
+                self._playlistdata.update()
 
     def set_volume_level(self, volume):
         """Set the volume level."""
@@ -246,6 +286,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs['uris'] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
+            for key, val in self._playlistdata.playlists.items():
+                if media_id in str(val):
+                    media_id = val["uri"]
             kwargs['context_uri'] = media_id
         else:
             _LOGGER.error("media type %s is not supported", media_type)
@@ -327,3 +370,43 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def media_content_type(self):
         """Return the media type."""
         return MEDIA_TYPE_MUSIC
+
+
+class SpotifyPlaylistView(HomeAssistantView):
+    """View to retrieve Spotify Playlists."""
+
+    url = '/api/spotify/playlists'
+    name = "api:spotify/playlists"
+
+    @callback
+    def get(self, request):
+        """Retrieve playlists."""
+        return self.json(request.app['hass'].data[DOMAIN].playlists)
+
+
+class PlaylistData:
+    """Class to hold Spotify playlist data."""
+    def __init__(self, hass):
+        """Initialize the Spotify playlist store list."""
+        self.hass = hass
+        self.playlists = {}
+
+    def update(self, playlist=None):
+        """Add a playlist."""
+        if playlist is not None:
+            self.playlists[playlist['id']] = playlist
+        self.save()
+        self.playlists = self.load()
+
+    def load(self):
+        """Load the playlists."""
+        path = self.hass.config.path(PERSISTENCE)
+        if not os.path.isfile(path):
+            return {}
+        with open(path) as file:
+            return json.loads(file.read())
+
+    def save(self):
+        """Save playlists."""
+        with open(self.hass.config.path(PERSISTENCE), 'wt') as file:
+            file.write(json.dumps(self.playlists))
