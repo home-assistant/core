@@ -21,6 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['broadlink==0.5']
 
@@ -35,6 +36,7 @@ SERVICE_LEARN = 'broadlink_learn_command'
 SERVICE_SEND = 'broadlink_send_packet'
 SERVICE_SEND_BY_ID = 'broadlink_send_packet_by_id'
 CONF_SLOTS = 'slots'
+CONF_PACKET_ID = 'packet_id'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
@@ -69,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
 
-SAVE_PATH = 'known_packets.yaml'
+SAVE_PATH = 'known_packets.json'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Broadlink switches."""
@@ -137,7 +139,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @asyncio.coroutine
     def _send_packet_by_id(call):
-        """Send a packet by id in known_packets.yaml """
+        """Send a packet by id in file """
         try:
             auth = yield from hass.async_add_job(broadlink_device.auth)
         except socket.timeout:
@@ -147,39 +149,42 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Failed to connect to device")
             return
 
-        packet_id = call.data.get('packet_id')
+        packet_id = call.data.get(CONF_PACKET_ID)
         path = hass.config.path(SAVE_PATH)
         if packet_id:
-            with open(path, 'r') as fs:
-                for line in fs:
-                    if line[:line.index(': ')] == str(packet_id):
-                        packet = line[line.index(': ') + 2:line.index('  ')]
-                        if packet:
-                            payload = b64decode(packet)
-                            yield from hass.async_add_job(
+            packets = _load_packets(path)
+            for each_id,each_data in packets.items():
+                if each_id == packet_id:
+                    payload = b64decode(each_data)
+                    yield from hass.async_add_job(
                                 broadlink_device.send_data, payload)
-                            _LOGGER.info("Send '"+packet_id+"' packet successfully.")
-                            return
-            _LOGGER.error("Cannot find '"+packet_id+"' in 'known_packets.yaml'.")
+                    _LOGGER.info("Send '%s' successfully.",packet_id)
+                    return
+            _LOGGER.error("Cannot find %s in %s.", packet_id, SAVE_PATH)
         else:
             _LOGGER.error("Need the 'packet_id' in body.")
 
     '''auto save the packet when packet_id is set'''
     def _save_packet(call, data, title):
-        """save a packet by id in known_packets.yaml """
-        packet_id = call.data.get('packet_id')
+        """save a packet by id in file """
+        packet_id = call.data.get(CONF_PACKET_ID)
         path = hass.config.path(SAVE_PATH)
         if packet_id:
-            with open(path, 'a+') as fs:
-                fs.write(packet_id)
-                fs.write(': ')
-                fs.write(str(data))
-                fs.write('  \n')
-                fs.close()
-            _LOGGER.info("Save packet to 'known_packets.yaml' by id:"+packet_id)
+            packets = _load_packets(path)
+            packets[packet_id] = data
+            save_json(path, packets)
+            _LOGGER.info("Save '%s' in %s", packet_id, SAVE_PATH)
             title = title + " and Saved"
         hass.components.persistent_notification.async_create(
-        data, title=title)
+            data, title=title)
+
+    def _load_packets(path):
+        """Load saved json packet."""
+        try:
+            return load_json(path)
+        except HomeAssistantError:
+            pass
+        return {}
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
