@@ -43,7 +43,7 @@ RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
             'rm2_pro_plus_bl', 'rm_mini_shate', 'rm_mini_3']
 SP1_TYPES = ['sp1']
-SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus', 'sp3mini']
+SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus', 'spmini3']
 MP1_TYPES = ['mp1']
 
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
@@ -73,6 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SAVE_PATH = 'known_packets.json'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Broadlink switches."""
@@ -140,7 +141,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @asyncio.coroutine
     def _send_packet_by_id(call):
-        """Send a packet by id in file """
+        """Send a packet by id in file."""
         try:
             auth = yield from hass.async_add_job(broadlink_device.auth)
         except socket.timeout:
@@ -158,16 +159,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if each_id == packet_id:
                     payload = b64decode(each_data)
                     yield from hass.async_add_job(
-                                broadlink_device.send_data, payload)
+                        broadlink_device.send_data, payload)
                     _LOGGER.info("Send '%s' successfully.", packet_id)
                     return
             _LOGGER.error("Cannot find %s in %s.", packet_id, SAVE_PATH)
         else:
             _LOGGER.error("Need the 'packet_id' in body.")
 
-    '''auto save the packet when packet_id is set'''
+    """Auto save the packet when packet_id is set"""
     def _save_packet(call, data, title):
-        """save a packet by id in file """
+        """Save a packet by id in file."""
         packet_id = call.data.get(CONF_PACKET_ID)
         path = hass.config.path(SAVE_PATH)
         if packet_id:
