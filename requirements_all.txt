@@ -1019,6 +1019,9 @@ regenmaschine==0.4.1
 # homeassistant.components.python_script
 restrictedpython==4.0b2
 
+# homeassistant.components.sensor.postnl
+postnl_api==0.1
+
 # homeassistant.components.rflink
 rflink==0.0.34
 
