@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/deconz/
 """
 
-import ast
 import asyncio
 import logging
 
@@ -133,8 +132,7 @@ def async_setup_deconz(hass, config, deconz_config):
         entity_registry = hass.data[DECONZ_ENTITIES]
         field = call.data.get(SERVICE_FIELD)
         entity_id = call.data.get(SERVICE_ENTITY)
-        data_string = call.data.get(SERVICE_DATA)
-        data = ast.literal_eval(data_string)  # String to dict
+        data = call.data.get(SERVICE_DATA)
         field = entity_registry.get(entity_id, field)
         if field:
             yield from deconz.async_put_state(field, data)
