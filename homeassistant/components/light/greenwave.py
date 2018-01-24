@@ -129,6 +129,8 @@ class GatewayData(object):
     def __init__(self, host, token):
         """Initialize the data object."""
         import greenwavereality as greenwave
+        self._host = host
+        self._token = token
         self._greenwave = greenwave.grab_bulbs(host, token)
 
     @property
@@ -137,7 +139,8 @@ class GatewayData(object):
         return self._greenwave
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, host, token):
+    def update(self):
         """Get the latest data from the gateway."""
         import greenwavereality as greenwave
-        return greenwave.grab_bulbs(host, token)
+        self._greenwave = greenwave.grab_bulbs(self._host, self._token)
+        return self._greenwave
