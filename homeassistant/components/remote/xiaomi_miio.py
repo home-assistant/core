@@ -2,7 +2,7 @@
 Support for the Xiaomi IR Remote (Chuangmi IR).
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/ir_remote.xiaomi_miio/
+https://home-assistant.io/components/remote.xiaomi_miio/
 """
 import asyncio
 import logging
@@ -103,6 +103,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         """Handle a learn command."""
         entity_id = call.data.get('entity_id').split('.')[1]
 
+        if entity_id not in hass.data[PLATFORM]:
+            _LOGGER.error("entity_id: '%s' not found", entity_id)
+            return
+
         entity = hass.data[PLATFORM][entity_id]
 
         device = entity.device
@@ -202,7 +206,7 @@ class XiaomiMiioRemote(Entity):
 
     @asyncio.coroutine
     def _send_command(self, payload):
-        """Send a packet."""
+        """Send a command."""
         from miio import DeviceException
 
         _LOGGER.debug("Sending payload: '%s'", payload)
