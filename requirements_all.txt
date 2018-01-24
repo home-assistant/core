@@ -1200,7 +1200,7 @@ waqiasync==1.0.0
 warrant==0.6.1
 
 # homeassistant.components.waterfurnace
-waterfurnace==0.2.0
+waterfurnace==0.3.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
