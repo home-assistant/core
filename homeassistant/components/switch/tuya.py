@@ -9,7 +9,7 @@ from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pytuya==3.0']
+REQUIREMENTS = ['pytuya==4.0']
 
 CONF_DEVICE_ID = 'device_id'
 CONF_LOCAL_KEY = 'local_key'
