@@ -18,7 +18,7 @@ DOMAIN = 'panel_iframe'
 CONF_TITLE = 'title'
 
 CONF_ABSOLUTE_PATH_ERROR_MSG = "Invalid absolute path in relative URL"
-CONF_ABSOLUTE_PATH_REGEX = r'\A/[a-z0-9]'
+CONF_ABSOLUTE_PATH_REGEX = r'\A/'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
