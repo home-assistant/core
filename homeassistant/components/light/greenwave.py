@@ -29,6 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Greenwave Reality Platform."""
     import greenwavereality as greenwave
@@ -137,6 +138,6 @@ class GatewayData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, host, token):
-        """Get the latest data from the gateway"""
+        """Get the latest data from the gateway."""
         import greenwavereality as greenwave
         return greenwave.grab_bulbs(host, token)
