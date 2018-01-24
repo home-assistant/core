@@ -4,6 +4,8 @@ Support for BME680 Sensor over SMBus.
 Temperature, humidity, pressure and volitile gas support.
 Air Qaulity calucaltion based on humidity and volatile gas.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.bme680/
 """
 import asyncio
 import logging
