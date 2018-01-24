@@ -2,7 +2,7 @@
 Support for BME680 Sensor over SMBus.
 
 Temperature, humidity, pressure and volitile gas support.
-Air Quality calcualtion based on humidity and volatile gas.
+Air Quality calculation based on humidity and volatile gas.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bme680/
