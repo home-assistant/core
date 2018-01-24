@@ -158,6 +158,7 @@ class SmartHomeView(http.HomeAssistantView):
 
         response = yield from async_handle_message(
             hass, self.smart_home_config, message)
+        _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)
 
 
