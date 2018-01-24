@@ -5,57 +5,65 @@ import json
 
 from aiohttp.hdrs import CONTENT_TYPE, AUTHORIZATION
 import pytest
-from tests.common import get_test_instance_port
 
 from homeassistant import core, const, setup
 from homeassistant.components import (
-    fan, http, cover, light, switch, climate, async_setup, media_player)
+    fan, cover, light, switch, climate, async_setup, media_player, sensor)
 from homeassistant.components import google_assistant as ga
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import DEMO_DEVICES
 
 API_PASSWORD = "test1234"
-SERVER_PORT = get_test_instance_port()
-BASE_API_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
 HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
     CONTENT_TYPE: const.CONTENT_TYPE_JSON,
 }
 
-AUTHCFG = {
-    'project_id': 'hasstest-1234',
-    'client_id': 'helloworld',
-    'access_token': 'superdoublesecret'
-}
-AUTH_HEADER = {AUTHORIZATION: 'Bearer {}'.format(AUTHCFG['access_token'])}
+PROJECT_ID = 'hasstest-1234'
+CLIENT_ID = 'helloworld'
+ACCESS_TOKEN = 'superdoublesecret'
+AUTH_HEADER = {AUTHORIZATION: 'Bearer {}'.format(ACCESS_TOKEN)}
 
 
 @pytest.fixture
-def assistant_client(loop, hass_fixture, test_client):
+def assistant_client(loop, hass, test_client):
     """Create web client for the Google Assistant API."""
-    hass = hass_fixture
-    web_app = hass.http.app
+    loop.run_until_complete(
+        setup.async_setup_component(hass, 'google_assistant', {
+            'google_assistant': {
+                'project_id': PROJECT_ID,
+                'client_id': CLIENT_ID,
+                'access_token': ACCESS_TOKEN,
+                'entity_config': {
+                    'light.ceiling_lights': {
+                        'aliases': ['top lights', 'ceiling lights'],
+                        'name': 'Roof Lights',
+                    },
+                    'switch.decorative_lights': {
+                        'type': 'light'
+                    },
+                    'sensor.outside_humidity': {
+                        'type': 'climate',
+                        'expose': True
+                    },
+                    'sensor.outside_temperature': {
+                        'type': 'climate',
+                        'expose': True
+                    }
+                }
+            }
+        }))
 
-    ga.http.GoogleAssistantView(hass, AUTHCFG).register(web_app.router)
-    ga.auth.GoogleAssistantAuthView(hass, AUTHCFG).register(web_app.router)
-
-    return loop.run_until_complete(test_client(web_app))
+    return loop.run_until_complete(test_client(hass.http.app))
 
 
 @pytest.fixture
 def hass_fixture(loop, hass):
-    """Set up a HOme Assistant instance for these tests."""
+    """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(async_setup(hass, {core.DOMAIN: {}}))
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, http.DOMAIN, {
-            http.DOMAIN: {
-                http.CONF_SERVER_PORT: SERVER_PORT
-            }
-        }))
 
     loop.run_until_complete(
         setup.async_setup_component(hass, light.DOMAIN, {
@@ -97,44 +105,31 @@ def hass_fixture(loop, hass):
             }]
         }))
 
-    # Kitchen light is explicitly excluded from being exposed
-    ceiling_lights_entity = hass.states.get('light.ceiling_lights')
-    attrs = dict(ceiling_lights_entity.attributes)
-    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_NAME] = "Roof Lights"
-    attrs[ga.const.CONF_ALIASES] = ['top lights', 'ceiling lights']
-    hass.states.async_set(
-        ceiling_lights_entity.entity_id,
-        ceiling_lights_entity.state,
-        attributes=attrs)
-
-    # By setting the google_assistant_type = 'light'
-    # we can override how a device is reported to GA
-    switch_light = hass.states.get('switch.decorative_lights')
-    attrs = dict(switch_light.attributes)
-    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_TYPE] = "light"
-    hass.states.async_set(
-        switch_light.entity_id,
-        switch_light.state,
-        attributes=attrs)
+    loop.run_until_complete(
+        setup.async_setup_component(hass, sensor.DOMAIN, {
+            'sensor': [{
+                'platform': 'demo'
+            }]
+        }))
 
     return hass
 
 
 @asyncio.coroutine
-def test_auth(hass_fixture, assistant_client):
+def test_auth(assistant_client):
     """Test the auth process."""
     result = yield from assistant_client.get(
         ga.const.GOOGLE_ASSISTANT_API_ENDPOINT + '/auth',
         params={
             'redirect_uri':
-            'http://testurl/r/{}'.format(AUTHCFG['project_id']),
-            'client_id': AUTHCFG['client_id'],
+            'http://testurl/r/{}'.format(PROJECT_ID),
+            'client_id': CLIENT_ID,
             'state': 'random1234',
         },
         allow_redirects=False)
     assert result.status == 301
     loc = result.headers.get('Location')
-    assert AUTHCFG['access_token'] in loc
+    assert ACCESS_TOKEN in loc
 
 
 @asyncio.coroutine
@@ -167,9 +162,6 @@ def test_sync_request(hass_fixture, assistant_client):
 @asyncio.coroutine
 def test_query_request(hass_fixture, assistant_client):
     """Test a query request."""
-    # hass.states.set("light.bedroom", "on")
-    # hass.states.set("switch.outside", "off")
-    # res = _sync_req()
     reqid = '5711642932632160984'
     data = {
         'requestId':
@@ -217,6 +209,8 @@ def test_query_climate_request(hass_fixture, assistant_client):
                     {'id': 'climate.hvac'},
                     {'id': 'climate.heatpump'},
                     {'id': 'climate.ecobee'},
+                    {'id': 'sensor.outside_temperature'},
+                    {'id': 'sensor.outside_humidity'}
                 ]
             }
         }]
@@ -238,7 +232,7 @@ def test_query_climate_request(hass_fixture, assistant_client):
         'climate.ecobee': {
             'thermostatTemperatureSetpointHigh': 24,
             'thermostatTemperatureAmbient': 23,
-            'thermostatMode': 'on',
+            'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': 21
         },
         'climate.hvac': {
@@ -246,6 +240,12 @@ def test_query_climate_request(hass_fixture, assistant_client):
             'thermostatTemperatureAmbient': 22,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
+        },
+        'sensor.outside_temperature': {
+            'thermostatTemperatureAmbient': 15.6
+        },
+        'sensor.outside_humidity': {
+            'thermostatHumidityAmbient': 54.0
         }
     }
 
@@ -265,6 +265,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
                     {'id': 'climate.hvac'},
                     {'id': 'climate.heatpump'},
                     {'id': 'climate.ecobee'},
+                    {'id': 'sensor.outside_temperature'}
                 ]
             }
         }]
@@ -286,7 +287,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
         'climate.ecobee': {
             'thermostatTemperatureSetpointHigh': -4.4,
             'thermostatTemperatureAmbient': -5,
-            'thermostatMode': 'on',
+            'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': -6.1,
         },
         'climate.hvac': {
@@ -294,6 +295,9 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
             'thermostatTemperatureAmbient': -5.6,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
+        },
+        'sensor.outside_temperature': {
+            'thermostatTemperatureAmbient': -9.1
         }
     }
 
@@ -301,9 +305,6 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
 @asyncio.coroutine
 def test_execute_request(hass_fixture, assistant_client):
     """Test a execute request."""
-    # hass.states.set("light.bedroom", "on")
-    # hass.states.set("switch.outside", "off")
-    # res = _sync_req()
     reqid = '5711642932632160985'
     data = {
         'requestId':

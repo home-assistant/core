@@ -4,7 +4,8 @@ import unittest
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
 from homeassistant.components import alarm_control_panel
 
 from tests.common import (
@@ -190,3 +191,51 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         alarm_control_panel.alarm_disarm(self.hass, 'abcd')
         self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)
+
+    def test_default_availability_payload(self):
+        """Test availability by default payload with defined topic."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'availability_topic': 'availability-topic'
+            }
+        })
+
+        state = self.hass.states.get('alarm_control_panel.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_custom_availability_payload(self):
+        """Test availability by custom payload with defined topic."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'availability_topic': 'availability-topic',
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
+            }
+        })
+
+        state = self.hass.states.get('alarm_control_panel.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')

@@ -4,22 +4,27 @@ Support for UK Met Office weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.metoffice/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['datapoint==0.4.3']
+
+ATTR_LAST_UPDATE = 'last_update'
+ATTR_SENSOR_ID = 'sensor_id'
+ATTR_SITE_ID = 'site_id'
+ATTR_SITE_NAME = 'site_name'
 
 CONF_ATTRIBUTION = "Data provided by the Met Office"
 
@@ -40,6 +45,8 @@ CONDITION_CLASSES = {
     'exceptional': [],
 }
 
+DEFAULT_NAME = "Met Office"
+
 VISIBILTY_CLASSES = {
     'VP': '<1',
     'PO': '1-4',
@@ -49,7 +56,7 @@ VISIBILTY_CLASSES = {
     'EX': '>40'
 }
 
-SCAN_INTERVAL = timedelta(minutes=35)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=35)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -57,9 +64,9 @@ SENSOR_TYPES = {
     'weather': ['Weather', None],
     'temperature': ['Temperature', TEMP_CELSIUS],
     'feels_like_temperature': ['Feels Like Temperature', TEMP_CELSIUS],
-    'wind_speed': ['Wind Speed', 'm/s'],
+    'wind_speed': ['Wind Speed', 'mph'],
     'wind_direction': ['Wind Direction', None],
-    'wind_gust': ['Wind Gust', 'm/s'],
+    'wind_gust': ['Wind Gust', 'mph'],
     'visibility': ['Visibility', None],
     'visibility_distance': ['Visibility Distance', 'km'],
     'uv': ['UV', None],
@@ -68,77 +75,83 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.longitude,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Metoffice sensor platform."""
+    """Set up the Met Office sensor platform."""
     import datapoint as dp
-    datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
 
+    api_key = config.get(CONF_API_KEY)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    name = config.get(CONF_NAME)
+
+    datapoint = dp.connection(api_key=api_key)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     try:
-        site = datapoint.get_nearest_site(latitude=latitude,
-                                          longitude=longitude)
+        site = datapoint.get_nearest_site(
+            latitude=latitude, longitude=longitude)
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return False
+        return
 
     if not site:
         _LOGGER.error("Unable to get nearest Met Office forecast site")
-        return False
+        return
 
-    # Get data
     data = MetOfficeCurrentData(hass, datapoint, site)
-    try:
-        data.update()
-    except (ValueError, dp.exceptions.APIException) as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return False
+    data.update()
+    if data.data is None:
+        return
 
-    # Add
-    add_devices([MetOfficeCurrentSensor(site, data, variable)
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
-    return True
+    sensors = []
+    for variable in config[CONF_MONITORED_CONDITIONS]:
+        sensors.append(MetOfficeCurrentSensor(site, data, variable, name))
+
+    add_devices(sensors, True)
 
 
 class MetOfficeCurrentSensor(Entity):
     """Implementation of a Met Office current sensor."""
 
-    def __init__(self, site, data, condition):
+    def __init__(self, site, data, condition, name):
         """Initialize the sensor."""
-        self.site = site
-        self.data = data
         self._condition = condition
+        self.data = data
+        self._name = name
+        self.site = site
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Met Office {}'.format(SENSOR_TYPES[self._condition][0])
+        return '{} {}'.format(self._name, SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
         """Return the state of the sensor."""
         if (self._condition == 'visibility_distance' and
-                'visibility' in self.data.data.__dict__.keys()):
+                hasattr(self.data.data, 'visibility')):
             return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
-        if self._condition in self.data.data.__dict__.keys():
+        if hasattr(self.data.data, self._condition):
             variable = getattr(self.data.data, self._condition)
-            if self._condition == "weather":
+            if self._condition == 'weather':
                 return [k for k, v in CONDITION_CLASSES.items() if
                         self.data.data.weather.value in v][0]
             return variable.value
-        return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -149,11 +162,11 @@ class MetOfficeCurrentSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr['Sensor Id'] = self._condition
-        attr['Site Id'] = self.site.id
-        attr['Site Name'] = self.site.name
-        attr['Last Update'] = self.data.data.date
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attr[ATTR_LAST_UPDATE] = self.data.data.date
+        attr[ATTR_SENSOR_ID] = self._condition
+        attr[ATTR_SITE_ID] = self.site.id
+        attr[ATTR_SITE_NAME] = self.site.name
         return attr
 
     def update(self):
@@ -166,21 +179,19 @@ class MetOfficeCurrentData(object):
 
     def __init__(self, hass, datapoint, site):
         """Initialize the data object."""
-        self._hass = hass
         self._datapoint = datapoint
         self._site = site
         self.data = None
 
-    @Throttle(SCAN_INTERVAL)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Datapoint."""
         import datapoint as dp
 
         try:
             forecast = self._datapoint.get_forecast_for_site(
-                self._site.id, "3hourly")
+                self._site.id, '3hourly')
             self.data = forecast.now()
         except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office %s", err.args)
             self.data = None
-            raise

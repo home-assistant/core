@@ -6,7 +6,8 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON, ATTR_STATUS,
     ATTR_FAN_SPEED, mqtt)
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, CONF_NAME
+from homeassistant.const import (
+    CONF_PLATFORM, STATE_OFF, STATE_ON, STATE_UNAVAILABLE, CONF_NAME)
 from homeassistant.setup import setup_component
 from tests.common import (
     fire_mqtt_message, get_test_home_assistant, mock_mqtt_component)
@@ -197,3 +198,55 @@ class TestVacuumMQTT(unittest.TestCase):
         state = self.hass.states.get('vacuum.mqtttest')
         self.assertEqual(STATE_OFF, state.state)
         self.assertEqual("Stopped", state.attributes.get(ATTR_STATUS))
+
+    def test_default_availability_payload(self):
+        """Test availability by default payload with defined topic."""
+        self.default_config.update({
+            'availability_topic': 'availability-topic'
+        })
+
+        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+            vacuum.DOMAIN: self.default_config,
+        }))
+
+        state = self.hass.states.get('vacuum.mqtttest')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('vacuum.mqtttest')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('vacuum.mqtttest')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_custom_availability_payload(self):
+        """Test availability by custom payload with defined topic."""
+        self.default_config.update({
+            'availability_topic': 'availability-topic',
+            'payload_available': 'good',
+            'payload_not_available': 'nogood'
+        })
+
+        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+            vacuum.DOMAIN: self.default_config,
+        }))
+
+        state = self.hass.states.get('vacuum.mqtttest')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('vacuum.mqtttest')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('vacuum.mqtttest')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)

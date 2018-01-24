@@ -5,17 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.knx/
 """
 import asyncio
+
 import voluptuous as vol
 
-from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
-from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.components.cover import (
-    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE,
-    SUPPORT_SET_POSITION, SUPPORT_STOP, SUPPORT_SET_TILT_POSITION,
-    ATTR_POSITION, ATTR_TILT_POSITION)
-from homeassistant.core import callback
+    ATTR_POSITION, ATTR_TILT_POSITION, PLATFORM_SCHEMA, SUPPORT_CLOSE,
+    SUPPORT_OPEN, SUPPORT_SET_POSITION, SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP, CoverDevice)
+from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_utc_time_change
 
 CONF_MOVE_LONG_ADDRESS = 'move_long_address'
 CONF_MOVE_SHORT_ADDRESS = 'move_short_address'
@@ -50,19 +51,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up cover(s) for KNX platform."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return False
+    if DATA_KNX not in hass.data or not hass.data[DATA_KNX].initialized:
+        return
 
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
         async_add_devices_config(hass, config, async_add_devices)
-
-    return True
 
 
 @callback
@@ -114,7 +111,7 @@ class KNXCover(CoverDevice):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):
-            """Callback after device was updated."""
+            """Call after device was updated."""
             # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
@@ -123,6 +120,11 @@ class KNXCover(CoverDevice):
     def name(self):
         """Return the name of the KNX device."""
         return self.device.name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.hass.data[DATA_KNX].connected
 
     @property
     def should_poll(self):
@@ -204,7 +206,7 @@ class KNXCover(CoverDevice):
 
     @callback
     def auto_updater_hook(self, now):
-        """Callback for autoupdater."""
+        """Call for the autoupdater."""
         # pylint: disable=unused-argument
         self.async_schedule_update_ha_state()
         if self.device.position_reached():

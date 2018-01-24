@@ -7,14 +7,12 @@ https://home-assistant.io/components/fan.xiaomi_miio/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
                                           SUPPORT_SET_SPEED, DOMAIN)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
                                  ATTR_ENTITY_ID, )
 from homeassistant.exceptions import PlatformNotReady
@@ -31,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.2']
+REQUIREMENTS = ['python-miio==0.3.4']
 
 ATTR_TEMPERATURE = 'temperature'
 ATTR_HUMIDITY = 'humidity'
@@ -45,6 +43,8 @@ ATTR_CHILD_LOCK = 'child_lock'
 ATTR_LED = 'led'
 ATTR_LED_BRIGHTNESS = 'led_brightness'
 ATTR_MOTOR_SPEED = 'motor_speed'
+ATTR_AVERAGE_AIR_QUALITY_INDEX = 'average_aqi'
+ATTR_PURIFY_VOLUME = 'purify_volume'
 
 ATTR_BRIGHTNESS = 'brightness'
 ATTR_LEVEL = 'level'
@@ -55,6 +55,8 @@ SERVICE_SET_BUZZER_ON = 'xiaomi_miio_set_buzzer_on'
 SERVICE_SET_BUZZER_OFF = 'xiaomi_miio_set_buzzer_off'
 SERVICE_SET_LED_ON = 'xiaomi_miio_set_led_on'
 SERVICE_SET_LED_OFF = 'xiaomi_miio_set_led_off'
+SERVICE_SET_CHILD_LOCK_ON = 'xiaomi_miio_set_child_lock_on'
+SERVICE_SET_CHILD_LOCK_OFF = 'xiaomi_miio_set_child_lock_off'
 SERVICE_SET_FAVORITE_LEVEL = 'xiaomi_miio_set_favorite_level'
 SERVICE_SET_LED_BRIGHTNESS = 'xiaomi_miio_set_led_brightness'
 
@@ -77,6 +79,8 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_BUZZER_OFF: {'method': 'async_set_buzzer_off'},
     SERVICE_SET_LED_ON: {'method': 'async_set_led_on'},
     SERVICE_SET_LED_OFF: {'method': 'async_set_led_off'},
+    SERVICE_SET_CHILD_LOCK_ON: {'method': 'async_set_child_lock_on'},
+    SERVICE_SET_CHILD_LOCK_OFF: {'method': 'async_set_child_lock_off'},
     SERVICE_SET_FAVORITE_LEVEL: {
         'method': 'async_set_favorite_level',
         'schema': SERVICE_SCHEMA_FAVORITE_LEVEL},
@@ -118,29 +122,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         if entity_ids:
-            target_air_purifiers = [air for air in hass.data[PLATFORM].values()
-                                    if air.entity_id in entity_ids]
+            devices = [device for device in hass.data[PLATFORM].values() if
+                       device.entity_id in entity_ids]
         else:
-            target_air_purifiers = hass.data[PLATFORM].values()
+            devices = hass.data[PLATFORM].values()
 
         update_tasks = []
-        for air_purifier in target_air_purifiers:
-            yield from getattr(air_purifier, method['method'])(**params)
-            update_tasks.append(air_purifier.async_update_ha_state(True))
+        for device in devices:
+            yield from getattr(device, method['method'])(**params)
+            update_tasks.append(device.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'xiaomi_miio_services.yaml'))
 
     for air_purifier_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[air_purifier_service].get(
             'schema', AIRPURIFIER_SERVICE_SCHEMA)
         hass.services.async_register(
-            DOMAIN, air_purifier_service, async_service_handler,
-            description=descriptions.get(air_purifier_service), schema=schema)
+            DOMAIN, air_purifier_service, async_service_handler, schema=schema)
 
 
 class XiaomiAirPurifier(FanEntity):
@@ -164,7 +163,9 @@ class XiaomiAirPurifier(FanEntity):
             ATTR_CHILD_LOCK: None,
             ATTR_LED: None,
             ATTR_LED_BRIGHTNESS: None,
-            ATTR_MOTOR_SPEED: None
+            ATTR_MOTOR_SPEED: None,
+            ATTR_AVERAGE_AIR_QUALITY_INDEX: None,
+            ATTR_PURIFY_VOLUME: None,
         }
 
     @property
@@ -251,7 +252,9 @@ class XiaomiAirPurifier(FanEntity):
                 ATTR_BUZZER: state.buzzer,
                 ATTR_CHILD_LOCK: state.child_lock,
                 ATTR_LED: state.led,
-                ATTR_MOTOR_SPEED: state.motor_speed
+                ATTR_MOTOR_SPEED: state.motor_speed,
+                ATTR_AVERAGE_AIR_QUALITY_INDEX: state.average_aqi,
+                ATTR_PURIFY_VOLUME: state.purify_volume,
             }
 
             if state.led_brightness:
@@ -291,29 +294,43 @@ class XiaomiAirPurifier(FanEntity):
     def async_set_buzzer_on(self):
         """Turn the buzzer on."""
         yield from self._try_command(
-            "Turning the buzzer of air purifier on failed.",
+            "Turning the buzzer of the air purifier on failed.",
             self._air_purifier.set_buzzer, True)
 
     @asyncio.coroutine
     def async_set_buzzer_off(self):
-        """Turn the buzzer on."""
+        """Turn the buzzer off."""
         yield from self._try_command(
-            "Turning the buzzer of air purifier off failed.",
+            "Turning the buzzer of the air purifier off failed.",
             self._air_purifier.set_buzzer, False)
 
     @asyncio.coroutine
     def async_set_led_on(self):
         """Turn the led on."""
         yield from self._try_command(
-            "Turning the led of air purifier off failed.",
+            "Turning the led of the air purifier off failed.",
             self._air_purifier.set_led, True)
 
     @asyncio.coroutine
     def async_set_led_off(self):
         """Turn the led off."""
         yield from self._try_command(
-            "Turning the led of air purifier off failed.",
+            "Turning the led of the air purifier off failed.",
             self._air_purifier.set_led, False)
+
+    @asyncio.coroutine
+    def async_set_child_lock_on(self):
+        """Turn the child lock on."""
+        yield from self._try_command(
+            "Turning the child lock of the air purifier on failed.",
+            self._air_purifier.set_child_lock, True)
+
+    @asyncio.coroutine
+    def async_set_child_lock_off(self):
+        """Turn the child lock off."""
+        yield from self._try_command(
+            "Turning the child lock of the air purifier off failed.",
+            self._air_purifier.set_child_lock, False)
 
     @asyncio.coroutine
     def async_set_led_brightness(self, brightness: int=2):

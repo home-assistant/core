@@ -121,9 +121,14 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._config['method'] = 'legacy'
 
     def update(self):
-        """Retrieve the latest data."""
-        # Send an empty key to see if we are still connected
-        self.send_key('KEY')
+        """Update state of device."""
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(self._config[CONF_TIMEOUT])
+            sock.connect((self._config['host'], self._config['port']))
+            self._state = STATE_ON
+        except socket.error:
+            self._state = STATE_OFF
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -190,7 +195,10 @@ class SamsungTVDevice(MediaPlayerDevice):
         else:
             self.send_key('KEY_POWEROFF')
         # Force closing of remote session to provide instant UI feedback
-        self.get_remote().close()
+        try:
+            self.get_remote().close()
+        except OSError:
+            _LOGGER.debug("Could not establish connection.")
 
     def volume_up(self):
         """Volume up the media player."""

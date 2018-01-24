@@ -8,15 +8,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_VOLUME_MUTE,
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
+import homeassistant.helpers.config_validation as cv
 
-
-REQUIREMENTS = ['pymonoprice==0.2']
+REQUIREMENTS = ['pymonoprice==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,10 +35,15 @@ SOURCE_SCHEMA = vol.Schema({
 CONF_ZONES = 'zones'
 CONF_SOURCES = 'sources'
 
+DATA_MONOPRICE = 'monoprice'
+
+SERVICE_SNAPSHOT = 'snapshot'
+SERVICE_RESTORE = 'restore'
+
 # Valid zone ids: 11-16 or 21-26 or 31-36
-ZONE_IDS = vol.All(vol.Coerce(int), vol.Any(vol.Range(min=11, max=16),
-                                            vol.Range(min=21, max=26),
-                                            vol.Range(min=31, max=36)))
+ZONE_IDS = vol.All(vol.Coerce(int), vol.Any(
+    vol.Range(min=11, max=16), vol.Range(min=21, max=26),
+    vol.Range(min=31, max=36)))
 
 # Valid source ids: 1-6
 SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=6))
@@ -56,26 +61,49 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
 
     from serial import SerialException
-    from pymonoprice import Monoprice
+    from pymonoprice import get_monoprice
     try:
-        monoprice = Monoprice(port)
+        monoprice = get_monoprice(port)
     except SerialException:
-        _LOGGER.error('Error connecting to Monoprice controller.')
+        _LOGGER.error("Error connecting to Monoprice controller")
         return
 
     sources = {source_id: extra[CONF_NAME] for source_id, extra
                in config[CONF_SOURCES].items()}
 
+    hass.data[DATA_MONOPRICE] = []
     for zone_id, extra in config[CONF_ZONES].items():
         _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
-        add_devices([MonopriceZone(monoprice, sources,
-                                   zone_id, extra[CONF_NAME])], True)
+        hass.data[DATA_MONOPRICE].append(MonopriceZone(
+            monoprice, sources, zone_id, extra[CONF_NAME]))
+
+    add_devices(hass.data[DATA_MONOPRICE], True)
+
+    def service_handle(service):
+        """Handle for services."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+
+        if entity_ids:
+            devices = [device for device in hass.data[DATA_MONOPRICE]
+                       if device.entity_id in entity_ids]
+        else:
+            devices = hass.data[DATA_MONOPRICE]
+
+        for device in devices:
+            if service.service == SERVICE_SNAPSHOT:
+                device.snapshot()
+            elif service.service == SERVICE_RESTORE:
+                device.restore()
+
+    hass.services.register(
+        DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=MEDIA_PLAYER_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_RESTORE, service_handle, schema=MEDIA_PLAYER_SCHEMA)
 
 
 class MonopriceZone(MediaPlayerDevice):
     """Representation of a a Monoprice amplifier zone."""
-
-    # pylint: disable=too-many-public-methods
 
     def __init__(self, monoprice, sources, zone_id, zone_name):
         """Initialize new zone."""
@@ -90,6 +118,7 @@ class MonopriceZone(MediaPlayerDevice):
         self._zone_id = zone_id
         self._name = zone_name
 
+        self._snapshot = None
         self._state = None
         self._volume = None
         self._source = None
@@ -144,13 +173,23 @@ class MonopriceZone(MediaPlayerDevice):
 
     @property
     def source(self):
-        """"Return the current input source of the device."""
+        """Return the current input source of the device."""
         return self._source
 
     @property
     def source_list(self):
         """List of available input sources."""
         return self._source_names
+
+    def snapshot(self):
+        """Save zone's current state."""
+        self._snapshot = self._monoprice.zone_status(self._zone_id)
+
+    def restore(self):
+        """Restore saved state."""
+        if self._snapshot:
+            self._monoprice.restore_zone(self._snapshot)
+            self.schedule_update_ha_state(True)
 
     def select_source(self, source):
         """Set input source."""
@@ -179,12 +218,10 @@ class MonopriceZone(MediaPlayerDevice):
         """Volume up the media player."""
         if self._volume is None:
             return
-        self._monoprice.set_volume(self._zone_id,
-                                   min(self._volume + 1, 38))
+        self._monoprice.set_volume(self._zone_id, min(self._volume + 1, 38))
 
     def volume_down(self):
         """Volume down media player."""
         if self._volume is None:
             return
-        self._monoprice.set_volume(self._zone_id,
-                                   max(self._volume - 1, 0))
+        self._monoprice.set_volume(self._zone_id, max(self._volume - 1, 0))

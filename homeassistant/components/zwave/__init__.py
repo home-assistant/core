@@ -7,8 +7,6 @@ https://home-assistant.io/components/zwave/
 import asyncio
 import copy
 import logging
-import os.path
-import time
 from pprint import pprint
 
 import voluptuous as vol
@@ -23,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
-import homeassistant.config as conf_util
+import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -249,9 +247,6 @@ def setup(hass, config):
 
     Will automatically load components to support devices found on the network.
     """
-    descriptions = conf_util.load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     from pydispatch import dispatcher
     # pylint: disable=import-error
     from openzwave.option import ZWaveOption
@@ -597,25 +592,40 @@ def setup(hass, config):
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
-        # Need to be in STATE_AWAKED before talking to nodes.
-        # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
-        # to be ready.
-        for i in range(const.NETWORK_READY_WAIT_SECS):
+        @asyncio.coroutine
+        def _check_awaked():
+            """Wait for Z-wave awaked state (or timeout) and finalize start."""
             _LOGGER.debug(
                 "network state: %d %s", network.state,
                 network.state_str)
-            if network.state >= network.STATE_AWAKED:
-                _LOGGER.info("Z-Wave ready after %d seconds", i)
-                break
-            time.sleep(1)
-        else:
-            _LOGGER.warning(
-                "zwave not ready after %d seconds, continuing anyway",
-                const.NETWORK_READY_WAIT_SECS)
-            _LOGGER.info(
-                "final network state: %d %s", network.state,
-                network.state_str)
 
+            start_time = dt_util.utcnow()
+            while True:
+                waited = int((dt_util.utcnow()-start_time).total_seconds())
+
+                if network.state >= network.STATE_AWAKED:
+                    # Need to be in STATE_AWAKED before talking to nodes.
+                    _LOGGER.info("Z-Wave ready after %d seconds", waited)
+                    break
+                elif waited >= const.NETWORK_READY_WAIT_SECS:
+                    # Wait up to NETWORK_READY_WAIT_SECS seconds for the Z-Wave
+                    # network to be ready.
+                    _LOGGER.warning(
+                        "Z-Wave not ready after %d seconds, continuing anyway",
+                        waited)
+                    _LOGGER.info(
+                        "final network state: %d %s", network.state,
+                        network.state_str)
+                    break
+                else:
+                    yield from asyncio.sleep(1, loop=hass.loop)
+
+            hass.async_add_job(_finalize_start)
+
+        hass.add_job(_check_awaked)
+
+    def _finalize_start():
+        """Perform final initializations after Z-Wave network is awaked."""
         polling_interval = convert(
             config[DOMAIN].get(CONF_POLLING_INTERVAL), int)
         if polling_interval is not None:
@@ -627,99 +637,65 @@ def setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_network)
 
         # Register node services for Z-Wave network
-        hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node,
-                               descriptions[const.SERVICE_ADD_NODE])
+        hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node)
         hass.services.register(DOMAIN, const.SERVICE_ADD_NODE_SECURE,
-                               add_node_secure,
-                               descriptions[const.SERVICE_ADD_NODE_SECURE])
-        hass.services.register(DOMAIN, const.SERVICE_REMOVE_NODE, remove_node,
-                               descriptions[const.SERVICE_REMOVE_NODE])
+                               add_node_secure)
+        hass.services.register(DOMAIN, const.SERVICE_REMOVE_NODE, remove_node)
         hass.services.register(DOMAIN, const.SERVICE_CANCEL_COMMAND,
-                               cancel_command,
-                               descriptions[const.SERVICE_CANCEL_COMMAND])
+                               cancel_command)
         hass.services.register(DOMAIN, const.SERVICE_HEAL_NETWORK,
-                               heal_network,
-                               descriptions[const.SERVICE_HEAL_NETWORK])
-        hass.services.register(DOMAIN, const.SERVICE_SOFT_RESET, soft_reset,
-                               descriptions[const.SERVICE_SOFT_RESET])
+                               heal_network)
+        hass.services.register(DOMAIN, const.SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, const.SERVICE_TEST_NETWORK,
-                               test_network,
-                               descriptions[const.SERVICE_TEST_NETWORK])
+                               test_network)
         hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK,
-                               stop_network,
-                               descriptions[const.SERVICE_STOP_NETWORK])
+                               stop_network)
         hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
-                               start_zwave,
-                               descriptions[const.SERVICE_START_NETWORK])
+                               start_zwave)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_NODE, rename_node,
-                               descriptions[const.SERVICE_RENAME_NODE],
                                schema=RENAME_NODE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_VALUE,
                                rename_value,
-                               descriptions[const.SERVICE_RENAME_VALUE],
                                schema=RENAME_VALUE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_SET_CONFIG_PARAMETER,
                                set_config_parameter,
-                               descriptions[
-                                   const.SERVICE_SET_CONFIG_PARAMETER],
                                schema=SET_CONFIG_PARAMETER_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_PRINT_CONFIG_PARAMETER,
                                print_config_parameter,
-                               descriptions[
-                                   const.SERVICE_PRINT_CONFIG_PARAMETER],
                                schema=PRINT_CONFIG_PARAMETER_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_REMOVE_FAILED_NODE,
                                remove_failed_node,
-                               descriptions[const.SERVICE_REMOVE_FAILED_NODE],
                                schema=NODE_SERVICE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_REPLACE_FAILED_NODE,
                                replace_failed_node,
-                               descriptions[const.SERVICE_REPLACE_FAILED_NODE],
                                schema=NODE_SERVICE_SCHEMA)
 
         hass.services.register(DOMAIN, const.SERVICE_CHANGE_ASSOCIATION,
                                change_association,
-                               descriptions[
-                                   const.SERVICE_CHANGE_ASSOCIATION],
                                schema=CHANGE_ASSOCIATION_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_SET_WAKEUP,
                                set_wakeup,
-                               descriptions[
-                                   const.SERVICE_SET_WAKEUP],
                                schema=SET_WAKEUP_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_PRINT_NODE,
                                print_node,
-                               descriptions[
-                                   const.SERVICE_PRINT_NODE],
                                schema=NODE_SERVICE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_REFRESH_ENTITY,
                                async_refresh_entity,
-                               descriptions[
-                                   const.SERVICE_REFRESH_ENTITY],
                                schema=REFRESH_ENTITY_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_REFRESH_NODE,
                                refresh_node,
-                               descriptions[
-                                   const.SERVICE_REFRESH_NODE],
                                schema=NODE_SERVICE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_RESET_NODE_METERS,
                                reset_node_meters,
-                               descriptions[
-                                   const.SERVICE_RESET_NODE_METERS],
                                schema=RESET_NODE_METERS_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_SET_POLL_INTENSITY,
                                set_poll_intensity,
-                               descriptions[const.SERVICE_SET_POLL_INTENSITY],
                                schema=SET_POLL_INTENSITY_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_HEAL_NODE,
                                heal_node,
-                               descriptions[
-                                   const.SERVICE_HEAL_NODE],
                                schema=HEAL_NODE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_TEST_NODE,
                                test_node,
-                               descriptions[
-                                   const.SERVICE_TEST_NODE],
                                schema=TEST_NODE_SCHEMA)
 
     # Setup autoheal
