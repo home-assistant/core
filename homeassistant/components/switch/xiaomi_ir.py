@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
     DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME,
-    CONF_SWITCHES, CONF_HOST, CONF_TOKEN, CONF_SLOT, CONF_TIMEOUT)
+    CONF_SWITCHES, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_LEARN = 'xiaomi_miio_learn_command'
 SERVICE_SEND = 'xiaomi_miio_send_command'
+
+CONF_SLOT = 'slot'
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_SLOT = 1
