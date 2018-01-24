@@ -10,7 +10,6 @@ import binascii
 from datetime import timedelta
 import logging
 import socket
-import os
 
 import voluptuous as vol
 
@@ -70,8 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
 
-SAVE_PATH = os.path.expanduser('~')+'/.homeassistant/known_packets.yaml'
-
+SAVE_PATH = 'known_packets.yaml'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Broadlink switches."""
@@ -150,8 +148,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return
 
         packet_id = call.data.get('packet_id')
+        path = hass.config.path(SAVE_PATH)
         if packet_id:
-            with open(SAVE_PATH, 'r') as fs:
+            with open(path, 'r') as fs:
                 for line in fs:
                     if line[:line.index(': ')] == str(packet_id):
                         packet = line[line.index(': ') + 2:line.index('  ')]
@@ -169,8 +168,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def _save_packet(call, data, title):
         """save a packet by id in known_packets.yaml """
         packet_id = call.data.get('packet_id')
+        path = hass.config.path(SAVE_PATH)
         if packet_id:
-            with open(SAVE_PATH, 'a+') as fs:
+            with open(path, 'a+') as fs:
                 fs.write(packet_id)
                 fs.write(': ')
                 fs.write(str(data))
@@ -263,12 +263,7 @@ class BroadlinkRMSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if device is on."""
-        self.update()
         return self._state
-
-    def update(self):
-        """Synchronize state with switch."""
-        pass
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
