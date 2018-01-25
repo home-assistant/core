@@ -106,7 +106,6 @@ def async_setup(hass, config):
                             request['intent']['intentName'])
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s.", intent_type)
-            snips_response = "Error while handling intent"
 
         if snips_response:
             notification = {'sessionId': request.get('sessionId', 'default'),
