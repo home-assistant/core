@@ -106,14 +106,14 @@ def async_setup(hass, config):
                             request['intent']['intentName'])
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s.", intent_type)
-            snips_response = "Error while handling intent"
 
-        notification = {'sessionId': request.get('sessionId', 'default'),
-                        'text': snips_response}
+        if snips_response:
+            notification = {'sessionId': request.get('sessionId', 'default'),
+                            'text': snips_response}
 
-        _LOGGER.debug("send_response %s", json.dumps(notification))
-        mqtt.async_publish(hass, 'hermes/dialogueManager/endSession',
-                           json.dumps(notification))
+            _LOGGER.debug("send_response %s", json.dumps(notification))
+            mqtt.async_publish(hass, 'hermes/dialogueManager/endSession',
+                               json.dumps(notification))
 
     yield from hass.components.mqtt.async_subscribe(
         INTENT_TOPIC, message_received)
