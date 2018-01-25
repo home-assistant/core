@@ -542,10 +542,8 @@ class MockDependency:
         self.root = root
         self.submodules = args
 
-    def __call__(self, func):
-        """Apply decorator."""
-        from unittest.mock import MagicMock, patch
-
+    def __enter__(self):
+        """Start mocking."""
         def resolve(mock, path):
             """Resolve a mock."""
             if not path:
@@ -553,16 +551,27 @@ class MockDependency:
 
             return resolve(getattr(mock, path[0]), path[1:])
 
+        base = MagicMock()
+        to_mock = {
+            "{}.{}".format(self.root, tom): resolve(base, tom.split('.'))
+            for tom in self.submodules
+        }
+        to_mock[self.root] = base
+
+        self.patcher = patch.dict('sys.modules', to_mock)
+        self.patcher.start()
+        return base
+
+    def __exit__(self, *exc):
+        """Stop mocking."""
+        self.patcher.stop()
+        return False
+
+    def __call__(self, func):
+        """Apply decorator."""
         def run_mocked(*args, **kwargs):
             """Run with mocked dependencies."""
-            base = MagicMock()
-            to_mock = {
-                "{}.{}".format(self.root, tom): resolve(base, tom.split('.'))
-                for tom in self.submodules
-            }
-            to_mock[self.root] = base
-
-            with patch.dict('sys.modules', to_mock):
+            with self as base:
                 args = list(args) + [base]
                 func(*args, **kwargs)
 
