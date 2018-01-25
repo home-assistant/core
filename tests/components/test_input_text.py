@@ -99,6 +99,7 @@ class TestInputText(unittest.TestCase):
         assert state
         self.assertEqual('password', state.attributes['mode'])
 
+
 @asyncio.coroutine
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
