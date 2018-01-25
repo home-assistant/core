@@ -204,7 +204,7 @@ class XiaomiMiioRemote(Entity):
     @property
     def should_poll(self):
         """We should be polled for device up state."""
-        return True
+        return False
 
     @property
     def device_state_attributes(self):
@@ -214,20 +214,20 @@ class XiaomiMiioRemote(Entity):
         else:
             return
 
+    # pylint: disable=R0201
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
         _LOGGER.error("Device does not support turn_on, " +
                       "please use remote.send_command, to send commands.")
-        pass
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.error("Device does not support turn_off, " +
                       "please use remote.send_command, to send commands.")
-        pass
 
+    # pylint: enable=R0201
     @asyncio.coroutine
     def _send_command(self, payload):
         """Send a command."""
