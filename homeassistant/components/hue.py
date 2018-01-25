@@ -93,7 +93,7 @@ def setup(hass, config):
         hosts = requests.get(API_NUPNP).json()
         bridges = [{
             CONF_HOST: entry['internalipaddress'],
-            CONF_FILENAME: 'hue_{}.conf'.format(entry['id']),
+            CONF_FILENAME: '.hue_{}.conf'.format(entry['id']),
         } for entry in hosts]
     else:
         # Component not specified in config, we're loaded via discovery
