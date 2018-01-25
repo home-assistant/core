@@ -45,8 +45,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the IOTA component."""
-
     iota_config = config[DOMAIN]
+
     for platform in IOTA_PLATFORMS:
         load_platform(hass, platform, DOMAIN, iota_config, config)
 
