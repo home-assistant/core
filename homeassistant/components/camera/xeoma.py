@@ -9,15 +9,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    PLATFORM_SCHEMA, Camera)
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
 REQUIREMENTS = ['pyxeoma==1.2']
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_CAMERAS = 'cameras'
 CONF_HIDE = 'hide'
@@ -27,16 +26,16 @@ CONF_NEW_VERSION = 'new_version'
 CAMERAS_SCHEMA = vol.Schema({
     vol.Required(CONF_IMAGE_NAME): cv.string,
     vol.Optional(CONF_HIDE, default=False): cv.boolean,
-    vol.Optional(CONF_NAME): cv.string
+    vol.Optional(CONF_NAME): cv.string,
 }, required=False)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_CAMERAS, default={}):
         vol.Schema(vol.All(cv.ensure_list, [CAMERAS_SCHEMA])),
+    vol.Optional(CONF_NEW_VERSION, default=True): cv.boolean,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_NEW_VERSION, default=True): cv.boolean
 })
 
 
@@ -44,12 +43,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Discover and setup Xeoma Cameras."""
+    from pyxeoma.xeoma import Xeoma, XeomaError
+
     host = config[CONF_HOST]
     login = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     new_version = config[CONF_NEW_VERSION]
 
-    from pyxeoma.xeoma import Xeoma, XeomaError
     xeoma = Xeoma(host, new_version, login, password)
 
     try:
@@ -80,7 +80,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             [XeomaCamera(xeoma, camera[CONF_IMAGE_NAME], camera[CONF_NAME])
              for camera in cameras])
     except XeomaError as err:
-        _LOGGER.error('XeomaError: %s', err.message)
+        _LOGGER.error("Error: %s", err.message)
+        return
 
 
 class XeomaCamera(Camera):
@@ -102,7 +103,7 @@ class XeomaCamera(Camera):
             image = yield from self._xeoma.async_get_camera_image(self._image)
             self._last_image = image
         except XeomaError as err:
-            _LOGGER.error("Error fetching image from Xeoma: %s", err.message)
+            _LOGGER.error("Error fetching image: %s", err.message)
 
         return self._last_image
 
