@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.7.1', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.7.3', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -356,6 +356,10 @@ def setup(hass, config):
             save_json(config_path, _config)
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, save_credentials)
+
+    # Save the users potentially updated oauth credentials at a regular
+    # interval to prevent them from being expired after a HA reboot.
+    track_time_interval(hass, save_credentials, timedelta(minutes=60))
 
     def force_update(call):
         """Force all devices to poll the Wink API."""
