@@ -15,22 +15,29 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sense_energy==0.2.2']
+REQUIREMENTS = ['sense_energy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ACTIVE_NAME = "Energy Usage"
-ACTIVE_SOLAR_NAME = "Solar Energy Generation"
-DAILY_NAME = "Daily Energy Usage"
+ACTIVE_NAME = "Energy"
+DAILY_NAME = "Daily"
+WEEKLY_NAME = "Weekly"
+MONTHLY_NAME = "Monthly"
+YEARLY_NAME = "Yearly"
+
+PRODUCTION_NAME = "Production"
+CONSUMPTION_NAME = "Usage"
 
 ACTIVE_TYPE = 'active'
-ACTIVE_SOLAR_TYPE = 'solar'
-DAILY_TYPE = 'daily'
+DAILY_TYPE = 'DAY'
+WEEKLY_TYPE = 'WEEK'
+MONTHLY_TYPE = 'MONTH'
+YEARLY_TYPE = 'YEAR'
 
 ICON = 'mdi:flash'
 
-MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
-MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
+MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
@@ -48,9 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = Senseable(username, password)
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
-    def update_daily():
+    def update_trends():
         """Update the daily power usage."""
-        data.get_daily_usage()
+        data.update_trend_data()
 
     @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
     def update_active():
@@ -58,28 +65,40 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         data.get_realtime()
 
     add_devices([
-        # Active power usage
-        Sense(data, ACTIVE_NAME, ACTIVE_TYPE, update_active),
-        # Active power generation
-        Sense(data, ACTIVE_SOLAR_NAME, ACTIVE_SOLAR_TYPE, update_active),
+        # Active power usage/production
+        Sense(data, ACTIVE_NAME, ACTIVE_TYPE, False, update_active),
+        Sense(data, ACTIVE_NAME, ACTIVE_TYPE, True, update_active),
         # Daily Power
-        Sense(data, DAILY_NAME, DAILY_TYPE, update_daily)])
+        Sense(data, DAILY_NAME, DAILY_TYPE, False, update_trends),
+        Sense(data, DAILY_NAME, DAILY_TYPE, True, update_trends),
+        # Weekly Power
+        Sense(data, WEEKLY_NAME, WEEKLY_TYPE, False, update_trends),
+        Sense(data, WEEKLY_NAME, WEEKLY_TYPE, True, update_trends),
+        # Monthly Power
+        Sense(data, MONTHLY_NAME, MONTHLY_TYPE, False, update_trends),
+        Sense(data, MONTHLY_NAME, MONTHLY_TYPE, True, update_trends),
+        # Yearly Power
+        Sense(data, YEARLY_NAME, YEARLY_TYPE, False, update_trends),
+        Sense(data, YEARLY_NAME, YEARLY_TYPE, True, update_trends),
+        ])
 
 
 class Sense(Entity):
     """Implementation of a Sense energy sensor."""
 
-    def __init__(self, data, name, sensor_type, update_call):
+    def __init__(self, data, name, sensor_type, is_production, update_call):
         """Initialize the sensor."""
-        self._name = name
+        name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
+        self._name = name+" "+name_type
         self._data = data
         self._sensor_type = sensor_type
         self.update_sensor = update_call
+        self._is_production = is_production
         self._state = None
 
-        if sensor_type == ACTIVE_TYPE or sensor_type == ACTIVE_SOLAR_TYPE:
+        if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = 'W'
-        elif sensor_type == DAILY_TYPE:
+        else:
             self._unit_of_measurement = 'kWh'
 
     @property
@@ -107,8 +126,11 @@ class Sense(Entity):
         self.update_sensor()
 
         if self._sensor_type == ACTIVE_TYPE:
-            self._state = round(self._data.active_power)
-        elif self._sensor_type == ACTIVE_SOLAR_TYPE:
-            self._state = round(self._data.active_solar_power)
-        elif self._sensor_type == DAILY_TYPE:
-            self._state = round(self._data.get_daily_usage(), 1)
+            if self._is_production:
+                self._state = round(self._data.active_solar_power)
+            else:
+                self._state = round(self._data.active_power)
+        else:
+            state = self._data.get_trend(self._sensor_type,
+                                         self._is_production)
+            self._state = round(state, 1)
