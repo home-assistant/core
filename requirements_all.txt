@@ -322,7 +322,7 @@ googlemaps==2.5.1
 gps3==0.33.3
 
 # homeassistant.components.light.greenwave
-greenwavereality==0.2.9
+greenwavereality==0.5.1
 
 # homeassistant.components.media_player.gstreamer
 gstreamer-player==1.1.0
