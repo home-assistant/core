@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.soundtouch/
 """
 import logging
 
-from os import path
 import re
 import voluptuous as vol
 
@@ -15,8 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_VOLUME_SET, SUPPORT_TURN_ON, SUPPORT_PLAY, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
-from homeassistant.config import load_yaml_config_file
+    DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, CONF_PORT,
                                  STATE_PAUSED, STATE_PLAYING,
                                  STATE_UNAVAILABLE)
@@ -25,7 +23,6 @@ REQUIREMENTS = ['libsoundtouch==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'media_player'
 SERVICE_PLAY_EVERYWHERE = 'soundtouch_play_everywhere'
 SERVICE_CREATE_ZONE = 'soundtouch_create_zone'
 SERVICE_ADD_ZONE_SLAVE = 'soundtouch_add_zone_slave'
@@ -107,9 +104,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
         add_devices([soundtouch_device])
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     def service_handle(service):
         """Handle the applying of a service."""
         master_device_id = service.data.get('master')
@@ -140,19 +134,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.services.register(DOMAIN, SERVICE_PLAY_EVERYWHERE,
                            service_handle,
-                           descriptions.get(SERVICE_PLAY_EVERYWHERE),
                            schema=SOUNDTOUCH_PLAY_EVERYWHERE)
     hass.services.register(DOMAIN, SERVICE_CREATE_ZONE,
                            service_handle,
-                           descriptions.get(SERVICE_CREATE_ZONE),
                            schema=SOUNDTOUCH_CREATE_ZONE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_REMOVE_ZONE_SLAVE,
                            service_handle,
-                           descriptions.get(SERVICE_REMOVE_ZONE_SLAVE),
                            schema=SOUNDTOUCH_REMOVE_ZONE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_ADD_ZONE_SLAVE,
                            service_handle,
-                           descriptions.get(SERVICE_ADD_ZONE_SLAVE),
                            schema=SOUNDTOUCH_ADD_ZONE_SCHEMA)
 
 

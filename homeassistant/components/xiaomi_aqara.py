@@ -1,39 +1,57 @@
-"""Support for Xiaomi Gateways."""
+"""
+Support for Xiaomi Gateways.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/xiaomi_aqara/
+"""
 import asyncio
 import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.discovery import SERVICE_XIAOMI_GW
-from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_MAC, CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
+from datetime import timedelta
+
+import voluptuous as vol
+
+from homeassistant.components.discovery import SERVICE_XIAOMI_GW
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, CONF_HOST, CONF_MAC, CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import utcnow
+
+REQUIREMENTS = ['PyXiaomiGateway==0.8.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_RINGTONE_VOL = 'ringtone_vol'
 ATTR_DEVICE_ID = 'device_id'
+
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
+
 DOMAIN = 'xiaomi_aqara'
+
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
+
+TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
 SERVICE_PLAY_RINGTONE = 'play_ringtone'
 SERVICE_STOP_RINGTONE = 'stop_ringtone'
 SERVICE_ADD_DEVICE = 'add_device'
 SERVICE_REMOVE_DEVICE = 'remove_device'
 
-
 GW_MAC = vol.All(
     cv.string,
     lambda value: value.replace(':', '').lower(),
     vol.Length(min=12, max=12)
 )
-
 
 SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema({
     vol.Required(ATTR_RINGTONE_ID):
@@ -58,13 +76,13 @@ GATEWAY_CONFIG = vol.Schema({
 
 
 def _fix_conf_defaults(config):
-    """Update some config defaults."""
+    """Update some configuration defaults."""
     config['sid'] = config.pop(CONF_MAC, None)
 
     if config.get(CONF_KEY) is None:
         _LOGGER.warning(
             'Key is not provided for gateway %s. Controlling the gateway '
-            'will not be possible.', config['sid'])
+            'will not be possible', config['sid'])
 
     if config.get(CONF_HOST) is None:
         config.pop(CONF_PORT)
@@ -83,8 +101,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup(hass, config):
     """Set up the Xiaomi component."""
@@ -98,20 +114,20 @@ def setup(hass, config):
 
     @asyncio.coroutine
     def xiaomi_gw_discovered(service, discovery_info):
-        """Called when Xiaomi Gateway device(s) has been found."""
-        # We don't need to do anything here, the purpose of HA's
+        """Perform action when Xiaomi Gateway device(s) has been found."""
+        # We don't need to do anything here, the purpose of Home Assistant's
         # discovery service is to just trigger loading of this
         # component, and then its own discovery process kicks in.
 
     discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
 
-    from PyXiaomiGateway import PyXiaomiGateway
-    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(
+    from xiaomi_gateway import XiaomiGatewayDiscovery
+    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
         hass.add_job, gateways, interface)
 
     _LOGGER.debug("Expecting %s gateways", len(gateways))
     for k in range(discovery_retry):
-        _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', k + 1)
+        _LOGGER.info("Discovering Xiaomi Gateways (Try %s)", k + 1)
         xiaomi.discover_gateways()
         if len(xiaomi.gateways) >= len(gateways):
             break
@@ -127,7 +143,7 @@ def setup(hass, config):
 
     def stop_xiaomi(event):
         """Stop Xiaomi Socket."""
-        _LOGGER.info("Shutting down Xiaomi Hub.")
+        _LOGGER.info("Shutting down Xiaomi Hub")
         xiaomi.stop_listen()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
@@ -190,16 +206,26 @@ class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
     def __init__(self, device, name, xiaomi_hub):
-        """Initialize the xiaomi device."""
+        """Initialize the Xiaomi device."""
         self._state = None
+        self._is_available = True
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
-        xiaomi_hub.callbacks[self._sid].append(self.push_data)
-        self.parse_data(device['data'])
+        self._remove_unavailability_tracker = None
+        xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
+        self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
+
+    def _add_push_data_job(self, *args):
+        self.hass.add_job(self.push_data, *args)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Start unavailability tracking."""
+        self._async_track_unavailable()
 
     @property
     def name(self):
@@ -207,8 +233,13 @@ class XiaomiDevice(Entity):
         return self._name
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._is_available
+
+    @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state. No polling needed."""
         return False
 
     @property
@@ -216,13 +247,34 @@ class XiaomiDevice(Entity):
         """Return the state attributes."""
         return self._device_state_attributes
 
-    def push_data(self, data):
+    @callback
+    def _async_set_unavailable(self, now):
+        """Set state to UNAVAILABLE."""
+        self._remove_unavailability_tracker = None
+        self._is_available = False
+        self.async_schedule_update_ha_state()
+
+    @callback
+    def _async_track_unavailable(self):
+        if self._remove_unavailability_tracker:
+            self._remove_unavailability_tracker()
+        self._remove_unavailability_tracker = async_track_point_in_utc_time(
+            self.hass, self._async_set_unavailable,
+            utcnow() + TIME_TILL_UNAVAILABLE)
+        if not self._is_available:
+            self._is_available = True
+            return True
+        return False
+
+    @callback
+    def push_data(self, data, raw_data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
-        is_data = self.parse_data(data)
+        was_unavailable = self._async_track_unavailable()
+        is_data = self.parse_data(data, raw_data)
         is_voltage = self.parse_voltage(data)
-        if is_data or is_voltage:
-            self.schedule_update_ha_state()
+        if is_data or is_voltage or was_unavailable:
+            self.async_schedule_update_ha_state()
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
@@ -237,7 +289,7 @@ class XiaomiDevice(Entity):
         self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
         return True
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         raise NotImplementedError()
 

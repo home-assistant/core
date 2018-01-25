@@ -2,22 +2,23 @@
 import asyncio
 import logging
 import math
+from datetime import datetime
 from uuid import uuid4
 
+from homeassistant.components import (
+    alert, automation, cover, fan, group, input_boolean, light, lock,
+    media_player, scene, script, switch, http)
 import homeassistant.core as ha
+import homeassistant.util.color as color_util
+from homeassistant.util.decorator import Registry
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_LOCK,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_NAME, SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET)
-from homeassistant.components import (
-    alert, automation, cover, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch)
-import homeassistant.util.color as color_util
-from homeassistant.util.decorator import Registry
+from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
-HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 API_DIRECTIVE = 'directive'
@@ -26,10 +27,12 @@ API_EVENT = 'event'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
 
+SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
+
 CONF_DESCRIPTION = 'description'
 CONF_DISPLAY_CATEGORIES = 'display_categories'
-CONF_NAME = 'name'
 
+HANDLERS = Registry()
 
 MAPPING_COMPONENT = {
     alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
@@ -71,6 +74,39 @@ MAPPING_COMPONENT = {
 }
 
 
+class _Cause(object):
+    """Possible causes for property changes.
+
+    https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#cause-object
+    """
+
+    # Indicates that the event was caused by a customer interaction with an
+    # application. For example, a customer switches on a light, or locks a door
+    # using the Alexa app or an app provided by a device vendor.
+    APP_INTERACTION = 'APP_INTERACTION'
+
+    # Indicates that the event was caused by a physical interaction with an
+    # endpoint. For example manually switching on a light or manually locking a
+    # door lock
+    PHYSICAL_INTERACTION = 'PHYSICAL_INTERACTION'
+
+    # Indicates that the event was caused by the periodic poll of an appliance,
+    # which found a change in value. For example, you might poll a temperature
+    # sensor every hour, and send the updated temperature to Alexa.
+    PERIODIC_POLL = 'PERIODIC_POLL'
+
+    # Indicates that the event was caused by the application of a device rule.
+    # For example, a customer configures a rule to switch on a light if a
+    # motion sensor detects motion. In this case, Alexa receives an event from
+    # the motion sensor, and another event from the light to indicate that its
+    # state change was caused by the rule.
+    RULE_TRIGGER = 'RULE_TRIGGER'
+
+    # Indicates that the event was caused by a voice interaction with Alexa.
+    # For example a user speaking to their Echo device.
+    VOICE_INTERACTION = 'VOICE_INTERACTION'
+
+
 class Config:
     """Hold the configuration for Alexa."""
 
@@ -78,6 +114,51 @@ class Config:
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
+
+
+@ha.callback
+def async_setup(hass, config):
+    """Activate Smart Home functionality of Alexa component.
+
+    This is optional, triggered by having a `smart_home:` sub-section in the
+    alexa configuration.
+
+    Even if that's disabled, the functionality in this module may still be used
+    by the cloud component which will call async_handle_message directly.
+    """
+    smart_home_config = Config(
+        should_expose=config[CONF_FILTER],
+        entity_config=config.get(CONF_ENTITY_CONFIG),
+    )
+    hass.http.register_view(SmartHomeView(smart_home_config))
+
+
+class SmartHomeView(http.HomeAssistantView):
+    """Expose Smart Home v3 payload interface via HTTP POST."""
+
+    url = SMART_HOME_HTTP_ENDPOINT
+    name = 'api:alexa:smart_home'
+
+    def __init__(self, smart_home_config):
+        """Initialize."""
+        self.smart_home_config = smart_home_config
+
+    @asyncio.coroutine
+    def post(self, request):
+        """Handle Alexa Smart Home requests.
+
+        The Smart Home API requires the endpoint to be implemented in AWS
+        Lambda, which will need to forward the requests to here and pass back
+        the response.
+        """
+        hass = request.app['hass']
+        message = yield from request.json()
+
+        _LOGGER.debug("Received Alexa Smart Home request: %s", message)
+
+        response = yield from async_handle_message(
+            hass, self.smart_home_config, message)
+        return b'' if response is None else self.json(response)
 
 
 @asyncio.coroutine
@@ -174,8 +255,8 @@ def async_api_discovery(hass, config, request):
             scene_fmt = '{} (Scene connected via Home Assistant)'
             description = scene_fmt.format(description)
 
-        display_categories = entity_conf.get(CONF_DISPLAY_CATEGORIES,
-                                             class_data[0])
+        display_categories = entity_conf.get(
+            CONF_DISPLAY_CATEGORIES, class_data[0])
 
         endpoint = {
             'displayCategories': [display_categories],
@@ -216,7 +297,7 @@ def async_api_discovery(hass, config, request):
 
 
 def extract_entity(funct):
-    """Decorator for extract entity object from request."""
+    """Decorate for extract entity object from request."""
     @asyncio.coroutine
     def async_api_entity_wrapper(hass, config, request):
         """Process a turn on request."""
@@ -401,7 +482,17 @@ def async_api_activate(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False)
 
-    return api_message(request)
+    payload = {
+        'cause': {'type': _Cause.VOICE_INTERACTION},
+        'timestamp': '%sZ' % (datetime.utcnow().isoformat(),)
+    }
+
+    return api_message(
+        request,
+        name='ActivationStarted',
+        namespace='Alexa.SceneController',
+        payload=payload,
+    )
 
 
 @HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))

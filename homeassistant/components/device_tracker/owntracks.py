@@ -15,7 +15,10 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import zone as zone_comp
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA, ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE,
+    SOURCE_TYPE_GPS
+)
 from homeassistant.const import STATE_HOME
 from homeassistant.core import callback
 from homeassistant.util import slugify, decorator
@@ -32,19 +35,27 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_SECRET = 'secret'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
+CONF_MQTT_TOPIC = 'mqtt_topic'
+CONF_REGION_MAPPING = 'region_mapping'
+CONF_EVENTS_ONLY = 'events_only'
 
 DEPENDENCIES = ['mqtt']
 
-OWNTRACKS_TOPIC = 'owntracks/#'
+DEFAULT_OWNTRACKS_TOPIC = 'owntracks/#'
+REGION_MAPPING = {}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
     vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+    vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
+    vol.Optional(CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC):
+        mqtt.valid_subscribe_topic,
     vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
         cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SECRET): vol.Any(
         vol.Schema({vol.Optional(cv.string): cv.string}),
-        cv.string)
+        cv.string),
+    vol.Optional(CONF_REGION_MAPPING, default=REGION_MAPPING): dict
 })
 
 
@@ -82,31 +93,39 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         yield from async_handle_message(hass, context, message)
 
     yield from mqtt.async_subscribe(
-        hass, OWNTRACKS_TOPIC, async_handle_mqtt_message, 1)
+        hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
     return True
 
 
-def _parse_topic(topic):
-    """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple.
+def _parse_topic(topic, subscribe_topic):
+    """Parse an MQTT topic {sub_topic}/user/dev, return (user, dev) tuple.
 
     Async friendly.
     """
+    subscription = subscribe_topic.split('/')
     try:
-        _, user, device, *_ = topic.split('/', 3)
+        user_index = subscription.index('#')
     except ValueError:
+        _LOGGER.error("Can't parse subscription topic: '%s'", subscribe_topic)
+        raise
+
+    topic_list = topic.split('/')
+    try:
+        user, device = topic_list[user_index], topic_list[user_index + 1]
+    except IndexError:
         _LOGGER.error("Can't parse topic: '%s'", topic)
         raise
 
     return user, device
 
 
-def _parse_see_args(message):
+def _parse_see_args(message, subscribe_topic):
     """Parse the OwnTracks location parameters, into the format see expects.
 
     Async friendly.
     """
-    user, device = _parse_topic(message['topic'])
+    user, device = _parse_topic(message['topic'], subscribe_topic)
     dev_id = slugify('{}_{}'.format(user, device))
     kwargs = {
         'dev_id': dev_id,
@@ -124,6 +143,11 @@ def _parse_see_args(message):
         kwargs['attributes']['tid'] = message['tid']
     if 'addr' in message:
         kwargs['attributes']['address'] = message['addr']
+    if 't' in message:
+        if message['t'] == 'c':
+            kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_GPS
+        if message['t'] == 'b':
+            kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_BLUETOOTH_LE
 
     return dev_id, kwargs
 
@@ -185,16 +209,20 @@ def context_from_config(async_see, config):
     waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
     waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
     secret = config.get(CONF_SECRET)
+    region_mapping = config.get(CONF_REGION_MAPPING)
+    events_only = config.get(CONF_EVENTS_ONLY)
+    mqtt_topic = config.get(CONF_MQTT_TOPIC)
 
     return OwnTracksContext(async_see, secret, max_gps_accuracy,
-                            waypoint_import, waypoint_whitelist)
+                            waypoint_import, waypoint_whitelist,
+                            region_mapping, events_only, mqtt_topic)
 
 
 class OwnTracksContext:
     """Hold the current OwnTracks context."""
 
     def __init__(self, async_see, secret, max_gps_accuracy, import_waypoints,
-                 waypoint_whitelist):
+                 waypoint_whitelist, region_mapping, events_only, mqtt_topic):
         """Initialize an OwnTracks context."""
         self.async_see = async_see
         self.secret = secret
@@ -203,6 +231,9 @@ class OwnTracksContext:
         self.regions_entered = defaultdict(list)
         self.import_waypoints = import_waypoints
         self.waypoint_whitelist = waypoint_whitelist
+        self.region_mapping = region_mapping
+        self.events_only = events_only
+        self.mqtt_topic = mqtt_topic
 
     @callback
     def async_valid_accuracy(self, message):
@@ -267,7 +298,11 @@ def async_handle_location_message(hass, context, message):
     if not context.async_valid_accuracy(message):
         return
 
-    dev_id, kwargs = _parse_see_args(message)
+    if context.events_only:
+        _LOGGER.debug("Location update ignored due to events_only setting")
+        return
+
+    dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
 
     if context.regions_entered[dev_id]:
         _LOGGER.debug(
@@ -283,7 +318,7 @@ def async_handle_location_message(hass, context, message):
 def _async_transition_message_enter(hass, context, message, location):
     """Execute enter event."""
     zone = hass.states.get("zone.{}".format(slugify(location)))
-    dev_id, kwargs = _parse_see_args(message)
+    dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
 
     if zone is None and message.get('t') == 'b':
         # Not a HA zone, and a beacon so mobile beacon.
@@ -309,7 +344,7 @@ def _async_transition_message_enter(hass, context, message, location):
 @asyncio.coroutine
 def _async_transition_message_leave(hass, context, message, location):
     """Execute leave event."""
-    dev_id, kwargs = _parse_see_args(message)
+    dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
     regions = context.regions_entered[dev_id]
 
     if location in regions:
@@ -352,6 +387,12 @@ def async_handle_transition_message(hass, context, message):
     # OwnTracks uses - at the start of a beacon zone
     # to switch on 'hold mode' - ignore this
     location = message['desc'].lstrip("-")
+
+    # Create a layer of indirection for Owntracks instances that may name
+    # regions differently than their HA names
+    if location in context.region_mapping:
+        location = context.region_mapping[location]
+
     if location.lower() == 'home':
         location = STATE_HOME
 
@@ -398,7 +439,7 @@ def async_handle_waypoints_message(hass, context, message):
         return
 
     if context.waypoint_whitelist is not None:
-        user = _parse_topic(message['topic'])[0]
+        user = _parse_topic(message['topic'], context.mqtt_topic)[0]
 
         if user not in context.waypoint_whitelist:
             return
@@ -410,7 +451,7 @@ def async_handle_waypoints_message(hass, context, message):
 
     _LOGGER.info("Got %d waypoints from %s", len(wayps), message['topic'])
 
-    name_base = ' '.join(_parse_topic(message['topic']))
+    name_base = ' '.join(_parse_topic(message['topic'], context.mqtt_topic))
 
     for wayp in wayps:
         yield from async_handle_waypoint(hass, name_base, wayp)

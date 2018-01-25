@@ -31,7 +31,7 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['cover'].append(self)
 
     def close_cover(self, **kwargs):

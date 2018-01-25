@@ -160,7 +160,8 @@ class TestClimateGenericThermostat(unittest.TestCase):
             'cold_tolerance': 2,
             'hot_tolerance': 4,
             'heater': ENT_SWITCH,
-            'target_sensor': ENT_SENSOR
+            'target_sensor': ENT_SENSOR,
+            'away_temp': 16
         }})
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -176,7 +177,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         state = self.hass.states.get(ENTITY)
         self.assertEqual(7, state.attributes.get('min_temp'))
         self.assertEqual(35, state.attributes.get('max_temp'))
-        self.assertEqual(None, state.attributes.get('temperature'))
+        self.assertEqual(7, state.attributes.get('temperature'))
 
     def test_get_operation_modes(self):
         """Test that the operation list returns the correct modes."""
@@ -266,7 +267,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         climate.set_temperature(self.hass, 25)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        self.assertEqual(2, len(self.calls))
         call = self.calls[0]
         self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
@@ -414,7 +415,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        self.assertEqual(2, len(self.calls))
         call = self.calls[0]
         self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
@@ -750,6 +751,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
             'cold_tolerance': 0.3,
             'hot_tolerance': 0.3,
             'heater': ENT_SWITCH,
+            'target_temp': 25,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
             'keep_alive': datetime.timedelta(minutes=10)
@@ -841,6 +843,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
             'name': 'test',
             'cold_tolerance': 0.3,
             'hot_tolerance': 0.3,
+            'target_temp': 25,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'keep_alive': datetime.timedelta(minutes=10)

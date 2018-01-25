@@ -1,6 +1,5 @@
 """Support for Google Assistant Smart Home API."""
 import asyncio
-from collections import namedtuple
 import logging
 
 # Typing imports
@@ -15,19 +14,19 @@ from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
-    CONF_FRIENDLY_NAME, STATE_OFF,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
+    CONF_NAME, CONF_TYPE
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene, script, climate
+    switch, light, cover, media_player, group, fan, scene, script, climate,
+    sensor
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
-    ATTR_GOOGLE_ASSISTANT_NAME, COMMAND_COLOR,
-    ATTR_GOOGLE_ASSISTANT_TYPE,
+    COMMAND_COLOR,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
     COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, COMMAND_THERMOSTAT_SET_MODE,
@@ -56,12 +55,12 @@ MAPPING_COMPONENT = {
         }
     ],
     cover.DOMAIN: [
-        TYPE_LIGHT, TRAIT_ONOFF, {
+        TYPE_SWITCH, TRAIT_ONOFF, {
             cover.SUPPORT_SET_POSITION: TRAIT_BRIGHTNESS
         }
     ],
     media_player.DOMAIN: [
-        TYPE_LIGHT, TRAIT_ONOFF, {
+        TYPE_SWITCH, TRAIT_ONOFF, {
             media_player.SUPPORT_VOLUME_SET: TRAIT_BRIGHTNESS
         }
     ],
@@ -69,13 +68,40 @@ MAPPING_COMPONENT = {
 }  # type: Dict[str, list]
 
 
-Config = namedtuple('GoogleAssistantConfig', 'should_expose,agent_user_id')
+"""Error code used for SmartHomeError class."""
+ERROR_NOT_SUPPORTED = "notSupported"
 
 
-def entity_to_device(entity: Entity, units: UnitSystem):
+class SmartHomeError(Exception):
+    """Google Assistant Smart Home errors."""
+
+    def __init__(self, code, msg):
+        """Log error code."""
+        super(SmartHomeError, self).__init__(msg)
+        _LOGGER.error(
+            "An error has ocurred in Google SmartHome: %s."
+            "Error code: %s", msg, code
+        )
+        self.code = code
+
+
+class Config:
+    """Hold the configuration for Google Assistant."""
+
+    def __init__(self, should_expose, agent_user_id, entity_config=None):
+        """Initialize the configuration."""
+        self.should_expose = should_expose
+        self.agent_user_id = agent_user_id
+        self.entity_config = entity_config or {}
+
+
+def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     """Convert a hass entity into an google actions device."""
+    entity_config = config.entity_config.get(entity.entity_id, {})
+    google_domain = entity_config.get(CONF_TYPE)
     class_data = MAPPING_COMPONENT.get(
-        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) or entity.domain)
+        google_domain or entity.domain)
+
     if class_data is None:
         return None
 
@@ -90,17 +116,12 @@ def entity_to_device(entity: Entity, units: UnitSystem):
     device['traits'].append(class_data[1])
 
     # handle custom names
-    device['name']['name'] = \
-        entity.attributes.get(ATTR_GOOGLE_ASSISTANT_NAME) or \
-        entity.attributes.get(CONF_FRIENDLY_NAME)
+    device['name']['name'] = entity_config.get(CONF_NAME) or entity.name
 
     # use aliases
-    aliases = entity.attributes.get(CONF_ALIASES)
+    aliases = entity_config.get(CONF_ALIASES)
     if aliases:
-        if isinstance(aliases, list):
-            device['name']['nicknames'] = aliases
-        else:
-            _LOGGER.warning("%s must be a list", CONF_ALIASES)
+        device['name']['nicknames'] = aliases
 
     # add trait if entity supports feature
     if class_data[2]:
@@ -136,20 +157,79 @@ def entity_to_device(entity: Entity, units: UnitSystem):
             'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
         _LOGGER.debug('Thermostat attributes %s', device['attributes'])
+
+    if entity.domain == sensor.DOMAIN:
+        if google_domain == climate.DOMAIN:
+            unit_of_measurement = entity.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT,
+                units.temperature_unit
+            )
+
+            device['attributes'] = {
+                'thermostatTemperatureUnit':
+                'F' if unit_of_measurement == TEMP_FAHRENHEIT else 'C',
+            }
+            _LOGGER.debug('Sensor attributes %s', device['attributes'])
+
     return device
 
 
-def query_device(entity: Entity, units: UnitSystem) -> dict:
+def query_device(entity: Entity, config: Config, units: UnitSystem) -> dict:
     """Take an entity and return a properly formatted device object."""
     def celsius(deg: Optional[float]) -> Optional[float]:
         """Convert a float to Celsius and rounds to one decimal place."""
         if deg is None:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+
+    if entity.domain == sensor.DOMAIN:
+        entity_config = config.entity_config.get(entity.entity_id, {})
+        google_domain = entity_config.get(CONF_TYPE)
+
+        if google_domain == climate.DOMAIN:
+            # check if we have a string value to convert it to number
+            value = entity.state
+            if isinstance(entity.state, str):
+                try:
+                    value = float(value)
+                except ValueError:
+                    value = None
+
+            if value is None:
+                raise SmartHomeError(
+                    ERROR_NOT_SUPPORTED,
+                    "Invalid value {} for the climate sensor"
+                    .format(entity.state)
+                )
+
+            # detect if we report temperature or humidity
+            unit_of_measurement = entity.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT,
+                units.temperature_unit
+            )
+            if unit_of_measurement in [TEMP_FAHRENHEIT, TEMP_CELSIUS]:
+                value = celsius(value)
+                attr = 'thermostatTemperatureAmbient'
+            elif unit_of_measurement == '%':
+                attr = 'thermostatHumidityAmbient'
+            else:
+                raise SmartHomeError(
+                    ERROR_NOT_SUPPORTED,
+                    "Unit {} is not supported by the climate sensor"
+                    .format(unit_of_measurement)
+                )
+
+            return {attr: value}
+
+        raise SmartHomeError(
+            ERROR_NOT_SUPPORTED,
+            "Sensor type {} is not supported".format(google_domain)
+        )
+
     if entity.domain == climate.DOMAIN:
         mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
         if mode not in CLIMATE_SUPPORTED_MODES:
-            mode = 'on'
+            mode = 'heat'
         response = {
             'thermostatMode': mode,
             'thermostatTemperatureSetpoint':
@@ -315,14 +395,14 @@ def async_handle_message(hass, config, message):
 
 @HANDLERS.register('action.devices.SYNC')
 @asyncio.coroutine
-def async_devices_sync(hass, config, payload):
+def async_devices_sync(hass, config: Config, payload):
     """Handle action.devices.SYNC request."""
     devices = []
     for entity in hass.states.async_all():
         if not config.should_expose(entity):
             continue
 
-        device = entity_to_device(entity, hass.config.units)
+        device = entity_to_device(entity, config, hass.config.units)
         if device is None:
             _LOGGER.warning("No mapping for %s domain", entity.domain)
             continue
@@ -352,7 +432,10 @@ def async_devices_query(hass, config, payload):
             # If we can't find a state, the device is offline
             devices[devid] = {'online': False}
 
-        devices[devid] = query_device(state, hass.config.units)
+        try:
+            devices[devid] = query_device(state, config, hass.config.units)
+        except SmartHomeError as error:
+            devices[devid] = {'errorCode': error.code}
 
     return {'devices': devices}
 

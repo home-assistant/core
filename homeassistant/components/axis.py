@@ -4,25 +4,20 @@ Support for Axis devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/axis/
 """
-
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_AXIS
-from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
-                                 CONF_EVENT, CONF_HOST, CONF_INCLUDE,
-                                 CONF_NAME, CONF_PASSWORD, CONF_PORT,
-                                 CONF_TRIGGER_TIME, CONF_USERNAME,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    ATTR_LOCATION, ATTR_TRIPPED, CONF_EVENT, CONF_HOST, CONF_INCLUDE,
+    CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.json import load_json, save_json
-
 
 REQUIREMENTS = ['axis==14']
 
@@ -83,10 +78,10 @@ def request_configuration(hass, config, name, host, serialnumber):
     configurator = hass.components.configurator
 
     def configuration_callback(callback_data):
-        """Called when config is submitted."""
+        """Call when configuration is submitted."""
         if CONF_INCLUDE not in callback_data:
-            configurator.notify_errors(request_id,
-                                       "Functionality mandatory.")
+            configurator.notify_errors(
+                request_id, "Functionality mandatory.")
             return False
 
         callback_data[CONF_INCLUDE] = callback_data[CONF_INCLUDE].split()
@@ -98,18 +93,20 @@ def request_configuration(hass, config, name, host, serialnumber):
         try:
             device_config = DEVICE_SCHEMA(callback_data)
         except vol.Invalid:
-            configurator.notify_errors(request_id,
-                                       "Bad input, please check spelling.")
+            configurator.notify_errors(
+                request_id, "Bad input, please check spelling.")
             return False
 
         if setup_device(hass, config, device_config):
+            del device_config['events']
+            del device_config['signal']
             config_file = load_json(hass.config.path(CONFIG_FILE))
             config_file[serialnumber] = dict(device_config)
             save_json(hass.config.path(CONFIG_FILE), config_file)
             configurator.request_done(request_id)
         else:
-            configurator.notify_errors(request_id,
-                                       "Failed to register, please try again.")
+            configurator.notify_errors(
+                request_id, "Failed to register, please try again.")
             return False
 
     title = '{} ({})'.format(name, host)
@@ -147,7 +144,7 @@ def request_configuration(hass, config, name, host, serialnumber):
 
 
 def setup(hass, config):
-    """Common setup for Axis devices."""
+    """Set up for Axis devices."""
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the event stream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
@@ -157,7 +154,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     def axis_device_discovered(service, discovery_info):
-        """Called when axis devices has been found."""
+        """Call when axis devices has been found."""
         host = discovery_info[CONF_HOST]
         name = discovery_info['hostname']
         serialnumber = discovery_info['properties']['macaddress']
@@ -173,8 +170,8 @@ def setup(hass, config):
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                     return False
                 if not setup_device(hass, config, device_config):
-                    _LOGGER.error("Couldn\'t set up %s",
-                                  device_config[CONF_NAME])
+                    _LOGGER.error(
+                        "Couldn't set up %s", device_config[CONF_NAME])
             else:
                 # New device, create configuration request for UI
                 request_configuration(hass, config, name, host, serialnumber)
@@ -193,11 +190,7 @@ def setup(hass, config):
             if CONF_NAME not in device_config:
                 device_config[CONF_NAME] = device
             if not setup_device(hass, config, device_config):
-                _LOGGER.error("Couldn\'t set up %s", device_config[CONF_NAME])
-
-    # Services to communicate with device.
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+                _LOGGER.error("Couldn't set up %s", device_config[CONF_NAME])
 
     def vapix_service(call):
         """Service to send a message."""
@@ -209,24 +202,21 @@ def setup(hass, config):
                     call.data[SERVICE_PARAM])
                 hass.bus.fire(SERVICE_VAPIX_CALL_RESPONSE, response)
                 return True
-        _LOGGER.info("Couldn\'t find device %s", call.data[CONF_NAME])
+        _LOGGER.info("Couldn't find device %s", call.data[CONF_NAME])
         return False
 
     # Register service with Home Assistant.
-    hass.services.register(DOMAIN,
-                           SERVICE_VAPIX_CALL,
-                           vapix_service,
-                           descriptions[DOMAIN][SERVICE_VAPIX_CALL],
-                           schema=SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_VAPIX_CALL, vapix_service, schema=SERVICE_SCHEMA)
     return True
 
 
 def setup_device(hass, config, device_config):
-    """Set up device."""
+    """Set up an Axis device."""
     from axis import AxisDevice
 
     def signal_callback(action, event):
-        """Callback to configure events when initialized on event stream."""
+        """Call to configure events when initialized on event stream."""
         if action == 'add':
             event_config = {
                 CONF_EVENT: event,
@@ -235,11 +225,8 @@ def setup_device(hass, config, device_config):
                 CONF_TRIGGER_TIME: device_config[CONF_TRIGGER_TIME]
             }
             component = event.event_platform
-            discovery.load_platform(hass,
-                                    component,
-                                    DOMAIN,
-                                    event_config,
-                                    config)
+            discovery.load_platform(
+                hass, component, DOMAIN, event_config, config)
 
     event_types = list(filter(lambda x: x in device_config[CONF_INCLUDE],
                               EVENT_TYPES))
@@ -250,7 +237,7 @@ def setup_device(hass, config, device_config):
 
     if device.serial_number is None:
         # If there is no serial number a connection could not be made
-        _LOGGER.error("Couldn\'t connect to %s", device_config[CONF_HOST])
+        _LOGGER.error("Couldn't connect to %s", device_config[CONF_HOST])
         return False
 
     for component in device_config[CONF_INCLUDE]:
@@ -262,11 +249,8 @@ def setup_device(hass, config, device_config):
                 CONF_USERNAME: device_config[CONF_USERNAME],
                 CONF_PASSWORD: device_config[CONF_PASSWORD]
             }
-            discovery.load_platform(hass,
-                                    component,
-                                    DOMAIN,
-                                    camera_config,
-                                    config)
+            discovery.load_platform(
+                hass, component, DOMAIN, camera_config, config)
 
     AXIS_DEVICES[device.serial_number] = device
     if event_types:
@@ -280,9 +264,9 @@ class AxisDeviceEvent(Entity):
     def __init__(self, event_config):
         """Initialize the event."""
         self.axis_event = event_config[CONF_EVENT]
-        self._name = '{}_{}_{}'.format(event_config[CONF_NAME],
-                                       self.axis_event.event_type,
-                                       self.axis_event.id)
+        self._name = '{}_{}_{}'.format(
+            event_config[CONF_NAME], self.axis_event.event_type,
+            self.axis_event.id)
         self.location = event_config[ATTR_LOCATION]
         self.axis_event.callback = self._update_callback
 
@@ -303,7 +287,7 @@ class AxisDeviceEvent(Entity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state. No polling needed."""
         return False
 
     @property

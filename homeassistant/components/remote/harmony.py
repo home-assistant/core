@@ -4,22 +4,20 @@ Support for Harmony Hub devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.harmony/
 """
-import logging
 import asyncio
-from os import path
+import logging
 import time
 
 import voluptuous as vol
 
 import homeassistant.components.remote as remote
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_ACTIVITY, ATTR_NUM_REPEATS,
-    ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+    ATTR_ACTIVITY, ATTR_DELAY_SECS, ATTR_DEVICE, ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS, DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
-from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['pyharmony==1.0.18']
 
@@ -32,12 +30,12 @@ CONF_DEVICE_CACHE = 'harmony_device_cache'
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
+    vol.Required(CONF_NAME): cv.string,
     vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
         vol.Coerce(float),
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 HARMONY_SYNC_SCHEMA = vol.Schema({
@@ -105,11 +103,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def register_services(hass):
     """Register all services for harmony devices."""
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
-        DOMAIN, SERVICE_SYNC, _sync_service, descriptions.get(SERVICE_SYNC),
+        DOMAIN, SERVICE_SYNC, _sync_service,
         schema=HARMONY_SYNC_SCHEMA)
 
 
@@ -187,7 +182,7 @@ class HarmonyRemote(remote.RemoteDevice):
         return self._current_activity not in [None, 'PowerOff']
 
     def new_activity(self, activity_id):
-        """Callback for updating the current activity."""
+        """Call for updating the current activity."""
         import pyharmony
         activity_name = pyharmony.activity_name(self._config, activity_id)
         _LOGGER.debug("%s activity reported as: %s", self._name, activity_name)

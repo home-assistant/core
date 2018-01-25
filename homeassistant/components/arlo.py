@@ -12,7 +12,7 @@ from requests.exceptions import HTTPError, ConnectTimeout
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-REQUIREMENTS = ['pyarlo==0.1.0']
+REQUIREMENTS = ['pyarlo==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

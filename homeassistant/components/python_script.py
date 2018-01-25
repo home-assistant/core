@@ -12,11 +12,11 @@ import time
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['restrictedpython==4.0b2']
 
@@ -185,7 +185,7 @@ class StubPrinter:
 
 
 class TimeWrapper:
-    """Wrapper of the time module."""
+    """Wrap the time module."""
 
     # Class variable, only going to warn once per Home Assistant run
     warned = False
@@ -202,4 +202,11 @@ class TimeWrapper:
 
     def __getattr__(self, attr):
         """Fetch an attribute from Time module."""
-        return getattr(time, attr)
+        attribute = getattr(time, attr)
+        if callable(attribute):
+            def wrapper(*args, **kw):
+                """Wrap to return callable method if callable."""
+                return attribute(*args, **kw)
+            return wrapper
+        else:
+            return attribute

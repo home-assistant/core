@@ -10,7 +10,6 @@ import functools as ft
 import collections
 import hashlib
 import logging
-import os
 from random import SystemRandom
 
 from aiohttp import web
@@ -19,7 +18,6 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
     SERVICE_TOGGLE, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
@@ -368,13 +366,9 @@ def async_setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(MediaPlayerImageView(component.entities))
+    hass.http.register_view(MediaPlayerImageView(component))
 
     yield from component.async_setup(config)
-
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -418,7 +412,7 @@ def async_setup(hass, config):
             'schema', MEDIA_PLAYER_SCHEMA)
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
-            descriptions.get(service), schema=schema)
+            schema=schema)
 
     return True
 
@@ -935,14 +929,14 @@ class MediaPlayerImageView(HomeAssistantView):
     url = '/api/media_player_proxy/{entity_id}'
     name = 'api:media_player:image'
 
-    def __init__(self, entities):
+    def __init__(self, component):
         """Initialize a media player view."""
-        self.entities = entities
+        self.component = component
 
     @asyncio.coroutine
     def get(self, request, entity_id):
         """Start a get request."""
-        player = self.entities.get(entity_id)
+        player = self.component.get_entity(entity_id)
         if player is None:
             status = 404 if request[KEY_AUTHENTICATED] else 401
             return web.Response(status=status)

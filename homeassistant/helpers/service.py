@@ -3,13 +3,16 @@ import asyncio
 import logging
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
+from os import path
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant  # NOQA
+import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
 from homeassistant.loader import get_component, bind_hass
+from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -20,6 +23,8 @@ CONF_SERVICE_DATA = 'data'
 CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_DESCRIPTION_CACHE = 'service_description_cache'
 
 
 @bind_hass
@@ -63,17 +68,12 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
     service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
     if CONF_SERVICE_DATA_TEMPLATE in config:
-        def _data_template_creator(value):
-            """Recursive template creator helper function."""
-            if isinstance(value, list):
-                return [_data_template_creator(item) for item in value]
-            elif isinstance(value, dict):
-                return {key: _data_template_creator(item)
-                        for key, item in value.items()}
-            value.hass = hass
-            return value.async_render(variables)
-        service_data.update(_data_template_creator(
-            config[CONF_SERVICE_DATA_TEMPLATE]))
+        try:
+            template.attach(hass, config[CONF_SERVICE_DATA_TEMPLATE])
+            service_data.update(template.render_complex(
+                config[CONF_SERVICE_DATA_TEMPLATE], variables))
+        except TemplateError as ex:
+            _LOGGER.error('Error rendering data template: %s', ex)
 
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
@@ -112,3 +112,75 @@ def extract_entity_ids(hass, service_call, expand_group=True):
             return [service_ent_id]
 
         return service_ent_id
+
+
+@asyncio.coroutine
+@bind_hass
+def async_get_all_descriptions(hass):
+    """Return descriptions (i.e. user documentation) for all service calls."""
+    if SERVICE_DESCRIPTION_CACHE not in hass.data:
+        hass.data[SERVICE_DESCRIPTION_CACHE] = {}
+    description_cache = hass.data[SERVICE_DESCRIPTION_CACHE]
+
+    format_cache_key = '{}.{}'.format
+
+    def domain_yaml_file(domain):
+        """Return the services.yaml location for a domain."""
+        if domain == ha.DOMAIN:
+            import homeassistant.components as components
+            component_path = path.dirname(components.__file__)
+        else:
+            component_path = path.dirname(get_component(domain).__file__)
+        return path.join(component_path, 'services.yaml')
+
+    def load_services_files(yaml_files):
+        """Load and parse services.yaml files."""
+        loaded = {}
+        for yaml_file in yaml_files:
+            try:
+                loaded[yaml_file] = load_yaml(yaml_file)
+            except FileNotFoundError:
+                loaded[yaml_file] = {}
+
+        return loaded
+
+    services = hass.services.async_services()
+
+    # Load missing files
+    missing = set()
+    for domain in services:
+        for service in services[domain]:
+            if format_cache_key(domain, service) not in description_cache:
+                missing.add(domain_yaml_file(domain))
+                break
+
+    if missing:
+        loaded = yield from hass.async_add_job(load_services_files, missing)
+
+    # Build response
+    catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
+    descriptions = {}
+    for domain in services:
+        descriptions[domain] = {}
+        yaml_file = domain_yaml_file(domain)
+
+        for service in services[domain]:
+            cache_key = format_cache_key(domain, service)
+            description = description_cache.get(cache_key)
+
+            # Cache missing descriptions
+            if description is None:
+                if yaml_file == catch_all_yaml_file:
+                    yaml_services = loaded[yaml_file].get(domain, {})
+                else:
+                    yaml_services = loaded[yaml_file]
+                yaml_description = yaml_services.get(service, {})
+
+                description = description_cache[cache_key] = {
+                    'description': yaml_description.get('description', ''),
+                    'fields': yaml_description.get('fields', {})
+                }
+
+            descriptions[domain][service] = description
+
+    return descriptions

@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['concord232==0.14']
+REQUIREMENTS = ['concord232==0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
 
     try:
-        _LOGGER.debug("Initializing Client")
+        _LOGGER.debug("Initializing client")
         client = concord232_client.Client('http://{}:{}'.format(host, port))
         client.zones = client.list_zones()
         client.last_zone_update = datetime.datetime.now()

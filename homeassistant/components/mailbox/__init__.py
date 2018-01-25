@@ -82,7 +82,7 @@ def async_setup(hass, config):
         mailbox_entity = MailboxEntity(hass, mailbox)
         component = EntityComponent(
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
-        yield from component.async_add_entity(mailbox_entity)
+        yield from component.async_add_entities([mailbox_entity])
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
