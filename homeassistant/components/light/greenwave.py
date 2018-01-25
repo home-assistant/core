@@ -114,7 +114,7 @@ class GreenwaveLight(Light):
     def update(self):
         """Fetch new state data for this light."""
         import greenwavereality as greenwave
-        self._gatewaydata.update(self._host, self._token)
+        self._gatewaydata.update()
         bulbs = self._gatewaydata.greenwave
 
         self._state = int(bulbs[self._did]['state'])
