@@ -106,6 +106,9 @@ omit =
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
 
+    homeassistant/components/iota.py
+    homeassistant/components/*/iota.py
+
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
@@ -368,7 +371,6 @@ omit =
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/image_processing/seven_segments.py
-    homeassistant/components/iota.py
     homeassistant/components/keyboard.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/light/avion.py
@@ -550,7 +552,6 @@ omit =
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
-    homeassistant/components/sensor/iota.py
     homeassistant/components/sensor/irish_rail_transport.py
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lacrosse.py
