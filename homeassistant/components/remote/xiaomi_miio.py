@@ -106,9 +106,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             return
 
         entity_id = service.data.get(ATTR_ENTITY_ID)
-
         entity = None
-
         for remote in hass.data[PLATFORM].values():
             if remote.entity_id == entity_id:
                 entity = remote
@@ -131,17 +129,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             message = yield from hass.async_add_job(
                 device.read, slot)
             _LOGGER.debug("Message recieved from device: '%s'", message)
+
             if 'code' in message and message['code']:
-                log_msg = "Received command is: {}".\
-                          format(message['code'])
+                log_msg = "Received command is: {}".format(message['code'])
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(
                     log_msg, title='Xiaomi Miio Remote')
                 return
+
             if ('error' in message and
                     message['error']['message'] == "learn timeout"):
                 yield from hass.async_add_job(device.learn, slot)
+
             yield from asyncio.sleep(1, loop=hass.loop)
+
         _LOGGER.error("Timeout. No infrared command captured")
         hass.components.persistent_notification.async_create(
             "Timeout. No infrared command captured",
@@ -216,10 +217,16 @@ class XiaomiMiioRemote(Entity):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
+        _LOGGER.error("Device does not support turn_on, " +
+                      "please use remote.send_command, to send commands.")
+        pass
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
+        _LOGGER.error("Device does not support turn_off, " +
+                      "please use remote.send_command, to send commands.")
+        pass
 
     @asyncio.coroutine
     def _send_command(self, payload):

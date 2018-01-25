@@ -57,8 +57,8 @@ xiaomi_miio_learn_command:
       description: 'Name of the entity to learn command from.'
       example: 'remote.xiaomi_miio'
     slot:
-      description: 'Define the slot used to save the IR command (Value from 1 to 1000000) (Default: 1)'
-      example: '"slot": 1'
+      description: 'Define the slot used to save the IR command (Value from 1 to 1000000)'
+      example: '1'
     timeout:
-      description: 'Define the timeout in seconds, before which the command must be learned. (Default: 10)'
-      example: '"timeout": 30'
+      description: 'Define the timeout in seconds, before which the command must be learned.'
+      example: '30'
