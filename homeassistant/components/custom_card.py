@@ -1,5 +1,5 @@
 """
-Show custom full-cards (ha-cards) and sate-cards on Home Assistant frontend
+Show custom full-cards (ha-cards) and sate-cards on Home Assistant frontend.
 
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/custom_card/
@@ -37,7 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize custom card."""
-
     card_configs = {}
 
     for object_id, cfg in config[DOMAIN].items():
@@ -86,6 +85,7 @@ class CustomCardView(http.HomeAssistantView):
     name = 'api:custom_card'
 
     def __init__(self, card_configs):
+        """Initialize a custom card view."""
         self._card_configs = card_configs
 
     @http.RequestDataValidator(vol.Schema({
