@@ -92,14 +92,20 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         return self.mac2name.get(device)
 
-    def _update_info(self):
+    def _update_info(self, wireless=True):
         """Ensure the information from the DD-WRT router is up to date.
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Checking ARP")
+        if wireless:
+            _LOGGER.info("Checking ARP")
+            url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
+            extract_key = 'active_wireless'
+        else:
+            _LOGGER.info("Checking DHCP leases")
+            url = 'http://{}/Info.live.htm'.format(self.host)
+            extract_key = 'dhcp_leases'
 
-        url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
         data = self.get_ddwrt_data(url)
 
         if not data:
@@ -107,7 +113,7 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         self.last_results = []
 
-        active_clients = data.get('active_wireless', None)
+        active_clients = data.get(extract_key, None)
         if not active_clients:
             return False
 
