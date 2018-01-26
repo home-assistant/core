@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from homeassistant.components import (
     alert, automation, cover, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch, http)
+    media_player, scene, script, switch, http, sensor)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
@@ -16,7 +16,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_UNLOCK, SERVICE_VOLUME_SET)
+    SERVICE_UNLOCK, SERVICE_VOLUME_SET, TEMP_FAHRENHEIT, TEMP_CELSIUS,
+    CONF_UNIT_OF_MEASUREMENT)
 from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +25,14 @@ _LOGGER = logging.getLogger(__name__)
 API_DIRECTIVE = 'directive'
 API_ENDPOINT = 'endpoint'
 API_EVENT = 'event'
+API_CONTEXT = 'context'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
+
+API_TEMP_UNITS = {
+    TEMP_FAHRENHEIT: 'FAHRENHEIT',
+    TEMP_CELSIUS: 'CELSIUS',
+}
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
@@ -94,6 +101,8 @@ class _DisplayCategory(object):
 def _capability(interface,
                 version=3,
                 supports_deactivation=None,
+                retrievable=None,
+                properties_supported=None,
                 cap_type='AlexaInterface'):
     """Return a Smart Home API capability object.
 
@@ -102,9 +111,7 @@ def _capability(interface,
     There are some additional fields allowed but not implemented here since
     we've no use case for them yet:
 
-      - properties.supported
       - proactively_reported
-      - retrievable
 
     `supports_deactivation` applies only to scenes.
     """
@@ -116,6 +123,12 @@ def _capability(interface,
 
     if supports_deactivation is not None:
         result['supportsDeactivation'] = supports_deactivation
+
+    if retrievable is not None:
+        result['retrievable'] = retrievable
+
+    if properties_supported is not None:
+        result['properties'] = {'supported': properties_supported}
 
     return result
 
@@ -143,6 +156,8 @@ class _EntityCapabilities(object):
 
     def capabilities(self):
         """Return a list of supported capabilities.
+
+        If the returned list is empty, the entity will not be discovered.
 
         You might find _capability() useful.
         """
@@ -269,6 +284,28 @@ class _GroupCapabilities(_EntityCapabilities):
                             supports_deactivation=True)]
 
 
+class _SensorCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        # although there are other kinds of sensors, all but temperature
+        # sensors are currently ignored.
+        return [_DisplayCategory.TEMPERATURE_SENSOR]
+
+    def capabilities(self):
+        capabilities = []
+
+        attrs = self.entity.attributes
+        if attrs.get(CONF_UNIT_OF_MEASUREMENT) in (
+                TEMP_FAHRENHEIT,
+                TEMP_CELSIUS,
+        ):
+            capabilities.append(_capability(
+                'Alexa.TemperatureSensor',
+                retrievable=True,
+                properties_supported=[{'name': 'temperature'}]))
+
+        return capabilities
+
+
 class _UnknownEntityDomainError(Exception):
     pass
 
@@ -296,6 +333,7 @@ _CAPABILITIES_FOR_DOMAIN = {
     scene.DOMAIN: _SceneCapabilities,
     script.DOMAIN: _ScriptCapabilities,
     switch.DOMAIN: _SwitchCapabilities,
+    sensor.DOMAIN: _SensorCapabilities,
 }
 
 
@@ -407,7 +445,11 @@ def async_handle_message(hass, config, message):
     return (yield from funct_ref(hass, config, message))
 
 
-def api_message(request, name='Response', namespace='Alexa', payload=None):
+def api_message(request,
+                name='Response',
+                namespace='Alexa',
+                payload=None,
+                context=None):
     """Create a API formatted response message.
 
     Async friendly.
@@ -434,6 +476,9 @@ def api_message(request, name='Response', namespace='Alexa', payload=None):
     # Extend event with endpoint object / Need by Async requests
     if API_ENDPOINT in request:
         response[API_EVENT][API_ENDPOINT] = request[API_ENDPOINT].copy()
+
+    if context is not None:
+        response[API_CONTEXT] = context
 
     return response
 
@@ -490,7 +535,12 @@ def async_api_discovery(hass, config, request):
             'manufacturerName': 'Home Assistant',
         }
 
-        endpoint['capabilities'] = entity_capabilities.capabilities()
+        alexa_capabilities = entity_capabilities.capabilities()
+        if not alexa_capabilities:
+            _LOGGER.debug("Not exposing %s because it has no capabilities",
+                          entity.entity_id)
+            continue
+        endpoint['capabilities'] = alexa_capabilities
         discovery_endpoints.append(endpoint)
 
     return api_message(
@@ -976,3 +1026,25 @@ def async_api_previous(hass, config, request, entity):
         data, blocking=False)
 
     return api_message(request)
+
+
+@HANDLERS.register(('Alexa', 'ReportState'))
+@extract_entity
+@asyncio.coroutine
+def async_api_reportstate(hass, config, request, entity):
+    """Process a ReportState request."""
+    unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
+    temp_property = {
+        'namespace': 'Alexa.TemperatureSensor',
+        'name': 'temperature',
+        'value': {
+            'value': float(entity.state),
+            'scale': API_TEMP_UNITS[unit],
+        },
+    }
+
+    return api_message(
+        request,
+        name='StateReport',
+        context={'properties': [temp_property]}
+    )
