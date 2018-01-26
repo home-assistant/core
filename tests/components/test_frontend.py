@@ -189,3 +189,20 @@ def test_panel_without_path(hass):
         'test_component', 'nonexistant_file')
     yield from async_setup_component(hass, 'frontend', {})
     assert 'test_component' not in hass.data[DATA_PANELS]
+
+
+@asyncio.coroutine
+def test_frontend_version(mock_http_client):
+    """Test frontend version."""
+    resp = yield from mock_http_client.get('/states?latest')
+    assert resp.status == 200
+    text = yield from resp.text()
+    print(text)
+    assert text.find(".latest';") >= 0
+    assert text.find(".es5';") < 0
+
+    resp = yield from mock_http_client.get('/states?es5')
+    assert resp.status == 200
+    text = yield from resp.text()
+    assert text.find(".latest';") < 0
+    assert text.find(".es5';") >= 0
