@@ -593,6 +593,7 @@ omit =
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
+    homeassistant/components/sensor/pollen.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py
