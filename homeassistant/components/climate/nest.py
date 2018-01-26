@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
-STATE_HEAT_COOL = 'heat-cool'
+NEST_MODE_HEAT_COOL = 'heat-cool'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
                  SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
@@ -117,14 +117,14 @@ class NestThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             return self._mode
-        elif self._mode == STATE_HEAT_COOL:
+        elif self._mode == NEST_MODE_HEAT_COOL:
             return STATE_AUTO
         return STATE_UNKNOWN
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._mode != STATE_HEAT_COOL and not self.is_away_mode_on:
+        if self._mode != NEST_MODE_HEAT_COOL and not self.is_away_mode_on:
             return self._target_temperature
         return None
 
@@ -135,7 +135,7 @@ class NestThermostat(ClimateDevice):
                 self._eco_temperature[0]:
             # eco_temperature is always a low, high tuple
             return self._eco_temperature[0]
-        if self._mode == STATE_HEAT_COOL:
+        if self._mode == NEST_MODE_HEAT_COOL:
             return self._target_temperature[0]
         return None
 
@@ -146,7 +146,7 @@ class NestThermostat(ClimateDevice):
                 self._eco_temperature[1]:
             # eco_temperature is always a low, high tuple
             return self._eco_temperature[1]
-        if self._mode == STATE_HEAT_COOL:
+        if self._mode == NEST_MODE_HEAT_COOL:
             return self._target_temperature[1]
         return None
 
@@ -159,7 +159,7 @@ class NestThermostat(ClimateDevice):
         """Set new target temperature."""
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if self._mode == STATE_HEAT_COOL:
+        if self._mode == NEST_MODE_HEAT_COOL:
             if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
         else:
@@ -172,7 +172,7 @@ class NestThermostat(ClimateDevice):
         if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             device_mode = operation_mode
         elif operation_mode == STATE_AUTO:
-            device_mode = STATE_HEAT_COOL
+            device_mode = NEST_MODE_HEAT_COOL
         self.device.mode = device_mode
 
     @property
