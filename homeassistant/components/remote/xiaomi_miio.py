@@ -6,6 +6,7 @@ https://home-assistant.io/components/remote.xiaomi_miio/
 """
 import asyncio
 import logging
+import time
 
 from datetime import timedelta
 
@@ -13,8 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.remote import (
     PLATFORM_SCHEMA, DOMAIN, ATTR_NUM_REPEATS, ATTR_DELAY_SECS,
-    DEFAULT_DELAY_SECS)
-from homeassistant.helpers.entity import Entity
+    DEFAULT_DELAY_SECS, RemoteDevice)
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT,
     ATTR_ENTITY_ID, ATTR_HIDDEN, CONF_COMMAND)
@@ -152,7 +152,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                                  schema=LEARN_COMMAND_SCHEMA)
 
 
-class XiaomiMiioRemote(Entity):
+class XiaomiMiioRemote(RemoteDevice):
     """Representation of a Xiaomi Miio Remote device."""
 
     def __init__(self, friendly_name, device,
@@ -228,15 +228,13 @@ class XiaomiMiioRemote(Entity):
                       "please use 'remote.send_command' to send commands.")
 
     # pylint: enable=R0201
-    @asyncio.coroutine
     def _send_command(self, payload):
         """Send a command."""
         from miio import DeviceException
 
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
-            yield from self.hass.async_add_job(
-                self.device.play, payload, None)
+            self.device.play(payload, None)
             return True
         except DeviceException as ex:
             _LOGGER.error(
@@ -244,8 +242,7 @@ class XiaomiMiioRemote(Entity):
                 payload, ex)
             return False
 
-    @asyncio.coroutine
-    def async_send_command(self, command, **kwargs):
+    def send_command(self, command, **kwargs):
         """Wrapper for _send_command."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
 
@@ -255,7 +252,7 @@ class XiaomiMiioRemote(Entity):
             for payload in command:
                 if payload in self._commands:
                     for local_payload in self._commands[payload][CONF_COMMAND]:
-                        yield from self._send_command(local_payload)
+                        self._send_command(local_payload)
                 else:
-                    yield from self._send_command(payload)
-                yield from asyncio.sleep(delay, loop=self.hass.loop)
+                    self._send_command(payload)
+                time.sleep(delay)
