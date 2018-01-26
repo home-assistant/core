@@ -207,7 +207,7 @@ class DemoClimate(ClimateDevice):
         self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
-        """Turn auxillary heater on."""
+        """Turn auxiliary heater on."""
         self._aux = True
         self.schedule_update_ha_state()
 

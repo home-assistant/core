@@ -133,7 +133,7 @@ def async_setup(hass, config):
             # have been processed. If a service does not exist it causes a 10
             # second delay while we're blocking waiting for a response.
             # But services can be registered on other HA instances that are
-            # listening to the bus too. So as a in between solution, we'll
+            # listening to the bus too. So as an in between solution, we'll
             # block only if the service is defined in the current HA instance.
             blocking = hass.services.has_service(domain, service.service)
 

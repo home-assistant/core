@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                       sensor_type))
 
         else:
-            # create an sensor for each zone managed by faucet
+            # create a sensor for each zone managed by faucet
             for zone in raincloud.controller.faucet.zones:
                 sensors.append(RainCloudBinarySensor(zone, sensor_type))
 

@@ -390,7 +390,7 @@ class RflinkCommand(RflinkDevice):
         """Cancel queued signal repetition commands.
 
         For example when user changed state while repetitions are still
-        queued for broadcast. Or when a incoming Rflink command (remote
+        queued for broadcast. Or when an incoming Rflink command (remote
         switch) changes the state.
         """
         # cancel any outstanding tasks from the previous state change

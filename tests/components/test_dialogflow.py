@@ -435,7 +435,7 @@ class TestDialogflow(unittest.TestCase):
         self.assertEqual("virgo", call.data.get("hello"))
 
     def test_intent_with_no_action(self):
-        """Test a intent with no defined action."""
+        """Test an intent with no defined action."""
         data = {
             "id": REQUEST_ID,
             "timestamp": REQUEST_TIMESTAMP,
@@ -480,7 +480,7 @@ class TestDialogflow(unittest.TestCase):
             "You have not defined an action in your Dialogflow intent.", text)
 
     def test_intent_with_unknown_action(self):
-        """Test a intent with an action not defined in the conf."""
+        """Test an intent with an action not defined in the conf."""
         data = {
             "id": REQUEST_ID,
             "timestamp": REQUEST_TIMESTAMP,

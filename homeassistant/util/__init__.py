@@ -227,7 +227,7 @@ class OrderedSet(MutableSet):
         return '%s(%r)' % (self.__class__.__name__, list(self))
 
     def __eq__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)

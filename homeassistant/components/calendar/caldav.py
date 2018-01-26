@@ -174,7 +174,7 @@ class WebDavCalendarData(object):
 
     @staticmethod
     def is_matching(vevent, search):
-        """Return if the event matches the filter critera."""
+        """Return if the event matches the filter criteria."""
         if search is None:
             return True
 
