@@ -6,16 +6,17 @@ https://home-assistant.io/components/media_player.spotify/
 """
 import logging
 from datetime import timedelta
+from random import SystemRandom
 
 import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
-    SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+    ATTR_MEDIA_SHUFFLE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -27,6 +28,7 @@ REQUIREMENTS = ['https://github.com/happyleavesaoc/spotipy/'
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
+_RND = SystemRandom()
 
 SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
@@ -243,18 +245,31 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
-        kwargs = {}
+        shuffle = kwargs.get(ATTR_MEDIA_SHUFFLE)
+        play_args = {}
         if media_type == MEDIA_TYPE_MUSIC:
-            kwargs['uris'] = [media_id]
+            play_args['uris'] = [media_id]
+            if shuffle:
+                _LOGGER.error("ignoring shuffle for media_type music")
+                shuffle = False
         elif media_type == MEDIA_TYPE_PLAYLIST:
-            kwargs['context_uri'] = media_id
+            play_args['context_uri'] = media_id
+            if shuffle:
+                _, _, playlist_user, _, playlist_id = media_id.split(':')
+                playlist_data = self._player.user_playlist(
+                    playlist_user, playlist_id, fields='tracks')
+                playlist_total = playlist_data['tracks']['total']
+                play_args['offset'] = {'position':
+                                       _RND.randint(0, playlist_total - 1)}
         else:
             _LOGGER.error("media type %s is not supported", media_type)
             return
         if not media_id.startswith('spotify:'):
             _LOGGER.error("media id must be spotify uri")
             return
-        self._player.start_playback(**kwargs)
+        self._player.start_playback(**play_args)
+        if shuffle:
+            self.set_shuffle(True)
 
     @property
     def name(self):
