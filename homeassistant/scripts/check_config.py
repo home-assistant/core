@@ -13,7 +13,7 @@ from homeassistant import bootstrap, loader, setup, config as config_util
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.0.1',)
+REQUIREMENTS = ('colorlog==3.1.2',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 

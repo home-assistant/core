@@ -176,7 +176,7 @@ coinbase==2.0.6
 coinmarketcap==4.1.2
 
 # homeassistant.scripts.check_config
-colorlog==3.0.1
+colorlog==3.1.2
 
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
