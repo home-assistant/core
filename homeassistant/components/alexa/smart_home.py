@@ -34,43 +34,268 @@ CONF_DISPLAY_CATEGORIES = 'display_categories'
 
 HANDLERS = Registry()
 
-MAPPING_COMPONENT = {
-    alert.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
-    automation.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
-    cover.DOMAIN: [
-        'DOOR', ('Alexa.PowerController',), {
-            cover.SUPPORT_SET_POSITION: 'Alexa.PercentageController',
-        }
-    ],
-    fan.DOMAIN: [
-        'OTHER', ('Alexa.PowerController',), {
-            fan.SUPPORT_SET_SPEED: 'Alexa.PercentageController',
-        }
-    ],
-    group.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
-    input_boolean.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
-    light.DOMAIN: [
-        'LIGHT', ('Alexa.PowerController',), {
-            light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController',
-            light.SUPPORT_RGB_COLOR: 'Alexa.ColorController',
-            light.SUPPORT_XY_COLOR: 'Alexa.ColorController',
-            light.SUPPORT_COLOR_TEMP: 'Alexa.ColorTemperatureController',
-        }
-    ],
-    lock.DOMAIN: ['SMARTLOCK', ('Alexa.LockController',), None],
-    media_player.DOMAIN: [
-        'TV', ('Alexa.PowerController',), {
-            media_player.SUPPORT_VOLUME_SET: 'Alexa.Speaker',
-            media_player.SUPPORT_PLAY: 'Alexa.PlaybackController',
-            media_player.SUPPORT_PAUSE: 'Alexa.PlaybackController',
-            media_player.SUPPORT_STOP: 'Alexa.PlaybackController',
-            media_player.SUPPORT_NEXT_TRACK: 'Alexa.PlaybackController',
-            media_player.SUPPORT_PREVIOUS_TRACK: 'Alexa.PlaybackController',
-        }
-    ],
-    scene.DOMAIN: ['ACTIVITY_TRIGGER', ('Alexa.SceneController',), None],
-    script.DOMAIN: ['OTHER', ('Alexa.PowerController',), None],
-    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
+
+class _DisplayCategory(object):
+    """Possible display categories for Discovery response.
+
+    https://developer.amazon.com/docs/device-apis/alexa-discovery.html#display-categories
+    """
+
+    # Describes a combination of devices set to a specific state, when the
+    # state change must occur in a specific order. For example, a "watch
+    # Neflix" scene might require the: 1. TV to be powered on & 2. Input set to
+    # HDMI1.    Applies to Scenes
+    ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
+
+    # Indicates media devices with video or photo capabilities.
+    CAMERA = "CAMERA"
+
+    # Indicates a door.
+    DOOR = "DOOR"
+
+    # Indicates light sources or fixtures.
+    LIGHT = "LIGHT"
+
+    # An endpoint that cannot be described in on of the other categories.
+    OTHER = "OTHER"
+
+    # Describes a combination of devices set to a specific state, when the
+    # order of the state change is not important. For example a bedtime scene
+    # might include turning off lights and lowering the thermostat, but the
+    # order is unimportant.    Applies to Scenes
+    SCENE_TRIGGER = "SCENE_TRIGGER"
+
+    # Indicates an endpoint that locks.
+    SMARTLOCK = "SMARTLOCK"
+
+    # Indicates modules that are plugged into an existing electrical outlet.
+    # Can control a variety of devices.
+    SMARTPLUG = "SMARTPLUG"
+
+    # Indicates the endpoint is a speaker or speaker system.
+    SPEAKER = "SPEAKER"
+
+    # Indicates in-wall switches wired to the electrical system.  Can control a
+    # variety of devices.
+    SWITCH = "SWITCH"
+
+    # Indicates endpoints that report the temperature only.
+    TEMPERATURE_SENSOR = "TEMPERATURE_SENSOR"
+
+    # Indicates endpoints that control temperature, stand-alone air
+    # conditioners, or heaters with direct temperature control.
+    THERMOSTAT = "THERMOSTAT"
+
+    # Indicates the endpoint is a television.
+    # pylint: disable=invalid-name
+    TV = "TV"
+
+
+def _capability(interface,
+                version=3,
+                supports_deactivation=None,
+                cap_type='AlexaInterface'):
+    """Return a Smart Home API capability object.
+
+    https://developer.amazon.com/docs/device-apis/alexa-discovery.html#capability-object
+
+    There are some additional fields allowed but not implemented here since
+    we've no use case for them yet:
+
+      - properties.supported
+      - proactively_reported
+      - retrievable
+
+    `supports_deactivation` applies only to scenes.
+    """
+    result = {
+        'type': cap_type,
+        'interface': interface,
+        'version': version,
+    }
+
+    if supports_deactivation is not None:
+        result['supportsDeactivation'] = supports_deactivation
+
+    return result
+
+
+class _EntityCapabilities(object):
+    def __init__(self, config, entity):
+        self.config = config
+        self.entity = entity
+
+    def display_categories(self):
+        """Return a list of display categories."""
+        entity_conf = self.config.entity_config.get(self.entity.entity_id, {})
+        if CONF_DISPLAY_CATEGORIES in entity_conf:
+            return [entity_conf[CONF_DISPLAY_CATEGORIES]]
+        return self.default_display_categories()
+
+    def default_display_categories(self):
+        """Return a list of default display categories.
+
+        This can be overridden by the user in the Home Assistant configuration.
+
+        See also _DisplayCategory.
+        """
+        raise NotImplementedError
+
+    def capabilities(self):
+        """Return a list of supported capabilities.
+
+        You might find _capability() useful.
+        """
+        raise NotImplementedError
+
+
+class _GenericCapabilities(_EntityCapabilities):
+    """A generic, on/off device.
+
+    The choice of last resort.
+    """
+
+    def default_display_categories(self):
+        return [_DisplayCategory.OTHER]
+
+    def capabilities(self):
+        return [_capability('Alexa.PowerController')]
+
+
+class _SwitchCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.SWITCH]
+
+    def capabilities(self):
+        return [_capability('Alexa.PowerController')]
+
+
+class _CoverCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.DOOR]
+
+    def capabilities(self):
+        capabilities = [_capability('Alexa.PowerController')]
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & cover.SUPPORT_SET_POSITION:
+            capabilities.append(_capability('Alexa.PercentageController'))
+        return capabilities
+
+
+class _LightCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.LIGHT]
+
+    def capabilities(self):
+        capabilities = [_capability('Alexa.PowerController')]
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & light.SUPPORT_BRIGHTNESS:
+            capabilities.append(_capability('Alexa.BrightnessController'))
+        if supported & light.SUPPORT_RGB_COLOR:
+            capabilities.append(_capability('Alexa.ColorController'))
+        if supported & light.SUPPORT_XY_COLOR:
+            capabilities.append(_capability('Alexa.ColorController'))
+        if supported & light.SUPPORT_COLOR_TEMP:
+            capabilities.append(
+                _capability('Alexa.ColorTemperatureController'))
+        return capabilities
+
+
+class _FanCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.OTHER]
+
+    def capabilities(self):
+        capabilities = [_capability('Alexa.PowerController')]
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & fan.SUPPORT_SET_SPEED:
+            capabilities.append(_capability('Alexa.PercentageController'))
+        return capabilities
+
+
+class _LockCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.SMARTLOCK]
+
+    def capabilities(self):
+        return [_capability('Alexa.LockController')]
+
+
+class _MediaPlayerCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.TV]
+
+    def capabilities(self):
+        capabilities = [_capability('Alexa.PowerController')]
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & media_player.SUPPORT_VOLUME_SET:
+            capabilities.append(_capability('Alexa.Speaker'))
+
+        playback_features = (media_player.SUPPORT_PLAY |
+                             media_player.SUPPORT_PAUSE |
+                             media_player.SUPPORT_STOP |
+                             media_player.SUPPORT_NEXT_TRACK |
+                             media_player.SUPPORT_PREVIOUS_TRACK)
+        if supported & playback_features:
+            capabilities.append(_capability('Alexa.PlaybackController'))
+
+        return capabilities
+
+
+class _SceneCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.SCENE_TRIGGER]
+
+    def capabilities(self):
+        return [_capability('Alexa.SceneController')]
+
+
+class _ScriptCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.ACTIVITY_TRIGGER]
+
+    def capabilities(self):
+        can_cancel = bool(self.entity.attributes.get('can_cancel'))
+        return [_capability('Alexa.SceneController',
+                            supports_deactivation=can_cancel)]
+
+
+class _GroupCapabilities(_EntityCapabilities):
+    def default_display_categories(self):
+        return [_DisplayCategory.SCENE_TRIGGER]
+
+    def capabilities(self):
+        return [_capability('Alexa.SceneController',
+                            supports_deactivation=True)]
+
+
+class _UnknownEntityDomainError(Exception):
+    pass
+
+
+def _capabilities_for_entity(config, entity):
+    """Return an _EntityCapabilities appropriate for given entity.
+
+    raises _UnknownEntityDomainError if the given domain is unsupported.
+    """
+    if entity.domain not in _CAPABILITIES_FOR_DOMAIN:
+        raise _UnknownEntityDomainError()
+    return _CAPABILITIES_FOR_DOMAIN[entity.domain](config, entity)
+
+
+_CAPABILITIES_FOR_DOMAIN = {
+    alert.DOMAIN: _GenericCapabilities,
+    automation.DOMAIN: _GenericCapabilities,
+    cover.DOMAIN: _CoverCapabilities,
+    fan.DOMAIN: _FanCapabilities,
+    group.DOMAIN: _GroupCapabilities,
+    input_boolean.DOMAIN: _GenericCapabilities,
+    light.DOMAIN: _LightCapabilities,
+    lock.DOMAIN: _LockCapabilities,
+    media_player.DOMAIN: _MediaPlayerCapabilities,
+    scene.DOMAIN: _SceneCapabilities,
+    script.DOMAIN: _ScriptCapabilities,
+    switch.DOMAIN: _SwitchCapabilities,
 }
 
 
@@ -158,6 +383,7 @@ class SmartHomeView(http.HomeAssistantView):
 
         response = yield from async_handle_message(
             hass, self.smart_home_config, message)
+        _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)
 
 
@@ -240,9 +466,9 @@ def async_api_discovery(hass, config, request):
                           entity.entity_id)
             continue
 
-        class_data = MAPPING_COMPONENT.get(entity.domain)
-
-        if not class_data:
+        try:
+            entity_capabilities = _capabilities_for_entity(config, entity)
+        except _UnknownEntityDomainError:
             continue
 
         entity_conf = config.entity_config.get(entity.entity_id, {})
@@ -255,40 +481,16 @@ def async_api_discovery(hass, config, request):
             scene_fmt = '{} (Scene connected via Home Assistant)'
             description = scene_fmt.format(description)
 
-        display_categories = entity_conf.get(
-            CONF_DISPLAY_CATEGORIES, class_data[0])
-
         endpoint = {
-            'displayCategories': [display_categories],
+            'displayCategories': entity_capabilities.display_categories(),
             'additionalApplianceDetails': {},
             'endpointId': entity.entity_id.replace('.', '#'),
             'friendlyName': friendly_name,
             'description': description,
             'manufacturerName': 'Home Assistant',
         }
-        actions = set()
 
-        # static actions
-        if class_data[1]:
-            actions |= set(class_data[1])
-
-        # dynamic actions
-        if class_data[2]:
-            supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            for feature, action_name in class_data[2].items():
-                if feature & supported > 0:
-                    actions.add(action_name)
-
-        # Write action into capabilities
-        capabilities = []
-        for action in actions:
-            capabilities.append({
-                'type': 'AlexaInterface',
-                'interface': action,
-                'version': 3,
-            })
-
-        endpoint['capabilities'] = capabilities
+        endpoint['capabilities'] = entity_capabilities.capabilities()
         discovery_endpoints.append(endpoint)
 
     return api_message(
@@ -321,8 +523,6 @@ def extract_entity(funct):
 def async_api_turn_on(hass, config, request, entity):
     """Process a turn on request."""
     domain = entity.domain
-    if entity.domain == group.DOMAIN:
-        domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
     if entity.domain == cover.DOMAIN:
@@ -460,7 +660,7 @@ def async_api_decrease_color_temp(hass, config, request, entity):
 @extract_entity
 @asyncio.coroutine
 def async_api_increase_color_temp(hass, config, request, entity):
-    """Process a increase color temperature request."""
+    """Process an increase color temperature request."""
     current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
     min_mireds = int(entity.attributes.get(light.ATTR_MIN_MIREDS))
 
@@ -477,8 +677,13 @@ def async_api_increase_color_temp(hass, config, request, entity):
 @extract_entity
 @asyncio.coroutine
 def async_api_activate(hass, config, request, entity):
-    """Process a activate request."""
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+    """Process an activate request."""
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
+    else:
+        domain = entity.domain
+
+    yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False)
 
@@ -490,6 +695,33 @@ def async_api_activate(hass, config, request, entity):
     return api_message(
         request,
         name='ActivationStarted',
+        namespace='Alexa.SceneController',
+        payload=payload,
+    )
+
+
+@HANDLERS.register(('Alexa.SceneController', 'Deactivate'))
+@extract_entity
+@asyncio.coroutine
+def async_api_deactivate(hass, config, request, entity):
+    """Process a deactivate request."""
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
+    else:
+        domain = entity.domain
+
+    yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=False)
+
+    payload = {
+        'cause': {'type': _Cause.VOICE_INTERACTION},
+        'timestamp': '%sZ' % (datetime.utcnow().isoformat(),)
+    }
+
+    return api_message(
+        request,
+        name='DeactivationStarted',
         namespace='Alexa.SceneController',
         payload=payload,
     )
