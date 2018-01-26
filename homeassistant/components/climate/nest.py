@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.nest import DATA_NEST
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
-STATE_ECO = 'eco'
 STATE_HEAT_COOL = 'heat-cool'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
