@@ -96,11 +96,10 @@ class TeleinfoSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        return self._attributes
-
+    def attribution(self):
+        """Return the attribution."""
+        return ATTRIBUTION
+  
     def update(self):
         """Get the latest data from Teleinfo device and updates the state."""
         self._data.update()
