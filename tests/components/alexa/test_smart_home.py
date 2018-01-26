@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 
+from homeassistant.const import TEMP_FAHRENHEIT, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.setup import async_setup_component
 from homeassistant.components import alexa
 from homeassistant.components.alexa import smart_home
@@ -166,13 +167,27 @@ def test_discovery_request(hass):
             'position': 85
         })
 
+    hass.states.async_set(
+        'sensor.test_temp', '59', {
+            'friendly_name': "Test Temp Sensor",
+            'unit_of_measurement': TEMP_FAHRENHEIT,
+        })
+
+    # This sensor measures a quantity not applicable to Alexa, and should not
+    # be discovered.
+    hass.states.async_set(
+        'sensor.test_sickness', '0.1', {
+            'friendly_name': "Test Space Sickness Sensor",
+            'unit_of_measurement': 'garn',
+        })
+
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 16
+    assert len(msg['payload']['endpoints']) == 17
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
 
@@ -332,6 +347,17 @@ def test_discovery_request(hass):
 
             assert 'Alexa.PercentageController' in caps
             assert 'Alexa.PowerController' in caps
+            continue
+
+        if appliance['endpointId'] == 'sensor#test_temp':
+            assert appliance['displayCategories'][0] == 'TEMPERATURE_SENSOR'
+            assert appliance['friendlyName'] == 'Test Temp Sensor'
+            assert len(appliance['capabilities']) == 1
+            capability = appliance['capabilities'][0]
+            assert capability['interface'] == 'Alexa.TemperatureSensor'
+            assert capability['retrievable'] is True
+            properties = capability['properties']
+            assert {'name': 'temperature'} in properties['supported']
             continue
 
         raise AssertionError("Unknown appliance!")
@@ -1168,6 +1194,34 @@ def test_api_mute(hass, domain):
     assert len(call) == 1
     assert call[0].data['entity_id'] == '{}.test'.format(domain)
     assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+def test_api_report_temperature(hass):
+    """Test API ReportState response for a temperature sensor."""
+    request = get_new_request('Alexa', 'ReportState', 'sensor#test')
+
+    # setup test devices
+    hass.states.async_set(
+        'sensor.test', '42', {
+            'friendly_name': 'test sensor',
+            CONF_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
+        })
+
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+    header = msg['event']['header']
+    assert header['namespace'] == 'Alexa'
+    assert header['name'] == 'StateReport'
+
+    properties = msg['context']['properties']
+    assert len(properties) == 1
+    prop = properties[0]
+    assert prop['namespace'] == 'Alexa.TemperatureSensor'
+    assert prop['name'] == 'temperature'
+    assert prop['value'] == {'value': 42.0, 'scale': 'FAHRENHEIT'}
 
 
 @asyncio.coroutine
