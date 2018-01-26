@@ -46,7 +46,8 @@ def setup(hass, config):
             'username': username,
             'password': password,
             'connection_info': data}
-        resp = requests.post(GOALFEED_AUTH_ENDPOINT, post_data).json()
+        resp = requests.post(GOALFEED_AUTH_ENDPOINT, post_data,
+                             timeout=30).json()
 
         channel = pusher.subscribe('private-goals', resp['auth'])
         channel.bind('goalfeed_goal', goal_handler)
