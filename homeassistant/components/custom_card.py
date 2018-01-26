@@ -73,7 +73,7 @@ def async_setup(hass, config):
             card_configs[entity_id] = config
 
         hass.states.async_set(entity_id, state, attributes)
-        
+
     hass.http.register_view(CustomCardView(card_configs))
 
     return True
@@ -91,21 +91,20 @@ class CustomCardView(http.HomeAssistantView):
     @http.RequestDataValidator(vol.Schema({
         vol.Required('entity_id'): str,
     }))
-
     @asyncio.coroutine
     def post(self, request, data):
         """Handle a config request."""
         try:
             config = self._card_configs[data['entity_id']]
         except KeyError:
-            res = { "config": None }
+            res = {"config": None}
             state = 400
         else:
-            res = { "config": config }
+            res = {"config": config}
             state = 200
 
         return web.Response(
-            body = str(res),
-            status = state,
-            content_type = 'application/json',
+            body=str(res),
+            status=state,
+            content_type='application/json',
         )
