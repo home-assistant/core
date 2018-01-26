@@ -23,7 +23,10 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180126.0', 'user-agents==1.1.0']
+FRONTEND_VERSION = '20180126.0'
+
+REQUIREMENTS = ['home-assistant-frontend=={}'.format(FRONTEND_VERSION),
+                'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -497,12 +500,20 @@ class IndexView(HomeAssistantView):
 
         extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
 
+        version = 'dev'
+        if self.repo_path is None:
+            if latest:
+                version = 'latest'
+            else:
+                version = 'es5'
+
         resp = template.render(
             no_auth=no_auth,
             panel_url=panel_url,
             panels=hass.data[DATA_PANELS],
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[extra_key],
+            frontend_version='{}.{}'.format(FRONTEND_VERSION, version)
         )
 
         return web.Response(text=resp, content_type='text/html')
