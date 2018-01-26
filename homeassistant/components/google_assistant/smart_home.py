@@ -33,7 +33,7 @@ from .const import (
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE, TRAIT_TEMPERATURE_SETTING,
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
-    CONF_ALIASES, CLIMATE_SUPPORTED_MODES
+    CONF_ALIASES, CLIMATE_SUPPORTED_MODES, CLIMATE_MODE_HEATCOOL
 )
 
 HANDLERS = Registry()
@@ -147,12 +147,15 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
                                 entity.attributes.get(light.ATTR_MIN_MIREDS))))
 
     if entity.domain == climate.DOMAIN:
-        modes = ','.join(
-            m.lower() for m in entity.attributes.get(
-                climate.ATTR_OPERATION_LIST, [])
-            if m.lower() in CLIMATE_SUPPORTED_MODES)
+        modes = []
+        for mode in entity.attributes.get(climate.ATTR_OPERATION_LIST, []):
+            if mode in CLIMATE_SUPPORTED_MODES:
+                modes.append(mode)
+            elif mode == climate.STATE_AUTO:
+                modes.append(CLIMATE_MODE_HEATCOOL)
+
         device['attributes'] = {
-            'availableThermostatModes': modes,
+            'availableThermostatModes': ','.join(modes),
             'thermostatTemperatureUnit':
             'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
@@ -323,9 +326,9 @@ def determine_service(
     # special climate handling
     if domain == climate.DOMAIN:
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            service_data['temperature'] = units.temperature(
-                params.get('thermostatTemperatureSetpoint', 25),
-                TEMP_CELSIUS)
+            service_data['temperature'] = \
+                units.temperature(
+                    params['thermostatTemperatureSetpoint'], TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             service_data['target_temp_high'] = units.temperature(
@@ -336,8 +339,12 @@ def determine_service(
                 TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_SET_MODE:
-            service_data['operation_mode'] = params.get(
-                'thermostatMode', 'off')
+            mode = params['thermostatMode']
+
+            if mode == CLIMATE_MODE_HEATCOOL:
+                mode = climate.STATE_AUTO
+
+            service_data['operation_mode'] = mode
             return (climate.SERVICE_SET_OPERATION_MODE, service_data)
 
     if command == COMMAND_BRIGHTNESS:
