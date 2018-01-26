@@ -4,6 +4,7 @@ import asyncio
 import json
 
 import pytest
+
 from homeassistant import const
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
