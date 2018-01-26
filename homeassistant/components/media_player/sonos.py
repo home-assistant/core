@@ -8,26 +8,24 @@ import asyncio
 import datetime
 import functools as ft
 import logging
-from os import path
 import socket
 import urllib
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP,
-    SUPPORT_PLAY)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
-    CONF_HOSTS, ATTR_TIME)
-from homeassistant.config import load_yaml_config_file
+    ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['SoCo==0.12']
+REQUIREMENTS = ['SoCo==0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +41,7 @@ _REQUESTS_LOGGER.setLevel(logging.ERROR)
 SUPPORT_SONOS = SUPPORT_STOP | SUPPORT_PAUSE | SUPPORT_VOLUME_SET |\
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_SHUFFLE_SET
 
 SERVICE_JOIN = 'sonos_join'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -52,6 +50,7 @@ SERVICE_RESTORE = 'sonos_restore'
 SERVICE_SET_TIMER = 'sonos_set_sleep_timer'
 SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
+SERVICE_SET_OPTION = 'sonos_set_option'
 
 DATA_SONOS = 'sonos'
 
@@ -69,6 +68,8 @@ ATTR_ENABLED = 'enabled'
 ATTR_INCLUDE_LINKED_ZONES = 'include_linked_zones'
 ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
+ATTR_NIGHT_SOUND = 'night_sound'
+ATTR_SPEECH_ENHANCE = 'speech_enhance'
 
 ATTR_IS_COORDINATOR = 'is_coordinator'
 
@@ -105,6 +106,11 @@ SONOS_UPDATE_ALARM_SCHEMA = SONOS_SCHEMA.extend({
     vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
 })
 
+SONOS_SET_OPTION_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
+    vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sonos platform."""
@@ -120,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info:
         player = soco.SoCo(discovery_info.get('host'))
 
-        # if device already exists by config
+        # If device already exists by config
         if player.uid in [x.unique_id for x in hass.data[DATA_SONOS]]:
             return
 
@@ -140,7 +146,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hosts = hosts.split(',') if isinstance(hosts, str) else hosts
             players = []
             for host in hosts:
-                players.append(soco.SoCo(socket.gethostbyname(host)))
+                try:
+                    players.append(soco.SoCo(socket.gethostbyname(host)))
+                except OSError:
+                    _LOGGER.warning("Failed to initialize '%s'", host)
 
         if not players:
             players = soco.discover(
@@ -158,10 +167,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices(coordinators, True)
         if slaves:
             add_devices(slaves, True)
-        _LOGGER.info("Added %s Sonos speakers", len(players))
-
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
+        _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
         """Handle for services."""
@@ -189,37 +195,42 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device.clear_sleep_timer()
             elif service.service == SERVICE_UPDATE_ALARM:
                 device.update_alarm(**service.data)
+            elif service.service == SERVICE_SET_OPTION:
+                device.update_option(**service.data)
 
             device.schedule_update_ha_state(True)
 
     hass.services.register(
         DOMAIN, SERVICE_JOIN, service_handle,
-        descriptions.get(SERVICE_JOIN), schema=SONOS_JOIN_SCHEMA)
+        schema=SONOS_JOIN_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_UNJOIN, service_handle,
-        descriptions.get(SERVICE_UNJOIN), schema=SONOS_SCHEMA)
+        schema=SONOS_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_SNAPSHOT, service_handle,
-        descriptions.get(SERVICE_SNAPSHOT), schema=SONOS_STATES_SCHEMA)
+        schema=SONOS_STATES_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_RESTORE, service_handle,
-        descriptions.get(SERVICE_RESTORE), schema=SONOS_STATES_SCHEMA)
+        schema=SONOS_STATES_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_TIMER, service_handle,
-        descriptions.get(SERVICE_SET_TIMER), schema=SONOS_SET_TIMER_SCHEMA)
+        schema=SONOS_SET_TIMER_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_CLEAR_TIMER, service_handle,
-        descriptions.get(SERVICE_CLEAR_TIMER), schema=SONOS_SCHEMA)
+        schema=SONOS_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_UPDATE_ALARM, service_handle,
-        descriptions.get(SERVICE_UPDATE_ALARM),
         schema=SONOS_UPDATE_ALARM_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_OPTION, service_handle,
+        schema=SONOS_SET_OPTION_SCHEMA)
 
 
 def _parse_timespan(timespan):
@@ -231,10 +242,11 @@ def _parse_timespan(timespan):
         reversed(timespan.split(':'))))
 
 
-class _ProcessSonosEventQueue():
+class _ProcessSonosEventQueue(object):
     """Queue like object for dispatching sonos events."""
 
     def __init__(self, sonos_device):
+        """Initialize Sonos event queue."""
         self._sonos_device = sonos_device
 
     def put(self, item, block=True, timeout=None):
@@ -252,27 +264,14 @@ def _get_entity_from_soco(hass, soco):
     raise ValueError("No entity for SoCo device")
 
 
-def soco_error(funct):
-    """Catch soco exceptions."""
-    @ft.wraps(funct)
-    def wrapper(*args, **kwargs):
-        """Wrap for all soco exception."""
-        from soco.exceptions import SoCoException
-        try:
-            return funct(*args, **kwargs)
-        except SoCoException as err:
-            _LOGGER.error("Error on %s with %s", funct.__name__, err)
-    return wrapper
-
-
-def soco_filter_upnperror(errorcodes=None):
-    """Filter out specified UPnP errors from logs."""
+def soco_error(errorcodes=None):
+    """Filter out specified UPnP errors from logs and avoid exceptions."""
     def decorator(funct):
-        """Decorator function."""
+        """Decorate functions."""
         @ft.wraps(funct)
         def wrapper(*args, **kwargs):
             """Wrap for all soco UPnP exception."""
-            from soco.exceptions import SoCoUPnPException
+            from soco.exceptions import SoCoUPnPException, SoCoException
 
             # Temporarily disable SoCo logging because it will log the
             # UPnP exception otherwise
@@ -284,7 +283,9 @@ def soco_filter_upnperror(errorcodes=None):
                 if err.error_code in errorcodes:
                     pass
                 else:
-                    raise
+                    _LOGGER.error("Error on %s with %s", funct.__name__, err)
+            except SoCoException as err:
+                _LOGGER.error("Error on %s with %s", funct.__name__, err)
             finally:
                 _SOCO_SERVICES_LOGGER.disabled = False
 
@@ -331,8 +332,11 @@ class SonosDevice(MediaPlayerDevice):
         self._support_previous_track = False
         self._support_next_track = False
         self._support_play = False
+        self._support_shuffle_set = True
         self._support_stop = False
         self._support_pause = False
+        self._night_sound = None
+        self._speech_enhance = None
         self._current_track_uri = None
         self._current_track_is_radio_stream = False
         self._queue = None
@@ -450,8 +454,11 @@ class SonosDevice(MediaPlayerDevice):
             self._support_previous_track = False
             self._support_next_track = False
             self._support_play = False
+            self._support_shuffle_set = False
             self._support_stop = False
             self._support_pause = False
+            self._night_sound = None
+            self._speech_enhance = None
             self._is_playing_tv = False
             self._is_playing_line_in = False
             self._source_name = None
@@ -524,6 +531,9 @@ class SonosDevice(MediaPlayerDevice):
         media_position_updated_at = None
         source_name = None
 
+        night_sound = self._player.night_mode
+        speech_enhance = self._player.dialog_mode
+
         is_radio_stream = \
             current_media_uri.startswith('x-sonosapi-stream:') or \
             current_media_uri.startswith('x-rincon-mp3radio:')
@@ -536,6 +546,7 @@ class SonosDevice(MediaPlayerDevice):
             support_play = False
             support_stop = True
             support_pause = False
+            support_shuffle_set = False
 
             if is_playing_tv:
                 media_artist = SUPPORT_SOURCE_TV
@@ -558,6 +569,7 @@ class SonosDevice(MediaPlayerDevice):
             support_play = True
             support_stop = True
             support_pause = False
+            support_shuffle_set = False
 
             source_name = 'Radio'
             # Check if currently playing radio station is in favorites
@@ -622,6 +634,7 @@ class SonosDevice(MediaPlayerDevice):
             support_play = True
             support_stop = True
             support_pause = True
+            support_shuffle_set = True
 
             position_info = self._player.avTransport.GetPositionInfo(
                 [('InstanceID', 0),
@@ -694,8 +707,11 @@ class SonosDevice(MediaPlayerDevice):
         self._support_previous_track = support_previous_track
         self._support_next_track = support_next_track
         self._support_play = support_play
+        self._support_shuffle_set = support_shuffle_set
         self._support_stop = support_stop
         self._support_pause = support_pause
+        self._night_sound = night_sound
+        self._speech_enhance = speech_enhance
         self._is_playing_tv = is_playing_tv
         self._is_playing_line_in = is_playing_line_in
         self._source_name = source_name
@@ -761,6 +777,11 @@ class SonosDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Return true if volume is muted."""
         return self._player_volume_muted
+
+    @property
+    def shuffle(self):
+        """Shuffling state."""
+        return True if self._player.play_mode == 'SHUFFLE' else False
 
     @property
     def media_content_id(self):
@@ -835,6 +856,16 @@ class SonosDevice(MediaPlayerDevice):
         return self._media_title
 
     @property
+    def night_sound(self):
+        """Get status of Night Sound."""
+        return self._night_sound
+
+    @property
+    def speech_enhance(self):
+        """Get status of Speech Enhancement."""
+        return self._speech_enhance
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._coordinator:
@@ -850,7 +881,8 @@ class SonosDevice(MediaPlayerDevice):
 
         if not self._support_play:
             supported = supported ^ SUPPORT_PLAY
-
+        if not self._support_shuffle_set:
+            supported = supported ^ SUPPORT_SHUFFLE_SET
         if not self._support_stop:
             supported = supported ^ SUPPORT_STOP
 
@@ -859,27 +891,32 @@ class SonosDevice(MediaPlayerDevice):
 
         return supported
 
-    @soco_error
+    @soco_error()
     def volume_up(self):
         """Volume up media player."""
         self._player.volume += self.volume_increment
 
-    @soco_error
+    @soco_error()
     def volume_down(self):
         """Volume down media player."""
         self._player.volume -= self.volume_increment
 
-    @soco_error
+    @soco_error()
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._player.volume = str(int(volume * 100))
 
-    @soco_error
+    @soco_error()
+    def set_shuffle(self, shuffle):
+        """Enable/Disable shuffle mode."""
+        self._player.play_mode = 'SHUFFLE' if shuffle else 'NORMAL'
+
+    @soco_error()
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self._player.mute = mute
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def select_source(self, source):
         """Select input source."""
@@ -932,7 +969,6 @@ class SonosDevice(MediaPlayerDevice):
 
         self._player.stop()
         self._player.clear_queue()
-        self._player.play_mode = 'NORMAL'
         self._player.add_to_queue(didl)
 
     @property
@@ -962,64 +998,61 @@ class SonosDevice(MediaPlayerDevice):
 
         return self._source_name
 
-    @soco_error
+    @soco_error()
     def turn_off(self):
         """Turn off media player."""
         if self._support_stop:
             self.media_stop()
 
-    @soco_error
-    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_play(self):
         """Send play command."""
         self._player.play()
 
-    @soco_error
-    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_stop(self):
         """Send stop command."""
         self._player.stop()
 
-    @soco_error
-    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_pause(self):
         """Send pause command."""
         self._player.pause()
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def media_next_track(self):
         """Send next track command."""
         self._player.next()
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def media_previous_track(self):
         """Send next track command."""
         self._player.previous()
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def media_seek(self, position):
         """Send seek command."""
         self._player.seek(str(datetime.timedelta(seconds=int(position))))
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def clear_playlist(self):
         """Clear players playlist."""
         self._player.clear_queue()
 
-    @soco_error
+    @soco_error()
     def turn_on(self):
         """Turn the media player on."""
         if self.support_play:
             self.media_play()
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def play_media(self, media_type, media_id, **kwargs):
         """
@@ -1038,7 +1071,7 @@ class SonosDevice(MediaPlayerDevice):
         else:
             self._player.play_uri(media_id)
 
-    @soco_error
+    @soco_error()
     def join(self, master):
         """Join the player to a group."""
         coord = [device for device in self.hass.data[DATA_SONOS]
@@ -1053,13 +1086,13 @@ class SonosDevice(MediaPlayerDevice):
         else:
             _LOGGER.error("Master not found %s", master)
 
-    @soco_error
+    @soco_error()
     def unjoin(self):
         """Unjoin the player from a group."""
         self._player.unjoin()
         self._coordinator = None
 
-    @soco_error
+    @soco_error()
     def snapshot(self, with_group=True):
         """Snapshot the player."""
         from soco.snapshot import Snapshot
@@ -1074,7 +1107,7 @@ class SonosDevice(MediaPlayerDevice):
         else:
             self._snapshot_group = None
 
-    @soco_error
+    @soco_error()
     def restore(self, with_group=True):
         """Restore snapshot for the player."""
         from soco.exceptions import SoCoException
@@ -1124,19 +1157,19 @@ class SonosDevice(MediaPlayerDevice):
                 if s_dev != old.coordinator:
                     s_dev.join(old.coordinator)
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
         self._player.set_sleep_timer(sleep_time)
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def clear_sleep_timer(self):
         """Clear the timer on the player."""
         self._player.set_sleep_timer(None)
 
-    @soco_error
+    @soco_error()
     @soco_coordinator
     def update_alarm(self, **data):
         """Set the alarm clock on the player."""
@@ -1160,7 +1193,24 @@ class SonosDevice(MediaPlayerDevice):
             a.include_linked_zones = data[ATTR_INCLUDE_LINKED_ZONES]
         a.save()
 
+    @soco_error()
+    def update_option(self, **data):
+        """Modify playback options."""
+        if ATTR_NIGHT_SOUND in data and self.night_sound is not None:
+            self.soco.night_mode = data[ATTR_NIGHT_SOUND]
+
+        if ATTR_SPEECH_ENHANCE in data and self.speech_enhance is not None:
+            self.soco.dialog_mode = data[ATTR_SPEECH_ENHANCE]
+
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {ATTR_IS_COORDINATOR: self.is_coordinator}
+        attributes = {ATTR_IS_COORDINATOR: self.is_coordinator}
+
+        if self.night_sound is not None:
+            attributes[ATTR_NIGHT_SOUND] = self.night_sound
+
+        if self.speech_enhance is not None:
+            attributes[ATTR_SPEECH_ENHANCE] = self.speech_enhance
+
+        return attributes

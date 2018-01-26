@@ -34,15 +34,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api = xbox_api.XboxApi(config.get(CONF_API_KEY))
     devices = []
 
+    # request personal profile to check api connection
+    profile = api.get_profile()
+    if profile.get('error_code') is not None:
+        _LOGGER.error("Can't setup XboxAPI connection. Check your account or "
+                      " api key on xboxapi.com. Code: %s Description: %s ",
+                      profile.get('error_code', STATE_UNKNOWN),
+                      profile.get('error_message', STATE_UNKNOWN))
+        return
+
     for xuid in config.get(CONF_XUID):
         new_device = XboxSensor(hass, api, xuid)
         if new_device.success_init:
             devices.append(new_device)
 
     if devices:
-        add_devices(devices)
-    else:
-        return False
+        add_devices(devices, True)
 
 
 class XboxSensor(Entity):
@@ -57,13 +64,18 @@ class XboxSensor(Entity):
         self._api = api
 
         # get profile info
-        profile = self._api.get_user_profile(self._xuid)
+        profile = self._api.get_user_gamercard(self._xuid)
 
-        if profile.get('success', True) and profile.get('code', 0) != 28:
+        if profile.get('success', True) and profile.get('code') is None:
             self.success_init = True
-            self._gamertag = profile.get('Gamertag')
-            self._picture = profile.get('GameDisplayPicRaw')
+            self._gamertag = profile.get('gamertag')
+            self._picture = profile.get('gamerpicSmallSslImagePath')
         else:
+            _LOGGER.error("Can't get user profile %s. "
+                          "Error Code: %s Description: %s",
+                          self._xuid,
+                          profile.get('code', STATE_UNKNOWN),
+                          profile.get('description', STATE_UNKNOWN))
             self.success_init = False
 
     @property

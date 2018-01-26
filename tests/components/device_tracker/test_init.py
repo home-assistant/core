@@ -123,7 +123,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                   'My device', None, None, False),
             device_tracker.Device(self.hass, True, True, 'your_device',
                                   'AB:01', 'Your device', None, None, False)]
-        device_tracker.DeviceTracker(self.hass, False, True, devices)
+        device_tracker.DeviceTracker(self.hass, False, True, {}, devices)
         _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
             "The only warning call should be duplicates (check DEBUG)"
@@ -137,7 +137,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                   'AB:01', 'My device', None, None, False),
             device_tracker.Device(self.hass, True, True, 'my_device',
                                   None, 'Your device', None, None, False)]
-        device_tracker.DeviceTracker(self.hass, False, True, devices)
+        device_tracker.DeviceTracker(self.hass, False, True, {}, devices)
 
         _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
@@ -299,7 +299,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         vendor_string = 'Raspberry Pi Foundation'
 
         tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), 0, [])
+            self.hass, timedelta(seconds=60), 0, {}, [])
 
         with mock_aiohttp_client() as aioclient_mock:
             aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
@@ -345,6 +345,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         CONF_PLATFORM: 'test',
                         device_tracker.CONF_CONSIDER_HOME: 59,
                     }})
+                self.hass.block_till_done()
 
         self.assertEqual(STATE_HOME,
                          self.hass.states.get('device_tracker.dev1').state)
@@ -586,6 +587,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         CONF_PLATFORM: 'test',
                         device_tracker.CONF_CONSIDER_HOME: 59,
                     }})
+                self.hass.block_till_done()
 
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
@@ -622,7 +624,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_see_failures(self, mock_warning):
         """Test that the device tracker see failures."""
         tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), 0, [])
+            self.hass, timedelta(seconds=60), 0, {}, [])
 
         # MAC is not a string (but added)
         tracker.see(mac=567, host_name="Number MAC")
@@ -654,7 +656,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_picture_and_icon_on_see_discovery(self):
         """Test that picture and icon are set in initial see."""
         tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), False, [])
+            self.hass, timedelta(seconds=60), False, {}, [])
         tracker.see(dev_id=11, picture='pic_url', icon='mdi:icon')
         self.hass.block_till_done()
         config = device_tracker.load_config(self.yaml_devices, self.hass,
@@ -662,6 +664,42 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert len(config) == 1
         assert config[0].icon == 'mdi:icon'
         assert config[0].entity_picture == 'pic_url'
+
+    def test_default_hide_if_away_is_used(self):
+        """Test that default track_new is used."""
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), False,
+            {device_tracker.CONF_AWAY_HIDE: True}, [])
+        tracker.see(dev_id=12)
+        self.hass.block_till_done()
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert len(config) == 1
+        self.assertTrue(config[0].hidden)
+
+    def test_backward_compatibility_for_track_new(self):
+        """Test backward compatibility for track new."""
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), False,
+            {device_tracker.CONF_TRACK_NEW: True}, [])
+        tracker.see(dev_id=13)
+        self.hass.block_till_done()
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert len(config) == 1
+        self.assertFalse(config[0].track)
+
+    def test_old_style_track_new_is_skipped(self):
+        """Test old style config is skipped."""
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), None,
+            {device_tracker.CONF_TRACK_NEW: False}, [])
+        tracker.see(dev_id=14)
+        self.hass.block_till_done()
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert len(config) == 1
+        self.assertFalse(config[0].track)
 
 
 @asyncio.coroutine

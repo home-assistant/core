@@ -3,10 +3,8 @@ DOMAIN = 'google_assistant'
 
 GOOGLE_ASSISTANT_API_ENDPOINT = '/api/google_assistant'
 
-ATTR_GOOGLE_ASSISTANT = 'google_assistant'
-ATTR_GOOGLE_ASSISTANT_NAME = 'google_assistant_name'
-ATTR_GOOGLE_ASSISTANT_TYPE = 'google_assistant_type'
-
+CONF_EXPOSE = 'expose'
+CONF_ENTITY_CONFIG = 'entity_config'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
 CONF_PROJECT_ID = 'project_id'

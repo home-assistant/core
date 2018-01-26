@@ -1,15 +1,18 @@
 """Test for smart home alexa support."""
 import asyncio
+import json
 from uuid import uuid4
 
 import pytest
 
+from homeassistant.setup import async_setup_component
+from homeassistant.components import alexa
 from homeassistant.components.alexa import smart_home
 from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
 
-DEFAULT_CONFIG = smart_home.Config(filter=lambda entity_id: True)
+DEFAULT_CONFIG = smart_home.Config(should_expose=lambda entity_id: True)
 
 
 def get_new_request(namespace, name, endpoint=None):
@@ -338,7 +341,7 @@ def test_exclude_filters(hass):
     hass.states.async_set(
         'cover.deny', 'off', {'friendly_name': "Blocked cover"})
 
-    config = smart_home.Config(filter=entityfilter.generate_filter(
+    config = smart_home.Config(should_expose=entityfilter.generate_filter(
         include_domains=[],
         include_entities=[],
         exclude_domains=['script'],
@@ -346,6 +349,7 @@ def test_exclude_filters(hass):
     ))
 
     msg = yield from smart_home.async_handle_message(hass, config, request)
+    yield from hass.async_block_till_done()
 
     msg = msg['event']
 
@@ -370,7 +374,7 @@ def test_include_filters(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    config = smart_home.Config(filter=entityfilter.generate_filter(
+    config = smart_home.Config(should_expose=entityfilter.generate_filter(
         include_domains=['automation', 'group'],
         include_entities=['script.deny'],
         exclude_domains=[],
@@ -378,6 +382,7 @@ def test_include_filters(hass):
     ))
 
     msg = yield from smart_home.async_handle_message(hass, config, request)
+    yield from hass.async_block_till_done()
 
     msg = msg['event']
 
@@ -393,6 +398,7 @@ def test_api_entity_not_exists(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -419,7 +425,7 @@ def test_api_function_not_implemented(hass):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['alert', 'automation', 'group',
+@pytest.mark.parametrize("domain", ['alert', 'automation', 'cover', 'group',
                                     'input_boolean', 'light', 'script',
                                     'switch'])
 def test_api_turn_on(hass, domain):
@@ -438,10 +444,14 @@ def test_api_turn_on(hass, domain):
     if domain == 'group':
         call_domain = 'homeassistant'
 
-    call = async_mock_service(hass, call_domain, 'turn_on')
+    if domain == 'cover':
+        call = async_mock_service(hass, call_domain, 'open_cover')
+    else:
+        call = async_mock_service(hass, call_domain, 'turn_on')
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -452,7 +462,7 @@ def test_api_turn_on(hass, domain):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize("domain", ['alert', 'automation', 'group',
+@pytest.mark.parametrize("domain", ['alert', 'automation', 'cover', 'group',
                                     'input_boolean', 'light', 'script',
                                     'switch'])
 def test_api_turn_off(hass, domain):
@@ -471,10 +481,14 @@ def test_api_turn_off(hass, domain):
     if domain == 'group':
         call_domain = 'homeassistant'
 
-    call = async_mock_service(hass, call_domain, 'turn_off')
+    if domain == 'cover':
+        call = async_mock_service(hass, call_domain, 'close_cover')
+    else:
+        call = async_mock_service(hass, call_domain, 'turn_off')
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -501,6 +515,7 @@ def test_api_set_brightness(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -532,6 +547,7 @@ def test_api_adjust_brightness(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -566,6 +582,7 @@ def test_api_set_color_rgb(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -600,6 +617,7 @@ def test_api_set_color_xy(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -629,6 +647,7 @@ def test_api_set_color_temperature(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -658,6 +677,7 @@ def test_api_decrease_color_temp(hass, result, initial):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -687,6 +707,7 @@ def test_api_increase_color_temp(hass, result, initial):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -714,13 +735,16 @@ def test_api_activate(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
 
     assert len(call) == 1
     assert call[0].data['entity_id'] == '{}.test'.format(domain)
-    assert msg['header']['name'] == 'Response'
+    assert msg['header']['name'] == 'ActivationStarted'
+    assert msg['payload']['cause']['type'] == 'VOICE_INTERACTION'
+    assert 'timestamp' in msg['payload']
 
 
 @asyncio.coroutine
@@ -740,6 +764,7 @@ def test_api_set_percentage_fan(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -769,6 +794,7 @@ def test_api_set_percentage_cover(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -800,6 +826,7 @@ def test_api_adjust_percentage_fan(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -832,6 +859,7 @@ def test_api_adjust_percentage_cover(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -859,6 +887,7 @@ def test_api_lock(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -885,6 +914,7 @@ def test_api_play(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -911,6 +941,7 @@ def test_api_pause(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -937,6 +968,7 @@ def test_api_stop(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -963,6 +995,7 @@ def test_api_next(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -989,6 +1022,7 @@ def test_api_previous(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -1017,6 +1051,7 @@ def test_api_set_volume(hass):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -1048,6 +1083,7 @@ def test_api_adjust_volume(hass, result, adjust):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -1077,6 +1113,7 @@ def test_api_mute(hass, domain):
 
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
 
     assert 'event' in msg
     msg = msg['event']
@@ -1084,3 +1121,82 @@ def test_api_mute(hass, domain):
     assert len(call) == 1
     assert call[0].data['entity_id'] == '{}.test'.format(domain)
     assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+def test_entity_config(hass):
+    """Test that we can configure things via entity config."""
+    request = get_new_request('Alexa.Discovery', 'Discover')
+
+    hass.states.async_set(
+        'light.test_1', 'on', {'friendly_name': "Test light 1"})
+
+    config = smart_home.Config(
+        should_expose=lambda entity_id: True,
+        entity_config={
+            'light.test_1': {
+                'name': 'Config name',
+                'display_categories': 'SWITCH',
+                'description': 'Config description'
+            }
+        }
+    )
+
+    msg = yield from smart_home.async_handle_message(
+        hass, config, request)
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert len(msg['payload']['endpoints']) == 1
+
+    appliance = msg['payload']['endpoints'][0]
+    assert appliance['endpointId'] == 'light#test_1'
+    assert appliance['displayCategories'][0] == "SWITCH"
+    assert appliance['friendlyName'] == "Config name"
+    assert appliance['description'] == "Config description"
+    assert len(appliance['capabilities']) == 1
+    assert appliance['capabilities'][-1]['interface'] == \
+        'Alexa.PowerController'
+
+
+@asyncio.coroutine
+def do_http_discovery(config, hass, test_client):
+    """Submit a request to the Smart Home HTTP API."""
+    yield from async_setup_component(hass, alexa.DOMAIN, config)
+    http_client = yield from test_client(hass.http.app)
+
+    request = get_new_request('Alexa.Discovery', 'Discover')
+    response = yield from http_client.post(
+        smart_home.SMART_HOME_HTTP_ENDPOINT,
+        data=json.dumps(request),
+        headers={'content-type': 'application/json'})
+    return response
+
+
+@asyncio.coroutine
+def test_http_api(hass, test_client):
+    """With `smart_home:` HTTP API is exposed."""
+    config = {
+        'alexa': {
+            'smart_home': None
+        }
+    }
+
+    response = yield from do_http_discovery(config, hass, test_client)
+    response_data = yield from response.json()
+
+    # Here we're testing just the HTTP view glue -- details of discovery are
+    # covered in other tests.
+    assert response_data['event']['header']['name'] == 'Discover.Response'
+
+
+@asyncio.coroutine
+def test_http_api_disabled(hass, test_client):
+    """Without `smart_home:`, the HTTP API is disabled."""
+    config = {
+        'alexa': {}
+    }
+    response = yield from do_http_discovery(config, hass, test_client)
+
+    assert response.status == 404

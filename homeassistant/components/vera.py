@@ -19,13 +19,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.38']
+REQUIREMENTS = ['pyvera==0.2.39']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vera'
 
-VERA_CONTROLLER = None
+VERA_CONTROLLER = 'vera_controller'
 
 CONF_CONTROLLER = 'vera_controller_url'
 
@@ -34,7 +34,8 @@ VERA_ID_FORMAT = '{}_{}'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 
-VERA_DEVICES = defaultdict(list)
+VERA_DEVICES = 'vera_devices'
+VERA_SCENES = 'vera_scenes'
 
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
@@ -47,20 +48,20 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 VERA_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate', 'cover'
+    'binary_sensor', 'sensor', 'light', 'switch',
+    'lock', 'climate', 'cover', 'scene'
 ]
 
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
     """Set up for Vera devices."""
-    global VERA_CONTROLLER
     import pyvera as veraApi
 
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
         _LOGGER.info("Shutting down subscriptions")
-        VERA_CONTROLLER.stop()
+        hass.data[VERA_CONTROLLER].stop()
 
     config = base_config.get(DOMAIN)
 
@@ -70,11 +71,14 @@ def setup(hass, base_config):
     exclude_ids = config.get(CONF_EXCLUDE)
 
     # Initialize the Vera controller.
-    VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
+    controller, _ = veraApi.init_controller(base_url)
+    hass.data[VERA_CONTROLLER] = controller
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     try:
-        all_devices = VERA_CONTROLLER.get_devices()
+        all_devices = controller.get_devices()
+
+        all_scenes = controller.get_scenes()
     except RequestException:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
@@ -84,12 +88,19 @@ def setup(hass, base_config):
     devices = [device for device in all_devices
                if device.device_id not in exclude_ids]
 
+    vera_devices = defaultdict(list)
     for device in devices:
         device_type = map_vera_device(device, light_ids)
         if device_type is None:
             continue
 
-        VERA_DEVICES[device_type].append(device)
+        vera_devices[device_type].append(device)
+    hass.data[VERA_DEVICES] = vera_devices
+
+    vera_scenes = []
+    for scene in all_scenes:
+        vera_scenes.append(scene)
+    hass.data[VERA_SCENES] = vera_scenes
 
     for component in VERA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)

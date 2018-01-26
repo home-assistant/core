@@ -8,35 +8,33 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
 import asyncio
+from collections import namedtuple
 import concurrent.futures
+from datetime import datetime, timedelta
 import logging
-from os import path
 import queue
 import threading
 import time
-from collections import namedtuple
-from datetime import datetime, timedelta
-from typing import Optional, Dict
+
+from typing import Dict, Optional
 
 import voluptuous as vol
 
-from homeassistant.core import (
-    HomeAssistant, callback, CoreState)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
-    CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+    ATTR_ENTITY_ID, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-from homeassistant import config as conf_util
 
-from . import purge, migration
+from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.1.15']
+REQUIREMENTS = ['sqlalchemy==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,14 +140,9 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(service.data[ATTR_KEEP_DAYS])
 
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, path.join(
-            path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(DOMAIN, SERVICE_PURGE,
-                                 async_handle_purge_service,
-                                 descriptions.get(SERVICE_PURGE),
-                                 schema=SERVICE_PURGE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_PURGE, async_handle_purge_service,
+        schema=SERVICE_PURGE_SCHEMA)
 
     return (yield from instance.async_db_ready)
 
@@ -176,10 +169,9 @@ class Recorder(threading.Thread):
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 
-        self.entity_filter = generate_filter(include.get(CONF_DOMAINS, []),
-                                             include.get(CONF_ENTITIES, []),
-                                             exclude.get(CONF_DOMAINS, []),
-                                             exclude.get(CONF_ENTITIES, []))
+        self.entity_filter = generate_filter(
+            include.get(CONF_DOMAINS, []), include.get(CONF_ENTITIES, []),
+            exclude.get(CONF_DOMAINS, []), exclude.get(CONF_ENTITIES, []))
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
@@ -245,8 +237,7 @@ class Recorder(threading.Thread):
                 self.queue.put(None)
                 self.join()
 
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                            shutdown)
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
             if self.hass.state == CoreState.running:
                 hass_started.set_result(None)
@@ -256,8 +247,8 @@ class Recorder(threading.Thread):
                     """Notify that hass has started."""
                     hass_started.set_result(None)
 
-                self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                                notify_hass_started)
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_START, notify_hass_started)
 
             if self.keep_days and self.purge_interval:
                 @callback

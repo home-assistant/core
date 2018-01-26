@@ -7,16 +7,19 @@ https://home-assistant.io/components/demo/
 from homeassistant.components.climate import (
     ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_AUX_HEAT, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_ON_OFF)
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
+                 SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH |
                  SUPPORT_AWAY_MODE | SUPPORT_HOLD_MODE | SUPPORT_FAN_MODE |
                  SUPPORT_OPERATION_MODE | SUPPORT_AUX_HEAT |
                  SUPPORT_SWING_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW)
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_ON_OFF)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -56,6 +59,7 @@ class DemoClimate(ClimateDevice):
         self._swing_list = ['Auto', '1', '2', '3', 'Off']
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
+        self._on = True
 
     @property
     def supported_features(self):
@@ -133,6 +137,11 @@ class DemoClimate(ClimateDevice):
         return self._aux
 
     @property
+    def is_on(self):
+        """Return true if the device is on."""
+        return self._on
+
+    @property
     def current_fan_mode(self):
         """Return the fan setting."""
         return self._current_fan_mode
@@ -205,4 +214,14 @@ class DemoClimate(ClimateDevice):
     def turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._aux = False
+        self.schedule_update_ha_state()
+
+    def turn_on(self):
+        """Turn on."""
+        self._on = True
+        self.schedule_update_ha_state()
+
+    def turn_off(self):
+        """Turn off."""
+        self._on = False
         self.schedule_update_ha_state()

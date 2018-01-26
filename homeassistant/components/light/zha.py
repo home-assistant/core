@@ -17,6 +17,11 @@ DEPENDENCIES = ['zha']
 
 DEFAULT_DURATION = 0.5
 
+CAPABILITIES_COLOR_XY = 0x08
+CAPABILITIES_COLOR_TEMP = 0x10
+
+UNSUPPORTED_ATTRIBUTE = 0x86
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -26,11 +31,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     endpoint = discovery_info['endpoint']
-    try:
-        discovery_info['color_capabilities'] \
-            = yield from endpoint.light_color['color_capabilities']
-    except (AttributeError, KeyError):
-        pass
+    if hasattr(endpoint, 'light_color'):
+        caps = yield from zha.safe_read(
+            endpoint.light_color, ['color_capabilities'])
+        discovery_info['color_capabilities'] = caps.get('color_capabilities')
+        if discovery_info['color_capabilities'] is None:
+            # ZCL Version 4 devices don't support the color_capabilities
+            # attribute. In this version XY support is mandatory, but we need
+            # to probe to determine if the device supports color temperature.
+            discovery_info['color_capabilities'] = CAPABILITIES_COLOR_XY
+            result = yield from zha.safe_read(
+                endpoint.light_color, ['color_temperature'])
+            if result.get('color_temperature') is not UNSUPPORTED_ATTRIBUTE:
+                discovery_info['color_capabilities'] |= CAPABILITIES_COLOR_TEMP
 
     async_add_devices([Light(**discovery_info)], update_before_add=True)
 
@@ -54,11 +67,11 @@ class Light(zha.Entity, light.Light):
             self._supported_features |= light.SUPPORT_TRANSITION
             self._brightness = 0
         if zcl_clusters.lighting.Color.cluster_id in self._in_clusters:
-            color_capabilities = kwargs.get('color_capabilities', 0x10)
-            if color_capabilities & 0x10:
+            color_capabilities = kwargs['color_capabilities']
+            if color_capabilities & CAPABILITIES_COLOR_TEMP:
                 self._supported_features |= light.SUPPORT_COLOR_TEMP
 
-            if color_capabilities & 0x08:
+            if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_XY_COLOR
                 self._supported_features |= light.SUPPORT_RGB_COLOR
                 self._xy_color = (1.0, 1.0)
@@ -142,41 +155,23 @@ class Light(zha.Entity, light.Light):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("%s async_update", self.entity_id)
-
-        @asyncio.coroutine
-        def safe_read(cluster, attributes):
-            """Swallow all exceptions from network read.
-
-            If we throw during initialization, setup fails. Rather have an
-            entity that exists, but is in a maybe wrong state, than no entity.
-            """
-            try:
-                result, _ = yield from cluster.read_attributes(
-                    attributes,
-                    allow_cache=False,
-                )
-                return result
-            except Exception:  # pylint: disable=broad-except
-                return {}
-
-        result = yield from safe_read(self._endpoint.on_off, ['on_off'])
+        result = yield from zha.safe_read(self._endpoint.on_off, ['on_off'])
         self._state = result.get('on_off', self._state)
 
         if self._supported_features & light.SUPPORT_BRIGHTNESS:
-            result = yield from safe_read(self._endpoint.level,
-                                          ['current_level'])
+            result = yield from zha.safe_read(self._endpoint.level,
+                                              ['current_level'])
             self._brightness = result.get('current_level', self._brightness)
 
         if self._supported_features & light.SUPPORT_COLOR_TEMP:
-            result = yield from safe_read(self._endpoint.light_color,
-                                          ['color_temperature'])
+            result = yield from zha.safe_read(self._endpoint.light_color,
+                                              ['color_temperature'])
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
         if self._supported_features & light.SUPPORT_XY_COLOR:
-            result = yield from safe_read(self._endpoint.light_color,
-                                          ['current_x', 'current_y'])
+            result = yield from zha.safe_read(self._endpoint.light_color,
+                                              ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:
                 self._xy_color = (result['current_x'], result['current_y'])
 

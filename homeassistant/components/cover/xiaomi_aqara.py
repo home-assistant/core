@@ -41,7 +41,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self.current_cover_position < 0
+        return self.current_cover_position <= 0
 
     def close_cover(self, **kwargs):
         """Close the cover."""
@@ -59,7 +59,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
         """Move the cover to a specific position."""
         self._write_to_hub(self._sid, **{self._data_key['pos']: str(position)})
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if ATTR_CURTAIN_LEVEL in data:
             self._pos = int(data[ATTR_CURTAIN_LEVEL])

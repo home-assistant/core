@@ -12,8 +12,8 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, CONF_NAME, CONF_HOST, CONF_PORT)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pynx584==0.4']
@@ -25,14 +25,14 @@ DEFAULT_NAME = 'NX584'
 DEFAULT_PORT = 5007
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the nx584 platform."""
+    """Set up the NX584 platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -88,7 +88,7 @@ class NX584Alarm(alarm.AlarmControlPanel):
             self._state = STATE_UNKNOWN
             zones = []
         except IndexError:
-            _LOGGER.error("nx584 reports no partitions")
+            _LOGGER.error("NX584 reports no partitions")
             self._state = STATE_UNKNOWN
             zones = []
 

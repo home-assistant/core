@@ -6,15 +6,13 @@ https://home-assistant.io/components/lock.wink/
 """
 import asyncio
 import logging
-from os import path
 
 import voluptuous as vol
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.components.wink import WinkDevice, DOMAIN
+from homeassistant.components.wink import DOMAIN, WinkDevice
+from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, ATTR_CODE
-from homeassistant.config import load_yaml_config_file
 
 DEPENDENCIES = ['wink']
 
@@ -32,13 +30,19 @@ ATTR_SENSITIVITY = 'sensitivity'
 ATTR_MODE = 'mode'
 ATTR_NAME = 'name'
 
-ALARM_SENSITIVITY_MAP = {"low": 0.2, "medium_low": 0.4,
-                         "medium": 0.6, "medium_high": 0.8,
-                         "high": 1.0}
+ALARM_SENSITIVITY_MAP = {
+    'low': 0.2,
+    'medium_low': 0.4,
+    'medium': 0.6,
+    'medium_high': 0.8,
+    'high': 1.0,
+}
 
-ALARM_MODES_MAP = {"tamper": "tamper",
-                   "activity": "alert",
-                   "forced_entry": "forced_entry"}
+ALARM_MODES_MAP = {
+    'activity': 'alert',
+    'forced_entry': 'forced_entry',
+    'tamper': 'tamper',
+}
 
 SET_ENABLED_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -72,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkLockDevice(lock, hass)])
 
     def service_handle(service):
-        """Handler for services."""
+        """Handle for services."""
         entity_ids = service.data.get('entity_id')
         all_locks = hass.data[DOMAIN]['entities']['lock']
         locks_to_set = []
@@ -99,37 +103,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 code = service.data.get(ATTR_CODE)
                 lock.add_new_key(code, name)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(DOMAIN, SERVICE_SET_VACATION_MODE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_VACATION_MODE),
                            schema=SET_ENABLED_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_ALARM_STATE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_STATE),
                            schema=SET_ENABLED_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_BEEPER_STATE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_BEEPER_STATE),
                            schema=SET_ENABLED_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_ALARM_MODE,
                            service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_MODE),
                            schema=SET_ALARM_MODES_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SET_ALARM_SENSITIVITY,
                            service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_SENSITIVITY),
                            schema=SET_SENSITIVITY_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_ADD_KEY,
                            service_handle,
-                           descriptions.get(SERVICE_ADD_KEY),
                            schema=ADD_KEY_SCHEMA)
 
 
@@ -138,7 +133,7 @@ class WinkLockDevice(WinkDevice, LockDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['lock'].append(self)
 
     @property

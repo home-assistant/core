@@ -6,7 +6,7 @@ https://home-assistant.io/components/climate.tado/
 """
 import logging
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.components.climate import (
     ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE
@@ -59,8 +59,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     climate_devices = []
     for zone in zones:
-        climate_devices.append(create_climate_device(
-            tado, hass, zone, zone['name'], zone['id']))
+        device = create_climate_device(
+            tado, hass, zone, zone['name'], zone['id'])
+        if not device:
+            continue
+        climate_devices.append(device)
 
     if climate_devices:
         add_devices(climate_devices, True)
@@ -75,8 +78,11 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     if ac_mode:
         temperatures = capabilities['HEAT']['temperatures']
-    else:
+    elif 'temperatures' in capabilities:
         temperatures = capabilities['temperatures']
+    else:
+        _LOGGER.debug("Received zone %s has no temperature; not adding", name)
+        return
 
     min_temp = float(temperatures['celsius']['min'])
     max_temp = float(temperatures['celsius']['max'])
@@ -185,6 +191,11 @@ class TadoClimate(ClimateDevice):
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return self._is_away
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return PRECISION_TENTHS
 
     @property
     def target_temperature(self):

@@ -9,15 +9,12 @@ from datetime import timedelta
 
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.util as util
-from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['insteon_local']
 DOMAIN = 'switch'
-
-INSTEON_LOCAL_SWITCH_CONF = 'insteon_local_switch.conf'
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -26,83 +23,33 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local switch platform."""
     insteonhub = hass.data['insteon_local']
-
-    conf_switches = load_json(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
-    if conf_switches:
-        for device_id in conf_switches:
-            setup_switch(
-                device_id, conf_switches[device_id], insteonhub, hass,
-                add_devices)
-    else:
-        linked = insteonhub.get_linked()
-
-        for device_id in linked:
-            if linked[device_id]['cat_type'] == 'switch'\
-                    and device_id not in conf_switches:
-                request_configuration(device_id, insteonhub,
-                                      linked[device_id]['model_name'] + ' ' +
-                                      linked[device_id]['sku'],
-                                      hass, add_devices)
-
-
-def request_configuration(
-        device_id, insteonhub, model, hass, add_devices_callback):
-    """Request configuration steps from the user."""
-    configurator = hass.components.configurator
-
-    # We got an error if this method is called while we are configuring
-    if device_id in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[device_id], 'Failed to register, please try again.')
-
+    if discovery_info is None:
         return
 
-    def insteon_switch_config_callback(data):
-        """Handle configuration changes."""
-        setup_switch(device_id, data.get('name'), insteonhub, hass,
-                     add_devices_callback)
+    linked = discovery_info['linked']
+    device_list = []
+    for device_id in linked:
+        if linked[device_id]['cat_type'] == 'switch':
+            device = insteonhub.switch(device_id)
+            device_list.append(
+                InsteonLocalSwitchDevice(device)
+            )
 
-    _CONFIGURING[device_id] = configurator.request_config(
-        'Insteon Switch ' + model + ' addr: ' + device_id,
-        insteon_switch_config_callback,
-        description=('Enter a name for ' + model + ' addr: ' + device_id),
-        entity_picture='/static/images/config_insteon.png',
-        submit_caption='Confirm',
-        fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
-    )
-
-
-def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
-    """Set up the switch."""
-    if device_id in _CONFIGURING:
-        request_id = _CONFIGURING.pop(device_id)
-        configurator = hass.components.configurator
-        configurator.request_done(request_id)
-        _LOGGER.info("Device configuration done")
-
-    conf_switch = load_json(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
-    if device_id not in conf_switch:
-        conf_switch[device_id] = name
-
-    save_json(hass.config.path(INSTEON_LOCAL_SWITCH_CONF), conf_switch)
-
-    device = insteonhub.switch(device_id)
-    add_devices_callback([InsteonLocalSwitchDevice(device, name)])
+    add_devices(device_list)
 
 
 class InsteonLocalSwitchDevice(SwitchDevice):
     """An abstract Class for an Insteon node."""
 
-    def __init__(self, node, name):
+    def __init__(self, node):
         """Initialize the device."""
         self.node = node
-        self.node.deviceName = name
         self._state = False
 
     @property
     def name(self):
         """Return the name of the node."""
-        return self.node.deviceName
+        return self.node.device_id
 
     @property
     def unique_id(self):

@@ -24,7 +24,7 @@ SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
                  SUPPORT_STATUS | SUPPORT_MAP
 
-ICON = "mdi:roomba"
+ICON = 'mdi:roomba'
 
 ATTR_CLEAN_START = 'clean_start'
 ATTR_CLEAN_STOP = 'clean_stop'
@@ -45,10 +45,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NeatoConnectedVacuum(VacuumDevice):
-    """Neato Connected Vacuums."""
+    """Representation of a Neato Connected Vacuum."""
 
     def __init__(self, hass, robot):
-        """Initialize the Neato Connected Vacuums."""
+        """Initialize the Neato Connected Vacuum."""
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._name = '{}'.format(self.robot.name)
@@ -66,7 +66,7 @@ class NeatoConnectedVacuum(VacuumDevice):
 
     def update(self):
         """Update the states of Neato Vacuums."""
-        _LOGGER.debug("Running Vacuums update")
+        _LOGGER.debug("Running Neato Vacuums update")
         self.neato.update_robots()
         try:
             self._state = self.robot.state
