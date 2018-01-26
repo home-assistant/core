@@ -70,7 +70,8 @@ FILTER_VALUES = set([0, 1, 3, 7, 15, 31, 63, 127])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
+    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
+        cv.positive_int,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): cv.positive_int,
@@ -174,7 +175,7 @@ def _setup_bme680(config):
         else:
             sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
     except (RuntimeError, IOError):
-        _LOGGER.error("BME680 sensor not detected at %s", i2c_address)
+        _LOGGER.error("BME680 sensor not detected at 0x%02x", i2c_address)
         return None
 
     sensor_handler = BME680Handler(
