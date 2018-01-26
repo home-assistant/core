@@ -8,12 +8,10 @@ import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID,
                                  STATE_UNKNOWN)
@@ -38,21 +36,15 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
-SUPPORT_TARGET_HUMIDITY = 8
-SUPPORT_FILTER_LIFE = 16
-SUPPORT_FILTER_EXPIRED = 32
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
 SERVICE_SET_DIRECTION = 'set_direction'
-SERVICE_SET_HUMIDITY = 'set_humidity'
 
 SPEED_OFF = 'off'
-SPEED_MINIMUM = 'minimum'
 SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
-SPEED_MAXIMUM = 'maximum'
 
 DIRECTION_FORWARD = 'forward'
 DIRECTION_REVERSE = 'reverse'
@@ -61,20 +53,12 @@ ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
-ATTR_CURRENT_HUMIDITY = 'current_humidity'
-ATTR_HUMIDITY = 'humidity'
-ATTR_FILTER_LIFE = 'filter_life'
-ATTR_FILTER_EXPIRED = 'filter_expired'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
-    'current_humidity': ATTR_CURRENT_HUMIDITY,
-    'humidity': ATTR_HUMIDITY,
-    'filter_life': ATTR_FILTER_LIFE,
-    'filter_expired': ATTR_FILTER_EXPIRED
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -105,11 +89,6 @@ FAN_SET_DIRECTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
-FAN_SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
-})
-
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {
         'method': 'async_turn_on',
@@ -134,10 +113,6 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_DIRECTION: {
         'method': 'async_set_direction',
         'schema': FAN_SET_DIRECTION_SCHEMA,
-    },
-    SERVICE_SET_HUMIDITY: {
-        'method': 'async_set_humidity',
-        'schema': FAN_SET_HUMIDITY_SCHEMA,
     },
 }
 
@@ -220,17 +195,6 @@ def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
 
 
-@bind_hass
-def set_humidity(hass, humidity, entity_id=None):
-    """Set new target humidity."""
-    data = {ATTR_HUMIDITY: humidity}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_HUMIDITY, data)
-
-
 @asyncio.coroutine
 def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
@@ -259,16 +223,10 @@ def async_setup(hass, config: dict):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    # Listen for fan service calls.
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for service_name in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service_name].get('schema')
         hass.services.async_register(
-            DOMAIN, service_name, async_handle_fan_service,
-            descriptions.get(service_name), schema=schema)
+            DOMAIN, service_name, async_handle_fan_service, schema=schema)
 
     return True
 
@@ -325,17 +283,6 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
 
-    def set_humidity(self: ToggleEntity, humidity: float) -> None:
-        """Set the humidity of the fan."""
-        raise NotImplementedError()
-
-    def async_set_humidity(self: ToggleEntity, humidity: float):
-        """Set the humidity of the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_humidity, humidity)
-
     @property
     def is_on(self):
         """Return true if the entity is on."""
@@ -354,26 +301,6 @@ class FanEntity(ToggleEntity):
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
-        return None
-
-    @property
-    def current_humidity(self) -> float:
-        """Return the current humidity reported by the fan."""
-        return None
-
-    @property
-    def target_humidity(self) -> float:
-        """Return the target humidity of the fan."""
-        return None
-
-    @property
-    def filter_life(self) -> float:
-        """Return the filter life remaining percent reported by the fan."""
-        return None
-
-    @property
-    def filter_expired(self) -> bool:
-        """Return true/false if filter is end of life."""
         return None
 
     @property

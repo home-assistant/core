@@ -14,20 +14,20 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.24']
+REQUIREMENTS = ['pywemo==0.4.25']
 
 DOMAIN = 'wemo'
 
 # Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
     'Bridge':  'light',
+    'CoffeeMaker': 'switch',
+    'Dimmer': 'light',
     'Insight': 'switch',
+    'LightSwitch': 'switch',
     'Maker':   'switch',
     'Sensor':  'binary_sensor',
-    'Socket':  'switch',
-    'LightSwitch': 'switch',
-    'CoffeeMaker': 'switch',
-    'Humidifier': 'fan'
+    'Socket':  'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -101,7 +101,7 @@ def setup(hass, config):
             'model_name': device.model_name,
             'serial': device.serialnumber,
             'mac_address': device.mac,
-            'ssdp_description': url
+            'ssdp_description': url,
         }
 
         discovery.discover(hass, SERVICE_WEMO, discovery_info)
