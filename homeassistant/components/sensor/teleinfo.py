@@ -106,7 +106,6 @@ class TeleinfoSensor(Entity):
         if not self._data.frame:
             _LOGGER.warning("Don't receive energy data from Teleinfo!")
             return
-        # self._attributes = self._data.frame
         _LOGGER.info("Frame read: %s", self._data.frame)
         for info in self._data.frame:
             if info['name'] in TELEINFO_AVAILABLE_VALUES:
