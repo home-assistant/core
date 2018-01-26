@@ -29,7 +29,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: vol.Schema({
             vol.Optional(CONF_NAME, default=None): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS, default=None): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_DEVICE_CLASS, default=None):
+                DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_OFF_DELAY, default=None):
             vol.Any(cv.time_period, cv.positive_timedelta),
