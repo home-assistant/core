@@ -8,7 +8,7 @@
             <description>Description 1</description>
             <category>Category 1</category>
             <pubDate>Sun, 30 Jul 2017 09:00:00 UTC</pubDate>
-            <updated>2017-07-30T09:12:00.000Z</updated>
+            <updated>2017-07-30T09:12:30.000Z</updated>
             <guid>GUID 1</guid>
             <georss:point>-32.916667 151.75</georss:point>
         </item>
@@ -18,6 +18,7 @@
             <description>Description 2</description>
             <category>Category 2</category>
             <pubDate>Sun, 30 Jul 2017 09:05:00 GMT</pubDate>
+            <updated>2017-07-30T09:06:00.000Z</updated>
             <guid>GUID 2</guid>
             <geo:long>148.601111</geo:long>
             <geo:lat>-32.256944</geo:lat>
@@ -28,7 +29,6 @@
             <description>Description 3</description>
             <category>Category 3</category>
             <pubDate>Sun, 30 Jul 2017 09:10:00 GMT</pubDate>
-            <updated>2017-07-30T09:11:00.000Z</updated>
             <guid>GUID 3</guid>
             <georss:polygon>
                 -33.283333 149.1
@@ -37,23 +37,6 @@
                 -33.283333 149.1166663888889
                 -33.283333 149.1
             </georss:polygon>
-        </item>
-        <!-- Entry out of vicinity of home coordinates - Point -->
-        <item>
-            <title>Title 4</title>
-            <description>Description 4</description>
-            <category>Category 4</category>
-            <pubDate>Sun, 30 Jul 2017 09:15:00 GMT</pubDate>
-            <guid>GUID 4</guid>
-            <georss:point>52.518611 13.408333</georss:point>
-        </item>
-        <!-- Entry without coordinates -->
-        <item>
-            <title>Title 5</title>
-            <description>Description 5</description>
-            <category>Category 5</category>
-            <pubDate>Sun, 30 Jul 2017 09:20:00 GMT</pubDate>
-            <guid>GUID 5</guid>
         </item>
         <!-- Entry within vicinity of home coordinates -->
         <!-- Link instead of GUID; updated instead of pubDate -->
@@ -65,14 +48,14 @@
             <link>Link 6</link>
             <georss:point>-33.75801 150.70544</georss:point>
         </item>
-        <!-- Entry with unsupported geometry - Line -->
+        <!-- New Eentry within vicinity of home coordinates - Point -->
         <item>
-            <title>Title 7</title>
-            <description>Description 7</description>
-            <category>Category 7</category>
-            <pubDate>Sun, 30 Jul 2017 09:30:00 UTC</pubDate>
-            <guid>GUID 7</guid>
-            <georss:line>45.256 -110.45 46.46 -109.48 43.84 -109.86</georss:line>
+            <title>Title 8</title>
+            <description>Description 8</description>
+            <category>Category 1</category>
+            <pubDate>Sun, 30 Jul 2017 09:35:00 UTC</pubDate>
+            <guid>GUID 8</guid>
+            <georss:point>-32.916667 151.75</georss:point>
         </item>
     </channel>
 </rss>
