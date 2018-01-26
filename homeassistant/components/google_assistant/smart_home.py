@@ -149,8 +149,6 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     if entity.domain == climate.DOMAIN:
         modes = []
         for mode in entity.attributes.get(climate.ATTR_OPERATION_LIST, []):
-            mode = mode.lower()
-
             if mode in CLIMATE_SUPPORTED_MODES:
                 modes.append(mode)
             elif mode == climate.STATE_AUTO:
