@@ -18,6 +18,9 @@ from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
 CONF_MAX_ENTRIES = 'max_entries'
+CONF_MESSAGE = 'message'
+CONF_LEVEL = 'level'
+CONF_LOGGER = 'logger'
 
 DATA_SYSTEM_LOG = 'system_log'
 DEFAULT_MAX_ENTRIES = 50
@@ -25,6 +28,7 @@ DEPENDENCIES = ['http']
 DOMAIN = 'system_log'
 
 SERVICE_CLEAR = 'clear'
+SERVICE_WRITE = 'write'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -34,6 +38,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_CLEAR_SCHEMA = vol.Schema({})
+SERVICE_WRITE_SCHEMA = vol.Schema({
+    vol.Required(CONF_MESSAGE): cv.string,
+    vol.Optional(CONF_LEVEL, default='error'):
+        vol.In(['debug', 'info', 'warning', 'error', 'critical']),
+    vol.Optional(CONF_LOGGER): cv.string,
+})
 
 
 class LogErrorHandler(logging.Handler):
@@ -78,12 +88,21 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_service_handler(service):
         """Handle logger services."""
-        # Only one service so far
-        handler.records.clear()
+        if service.service == 'clear':
+            handler.records.clear()
+            return
+        if service.service == 'write':
+            logger = logging.getLogger(
+                service.data.get(CONF_LOGGER, '{}.external'.format(__name__)))
+            level = service.data[CONF_LEVEL]
+            getattr(logger, level)(service.data[CONF_MESSAGE])
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR, async_service_handler,
         schema=SERVICE_CLEAR_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_WRITE, async_service_handler,
+        schema=SERVICE_WRITE_SCHEMA)
 
     return True
 
