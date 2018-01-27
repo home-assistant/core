@@ -38,9 +38,13 @@ def get_scanner(hass, config):
     for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
                 Tplink3DeviceScanner, Tplink2DeviceScanner,
                 TplinkDeviceScanner]:
-        scanner = cls(config[DOMAIN])
-        if scanner.success_init:
-            return scanner
+        try:
+            _LOGGER.info("Trying with " + cls.__name__)
+            scanner = cls(config[DOMAIN])
+            if scanner.success_init:
+                return scanner
+        except:
+            _LOGGER.warning("Failed " + cls.__name__)
 
     return None
 
