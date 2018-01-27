@@ -4,26 +4,28 @@ Flux for Home-Assistant.
 The idea was taken from https://github.com/KpaBap/hue-flux/
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.flux/
+https://home-assistant.io/components/flux/
 """
+import asyncio
 import datetime
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     is_on, turn_on, VALID_TRANSITION, ATTR_TRANSITION)
-from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE)
-from homeassistant.helpers.event import track_time_change
+from homeassistant.const import CONF_NAME, CONF_MODE, CONF_LIGHTS
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
+import homeassistant.helpers.config_validation as cv
+
+DOMAIN = 'flux'
+DEPENDENCIES = ['light']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,34 +37,38 @@ CONF_STOP_CT = 'stop_colortemp'
 CONF_BRIGHTNESS = 'brightness'
 CONF_DISABLE_BRIGTNESS_ADJUST = 'disable_brightness_adjust'
 CONF_INTERVAL = 'interval'
+CONF_ACTIVE_BY_DEFAULT = 'active_by_default'
 
 MODE_XY = 'xy'
 MODE_MIRED = 'mired'
 MODE_RGB = 'rgb'
 DEFAULT_MODE = MODE_XY
-DEPENDENCIES = ['light']
 
-
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'flux',
-    vol.Required(CONF_LIGHTS): cv.entity_ids,
-    vol.Optional(CONF_NAME, default="Flux"): cv.string,
-    vol.Optional(CONF_START_TIME): cv.time,
-    vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
-    vol.Optional(CONF_START_CT, default=4000):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-    vol.Optional(CONF_SUNSET_CT, default=3000):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-    vol.Optional(CONF_STOP_CT, default=1900):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-    vol.Optional(CONF_BRIGHTNESS):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
-    vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-        vol.Any(MODE_XY, MODE_MIRED, MODE_RGB),
-    vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
-    vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION
-})
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: vol.All({
+            vol.Optional(CONF_NAME, default="Flux"): cv.string,
+            vol.Required(CONF_LIGHTS): cv.entity_ids,
+            vol.Optional(CONF_START_TIME): cv.time,
+            vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
+            vol.Optional(CONF_START_CT, default=4000):
+                vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+            vol.Optional(CONF_SUNSET_CT, default=3000):
+                vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+            vol.Optional(CONF_STOP_CT, default=1900):
+                vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+            vol.Optional(CONF_BRIGHTNESS):
+                vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+            vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
+            vol.Optional(CONF_MODE, default=DEFAULT_MODE):
+                vol.Any(MODE_XY, MODE_MIRED, MODE_RGB),
+            vol.Optional(CONF_INTERVAL, default=datetime.timedelta(seconds=30)):
+                cv.time_period,
+            vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+            vol.Optional(CONF_ACTIVE_BY_DEFAULT, default=True): cv.boolean
+        })
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
@@ -94,42 +100,48 @@ def set_lights_rgb(hass, lights, rgb, transition):
                     transition=transition)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup(hass, config):
     """Set up the Flux switches."""
-    name = config.get(CONF_NAME)
-    lights = config.get(CONF_LIGHTS)
-    start_time = config.get(CONF_START_TIME)
-    stop_time = config.get(CONF_STOP_TIME)
-    start_colortemp = config.get(CONF_START_CT)
-    sunset_colortemp = config.get(CONF_SUNSET_CT)
-    stop_colortemp = config.get(CONF_STOP_CT)
-    brightness = config.get(CONF_BRIGHTNESS)
-    disable_brightness_adjust = config.get(CONF_DISABLE_BRIGTNESS_ADJUST)
-    mode = config.get(CONF_MODE)
-    interval = config.get(CONF_INTERVAL)
-    transition = config.get(ATTR_TRANSITION)
-    flux = FluxSwitch(name, hass, lights, start_time, stop_time,
-                      start_colortemp, sunset_colortemp, stop_colortemp,
-                      brightness, disable_brightness_adjust, mode, interval,
-                      transition)
-    add_devices([flux])
+    fluxes = []
 
-    def update(call=None):
+    for object_id, cfg in config[DOMAIN].items():
+        name = cfg.get(CONF_NAME)
+        lights = cfg.get(CONF_LIGHTS)
+        start_time = cfg.get(CONF_START_TIME)
+        stop_time = cfg.get(CONF_STOP_TIME)
+        start_colortemp = cfg.get(CONF_START_CT)
+        sunset_colortemp = cfg.get(CONF_SUNSET_CT)
+        stop_colortemp = cfg.get(CONF_STOP_CT)
+        brightness = cfg.get(CONF_BRIGHTNESS)
+        disable_brightness_adjust = cfg.get(CONF_DISABLE_BRIGTNESS_ADJUST)
+        mode = cfg.get(CONF_MODE)
+        interval = cfg.get(CONF_INTERVAL)
+        transition = cfg.get(ATTR_TRANSITION)
+        active = cfg.get(CONF_ACTIVE_BY_DEFAULT)
+
+        fluxes[object_id] = Flux(
+            name, hass, lights, start_time, stop_time, start_colortemp,
+            sunset_colortemp, stop_colortemp, brightness,
+            disable_brightness_adjust, mode, interval, transition, active)
+
+    def update_service(call=None):
         """Update lights."""
-        flux.flux_update()
+        for flux in fluxes.items():
+            flux.flux_update()
 
     service_name = slugify("{} {}".format(name, 'update'))
-    hass.services.register(DOMAIN, service_name, update)
+    hass.services.register(DOMAIN, service_name, update_service)
+
+    return True
 
 
-class FluxSwitch(SwitchDevice):
+class Flux:
     """Representation of a Flux switch."""
 
     def __init__(self, name, hass, lights, start_time, stop_time,
                  start_colortemp, sunset_colortemp, stop_colortemp,
                  brightness, disable_brightness_adjust, mode, interval,
-                 transition):
+                 transition, active):
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
@@ -146,6 +158,9 @@ class FluxSwitch(SwitchDevice):
         self._transition = transition
         self.unsub_tracker = None
 
+        if active:
+            self.turn_on()
+
     @property
     def name(self):
         """Return the name of the device if any."""
@@ -156,7 +171,7 @@ class FluxSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
-    def turn_on(self, **kwargs):
+    def turn_on(self):
         """Turn on flux."""
         if self.is_on:
             return
@@ -164,18 +179,14 @@ class FluxSwitch(SwitchDevice):
         # Make initial update
         self.flux_update()
 
-        self.unsub_tracker = track_time_change(
-            self.hass, self.flux_update, second=[0, self._interval])
+        self.unsub_tracker = track_time_interval(
+            self.hass, self.flux_update, self._interval)
 
-        self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
+    def turn_off(self):
         """Turn off flux."""
         if self.unsub_tracker is not None:
             self.unsub_tracker()
             self.unsub_tracker = None
-
-        self.schedule_update_ha_state()
 
     def flux_update(self, now=None):
         """Update all the lights using flux."""
