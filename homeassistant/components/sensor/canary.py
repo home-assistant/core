@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['canary']
 
 SENSOR_VALUE_PRECISION = 2
-ATTR_AIR_QUALITY_READING = "air_quality_reading"
+ATTR_AIR_QUALITY = "air_quality"
 
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon
@@ -65,16 +65,6 @@ class CanarySensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._sensor_type[0] == "air_quality":
-            if self._sensor_value <= .4:
-                return STATE_AIR_QUALITY_VERY_ABNORMAL
-            elif self._sensor_value <= .59:
-                return STATE_AIR_QUALITY_ABNORMAL
-            elif self._sensor_value <= 1.0:
-                return STATE_AIR_QUALITY_NORMAL
-            else:
-                return None
-
         return self._sensor_value
 
     @property
@@ -97,8 +87,16 @@ class CanarySensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._sensor_type[0] == "air_quality":
+            air_quality = None
+            if self._sensor_value <= .4:
+                air_quality = STATE_AIR_QUALITY_VERY_ABNORMAL
+            elif self._sensor_value <= .59:
+                air_quality = STATE_AIR_QUALITY_ABNORMAL
+            elif self._sensor_value <= 1.0:
+                air_quality = STATE_AIR_QUALITY_NORMAL
+
             return {
-                ATTR_AIR_QUALITY_READING: self._sensor_value
+                ATTR_AIR_QUALITY: air_quality
             }
 
         return None
