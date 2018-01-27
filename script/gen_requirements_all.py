@@ -64,7 +64,6 @@ TEST_REQUIREMENTS = (
     'pmsensor',
     'prometheus_client',
     'pushbullet.py',
-    'py-canary',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
