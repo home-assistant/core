@@ -40,7 +40,6 @@ class MercedesMEBinarySensor(MercedesMeEntity, BinarySensorDevice):
     def is_on(self):
         """Return the state of the binary sensor."""
         retval = True if bool(self._state == "On") else False
-        _LOGGER.warning("is_on: %s %s", self._internal_name, retval)
         return retval
 
     @property
