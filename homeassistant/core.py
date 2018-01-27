@@ -66,7 +66,7 @@ def valid_entity_id(entity_id: str) -> bool:
 
 
 def valid_state(state: str) -> bool:
-    """Test if an state is valid."""
+    """Test if a state is valid."""
     return len(state) < 256
 
 
@@ -777,7 +777,7 @@ class ServiceCall(object):
         self.call_id = call_id
 
     def __repr__(self):
-        """Return the represenation of the service."""
+        """Return the representation of the service."""
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))

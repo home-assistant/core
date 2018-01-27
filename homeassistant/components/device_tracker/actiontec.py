@@ -42,7 +42,7 @@ Device = namedtuple('Device', ['mac', 'ip', 'last_update'])
 
 
 class ActiontecDeviceScanner(DeviceScanner):
-    """This class queries a an actiontec router for connected devices."""
+    """This class queries an actiontec router for connected devices."""
 
     def __init__(self, config):
         """Initialize the scanner."""

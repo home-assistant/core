@@ -152,7 +152,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('socket.create_connection', side_effect=socket.error())
     @mock.patch('soco.discover')
     def test_ensure_setup_config_interface_addr(self, discover_mock, *args):
-        """Test a interface address config'd by the HASS config file."""
+        """Test an interface address config'd by the HASS config file."""
         discover_mock.return_value = {SoCoMock('192.0.2.1')}
 
         config = {
@@ -172,7 +172,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('soco.discover')
     def test_ensure_setup_config_advertise_addr(self, discover_mock,
                                                 *args):
-        """Test a advertise address config'd by the HASS config file."""
+        """Test an advertise address config'd by the HASS config file."""
         discover_mock.return_value = {SoCoMock('192.0.2.1')}
 
         config = {

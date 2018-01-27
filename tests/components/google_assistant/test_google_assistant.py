@@ -304,7 +304,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
 
 @asyncio.coroutine
 def test_execute_request(hass_fixture, assistant_client):
-    """Test a execute request."""
+    """Test an execute request."""
     reqid = '5711642932632160985'
     data = {
         'requestId':

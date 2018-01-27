@@ -238,7 +238,7 @@ class BME680Handler:
 
         self._gas_sensor_running = True
 
-        # Pause to allow inital data read for device validation.
+        # Pause to allow initial data read for device validation.
         sleep(1)
 
         start_time = time()
