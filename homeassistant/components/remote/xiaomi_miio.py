@@ -232,19 +232,19 @@ class XiaomiMiioRemote(RemoteDevice):
         """Send a command."""
         from miio import DeviceException
 
-        if ':' in payload:
+        if ':' in payload and len(payload.split(':')) >= 2:
             command_list = payload.split(':')
             command_type = command_list[0]
             command = command_list[1]
             if len(command_list) == 3:
-                command_optional = command_list[3]
+                command_optional = command_list[2]
             else:
                 command_optional = None
 
             _LOGGER.debug("Sending command: '%s'", command)
             if command_type == 'raw':
                 try:
-                    self.device.play(command, command_optional)
+                    self.device.play(command, int(command_optional))
                     return True
                 except DeviceException as ex:
                     _LOGGER.error(
@@ -254,7 +254,8 @@ class XiaomiMiioRemote(RemoteDevice):
             if command_type == 'pronto':
                 try:
                     self.device.play_pronto(command,
-                                            repeats=(command_optional or 0))
+                                            repeats=int((
+                                                command_optional or 0)))
                     return True
                 except DeviceException as ex:
                     _LOGGER.error(
