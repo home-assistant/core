@@ -36,7 +36,7 @@ class TestSetup(unittest.TestCase):
             self.assertTrue(setup_component(
                 self.hass, hue.DOMAIN, {}))
             mock_phue.Bridge.assert_not_called()
-            self.assertEquals({}, self.hass.data[hue.DOMAIN])
+            self.assertEqual({}, self.hass.data[hue.DOMAIN])
 
     @MockDependency('phue')
     def test_setup_with_host(self, mock_phue):
@@ -59,7 +59,7 @@ class TestSetup(unittest.TestCase):
                     {'bridge_id': '127.0.0.1'})
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
-                self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+                self.assertEqual(1, len(self.hass.data[hue.DOMAIN]))
 
     @MockDependency('phue')
     def test_setup_with_phue_conf(self, mock_phue):
@@ -86,7 +86,7 @@ class TestSetup(unittest.TestCase):
                         {'bridge_id': '127.0.0.1'})
 
                     self.assertTrue(hue.DOMAIN in self.hass.data)
-                    self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+                    self.assertEqual(1, len(self.hass.data[hue.DOMAIN]))
 
     @MockDependency('phue')
     def test_setup_with_multiple_hosts(self, mock_phue):
@@ -122,7 +122,7 @@ class TestSetup(unittest.TestCase):
                 ], any_order=True)
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
-                self.assertEquals(2, len(self.hass.data[hue.DOMAIN]))
+                self.assertEqual(2, len(self.hass.data[hue.DOMAIN]))
 
     @MockDependency('phue')
     def test_bridge_discovered(self, mock_phue):
@@ -145,7 +145,7 @@ class TestSetup(unittest.TestCase):
                 {'bridge_id': '192.168.0.10'})
 
             self.assertTrue(hue.DOMAIN in self.hass.data)
-            self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+            self.assertEqual(1, len(self.hass.data[hue.DOMAIN]))
 
     @MockDependency('phue')
     def test_bridge_configure_and_discovered(self, mock_phue):
@@ -175,7 +175,7 @@ class TestSetup(unittest.TestCase):
                 mock_load.assert_has_calls(calls_to_mock_load)
 
                 self.assertTrue(hue.DOMAIN in self.hass.data)
-                self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+                self.assertEqual(1, len(self.hass.data[hue.DOMAIN]))
 
                 # Then we discover the same bridge
                 hue.bridge_discovered(self.hass, mock_service, discovery_info)
@@ -189,7 +189,7 @@ class TestSetup(unittest.TestCase):
 
                 # Still only one
                 self.assertTrue(hue.DOMAIN in self.hass.data)
-                self.assertEquals(1, len(self.hass.data[hue.DOMAIN]))
+                self.assertEqual(1, len(self.hass.data[hue.DOMAIN]))
 
 
 class TestHueBridge(unittest.TestCase):

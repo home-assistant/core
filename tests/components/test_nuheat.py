@@ -35,11 +35,11 @@ class TestNuHeat(unittest.TestCase):
 
         mocked_nuheat.NuHeat.assert_called_with("warm", "feet")
         self.assertIn(nuheat.DOMAIN, self.hass.data)
-        self.assertEquals(2, len(self.hass.data[nuheat.DOMAIN]))
+        self.assertEqual(2, len(self.hass.data[nuheat.DOMAIN]))
         self.assertIsInstance(
             self.hass.data[nuheat.DOMAIN][0], type(mocked_nuheat.NuHeat())
         )
-        self.assertEquals(self.hass.data[nuheat.DOMAIN][1], "thermostat123")
+        self.assertEqual(self.hass.data[nuheat.DOMAIN][1], "thermostat123")
 
         mocked_load.assert_called_with(
             self.hass, "climate", nuheat.DOMAIN, {}, self.config
