@@ -8,7 +8,7 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
-from homeassistant.core import callback, valid_entity_id
+from homeassistant.core import callback, valid_entity_id, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -19,11 +19,13 @@ from homeassistant.util import slugify
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 import homeassistant.util.dt as dt_util
+from .entity_registry import EntityRegistry
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
+DATA_REGISTRY = 'entity_registry'
 
 
 class EntityComponent(object):
@@ -357,12 +359,18 @@ class EntityPlatform(object):
         if not new_entities:
             return
 
+        hass = self.component.hass
         component_entities = set(entity.entity_id for entity
                                  in self.component.entities)
 
+        registry = hass.data.get(DATA_REGISTRY)
+
+        if registry is None:
+            registry = hass.data[DATA_REGISTRY] = EntityRegistry(hass)
+
         tasks = [
             self._async_add_entity(entity, update_before_add,
-                                   component_entities)
+                                   component_entities, registry)
             for entity in new_entities]
 
         yield from asyncio.wait(tasks, loop=self.component.hass.loop)
@@ -378,14 +386,11 @@ class EntityPlatform(object):
         )
 
     @asyncio.coroutine
-    def _async_add_entity(self, entity, update_before_add, component_entities):
+    def _async_add_entity(self, entity, update_before_add, component_entities,
+                          registry):
         """Helper method to add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
-
-        # Do nothing if entity has already been added based on unique id.
-        if entity in self.component.entities:
-            return
 
         entity.hass = self.component.hass
         entity.platform = self
@@ -400,8 +405,20 @@ class EntityPlatform(object):
                     "%s: Error on device update!", self.platform)
                 return
 
-        # Write entity_id to entity
-        if getattr(entity, 'entity_id', None) is None:
+        # Resolve entity_id to entity
+        if entity.unique_id is not None:
+            yield from registry.async_ensure_loaded()
+
+            suggested_object_id = entity.name
+            if suggested_object_id is None and entity.entity_id is not None:
+                suggested_object_id = split_entity_id(entity.entity_id)[1]
+
+            entry = registry.async_get_or_create(
+                self.component.domain, self.platform, entity.unique_id,
+                suggested_object_id=suggested_object_id)
+            entity.entity_id = entry.entity_id
+
+        elif entity.entity_id is None:
             object_id = entity.name or DEVICE_DEFAULT_NAME
 
             if self.entity_namespace is not None:

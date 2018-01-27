@@ -83,6 +83,14 @@ def dump(_dict: dict) -> str:
         .replace(': null\n', ':\n')
 
 
+def save_yaml(path, data):
+    """Save YAML to a file."""
+    # Dump before writing to not truncate the file if dumping fails
+    data = dump(data)
+    with open(path, 'w', encoding='utf-8') as outfile:
+        outfile.write(data)
+
+
 def clear_secret_cache() -> None:
     """Clear the secret cache.
 
