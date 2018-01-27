@@ -4,21 +4,40 @@ Support for MercedesME System.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mercedesme/
 """
+import asyncio
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
+
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['mercedesmejsonpy==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+BINARY_SENSORS = [
+    'doorsClosed',
+    'windowsClosed',
+    'locked',
+    'tireWarningLight'
+]
+
 DATA_MME = 'mercedesme'
 DOMAIN = 'mercedesme'
+
+NOTIFICATION_ID = 'mercedesme_integration_notification'
+NOTIFICATION_TITLE = 'Mercedes me integration setup'
+
+SIGNAL_UPDATE_MERCEDESME = "mercedesme_update"
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -29,22 +48,23 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-NOTIFICATION_ID = 'mercedesme_integration_notification'
-NOTIFICATION_TITLE = 'Mercedes me integration setup'
-
 
 def setup(hass, config):
     """Set up MercedesMe System."""
-    from mercedesmejsonpy import controller
+    from mercedesmejsonpy.controller import Controller
     from mercedesmejsonpy import Exceptions
 
+    conf = config[DOMAIN]
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    scan_interval = conf.get(CONF_SCAN_INTERVAL)
+
+
     try:
-        hass.data[DATA_MME] = {
-            'controller': controller.Controller(
-                config[DOMAIN][CONF_USERNAME],
-                config[DOMAIN][CONF_PASSWORD],
-                config[DOMAIN][CONF_SCAN_INTERVAL])
-        }
+        mercedesme_api = Controller(username, password, scan_interval)
+        if not mercedesme_api.is_valid_session:
+            raise Exceptions.MercedesMeException(500)
+        hass.data[DATA_MME] = MercedesMeHub(mercedesme_api)
     except Exceptions.MercedesMeException as ex:
         if ex.code == 401:
             hass.components.persistent_notification.create(
@@ -65,12 +85,64 @@ def setup(hass, config):
                       ex.message)
         return False
 
-    if not hass.data[DATA_MME]["controller"].is_valid_session:
-        # should be logged already, the API should be raise an exception
-        return False
-
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'device_tracker', DOMAIN, {}, config)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
+    def hub_refresh(event_time):
+        """Call Mercedes me API to refresh information."""
+        _LOGGER.info("Updating Mercedes me component.")
+        hass.data[DATA_MME].data.update()
+        dispatcher_send(hass, SIGNAL_UPDATE_MERCEDESME)
+
+    track_time_interval(
+        hass,
+        hub_refresh,
+        timedelta(seconds=scan_interval))
+
     return True
+
+class MercedesMeHub(object):
+    """Representation of a base MercedesMe device."""
+
+    def __init__(self, data):
+        """Initialize the entity."""
+        self.data = data
+
+class MercedesMeEntity(Entity):
+    """Entity class for RainCloud devices."""
+
+    def __init__(self, data, internal_name, sensor_name, vin, unit):
+        """Initialize the RainCloud entity."""
+        self._car = None
+        self._data = data
+        self._state = False
+        self._name = sensor_name
+        self._internal_name = internal_name
+        self._unit = unit
+        self._vin = vin
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_MERCEDESME, self._update_callback)
+
+    def _update_callback(self):
+        """Callback update method."""
+        self.schedule_update_ha_state(True)
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._unit

@@ -23,12 +23,12 @@ def setup_scanner(hass, config, see, discovery_info=None):
     if discovery_info is None:
         return False
 
-    controller = hass.data[DATA_MME]['controller']
+    data = hass.data[DATA_MME].data
 
-    if not controller.cars:
+    if not data.cars:
         return False
 
-    MercedesMEDeviceTracker(hass, config, see, controller)
+    MercedesMEDeviceTracker(hass, config, see, data)
 
     return True
 
@@ -36,11 +36,11 @@ def setup_scanner(hass, config, see, discovery_info=None):
 class MercedesMEDeviceTracker(object):
     """A class representing a Mercedes ME device tracker."""
 
-    def __init__(self, hass, config, see, controller):
+    def __init__(self, hass, config, see, data):
         """Initialize the Mercedes ME device tracker."""
         self.hass = hass
         self.see = see
-        self.controller = controller
+        self.data = data
         self.update_info()
 
         track_utc_time_change(
@@ -49,9 +49,9 @@ class MercedesMEDeviceTracker(object):
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_info(self, now=None):
         """Update the device info."""
-        for device in self.controller.cars:
+        for device in self.data.cars:
             _LOGGER.debug("Updating %s", device["vin"])
-            location = self.controller.get_location(device["vin"])
+            location = self.data.get_location(device["vin"])
             if location is None:
                 return False
             dev_id = device["vin"]

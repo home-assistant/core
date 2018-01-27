@@ -7,65 +7,44 @@ https://home-assistant.io/components/mercedesme/
 import logging
 import datetime
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice)
-from homeassistant.components.mercedesme import DATA_MME
+from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.mercedesme import (
+    DATA_MME, MercedesMeEntity, BINARY_SENSORS)
 
 DEPENDENCIES = ['mercedesme']
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = [
-    'doorsClosed',
-    'windowsClosed',
-    'locked',
-    'tireWarningLight'
-]
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    if discovery_info is None:
-        return
+    data = hass.data[DATA_MME].data
 
-    controller = hass.data[DATA_MME]['controller']
-
-    if not controller.cars:
-        _LOGGER.error("setup_platform controller.cars is none")
+    if not data.cars:
+        _LOGGER.error("setup_platform data.cars is none")
         return
 
     devices = []
-    for car in controller.cars:
-        for dev in SENSOR_TYPES:
-            devices.append(MercedesMEBinarySensor(dev, car, controller))
+    for car in data.cars:
+        for dev in BINARY_SENSORS:
+            devices.append(MercedesMEBinarySensor(data, dev, dev, car["vin"], None))
 
     add_devices(devices, True)
 
 
-class MercedesMEBinarySensor(BinarySensorDevice):
+class MercedesMEBinarySensor(MercedesMeEntity, BinarySensorDevice):
     """Representation of a Sensor."""
-
-    def __init__(self, sensor_name, car, controller):
-        """Initialize the sensor."""
-        self._state = None
-        self._name = sensor_name
-        self._sensor_type = None
-        self._car = car
-        self.controller = controller
-
-    @property
-    def device_class(self):
-        """Return the class of this binary sensor."""
-        return self._sensor_type
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
 
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
+        retval = True if bool(self._state == "On") else False
+        _LOGGER.warning("is_on: %s %s", self._internal_name, retval)
+        return retval
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
         return self._state
 
     @property
@@ -96,7 +75,8 @@ class MercedesMEBinarySensor(BinarySensorDevice):
                 "lastUpdate": datetime.datetime.fromtimestamp(
                     self._car["lastUpdate"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
-                "car": self._car["license"]
+                "car": self._car["license"],
+                "Is_On": self.is_on,
             }
         return {
             "originalValue": self._car[self._name],
@@ -109,11 +89,18 @@ class MercedesMEBinarySensor(BinarySensorDevice):
         """Fetch new state data for the sensor."""
         _LOGGER.debug("Updating %s", self._name)
 
-        self.controller.update()
+        self._car = next(car for car in self._data.cars if car["vin"] == self._vin)
+
+        result = False
 
         if self._name == "windowsClosed":
-            self._state = bool(self._car[self._name] == "CLOSED")
+            result = bool(self._car[self._name] == "CLOSED")
         elif self._name == "tireWarningLight":
-            self._state = bool(self._car[self._name] != "INACTIVE")
+            result = bool(self._car[self._name] != "INACTIVE")
         else:
-            self._state = self._car[self._name]
+            result = self._car[self._name] is True
+
+        self._state = "On" if result else "Off"
+
+        _LOGGER.debug("Updated %s Value: %s IsOn: %s",
+                      self._name, self._state, self.is_on)
