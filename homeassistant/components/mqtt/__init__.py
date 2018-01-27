@@ -12,6 +12,7 @@ import time
 import ssl
 import re
 import requests.certs
+import unicodedata
 
 import voluptuous as vol
 
@@ -675,6 +676,15 @@ class MqttAvailability(Entity):
         self._payload_available = payload_available
         self._payload_not_available = payload_not_available
 
+    # Code from: https://stackoverflow.com/a/29247821
+    def normalize_caseless(text):
+        """Return a normalized and accent less version."""
+        return unicodedata.normalize("NFKD", text.casefold())
+
+    def caseless_equal(self, left, right):
+        """Return equality of normalized and accent less strings."""
+        return self.normalize_caseless(left) == self.normalize_caseless(right)
+
     def async_added_to_hass(self):
         """Subscribe mqtt events.
 
@@ -683,9 +693,9 @@ class MqttAvailability(Entity):
         @callback
         def availability_message_received(topic, payload, qos):
             """Handle a new received MQTT availability message."""
-            if payload == self._payload_available:
+            if self.caseless_equal(payload, self._payload_available):
                 self._available = True
-            elif payload == self._payload_not_available:
+            elif self.caseless_equal(payload, self._payload_not_available):
                 self._available = False
 
             self.async_schedule_update_ha_state()
@@ -693,7 +703,7 @@ class MqttAvailability(Entity):
         if self._availability_topic is not None:
             yield from async_subscribe(
                 self.hass, self._availability_topic,
-                availability_message_received, self. _availability_qos)
+                availability_message_received, self._availability_qos)
 
     @property
     def available(self) -> bool:
