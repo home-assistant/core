@@ -11,13 +11,13 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MEDIA_TYPE_URL,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.2',
+REQUIREMENTS = ['panasonic_viera==0.3',
                 'wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
@@ -183,3 +183,13 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self.send_key('NRC_REW-ONOFF')
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """ Play media."""
+        _LOGGER.debug("Play media: %s (%s)",media_id, media_type)
+
+        if media_type == MEDIA_TYPE_URL:
+            try:
+                self._remote.open_webpage(media_id)
+            except (socket.timeout, TimeoutError, OSError):
+                self._state = STATE_OFF
