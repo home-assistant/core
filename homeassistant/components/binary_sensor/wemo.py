@@ -62,7 +62,7 @@ class WemoBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Return the name of the sevice if any."""
+        """Return the name of the service if any."""
         return self.wemo.name
 
     @property

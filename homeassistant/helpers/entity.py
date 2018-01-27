@@ -268,7 +268,7 @@ class Entity(object):
             self.entity_id, state, attr, self.force_update)
 
     def schedule_update_ha_state(self, force_refresh=False):
-        """Schedule a update ha state change task.
+        """Schedule an update ha state change task.
 
         That avoid executor dead looks.
         """
@@ -276,7 +276,7 @@ class Entity(object):
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
-        """Schedule a update ha state change task."""
+        """Schedule an update ha state change task."""
         self.hass.async_add_job(self.async_update_ha_state(force_refresh))
 
     @asyncio.coroutine

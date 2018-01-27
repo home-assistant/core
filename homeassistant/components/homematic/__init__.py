@@ -466,7 +466,7 @@ def _system_callback_handler(hass, config, src, *args):
                     hass, discovery_type, addresses, interface)
 
                 # When devices of this type are found
-                # they are setup in HASS and an discovery event is fired
+                # they are setup in HASS and a discovery event is fired
                 if found_devices:
                     discovery.load_platform(hass, component_name, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices

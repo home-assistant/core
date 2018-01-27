@@ -624,7 +624,7 @@ def async_api_set_brightness(hass, config, request, entity):
 @extract_entity
 @asyncio.coroutine
 def async_api_adjust_brightness(hass, config, request, entity):
-    """Process a adjust brightness request."""
+    """Process an adjust brightness request."""
     brightness_delta = int(request[API_PAYLOAD]['brightnessDelta'])
 
     # read current state
@@ -812,7 +812,7 @@ def async_api_set_percentage(hass, config, request, entity):
 @extract_entity
 @asyncio.coroutine
 def async_api_adjust_percentage(hass, config, request, entity):
-    """Process a adjust percentage request."""
+    """Process an adjust percentage request."""
     percentage_delta = int(request[API_PAYLOAD]['percentageDelta'])
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -873,7 +873,7 @@ def async_api_lock(hass, config, request, entity):
 @extract_entity
 @asyncio.coroutine
 def async_api_unlock(hass, config, request, entity):
-    """Process a unlock request."""
+    """Process an unlock request."""
     yield from hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False)
@@ -904,7 +904,7 @@ def async_api_set_volume(hass, config, request, entity):
 @extract_entity
 @asyncio.coroutine
 def async_api_adjust_volume(hass, config, request, entity):
-    """Process a adjust volume request."""
+    """Process an adjust volume request."""
     volume_delta = int(request[API_PAYLOAD]['volume'])
 
     current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)

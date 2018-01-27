@@ -172,7 +172,7 @@ class TestHomeAssistant(unittest.TestCase):
         assert len(call_count) == 2
 
     def test_async_add_job_pending_tasks_executor(self):
-        """Run a executor in pending tasks."""
+        """Run an executor in pending tasks."""
         call_count = []
 
         def test_executor():
