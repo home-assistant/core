@@ -185,15 +185,15 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self.send_key('NRC_REW-ONOFF')
 
     def play_media(self, media_type, media_id, **kwargs):
-        """ Play media."""
-        _LOGGER.debug("Play media: %s (%s)",media_id, media_type)
+        """Play media."""
+        _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
 
         if media_type == MEDIA_TYPE_URL:
             try:
                 self._remote.open_webpage(media_id)
-            except (socket.timeout, TimeoutError, OSError):
+            except (TimeoutError, OSError):
                 self._state = STATE_OFF
 
     def media_stop(self):
-        """ Stop playback."""
+        """Stop playback."""
         self.send_key('NRC_CANCEL-ONOFF')
