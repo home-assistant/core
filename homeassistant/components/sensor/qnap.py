@@ -197,7 +197,6 @@ class QNAPStatsAPI(object):
 
         self.data = {}
 
-    # pylint: disable=bare-except
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update API information and store locally."""
@@ -207,7 +206,7 @@ class QNAPStatsAPI(object):
             self.data["smart_drive_health"] = self._api.get_smart_disk_health()
             self.data["volumes"] = self._api.get_volumes()
             self.data["bandwidth"] = self._api.get_bandwidth()
-        except:
+        except:  # pylint: disable=bare-except  # noqa: E722
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
 

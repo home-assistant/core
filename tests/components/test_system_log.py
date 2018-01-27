@@ -34,7 +34,7 @@ def get_error_log(hass, test_client, expected_count):
 def _generate_and_log_exception(exception, log):
     try:
         raise Exception(exception)
-    except:  # pylint: disable=bare-except
+    except:  # pylint: disable=bare-except  # noqa: E722
         _LOGGER.exception(log)
 
 
