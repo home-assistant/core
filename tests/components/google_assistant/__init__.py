@@ -211,7 +211,7 @@ DEMO_DEVICES = [{
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False,
     'attributes': {
-        'availableThermostatModes': 'heat,cool,off',
+        'availableThermostatModes': 'heat,cool,heatcool,off',
         'thermostatTemperatureUnit': 'C',
     },
 }, {
@@ -226,6 +226,22 @@ DEMO_DEVICES = [{
     'id': 'climate.ecobee',
     'name': {
         'name': 'Ecobee'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'sensor.outside_temperature',
+    'name': {
+        'name': 'Outside Temperature'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'sensor.outside_humidity',
+    'name': {
+        'name': 'Outside Humidity'
     },
     'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',

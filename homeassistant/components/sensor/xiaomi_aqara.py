@@ -61,7 +61,7 @@ class XiaomiSensor(XiaomiDevice):
         """Return the state of the sensor."""
         return self._state
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
         if value is None:
@@ -77,5 +77,5 @@ class XiaomiSensor(XiaomiDevice):
             return False
         elif self._data_key == 'pressure' and value == 0:
             return False
-        self._state = round(value, 2)
+        self._state = round(value, 1)
         return True

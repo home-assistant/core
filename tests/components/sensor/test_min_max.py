@@ -260,3 +260,33 @@ class TestMinMaxSensor(unittest.TestCase):
 
         self.assertEqual(STATE_UNKNOWN, state.state)
         self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))
+
+    def test_last_sensor(self):
+        """Test the last sensor."""
+        config = {
+            'sensor': {
+                'platform': 'min_max',
+                'name': 'test_last',
+                'type': 'last',
+                'entity_ids': [
+                    'sensor.test_1',
+                    'sensor.test_2',
+                    'sensor.test_3',
+                ]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        entity_ids = config['sensor']['entity_ids']
+        state = self.hass.states.get('sensor.test_last')
+
+        for entity_id, value in dict(zip(entity_ids, self.values)).items():
+            self.hass.states.set(entity_id, value)
+            self.hass.block_till_done()
+            state = self.hass.states.get('sensor.test_last')
+            self.assertEqual(str(float(value)), state.state)
+
+        self.assertEqual(self.min, state.attributes.get('min_value'))
+        self.assertEqual(self.max, state.attributes.get('max_value'))
+        self.assertEqual(self.mean, state.attributes.get('mean'))

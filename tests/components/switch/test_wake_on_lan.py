@@ -98,6 +98,7 @@ class TestWOLSwitch(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
 
     @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
+    @patch('subprocess.call', new=call)
     def test_minimal_config(self):
         """Test with minimal config."""
         self.assertTrue(setup_component(self.hass, switch.DOMAIN, {

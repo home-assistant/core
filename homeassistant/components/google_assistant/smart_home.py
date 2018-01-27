@@ -14,13 +14,14 @@ from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
     CONF_NAME, CONF_TYPE
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene, script, climate
+    switch, light, cover, media_player, group, fan, scene, script, climate,
+    sensor
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -32,7 +33,7 @@ from .const import (
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE, TRAIT_TEMPERATURE_SETTING,
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
-    CONF_ALIASES, CLIMATE_SUPPORTED_MODES
+    CONF_ALIASES, CLIMATE_SUPPORTED_MODES, CLIMATE_MODE_HEATCOOL
 )
 
 HANDLERS = Registry()
@@ -67,6 +68,23 @@ MAPPING_COMPONENT = {
 }  # type: Dict[str, list]
 
 
+"""Error code used for SmartHomeError class."""
+ERROR_NOT_SUPPORTED = "notSupported"
+
+
+class SmartHomeError(Exception):
+    """Google Assistant Smart Home errors."""
+
+    def __init__(self, code, msg):
+        """Log error code."""
+        super(SmartHomeError, self).__init__(msg)
+        _LOGGER.error(
+            "An error has ocurred in Google SmartHome: %s."
+            "Error code: %s", msg, code
+        )
+        self.code = code
+
+
 class Config:
     """Hold the configuration for Google Assistant."""
 
@@ -80,8 +98,9 @@ class Config:
 def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     """Convert a hass entity into an google actions device."""
     entity_config = config.entity_config.get(entity.entity_id, {})
+    google_domain = entity_config.get(CONF_TYPE)
     class_data = MAPPING_COMPONENT.get(
-        entity_config.get(CONF_TYPE) or entity.domain)
+        google_domain or entity.domain)
 
     if class_data is None:
         return None
@@ -128,30 +147,92 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
                                 entity.attributes.get(light.ATTR_MIN_MIREDS))))
 
     if entity.domain == climate.DOMAIN:
-        modes = ','.join(
-            m.lower() for m in entity.attributes.get(
-                climate.ATTR_OPERATION_LIST, [])
-            if m.lower() in CLIMATE_SUPPORTED_MODES)
+        modes = []
+        for mode in entity.attributes.get(climate.ATTR_OPERATION_LIST, []):
+            if mode in CLIMATE_SUPPORTED_MODES:
+                modes.append(mode)
+            elif mode == climate.STATE_AUTO:
+                modes.append(CLIMATE_MODE_HEATCOOL)
+
         device['attributes'] = {
-            'availableThermostatModes': modes,
+            'availableThermostatModes': ','.join(modes),
             'thermostatTemperatureUnit':
             'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
         _LOGGER.debug('Thermostat attributes %s', device['attributes'])
+
+    if entity.domain == sensor.DOMAIN:
+        if google_domain == climate.DOMAIN:
+            unit_of_measurement = entity.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT,
+                units.temperature_unit
+            )
+
+            device['attributes'] = {
+                'thermostatTemperatureUnit':
+                'F' if unit_of_measurement == TEMP_FAHRENHEIT else 'C',
+            }
+            _LOGGER.debug('Sensor attributes %s', device['attributes'])
+
     return device
 
 
-def query_device(entity: Entity, units: UnitSystem) -> dict:
+def query_device(entity: Entity, config: Config, units: UnitSystem) -> dict:
     """Take an entity and return a properly formatted device object."""
     def celsius(deg: Optional[float]) -> Optional[float]:
         """Convert a float to Celsius and rounds to one decimal place."""
         if deg is None:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+
+    if entity.domain == sensor.DOMAIN:
+        entity_config = config.entity_config.get(entity.entity_id, {})
+        google_domain = entity_config.get(CONF_TYPE)
+
+        if google_domain == climate.DOMAIN:
+            # check if we have a string value to convert it to number
+            value = entity.state
+            if isinstance(entity.state, str):
+                try:
+                    value = float(value)
+                except ValueError:
+                    value = None
+
+            if value is None:
+                raise SmartHomeError(
+                    ERROR_NOT_SUPPORTED,
+                    "Invalid value {} for the climate sensor"
+                    .format(entity.state)
+                )
+
+            # detect if we report temperature or humidity
+            unit_of_measurement = entity.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT,
+                units.temperature_unit
+            )
+            if unit_of_measurement in [TEMP_FAHRENHEIT, TEMP_CELSIUS]:
+                value = celsius(value)
+                attr = 'thermostatTemperatureAmbient'
+            elif unit_of_measurement == '%':
+                attr = 'thermostatHumidityAmbient'
+            else:
+                raise SmartHomeError(
+                    ERROR_NOT_SUPPORTED,
+                    "Unit {} is not supported by the climate sensor"
+                    .format(unit_of_measurement)
+                )
+
+            return {attr: value}
+
+        raise SmartHomeError(
+            ERROR_NOT_SUPPORTED,
+            "Sensor type {} is not supported".format(google_domain)
+        )
+
     if entity.domain == climate.DOMAIN:
         mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
         if mode not in CLIMATE_SUPPORTED_MODES:
-            mode = 'on'
+            mode = 'heat'
         response = {
             'thermostatMode': mode,
             'thermostatTemperatureSetpoint':
@@ -245,9 +326,9 @@ def determine_service(
     # special climate handling
     if domain == climate.DOMAIN:
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            service_data['temperature'] = units.temperature(
-                params.get('thermostatTemperatureSetpoint', 25),
-                TEMP_CELSIUS)
+            service_data['temperature'] = \
+                units.temperature(
+                    params['thermostatTemperatureSetpoint'], TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             service_data['target_temp_high'] = units.temperature(
@@ -258,8 +339,12 @@ def determine_service(
                 TEMP_CELSIUS)
             return (climate.SERVICE_SET_TEMPERATURE, service_data)
         if command == COMMAND_THERMOSTAT_SET_MODE:
-            service_data['operation_mode'] = params.get(
-                'thermostatMode', 'off')
+            mode = params['thermostatMode']
+
+            if mode == CLIMATE_MODE_HEATCOOL:
+                mode = climate.STATE_AUTO
+
+            service_data['operation_mode'] = mode
             return (climate.SERVICE_SET_OPERATION_MODE, service_data)
 
     if command == COMMAND_BRIGHTNESS:
@@ -317,7 +402,7 @@ def async_handle_message(hass, config, message):
 
 @HANDLERS.register('action.devices.SYNC')
 @asyncio.coroutine
-def async_devices_sync(hass, config, payload):
+def async_devices_sync(hass, config: Config, payload):
     """Handle action.devices.SYNC request."""
     devices = []
     for entity in hass.states.async_all():
@@ -354,7 +439,10 @@ def async_devices_query(hass, config, payload):
             # If we can't find a state, the device is offline
             devices[devid] = {'online': False}
 
-        devices[devid] = query_device(state, hass.config.units)
+        try:
+            devices[devid] = query_device(state, config, hass.config.units)
+        except SmartHomeError as error:
+            devices[devid] = {'errorCode': error.code}
 
     return {'devices': devices}
 

@@ -4,19 +4,19 @@ IMAP sensor support.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.imap/
 """
-import logging
 import asyncio
-import async_timeout
+import logging
 
+import async_timeout
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
+    CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the IMAP platform."""
+    """Set up the IMAP platform."""
     sensor = ImapSensor(config.get(CONF_NAME),
                         config.get(CONF_USERNAME),
                         config.get(CONF_PASSWORD),
