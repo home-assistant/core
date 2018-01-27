@@ -111,10 +111,10 @@ class MercedesMeHub(object):
 
 
 class MercedesMeEntity(Entity):
-    """Entity class for RainCloud devices."""
+    """Entity class for MercedesMe devices."""
 
     def __init__(self, data, internal_name, sensor_name, vin, unit):
-        """Initialize the RainCloud entity."""
+        """Initialize the MercedesMe entity."""
         self._car = None
         self._data = data
         self._state = False

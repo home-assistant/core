@@ -8,7 +8,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components.mercedesme import DATA_MME
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +43,8 @@ class MercedesMEDeviceTracker(object):
         self.data = data
         self.update_info()
 
-        track_utc_time_change(
-            self.hass, self.update_info, second=range(0, 60, 30))
+        track_time_interval(
+            self.hass, self.update_info, MIN_TIME_BETWEEN_SCANS)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_info(self, now=None):
