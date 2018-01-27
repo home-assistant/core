@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.google_travel_time/
 from datetime import datetime
 from datetime import timedelta
 import logging
-from os import path
 
 import voluptuous as vol
 
@@ -17,7 +16,6 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_ENTITY_ID,
     ATTR_LATITUDE, ATTR_LONGITUDE, CONF_MODE)
 from homeassistant.util import Throttle
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
