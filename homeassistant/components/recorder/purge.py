@@ -12,7 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 def purge_old_data(instance, purge_days):
     """Purge events and states older than purge_days ago."""
     from .models import States, Events
-    from sqlalchemy import func
+    from sqlalchemy import orm
+    from sqlalchemy.sql import exists
 
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
 
@@ -20,12 +21,18 @@ def purge_old_data(instance, purge_days):
         # For each entity, the most recent state is protected from deletion
         # s.t. we can properly restore state even if the entity has not been
         # updated in a long time
-        protected_states = session.query(States.state_id, States.event_id,
-                                         func.max(States.last_updated)) \
-                              .group_by(States.entity_id).all()
+        states_alias = orm.aliased(States, name='StatesAlias')
+        protected_states = session.query(States.state_id, States.event_id)\
+            .filter(~exists()
+                    .where(States.entity_id ==
+                           states_alias.entity_id)
+                    .where(states_alias.last_updated >
+                           States.last_updated))\
+            .all()
 
         protected_state_ids = tuple((state[0] for state in protected_states))
-        protected_event_ids = tuple((state[1] for state in protected_states))
+        protected_event_ids = tuple((state[1] for state in protected_states
+                                     if state[1] is not None))
 
         deleted_rows = session.query(States) \
                               .filter((States.last_updated < purge_before)) \

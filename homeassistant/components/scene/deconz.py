@@ -4,7 +4,6 @@ Support for deCONZ scenes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.deconz/
 """
-
 import asyncio
 
 from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
@@ -31,7 +30,7 @@ class DeconzScene(Scene):
     """Representation of a deCONZ scene."""
 
     def __init__(self, scene):
-        """Setup scene."""
+        """Set up a scene."""
         self._scene = scene
 
     @asyncio.coroutine

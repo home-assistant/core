@@ -5,33 +5,33 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light/
 """
 import asyncio
+import csv
 from datetime import timedelta
 import logging
 import os
-import csv
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
 from homeassistant.components import group
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_ON)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
-DOMAIN = "light"
+DOMAIN = 'light'
 DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 # Bitfield of features supported by the light entity
 SUPPORT_BRIGHTNESS = 1
@@ -220,7 +220,7 @@ def toggle(hass, entity_id=None, transition=None):
 
 
 def preprocess_turn_on_alternatives(params):
-    """Processing extra data for turn light on request."""
+    """Process extra data for turn light on request."""
     profile = Profiles.get(params.pop(ATTR_PROFILE, None))
     if profile is not None:
         params.setdefault(ATTR_XY_COLOR, profile[:2])
@@ -242,7 +242,7 @@ def preprocess_turn_on_alternatives(params):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Expose light control via statemachine and services."""
+    """Expose light control via state machine and services."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
     yield from component.async_setup(config)

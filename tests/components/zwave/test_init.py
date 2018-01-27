@@ -154,18 +154,31 @@ def test_zwave_ready_wait(hass, mock_openzwave):
     yield from async_setup_component(hass, 'zwave', {'zwave': {}})
     yield from hass.async_block_till_done()
 
-    with patch.object(zwave.time, 'sleep') as mock_sleep:
-        with patch.object(zwave, '_LOGGER') as mock_logger:
-            hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-            yield from hass.async_block_till_done()
+    sleeps = []
 
-            assert mock_sleep.called
-            assert len(mock_sleep.mock_calls) == const.NETWORK_READY_WAIT_SECS
-            assert mock_logger.warning.called
-            assert len(mock_logger.warning.mock_calls) == 1
-            assert mock_logger.warning.mock_calls[0][1][1] == \
-                const.NETWORK_READY_WAIT_SECS
+    def utcnow():
+        return datetime.fromtimestamp(len(sleeps))
+
+    asyncio_sleep = asyncio.sleep
+
+    @asyncio.coroutine
+    def sleep(duration, loop):
+        if duration > 0:
+            sleeps.append(duration)
+        yield from asyncio_sleep(0, loop=loop)
+
+    with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
+        with patch('asyncio.sleep', new=sleep):
+            with patch.object(zwave, '_LOGGER') as mock_logger:
+                hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
+                hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+                yield from hass.async_block_till_done()
+
+                assert len(sleeps) == const.NETWORK_READY_WAIT_SECS
+                assert mock_logger.warning.called
+                assert len(mock_logger.warning.mock_calls) == 1
+                assert mock_logger.warning.mock_calls[0][1][1] == \
+                    const.NETWORK_READY_WAIT_SECS
 
 
 @asyncio.coroutine

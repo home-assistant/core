@@ -1,11 +1,12 @@
 """Test system log component."""
 import asyncio
 import logging
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
-from unittest.mock import MagicMock, patch
 
 _LOGGER = logging.getLogger('test_logger')
 
@@ -118,10 +119,53 @@ def test_clear_logs(hass, test_client):
 
 
 @asyncio.coroutine
+def test_write_log(hass):
+    """Test that error propagates to logger."""
+    logger = MagicMock()
+    with patch('logging.getLogger', return_value=logger) as mock_logging:
+        hass.async_add_job(
+            hass.services.async_call(
+                system_log.DOMAIN, system_log.SERVICE_WRITE,
+                {'message': 'test_message'}))
+        yield from hass.async_block_till_done()
+    mock_logging.assert_called_once_with(
+        'homeassistant.components.system_log.external')
+    assert logger.method_calls[0] == ('error', ('test_message',))
+
+
+@asyncio.coroutine
+def test_write_choose_logger(hass):
+    """Test that correct logger is chosen."""
+    with patch('logging.getLogger') as mock_logging:
+        hass.async_add_job(
+            hass.services.async_call(
+                system_log.DOMAIN, system_log.SERVICE_WRITE,
+                {'message': 'test_message',
+                 'logger': 'myLogger'}))
+        yield from hass.async_block_till_done()
+    mock_logging.assert_called_once_with(
+        'myLogger')
+
+
+@asyncio.coroutine
+def test_write_choose_level(hass):
+    """Test that correct logger is chosen."""
+    logger = MagicMock()
+    with patch('logging.getLogger', return_value=logger):
+        hass.async_add_job(
+            hass.services.async_call(
+                system_log.DOMAIN, system_log.SERVICE_WRITE,
+                {'message': 'test_message',
+                 'level': 'debug'}))
+        yield from hass.async_block_till_done()
+    assert logger.method_calls[0] == ('debug', ('test_message',))
+
+
+@asyncio.coroutine
 def test_unknown_path(hass, test_client):
     """Test error logged from unknown path."""
     _LOGGER.findCaller = MagicMock(
-            return_value=('unknown_path', 0, None, None))
+        return_value=('unknown_path', 0, None, None))
     _LOGGER.error('error message')
     log = (yield from get_error_log(hass, test_client, 1))[0]
     assert log['source'] == 'unknown_path'
@@ -130,16 +174,15 @@ def test_unknown_path(hass, test_client):
 def log_error_from_test_path(path):
     """Log error while mocking the path."""
     call_path = 'internal_path.py'
-    with patch.object(
-            _LOGGER,
-            'findCaller',
-            MagicMock(return_value=(call_path, 0, None, None))):
+    with patch.object(_LOGGER,
+                      'findCaller',
+                      MagicMock(return_value=(call_path, 0, None, None))):
         with patch('traceback.extract_stack',
                    MagicMock(return_value=[
-                             get_frame('main_path/main.py'),
-                             get_frame(path),
-                             get_frame(call_path),
-                             get_frame('venv_path/logging/log.py')])):
+                       get_frame('main_path/main.py'),
+                       get_frame(path),
+                       get_frame(call_path),
+                       get_frame('venv_path/logging/log.py')])):
             _LOGGER.error('error message')
 
 
