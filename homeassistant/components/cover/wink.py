@@ -6,7 +6,7 @@ https://home-assistant.io/components/cover.wink/
 """
 import asyncio
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, STATE_UNKNOWN
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
@@ -31,25 +31,28 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['cover'].append(self)
 
     def close_cover(self, **kwargs):
-        """Close the shade."""
+        """Close the cover."""
         self.wink.set_state(0)
 
     def open_cover(self, **kwargs):
-        """Open the shade."""
+        """Open the cover."""
         self.wink.set_state(1)
 
     def set_cover_position(self, position, **kwargs):
-        """Move the roller shutter to a specific position."""
+        """Move the cover shutter to a specific position."""
         self.wink.set_state(float(position)/100)
 
     @property
     def current_cover_position(self):
-        """Return the current position of roller shutter."""
-        return int(self.wink.state()*100)
+        """Return the current position of cover shutter."""
+        if self.wink.state() is not None:
+            return int(self.wink.state()*100)
+        else:
+            return STATE_UNKNOWN
 
     @property
     def is_closed(self):

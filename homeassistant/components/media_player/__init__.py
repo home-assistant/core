@@ -366,7 +366,7 @@ def async_setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(MediaPlayerImageView(component.entities))
+    hass.http.register_view(MediaPlayerImageView(component))
 
     yield from component.async_setup(config)
 
@@ -929,14 +929,14 @@ class MediaPlayerImageView(HomeAssistantView):
     url = '/api/media_player_proxy/{entity_id}'
     name = 'api:media_player:image'
 
-    def __init__(self, entities):
+    def __init__(self, component):
         """Initialize a media player view."""
-        self.entities = entities
+        self.component = component
 
     @asyncio.coroutine
     def get(self, request, entity_id):
         """Start a get request."""
-        player = self.entities.get(entity_id)
+        player = self.component.get_entity(entity_id)
         if player is None:
             status = 404 if request[KEY_AUTHENTICATED] else 401
             return web.Response(status=status)

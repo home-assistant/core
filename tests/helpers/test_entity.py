@@ -388,3 +388,15 @@ def test_async_pararell_updates_with_two(hass):
     test_lock.release()
     yield from asyncio.sleep(0, loop=hass.loop)
     test_lock.release()
+
+
+@asyncio.coroutine
+def test_async_remove_no_platform(hass):
+    """Test async_remove method when no platform set."""
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = 'test.test'
+    yield from ent.async_update_ha_state()
+    assert len(hass.states.async_entity_ids()) == 1
+    yield from ent.async_remove()
+    assert len(hass.states.async_entity_ids()) == 0
