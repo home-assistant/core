@@ -12,13 +12,13 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP, SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, CONF_MAC, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['ha-philipsjs==0.0.1']
+REQUIREMENTS = ['ha-philipsjs==0.0.1', 'wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,11 +33,11 @@ SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_NAME = 'Philips TV'
-BASE_URL = 'http://{0}:1925/1/{1}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MAC): cv.string,
 })
 
 
@@ -48,19 +48,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
+    mac = config.get(CONF_MAC)
 
     tvapi = haphilipsjs.PhilipsTV(host)
 
-    add_devices([PhilipsTV(tvapi, name)])
+    add_devices([PhilipsTV(tvapi, name, mac)])
 
 
 class PhilipsTV(MediaPlayerDevice):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    def __init__(self, tv, name):
+    def __init__(self, tv, name, mac):
         """Initialize the Philips TV."""
         self._tv = tv
         self._name = name
+        self._mac = mac
         self._state = STATE_UNKNOWN
         self._min_volume = None
         self._max_volume = None
@@ -88,9 +90,10 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
+        is_supporting_turn_on = SUPPORT_TURN_ON if self._mac else 0
         if self._watching_tv:
-            return SUPPORT_PHILIPS_JS_TV
-        return SUPPORT_PHILIPS_JS
+            return SUPPORT_PHILIPS_JS_TV | is_supporting_turn_on
+        return SUPPORT_PHILIPS_JS | is_supporting_turn_on
 
     @property
     def state(self):
@@ -125,6 +128,11 @@ class PhilipsTV(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
+
+    def turn_on(self):
+        """Turn off the device."""
+        from wakeonlan import wol
+        wol.send_magic_packet(self._mac)
 
     def turn_off(self):
         """Turn off the device."""
