@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
+    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_OPEN)
 from homeassistant.components import group
 
 ATTR_CHANGED_BY = 'changed_by'
@@ -92,6 +92,8 @@ def async_setup(hass, config):
         for entity in target_locks:
             if service.service == SERVICE_LOCK:
                 yield from entity.async_lock(code=code)
+            elif service.service == SERVICE_OPEN:
+                yield from entity.async_open(code=code)
             else:
                 yield from entity.async_unlock(code=code)
 
@@ -107,6 +109,9 @@ def async_setup(hass, config):
         schema=LOCK_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_LOCK, async_handle_lock_service,
+        schema=LOCK_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_OPEN, async_handle_lock_service,
         schema=LOCK_SERVICE_SCHEMA)
 
     return True
@@ -152,6 +157,17 @@ class LockDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
+
+    def open(self, **kwargs):
+        """Open the lock."""
+        raise NotImplementedError()
+
+    def async_open(self, **kwargs):
+        """Open the lock.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(ft.partial(self.open, **kwargs))
 
     @property
     def state_attributes(self):
