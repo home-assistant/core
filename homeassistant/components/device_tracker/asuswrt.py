@@ -214,7 +214,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
         for device in result:
             if device['mac'] is not None:
                 mac = device['mac'].upper()
-                old_ip = cur_devices.get(mac, {}).ip or None
+                old_device = cur_devices.get(mac)
+                old_ip = old_device.ip if old_device else None
                 devices[mac] = Device(mac, device.get('ip', old_ip), None)
         return devices
 
