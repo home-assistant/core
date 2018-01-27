@@ -17,7 +17,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_UNIT_OF_MEASUREMENT)
+    CONF_UNIT_OF_MEASUREMENT, STATE_LOCKED, STATE_UNLOCKED, STATE_ON)
 from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
@@ -245,9 +245,8 @@ class _AlexaInterface(object):
             'properties': {
                 'supported': self.properties_supported(),
                 'proactivelyReported': self.properties_proactively_reported(),
+                'retrievable': self.properties_retrievable(),
             },
-            # XXX this is incorrect, but the tests assert it
-            'retrievable': self.properties_retrievable(),
         }
 
         # pylint: disable=assignment-from-none
@@ -271,10 +270,40 @@ class _AlexaPowerController(_AlexaInterface):
     def name(self):
         return 'Alexa.PowerController'
 
+    def properties_supported(self):
+        return [{'name': 'powerState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'powerState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_ON:
+            return 'ON'
+        return 'OFF'
+
 
 class _AlexaLockController(_AlexaInterface):
     def name(self):
         return 'Alexa.LockController'
+
+    def properties_supported(self):
+        return [{'name': 'lockState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'lockState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_LOCKED:
+            return 'LOCKED'
+        elif self.entity.state == STATE_UNLOCKED:
+            return 'UNLOCKED'
+        return 'JAMMED'
 
 
 class _AlexaSceneController(_AlexaInterface):
@@ -289,6 +318,18 @@ class _AlexaSceneController(_AlexaInterface):
 class _AlexaBrightnessController(_AlexaInterface):
     def name(self):
         return 'Alexa.BrightnessController'
+
+    def properties_supported(self):
+        return [{'name': 'brightness'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'brightness':
+            raise _UnsupportedProperty(name)
+
+        return round(self.entity.attributes['brightness'] / 255.0 * 100)
 
 
 class _AlexaColorController(_AlexaInterface):
