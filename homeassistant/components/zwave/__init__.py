@@ -219,7 +219,7 @@ def get_config_value(node, value_index, tries=5):
                     and value.index == value_index):
                 return value.data
     except RuntimeError:
-        # If we get an runtime error the dict has changed while
+        # If we get a runtime error the dict has changed while
         # we was looking for a value, just do it again
         return None if tries <= 0 else get_config_value(
             node, value_index, tries=tries - 1)
