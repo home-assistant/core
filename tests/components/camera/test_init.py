@@ -83,7 +83,7 @@ class TestGetImage(object):
     @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
            autospec=True, return_value=b'Test')
     def test_get_image_from_camera(self, mock_camera):
-        """Grab a image from camera entity."""
+        """Grab an image from camera entity."""
         self.hass.start()
 
         image = run_coroutine_threadsafe(camera.async_get_image(

@@ -82,7 +82,7 @@ class TestImageProcessing(object):
     @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
            autospec=True, return_value=b'Test')
     def test_get_image_from_camera(self, mock_camera):
-        """Grab a image from camera entity."""
+        """Grab an image from camera entity."""
         self.hass.start()
 
         ip.scan(self.hass, entity_id='image_processing.test')

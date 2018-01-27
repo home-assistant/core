@@ -473,7 +473,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         return self.async_query('playlist', 'play', media_id)
 
     def _add_uri_to_playlist(self, media_id):
-        """Add a items to the existing playlist."""
+        """Add an item to the existing playlist."""
         return self.async_query('playlist', 'add', media_id)
 
     def async_set_shuffle(self, shuffle):

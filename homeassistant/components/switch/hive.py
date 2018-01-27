@@ -65,5 +65,5 @@ class HiveDevicePlug(SwitchDevice):
             entity.handle_update(self.data_updatesource)
 
     def update(self):
-        """Update all Node data frome Hive."""
+        """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)

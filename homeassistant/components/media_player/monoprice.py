@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MonopriceZone(MediaPlayerDevice):
-    """Representation of a a Monoprice amplifier zone."""
+    """Representation of a Monoprice amplifier zone."""
 
     def __init__(self, monoprice, sources, zone_id, zone_name):
         """Initialize new zone."""
