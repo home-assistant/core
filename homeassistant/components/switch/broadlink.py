@@ -21,6 +21,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['broadlink==0.5']
 
@@ -33,13 +35,15 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_RETRY = 3
 SERVICE_LEARN = 'broadlink_learn_command'
 SERVICE_SEND = 'broadlink_send_packet'
+SERVICE_SEND_BY_ID = 'broadlink_send_packet_by_id'
 CONF_SLOTS = 'slots'
+CONF_PACKET_ID = 'packet_id'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
-            'rm2_pro_plus_bl', 'rm_mini_shate']
+            'rm2_pro_plus_bl', 'rm_mini_shate', 'rm_mini_3']
 SP1_TYPES = ['sp1']
-SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus']
+SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus', 'spmini3']
 MP1_TYPES = ['mp1']
 
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
@@ -67,6 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
+
+SAVE_PATH = 'known_packets.json'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -96,20 +102,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
+        title = friendly_name + " Learned "
         while (utcnow() - start_time) < timedelta(seconds=20):
             packet = yield from hass.async_add_job(
                 broadlink_device.check_data)
             if packet:
-                log_msg = "Recieved packet is: {}".\
-                          format(b64encode(packet).decode('utf8'))
+                data = format(b64encode(packet).decode('utf8'))
+                log_msg = "Recieved packet is: " + data
                 _LOGGER.info(log_msg)
-                hass.components.persistent_notification.async_create(
-                    log_msg, title='Broadlink switch')
+                _save_packet(call, data, title)
                 return
             yield from asyncio.sleep(1, loop=hass.loop)
         _LOGGER.error("Did not received any signal")
         hass.components.persistent_notification.async_create(
-            "Did not received any signal", title='Broadlink switch')
+            "Did not received any signal", title=title)
 
     @asyncio.coroutine
     def _send_packet(call):
@@ -133,6 +139,54 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         if retry == DEFAULT_RETRY-1:
                             _LOGGER.error("Failed to send packet to device")
 
+    @asyncio.coroutine
+    def _send_packet_by_id(call):
+        """Send a packet by id in file."""
+        try:
+            auth = yield from hass.async_add_job(broadlink_device.auth)
+        except socket.timeout:
+            _LOGGER.error("Failed to connect to device, timeout")
+            return
+        if not auth:
+            _LOGGER.error("Failed to connect to device")
+            return
+
+        packet_id = call.data.get(CONF_PACKET_ID)
+        path = hass.config.path(SAVE_PATH)
+        if packet_id:
+            packets = _load_packets(path)
+            for each_id, each_data in packets.items():
+                if each_id == packet_id:
+                    payload = b64decode(each_data)
+                    yield from hass.async_add_job(
+                        broadlink_device.send_data, payload)
+                    _LOGGER.info("Send '%s' successfully.", packet_id)
+                    return
+            _LOGGER.error("Cannot find %s in %s.", packet_id, SAVE_PATH)
+        else:
+            _LOGGER.error("Need the 'packet_id' in body.")
+
+    def _save_packet(call, data, title):
+        """Save a packet by id in file  when packet_id is set."""
+        packet_id = call.data.get(CONF_PACKET_ID)
+        path = hass.config.path(SAVE_PATH)
+        if packet_id:
+            packets = _load_packets(path)
+            packets[packet_id] = data
+            save_json(path, packets)
+            _LOGGER.info("Save '%s' in %s", packet_id, SAVE_PATH)
+            title = title + " and Saved"
+        hass.components.persistent_notification.async_create(
+            data, title=title)
+
+    def _load_packets(path):
+        """Load saved json packet."""
+        try:
+            return load_json(path)
+        except HomeAssistantError:
+            pass
+        return {}
+
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
         if not slots['slot_{}'.format(slot)]:
@@ -141,10 +195,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
-        hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
-                               ip_addr.replace('.', '_'), _learn_command)
-        hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               ip_addr.replace('.', '_'), _send_packet)
+        device_id = ip_addr.replace('.', '_')
+        if friendly_name:
+            device_id = friendly_name
+        hass.services.register(DOMAIN, device_id + '_' +
+                               SERVICE_LEARN, _learn_command)
+        hass.services.register(DOMAIN, device_id + '_' +
+                               SERVICE_SEND, _send_packet)
+        hass.services.register(DOMAIN, device_id + '_' +
+                               SERVICE_SEND_BY_ID, _send_packet_by_id)
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
