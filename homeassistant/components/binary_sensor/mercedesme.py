@@ -27,7 +27,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for car in data.cars:
         for dev in BINARY_SENSORS:
-            devices.append(MercedesMEBinarySensor(data, dev, dev, car["vin"], None))
+            devices.append(MercedesMEBinarySensor(
+                data, dev, dev, car["vin"], None))
 
     add_devices(devices, True)
 
@@ -89,7 +90,8 @@ class MercedesMEBinarySensor(MercedesMeEntity, BinarySensorDevice):
         """Fetch new state data for the sensor."""
         _LOGGER.debug("Updating %s", self._name)
 
-        self._car = next(car for car in self._data.cars if car["vin"] == self._vin)
+        self._car = next(
+            car for car in self._data.cars if car["vin"] == self._vin)
 
         result = False
 

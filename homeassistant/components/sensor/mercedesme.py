@@ -56,7 +56,8 @@ class MercedesMESensor(MercedesMeEntity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating %s", self._internal_name)
 
-        self._car = next(car for car in self._data.cars if car["vin"] == self._vin)
+        self._car = next(
+            car for car in self._data.cars if car["vin"] == self._vin)
 
         if self._internal_name == "latestTrip":
             self._state = self._car["latestTrip"]["id"]

@@ -59,7 +59,6 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
-
     try:
         mercedesme_api = Controller(username, password, scan_interval)
         if not mercedesme_api.is_valid_session:
@@ -102,12 +101,14 @@ def setup(hass, config):
 
     return True
 
+
 class MercedesMeHub(object):
     """Representation of a base MercedesMe device."""
 
     def __init__(self, data):
         """Initialize the entity."""
         self.data = data
+
 
 class MercedesMeEntity(Entity):
     """Entity class for RainCloud devices."""
