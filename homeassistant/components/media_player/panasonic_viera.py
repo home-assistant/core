@@ -193,3 +193,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
                 self._remote.open_webpage(media_id)
             except (socket.timeout, TimeoutError, OSError):
                 self._state = STATE_OFF
+
+    def media_stop(self):
+        """ Stop playback."""
+        self.send_key('NRC_CANCEL-ONOFF')
