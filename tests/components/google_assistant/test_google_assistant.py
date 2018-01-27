@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import core, const, setup
 from homeassistant.components import (
-    fan, cover, light, switch, climate, async_setup, media_player)
+    fan, cover, light, switch, climate, async_setup, media_player, sensor)
 from homeassistant.components import google_assistant as ga
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -43,6 +43,14 @@ def assistant_client(loop, hass, test_client):
                     },
                     'switch.decorative_lights': {
                         'type': 'light'
+                    },
+                    'sensor.outside_humidity': {
+                        'type': 'climate',
+                        'expose': True
+                    },
+                    'sensor.outside_temperature': {
+                        'type': 'climate',
+                        'expose': True
                     }
                 }
             }
@@ -53,7 +61,7 @@ def assistant_client(loop, hass, test_client):
 
 @pytest.fixture
 def hass_fixture(loop, hass):
-    """Set up a HOme Assistant instance for these tests."""
+    """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(async_setup(hass, {core.DOMAIN: {}}))
 
@@ -93,6 +101,13 @@ def hass_fixture(loop, hass):
     loop.run_until_complete(
         setup.async_setup_component(hass, climate.DOMAIN, {
             'climate': [{
+                'platform': 'demo'
+            }]
+        }))
+
+    loop.run_until_complete(
+        setup.async_setup_component(hass, sensor.DOMAIN, {
+            'sensor': [{
                 'platform': 'demo'
             }]
         }))
@@ -194,6 +209,8 @@ def test_query_climate_request(hass_fixture, assistant_client):
                     {'id': 'climate.hvac'},
                     {'id': 'climate.heatpump'},
                     {'id': 'climate.ecobee'},
+                    {'id': 'sensor.outside_temperature'},
+                    {'id': 'sensor.outside_humidity'}
                 ]
             }
         }]
@@ -223,6 +240,12 @@ def test_query_climate_request(hass_fixture, assistant_client):
             'thermostatTemperatureAmbient': 22,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
+        },
+        'sensor.outside_temperature': {
+            'thermostatTemperatureAmbient': 15.6
+        },
+        'sensor.outside_humidity': {
+            'thermostatHumidityAmbient': 54.0
         }
     }
 
@@ -242,6 +265,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
                     {'id': 'climate.hvac'},
                     {'id': 'climate.heatpump'},
                     {'id': 'climate.ecobee'},
+                    {'id': 'sensor.outside_temperature'}
                 ]
             }
         }]
@@ -271,6 +295,9 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
             'thermostatTemperatureAmbient': -5.6,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
+        },
+        'sensor.outside_temperature': {
+            'thermostatTemperatureAmbient': -9.1
         }
     }
 

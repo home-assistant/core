@@ -109,6 +109,9 @@ omit =
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
 
+    homeassistant/components/iota.py
+    homeassistant/components/*/iota.py
+
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
@@ -313,6 +316,7 @@ omit =
     homeassistant/components/camera/ring.py
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/synology.py
+    homeassistant/components/camera/xeoma.py
     homeassistant/components/camera/yi.py
     homeassistant/components/climate/econet.py
     homeassistant/components/climate/ephember.py
@@ -327,6 +331,7 @@ omit =
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/climate/sensibo.py
     homeassistant/components/climate/touchline.py
+    homeassistant/components/climate/venstar.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py
@@ -336,7 +341,6 @@ omit =
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
-    homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/automatic.py
     homeassistant/components/device_tracker/bbox.py
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
@@ -514,6 +518,7 @@ omit =
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/blockchain.py
     homeassistant/components/sensor/bme280.py
+    homeassistant/components/sensor/bme680.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
@@ -588,6 +593,7 @@ omit =
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
+    homeassistant/components/sensor/pollen.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py

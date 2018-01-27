@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice)
+    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA, BinarySensorDevice)
 from homeassistant.components.rfxtrx import (
     ATTR_NAME, CONF_AUTOMATIC_ADD, CONF_DATA_BITS, CONF_DEVICES,
     CONF_FIRE_EVENT, CONF_OFF_DELAY)
@@ -29,7 +29,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: vol.Schema({
             vol.Optional(CONF_NAME, default=None): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS, default=None): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS, default=None):
+                DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_OFF_DELAY, default=None):
             vol.Any(cv.time_period, cv.positive_timedelta),

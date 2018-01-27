@@ -35,7 +35,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.7.1
+PyXiaomiGateway==0.8.0
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -143,6 +143,9 @@ blockchain==1.4.0
 # homeassistant.components.light.decora
 # bluepy==1.1.4
 
+# homeassistant.components.sensor.bme680
+# bme680==1.0.4
+
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
@@ -173,7 +176,7 @@ coinbase==2.0.6
 coinmarketcap==4.1.2
 
 # homeassistant.scripts.check_config
-colorlog==3.0.1
+colorlog==3.1.2
 
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
@@ -319,7 +322,7 @@ googlemaps==2.5.1
 gps3==0.33.3
 
 # homeassistant.components.light.greenwave
-greenwavereality==0.2.9
+greenwavereality==0.5.1
 
 # homeassistant.components.media_player.gstreamer
 gstreamer-player==1.1.0
@@ -349,7 +352,7 @@ hipnotify==1.0.8
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180119.0
+home-assistant-frontend==20180126.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -726,10 +729,10 @@ pyharmony==1.0.18
 pyhik==0.1.4
 
 # homeassistant.components.hive
-pyhiveapi==0.2.10
+pyhiveapi==0.2.11
 
 # homeassistant.components.homematic
-pyhomematic==0.1.37
+pyhomematic==0.1.38
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.1.0
@@ -820,12 +823,18 @@ pynut2==2.1.2
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
 
+# homeassistant.components.iota
+pyota==2.0.3
+
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
 pyowm==2.8.0
+
+# homeassistant.components.sensor.pollen
+pypollencom==1.1.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4
@@ -870,13 +879,13 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.0.14
+python-ecobee-api==0.0.15
 
 # homeassistant.components.climate.eq3btsmart
 # python-eq3bt==0.1.8
 
 # homeassistant.components.sensor.etherscan
-python-etherscan-api==0.0.2
+python-etherscan-api==0.0.3
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
@@ -948,7 +957,7 @@ python-velbus==2.0.11
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.7.1
+python-wink==1.7.3
 
 # homeassistant.components.sensor.swiss_public_transport
 python_opendata_transport==0.0.3
@@ -994,6 +1003,9 @@ pywebpush==1.5.0
 
 # homeassistant.components.wemo
 pywemo==0.4.25
+
+# homeassistant.components.camera.xeoma
+pyxeoma==1.2
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
@@ -1089,6 +1101,7 @@ sleepyq==0.6
 # homeassistant.components.raspihats
 # homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
+# homeassistant.components.sensor.bme680
 # homeassistant.components.sensor.envirophat
 # homeassistant.components.sensor.htu21d
 # smbus-cffi==0.5.1
@@ -1173,6 +1186,9 @@ user-agents==1.1.0
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
+# homeassistant.components.climate.venstar
+venstarcolortouch==0.5
+
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
 
@@ -1199,7 +1215,7 @@ waqiasync==1.0.0
 warrant==0.6.1
 
 # homeassistant.components.waterfurnace
-waterfurnace==0.2.0
+waterfurnace==0.3.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0

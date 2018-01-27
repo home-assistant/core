@@ -75,7 +75,7 @@ hbmqtt==0.9.1
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180119.0
+home-assistant-frontend==20180126.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -115,6 +115,10 @@ pmsensor==0.4
 
 # homeassistant.components.prometheus
 prometheus_client==0.1.0
+
+# homeassistant.components.notify.pushbullet
+# homeassistant.components.sensor.pushbullet
+pushbullet.py==0.11.0
 
 # homeassistant.components.canary
 py-canary==0.2.3
