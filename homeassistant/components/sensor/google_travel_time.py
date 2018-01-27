@@ -149,9 +149,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             for target in targets:
                 target.set_traffic_model(traffic_model)
 
-        descriptions = load_yaml_config_file(
-            path.join(path.dirname(__file__), 'services.yaml'))
-
         hass.services.register(
             DOMAIN, SERVICE_SET_TRAFFIC_MODEL, traffic_model_set_service,
             schema=SET_TRAFFIC_MODEL_SCHEMA)
