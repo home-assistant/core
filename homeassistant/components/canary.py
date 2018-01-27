@@ -117,4 +117,5 @@ class CanaryData(object):
         self.update(no_throttle=True)
 
     def get_live_stream_session(self, device):
+        """Return live stream session."""
         return self._api.get_live_stream_session(device)
