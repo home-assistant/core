@@ -99,7 +99,8 @@ def test_error_posted_as_event(hass, test_client):
     hass.bus.async_listen(system_log.EVENT_SYSTEM_LOG, event_listener)
 
     _LOGGER.error('error message')
-
+    yield from hass.async_block_till_done()
+    
     assert len(events) == 1
     assert False  # TODO: add more checks here
 
