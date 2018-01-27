@@ -1,4 +1,9 @@
-"""Component to integrate the Home Assistant cloud."""
+"""
+Component to integrate the Home Assistant cloud.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/cloud/
+"""
 import asyncio
 from datetime import datetime
 import json
@@ -26,18 +31,18 @@ REQUIREMENTS = ['warrant==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALEXA = 'alexa'
-CONF_GOOGLE_ACTIONS = 'google_actions'
-CONF_FILTER = 'filter'
+CONF_ALIASES = 'aliases'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
+CONF_ENTITY_CONFIG = 'entity_config'
+CONF_FILTER = 'filter'
+CONF_GOOGLE_ACTIONS = 'google_actions'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
-CONF_ALIASES = 'aliases'
 
-MODE_DEV = 'development'
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
 
-CONF_ENTITY_CONFIG = 'entity_config'
+MODE_DEV = 'development'
 
 ALEXA_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(alexa_sh.CONF_DESCRIPTION): cv.string,
@@ -149,7 +154,7 @@ class Cloud:
 
     @property
     def subscription_expired(self):
-        """Return a boolen if the subscription has expired."""
+        """Return a boolean if the subscription has expired."""
         return dt_util.utcnow() > self.expiration_date
 
     @property
@@ -195,8 +200,8 @@ class Cloud:
         if not jwt_success:
             return False
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                        self._start_cloud)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, self._start_cloud)
 
         return True
 
@@ -248,7 +253,7 @@ class Cloud:
             for token in 'id_token', 'access_token':
                 self._decode_claims(info[token])
         except ValueError as err:  # Raised when token is invalid
-            _LOGGER.warning('Found invalid token %s: %s', token, err)
+            _LOGGER.warning("Found invalid token %s: %s", token, err)
             return
 
         self.id_token = info['id_token']
@@ -282,15 +287,15 @@ class Cloud:
             header = jwt.get_unverified_header(token)
         except jose_exceptions.JWTError as err:
             raise ValueError(str(err)) from None
-        kid = header.get("kid")
+        kid = header.get('kid')
 
         if kid is None:
-            raise ValueError('No kid in header')
+            raise ValueError("No kid in header")
 
         # Locate the key for this kid
         key = None
-        for key_dict in self.jwt_keyset["keys"]:
-            if key_dict["kid"] == kid:
+        for key_dict in self.jwt_keyset['keys']:
+            if key_dict['kid'] == kid:
                 key = key_dict
                 break
         if not key:

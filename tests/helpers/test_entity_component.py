@@ -86,6 +86,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert len(self.hass.states.entity_ids()) == 0
 
         component.add_entities([EntityTest()])
+        self.hass.block_till_done()
 
         # group exists
         assert len(self.hass.states.entity_ids()) == 2
@@ -98,6 +99,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         # group extended
         component.add_entities([EntityTest(name='goodbye')])
+        self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
@@ -214,7 +216,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 0 == len(self.hass.states.entity_ids())
 
-        component.add_entities([None, EntityTest(unique_id='not_very_unique')])
+        component.add_entities([EntityTest(unique_id='not_very_unique')])
 
         assert 1 == len(self.hass.states.entity_ids())
 
@@ -671,3 +673,14 @@ def test_raise_error_on_update(hass):
 
     assert len(updates) == 1
     assert 1 in updates
+
+
+@asyncio.coroutine
+def test_async_remove_with_platform(hass):
+    """Remove an entity from a platform."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity1 = EntityTest(name='test_1')
+    yield from component.async_add_entities([entity1])
+    assert len(hass.states.async_entity_ids()) == 1
+    yield from entity1.async_remove()
+    assert len(hass.states.async_entity_ids()) == 0

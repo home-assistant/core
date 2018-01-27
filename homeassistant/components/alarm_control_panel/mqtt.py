@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
