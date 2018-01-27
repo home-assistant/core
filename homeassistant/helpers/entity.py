@@ -91,7 +91,7 @@ class Entity(object):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return "{}.{}".format(self.__class__, id(self))
+        return None
 
     @property
     def name(self) -> Optional[str]:
@@ -339,6 +339,7 @@ class Entity(object):
     def __eq__(self, other):
         """Return the comparison."""
         return (isinstance(other, Entity) and
+                self.unique_id is not None and other.unique_id is not None and
                 other.unique_id == self.unique_id)
 
     def __repr__(self):
