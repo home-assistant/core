@@ -6,18 +6,15 @@ https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 """
 import asyncio
 import logging
-from os import path
 
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
-from homeassistant.components.alarmdecoder import (
-    DATA_AD, SIGNAL_PANEL_MESSAGE)
+from homeassistant.components.alarmdecoder import DATA_AD, SIGNAL_PANEL_MESSAGE
 from homeassistant.const import (
     ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         code = service.data.get(ATTR_CODE)
         device.alarm_toggle_chime(code)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
         alarm.DOMAIN, SERVICE_ALARM_TOGGLE_CHIME, alarm_toggle_chime_handler,
-        descriptions.get(SERVICE_ALARM_TOGGLE_CHIME),
         schema=ALARM_TOGGLE_CHIME_SCHEMA)
 
 
@@ -73,6 +66,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             SIGNAL_PANEL_MESSAGE, self._message_callback)
 
     def _message_callback(self, message):
+        """Handle received messages."""
         if message.alarm_sounding or message.fire_alarm:
             self._state = STATE_ALARM_TRIGGERED
         elif message.armed_away:
@@ -126,7 +120,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             'entry_delay_off': self._entry_delay_off,
             'programming_mode': self._programming_mode,
             'ready': self._ready,
-            'zone_bypassed': self._zone_bypassed
+            'zone_bypassed': self._zone_bypassed,
         }
 
     def alarm_disarm(self, code=None):

@@ -4,23 +4,23 @@ Support for Broadlink RM devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.broadlink/
 """
-from datetime import timedelta
-from base64 import b64encode, b64decode
 import asyncio
+from base64 import b64decode, b64encode
 import binascii
+from datetime import timedelta
 import logging
 import socket
 
 import voluptuous as vol
 
-from homeassistant.util.dt import utcnow
-from homeassistant.util import Throttle
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_SWITCHES,
-    CONF_COMMAND_OFF, CONF_COMMAND_ON,
-    CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
+    CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
+    CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
+from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['broadlink==0.5']
 
@@ -28,12 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 
 TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-DOMAIN = 'broadlink'
 DEFAULT_NAME = 'Broadlink switch'
 DEFAULT_TIMEOUT = 10
 DEFAULT_RETRY = 3
-SERVICE_LEARN = 'learn_command'
-SERVICE_SEND = 'send_packet'
+SERVICE_LEARN = 'broadlink_learn_command'
+SERVICE_SEND = 'broadlink_send_packet'
 CONF_SLOTS = 'slots'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
@@ -41,7 +40,7 @@ RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_pro_plus_bl', 'rm_mini_shate']
 SP1_TYPES = ['sp1']
 SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus']
-MP1_TYPES = ["mp1"]
+MP1_TYPES = ['mp1']
 
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
@@ -71,7 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Broadlink switches."""
+    """Set up the Broadlink switches."""
     import broadlink
     devices = config.get(CONF_SWITCHES)
     slots = config.get('slots', {})
@@ -83,6 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @asyncio.coroutine
     def _learn_command(call):
+        """Handle a learn command."""
         try:
             auth = yield from hass.async_add_job(broadlink_device.auth)
         except socket.timeout:
@@ -94,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         yield from hass.async_add_job(broadlink_device.enter_learning)
 
-        _LOGGER.info("Press the key you want HASS to learn")
+        _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
             packet = yield from hass.async_add_job(
@@ -113,6 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @asyncio.coroutine
     def _send_packet(call):
+        """Send a packet."""
         packets = call.data.get('packet', [])
         for packet in packets:
             for retry in range(DEFAULT_RETRY):
@@ -133,6 +134,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                             _LOGGER.error("Failed to send packet to device")
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
+        """Get slot name."""
         if not slots['slot_{}'.format(slot)]:
             return '{} slot {}'.format(switch_friendly_name, slot)
         return slots['slot_{}'.format(slot)]
@@ -288,6 +290,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         self._update()
 
     def _update(self, retry=2):
+        """Update the state of the device."""
         try:
             state = self._device.check_power()
         except (socket.timeout, ValueError) as error:
@@ -333,7 +336,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     def update(self):
@@ -360,6 +363,7 @@ class BroadlinkMP1Switch(object):
         self._update()
 
     def _update(self, retry=2):
+        """Update the state of the device."""
         try:
             states = self._device.check_power()
         except (socket.timeout, ValueError) as error:
@@ -374,6 +378,7 @@ class BroadlinkMP1Switch(object):
         self._states = states
 
     def _auth(self, retry=2):
+        """Authenticate the device."""
         try:
             auth = self._device.auth()
         except socket.timeout:

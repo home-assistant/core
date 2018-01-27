@@ -41,17 +41,6 @@ CONFIG_SCHEMA = vol.Schema({
 ATTR_DURATION = 'duration'
 
 SERVICE_PERMIT = 'permit'
-SERVICE_DESCRIPTIONS = {
-    SERVICE_PERMIT: {
-        "description": "Allow nodes to join the ZigBee network",
-        "fields": {
-            ATTR_DURATION: {
-                "description": "Time to permit joins, in seconds",
-                "example": "60",
-            },
-        },
-    },
-}
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema({
         vol.Optional(ATTR_DURATION, default=60):
@@ -103,8 +92,7 @@ def async_setup(hass, config):
         yield from APPLICATION_CONTROLLER.permit(duration)
 
     hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
-                                 SERVICE_DESCRIPTIONS[SERVICE_PERMIT],
-                                 SERVICE_SCHEMAS[SERVICE_PERMIT])
+                                 schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
 
     return True
 
@@ -327,3 +315,21 @@ def get_discovery_info(hass, discovery_info):
     all_discovery_info = hass.data.get(DISCOVERY_KEY, {})
     discovery_info = all_discovery_info.get(discovery_key, None)
     return discovery_info
+
+
+@asyncio.coroutine
+def safe_read(cluster, attributes):
+    """Swallow all exceptions from network read.
+
+    If we throw during initialization, setup fails. Rather have an entity that
+    exists, but is in a maybe wrong state, than no entity. This method should
+    probably only be used during initialization.
+    """
+    try:
+        result, _ = yield from cluster.read_attributes(
+            attributes,
+            allow_cache=False,
+        )
+        return result
+    except Exception:  # pylint: disable=broad-except
+        return {}

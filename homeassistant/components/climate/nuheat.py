@@ -6,7 +6,6 @@ https://home-assistant.io/components/climate.nuheat/
 """
 import logging
 from datetime import timedelta
-from os import path
 
 import voluptuous as vol
 
@@ -20,7 +19,6 @@ from homeassistant.components.climate import (
     STATE_HEAT,
     STATE_IDLE)
 from homeassistant.components.nuheat import DOMAIN as NUHEAT_DOMAIN
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -85,12 +83,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             thermostat.schedule_update_ha_state(True)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), "services.yaml"))
-
     hass.services.register(
         DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
-        descriptions.get(SERVICE_RESUME_PROGRAM),
         schema=RESUME_PROGRAM_SCHEMA)
 
 

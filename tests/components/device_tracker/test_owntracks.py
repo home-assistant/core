@@ -35,6 +35,9 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = owntracks.CONF_WAYPOINT_IMPORT
 CONF_WAYPOINT_WHITELIST = owntracks.CONF_WAYPOINT_WHITELIST
 CONF_SECRET = owntracks.CONF_SECRET
+CONF_MQTT_TOPIC = owntracks.CONF_MQTT_TOPIC
+CONF_EVENTS_ONLY = owntracks.CONF_EVENTS_ONLY
+CONF_REGION_MAPPING = owntracks.CONF_REGION_MAPPING
 
 TEST_ZONE_LAT = 45.0
 TEST_ZONE_LON = 90.0
@@ -179,6 +182,13 @@ REGION_GPS_LEAVE_MESSAGE_OUTER = build_message(
      'event': 'leave'},
     DEFAULT_TRANSITION_MESSAGE)
 
+REGION_GPS_ENTER_MESSAGE_OUTER = build_message(
+    {'lon': OUTER_ZONE['longitude'],
+     'lat': OUTER_ZONE['latitude'],
+     'desc': 'outer',
+     'event': 'enter'},
+    DEFAULT_TRANSITION_MESSAGE)
+
 # Region Beacon messages
 REGION_BEACON_ENTER_MESSAGE = DEFAULT_BEACON_TRANSITION_MESSAGE
 
@@ -305,6 +315,11 @@ class BaseMQTT(unittest.TestCase):
         """Test the assertion of a location accuracy."""
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
+
+    def assert_location_source_type(self, source_type):
+        """Test the assertion of source_type."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('source_type'), source_type)
 
 
 class TestDeviceTrackerOwnTracks(BaseMQTT):
@@ -615,6 +630,72 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
             REGION_GPS_ENTER_MESSAGE)
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('inner')
+
+    def test_events_only_on(self):
+        """Test events_only config suppresses location updates."""
+        # Sending a location message that is not home
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        self.context.events_only = True
+
+        # Enter and Leave messages
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
+        self.assert_location_state('outer')
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        # Sending a location message that is inside outer zone
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
+
+        # Ignored location update. Location remains at previous.
+        self.assert_location_state(STATE_NOT_HOME)
+
+    def test_events_only_off(self):
+        """Test when events_only is False."""
+        # Sending a location message that is not home
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        self.context.events_only = False
+
+        # Enter and Leave messages
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
+        self.assert_location_state('outer')
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        # Sending a location message that is inside outer zone
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
+
+        # Location update processed
+        self.assert_location_state('outer')
+
+    def test_event_source_type_entry_exit(self):
+        """Test the entry and exit events of source type."""
+        # Entering the owntrack circular region named "inner"
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
+
+        # source_type should be gps when enterings using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_ENTER_MESSAGE))
+
+        # We should be able to enter a beacon zone even inside a gps zone
+        self.assert_location_source_type('bluetooth_le')
+
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
+
+        # source_type should be gps when leaving using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_LEAVE_MESSAGE))
+
+        self.assert_location_source_type('bluetooth_le')
 
     # Region Beacon based event entry / exit testing
 
@@ -1111,7 +1192,8 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         test_config = {
             CONF_PLATFORM: 'owntracks',
             CONF_MAX_GPS_ACCURACY: 200,
-            CONF_WAYPOINT_IMPORT: True
+            CONF_WAYPOINT_IMPORT: True,
+            CONF_MQTT_TOPIC: 'owntracks/#',
         }
         run_coroutine_threadsafe(owntracks.async_setup_scanner(
             self.hass, test_config, mock_see), self.hass.loop).result()
@@ -1353,3 +1435,37 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
 
         self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(LOCATION_MESSAGE['lat'])
+
+    def test_customized_mqtt_topic(self):
+        """Test subscribing to a custom mqtt topic."""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_MQTT_TOPIC: 'mytracks/#',
+                    }})
+
+        topic = 'mytracks/{}/{}'.format(USER, DEVICE)
+
+        self.send_message(topic, LOCATION_MESSAGE)
+        self.assert_location_latitude(LOCATION_MESSAGE['lat'])
+
+    def test_region_mapping(self):
+        """Test region to zone mapping."""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_REGION_MAPPING: {
+                        'foo': 'inner'
+                    },
+                    }})
+
+        self.hass.states.set(
+            'zone.inner', 'zoning', INNER_ZONE)
+
+        message = build_message({'desc': 'foo'}, REGION_GPS_ENTER_MESSAGE)
+        self.assertEqual(message['desc'], 'foo')
+
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('inner')

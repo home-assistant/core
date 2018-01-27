@@ -31,6 +31,14 @@ def test_generate_entity_id_given_keys():
             'test.another_entity']) == 'test.overwrite_hidden_true'
 
 
+def test_generate_entity_id_with_nonlatin_name():
+    """Test generate_entity_id given a name containing non-latin characters."""
+    fmt = 'test.{}'
+    assert entity.generate_entity_id(
+        fmt, 'ホームアシスタント', current_ids=[]
+    ) == 'test.unnamed_device'
+
+
 def test_async_update_support(hass):
     """Test async update getting called."""
     sync_update = []
@@ -380,3 +388,15 @@ def test_async_pararell_updates_with_two(hass):
     test_lock.release()
     yield from asyncio.sleep(0, loop=hass.loop)
     test_lock.release()
+
+
+@asyncio.coroutine
+def test_async_remove_no_platform(hass):
+    """Test async_remove method when no platform set."""
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = 'test.test'
+    yield from ent.async_update_ha_state()
+    assert len(hass.states.async_entity_ids()) == 1
+    yield from ent.async_remove()
+    assert len(hass.states.async_entity_ids()) == 0

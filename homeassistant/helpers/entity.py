@@ -15,8 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -35,10 +34,10 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
                 current_ids, hass
             ).result()
 
-    name = (name or DEVICE_DEFAULT_NAME).lower()
+    name = (slugify(name) or slugify(DEVICE_DEFAULT_NAME)).lower()
 
     return ensure_unique_string(
-        entity_id_format.format(slugify(name)), current_ids)
+        entity_id_format.format(name), current_ids)
 
 
 @callback
@@ -66,8 +65,11 @@ class Entity(object):
     # this class. These may be used to customize the behavior of the entity.
     entity_id = None  # type: str
 
-    # Owning hass instance. Will be set by EntityComponent
+    # Owning hass instance. Will be set by EntityPlatform
     hass = None  # type: Optional[HomeAssistant]
+
+    # Owning platform instance. Will be set by EntityPlatform
+    platform = None
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -311,19 +313,13 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
-    def remove(self) -> None:
-        """Remove entity from HASS."""
-        run_coroutine_threadsafe(
-            self.async_remove(), self.hass.loop
-        ).result()
-
     @asyncio.coroutine
-    def async_remove(self) -> None:
-        """Remove entity from async HASS.
-
-        This method must be run in the event loop.
-        """
-        self.hass.states.async_remove(self.entity_id)
+    def async_remove(self):
+        """Remove entity from Home Assistant."""
+        if self.platform is not None:
+            yield from self.platform.async_remove_entity(self.entity_id)
+        else:
+            self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Populate attributes based on properties."""

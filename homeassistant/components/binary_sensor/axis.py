@@ -4,13 +4,12 @@ Support for Axis binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.axis/
 """
-
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
-from homeassistant.components.axis import (AxisDeviceEvent)
-from homeassistant.const import (CONF_TRIGGER_TIME)
+from homeassistant.components.axis import AxisDeviceEvent
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import CONF_TRIGGER_TIME
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -20,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Axis device event."""
+    """Set up the Axis binary devices."""
     add_devices([AxisBinarySensor(hass, discovery_info)], True)
 
 
@@ -28,7 +27,7 @@ class AxisBinarySensor(AxisDeviceEvent, BinarySensorDevice):
     """Representation of a binary Axis event."""
 
     def __init__(self, hass, event_config):
-        """Initialize the binary sensor."""
+        """Initialize the Axis binary sensor."""
         self.hass = hass
         self._state = False
         self._delay = event_config[CONF_TRIGGER_TIME]
@@ -56,7 +55,7 @@ class AxisBinarySensor(AxisDeviceEvent, BinarySensorDevice):
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
-                _LOGGER.debug("%s Called delayed (%s sec) update.",
+                _LOGGER.debug("%s called delayed (%s sec) update",
                               self._name, self._delay)
                 self.schedule_update_ha_state()
                 self._timer = None

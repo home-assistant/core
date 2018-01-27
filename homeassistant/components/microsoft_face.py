@@ -7,7 +7,6 @@ https://home-assistant.io/components/microsoft_face/
 import asyncio
 import json
 import logging
-import os
 
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
@@ -15,7 +14,6 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT
-from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -133,10 +131,6 @@ def async_setup(hass, config):
 
     hass.data[DATA_MICROSOFT_FACE] = face
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_create_group(service):
         """Create a new person group."""
@@ -155,7 +149,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE_GROUP, async_create_group,
-        descriptions[DOMAIN].get(SERVICE_CREATE_GROUP),
         schema=SCHEMA_GROUP_SERVICE)
 
     @asyncio.coroutine
@@ -168,13 +161,12 @@ def async_setup(hass, config):
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
-            yield from entity.async_remove()
+            hass.states.async_remove(entity.entity_id)
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 
     hass.services.async_register(
         DOMAIN, SERVICE_DELETE_GROUP, async_delete_group,
-        descriptions[DOMAIN].get(SERVICE_DELETE_GROUP),
         schema=SCHEMA_GROUP_SERVICE)
 
     @asyncio.coroutine
@@ -190,7 +182,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRAIN_GROUP, async_train_group,
-        descriptions[DOMAIN].get(SERVICE_TRAIN_GROUP),
         schema=SCHEMA_TRAIN_SERVICE)
 
     @asyncio.coroutine
@@ -211,7 +202,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE_PERSON, async_create_person,
-        descriptions[DOMAIN].get(SERVICE_CREATE_PERSON),
         schema=SCHEMA_PERSON_SERVICE)
 
     @asyncio.coroutine
@@ -232,7 +222,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_DELETE_PERSON, async_delete_person,
-        descriptions[DOMAIN].get(SERVICE_DELETE_PERSON),
         schema=SCHEMA_PERSON_SERVICE)
 
     @asyncio.coroutine
@@ -259,7 +248,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_FACE_PERSON, async_face_person,
-        descriptions[DOMAIN].get(SERVICE_FACE_PERSON),
         schema=SCHEMA_FACE_SERVICE)
 
     return True

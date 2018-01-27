@@ -6,11 +6,10 @@ https://home-assistant.io/components/group/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 
-from homeassistant import config as conf_util, core as ha
+from homeassistant import core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
@@ -146,7 +145,7 @@ def set_visibility(hass, entity_id=None, visible=True):
 @bind_hass
 def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
               icon=None, view=None, control=None, add=None):
-    """Create a new user group."""
+    """Create/Update a group."""
     hass.add_job(
         async_set_group, hass, object_id, name, entity_ids, visible, icon,
         view, control, add)
@@ -156,7 +155,7 @@ def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
 @bind_hass
 def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
                     icon=None, view=None, control=None, add=None):
-    """Create a new user group."""
+    """Create/Update a group."""
     data = {
         key: value for key, value in [
             (ATTR_OBJECT_ID, object_id),
@@ -249,15 +248,12 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up all groups found definded in the configuration."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    service_groups = {}
+    component = hass.data.get(DOMAIN)
+
+    if component is None:
+        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     yield from _async_process_config(hass, config, component)
-
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
 
     @asyncio.coroutine
     def reload_service_handler(service):
@@ -269,15 +265,17 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
-        descriptions[SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
+        schema=RELOAD_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def groups_service_handler(service):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
+        entity_id = ENTITY_ID_FORMAT.format(object_id)
+        group = component.get_entity(entity_id)
 
         # new group
-        if service.service == SERVICE_SET and object_id not in service_groups:
+        if service.service == SERVICE_SET and group is None:
             entity_ids = service.data.get(ATTR_ENTITIES) or \
                 service.data.get(ATTR_ADD_ENTITIES) or None
 
@@ -285,20 +283,22 @@ def async_setup(hass, config):
                 ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
             ) if service.data.get(attr) is not None}
 
-            new_group = yield from Group.async_create_group(
+            yield from Group.async_create_group(
                 hass, service.data.get(ATTR_NAME, object_id),
                 object_id=object_id,
                 entity_ids=entity_ids,
                 user_defined=False,
                 **extra_arg
             )
+            return
 
-            service_groups[object_id] = new_group
+        if group is None:
+            _LOGGER.warning("%s:Group '%s' doesn't exist!",
+                            service.service, object_id)
             return
 
         # update group
         if service.service == SERVICE_SET:
-            group = service_groups[object_id]
             need_update = False
 
             if ATTR_ADD_ENTITIES in service.data:
@@ -337,20 +337,15 @@ def async_setup(hass, config):
 
         # remove group
         if service.service == SERVICE_REMOVE:
-            if object_id not in service_groups:
-                _LOGGER.warning("Group '%s' doesn't exist!", object_id)
-                return
-
-            del_group = service_groups.pop(object_id)
-            yield from del_group.async_stop()
+            yield from component.async_remove_entity(entity_id)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET, groups_service_handler,
-        descriptions[SERVICE_SET], schema=SET_SERVICE_SCHEMA)
+        schema=SET_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE, groups_service_handler,
-        descriptions[SERVICE_REMOVE], schema=REMOVE_SERVICE_SCHEMA)
+        schema=REMOVE_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def visibility_service_handler(service):
@@ -368,7 +363,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
-        descriptions[SERVICE_SET_VISIBILITY],
         schema=SET_VISIBILITY_SERVICE_SCHEMA)
 
     return True
@@ -400,7 +394,7 @@ class Group(Entity):
     """Track a group of entity ids."""
 
     def __init__(self, hass, name, order=None, visible=True, icon=None,
-                 view=False, control=None, user_defined=True):
+                 view=False, control=None, user_defined=True, entity_ids=None):
         """Initialize a group.
 
         This Object has factory function for creation.
@@ -410,7 +404,10 @@ class Group(Entity):
         self._state = STATE_UNKNOWN
         self._icon = icon
         self.view = view
-        self.tracking = []
+        if entity_ids:
+            self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
+        else:
+            self.tracking = tuple()
         self.group_on = None
         self.group_off = None
         self.visible = visible
@@ -444,17 +441,20 @@ class Group(Entity):
             hass, name,
             order=len(hass.states.async_entity_ids(DOMAIN)),
             visible=visible, icon=icon, view=view, control=control,
-            user_defined=user_defined
+            user_defined=user_defined, entity_ids=entity_ids
         )
 
         group.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
-        # run other async stuff
-        if entity_ids is not None:
-            yield from group.async_update_tracked_entity_ids(entity_ids)
-        else:
-            yield from group.async_update_ha_state(True)
+        # If called before the platform async_setup is called (test cases)
+        component = hass.data.get(DOMAIN)
+
+        if component is None:
+            component = hass.data[DOMAIN] = \
+                EntityComponent(_LOGGER, DOMAIN, hass)
+
+        yield from component.async_add_entities([group], True)
 
         return group
 
@@ -534,10 +534,6 @@ class Group(Entity):
         yield from self.async_update_ha_state(True)
         self.async_start()
 
-    def start(self):
-        """Start tracking members."""
-        self.hass.add_job(self.async_start)
-
     @callback
     def async_start(self):
         """Start tracking members.
@@ -549,17 +545,15 @@ class Group(Entity):
                 self.hass, self.tracking, self._async_state_changed_listener
             )
 
-    def stop(self):
-        """Unregister the group from Home Assistant."""
-        run_coroutine_threadsafe(self.async_stop(), self.hass.loop).result()
-
     @asyncio.coroutine
     def async_stop(self):
         """Unregister the group from Home Assistant.
 
         This method must be run in the event loop.
         """
-        yield from self.async_remove()
+        if self._async_unsub_state_changed:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
 
     @asyncio.coroutine
     def async_update(self):
@@ -567,16 +561,18 @@ class Group(Entity):
         self._state = STATE_UNKNOWN
         self._async_update_group_state()
 
-    def async_remove(self):
-        """Remove group from HASS.
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when added to HASS."""
+        if self.tracking:
+            self.async_start()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
+    @asyncio.coroutine
+    def async_will_remove_from_hass(self):
+        """Callback when removed from HASS."""
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
-
-        return super().async_remove()
 
     @asyncio.coroutine
     def _async_state_changed_listener(self, entity_id, old_state, new_state):
