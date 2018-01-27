@@ -8,11 +8,9 @@ import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-import os
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
@@ -160,24 +158,17 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
-        descriptions.get(SERVICE_TURN_OFF),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_remote_service,
-        descriptions.get(SERVICE_TURN_ON),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_remote_service,
-        descriptions.get(SERVICE_TOGGLE),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_handle_remote_service,
-        descriptions.get(SERVICE_SEND_COMMAND),
         schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
 
     return True

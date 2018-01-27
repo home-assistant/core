@@ -4,20 +4,20 @@ Support for Blink system camera.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.blink/
 """
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 import requests
 
 from homeassistant.components.blink import DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['blink']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -45,7 +45,7 @@ class BlinkCamera(Camera):
         self.notifications = self.data.cameras[self._name].notifications
         self.response = None
 
-        _LOGGER.info("Initialized blink camera %s", self._name)
+        _LOGGER.debug("Initialized blink camera %s", self._name)
 
     @property
     def name(self):
@@ -55,7 +55,7 @@ class BlinkCamera(Camera):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def request_image(self):
         """Request a new image from Blink servers."""
-        _LOGGER.info("Requesting new image from blink servers")
+        _LOGGER.debug("Requesting new image from blink servers")
         image_url = self.check_for_motion()
         header = self.data.cameras[self._name].header
         self.response = requests.get(image_url, headers=header, stream=True)
@@ -68,7 +68,7 @@ class BlinkCamera(Camera):
             # We detected motion at some point
             self.data.last_motion()
             self.notifications = notifs
-            # returning motion image currently not working
+            # Returning motion image currently not working
             # return self.data.cameras[self._name].motion['image']
         elif notifs < self.notifications:
             self.notifications = notifs

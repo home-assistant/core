@@ -1,11 +1,11 @@
-"""Script to get, set, and delete secrets stored in the keyring."""
-import os
+"""Script to get, set and delete secrets stored in the keyring."""
 import argparse
 import getpass
+import os
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-REQUIREMENTS = ['keyring>=9.3,<10.0']
+REQUIREMENTS = ['keyring==10.6.0', 'keyrings.alt==2.3']
 
 
 def run(args):
@@ -39,8 +39,8 @@ def run(args):
         return 1
 
     if args.action == 'set':
-        the_secret = getpass.getpass('Please enter the secret for {}: '
-                                     .format(args.name))
+        the_secret = getpass.getpass(
+            'Please enter the secret for {}: '.format(args.name))
         keyring.set_password(_SECRET_NAMESPACE, args.name, the_secret)
         print('Secret {} set successfully'.format(args.name))
     elif args.action == 'get':

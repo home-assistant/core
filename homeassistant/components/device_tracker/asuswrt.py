@@ -25,9 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
-
 DEFAULT_SSH_PORT = 22
-
 SECRET_GROUP = 'Password or SSH Key'
 
 PLATFORM_SCHEMA = vol.All(
@@ -118,20 +116,10 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.port = config[CONF_PORT]
 
         if self.protocol == 'ssh':
-            if not (self.ssh_key or self.password):
-                _LOGGER.error("No password or private key specified")
-                self.success_init = False
-                return
-
             self.connection = SshConnection(
                 self.host, self.port, self.username, self.password,
                 self.ssh_key, self.mode == 'ap')
         else:
-            if not self.password:
-                _LOGGER.error("No password specified")
-                self.success_init = False
-                return
-
             self.connection = TelnetConnection(
                 self.host, self.port, self.username, self.password,
                 self.mode == 'ap')
@@ -178,10 +166,15 @@ class AsusWrtDeviceScanner(DeviceScanner):
         devices = {}
         devices.update(self._get_wl())
         devices.update(self._get_arp())
-        devices.update(self._get_neigh())
+        devices.update(self._get_neigh(devices))
         if not self.mode == 'ap':
-            devices.update(self._get_leases())
-        return devices
+            devices.update(self._get_leases(devices))
+
+        ret_devices = {}
+        for key in devices:
+            if devices[key].ip is not None:
+                ret_devices[key] = devices[key]
+        return ret_devices
 
     def _get_wl(self):
         lines = self.connection.run_command(_WL_CMD)
@@ -194,7 +187,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
             devices[mac] = Device(mac, None, None)
         return devices
 
-    def _get_leases(self):
+    def _get_leases(self, cur_devices):
         lines = self.connection.run_command(_LEASES_CMD)
         if not lines:
             return {}
@@ -208,18 +201,21 @@ class AsusWrtDeviceScanner(DeviceScanner):
             if host == '*':
                 host = ''
             mac = device['mac'].upper()
-            devices[mac] = Device(mac, device['ip'], host)
+            if mac in cur_devices:
+                devices[mac] = Device(mac, device['ip'], host)
         return devices
 
-    def _get_neigh(self):
+    def _get_neigh(self, cur_devices):
         lines = self.connection.run_command(_IP_NEIGH_CMD)
         if not lines:
             return {}
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
         devices = {}
         for device in result:
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, None, None)
+            if device['mac'] is not None:
+                mac = device['mac'].upper()
+                old_ip = cur_devices.get(mac, {}).ip or None
+                devices[mac] = Device(mac, device.get('ip', old_ip), None)
         return devices
 
     def _get_arp(self):
@@ -229,8 +225,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _ARP_REGEX)
         devices = {}
         for device in result:
-            mac = device['mac'].upper()
-            devices[mac] = Device(mac, device['ip'], None)
+            if device['mac']:
+                mac = device['mac'].upper()
+                devices[mac] = Device(mac, device['ip'], None)
         return devices
 
 
@@ -257,7 +254,7 @@ class SshConnection(_Connection):
 
     def __init__(self, host, port, username, password, ssh_key, ap):
         """Initialize the SSH connection properties."""
-        super(SshConnection, self).__init__()
+        super().__init__()
 
         self._ssh = None
         self._host = host
@@ -307,7 +304,7 @@ class SshConnection(_Connection):
             self._ssh.login(self._host, self._username,
                             password=self._password, port=self._port)
 
-        super(SshConnection, self).connect()
+        super().connect()
 
     def disconnect(self):   \
             # pylint: disable=broad-except
@@ -319,7 +316,7 @@ class SshConnection(_Connection):
         finally:
             self._ssh = None
 
-        super(SshConnection, self).disconnect()
+        super().disconnect()
 
 
 class TelnetConnection(_Connection):
@@ -327,7 +324,7 @@ class TelnetConnection(_Connection):
 
     def __init__(self, host, port, username, password, ap):
         """Initialize the Telnet connection properties."""
-        super(TelnetConnection, self).__init__()
+        super().__init__()
 
         self._telnet = None
         self._host = host
@@ -346,10 +343,10 @@ class TelnetConnection(_Connection):
         try:
             if not self.connected:
                 self.connect()
-
             self._telnet.write('{}\n'.format(command).encode('ascii'))
-            return (self._telnet.read_until(self._prompt_string).
+            data = (self._telnet.read_until(self._prompt_string).
                     split(b'\n')[1:-1])
+            return [line.decode('utf-8') for line in data]
         except EOFError:
             _LOGGER.error("Unexpected response from router")
             self.disconnect()
@@ -376,7 +373,7 @@ class TelnetConnection(_Connection):
         self._telnet.write((self._password + '\n').encode('ascii'))
         self._prompt_string = self._telnet.read_until(b'#').split(b'\n')[-1]
 
-        super(TelnetConnection, self).connect()
+        super().connect()
 
     def disconnect(self):   \
             # pylint: disable=broad-except
@@ -386,4 +383,4 @@ class TelnetConnection(_Connection):
         except Exception:
             pass
 
-        super(TelnetConnection, self).disconnect()
+        super().disconnect()

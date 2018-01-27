@@ -9,9 +9,10 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT)
+    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD)
+    TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyephember==0.1.1']
@@ -59,7 +60,10 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_AUX_HEAT
+        if self._hot_water:
+            return SUPPORT_AUX_HEAT
+
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT
 
     @property
     def name(self):
@@ -80,6 +84,14 @@ class EphEmberThermostat(ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._zone['targetTemperature']
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        if self._hot_water:
+            return None
+
+        return 1
 
     @property
     def current_operation(self):
@@ -105,17 +117,38 @@ class EphEmberThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        return
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
+
+        if self._hot_water:
+            return
+
+        if temperature == self.target_temperature:
+            return
+
+        if temperature > self.max_temp or temperature < self.min_temp:
+            return
+
+        self._ember.set_target_temperture_by_name(self._zone_name,
+                                                  int(temperature))
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._zone['targetTemperature']
+        # Hot water temp doesn't support being changed
+        if self._hot_water:
+            return self._zone['targetTemperature']
+
+        return 5
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._zone['targetTemperature']
+        if self._hot_water:
+            return self._zone['targetTemperature']
+
+        return 35
 
     def update(self):
         """Get the latest data."""

@@ -95,7 +95,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -107,7 +107,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -116,7 +116,7 @@ DEMO_DEVICES = [{
         'name': 'Garage Door'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id': 'cover.kitchen_window',
@@ -124,7 +124,7 @@ DEMO_DEVICES = [{
         'name': 'Kitchen Window'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id': 'group.all_covers',
@@ -143,7 +143,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -155,7 +155,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -164,7 +164,7 @@ DEMO_DEVICES = [{
         'name': 'Lounge room'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.LIGHT',
+    'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
     'id':
@@ -175,7 +175,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
-    'action.devices.types.LIGHT',
+    'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -211,7 +211,7 @@ DEMO_DEVICES = [{
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False,
     'attributes': {
-        'availableThermostatModes': 'heat,cool,off',
+        'availableThermostatModes': 'heat,cool,heatcool,off',
         'thermostatTemperatureUnit': 'C',
     },
 }, {
@@ -226,6 +226,22 @@ DEMO_DEVICES = [{
     'id': 'climate.ecobee',
     'name': {
         'name': 'Ecobee'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'sensor.outside_temperature',
+    'name': {
+        'name': 'Outside Temperature'
+    },
+    'traits': ['action.devices.traits.TemperatureSetting'],
+    'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'sensor.outside_humidity',
+    'name': {
+        'name': 'Outside Humidity'
     },
     'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',

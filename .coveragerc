@@ -50,6 +50,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/coinbase.py
+    homeassistant/components/sensor/coinbase.py
+
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
 
@@ -94,6 +97,9 @@ omit =
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/ihc/*
+    homeassistant/components/*/ihc.py
+
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 
@@ -102,6 +108,9 @@ omit =
 
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
+
+    homeassistant/components/iota.py
+    homeassistant/components/*/iota.py
 
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
@@ -141,6 +150,9 @@ omit =
 
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
+
+    homeassistant/components/mychevy.py
+    homeassistant/components/*/mychevy.py
 
     homeassistant/components/mysensors.py
     homeassistant/components/*/mysensors.py
@@ -238,6 +250,9 @@ omit =
     homeassistant/components/volvooncall.py
     homeassistant/components/*/volvooncall.py
 
+    homeassistant/components/waterfurnace.py
+    homeassistant/components/*/waterfurnace.py
+
     homeassistant/components/*/webostv.py
 
     homeassistant/components/wemo.py
@@ -301,6 +316,7 @@ omit =
     homeassistant/components/camera/ring.py
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/synology.py
+    homeassistant/components/camera/xeoma.py
     homeassistant/components/camera/yi.py
     homeassistant/components/climate/econet.py
     homeassistant/components/climate/ephember.py
@@ -314,6 +330,8 @@ omit =
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/climate/sensibo.py
+    homeassistant/components/climate/touchline.py
+    homeassistant/components/climate/venstar.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py
@@ -323,7 +341,6 @@ omit =
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
-    homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/automatic.py
     homeassistant/components/device_tracker/bbox.py
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
@@ -375,6 +392,7 @@ omit =
     homeassistant/components/light/greenwave.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
+    homeassistant/components/light/iglo.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/lifx_legacy.py
     homeassistant/components/light/limitlessled.py
@@ -499,6 +517,7 @@ omit =
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/blockchain.py
     homeassistant/components/sensor/bme280.py
+    homeassistant/components/sensor/bme680.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
@@ -573,6 +592,7 @@ omit =
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
+    homeassistant/components/sensor/pollen.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py
@@ -601,6 +621,7 @@ omit =
     homeassistant/components/sensor/sytadin.py
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/ted5000.py
+    homeassistant/components/sensor/teksavvy.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py
@@ -658,9 +679,9 @@ omit =
     homeassistant/components/vacuum/xiaomi_miio.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
+    homeassistant/components/weather/darksky.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
-    homeassistant/components/weather/yweather.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py

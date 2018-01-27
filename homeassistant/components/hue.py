@@ -9,10 +9,10 @@ import logging
 import os
 import socket
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_HUE
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "hue"
 SERVICE_HUE_SCENE = "hue_activate_scene"
+API_NUPNP = 'https://www.meethue.com/api/nupnp'
 
 CONF_BRIDGES = "bridges"
 
@@ -50,7 +51,7 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema([{
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_BRIDGES, default=[]): BRIDGE_CONFIG_SCHEMA,
+        vol.Optional(CONF_BRIDGES): BRIDGE_CONFIG_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -70,9 +71,9 @@ Press the button on the bridge to register Philips Hue with Home Assistant.
 
 def setup(hass, config):
     """Set up the Hue platform."""
-    config = config.get(DOMAIN)
-    if config is None:
-        config = {}
+    conf = config.get(DOMAIN)
+    if conf is None:
+        conf = {}
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -83,7 +84,21 @@ def setup(hass, config):
         lambda service, discovery_info:
         bridge_discovered(hass, service, discovery_info))
 
-    bridges = config.get(CONF_BRIDGES, [])
+    # User has configured bridges
+    if CONF_BRIDGES in conf:
+        bridges = conf[CONF_BRIDGES]
+    # Component is part of config but no bridges specified, discover.
+    elif DOMAIN in config:
+        # discover from nupnp
+        hosts = requests.get(API_NUPNP).json()
+        bridges = [{
+            CONF_HOST: entry['internalipaddress'],
+            CONF_FILENAME: '.hue_{}.conf'.format(entry['id']),
+        } for entry in hosts]
+    else:
+        # Component not specified in config, we're loaded via discovery
+        bridges = []
+
     for bridge in bridges:
         filename = bridge.get(CONF_FILENAME)
         allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE)
@@ -153,6 +168,7 @@ class HueBridge(object):
                  allow_in_emulated_hue=True, allow_hue_groups=True):
         """Initialize the system."""
         self.host = host
+        self.bridge_id = socket.gethostbyname(host)
         self.hass = hass
         self.filename = filename
         self.allow_unreachable = allow_unreachable
@@ -166,7 +182,7 @@ class HueBridge(object):
         self.configured = False
         self.config_request_id = None
 
-        hass.data[DOMAIN][socket.gethostbyname(host)] = self
+        hass.data[DOMAIN][self.bridge_id] = self
 
     def setup(self):
         """Set up a phue bridge based on host parameter."""
@@ -197,7 +213,7 @@ class HueBridge(object):
 
         discovery.load_platform(
             self.hass, 'light', DOMAIN,
-            {'bridge_id': socket.gethostbyname(self.host)})
+            {'bridge_id': self.bridge_id})
 
         # create a service for calling run_scene directly on the bridge,
         # used to simplify automation rules.
@@ -207,11 +223,8 @@ class HueBridge(object):
             scene_name = call.data[ATTR_SCENE_NAME]
             self.bridge.run_scene(group_name, scene_name)
 
-        descriptions = load_yaml_config_file(
-            os.path.join(os.path.dirname(__file__), 'services.yaml'))
         self.hass.services.register(
             DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
-            descriptions.get(SERVICE_HUE_SCENE),
             schema=SCENE_SCHEMA)
 
     def request_configuration(self):

@@ -1,42 +1,49 @@
 """
 Support for system log.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/system_log/
 """
-import os
-import re
 import asyncio
-import logging
-import traceback
-from io import StringIO
 from collections import deque
+from io import StringIO
+import logging
+import re
+import traceback
 
 import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-from homeassistant.config import load_yaml_config_file
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-
-DOMAIN = 'system_log'
-DEPENDENCIES = ['http']
-SERVICE_CLEAR = 'clear'
+import homeassistant.helpers.config_validation as cv
 
 CONF_MAX_ENTRIES = 'max_entries'
-
-DEFAULT_MAX_ENTRIES = 50
+CONF_MESSAGE = 'message'
+CONF_LEVEL = 'level'
+CONF_LOGGER = 'logger'
 
 DATA_SYSTEM_LOG = 'system_log'
+DEFAULT_MAX_ENTRIES = 50
+DEPENDENCIES = ['http']
+DOMAIN = 'system_log'
+
+SERVICE_CLEAR = 'clear'
+SERVICE_WRITE = 'write'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_MAX_ENTRIES,
-                     default=DEFAULT_MAX_ENTRIES): cv.positive_int,
+        vol.Optional(CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES):
+            cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_CLEAR_SCHEMA = vol.Schema({})
+SERVICE_WRITE_SCHEMA = vol.Schema({
+    vol.Required(CONF_MESSAGE): cv.string,
+    vol.Optional(CONF_LEVEL, default='error'):
+        vol.In(['debug', 'info', 'warning', 'error', 'critical']),
+    vol.Optional(CONF_LOGGER): cv.string,
+})
 
 
 class LogErrorHandler(logging.Handler):
@@ -50,9 +57,9 @@ class LogErrorHandler(logging.Handler):
     def emit(self, record):
         """Save error and warning logs.
 
-        Everyhing logged with error or warning is saved in local buffer. A
+        Everything logged with error or warning is saved in local buffer. A
         default upper limit is set to 50 (older entries are discarded) but can
-        be changed if neeeded.
+        be changed if needed.
         """
         if record.levelno >= logging.WARN:
             stack = []
@@ -81,17 +88,21 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_service_handler(service):
         """Handle logger services."""
-        # Only one service so far
-        handler.records.clear()
-
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+        if service.service == 'clear':
+            handler.records.clear()
+            return
+        if service.service == 'write':
+            logger = logging.getLogger(
+                service.data.get(CONF_LOGGER, '{}.external'.format(__name__)))
+            level = service.data[CONF_LEVEL]
+            getattr(logger, level)(service.data[CONF_MESSAGE])
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR, async_service_handler,
-        descriptions[DOMAIN].get(SERVICE_CLEAR),
         schema=SERVICE_CLEAR_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_WRITE, async_service_handler,
+        schema=SERVICE_WRITE_SCHEMA)
 
     return True
 
@@ -104,7 +115,7 @@ def _figure_out_source(record, call_stack, hass):
         paths.append(netdisco_path[0])
     except ImportError:
         pass
-    # If a stack trace exists, extract filenames from the entire call stack.
+    # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
@@ -122,10 +133,10 @@ def _figure_out_source(record, call_stack, hass):
             stack = call_stack[0:index+1]
 
     # Iterate through the stack call (in reverse) and find the last call from
-    # a file in HA. Try to figure out where error happened.
+    # a file in Home Assistant. Try to figure out where error happened.
     for pathname in reversed(stack):
 
-        # Try to match with a file within HA
+        # Try to match with a file within Home Assistant
         match = re.match(r'(?:{})/(.*)'.format('|'.join(paths)), pathname)
         if match:
             return match.group(1)

@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.6']
+REQUIREMENTS = ['python-eq3bt==0.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 

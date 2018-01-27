@@ -22,7 +22,6 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA)
 from homeassistant.components.media_player import DOMAIN as DOMAIN_MP
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -96,10 +95,6 @@ def async_setup(hass, config):
 
     hass.http.register_view(TextToSpeechView(tts))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config, disc_info=None):
         """Set up a TTS platform."""
@@ -156,7 +151,7 @@ def async_setup(hass, config):
 
         hass.services.async_register(
             DOMAIN, "{}_{}".format(p_type, SERVICE_SAY), async_say_handle,
-            descriptions.get(SERVICE_SAY), schema=SCHEMA_SERVICE_SAY)
+            schema=SCHEMA_SERVICE_SAY)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
@@ -171,7 +166,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR_CACHE, async_clear_cache_handle,
-        descriptions.get(SERVICE_CLEAR_CACHE),
         schema=SCHEMA_SERVICE_CLEAR_CACHE)
 
     return True

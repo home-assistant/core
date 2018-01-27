@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180102.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180126.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -260,10 +260,10 @@ def async_register_panel(hass, component_name, path, md5=None,
     component_name: name of the web component
     path: path to the HTML of the web component
           (required unless url is provided)
-    md5: the md5 hash of the web component (for versioning in url, optional)
+    md5: the md5 hash of the web component (for versioning in URL, optional)
     sidebar_title: title to show in the sidebar (optional)
     sidebar_icon: icon to show next to title in sidebar (optional)
-    url_path: name to use in the url (defaults to component_name)
+    url_path: name to use in the URL (defaults to component_name)
     config: config to be passed into the web component
     """
     panel = ExternalPanel(component_name, path, md5, sidebar_title,
@@ -376,12 +376,11 @@ def async_setup(hass, config):
     for url in conf.get(CONF_EXTRA_HTML_URL_ES5, []):
         add_extra_html_url(hass, url, True)
 
-    yield from async_setup_themes(hass, conf.get(CONF_THEMES))
+    async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-@asyncio.coroutine
 def async_setup_themes(hass, themes):
     """Set up themes data and services."""
     hass.http.register_view(ThemesView)
@@ -428,16 +427,9 @@ def async_setup_themes(hass, themes):
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
         update_theme_and_fire_event()
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(DOMAIN, SERVICE_SET_THEME,
-                                 set_theme,
-                                 descriptions[SERVICE_SET_THEME],
-                                 SERVICE_SET_THEME_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
-                                 descriptions[SERVICE_RELOAD_THEMES])
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_THEME, set_theme, schema=SERVICE_SET_THEME_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
 
 
 class IndexView(HomeAssistantView):
@@ -586,9 +578,10 @@ def _is_latest(js_option, request):
     from user_agents import parse
     useragent = parse(useragent)
 
-    # on iOS every browser is a Safari which we support from version 10.
+    # on iOS every browser is a Safari which we support from version 11.
     if useragent.os.family == 'iOS':
-        return useragent.os.version[0] >= 10
+        # Was >= 10, temp setting it to 12 to work around issue #11387
+        return useragent.os.version[0] >= 12
 
     family_min_version = {
         'Chrome': 50,   # Probably can reduce this

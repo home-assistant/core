@@ -78,9 +78,7 @@ class TPLinkSmartBulb(Light):
     def __init__(self, smartbulb: 'SmartBulb', name):
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-        self._name = None
-        if name is not None:
-            self._name = name
+        self._name = name
         self._state = None
         self._available = True
         self._color_temp = None
@@ -149,22 +147,30 @@ class TPLinkSmartBulb(Light):
         from pyHS100 import SmartDeviceException
         try:
             self._available = True
+
             if self._supported_features == 0:
                 self.get_features()
+
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
-            if self._name is None:
+
+            # Pull the name from the device if a name was not specified
+            if self._name == DEFAULT_NAME:
                 self._name = self.smartbulb.alias
+
             if self._supported_features & SUPPORT_BRIGHTNESS:
                 self._brightness = brightness_from_percentage(
                     self.smartbulb.brightness)
+
             if self._supported_features & SUPPORT_COLOR_TEMP:
                 if (self.smartbulb.color_temp is not None and
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
+
             if self._supported_features & SUPPORT_RGB_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
+
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
                     self.smartbulb.current_consumption())

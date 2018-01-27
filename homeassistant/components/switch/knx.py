@@ -5,9 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.knx/
 """
 import asyncio
+
 import voluptuous as vol
 
-from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
+from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
@@ -27,19 +28,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up switch(es) for KNX platform."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return False
+    if DATA_KNX not in hass.data or not hass.data[DATA_KNX].initialized:
+        return
 
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
         async_add_devices_config(hass, config, async_add_devices)
-
-    return True
 
 
 @callback
@@ -69,7 +66,7 @@ class KNXSwitch(SwitchDevice):
     """Representation of a KNX switch."""
 
     def __init__(self, hass, device):
-        """Initialization of KNXSwitch."""
+        """Initialize of KNX switch."""
         self.device = device
         self.hass = hass
         self.async_register_callbacks()
@@ -79,7 +76,7 @@ class KNXSwitch(SwitchDevice):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):
-            """Callback after device was updated."""
+            """Call after device was updated."""
             # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
@@ -90,8 +87,13 @@ class KNXSwitch(SwitchDevice):
         return self.device.name
 
     @property
+    def available(self):
+        """Return true if entity is available."""
+        return self.hass.data[DATA_KNX].connected
+
+    @property
     def should_poll(self):
-        """No polling needed within KNX."""
+        """Return the polling state. Not needed within KNX."""
         return False
 
     @property

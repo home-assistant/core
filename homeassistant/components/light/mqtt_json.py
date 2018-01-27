@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     FLASH_LONG, FLASH_SHORT, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, SUPPORT_XY_COLOR)
+from homeassistant.components.light.mqtt import CONF_BRIGHTNESS_SCALE
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT,
     CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY)
@@ -42,6 +43,7 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_RGB = False
 DEFAULT_WHITE_VALUE = False
 DEFAULT_XY = False
+DEFAULT_BRIGHTNESS_SCALE = 255
 
 CONF_EFFECT_LIST = 'effect_list'
 
@@ -51,6 +53,8 @@ CONF_FLASH_TIME_SHORT = 'flash_time_short'
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
+    vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
     vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
     vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
@@ -102,7 +106,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         },
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        config.get(CONF_BRIGHTNESS_SCALE)
     )])
 
 
@@ -112,7 +117,7 @@ class MqttJson(MqttAvailability, Light):
     def __init__(self, name, effect_list, topic, qos, retain, optimistic,
                  brightness, color_temp, effect, rgb, white_value, xy,
                  flash_times, availability_topic, payload_available,
-                 payload_not_available):
+                 payload_not_available, brightness_scale):
         """Initialize MQTT JSON light."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -154,6 +159,7 @@ class MqttJson(MqttAvailability, Light):
             self._xy = None
 
         self._flash_times = flash_times
+        self._brightness_scale = brightness_scale
 
         self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
         self._supported_features |= (rgb and SUPPORT_RGB_COLOR)
@@ -192,7 +198,9 @@ class MqttJson(MqttAvailability, Light):
 
             if self._brightness is not None:
                 try:
-                    self._brightness = int(values['brightness'])
+                    self._brightness = int(values['brightness'] /
+                                           float(self._brightness_scale) *
+                                           255)
                 except KeyError:
                     pass
                 except ValueError:
@@ -333,7 +341,9 @@ class MqttJson(MqttAvailability, Light):
             message['transition'] = int(kwargs[ATTR_TRANSITION])
 
         if ATTR_BRIGHTNESS in kwargs:
-            message['brightness'] = int(kwargs[ATTR_BRIGHTNESS])
+            message['brightness'] = int(kwargs[ATTR_BRIGHTNESS] /
+                                        float(DEFAULT_BRIGHTNESS_SCALE) *
+                                        self._brightness_scale)
 
             if self._optimistic:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
