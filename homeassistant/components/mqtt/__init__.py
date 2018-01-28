@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+    async_dispatcher_connect, async_dispatcher_send, dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
@@ -450,6 +450,7 @@ class MQTT(object):
         self.subscribed_topics = {}
         self.progress = {}
         self.birth_message = birth_message
+        self.retained_messages = {}
         self._mqttc = None
         self._paho_lock = asyncio.Lock(loop=hass.loop)
 
@@ -532,10 +533,21 @@ class MQTT(object):
         This method is a coroutine.
         """
         if not isinstance(topic, str):
-            raise HomeAssistantError("topic need to be a string!")
+            raise HomeAssistantError("topic needs to be a string!")
+
+        _LOGGER.debug("Subscribing to %s", topic)
 
         with (yield from self._paho_lock):
-            if topic in self.subscribed_topics:
+            # Don't re-subscribe to wanted subscription topics.
+            if topic in self.wanted_topics:
+                # Re-send matching retained messages.
+                for retained_topic in self.retained_messages.keys():
+                    if _match_topic(topic, retained_topic):
+                        msg = self.retained_messages[topic]
+                        yield from async_dispatcher_send(
+                            self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED,
+                            topic, msg[0], msg[1]
+                        )
                 return
             self.wanted_topics[topic] = qos
             result, mid = yield from self.hass.async_add_job(
@@ -573,6 +585,7 @@ class MQTT(object):
 
         self.progress = {}
         self.subscribed_topics = {}
+        self.retained_messages = {}
         for topic, qos in self.wanted_topics.items():
             self.hass.add_job(self.async_subscribe, topic, qos)
 
@@ -592,6 +605,13 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
+        if msg.retain:
+            self.retained_messages[msg.topic] = (msg.payload, msg.qos)
+        else:
+            # Retained messages are cleared by publishing a non-retaining
+            # message with the same topic
+            self.retained_messages.pop(msg.topic, None)
+
         dispatcher_send(
             self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, msg.payload,
             msg.qos
