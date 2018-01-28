@@ -57,4 +57,3 @@ class HMLock(HMDevice, LockDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPENING
-
