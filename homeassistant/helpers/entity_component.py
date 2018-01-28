@@ -11,7 +11,6 @@ from homeassistant.const import (
 from homeassistant.core import callback, valid_entity_id, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_time)
 from homeassistant.helpers.service import extract_entity_ids
@@ -368,6 +367,8 @@ class EntityPlatform(object):
         if registry is None:
             registry = hass.data[DATA_REGISTRY] = EntityRegistry(hass)
 
+        yield from registry.async_ensure_loaded()
+
         tasks = [
             self._async_add_entity(entity, update_before_add,
                                    component_entities, registry)
@@ -405,10 +406,10 @@ class EntityPlatform(object):
                     "%s: Error on device update!", self.platform)
                 return
 
-        # Resolve entity_id to entity
-        if entity.unique_id is not None:
-            yield from registry.async_ensure_loaded()
+        suggested_object_id = None
 
+        # Get entity_id from unique ID registration
+        if entity.unique_id is not None:
             suggested_object_id = entity.name
             if suggested_object_id is None and entity.entity_id is not None:
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
@@ -418,16 +419,25 @@ class EntityPlatform(object):
                 suggested_object_id=suggested_object_id)
             entity.entity_id = entry.entity_id
 
-        elif entity.entity_id is None:
-            object_id = entity.name or DEVICE_DEFAULT_NAME
+        # We won't generate an entity ID if the platform has already set one
+        # We will however make sure that platform cannot pick a registered ID
+        elif (entity.entity_id is not None and
+              registry.async_is_registered(entity.entity_id)):
+            # If entity already registered, convert entity id to suggestion
+            suggested_object_id = split_entity_id(entity.entity_id)[1]
+            entity.entity_id = None
+
+        # Generate entity ID
+        if entity.entity_id is None:
+            suggested_object_id = \
+                suggested_object_id or entity.name or DEVICE_DEFAULT_NAME
 
             if self.entity_namespace is not None:
-                object_id = '{} {}'.format(self.entity_namespace,
-                                           object_id)
+                suggested_object_id = '{} {}'.format(self.entity_namespace,
+                                                     suggested_object_id)
 
-            entity.entity_id = async_generate_entity_id(
-                self.component.entity_id_format, object_id,
-                component_entities)
+            entity.entity_id = registry.async_generate_entity_id(
+                self.component.domain, suggested_object_id)
 
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):

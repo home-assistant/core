@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
+from homeassistant.helpers import entity_component, entity_registry
 from homeassistant.components import mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
@@ -313,6 +314,14 @@ def mock_component(hass, component):
         AssertionError("Component {} is already setup".format(component))
 
     hass.config.components.add(component)
+
+
+def mock_registry(hass):
+    """Mock the Entity Registry."""
+    registry = entity_registry.EntityRegistry(hass)
+    registry.entities = {}
+    hass.data[entity_component.DATA_REGISTRY] = registry
+    return registry
 
 
 class MockModule(object):

@@ -1,12 +1,13 @@
-"""Provide a registry to track entities."""
+"""Provide a registry to track entity IDs."""
 import asyncio
 from collections import namedtuple, OrderedDict
+from itertools import chain
 import logging
 import os
 
 from ..core import callback, split_entity_id
+from ..util import ensure_unique_string, slugify
 from ..util.yaml import load_yaml, save_yaml
-from .entity import async_generate_entity_id
 
 PATH_REGISTRY = 'entity_registry.yaml'
 SAVE_DELAY = 10
@@ -26,6 +27,23 @@ class EntityRegistry:
         self._sched_save = None
 
     @callback
+    def async_is_registered(self, entity_id):
+        """Check if an entity_id is currently registered."""
+        return entity_id in self.entities
+
+    @callback
+    def async_generate_entity_id(self, domain, suggested_object_id):
+        """Generate an entity ID that does not conflict.
+
+        Conflicts checked against registered and currently existing entities.
+        """
+        return ensure_unique_string(
+            '{}.{}'.format(domain, slugify(suggested_object_id)),
+            chain(self.entities.keys(),
+                  self.hass.states.async_entity_ids(domain))
+        )
+
+    @callback
     def async_get_or_create(self, domain, platform, unique_id, *,
                             suggested_object_id=None):
         """Get entity. Creat if it doesn't exist."""
@@ -34,10 +52,8 @@ class EntityRegistry:
                entity.unique_id == unique_id:
                 return entity
 
-        entity_id = async_generate_entity_id(
-            domain + '.{}', suggested_object_id or unique_id,
-            self.entities.keys())
-
+        entity_id = self.async_generate_entity_id(
+            domain, suggested_object_id or unique_id)
         entity = Entry(
             entity_id=entity_id,
             unique_id=unique_id,
