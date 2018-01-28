@@ -541,7 +541,7 @@ class MQTT(object):
             # Don't re-subscribe to wanted subscription topics.
             if topic in self.wanted_topics:
                 # Re-send matching retained messages.
-                for retained_topic in self.retained_messages.keys():
+                for retained_topic in self.retained_messages:
                     if _match_topic(topic, retained_topic):
                         msg = self.retained_messages[topic]
                         yield from async_dispatcher_send(

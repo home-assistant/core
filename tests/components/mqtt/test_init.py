@@ -358,8 +358,10 @@ class TestMQTTCallbacks(unittest.TestCase):
         async_dispatcher_connect(
             self.hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, record)
 
-        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
-        message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
+        MQTTMessage = namedtuple('MQTTMessage',
+                                 ['topic', 'qos', 'payload', 'retain'])
+        message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'),
+                              False)
 
         self.hass.data['mqtt']._mqtt_on_message(
             None, {'hass': self.hass}, message)
