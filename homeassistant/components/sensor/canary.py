@@ -86,7 +86,8 @@ class CanarySensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._sensor_type[0] == "air_quality":
+        if self._sensor_type[0] == "air_quality" \
+                and self._sensor_value is not None:
             air_quality = None
             if self._sensor_value <= .4:
                 air_quality = STATE_AIR_QUALITY_VERY_ABNORMAL
@@ -115,4 +116,6 @@ class CanarySensor(Entity):
             canary_sensor_type = SensorType.HUMIDITY
 
         value = self._data.get_reading(self._device_id, canary_sensor_type)
-        self._sensor_value = round(float(value), SENSOR_VALUE_PRECISION)
+
+        if value is not None:
+            self._sensor_value = round(float(value), SENSOR_VALUE_PRECISION)
