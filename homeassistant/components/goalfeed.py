@@ -1,4 +1,5 @@
-"""Component for the Goalfeed service.
+"""
+Component for the Goalfeed service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/goalfeed/
@@ -11,9 +12,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-DOMAIN = 'goalfeed'
-
 REQUIREMENTS = ['pysher==0.2.0']
+
+DOMAIN = 'goalfeed'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -28,7 +29,7 @@ GOALFEED_APP_ID = 'bfd4ed98c1ff22c04074'
 
 
 def setup(hass, config):
-    """Set up is called when Home Assistant is loading our component."""
+    """Set up the Goalfeed component."""
     import pysher
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
