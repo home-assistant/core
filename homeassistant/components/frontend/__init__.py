@@ -407,7 +407,7 @@ def async_setup_themes(hass, themes):
 
     @callback
     def set_theme(call):
-        """Set backend-prefered theme."""
+        """Set backend-preferred theme."""
         data = call.data
         name = data[CONF_NAME]
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:

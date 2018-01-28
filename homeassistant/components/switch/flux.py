@@ -210,7 +210,7 @@ class FluxSwitch(SwitchDevice):
             else:
                 temp = self._start_colortemp + temp_offset
         else:
-            # Nightime
+            # Night time
             time_state = 'night'
 
             if now < stop_time:

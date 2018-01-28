@@ -1,5 +1,5 @@
 """
-LIRC interface to receive signals from a infrared remote control.
+LIRC interface to receive signals from an infrared remote control.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lirc/

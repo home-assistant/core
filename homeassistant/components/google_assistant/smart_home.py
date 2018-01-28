@@ -79,7 +79,7 @@ class SmartHomeError(Exception):
         """Log error code."""
         super(SmartHomeError, self).__init__(msg)
         _LOGGER.error(
-            "An error has ocurred in Google SmartHome: %s."
+            "An error has occurred in Google SmartHome: %s."
             "Error code: %s", msg, code
         )
         self.code = code
@@ -96,7 +96,7 @@ class Config:
 
 
 def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
-    """Convert a hass entity into an google actions device."""
+    """Convert a hass entity into a google actions device."""
     entity_config = config.entity_config.get(entity.entity_id, {})
     google_domain = entity_config.get(CONF_TYPE)
     class_data = MAPPING_COMPONENT.get(

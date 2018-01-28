@@ -337,7 +337,7 @@ class MicrosoftFace(object):
     @asyncio.coroutine
     def call_api(self, method, function, data=None, binary=False,
                  params=None):
-        """Make a api call."""
+        """Make an api call."""
         headers = {"Ocp-Apim-Subscription-Key": self._api_key}
         url = self._server_url.format(function)
 
