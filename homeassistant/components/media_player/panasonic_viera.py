@@ -51,6 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
+        name = discovery_info.get('name')
         host = discovery_info.get('host')
         port = discovery_info.get('port')
         remote = RemoteControl(host, port)
