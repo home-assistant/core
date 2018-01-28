@@ -60,7 +60,7 @@ class InsteonLocalFanDevice(FanEntity):
     @property
     def unique_id(self):
         """Return the ID of this Insteon node."""
-        return 'insteon_local_{}_fan'.format(self.node.device_id)
+        return self.node.device_id
 
     @property
     def speed(self) -> str:

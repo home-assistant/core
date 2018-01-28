@@ -182,7 +182,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this emby client."""
-        return '{}.{}'.format(self.__class__, self.device_id)
+        return self.device_id
 
     @property
     def supports_remote_control(self):

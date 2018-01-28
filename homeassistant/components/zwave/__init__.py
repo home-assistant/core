@@ -865,8 +865,8 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
-        self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
-                                               self.values.primary.object_id)
+        self._unique_id = "{}-{}".format(self.node.node_id,
+                                         self.values.primary.object_id)
         self._update_attributes()
 
         dispatcher.connect(

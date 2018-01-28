@@ -81,7 +81,7 @@ class WemoSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the ID of this WeMo switch."""
-        return "{}.{}".format(self.__class__, self.wemo.serialnumber)
+        return self.wemo.serialnumber
 
     @property
     def name(self):

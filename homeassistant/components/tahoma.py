@@ -101,14 +101,7 @@ class TahomaDevice(Entity):
         """Initialize the device."""
         self.tahoma_device = tahoma_device
         self.controller = controller
-        self._unique_id = TAHOMA_ID_FORMAT.format(
-            slugify(tahoma_device.label), slugify(tahoma_device.url))
         self._name = self.tahoma_device.label
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this cover."""
-        return self._unique_id
 
     @property
     def name(self):

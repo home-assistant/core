@@ -178,7 +178,7 @@ class YeelightLight(Light):
     @property
     def unique_id(self) -> str:
         """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._ipaddr)
+        return self._ipaddr
 
     @property
     def color_temp(self) -> int:

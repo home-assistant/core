@@ -338,9 +338,22 @@ class Entity(object):
 
     def __eq__(self, other):
         """Return the comparison."""
-        return (isinstance(other, Entity) and
-                self.unique_id is not None and other.unique_id is not None and
-                other.unique_id == self.unique_id)
+        if not isinstance(other, self.__class__):
+            return False
+
+        # Can only decide equality if both have a unique id
+        if self.unique_id is None or other.unique_id is None:
+            return False
+
+        # Ensure they belong to the same platform
+        if self.platform is not None or other.platform is not None:
+            if self.platform is None or other.platform is None:
+                return False
+
+            if self.platform.platform != other.platform.platform:
+                return False
+
+        return self.unique_id == other.unique_id
 
     def __repr__(self):
         """Return the representation."""

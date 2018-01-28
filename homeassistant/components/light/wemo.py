@@ -76,8 +76,7 @@ class WemoLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        deviceid = self.device.uniqueID
-        return '{}.{}'.format(self.__class__, deviceid)
+        return self.device.uniqueID
 
     @property
     def name(self):
@@ -176,7 +175,7 @@ class WemoDimmer(Light):
     @property
     def unique_id(self):
         """Return the ID of this WeMo dimmer."""
-        return "{}.{}".format(self.__class__, self.wemo.serialnumber)
+        return self.wemo.serialnumber
 
     @property
     def name(self):
