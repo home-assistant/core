@@ -39,7 +39,7 @@ def _create_sensor(hass, sensor):
                                name=sensor['name'],
                                state=_get_sensor_state(sensor['cond']),
                                device_class=_get_device_class(sensor['type'])
-                               )
+                               )  # pylint: disable=bad-continuation
 
 
 @asyncio.coroutine
@@ -50,12 +50,12 @@ def async_setup_platform(hass, config, async_add_devices,
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
 
-    di = discovery_info[ATTR_DISCOVER_DEVICES]
+    discinfo = discovery_info[ATTR_DISCOVER_DEVICES]
 
     # multiple devices here!
     async_add_devices(
-        _create_sensor(hass, di[sensor])
-        for sensor in di
+        _create_sensor(hass, discinfo[sensor])
+        for sensor in discinfo
         )
 
 
