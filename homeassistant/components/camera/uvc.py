@@ -127,6 +127,9 @@ class UnifiVideoCamera(Camera):
         else:
             client_cls = uvc_camera.UVCCameraClient
 
+        if caminfo['username'] is None:
+            caminfo['username'] = 'ubnt'
+
         camera = None
         for addr in addrs:
             try:
