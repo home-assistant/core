@@ -153,7 +153,8 @@ def run(script_args: List) -> int:
 
         step_stop = step_start + step
         if step_start > total_events:
-            print_progress(total_events, total_events, prefix_format.format(total_events, total_events))
+            print_progress(total_events, total_events, prefix_format.format(
+                total_events, total_events))
             break
         query = session.query(models.Events).filter(
             models.Events.event_type == 'state_changed').order_by(
@@ -162,8 +163,11 @@ def run(script_args: List) -> int:
         for event in query:
             event_data = json.loads(event.event_data)
 
-            if ('entity_id' not in event_data) or not (excl_entities and event_data['entity_id'] in excl_entities) or (
-                        excl_domains and event_data['entity_id'].split('.')[0] in excl_domains):
+            if ('entity_id' not in event_data) or not (
+                    excl_entities and event_data[
+                        'entity_id'] in excl_entities) or (
+                    excl_domains and event_data['entity_id']
+                    .split('.')[0] in excl_domains):
                 session.expunge(event)
                 continue
 
@@ -224,12 +228,6 @@ def run(script_args: List) -> int:
             point['tags'].update(tags)
             points.append(point)
             session.expunge(event)
-            # if len(points) >= step:
-            #     if not simulate:
-            #         print("Write {} points to the database".format(len(points)))
-            #         client.write_points(points)
-            #     count += len(points)
-            #     points = []
 
         if points:
             if not simulate:
@@ -238,11 +236,9 @@ def run(script_args: List) -> int:
             count += len(points)
 
         step_start += step
-        print_progress(step_start, total_events, prefix_format.format(step_start, total_events))
+        print_progress(step_start, total_events, prefix_format.format(
+            step_start, total_events))
 
-#    if len(invalid_points) > 0:
-#        print("Invalid Points were found, and not written")
-#        print("\n\t".join([str(x) for x in invalid_points]))
     print("\nStatistics:")
     print("\n".join(["{:6}: {}".format(v, k) for k, v
                      in sorted(entities.items(), key=lambda x: x[1])]))
