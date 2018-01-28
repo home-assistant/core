@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.canary import DATA_CANARY, DEFAULT_TIMEOUT
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
@@ -23,10 +22,10 @@ DEPENDENCIES = ['canary', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=90)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=timedelta(seconds=90)):
-        cv.time_period,
 })
 
 
@@ -39,8 +38,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in location.devices:
             if device.is_online:
                 devices.append(
-                    CanaryCamera(hass, config, data, location, device,
-                                 DEFAULT_TIMEOUT))
+                    CanaryCamera(hass, data, location, device, DEFAULT_TIMEOUT,
+                                 config.get(CONF_FFMPEG_ARGUMENTS)))
 
     add_devices(devices, True)
 
@@ -48,12 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CanaryCamera(Camera):
     """An implementation of a Canary security camera."""
 
-    def __init__(self, hass, config, data, location, device, timeout):
+    def __init__(self, hass, data, location, device, timeout, ffmpeg_args):
         """Initialize a Canary security camera."""
         super().__init__()
 
         self._ffmpeg = hass.data[DATA_FFMPEG]
-        self._ffmpeg_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
+        self._ffmpeg_arguments = ffmpeg_args
         self._data = data
         self._location = location
         self._device = device
