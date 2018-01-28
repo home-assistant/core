@@ -4,20 +4,21 @@ Support for Coinbase sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.coinbase/
 """
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.entity import Entity
 
-
-DEPENDENCIES = ['coinbase']
-
-DATA_COINBASE = 'coinbase_cache'
-
-CONF_ATTRIBUTION = "Data provided by coinbase.com"
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
 BTC_ICON = 'mdi:currency-btc'
-ETH_ICON = 'mdi:currency-eth'
+
 COIN_ICON = 'mdi:coin'
+
+CONF_ATTRIBUTION = "Data provided by coinbase.com"
+
+DATA_COINBASE = 'coinbase_cache'
+DEPENDENCIES = ['coinbase']
+
+ETH_ICON = 'mdi:currency-eth'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,13 +27,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     if 'account' in discovery_info:
         account = discovery_info['account']
-        sensor = AccountSensor(hass.data[DATA_COINBASE],
-                               account['name'],
-                               account['balance']['currency'])
+        sensor = AccountSensor(
+            hass.data[DATA_COINBASE], account['name'],
+            account['balance']['currency'])
     if 'exchange_currency' in discovery_info:
-        sensor = ExchangeRateSensor(hass.data[DATA_COINBASE],
-                                    discovery_info['exchange_currency'],
-                                    discovery_info['native_currency'])
+        sensor = ExchangeRateSensor(
+            hass.data[DATA_COINBASE], discovery_info['exchange_currency'],
+            discovery_info['native_currency'])
 
     add_devices([sensor], True)
 
@@ -78,8 +79,8 @@ class AccountSensor(Entity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_NATIVE_BALANCE: "{} {}".format(self._native_balance,
-                                                self._native_currency)
+            ATTR_NATIVE_BALANCE: "{} {}".format(
+                self._native_balance, self._native_currency),
         }
 
     def update(self):
