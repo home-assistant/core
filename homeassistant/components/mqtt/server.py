@@ -37,7 +37,7 @@ def async_start(hass, server_config):
     from hbmqtt.broker import Broker, BrokerException
 
     try:
-        passwd = tempfile.NamedTemporaryFile()
+        passwd = tempfile.NamedTemporaryFile(delete=False)
 
         if server_config is None:
             server_config, client_config = generate_config(hass, passwd)
