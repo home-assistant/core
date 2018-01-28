@@ -962,8 +962,8 @@ python_opendata_transport==0.0.3
 # homeassistant.components.zwave
 python_openzwave==0.4.0.35
 
-# homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.26
+# homeassistant.components.egardia
+pythonegardia==1.0.36
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
