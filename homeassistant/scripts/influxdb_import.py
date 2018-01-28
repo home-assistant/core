@@ -166,8 +166,8 @@ def run(script_args: List) -> int:
             if ('entity_id' not in event_data) or not (
                     excl_entities and event_data[
                         'entity_id'] in excl_entities) or (
-                    excl_domains and event_data['entity_id']
-                    .split('.')[0] in excl_domains):
+                            excl_domains and event_data[
+                                'entity_id'].split('.')[0] in excl_domains):
                 session.expunge(event)
                 continue
 
