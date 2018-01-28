@@ -112,13 +112,13 @@ class ApnsDevice(object):
         self.device_disabled = True
 
     def __eq__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         if isinstance(other, self.__class__):
             return self.push_id == other.push_id and self.name == other.name
         return NotImplemented
 
     def __ne__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         return not self.__eq__(other)
 
 

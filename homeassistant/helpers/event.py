@@ -119,7 +119,7 @@ track_template = threaded_listener_factory(async_track_template)
 @bind_hass
 def async_track_same_state(hass, period, action, async_check_same_func,
                            entity_ids=MATCH_ALL):
-    """Track the state of entities for a period and run a action.
+    """Track the state of entities for a period and run an action.
 
     If async_check_func is None it use the state of orig_value.
     Without entity_ids we track all state changes.

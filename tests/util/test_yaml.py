@@ -48,7 +48,7 @@ class TestYaml(unittest.TestCase):
             load_yaml_config_file(YAML_CONFIG_FILE)
 
     def test_no_key(self):
-        """Test item without an key."""
+        """Test item without a key."""
         files = {YAML_CONFIG_FILE: 'a: a\nnokeyhere'}
         with self.assertRaises(HomeAssistantError), \
                 patch_yaml_files(files):

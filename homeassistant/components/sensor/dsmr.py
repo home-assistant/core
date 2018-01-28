@@ -93,8 +93,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             device.telegram = telegram
             hass.async_add_job(device.async_update_ha_state())
 
-    # Creates a asyncio.Protocol factory for reading DSMR telegrams from serial
-    # and calls update_entities_telegram to update entities on arrival
+    # Creates an asyncio.Protocol factory for reading DSMR telegrams from
+    # serial and calls update_entities_telegram to update entities on arrival
     if config[CONF_HOST]:
         reader_factory = partial(
             create_tcp_dsmr_reader, config[CONF_HOST], config[CONF_PORT],
