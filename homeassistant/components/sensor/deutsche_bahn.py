@@ -99,7 +99,10 @@ class SchieneData(object):
     def update(self):
         """Update the connection data."""
         self.connections = self.schiene.connections(
-            self.start, self.goal, dt_util.as_local(dt_util.utcnow()), self.only_direct)
+            self.start,
+            self.goal,
+            dt_util.as_local(dt_util.utcnow()),
+            self.only_direct)
 
         for con in self.connections:
             # Detail info is not useful. Having a more consistent interface
