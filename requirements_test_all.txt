@@ -192,6 +192,3 @@ warrant==0.6.1
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
-
-# homeassistant.components.climate.xiaomi_miio
-python-miio==0.3.2
