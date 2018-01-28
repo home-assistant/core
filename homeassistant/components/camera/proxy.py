@@ -59,9 +59,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 @asyncio.coroutine
 def _read_frame(req):
-    """Read a single frame from an MJPEG stream.
-
-    based on https://gist.github.com/russss/1143799"""
+    """Read a single frame from an MJPEG stream."""
+    # based on https://gist.github.com/russss/1143799
     import cgi
     # Read in HTTP headers:
     stream = req.content
@@ -142,6 +141,7 @@ class ImageOpts():
         self.force_resize = force_resize
 
     def __bool__(self):
+        """Bool evaution rules."""
         return True if self.max_width or self.quality else False
 
 
@@ -187,7 +187,6 @@ class ProxyCamera(Camera):
     @asyncio.coroutine
     def async_camera_image(self):
         """Return a still image response from the camera."""
-
         now = dt_util.utcnow()
 
         if (self._image_refresh_rate and
