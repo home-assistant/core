@@ -149,11 +149,6 @@ class YamahaDevice(MediaPlayerDevice):
         self._name = name
         self._zone = receiver.zone
 
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return '{0}:{1}'.format(self.receiver.ctrl_url, self._zone)
-
     def update(self):
         """Get the latest details from the device."""
         self._play_status = self.receiver.play_status()
