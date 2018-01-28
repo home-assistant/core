@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.homematic/
 """
 import logging
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockDevice, SUPPORT_OPENING
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import STATE_UNKNOWN
 
@@ -52,3 +52,9 @@ class HMLock(HMDevice, LockDevice):
         """Generate the data dictionary (self._data) from metadata."""
         self._state = "STATE"
         self._data.update({self._state: STATE_UNKNOWN})
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPENING
+

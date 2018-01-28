@@ -39,6 +39,9 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_CODE): cv.string,
 })
 
+# Bitfield of features supported by the lock entity
+SUPPORT_OPENING = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -130,6 +133,10 @@ class LockDevice(Entity):
     def code_format(self):
         """Regex for code format or None if no code is required."""
         return None
+
+    @property
+    def is_openable(self):
+        return False
 
     @property
     def is_locked(self):
