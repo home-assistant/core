@@ -210,6 +210,11 @@ class HikvisionBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._id
+
+    @property
     def is_on(self):
         """Return true if sensor is on."""
         return self._sensor_state()
