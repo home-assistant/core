@@ -318,7 +318,8 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         """Return the list of available fan modes."""
         return self._fan_list
 
-    def set_temperature(self, **kwargs):
+    @asyncio.coroutine
+    def async_set_temperature(self, **kwargs):
         """Set target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -342,40 +343,44 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                             self._current_operation == STATE_IDLE):
                 self._current_operation = STATE_AUTO
 
-        self.send_configuration()
+        self._send_configuration()
         self.schedule_update_ha_state()
 
-    def set_humidity(self, humidity):
+    @asyncio.coroutine
+    def async_set_humidity(self, humidity):
         """Set the target humidity."""
         self._target_humidity = humidity
         self.schedule_update_ha_state()
 
-    def set_swing_mode(self, swing_mode):
+    @asyncio.coroutine
+    def async_set_swing_mode(self, swing_mode):
         """Set target temperature."""
         self._current_swing_mode = swing_mode
         if self._customize and ('swing' in self._customize) and \
                 (self._current_swing_mode in self._customize['swing']):
-            self.send_custom_command(
+            self._send_custom_command(
                 self._customize['swing'][self._current_swing_mode])
         else:
-            self.send_configuration()
+            self._send_configuration()
         self.schedule_update_ha_state()
 
-    def set_fan_mode(self, fan):
+    @asyncio.coroutine
+    def async_set_fan_mode(self, fan):
         """Set the fan mode."""
         self._current_fan_mode = fan
         if self._customize and ('fan' in self._customize) and \
                 (self._current_fan_mode in self._customize['fan']):
-            self.send_custom_command(
+            self._send_custom_command(
                 self._customize['fan'][self._current_fan_mode])
         else:
-            self.send_configuration()
+            self._send_configuration()
         self.schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
+    @asyncio.coroutine
+    def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         self._current_operation = operation_mode
-        self.send_configuration()
+        self._send_configuration()
         self.schedule_update_ha_state()
 
     @property
@@ -388,32 +393,37 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         """List of available swing modes."""
         return self._swing_list
 
-    def turn_away_mode_on(self):
+    @asyncio.coroutine
+    def async_turn_away_mode_on(self):
         """Turn away mode on."""
         self._away = True
         self.schedule_update_ha_state()
 
-    def turn_away_mode_off(self):
+    @asyncio.coroutine
+    def async_turn_away_mode_off(self):
         """Turn away mode off."""
         self._away = False
         self.schedule_update_ha_state()
 
-    def set_hold_mode(self, hold):
+    @asyncio.coroutine
+    def async_set_hold_mode(self, hold):
         """Update hold mode on."""
         self._hold = hold
         self.schedule_update_ha_state()
 
-    def turn_aux_heat_on(self):
+    @asyncio.coroutine
+    def async_turn_aux_heat_on(self):
         """Turn auxillary heater on."""
         self._aux = True
         self.schedule_update_ha_state()
 
-    def turn_aux_heat_off(self):
+    @asyncio.coroutine
+    def async_turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._aux = False
         self.schedule_update_ha_state()
 
-    def send_configuration(self):
+    def _send_configuration(self):
         from miio.airconditioningcompanion import \
             Power, OperationMode, FanSpeed, SwingMode
 
@@ -432,7 +442,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             _LOGGER.error('Model number of the air condition unknown. '
                           'Configuration cannot be sent.')
 
-    def send_custom_command(self, command: str):
+    def _send_custom_command(self, command: str):
         if command[0:2] == "01":
             yield from self._try_command(
                 "Sending new air conditioner configuration failed.",
