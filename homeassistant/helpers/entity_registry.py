@@ -53,7 +53,7 @@ class EntityRegistry:
                 return entity
 
         entity_id = self.async_generate_entity_id(
-            domain, suggested_object_id or unique_id)
+            domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
         entity = Entry(
             entity_id=entity_id,
             unique_id=unique_id,
