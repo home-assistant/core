@@ -113,7 +113,8 @@ def setup(hass, config):
                         server.start()
                 except IOError:
                     return
-                hass.data[D_EGARDIASRV].register_callback(hass.data[D_EGARDIADEV].handle_status_event)
+                hass.data[D_EGARDIASRV].register_callback(
+                    hass.data[D_EGARDIADEV].handle_status_event)
 
     # register for callback since we might need to set up the egardia server
     discovery.listen_platform(hass, 'alarm_control_panel', alarm_loaded)
