@@ -173,7 +173,7 @@ ciscosparkapi==0.4.2
 coinbase==2.0.6
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.1.2
+coinmarketcap==4.2.1
 
 # homeassistant.scripts.check_config
 colorlog==3.1.2
@@ -1114,7 +1114,7 @@ speedtest-cli==1.0.7
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.2.1
+sqlalchemy==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1250,7 +1250,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.01.14
+youtube_dl==2018.01.21
 
 # homeassistant.components.light.zengge
 zengge==0.2

@@ -41,7 +41,7 @@ homeassistant/components/*/zwave.py @home-assistant/z-wave
 
 homeassistant/components/hassio.py @home-assistant/hassio
 
-# Indiviudal components
+# Individual components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
 homeassistant/components/camera/yi.py @bachya
 homeassistant/components/climate/ephember.py @ttroy50

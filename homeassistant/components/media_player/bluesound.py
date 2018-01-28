@@ -150,10 +150,10 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._port = DEFAULT_PORT
 
     @staticmethod
-    def _try_get_index(string, seach_string):
+    def _try_get_index(string, search_string):
         """Get the index."""
         try:
-            return string.index(seach_string)
+            return string.index(search_string)
         except ValueError:
             return -1
 

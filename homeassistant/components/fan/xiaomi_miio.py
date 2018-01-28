@@ -200,7 +200,7 @@ class XiaomiAirPurifier(FanEntity):
 
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
-        """Call a air purifier command handling error messages."""
+        """Call an air purifier command handling error messages."""
         from miio import DeviceException
         try:
             result = yield from self.hass.async_add_job(

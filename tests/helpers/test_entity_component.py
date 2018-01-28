@@ -130,7 +130,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert poll_ent.async_update.called
 
     def test_polling_updates_entities_with_exception(self):
-        """Test the updated entities that not break with a exception."""
+        """Test the updated entities that not break with an exception."""
         component = EntityComponent(
             _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
 
@@ -663,7 +663,7 @@ def test_raise_error_on_update(hass):
     entity2 = EntityTest(name='test_2')
 
     def _raise():
-        """Helper to raise a exception."""
+        """Helper to raise an exception."""
         raise AssertionError
 
     entity1.update = _raise

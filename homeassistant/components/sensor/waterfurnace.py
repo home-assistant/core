@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 class WFSensorConfig(object):
     """Water Furnace Sensor configuration."""
 
-    def __init__(self, friendly_name, field, icon="mdi:guage",
+    def __init__(self, friendly_name, field, icon="mdi:gauge",
                  unit_of_measurement=None):
         """Initialize configuration."""
         self.friendly_name = friendly_name

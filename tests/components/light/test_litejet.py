@@ -156,7 +156,7 @@ class TestLiteJetLight(unittest.TestCase):
 
         # (Requesting the level is not strictly needed with a deactivated
         # event but the implementation happens to do it. This could be
-        # changed to a assert_not_called in the future.)
+        # changed to an assert_not_called in the future.)
         self.mock_lj.get_load_level.assert_called_with(
             ENTITY_OTHER_LIGHT_NUMBER)
 
