@@ -5,16 +5,17 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/coinbase/
 """
 from datetime import timedelta
-
 import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY
-from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import Throttle
 
-REQUIREMENTS = ['coinbase==2.0.6']
+REQUIREMENTS = ['coinbase==2.0.7']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'coinbase'
@@ -46,14 +47,13 @@ def setup(hass, config):
     api_secret = config[DOMAIN].get(CONF_API_SECRET)
     exchange_currencies = config[DOMAIN].get(CONF_EXCHANGE_CURRENCIES)
 
-    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key,
-                                                            api_secret)
+    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(
+        api_key, api_secret)
 
     if not hasattr(coinbase_data, 'accounts'):
         return False
     for account in coinbase_data.accounts.data:
-        load_platform(hass, 'sensor', DOMAIN,
-                      {'account': account}, config)
+        load_platform(hass, 'sensor', DOMAIN, {'account': account}, config)
     for currency in exchange_currencies:
         if currency not in coinbase_data.exchange_rates.rates:
             _LOGGER.warning("Currency %s not found", currency)
