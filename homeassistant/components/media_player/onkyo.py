@@ -6,6 +6,9 @@ https://home-assistant.io/components/media_player.onkyo/
 """
 import logging
 
+# pylint: disable=unused-import
+from typing import List  # noqa: F401
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (

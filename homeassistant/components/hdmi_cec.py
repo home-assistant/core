@@ -320,7 +320,7 @@ def setup(hass: HomeAssistant, base_config):
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
 
-    def __init__(self, hass: HomeAssistant, device, logical):
+    def __init__(self, hass: HomeAssistant, device, logical) -> None:
         """Initialize the device."""
         self._device = device
         self.hass = hass

@@ -277,7 +277,7 @@ class Alert(ToggleEntity):
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_toggle(self):
+    def async_toggle(self, **kwargs):
         """Async toggle alert."""
         if self._ack:
             return self.async_turn_on()
