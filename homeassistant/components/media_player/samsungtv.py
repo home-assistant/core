@@ -127,7 +127,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             sock.settimeout(self._config[CONF_TIMEOUT])
             sock.connect((self._config['host'], self._config['port']))
             self._state = STATE_ON
-        except socket.error:
+        except (socket.error, socket.timeout):
             self._state = STATE_OFF
 
     def get_remote(self):
