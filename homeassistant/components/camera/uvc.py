@@ -22,6 +22,7 @@ CONF_NVR = 'nvr'
 CONF_KEY = 'key'
 CONF_PASSWORD = 'password'
 
+DEFAULT_USERNAME = 'ubnt'
 DEFAULT_PASSWORD = 'ubnt'
 DEFAULT_PORT = 7080
 
@@ -127,11 +128,15 @@ class UnifiVideoCamera(Camera):
         else:
             client_cls = uvc_camera.UVCCameraClient
 
+        username = caminfo['username']
+        if not username:
+            username = DEFAULT_USERNAME
+
         camera = None
         for addr in addrs:
             try:
                 camera = client_cls(
-                    addr, caminfo['username'], self._password)
+                    addr, username, self._password)
                 camera.login()
                 _LOGGER.debug("Logged into UVC camera %(name)s via %(addr)s",
                               dict(name=self._name, addr=addr))
