@@ -13,7 +13,6 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import (slugify)
 
 REQUIREMENTS = ['tahoma-api==0.0.10']
 

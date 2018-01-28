@@ -64,8 +64,6 @@ class NetatmoCamera(Camera):
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
-        camera_id = data.camera_data.cameraByName(
-            camera=camera_name, home=home)['id']
         self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
             camera=camera_name
             )
