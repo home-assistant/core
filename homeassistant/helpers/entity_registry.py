@@ -46,7 +46,7 @@ class EntityRegistry:
     @callback
     def async_get_or_create(self, domain, platform, unique_id, *,
                             suggested_object_id=None):
-        """Get entity. Creat if it doesn't exist."""
+        """Get entity. Create if it doesn't exist."""
         for entity in self.entities.values():
             if entity.domain == domain and entity.platform == platform and \
                entity.unique_id == unique_id:
