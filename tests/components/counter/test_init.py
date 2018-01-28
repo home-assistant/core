@@ -104,17 +104,35 @@ class TestCounter(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(1, int(state.state))
 
+        increment(self.hass, entity_id, 5)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(6, int(state.state))
+
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(2, int(state.state))
+        self.assertEqual(7, int(state.state))
 
         decrement(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(1, int(state.state))
+        self.assertEqual(6, int(state.state))
+
+        decrement(self.hass, entity_id, 3)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(3, int(state.state))
+
+        decrement(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(2, int(state.state))
 
         reset(self.hass, entity_id)
         self.hass.block_till_done()
@@ -147,17 +165,35 @@ class TestCounter(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(15, int(state.state))
 
+        increment(self.hass, entity_id, 2)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(17, int(state.state))
+
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(20, int(state.state))
+        self.assertEqual(22, int(state.state))
 
         decrement(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(15, int(state.state))
+        self.assertEqual(17, int(state.state))
+
+        decrement(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(12, int(state.state))
+
+        decrement(self.hass, entity_id, 2)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(10, int(state.state))
 
 
 @asyncio.coroutine
