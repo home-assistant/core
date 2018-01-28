@@ -851,6 +851,9 @@ pyserial==3.1.1
 # homeassistant.components.lock.sesame
 pysesame==0.1.0
 
+# homeassistant.components.goalfeed
+pysher==0.2.0
+
 # homeassistant.components.sensor.sma
 pysma==0.1.3
 
