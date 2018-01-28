@@ -15,6 +15,7 @@ from homeassistant.components.canary import DATA_CANARY, DEFAULT_TIMEOUT
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.util import Throttle
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
@@ -22,7 +23,7 @@ DEPENDENCIES = ['canary', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=90)
+MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
@@ -74,16 +75,10 @@ class CanaryCamera(Camera):
         """Return the camera motion detection status."""
         return not self._location.is_recording
 
-    @property
-    def should_poll(self):
-        """Update the image periodically."""
-        return True
-
     @asyncio.coroutine
     def async_camera_image(self):
         """Return a still image response from the camera."""
-        if self._live_stream_session is None:
-            return
+        self.renew_live_stream_session()
 
         from haffmpeg import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
@@ -110,7 +105,8 @@ class CanaryCamera(Camera):
             'multipart/x-mixed-replace;boundary=ffserver')
         yield from stream.close()
 
-    def update(self):
-        """Update live stream url."""
+    @Throttle(MIN_TIME_BETWEEN_SESSION_RENEW)
+    def renew_live_stream_session(self):
+        """Renew live stream session."""
         self._live_stream_session = self._data.get_live_stream_session(
             self._device)
