@@ -45,7 +45,7 @@ class HMLock(HMDevice, LockDevice):
         self._hmdevice.unlock()
 
     def open(self, **kwargs):
-        """Opens the door lock."""
+        """Open the door latch."""
         self._hmdevice.open()
 
     def _init_data_struct(self):

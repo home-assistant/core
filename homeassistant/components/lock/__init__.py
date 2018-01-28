@@ -135,10 +135,6 @@ class LockDevice(Entity):
         return None
 
     @property
-    def is_openable(self):
-        return False
-
-    @property
     def is_locked(self):
         """Return true if the lock is locked."""
         return None
