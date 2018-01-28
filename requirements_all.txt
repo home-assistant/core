@@ -551,7 +551,7 @@ orvibo==1.1.1
 paho-mqtt==1.3.1
 
 # homeassistant.components.media_player.panasonic_viera
-panasonic_viera==0.2
+panasonic_viera==0.3
 
 # homeassistant.components.media_player.dunehd
 pdunehd==1.3
