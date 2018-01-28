@@ -494,5 +494,5 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         all_params = [command]
         if parameters:
             for parameter in parameters:
-                all_params.append(urllib.parse.quote(parameter, safe=':='))
+                all_params.append(urllib.parse.quote(parameter, safe=':=/?'))
         return self.async_query(*all_params)
