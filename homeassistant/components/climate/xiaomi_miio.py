@@ -159,7 +159,6 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         try:
             self._current_temperature = self.hass.config.units.temperature(
                 float(state.state), unit)
-            self.schedule_update_ha_state()
         except ValueError as ex:
             _LOGGER.error('Unable to update from sensor: %s', ex)
 
@@ -344,13 +343,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._current_operation = STATE_AUTO
 
         self._send_configuration()
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_humidity(self, humidity):
         """Set the target humidity."""
         self._target_humidity = humidity
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
@@ -362,7 +359,6 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._customize['swing'][self._current_swing_mode])
         else:
             self._send_configuration()
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_fan_mode(self, fan):
@@ -374,14 +370,12 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._customize['fan'][self._current_fan_mode])
         else:
             self._send_configuration()
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         self._current_operation = operation_mode
         self._send_configuration()
-        self.schedule_update_ha_state()
 
     @property
     def current_swing_mode(self):
@@ -397,31 +391,26 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def async_turn_away_mode_on(self):
         """Turn away mode on."""
         self._away = True
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_away_mode_off(self):
         """Turn away mode off."""
         self._away = False
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_hold_mode(self, hold):
         """Update hold mode on."""
         self._hold = hold
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_aux_heat_on(self):
         """Turn auxillary heater on."""
         self._aux = True
-        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._aux = False
-        self.schedule_update_ha_state()
 
     def _send_configuration(self):
         from miio.airconditioningcompanion import \
