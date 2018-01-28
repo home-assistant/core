@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_INITIAL = 'initial'
 ATTR_STEP = 'step'
+ATTR_AMOUNT = 'amount'
 
 CONF_INITIAL = 'initial'
 CONF_STEP = 'step'
@@ -53,31 +54,33 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @bind_hass
-def increment(hass, entity_id):
+def increment(hass, entity_id, amount=None):
     """Increment a counter."""
-    hass.add_job(async_increment, hass, entity_id)
+    hass.add_job(async_increment, hass, entity_id, amount)
 
 
 @callback
 @bind_hass
-def async_increment(hass, entity_id):
+def async_increment(hass, entity_id, amount=None):
     """Increment a counter."""
     hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: entity_id}))
+        DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: entity_id,
+                                    ATTR_AMOUNT: amount}))
 
 
 @bind_hass
-def decrement(hass, entity_id):
+def decrement(hass, entity_id, amount=None):
     """Decrement a counter."""
-    hass.add_job(async_decrement, hass, entity_id)
+    hass.add_job(async_decrement, hass, entity_id, amount)
 
 
 @callback
 @bind_hass
-def async_decrement(hass, entity_id):
+def async_decrement(hass, entity_id, amount=None):
     """Decrement a counter."""
     hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: entity_id}))
+        DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: entity_id,
+                                    ATTR_AMOUNT: amount}))
 
 
 @bind_hass
@@ -120,14 +123,18 @@ def async_setup(hass, config):
         """Handle a call to the counter services."""
         target_counters = component.async_extract_from_service(service)
 
+        args = []
+
         if service.service == SERVICE_INCREMENT:
             attr = 'async_increment'
+            args = [service.data.get(ATTR_AMOUNT)]
         elif service.service == SERVICE_DECREMENT:
             attr = 'async_decrement'
+            args = [service.data.get(ATTR_AMOUNT)]
         elif service.service == SERVICE_RESET:
             attr = 'async_reset'
 
-        tasks = [getattr(counter, attr)() for counter in target_counters]
+        tasks = [getattr(counter, attr)(*args) for counter in target_counters]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
@@ -192,15 +199,15 @@ class Counter(Entity):
         self._state = state and state.state == state
 
     @asyncio.coroutine
-    def async_decrement(self):
+    def async_decrement(self, amount=None):
         """Decrement the counter."""
-        self._state -= self._step
+        self._state -= self._step if amount is None else amount
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_increment(self):
+    def async_increment(self, amount=None):
         """Increment a counter."""
-        self._state += self._step
+        self._state += self._step if amount is None else amount
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine

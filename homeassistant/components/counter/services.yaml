@@ -6,12 +6,18 @@ decrement:
     entity_id:
       description: Entity id of the counter to decrement.
       example: 'counter.count0'
+    amount:
+      description: The amount to decrement the counter by.
+      exmaple: 5
 increment:
   description: Increment a counter.
   fields:
     entity_id:
       description: Entity id of the counter to increment.
       example: 'counter.count0'
+    amount:
+      description: The amount to increment the counter by.
+      exmaple: 5
 reset:
   description: Reset a counter.
   fields:
