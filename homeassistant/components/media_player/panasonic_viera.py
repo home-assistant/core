@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.2',
+REQUIREMENTS = ['panasonic_viera==0.3',
                 'wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
