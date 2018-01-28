@@ -19,8 +19,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, STATE_ON, STATE_OFF,
     STATE_IDLE, )
 
-from homeassistant.helpers.event import (
-    async_track_state_change, async_track_time_interval, )
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,9 +87,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class XiaomiAirConditioningCompanion(ClimateDevice):
     """Representation of a Xiaomi Air Conditioning Companion."""
-
-    # FIXME: Mismatch at the naming of the OperationModes (heating vs. heat)
-    # FIXME: OperationMode doesn't return 'off' anymore
 
     def __init__(self, hass, name, host, token, sensor_entity_id, customize):
 
