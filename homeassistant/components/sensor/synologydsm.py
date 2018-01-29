@@ -136,7 +136,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SynoApi(object):
     """Class to interface with Synology DSM API."""
 
-    # pylint: disable=bare-except
     def __init__(self, host, port, username, password, temp_unit):
         """Initialize the API wrapper class."""
         from SynologyDSM import SynologyDSM
@@ -144,7 +143,7 @@ class SynoApi(object):
 
         try:
             self._api = SynologyDSM(host, port, username, password)
-        except:
+        except:  # noqa: E722  # pylint: disable=bare-except
             _LOGGER.error("Error setting up Synology DSM")
 
         # Will be updated when update() gets called.
