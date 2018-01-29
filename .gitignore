@@ -98,3 +98,6 @@ desktop.ini
 /home-assistant.pyproj
 /home-assistant.sln
 /.vs/*
+
+# mypy
+/.mypy_cache/*
