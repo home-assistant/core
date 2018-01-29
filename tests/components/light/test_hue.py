@@ -282,28 +282,10 @@ class TestSetup(unittest.TestCase):
         self.assertEqual(len(args), 1)
         self.assertEqual(len(kwargs), 0)
 
-        # one argument, a list of lights in bridge one; each of them is an
-        # object of type HueLight so we can't straight up compare them
-        lights = args[0]
-        self.assertEqual(
-            lights[0].unique_id,
-            '{}.b1l1.Light.1'.format(hue_light.HueLight))
-        self.assertEqual(
-            lights[1].unique_id,
-            '{}.b1l2.Light.2'.format(hue_light.HueLight))
-
         # second call works the same
         name, args, kwargs = self.mock_add_devices.mock_calls[1]
         self.assertEqual(len(args), 1)
         self.assertEqual(len(kwargs), 0)
-
-        lights = args[0]
-        self.assertEqual(
-            lights[0].unique_id,
-            '{}.b2l1.Light.1'.format(hue_light.HueLight))
-        self.assertEqual(
-            lights[1].unique_id,
-            '{}.b2l3.Light.3'.format(hue_light.HueLight))
 
     def test_process_lights_api_error(self):
         """Test the process_lights function when the bridge errors out."""
@@ -506,60 +488,16 @@ class TestHueLight(unittest.TestCase):
 
     def test_unique_id_for_light(self):
         """Test the unique_id method with lights."""
-        class_name = "<class 'homeassistant.components.light.hue.HueLight'>"
-
         light = self.buildLight(info={'uniqueid': 'foobar'})
-        self.assertEqual(
-            class_name+'.foobar',
-            light.unique_id)
+        self.assertEqual('foobar', light.unique_id)
 
         light = self.buildLight(info={})
-        self.assertEqual(
-            class_name+'.Unnamed Device.Light.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'name': 'my-name'})
-        self.assertEqual(
-            class_name+'.my-name.Light.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'type': 'my-type'})
-        self.assertEqual(
-            class_name+'.Unnamed Device.my-type.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'name': 'a name', 'type': 'my-type'})
-        self.assertEqual(
-            class_name+'.a name.my-type.42',
-            light.unique_id)
+        self.assertIsNone(light.unique_id)
 
     def test_unique_id_for_group(self):
         """Test the unique_id method with groups."""
-        class_name = "<class 'homeassistant.components.light.hue.HueLight'>"
-
         light = self.buildLight(info={'uniqueid': 'foobar'}, is_group=True)
-        self.assertEqual(
-            class_name+'.foobar',
-            light.unique_id)
+        self.assertEqual('foobar', light.unique_id)
 
         light = self.buildLight(info={}, is_group=True)
-        self.assertEqual(
-            class_name+'.Unnamed Device.Group.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'name': 'my-name'}, is_group=True)
-        self.assertEqual(
-            class_name+'.my-name.Group.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'type': 'my-type'}, is_group=True)
-        self.assertEqual(
-            class_name+'.Unnamed Device.my-type.42',
-            light.unique_id)
-
-        light = self.buildLight(
-            info={'name': 'a name', 'type': 'my-type'},
-            is_group=True)
-        self.assertEqual(
-            class_name+'.a name.my-type.42',
-            light.unique_id)
+        self.assertIsNone(light.unique_id)

@@ -8,10 +8,14 @@ from mock_open import MockOpen
 
 from homeassistant.setup import async_setup_component
 
+from tests.common import mock_registry
+
 
 @asyncio.coroutine
 def test_loading_file(hass, test_client):
     """Test that it loads image from disk."""
+    mock_registry(hass)
+
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
             mock.patch('os.access', mock.Mock(return_value=True)):
         yield from async_setup_component(hass, 'camera', {
