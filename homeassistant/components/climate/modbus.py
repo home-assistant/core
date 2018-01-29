@@ -80,8 +80,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     max_temp = config.get(CONF_MAX_TEMP)
 
     add_devices([ModbusThermostat(name, modbus_slave, target_temp_register,
-                                  current_temp_register, data_type, count, precision, min_temp,
-                                  max_temp)], True)
+                                  current_temp_register, data_type, count,
+                                  precision, min_temp, max_temp)], True)
 
 
 class ModbusThermostat(ClimateDevice):
@@ -107,7 +107,7 @@ class ModbusThermostat(ClimateDevice):
         data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'}}
         data_types[DATA_TYPE_UINT] = {1: 'H', 2: 'I', 4: 'Q'}
         data_types[DATA_TYPE_FLOAT] = {1: 'e', 2: 'f', 4: 'd'}
-        
+
         self._structure = '>{}'.format(data_types[self._data_type]
                                        [self._count])
 
@@ -163,8 +163,8 @@ class ModbusThermostat(ClimateDevice):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         byte_string = struct.pack(self._structure,
-            float(self._target_temperature))
+                                  float(self._target_temperature))
         register_value = struct.unpack('>h', byte_string[0:2])[0]
-
         modbus.HUB.write_registers(self._slave,
-            self._target_temperature_register, [register_value,0])
+                                   self._target_temperature_register,
+                                   [register_value,0])
