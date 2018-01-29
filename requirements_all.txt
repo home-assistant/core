@@ -723,7 +723,7 @@ pyflexit==0.3
 pyfttt==0.3
 
 # homeassistant.components.remote.harmony
-pyharmony==1.0.18
+pyharmony==1.0.20
 
 # homeassistant.components.binary_sensor.hikvision
 pyhik==0.1.4
