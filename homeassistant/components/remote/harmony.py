@@ -17,9 +17,10 @@ from homeassistant.components.remote import (
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyharmony==1.0.18']
+REQUIREMENTS = ['pyharmony==1.0.20']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,8 +98,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DEVICES.append(device)
         add_devices([device])
         register_services(hass)
-    except ValueError:
-        _LOGGER.warning("Failed to initialize remote: %s", name)
+    except (ValueError, AttributeError):
+        raise PlatformNotReady
 
 
 def register_services(hass):
