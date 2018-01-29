@@ -310,7 +310,7 @@ class YamahaDevice(MediaPlayerDevice):
 
         NOTE: this might take a while, because the only API interface
         for setting the net radio station emulates button pressing and
-        navigating through the net radio menu hiearchy. And each sub
+        navigating through the net radio menu hierarchy. And each sub
         menu must be fetched by the receiver from the vtuner service.
 
         """

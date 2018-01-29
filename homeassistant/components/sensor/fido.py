@@ -50,7 +50,7 @@ SENSOR_TYPES = {
     'text_int_used': ['International text used',
                       MESSAGES, 'mdi:message-alert'],
     'text_int_limit': ['International text limit',
-                       MESSAGES, 'mdi:message-alart'],
+                       MESSAGES, 'mdi:message-alert'],
     'text_int_remaining': ['Internaltional remaining',
                            MESSAGES, 'mdi:message-alert'],
     'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],

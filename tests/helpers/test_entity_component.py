@@ -184,7 +184,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 2 == len(self.hass.states.entity_ids())
 
-    def test_update_state_adds_entities_with_update_befor_add_true(self):
+    def test_update_state_adds_entities_with_update_before_add_true(self):
         """Test if call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -197,7 +197,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 1 == len(self.hass.states.entity_ids())
         assert ent.update.called
 
-    def test_update_state_adds_entities_with_update_befor_add_false(self):
+    def test_update_state_adds_entities_with_update_before_add_false(self):
         """Test if not call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -579,7 +579,7 @@ def test_platform_not_ready(hass):
 
 
 @asyncio.coroutine
-def test_pararell_updates_async_platform(hass):
+def test_parallel_updates_async_platform(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
@@ -606,7 +606,7 @@ def test_pararell_updates_async_platform(hass):
 
 
 @asyncio.coroutine
-def test_pararell_updates_async_platform_with_constant(hass):
+def test_parallel_updates_async_platform_with_constant(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
@@ -634,7 +634,7 @@ def test_pararell_updates_async_platform_with_constant(hass):
 
 
 @asyncio.coroutine
-def test_pararell_updates_sync_platform(hass):
+def test_parallel_updates_sync_platform(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 

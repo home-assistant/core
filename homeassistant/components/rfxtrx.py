@@ -77,7 +77,7 @@ def setup(hass, config):
     """Set up the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
-        """Handle revieved messages from RFXtrx gateway."""
+        """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return

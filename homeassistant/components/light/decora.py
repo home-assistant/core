@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def retry(method):
     """Retry bluetooth commands."""
     @wraps(method)
-    def wrapper_retry(device, *args, **kwds):
+    def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
         # pylint: disable=import-error
         import decora
@@ -46,7 +46,7 @@ def retry(method):
             if time.monotonic() - initial >= 10:
                 return None
             try:
-                return method(device, *args, **kwds)
+                return method(device, *args, **kwargs)
             except (decora.decoraException, AttributeError,
                     bluepy.btle.BTLEException):
                 _LOGGER.warning("Decora connect error for device %s. "

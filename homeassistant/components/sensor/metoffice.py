@@ -47,7 +47,7 @@ CONDITION_CLASSES = {
 
 DEFAULT_NAME = "Met Office"
 
-VISIBILTY_CLASSES = {
+VISIBILITY_CLASSES = {
     'VP': '<1',
     'PO': '1-4',
     'MO': '4-10',
@@ -144,7 +144,7 @@ class MetOfficeCurrentSensor(Entity):
         """Return the state of the sensor."""
         if (self._condition == 'visibility_distance' and
                 hasattr(self.data.data, 'visibility')):
-            return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
+            return VISIBILITY_CLASSES.get(self.data.data.visibility.value)
         if hasattr(self.data.data, self._condition):
             variable = getattr(self.data.data, self._condition)
             if self._condition == 'weather':

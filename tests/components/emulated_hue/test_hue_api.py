@@ -218,7 +218,7 @@ def test_get_light_state(hass_hue, hue_client):
 
 @asyncio.coroutine
 def test_put_light_state(hass_hue, hue_client):
-    """Test the seeting of light states."""
+    """Test the setting of light states."""
     yield from perform_put_test_on_ceiling_lights(hass_hue, hue_client)
 
     # Turn the bedroom light on first
@@ -452,7 +452,7 @@ def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
 
 @asyncio.coroutine
 def perform_get_light_state(client, entity_id, expected_status):
-    """Test the gettting of a light state."""
+    """Test the getting of a light state."""
     result = yield from client.get('/api/username/lights/{}'.format(entity_id))
 
     assert result.status == expected_status

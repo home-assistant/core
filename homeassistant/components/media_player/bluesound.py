@@ -122,7 +122,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BluesoundPlayer(MediaPlayerDevice):
-    """Represenatation of a Bluesound Player."""
+    """Representation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -338,7 +338,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
     def async_update_captures(self):
-        """Update Capture cources."""
+        """Update Capture sources."""
         resp = yield from self.send_bluesound_command(
             'RadioBrowse?service=Capture')
         if not resp:

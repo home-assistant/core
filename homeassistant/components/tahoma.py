@@ -65,7 +65,7 @@ def setup(hass, config):
         api.get_setup()
         devices = api.get_devices()
     except RequestException:
-        _LOGGER.exception("Cannot fetch informations from Tahoma API")
+        _LOGGER.exception("Cannot fetch information from Tahoma API")
         return False
 
     hass.data[DOMAIN] = {
