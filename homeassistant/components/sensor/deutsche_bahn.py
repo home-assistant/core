@@ -69,7 +69,7 @@ class DeutscheBahnSensor(Entity):
         connections = self.data.connections[0]
         if len(self.data.connections) > 1:
             connections['next'] = self.data.connections[1]['departure']
-        elif len(self.data.connections) > 2:
+        if len(self.data.connections) > 2:
             connections['next_on'] = self.data.connections[2]['departure']
         return connections
 
