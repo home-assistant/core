@@ -13,13 +13,9 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DISCOVER_DEVICES = 'egardia_sensor'
 D_EGARDIASYS = 'egardiadevice'
 
-# TODO: add mapping to 'smoke'
 EGARDIA_TYPE_TO_DEVICE_CLASS = {'IR Sensor': 'motion',
                                 'Door Contact': 'opening',
                                 'IR': 'motion'}
-# TODO: add state for triggered motion sensor
-# NOT USED FOR NOW since we do not know state of motion sensor
-EGARDIA_INPUT_TO_STATES = {'': STATE_OFF, 'Open': STATE_ON}
 
 
 def _get_device_class(egardia_type):
@@ -31,20 +27,19 @@ def _get_sensor_state(egardia_input):
         return STATE_ON
     else:
         return STATE_OFF
-#    return EGARDIA_INPUT_TO_STATES.get(egardia_input, STATE_UNAVAILABLE)
 
 
 def _create_sensor(hass, sensor):
-    return EgardiaBinarySensor(hass, senid=sensor["id"],
-                               name=sensor['name'],
-                               state=_get_sensor_state(sensor['cond']),
-                               device_class=_get_device_class(sensor['type'])
-                               )  # pylint: disable=bad-continuation
+    return EgardiaBinarySensor(
+        hass, senid=sensor["id"],
+        name=sensor['name'],
+        state=_get_sensor_state(sensor['cond']),
+        device_class=_get_device_class(sensor['type'])
+        )
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Initialize the platform."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
@@ -70,12 +65,6 @@ class EgardiaBinarySensor(BinarySensorDevice):
         self._device_class = device_class
         self._hass = hass
         # spc_registry.register_sensor_device(zone_id, self)
-
-    # @asyncio.coroutine
-    # def async_update_from_egardia(self, state, extra):
-    #    """Update the state of the device."""
-    #    self._state = state
-    #    yield from self.async_update_ha_state()
 
     def update(self):
         """Update the status."""
