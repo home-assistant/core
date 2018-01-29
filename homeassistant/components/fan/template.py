@@ -208,7 +208,7 @@ class TemplateFan(FanEntity):
         This method is a coroutine.
         """
         self._state = True
-        yield from self.hass.async_add_job(self._on_script.async_run())
+        yield from self._on_script.async_run()
 
         if speed:
             yield from self.async_set_speed(speed)
@@ -220,7 +220,7 @@ class TemplateFan(FanEntity):
         This method is a coroutine.
         """
         self._state = False
-        yield from self.hass.async_add_job(self._off_script.async_run())
+        yield from self._off_script.async_run()
 
     @asyncio.coroutine
     def async_set_speed(self, speed: str) -> None:
@@ -233,8 +233,7 @@ class TemplateFan(FanEntity):
 
         if speed in self._speed_list:
             self._speed = speed
-            yield from self.hass.async_add_job(
-                self._set_speed_script.async_run({ATTR_SPEED: speed}))
+            yield from self._set_speed_script.async_run({ATTR_SPEED: speed})
         else:
             _LOGGER.error(
                 'Received invalid speed: %s. ' +
@@ -252,9 +251,9 @@ class TemplateFan(FanEntity):
 
         if oscillating is True or oscillating is False:
             self._oscillating = oscillating
-            yield from self.hass.async_add_job(
-                self._set_oscillating_script.async_run(
-                    {ATTR_OSCILLATING: oscillating}))
+            yield from self._set_oscillating_script.async_run(
+                {ATTR_OSCILLATING: oscillating}
+            )
         else:
             _LOGGER.error(
                 'Received invalid oscillating: %s. ' +
