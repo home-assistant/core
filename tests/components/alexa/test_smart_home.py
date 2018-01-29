@@ -187,9 +187,31 @@ def test_discovery_request(hass):
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(msg['payload']['endpoints']) == 17
     assert msg['header']['name'] == 'Discover.Response'
     assert msg['header']['namespace'] == 'Alexa.Discovery'
+
+    endpoint_ids = set(
+        appliance['endpointId']
+        for appliance in msg['payload']['endpoints'])
+    assert endpoint_ids == {
+        'switch#test',
+        'light#test_1',
+        'light#test_2',
+        'light#test_3',
+        'script#test',
+        'script#test_2',
+        'input_boolean#test',
+        'scene#test',
+        'fan#test_1',
+        'fan#test_2',
+        'lock#test',
+        'media_player#test',
+        'alert#test',
+        'automation#test',
+        'group#test',
+        'cover#test',
+        'sensor#test_temp',
+    }
 
     for appliance in msg['payload']['endpoints']:
         if appliance['endpointId'] == 'switch#test':
@@ -267,6 +289,8 @@ def test_discovery_request(hass):
             assert len(appliance['capabilities']) == 1
             assert appliance['capabilities'][-1]['interface'] == \
                 'Alexa.SceneController'
+            capability = appliance['capabilities'][-1]
+            assert not capability['supportsDeactivation']
             continue
 
         if appliance['endpointId'] == 'fan#test_1':
@@ -333,7 +357,7 @@ def test_discovery_request(hass):
             assert len(appliance['capabilities']) == 1
             capability = appliance['capabilities'][-1]
             assert capability['interface'] == 'Alexa.SceneController'
-            assert capability['supportsDeactivation'] is True
+            assert capability['supportsDeactivation']
             continue
 
         if appliance['endpointId'] == 'cover#test':

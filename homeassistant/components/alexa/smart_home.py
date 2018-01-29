@@ -40,6 +40,7 @@ CONF_DESCRIPTION = 'description'
 CONF_DISPLAY_CATEGORIES = 'display_categories'
 
 HANDLERS = Registry()
+ENTITY_ADAPTERS = Registry()
 
 
 class _DisplayCategory(object):
@@ -133,10 +134,36 @@ def _capability(interface,
     return result
 
 
-class _EntityCapabilities(object):
+class _UnsupportedInterface(Exception):
+    """This entity does not support the requested Smart Home API interface."""
+
+
+class _UnsupportedProperty(Exception):
+    """This entity does not support the requested Smart Home API property."""
+
+
+class _AlexaEntity(object):
+    """An adaptation of an entity, expressed in Alexa's terms.
+
+    The API handlers should manipulate entities only through this interface.
+    """
+
     def __init__(self, config, entity):
         self.config = config
         self.entity = entity
+        self.entity_conf = config.entity_config.get(entity.entity_id, {})
+
+    def friendly_name(self):
+        """Return the Alexa API friendly name."""
+        return self.entity_conf.get(CONF_NAME, self.entity.name)
+
+    def description(self):
+        """Return the Alexa API description."""
+        return self.entity_conf.get(CONF_DESCRIPTION, self.entity.entity_id)
+
+    def entity_id(self):
+        """Return the Alexa API entity id."""
+        return self.entity.entity_id.replace('.', '#')
 
     def display_categories(self):
         """Return a list of display categories."""
@@ -154,17 +181,166 @@ class _EntityCapabilities(object):
         """
         raise NotImplementedError
 
-    def capabilities(self):
-        """Return a list of supported capabilities.
+    def get_interface(self, capability):
+        """Return the given _AlexaInterface.
 
-        If the returned list is empty, the entity will not be discovered.
+        Raises _UnsupportedInterface.
+        """
+        pass
 
-        You might find _capability() useful.
+    def interfaces(self):
+        """Return a list of supported interfaces.
+
+        Used for discovery. The list should contain _AlexaInterface instances.
+        If the list is empty, this entity will not be discovered.
         """
         raise NotImplementedError
 
 
-class _GenericCapabilities(_EntityCapabilities):
+class _AlexaInterface(object):
+    def __init__(self, entity):
+        self.entity = entity
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        raise NotImplementedError
+
+    @staticmethod
+    def properties_supported():
+        """Return what properties this entity supports."""
+        return []
+
+    @staticmethod
+    def properties_proactively_reported():
+        """Return True if properties asynchronously reported."""
+        return False
+
+    @staticmethod
+    def properties_retrievable():
+        """Return True if properties can be retrieved."""
+        return False
+
+    @staticmethod
+    def get_property(name):
+        """Read and return a property.
+
+        Return value should be a dict, or raise _UnsupportedProperty.
+
+        Properties can also have a timeOfSample and uncertaintyInMilliseconds,
+        but returning those metadata is not yet implemented.
+        """
+        raise _UnsupportedProperty(name)
+
+    @staticmethod
+    def supports_deactivation():
+        """Applicable only to scenes."""
+        return None
+
+    def serialize_discovery(self):
+        """Serialize according to the Discovery API."""
+        result = {
+            'type': 'AlexaInterface',
+            'interface': self.name(),
+            'version': '3',
+            'properties': {
+                'supported': self.properties_supported(),
+                'proactivelyReported': self.properties_proactively_reported(),
+            },
+            # XXX this is incorrect, but the tests assert it
+            'retrievable': self.properties_retrievable(),
+        }
+
+        # pylint: disable=assignment-from-none
+        supports_deactivation = self.supports_deactivation()
+        if supports_deactivation is not None:
+            result['supportsDeactivation'] = supports_deactivation
+        return result
+
+    def serialize_properties(self):
+        """Return properties serialized for an API response."""
+        for prop in self.properties_supported():
+            prop_name = prop['name']
+            yield {
+                'name': prop_name,
+                'namespace': self.name(),
+                'value': self.get_property(prop_name),
+            }
+
+
+class _AlexaPowerController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.PowerController'
+
+
+class _AlexaLockController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.LockController'
+
+
+class _AlexaSceneController(_AlexaInterface):
+    def __init__(self, entity, supports_deactivation):
+        _AlexaInterface.__init__(self, entity)
+        self.supports_deactivation = lambda: supports_deactivation
+
+    def name(self):
+        return 'Alexa.SceneController'
+
+
+class _AlexaBrightnessController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.BrightnessController'
+
+
+class _AlexaColorController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.ColorController'
+
+
+class _AlexaColorTemperatureController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.ColorTemperatureController'
+
+
+class _AlexaPercentageController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.PercentageController'
+
+
+class _AlexaSpeaker(_AlexaInterface):
+    def name(self):
+        return 'Alexa.Speaker'
+
+
+class _AlexaPlaybackController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.PlaybackController'
+
+
+class _AlexaTemperatureSensor(_AlexaInterface):
+    def name(self):
+        return 'Alexa.TemperatureSensor'
+
+    def properties_supported(self):
+        return [{'name': 'temperature'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'temperature':
+            raise _UnsupportedProperty(name)
+
+        unit = self.entity.attributes[CONF_UNIT_OF_MEASUREMENT]
+        return {
+            'value': float(self.entity.state),
+            'scale': API_TEMP_UNITS[unit],
+        }
+
+
+@ENTITY_ADAPTERS.register(alert.DOMAIN)
+@ENTITY_ADAPTERS.register(automation.DOMAIN)
+@ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
+class _GenericCapabilities(_AlexaEntity):
     """A generic, on/off device.
 
     The choice of last resort.
@@ -173,78 +349,82 @@ class _GenericCapabilities(_EntityCapabilities):
     def default_display_categories(self):
         return [_DisplayCategory.OTHER]
 
-    def capabilities(self):
-        return [_capability('Alexa.PowerController')]
+    def interfaces(self):
+        return [_AlexaPowerController(self.entity)]
 
 
-class _SwitchCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(switch.DOMAIN)
+class _SwitchCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.SWITCH]
 
-    def capabilities(self):
-        return [_capability('Alexa.PowerController')]
+    def interfaces(self):
+        return [_AlexaPowerController(self.entity)]
 
 
-class _CoverCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(cover.DOMAIN)
+class _CoverCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.DOOR]
 
-    def capabilities(self):
-        capabilities = [_capability('Alexa.PowerController')]
+    def interfaces(self):
+        yield _AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
-            capabilities.append(_capability('Alexa.PercentageController'))
-        return capabilities
+            yield _AlexaPercentageController(self.entity)
 
 
-class _LightCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(light.DOMAIN)
+class _LightCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.LIGHT]
 
-    def capabilities(self):
-        capabilities = [_capability('Alexa.PowerController')]
+    def interfaces(self):
+        yield _AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & light.SUPPORT_BRIGHTNESS:
-            capabilities.append(_capability('Alexa.BrightnessController'))
+            yield _AlexaBrightnessController(self.entity)
         if supported & light.SUPPORT_RGB_COLOR:
-            capabilities.append(_capability('Alexa.ColorController'))
+            yield _AlexaColorController(self.entity)
         if supported & light.SUPPORT_XY_COLOR:
-            capabilities.append(_capability('Alexa.ColorController'))
+            yield _AlexaColorController(self.entity)
         if supported & light.SUPPORT_COLOR_TEMP:
-            capabilities.append(
-                _capability('Alexa.ColorTemperatureController'))
-        return capabilities
+            yield _AlexaColorTemperatureController(self.entity)
 
 
-class _FanCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(fan.DOMAIN)
+class _FanCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.OTHER]
 
-    def capabilities(self):
-        capabilities = [_capability('Alexa.PowerController')]
+    def interfaces(self):
+        yield _AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
-            capabilities.append(_capability('Alexa.PercentageController'))
-        return capabilities
+            yield _AlexaPercentageController(self.entity)
 
 
-class _LockCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(lock.DOMAIN)
+class _LockCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.SMARTLOCK]
 
-    def capabilities(self):
-        return [_capability('Alexa.LockController')]
+    def interfaces(self):
+        return [_AlexaLockController(self.entity)]
 
 
-class _MediaPlayerCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(media_player.DOMAIN)
+class _MediaPlayerCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.TV]
 
-    def capabilities(self):
-        capabilities = [_capability('Alexa.PowerController')]
+    def interfaces(self):
+        yield _AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.SUPPORT_VOLUME_SET:
-            capabilities.append(_capability('Alexa.Speaker'))
+            yield _AlexaSpeaker(self.entity)
 
         playback_features = (media_player.SUPPORT_PLAY |
                              media_player.SUPPORT_PAUSE |
@@ -252,89 +432,59 @@ class _MediaPlayerCapabilities(_EntityCapabilities):
                              media_player.SUPPORT_NEXT_TRACK |
                              media_player.SUPPORT_PREVIOUS_TRACK)
         if supported & playback_features:
-            capabilities.append(_capability('Alexa.PlaybackController'))
-
-        return capabilities
+            yield _AlexaPlaybackController(self.entity)
 
 
-class _SceneCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(scene.DOMAIN)
+class _SceneCapabilities(_AlexaEntity):
+    def description(self):
+        # Required description as per Amazon Scene docs
+        scene_fmt = '{} (Scene connected via Home Assistant)'
+        return scene_fmt.format(_AlexaEntity.description(self))
+
     def default_display_categories(self):
         return [_DisplayCategory.SCENE_TRIGGER]
 
-    def capabilities(self):
-        return [_capability('Alexa.SceneController')]
+    def interfaces(self):
+        return [_AlexaSceneController(self.entity,
+                                      supports_deactivation=False)]
 
 
-class _ScriptCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(script.DOMAIN)
+class _ScriptCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.ACTIVITY_TRIGGER]
 
-    def capabilities(self):
+    def interfaces(self):
         can_cancel = bool(self.entity.attributes.get('can_cancel'))
-        return [_capability('Alexa.SceneController',
-                            supports_deactivation=can_cancel)]
+        return [_AlexaSceneController(self.entity,
+                                      supports_deactivation=can_cancel)]
 
 
-class _GroupCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(group.DOMAIN)
+class _GroupCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.SCENE_TRIGGER]
 
-    def capabilities(self):
-        return [_capability('Alexa.SceneController',
-                            supports_deactivation=True)]
+    def interfaces(self):
+        return [_AlexaSceneController(self.entity,
+                                      supports_deactivation=True)]
 
 
-class _SensorCapabilities(_EntityCapabilities):
+@ENTITY_ADAPTERS.register(sensor.DOMAIN)
+class _SensorCapabilities(_AlexaEntity):
     def default_display_categories(self):
         # although there are other kinds of sensors, all but temperature
         # sensors are currently ignored.
         return [_DisplayCategory.TEMPERATURE_SENSOR]
 
-    def capabilities(self):
-        capabilities = []
-
+    def interfaces(self):
         attrs = self.entity.attributes
         if attrs.get(CONF_UNIT_OF_MEASUREMENT) in (
                 TEMP_FAHRENHEIT,
                 TEMP_CELSIUS,
         ):
-            capabilities.append(_capability(
-                'Alexa.TemperatureSensor',
-                retrievable=True,
-                properties_supported=[{'name': 'temperature'}]))
-
-        return capabilities
-
-
-class _UnknownEntityDomainError(Exception):
-    pass
-
-
-def _capabilities_for_entity(config, entity):
-    """Return an _EntityCapabilities appropriate for given entity.
-
-    raises _UnknownEntityDomainError if the given domain is unsupported.
-    """
-    if entity.domain not in _CAPABILITIES_FOR_DOMAIN:
-        raise _UnknownEntityDomainError()
-    return _CAPABILITIES_FOR_DOMAIN[entity.domain](config, entity)
-
-
-_CAPABILITIES_FOR_DOMAIN = {
-    alert.DOMAIN: _GenericCapabilities,
-    automation.DOMAIN: _GenericCapabilities,
-    cover.DOMAIN: _CoverCapabilities,
-    fan.DOMAIN: _FanCapabilities,
-    group.DOMAIN: _GroupCapabilities,
-    input_boolean.DOMAIN: _GenericCapabilities,
-    light.DOMAIN: _LightCapabilities,
-    lock.DOMAIN: _LockCapabilities,
-    media_player.DOMAIN: _MediaPlayerCapabilities,
-    scene.DOMAIN: _SceneCapabilities,
-    script.DOMAIN: _ScriptCapabilities,
-    switch.DOMAIN: _SwitchCapabilities,
-    sensor.DOMAIN: _SensorCapabilities,
-}
+            yield _AlexaTemperatureSensor(self.entity)
 
 
 class _Cause(object):
@@ -511,36 +661,26 @@ def async_api_discovery(hass, config, request):
                           entity.entity_id)
             continue
 
-        try:
-            entity_capabilities = _capabilities_for_entity(config, entity)
-        except _UnknownEntityDomainError:
+        if entity.domain not in ENTITY_ADAPTERS:
             continue
-
-        entity_conf = config.entity_config.get(entity.entity_id, {})
-
-        friendly_name = entity_conf.get(CONF_NAME, entity.name)
-        description = entity_conf.get(CONF_DESCRIPTION, entity.entity_id)
-
-        # Required description as per Amazon Scene docs
-        if entity.domain == scene.DOMAIN:
-            scene_fmt = '{} (Scene connected via Home Assistant)'
-            description = scene_fmt.format(description)
+        alexa_entity = ENTITY_ADAPTERS[entity.domain](config, entity)
 
         endpoint = {
-            'displayCategories': entity_capabilities.display_categories(),
+            'displayCategories': alexa_entity.display_categories(),
             'additionalApplianceDetails': {},
-            'endpointId': entity.entity_id.replace('.', '#'),
-            'friendlyName': friendly_name,
-            'description': description,
+            'endpointId': alexa_entity.entity_id(),
+            'friendlyName': alexa_entity.friendly_name(),
+            'description': alexa_entity.description(),
             'manufacturerName': 'Home Assistant',
         }
 
-        alexa_capabilities = entity_capabilities.capabilities()
-        if not alexa_capabilities:
+        endpoint['capabilities'] = [
+            i.serialize_discovery() for i in alexa_entity.interfaces()]
+
+        if not endpoint['capabilities']:
             _LOGGER.debug("Not exposing %s because it has no capabilities",
                           entity.entity_id)
             continue
-        endpoint['capabilities'] = alexa_capabilities
         discovery_endpoints.append(endpoint)
 
     return api_message(
@@ -1033,18 +1173,13 @@ def async_api_previous(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_reportstate(hass, config, request, entity):
     """Process a ReportState request."""
-    unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
-    temp_property = {
-        'namespace': 'Alexa.TemperatureSensor',
-        'name': 'temperature',
-        'value': {
-            'value': float(entity.state),
-            'scale': API_TEMP_UNITS[unit],
-        },
-    }
+    alexa_entity = ENTITY_ADAPTERS[entity.domain](config, entity)
+    properties = []
+    for interface in alexa_entity.interfaces():
+        properties.extend(interface.serialize_properties())
 
     return api_message(
         request,
         name='StateReport',
-        context={'properties': [temp_property]}
+        context={'properties': properties}
     )
