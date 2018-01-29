@@ -73,6 +73,7 @@ def setup(hass, config):
 class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
 
+    requires_auth = False
     url = API_URL
     name = API_URL[1:].replace('/', ':')
     extra_urls = [API_URL + '/{sensor}']
