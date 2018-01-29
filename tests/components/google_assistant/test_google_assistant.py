@@ -225,26 +225,36 @@ def test_query_climate_request(hass_fixture, assistant_client):
     devices = body['payload']['devices']
     assert devices == {
         'climate.heatpump': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': 20.0,
             'thermostatTemperatureAmbient': 25.0,
             'thermostatMode': 'heat',
         },
         'climate.ecobee': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpointHigh': 24,
             'thermostatTemperatureAmbient': 23,
             'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': 21
         },
         'climate.hvac': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': 21,
             'thermostatTemperatureAmbient': 22,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
         },
         'sensor.outside_temperature': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureAmbient': 15.6
         },
         'sensor.outside_humidity': {
+            'on': True,
+            'online': True,
             'thermostatHumidityAmbient': 54.0
         }
     }
@@ -280,23 +290,31 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
     devices = body['payload']['devices']
     assert devices == {
         'climate.heatpump': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': -6.7,
             'thermostatTemperatureAmbient': -3.9,
             'thermostatMode': 'heat',
         },
         'climate.ecobee': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpointHigh': -4.4,
             'thermostatTemperatureAmbient': -5,
             'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': -6.1,
         },
         'climate.hvac': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': -6.1,
             'thermostatTemperatureAmbient': -5.6,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
         },
         'sensor.outside_temperature': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureAmbient': -9.1
         }
     }
@@ -322,6 +340,17 @@ def test_execute_request(hass_fixture, assistant_client):
                         "command": "action.devices.commands.OnOff",
                         "params": {
                             "on": False
+                        }
+                    }]
+                }, {
+                    "devices": [{
+                        "id": "media_player.walkman",
+                    }],
+                    "execution": [{
+                        "command":
+                        "action.devices.commands.BrightnessAbsolute",
+                        "params": {
+                            "brightness": 70
                         }
                     }]
                 }, {
