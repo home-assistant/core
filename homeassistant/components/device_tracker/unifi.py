@@ -75,7 +75,7 @@ def get_scanner(hass, config):
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
-    def __init__(self, controller, detection_time: timedelta):
+    def __init__(self, controller, detection_time: timedelta) -> None:
         """Initialize the scanner."""
         self._detection_time = detection_time
         self._controller = controller

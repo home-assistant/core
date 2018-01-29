@@ -165,7 +165,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         try:
             resp = yield from self.send_bluesound_command(
                 'SyncStatus', raise_timeout, raise_timeout)
-        except:
+        except Exception:
             raise
 
         if not resp:
@@ -202,7 +202,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         except CancelledError:
             _LOGGER.debug("Stopping the polling of node %s", self._name)
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected error in %s", self._name)
             raise
 
@@ -229,7 +229,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             _LOGGER.info("Node %s is offline, retrying later", self.host)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION)
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected when initiating error in %s",
                               self.host)
             raise

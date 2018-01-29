@@ -16,7 +16,7 @@ import queue
 import threading
 import time
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional  # noqa: F401
 
 import voluptuous as vol
 

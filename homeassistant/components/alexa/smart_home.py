@@ -357,6 +357,11 @@ class _AlexaPlaybackController(_AlexaInterface):
         return 'Alexa.PlaybackController'
 
 
+class _AlexaInputController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.InputController'
+
+
 class _AlexaTemperatureSensor(_AlexaInterface):
     def name(self):
         return 'Alexa.TemperatureSensor'
@@ -474,6 +479,9 @@ class _MediaPlayerCapabilities(_AlexaEntity):
                              media_player.SUPPORT_PREVIOUS_TRACK)
         if supported & playback_features:
             yield _AlexaPlaybackController(self.entity)
+
+        if supported & media_player.SUPPORT_SELECT_SOURCE:
+            yield _AlexaInputController(self.entity)
 
 
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
@@ -1076,6 +1084,41 @@ def async_api_set_volume(hass, config, request, entity):
 
     yield from hass.services.async_call(
         entity.domain, SERVICE_VOLUME_SET,
+        data, blocking=False)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.InputController', 'SelectInput'))
+@extract_entity
+@asyncio.coroutine
+def async_api_select_input(hass, config, request, entity):
+    """Process a set input request."""
+    media_input = request[API_PAYLOAD]['input']
+
+    # attempt to map the ALL UPPERCASE payload name to a source
+    source_list = entity.attributes[media_player.ATTR_INPUT_SOURCE_LIST] or []
+    for source in source_list:
+        # response will always be space separated, so format the source in the
+        # most likely way to find a match
+        formatted_source = source.lower().replace('-', ' ').replace('_', ' ')
+        if formatted_source in media_input.lower():
+            media_input = source
+            break
+    else:
+        msg = 'failed to map input {} to a media source on {}'.format(
+            media_input, entity.entity_id)
+        _LOGGER.error(msg)
+        return api_error(
+            request, error_type='INVALID_VALUE', error_message=msg)
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_INPUT_SOURCE: media_input,
+    }
+
+    yield from hass.services.async_call(
+        entity.domain, media_player.SERVICE_SELECT_SOURCE,
         data, blocking=False)
 
     return api_message(request)

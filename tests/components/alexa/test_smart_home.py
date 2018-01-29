@@ -1163,6 +1163,52 @@ def test_api_set_volume(hass):
 
 @asyncio.coroutine
 @pytest.mark.parametrize(
+    "domain,payload,source_list,idx", [
+        ('media_player', 'GAME CONSOLE', ['tv', 'game console'], 1),
+        ('media_player', 'SATELLITE TV', ['satellite-tv', 'game console'], 0),
+        ('media_player', 'SATELLITE TV', ['satellite_tv', 'game console'], 0),
+        ('media_player', 'BAD DEVICE', ['satellite_tv', 'game console'], None),
+    ]
+)
+def test_api_select_input(hass, domain, payload, source_list, idx):
+    """Test api set input process."""
+    request = get_new_request(
+        'Alexa.InputController', 'SelectInput', 'media_player#test')
+
+    # add payload
+    request['directive']['payload']['input'] = payload
+
+    # setup test devices
+    hass.states.async_set(
+        'media_player.test', 'off', {
+            'friendly_name': "Test media player",
+            'source': 'unknown',
+            'source_list': source_list,
+        })
+
+    call_media_player = async_mock_service(hass, domain, 'select_source')
+
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    # test where no source matches
+    if idx is None:
+        assert len(call_media_player) == 0
+        assert msg['header']['name'] == 'ErrorResponse'
+        return
+
+    assert len(call_media_player) == 1
+    assert call_media_player[0].data['entity_id'] == 'media_player.test'
+    assert call_media_player[0].data['source'] == source_list[idx]
+    assert msg['header']['name'] == 'Response'
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize(
     "result,adjust", [(0.7, '-5'), (0.8, '5'), (0, '-80')])
 def test_api_adjust_volume(hass, result, adjust):
     """Test api adjust volume process."""

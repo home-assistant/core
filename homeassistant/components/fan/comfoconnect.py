@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
-    def __init__(self, hass, name, ccb: ComfoConnectBridge):
+    def __init__(self, hass, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         from pycomfoconnect import SENSOR_FAN_SPEED_MODE
 
@@ -93,7 +93,7 @@ class ComfoConnectFan(FanEntity):
             speed = SPEED_LOW
         self.set_speed(speed)
 
-    def turn_off(self) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn off the fan (to away)."""
         self.set_speed(SPEED_OFF)
 
