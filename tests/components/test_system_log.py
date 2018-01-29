@@ -102,7 +102,7 @@ def test_error_posted_as_event(hass, test_client):
     yield from hass.async_block_till_done()
 
     assert len(events) == 1
-    assert False  # TODO: add more checks here
+    assert_log(events[0].data, '', 'error message', 'ERROR')
 
 
 @asyncio.coroutine

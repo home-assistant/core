@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 CONF_MAX_ENTRIES = 'max_entries'
 CONF_MESSAGE = 'message'
@@ -154,6 +155,15 @@ def async_setup(hass, config):
                 service.data.get(CONF_LOGGER, '{}.external'.format(__name__)))
             level = service.data[CONF_LEVEL]
             getattr(logger, level)(service.data[CONF_MESSAGE])
+
+    @asyncio.coroutine
+    def async_shutdown_handler(event):
+        """Remove logging handler when Home Assistant is shutdown."""
+        # This is needed as older logger instances will remain
+        logging.getLogger().removeHandler(handler)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                               async_shutdown_handler)
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR, async_service_handler,
