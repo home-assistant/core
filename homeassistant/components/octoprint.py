@@ -9,6 +9,7 @@ import time
 
 import requests
 import voluptuous as vol
+from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
@@ -55,8 +56,10 @@ class OctoPrintAPI(object):
     def __init__(self, api_url, key, bed, number_of_tools):
         """Initialize OctoPrint API and set headers needed later."""
         self.api_url = api_url
-        self.headers = {'content-type': CONTENT_TYPE_JSON,
-                        'X-Api-Key': key}
+        self.headers = {
+            CONTENT_TYPE: CONTENT_TYPE_JSON,
+            'X-Api-Key': key,
+        }
         self.printer_last_reading = [{}, None]
         self.job_last_reading = [{}, None]
         self.job_available = False
@@ -66,7 +69,6 @@ class OctoPrintAPI(object):
         self.job_error_logged = False
         self.bed = bed
         self.number_of_tools = number_of_tools
-        _LOGGER.error(str(bed) + " " + str(number_of_tools))
 
     def get_tools(self):
         """Get the list of tools that temperature is monitored on."""
@@ -115,9 +117,7 @@ class OctoPrintAPI(object):
                 self.job_error_logged = False
                 self.printer_error_logged = False
             return response.json()
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError,
-                requests.exceptions.ReadTimeout) as conn_exc:
+        except Exception as conn_exc:  # pylint: disable=broad-except
             log_string = "Failed to update OctoPrint status. " + \
                                "  Error: %s" % (conn_exc)
             # Only log the first failure

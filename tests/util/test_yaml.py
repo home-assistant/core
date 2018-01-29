@@ -48,7 +48,7 @@ class TestYaml(unittest.TestCase):
             load_yaml_config_file(YAML_CONFIG_FILE)
 
     def test_no_key(self):
-        """Test item without an key."""
+        """Test item without a key."""
         files = {YAML_CONFIG_FILE: 'a: a\nnokeyhere'}
         with self.assertRaises(HomeAssistantError), \
                 patch_yaml_files(files):
@@ -266,6 +266,10 @@ class TestYaml(unittest.TestCase):
     def test_dump(self):
         """The that the dump method returns empty None values."""
         assert yaml.dump({'a': None, 'b': 'b'}) == 'a:\nb: b\n'
+
+    def test_dump_unicode(self):
+        """The that the dump method returns empty None values."""
+        assert yaml.dump({'a': None, 'b': 'привет'}) == 'a:\nb: привет\n'
 
 
 FILES = {}

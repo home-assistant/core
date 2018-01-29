@@ -18,10 +18,13 @@ DEVICE = 'phone'
 
 LOCATION_TOPIC = 'owntracks/{}/{}'.format(USER, DEVICE)
 EVENT_TOPIC = 'owntracks/{}/{}/event'.format(USER, DEVICE)
-WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoints'.format(USER, DEVICE)
+WAYPOINTS_TOPIC = 'owntracks/{}/{}/waypoints'.format(USER, DEVICE)
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'.format(USER, DEVICE)
 USER_BLACKLIST = 'ram'
-WAYPOINT_TOPIC_BLOCKED = 'owntracks/{}/{}/waypoints'.format(
+WAYPOINTS_TOPIC_BLOCKED = 'owntracks/{}/{}/waypoints'.format(
     USER_BLACKLIST, DEVICE)
+LWT_TOPIC = 'owntracks/{}/{}/lwt'.format(USER, DEVICE)
+BAD_TOPIC = 'owntracks/{}/{}/unsupported'.format(USER, DEVICE)
 
 DEVICE_TRACKER_STATE = 'device_tracker.{}_{}'.format(USER, DEVICE)
 
@@ -32,6 +35,9 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = owntracks.CONF_WAYPOINT_IMPORT
 CONF_WAYPOINT_WHITELIST = owntracks.CONF_WAYPOINT_WHITELIST
 CONF_SECRET = owntracks.CONF_SECRET
+CONF_MQTT_TOPIC = owntracks.CONF_MQTT_TOPIC
+CONF_EVENTS_ONLY = owntracks.CONF_EVENTS_ONLY
+CONF_REGION_MAPPING = owntracks.CONF_REGION_MAPPING
 
 TEST_ZONE_LAT = 45.0
 TEST_ZONE_LON = 90.0
@@ -176,6 +182,13 @@ REGION_GPS_LEAVE_MESSAGE_OUTER = build_message(
      'event': 'leave'},
     DEFAULT_TRANSITION_MESSAGE)
 
+REGION_GPS_ENTER_MESSAGE_OUTER = build_message(
+    {'lon': OUTER_ZONE['longitude'],
+     'lat': OUTER_ZONE['latitude'],
+     'desc': 'outer',
+     'event': 'enter'},
+    DEFAULT_TRANSITION_MESSAGE)
+
 # Region Beacon messages
 REGION_BEACON_ENTER_MESSAGE = DEFAULT_BEACON_TRANSITION_MESSAGE
 
@@ -232,6 +245,15 @@ WAYPOINTS_UPDATED_MESSAGE = {
     ]
 }
 
+WAYPOINT_MESSAGE = {
+    "_type": "waypoint",
+    "tst": 4,
+    "lat": 9,
+    "lon": 47,
+    "rad": 50,
+    "desc": "exp_wayp1"
+}
+
 WAYPOINT_ENTITY_NAMES = [
     'zone.greg_phone__exp_wayp1',
     'zone.greg_phone__exp_wayp2',
@@ -239,8 +261,24 @@ WAYPOINT_ENTITY_NAMES = [
     'zone.ram_phone__exp_wayp2',
 ]
 
+LWT_MESSAGE = {
+    "_type": "lwt",
+    "tst": 1
+}
+
+BAD_MESSAGE = {
+    "_type": "unsupported",
+    "tst": 1
+}
+
 BAD_JSON_PREFIX = '--$this is bad json#--'
 BAD_JSON_SUFFIX = '** and it ends here ^^'
+
+
+# def raise_on_not_implemented(hass, context, message):
+def raise_on_not_implemented():
+    """Throw NotImplemented."""
+    raise NotImplementedError("oopsie")
 
 
 class BaseMQTT(unittest.TestCase):
@@ -277,6 +315,11 @@ class BaseMQTT(unittest.TestCase):
         """Test the assertion of a location accuracy."""
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
+
+    def assert_location_source_type(self, source_type):
+        """Test the assertion of source_type."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('source_type'), source_type)
 
 
 class TestDeviceTrackerOwnTracks(BaseMQTT):
@@ -587,6 +630,72 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
             REGION_GPS_ENTER_MESSAGE)
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('inner')
+
+    def test_events_only_on(self):
+        """Test events_only config suppresses location updates."""
+        # Sending a location message that is not home
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        self.context.events_only = True
+
+        # Enter and Leave messages
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
+        self.assert_location_state('outer')
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        # Sending a location message that is inside outer zone
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
+
+        # Ignored location update. Location remains at previous.
+        self.assert_location_state(STATE_NOT_HOME)
+
+    def test_events_only_off(self):
+        """Test when events_only is False."""
+        # Sending a location message that is not home
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        self.context.events_only = False
+
+        # Enter and Leave messages
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
+        self.assert_location_state('outer')
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
+        self.assert_location_state(STATE_NOT_HOME)
+
+        # Sending a location message that is inside outer zone
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
+
+        # Location update processed
+        self.assert_location_state('outer')
+
+    def test_event_source_type_entry_exit(self):
+        """Test the entry and exit events of source type."""
+        # Entering the owntrack circular region named "inner"
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
+
+        # source_type should be gps when enterings using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_ENTER_MESSAGE))
+
+        # We should be able to enter a beacon zone even inside a gps zone
+        self.assert_location_source_type('bluetooth_le')
+
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
+
+        # source_type should be gps when leaving using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_LEAVE_MESSAGE))
+
+        self.assert_location_source_type('bluetooth_le')
 
     # Region Beacon based event entry / exit testing
 
@@ -1056,7 +1165,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_simple(self):
         """Test a simple import of list of waypoints."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp is not None)
@@ -1066,7 +1175,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_blacklist(self):
         """Test import of list of waypoints for blacklisted user."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is None)
@@ -1083,12 +1192,13 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         test_config = {
             CONF_PLATFORM: 'owntracks',
             CONF_MAX_GPS_ACCURACY: 200,
-            CONF_WAYPOINT_IMPORT: True
+            CONF_WAYPOINT_IMPORT: True,
+            CONF_MQTT_TOPIC: 'owntracks/#',
         }
         run_coroutine_threadsafe(owntracks.async_setup_scanner(
             self.hass, test_config, mock_see), self.hass.loop).result()
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is not None)
@@ -1098,7 +1208,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_bad_json(self):
         """Test importing a bad JSON payload."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message, True)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message, True)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is None)
@@ -1108,14 +1218,39 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_waypoint_import_existing(self):
         """Test importing a zone that exists."""
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         # Get the first waypoint exported
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         # Send an update
         waypoints_message = WAYPOINTS_UPDATED_MESSAGE.copy()
-        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         new_wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp == new_wayp)
+
+    def test_single_waypoint_import(self):
+        """Test single waypoint message."""
+        waypoint_message = WAYPOINT_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC, waypoint_message)
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
+        self.assertTrue(wayp is not None)
+
+    def test_not_implemented_message(self):
+        """Handle not implemented message type."""
+        patch_handler = patch('homeassistant.components.device_tracker.'
+                              'owntracks.async_handle_not_impl_msg',
+                              return_value=mock_coro(False))
+        patch_handler.start()
+        self.assertFalse(self.send_message(LWT_TOPIC, LWT_MESSAGE))
+        patch_handler.stop()
+
+    def test_unsupported_message(self):
+        """Handle not implemented message type."""
+        patch_handler = patch('homeassistant.components.device_tracker.'
+                              'owntracks.async_handle_unsupported_msg',
+                              return_value=mock_coro(False))
+        patch_handler.start()
+        self.assertFalse(self.send_message(BAD_TOPIC, BAD_MESSAGE))
+        patch_handler.stop()
 
 
 def generate_ciphers(secret):
@@ -1143,7 +1278,7 @@ def generate_ciphers(secret):
              json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8"))
         )
     ).decode("utf-8")
-    return (ctxt, mctxt)
+    return ctxt, mctxt
 
 
 TEST_SECRET_KEY = 's3cretkey'
@@ -1172,7 +1307,7 @@ def mock_cipher():
         if key != mkey:
             raise ValueError()
         return plaintext
-    return (len(TEST_SECRET_KEY), mock_decrypt)
+    return len(TEST_SECRET_KEY), mock_decrypt
 
 
 class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
@@ -1300,3 +1435,37 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
 
         self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(LOCATION_MESSAGE['lat'])
+
+    def test_customized_mqtt_topic(self):
+        """Test subscribing to a custom mqtt topic."""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_MQTT_TOPIC: 'mytracks/#',
+                    }})
+
+        topic = 'mytracks/{}/{}'.format(USER, DEVICE)
+
+        self.send_message(topic, LOCATION_MESSAGE)
+        self.assert_location_latitude(LOCATION_MESSAGE['lat'])
+
+    def test_region_mapping(self):
+        """Test region to zone mapping."""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_REGION_MAPPING: {
+                        'foo': 'inner'
+                    },
+                    }})
+
+        self.hass.states.set(
+            'zone.inner', 'zoning', INNER_ZONE)
+
+        message = build_message({'desc': 'foo'}, REGION_GPS_ENTER_MESSAGE)
+        self.assertEqual(message['desc'], 'foo')
+
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('inner')

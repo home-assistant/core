@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-gc100==1.0.1a']
+REQUIREMENTS = ['python-gc100==1.0.3a']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def setup(hass, base_config):
 
     gc_device = gc100.GC100SocketClient(host, port)
 
-    def cleanup_gc100():
+    def cleanup_gc100(event):
         """Stuff to do before stopping."""
         gc_device.quit()
 

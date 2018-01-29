@@ -1,14 +1,11 @@
 """The tests for the demo light component."""
 # pylint: disable=protected-access
-import asyncio
 import unittest
 
-from homeassistant.core import State, CoreState
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.light as light
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
-from tests.common import get_test_home_assistant, mock_component
+from tests.common import get_test_home_assistant
 
 ENTITY_LIGHT = 'light.bed_light'
 
@@ -79,36 +76,3 @@ class TestDemoLight(unittest.TestCase):
         light.turn_off(self.hass)
         self.hass.block_till_done()
         self.assertFalse(light.is_on(self.hass, ENTITY_LIGHT))
-
-
-@asyncio.coroutine
-def test_restore_state(hass):
-    """Test state gets restored."""
-    mock_component(hass, 'recorder')
-    hass.state = CoreState.starting
-    hass.data[DATA_RESTORE_CACHE] = {
-        'light.bed_light': State('light.bed_light', 'on', {
-            'brightness': 'value-brightness',
-            'color_temp': 'value-color_temp',
-            'rgb_color': 'value-rgb_color',
-            'xy_color': 'value-xy_color',
-            'white_value': 'value-white_value',
-            'effect': 'value-effect',
-        }),
-    }
-
-    yield from async_setup_component(hass, 'light', {
-        'light': {
-            'platform': 'demo',
-        }})
-
-    state = hass.states.get('light.bed_light')
-    assert state is not None
-    assert state.entity_id == 'light.bed_light'
-    assert state.state == 'on'
-    assert state.attributes.get('brightness') == 'value-brightness'
-    assert state.attributes.get('color_temp') == 'value-color_temp'
-    assert state.attributes.get('rgb_color') == 'value-rgb_color'
-    assert state.attributes.get('xy_color') == 'value-xy_color'
-    assert state.attributes.get('white_value') == 'value-white_value'
-    assert state.attributes.get('effect') == 'value-effect'

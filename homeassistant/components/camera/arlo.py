@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(seconds=90)
 
 ARLO_MODE_ARMED = 'armed'
 ARLO_MODE_DISARMED = 'disarmed'
@@ -31,6 +31,7 @@ ATTR_MOTION = 'motion_detection_sensitivity'
 ATTR_POWERSAVE = 'power_save_mode'
 ATTR_SIGNAL_STRENGTH = 'signal_strength'
 ATTR_UNSEEN_VIDEOS = 'unseen_videos'
+ATTR_LAST_REFRESH = 'last_refresh'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
@@ -73,6 +74,10 @@ class ArloCam(Camera):
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
+        self._last_refresh = None
+        if self._camera.base_station:
+            self._camera.base_station.refresh_rate = \
+                SCAN_INTERVAL.total_seconds()
         self.attrs = {}
 
     def camera_image(self):
@@ -105,14 +110,17 @@ class ArloCam(Camera):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_BATTERY_LEVEL: self.attrs.get(ATTR_BATTERY_LEVEL),
-            ATTR_BRIGHTNESS: self.attrs.get(ATTR_BRIGHTNESS),
-            ATTR_FLIPPED: self.attrs.get(ATTR_FLIPPED),
-            ATTR_MIRRORED: self.attrs.get(ATTR_MIRRORED),
-            ATTR_MOTION: self.attrs.get(ATTR_MOTION),
-            ATTR_POWERSAVE: self.attrs.get(ATTR_POWERSAVE),
-            ATTR_SIGNAL_STRENGTH: self.attrs.get(ATTR_SIGNAL_STRENGTH),
-            ATTR_UNSEEN_VIDEOS: self.attrs.get(ATTR_UNSEEN_VIDEOS),
+            name: value for name, value in (
+                (ATTR_BATTERY_LEVEL, self._camera.battery_level),
+                (ATTR_BRIGHTNESS, self._camera.brightness),
+                (ATTR_FLIPPED, self._camera.flip_state),
+                (ATTR_MIRRORED, self._camera.mirror_state),
+                (ATTR_MOTION, self._camera.motion_detection_sensitivity),
+                (ATTR_POWERSAVE, POWERSAVE_MODE_MAPPING.get(
+                    self._camera.powersave_mode)),
+                (ATTR_SIGNAL_STRENGTH, self._camera.signal_strength),
+                (ATTR_UNSEEN_VIDEOS, self._camera.unseen_videos),
+            ) if value is not None
         }
 
     @property
@@ -160,13 +168,4 @@ class ArloCam(Camera):
 
     def update(self):
         """Add an attribute-update task to the executor pool."""
-        self.attrs[ATTR_BATTERY_LEVEL] = self._camera.get_battery_level
-        self.attrs[ATTR_BRIGHTNESS] = self._camera.get_battery_level
-        self.attrs[ATTR_FLIPPED] = self._camera.get_flip_state,
-        self.attrs[ATTR_MIRRORED] = self._camera.get_mirror_state,
-        self.attrs[
-            ATTR_MOTION] = self._camera.get_motion_detection_sensitivity,
-        self.attrs[ATTR_POWERSAVE] = POWERSAVE_MODE_MAPPING[
-            self._camera.get_powersave_mode],
-        self.attrs[ATTR_SIGNAL_STRENGTH] = self._camera.get_signal_strength,
-        self.attrs[ATTR_UNSEEN_VIDEOS] = self._camera.unseen_videos
+        self._camera.update()

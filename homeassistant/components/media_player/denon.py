@@ -108,7 +108,7 @@ class DenonDevice(MediaPlayerDevice):
             if not line:
                 break
             lines.append(line.decode('ASCII').strip())
-            _LOGGER.debug("Recived: %s", line)
+            _LOGGER.debug("Received: %s", line)
 
         if all_lines:
             return lines

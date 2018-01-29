@@ -7,10 +7,10 @@ https://www.fido.ca/pages/#/my-account/wireless
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fido/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfido==1.0.1']
+REQUIREMENTS = ['pyfido==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,17 +70,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Fido sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    try:
-        fido_data = FidoData(username, password)
-        fido_data.update()
-    except requests.exceptions.HTTPError as error:
-        _LOGGER.error("Failt login: %s", error)
-        return False
+    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    fido_data = FidoData(username, password, httpsession)
+    ret = yield from fido_data.async_update()
+    if ret is False:
+        return
 
     name = config.get(CONF_NAME)
 
@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for variable in config[CONF_MONITORED_VARIABLES]:
             sensors.append(FidoSensor(fido_data, variable, name, number))
 
-    add_devices(sensors, True)
+    async_add_devices(sensors, True)
 
 
 class FidoSensor(Entity):
@@ -133,9 +133,10 @@ class FidoSensor(Entity):
             'number': self._number,
         }
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data from Fido and update the state."""
-        self.fido_data.update()
+        yield from self.fido_data.async_update()
         if self.type == 'balance':
             if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
@@ -149,20 +150,23 @@ class FidoSensor(Entity):
 class FidoData(object):
     """Get data from Fido."""
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, httpsession):
         """Initialize the data object."""
         from pyfido import FidoClient
-        self.client = FidoClient(username, password, REQUESTS_TIMEOUT)
+        self.client = FidoClient(username, password,
+                                 REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
+    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def async_update(self):
         """Get the latest data from Fido."""
         from pyfido.client import PyFidoError
         try:
-            self.client.fetch_data()
-        except PyFidoError as err:
-            _LOGGER.error("Error on receive last Fido data: %s", err)
-            return
+            yield from self.client.fetch_data()
+        except PyFidoError as exp:
+            _LOGGER.error("Error on receive last Fido data: %s", exp)
+            return False
         # Update data
         self.data = self.client.get_data()
+        return True

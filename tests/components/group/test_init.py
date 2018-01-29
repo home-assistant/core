@@ -8,7 +8,7 @@ from unittest.mock import patch
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE, STATE_NOT_HOME)
+    ATTR_ASSUMED_STATE, STATE_NOT_HOME, ATTR_FRIENDLY_NAME)
 import homeassistant.components.group as group
 
 from tests.common import get_test_home_assistant, assert_setup_component
@@ -350,7 +350,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         assert sorted(self.hass.states.entity_ids()) == \
             ['group.empty_group', 'group.second_group', 'group.test_group']
-        assert self.hass.bus.listeners['state_changed'] == 3
+        assert self.hass.bus.listeners['state_changed'] == 2
 
         with patch('homeassistant.config.load_yaml_config_file', return_value={
             'group': {
@@ -364,14 +364,6 @@ class TestComponentsGroup(unittest.TestCase):
 
         assert self.hass.states.entity_ids() == ['group.hello']
         assert self.hass.bus.listeners['state_changed'] == 1
-
-    def test_stopping_a_group(self):
-        """Test that a group correctly removes itself."""
-        grp = group.Group.create_group(
-            self.hass, 'light', ['light.test_1', 'light.test_2'])
-        assert self.hass.states.entity_ids() == ['group.light']
-        grp.stop()
-        assert self.hass.states.entity_ids() == []
 
     def test_changing_group_visibility(self):
         """Test that a group can be hidden and shown."""
@@ -394,6 +386,29 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.block_till_done()
         group_state = self.hass.states.get(group_entity_id)
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
+
+    def test_modify_group(self):
+        """Test modifying a group."""
+        group_conf = OrderedDict()
+        group_conf['modify_group'] = {
+            'name': 'friendly_name',
+            'icon': 'mdi:work'
+        }
+
+        assert setup_component(self.hass, 'group', {'group': group_conf})
+
+        # The old way would create a new group modify_group1 because
+        # internally it didn't know anything about those created in the config
+        group.set_group(self.hass, 'modify_group', icon="mdi:play")
+        self.hass.block_till_done()
+
+        group_state = self.hass.states.get(
+            group.ENTITY_ID_FORMAT.format('modify_group'))
+
+        assert self.hass.states.entity_ids() == ['group.modify_group']
+        assert group_state.attributes.get(ATTR_ICON) == 'mdi:play'
+        assert group_state.attributes.get(ATTR_FRIENDLY_NAME) == \
+            'friendly_name'
 
 
 @asyncio.coroutine

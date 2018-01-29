@@ -7,12 +7,13 @@ https://home-assistant.io/components/camera.ring/
 import asyncio
 import logging
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components.ring import DATA_RING, CONF_ATTRIBUTION
+from homeassistant.components.ring import (
+    DATA_RING, CONF_ATTRIBUTION, NOTIFICATION_ID)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL
@@ -23,7 +24,11 @@ CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
 DEPENDENCIES = ['ring', 'ffmpeg']
 
+FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
+
 _LOGGER = logging.getLogger(__name__)
+
+NOTIFICATION_TITLE = 'Ring Camera Setup'
 
 SCAN_INTERVAL = timedelta(seconds=90)
 
@@ -40,11 +45,33 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     ring = hass.data[DATA_RING]
 
     cams = []
+    cams_no_plan = []
     for camera in ring.doorbells:
-        cams.append(RingCam(hass, camera, config))
+        if camera.has_subscription:
+            cams.append(RingCam(hass, camera, config))
+        else:
+            cams_no_plan.append(camera)
 
     for camera in ring.stickup_cams:
-        cams.append(RingCam(hass, camera, config))
+        if camera.has_subscription:
+            cams.append(RingCam(hass, camera, config))
+        else:
+            cams_no_plan.append(camera)
+
+    # show notification for all cameras without an active subscription
+    if cams_no_plan:
+        cameras = str(', '.join([camera.name for camera in cams_no_plan]))
+
+        err_msg = '''A Ring Protect Plan is required for the''' \
+                  ''' following cameras: {}.'''.format(cameras)
+
+        _LOGGER.error(err_msg)
+        hass.components.persistent_notification.async_create(
+            'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(err_msg),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
 
     async_add_devices(cams, True)
     return True
@@ -63,8 +90,8 @@ class RingCam(Camera):
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_video_id = self._camera.last_recording_id
         self._video_url = self._camera.recording_url(self._last_video_id)
-        self._expires_at = None
-        self._utcnow = None
+        self._utcnow = dt_util.utcnow()
+        self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
 
     @property
     def name(self):
@@ -82,7 +109,6 @@ class RingCam(Camera):
             'timezone': self._camera.timezone,
             'type': self._camera.family,
             'video_url': self._video_url,
-            'video_id': self._last_video_id
         }
 
     @asyncio.coroutine
@@ -123,19 +149,19 @@ class RingCam(Camera):
 
     def update(self):
         """Update camera entity and refresh attributes."""
-        # extract the video expiration from URL
-        x_amz_expires = int(self._video_url.split('&')[0].split('=')[-1])
-        x_amz_date = self._video_url.split('&')[1].split('=')[-1]
+        _LOGGER.debug("Checking if Ring DoorBell needs to refresh video_url")
 
+        self._camera.update()
         self._utcnow = dt_util.utcnow()
-        self._expires_at = \
-            timedelta(seconds=x_amz_expires) + \
-            dt_util.as_utc(datetime.strptime(x_amz_date, "%Y%m%dT%H%M%SZ"))
 
-        if self._last_video_id != self._camera.last_recording_id:
-            _LOGGER.debug("Updated Ring DoorBell last_video_id")
+        last_recording_id = self._camera.last_recording_id
+
+        if self._last_video_id != last_recording_id or \
+           self._utcnow >= self._expires_at:
+
+            _LOGGER.info("Ring DoorBell properties refreshed")
+
+            # update attributes if new video or if URL has expired
             self._last_video_id = self._camera.last_recording_id
-
-        if self._utcnow >= self._expires_at:
-            _LOGGER.debug("Updated Ring DoorBell video_url")
             self._video_url = self._camera.recording_url(self._last_video_id)
+            self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow

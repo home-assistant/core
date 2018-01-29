@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AcerSwitch(SwitchDevice):
-    """Represents an Acer Projector as an switch."""
+    """Represents an Acer Projector as a switch."""
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
         """Init of the Acer projector."""

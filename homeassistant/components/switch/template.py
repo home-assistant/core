@@ -38,6 +38,11 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
+SWITCH_SCHEMA = vol.All(
+    cv.deprecated(ATTR_ENTITY_ID),
+    SWITCH_SCHEMA,
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
 })
@@ -152,13 +157,15 @@ class SwitchTemplate(SwitchDevice):
         """Return the entity_picture to use in the frontend, if any."""
         return self._entity_picture
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Fire the on action."""
-        self._on_script.run()
+        yield from self._on_script.async_run()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Fire the off action."""
-        self._off_script.run()
+        yield from self._off_script.async_run()
 
     @asyncio.coroutine
     def async_update(self):

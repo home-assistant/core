@@ -1,35 +1,39 @@
 """
-Bluesound.
+Support for Bluesound devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.bluesound/
 """
-import logging
-from datetime import timedelta
-from asyncio.futures import CancelledError
 import asyncio
-import voluptuous as vol
-from aiohttp.client_exceptions import ClientError
+from asyncio.futures import CancelledError
+from datetime import timedelta
+import logging
+
 import aiohttp
+from aiohttp.client_exceptions import ClientError
+from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
 import async_timeout
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.core import callback
-from homeassistant.util import Throttle
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.util.dt as dt_util
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
-    SUPPORT_CLEAR_PLAYLIST, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_STEP)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, CONF_HOSTS,
-    CONF_HOST, CONF_PORT, CONF_NAME)
+    CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
+from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['xmltodict==0.11.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 STATE_OFFLINE = 'offline'
 ATTR_MODEL = 'model'
@@ -46,8 +50,6 @@ UPDATE_PRESETS_INTERVAL = timedelta(minutes=30)
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [{
         vol.Required(CONF_HOST): cv.string,
@@ -58,6 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def _add_player(hass, async_add_devices, host, port=None, name=None):
+    """Add Bluesound players."""
     if host in [x.host for x in hass.data[DATA_BLUESOUND]]:
         return
 
@@ -80,20 +83,15 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
     def _add_player_cb():
         """Add player after first sync fetch."""
         async_add_devices([player])
-        _LOGGER.info('Added Bluesound device with name: %s', player.name)
+        _LOGGER.info("Added device with name: %s", player.name)
 
         if hass.is_running:
             _start_polling()
         else:
             hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START,
-                _start_polling
-            )
+                EVENT_HOMEASSISTANT_START, _start_polling)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        _stop_polling
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
     player = BluesoundPlayer(hass, host, port, name, _add_player_cb)
     hass.data[DATA_BLUESOUND].append(player)
@@ -101,10 +99,7 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
     if hass.is_running:
         _init_player()
     else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START,
-            _init_player
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
 
 
 @asyncio.coroutine
@@ -114,22 +109,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_BLUESOUND] = []
 
     if discovery_info:
-        _add_player(hass, async_add_devices, discovery_info.get('host'),
-                    discovery_info.get('port', None))
+        _add_player(hass, async_add_devices, discovery_info.get(CONF_HOST),
+                    discovery_info.get(CONF_PORT, None))
         return
 
     hosts = config.get(CONF_HOSTS, None)
     if hosts:
         for host in hosts:
-            _add_player(hass,
-                        async_add_devices,
-                        host.get(CONF_HOST),
-                        host.get(CONF_PORT, None),
-                        host.get(CONF_NAME, None))
+            _add_player(
+                hass, async_add_devices, host.get(CONF_HOST),
+                host.get(CONF_PORT), host.get(CONF_NAME))
 
 
 class BluesoundPlayer(MediaPlayerDevice):
-    """Bluesound Player Object."""
+    """Represenatation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -137,7 +130,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         self._hass = hass
         self._port = port
         self._polling_session = async_get_clientsession(hass)
-        self._polling_task = None  # The actuall polling task.
+        self._polling_task = None  # The actual polling task.
         self._name = name
         self._brand = None
         self._model = None
@@ -156,23 +149,23 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._port is None:
             self._port = DEFAULT_PORT
 
-# Internal methods
     @staticmethod
-    def _try_get_index(string, seach_string):
+    def _try_get_index(string, search_string):
+        """Get the index."""
         try:
-            return string.index(seach_string)
+            return string.index(search_string)
         except ValueError:
             return -1
 
     @asyncio.coroutine
-    def _internal_update_sync_status(self, on_updated_cb=None,
-                                     raise_timeout=False):
+    def _internal_update_sync_status(
+            self, on_updated_cb=None, raise_timeout=False):
+        """Update the internal status."""
         resp = None
         try:
             resp = yield from self.send_bluesound_command(
-                'SyncStatus',
-                raise_timeout, raise_timeout)
-        except:
+                'SyncStatus', raise_timeout, raise_timeout)
+        except Exception:
             raise
 
         if not resp:
@@ -193,26 +186,23 @@ class BluesoundPlayer(MediaPlayerDevice):
         if on_updated_cb:
             on_updated_cb()
         return True
-# END Internal methods
 
-# Poll functionality
     @asyncio.coroutine
     def _start_poll_command(self):
-        """"Loop which polls the status of the player."""
+        """Loop which polls the status of the player."""
         try:
             while True:
                 yield from self.async_update_status()
 
         except (asyncio.TimeoutError, ClientError):
-            _LOGGER.info("Bluesound node %s is offline, retrying later",
-                         self._name)
-            yield from asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT,
-                                     loop=self._hass.loop)
+            _LOGGER.info("Node %s is offline, retrying later", self._name)
+            yield from asyncio.sleep(
+                NODE_OFFLINE_CHECK_TIMEOUT, loop=self._hass.loop)
             self.start_polling()
 
         except CancelledError:
-            _LOGGER.debug("Stopping bluesound polling of node %s", self._name)
-        except:
+            _LOGGER.debug("Stopping the polling of node %s", self._name)
+        except Exception:
             _LOGGER.exception("Unexpected error in %s", self._name)
             raise
 
@@ -224,33 +214,26 @@ class BluesoundPlayer(MediaPlayerDevice):
     def stop_polling(self):
         """Stop the polling task."""
         self._polling_task.cancel()
-# END Poll functionality
 
-# Initiator
     @asyncio.coroutine
     def async_init(self):
-        """Initiate the player async."""
+        """Initialize the player async."""
         try:
             if self._retry_remove is not None:
                 self._retry_remove()
                 self._retry_remove = None
 
-            yield from self._internal_update_sync_status(self._init_callback,
-                                                         True)
+            yield from self._internal_update_sync_status(
+                self._init_callback, True)
         except (asyncio.TimeoutError, ClientError):
-            _LOGGER.info("Bluesound node %s is offline, retrying later",
-                         self.host)
+            _LOGGER.info("Node %s is offline, retrying later", self.host)
             self._retry_remove = async_track_time_interval(
-                self._hass,
-                self.async_init,
-                NODE_RETRY_INITIATION)
-        except:
+                self._hass, self.async_init, NODE_RETRY_INITIATION)
+        except Exception:
             _LOGGER.exception("Unexpected when initiating error in %s",
                               self.host)
             raise
-# END Initiator
 
-# Status updates fetchers
     @asyncio.coroutine
     def async_update(self):
         """Update internal status of the entity."""
@@ -275,7 +258,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             method = method[1:]
         url = "http://{}:{}/{}".format(self.host, self._port, method)
 
-        _LOGGER.info("calling URL: %s", url)
+        _LOGGER.debug("Calling URL: %s", url)
         response = None
         try:
             websession = async_get_clientsession(self._hass)
@@ -294,18 +277,17 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             if raise_timeout:
-                _LOGGER.info("Timeout with Bluesound: %s", self.host)
+                _LOGGER.info("Timeout: %s", self.host)
                 raise
             else:
-                _LOGGER.debug("Failed communicating with Bluesound: %s",
-                              self.host)
+                _LOGGER.debug("Failed communicating: %s", self.host)
                 return None
 
         return data
 
     @asyncio.coroutine
     def async_update_status(self):
-        """Using the poll session to always get the status of the player."""
+        """Use the poll session to always get the status of the player."""
         import xmltodict
         response = None
 
@@ -315,17 +297,17 @@ class BluesoundPlayer(MediaPlayerDevice):
             etag = self._status.get('@etag', '')
 
         if etag != '':
-            url = 'Status?etag='+etag+'&timeout=60.0'
+            url = 'Status?etag={}&timeout=60.0'.format(etag)
         url = "http://{}:{}/{}".format(self.host, self._port, url)
 
-        _LOGGER.debug("calling URL: %s", url)
+        _LOGGER.debug("Calling URL: %s", url)
 
         try:
 
             with async_timeout.timeout(65, loop=self._hass.loop):
                 response = yield from self._polling_session.get(
                     url,
-                    headers={'connection': 'keep-alive'})
+                    headers={CONNECTION: KEEP_ALIVE})
 
             if response.status != 200:
                 _LOGGER.error("Error %s on %s", response.status, url)
@@ -350,8 +332,8 @@ class BluesoundPlayer(MediaPlayerDevice):
     def async_update_sync_status(self, on_updated_cb=None,
                                  raise_timeout=False):
         """Update sync status."""
-        yield from self._internal_update_sync_status(on_updated_cb,
-                                                     raise_timeout=False)
+        yield from self._internal_update_sync_status(
+            on_updated_cb, raise_timeout=False)
 
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
@@ -436,9 +418,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                 _create_service_item(resp['services']['service'])
 
         return self._services_items
-# END Status updates fetchers
 
-# Media player (and core) properties
     @property
     def should_poll(self):
         """No need to poll information."""
@@ -611,17 +591,17 @@ class BluesoundPlayer(MediaPlayerDevice):
         stream_url = self._status.get('streamUrl', '')
 
         if self._status.get('is_preset', '') == '1' and stream_url != '':
-            # this check doesn't work with all presets, for example playlists.
-            # But it works with radio service_items will catch playlists
+            # This check doesn't work with all presets, for example playlists.
+            # But it works with radio service_items will catch playlists.
             items = [x for x in self._preset_items if 'url2' in x and
                      parse.unquote(x['url2']) == stream_url]
             if len(items) > 0:
                 return items[0]['title']
 
-        # this could be a bit difficult to detect. Bluetooth could be named
+        # This could be a bit difficult to detect. Bluetooth could be named
         # different things and there is not any way to match chooses in
         # capture list to current playing. It's a bit of guesswork.
-        # This method will be needing some tweaking over time
+        # This method will be needing some tweaking over time.
         title = self._status.get('title1', '').lower()
         if title == 'bluetooth' or stream_url == 'Capture:hw:2,0/44100/16/2':
             items = [x for x in self._capture_items
@@ -660,7 +640,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return items[0]['title']
 
         if self._status.get('streamUrl', '') != '':
-            _LOGGER.debug("Couldn't find source of stream url: %s",
+            _LOGGER.debug("Couldn't find source of stream URL: %s",
                           self._status.get('streamUrl', ''))
         return None
 
@@ -695,9 +675,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             ATTR_MODEL_NAME: self._model_name,
             ATTR_BRAND: self._brand,
         }
-# END Media player (and core) properties
 
-# Media player commands
     @asyncio.coroutine
     def async_select_source(self, source):
         """Select input source."""
@@ -712,8 +690,8 @@ class BluesoundPlayer(MediaPlayerDevice):
             return
 
         selected_source = items[0]
-        url = 'Play?url={}&preset_id&image={}'.format(selected_source['url'],
-                                                      selected_source['image'])
+        url = 'Play?url={}&preset_id&image={}'.format(
+            selected_source['url'], selected_source['image'])
 
         if 'is_raw_url' in selected_source and selected_source['is_raw_url']:
             url = selected_source['url']
@@ -806,4 +784,3 @@ class BluesoundPlayer(MediaPlayerDevice):
         else:
             return self.send_bluesound_command(
                 'Volume?level=' + str(float(self._lastvol) * 100))
-# END Media player commands

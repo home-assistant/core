@@ -6,7 +6,6 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import logging
 import multiprocessing
-import os
 from collections import defaultdict
 from functools import reduce
 
@@ -16,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
 from homeassistant.components.switch import DOMAIN as SWITCH
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
@@ -301,17 +299,12 @@ def setup(hass: HomeAssistant, base_config):
 
     def _start_cec(event):
         """Register services and start HDMI network to watch for devices."""
-        descriptions = load_yaml_config_file(
-            os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
         hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, _tx,
-                               descriptions[SERVICE_SEND_COMMAND],
                                SERVICE_SEND_COMMAND_SCHEMA)
         hass.services.register(DOMAIN, SERVICE_VOLUME, _volume,
-                               descriptions[SERVICE_VOLUME],
-                               SERVICE_VOLUME_SCHEMA)
+                               schema=SERVICE_VOLUME_SCHEMA)
         hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update,
-                               descriptions[SERVICE_UPDATE_DEVICES],
-                               SERVICE_UPDATE_DEVICES_SCHEMA)
+                               schema=SERVICE_UPDATE_DEVICES_SCHEMA)
         hass.services.register(DOMAIN, SERVICE_POWER_ON, _power_on)
         hass.services.register(DOMAIN, SERVICE_STANDBY, _standby)
         hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, _select_device)
@@ -327,7 +320,7 @@ def setup(hass: HomeAssistant, base_config):
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
 
-    def __init__(self, hass: HomeAssistant, device, logical):
+    def __init__(self, hass: HomeAssistant, device, logical) -> None:
         """Initialize the device."""
         self._device = device
         self.hass = hass

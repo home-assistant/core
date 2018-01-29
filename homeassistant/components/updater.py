@@ -4,28 +4,28 @@ Support to check for available updates.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/updater/
 """
+# pylint: disable=no-name-in-module, import-error
 import asyncio
+from datetime import timedelta
+from distutils.version import StrictVersion
 import json
 import logging
 import os
 import platform
 import uuid
-from datetime import timedelta
-# pylint: disable=no-name-in-module, import-error
-from distutils.version import StrictVersion
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import __version__ as current_version
+from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, __version__ as current_version)
-from homeassistant.helpers import event
 
-REQUIREMENTS = ['distro==1.0.4']
+REQUIREMENTS = ['distro==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,9 +97,15 @@ def async_setup(hass, config):
 
         newest, releasenotes = result
 
+        # Skip on dev
         if newest is None or 'dev' in current_version:
             return
 
+        # Load data from supervisor on hass.io
+        if hass.components.hassio.is_hassio():
+            newest = hass.components.hassio.get_homeassistant_version()
+
+        # Validate version
         if StrictVersion(newest) > StrictVersion(current_version):
             _LOGGER.info("The latest available version is %s", newest)
             hass.states.async_set(
@@ -131,6 +137,7 @@ def get_system_info(hass, include_components):
         'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
         'version': current_version,
         'virtualenv': os.environ.get('VIRTUAL_ENV') is not None,
+        'hassio': hass.components.hassio.is_hassio(),
     }
 
     if include_components:

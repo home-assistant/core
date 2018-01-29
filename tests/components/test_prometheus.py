@@ -30,4 +30,6 @@ def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     assert len(body) > 3  # At least two comment lines and a metric
     for line in body:
         if line:
-            assert line.startswith('# ') or line.startswith('process_')
+            assert line.startswith('# ') \
+                or line.startswith('process_') \
+                or line.startswith('python_info')

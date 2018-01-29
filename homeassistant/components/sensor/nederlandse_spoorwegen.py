@@ -4,17 +4,16 @@ Support for Nederlandse Spoorwegen public transport.
 For more details on this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nederlandse_spoorwegen/
 """
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_EMAIL, CONF_NAME,
-                                 CONF_PASSWORD, ATTR_ATTRIBUTION)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_EMAIL, CONF_NAME, CONF_PASSWORD)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -50,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the departure sensor."""
+    """Set up the departure sensor."""
     import ns_api
     nsapi = ns_api.NSAPI(
         config.get(CONF_EMAIL), config.get(CONF_PASSWORD))
@@ -77,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def valid_stations(stations, given_stations):
-    """Verify the existance of the given station codes."""
+    """Verify the existence of the given station codes."""
     for station in given_stations:
         if station is None:
             continue
@@ -135,6 +134,10 @@ class NSDepartureSensor(Entity):
             'departure_delay':
                 self._trips[0].departure_time_planned !=
                 self._trips[0].departure_time_actual,
+            'departure_platform':
+                self._trips[0].trip_parts[0].stops[0].platform,
+            'departure_platform_changed':
+                self._trips[0].trip_parts[0].stops[0].platform_changed,
             'arrival_time_planned':
                 self._trips[0].arrival_time_planned.strftime('%H:%M'),
             'arrival_time_actual':
@@ -142,6 +145,10 @@ class NSDepartureSensor(Entity):
             'arrival_delay':
                 self._trips[0].arrival_time_planned !=
                 self._trips[0].arrival_time_actual,
+            'arrival_platform':
+                self._trips[0].trip_parts[0].stops[-1].platform,
+            'arrival_platform_changed':
+                self._trips[0].trip_parts[0].stops[-1].platform_changed,
             'next':
                 self._trips[1].departure_time_actual.strftime('%H:%M'),
             'status': self._trips[0].status.lower(),

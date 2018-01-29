@@ -34,7 +34,7 @@ SENSOR_TYPES = {
         'Last Activity', ['doorbell', 'stickup_cams'], None, 'history', None],
 
     'last_ding': [
-        'Last Ding', ['doorbell', 'stickup_cams'], None, 'history', 'ding'],
+        'Last Ding', ['doorbell'], None, 'history', 'ding'],
 
     'last_motion': [
         'Last Motion', ['doorbell', 'stickup_cams'], None,

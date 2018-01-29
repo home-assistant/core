@@ -33,6 +33,8 @@ from homeassistant.helpers import config_per_platform, extract_domain_configs
 _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
+RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
+RE_ASCII = re.compile(r"\033\[[^m]*m")
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
@@ -109,6 +111,9 @@ sensor:
 # Text to speech
 tts:
   - platform: google
+
+# Cloud
+cloud:
 
 group: !include groups.yaml
 automation: !include automations.yaml
@@ -652,15 +657,19 @@ def async_check_ha_config_file(hass):
     proc = yield from asyncio.create_subprocess_exec(
         sys.executable, '-m', 'homeassistant', '--script',
         'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
+
     # Wait for the subprocess exit
-    stdout_data, dummy = yield from proc.communicate()
-    result = yield from proc.wait()
+    log, _ = yield from proc.communicate()
+    exit_code = yield from proc.wait()
 
-    if not result:
-        return None
+    # Convert to ASCII
+    log = RE_ASCII.sub('', log.decode())
 
-    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
+    if exit_code != 0 or RE_YAML_ERROR.search(log):
+        return log
+    return None
 
 
 @callback
@@ -677,9 +686,18 @@ def async_notify_setup_error(hass, component, link=False):
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
     errors[component] = errors.get(component) or link
-    _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
-            if link else name for name, link in errors.items()]
-    message = ('The following components and platforms could not be set up:\n'
-               '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
+
+    message = 'The following components and platforms could not be set up:\n\n'
+
+    for name, link in errors.items():
+        if link:
+            part = HA_COMPONENT_URL.format(name.replace('_', '-'), name)
+        else:
+            part = name
+
+        message += ' - {}\n'.format(part)
+
+    message += '\nPlease check your config.'
+
     persistent_notification.async_create(
         hass, message, 'Invalid config', 'invalid_config')

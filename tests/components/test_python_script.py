@@ -210,11 +210,34 @@ hass.states.set('hello.ab_list', '{}'.format(ab_list))
 
 
 @asyncio.coroutine
+def test_execute_sorted(hass, caplog):
+    """Test sorted() function."""
+    caplog.set_level(logging.ERROR)
+    source = """
+a  = sorted([3,1,2])
+assert(a == [1,2,3])
+hass.states.set('hello.a', a[0])
+hass.states.set('hello.b', a[1])
+hass.states.set('hello.c', a[2])
+"""
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('hello.a', '1')
+    assert hass.states.is_state('hello.b', '2')
+    assert hass.states.is_state('hello.c', '3')
+    # No errors logged = good
+    assert caplog.text == ''
+
+
+@asyncio.coroutine
 def test_exposed_modules(hass, caplog):
     """Test datetime and time modules exposed."""
     caplog.set_level(logging.ERROR)
     source = """
 hass.states.set('module.time', time.strftime('%Y', time.gmtime(521276400)))
+hass.states.set('module.time_strptime',
+                time.strftime('%H:%M', time.strptime('12:34', '%H:%M')))
 hass.states.set('module.datetime',
                 datetime.timedelta(minutes=1).total_seconds())
 """
@@ -223,6 +246,7 @@ hass.states.set('module.datetime',
     yield from hass.async_block_till_done()
 
     assert hass.states.is_state('module.time', '1986')
+    assert hass.states.is_state('module.time_strptime', '12:34')
     assert hass.states.is_state('module.datetime', '60.0')
 
     # No errors logged = good

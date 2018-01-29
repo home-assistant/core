@@ -12,10 +12,10 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_STOP,
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
-    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_MUSIC, MEDIA_PLAYER_SCHEMA, DOMAIN,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
-                                 STATE_PLAYING, STATE_IDLE)
+                                 STATE_PLAYING, STATE_IDLE, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rxv==0.5.1']
@@ -27,10 +27,11 @@ SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
+CONF_ZONE_NAMES = 'zone_names'
 CONF_ZONE_IGNORE = 'zone_ignore'
 
 DEFAULT_NAME = 'Yamaha Receiver'
-KNOWN = 'yamaha_known_receivers'
+DATA_YAMAHA = 'yamaha_known_receivers'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -40,32 +41,42 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ZONE_IGNORE, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+    vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
+})
+
+SERVICE_ENABLE_OUTPUT = 'yamaha_enable_output'
+
+ATTR_PORT = 'port'
+ATTR_ENABLED = 'enabled'
+
+ENABLE_OUTPUT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_PORT): cv.string,
+    vol.Required(ATTR_ENABLED): cv.boolean
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Yamaha platform."""
     import rxv
-    # keep track of configured receivers so that we don't end up
+    # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
-    # for.
-    if hass.data.get(KNOWN, None) is None:
-        hass.data[KNOWN] = set()
+    # for. Map each device from its unique_id to an instance since
+    # YamahaDevice is not hashable (thus not possible to add to a set).
+    if hass.data.get(DATA_YAMAHA) is None:
+        hass.data[DATA_YAMAHA] = {}
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     source_ignore = config.get(CONF_SOURCE_IGNORE)
     source_names = config.get(CONF_SOURCE_NAMES)
     zone_ignore = config.get(CONF_ZONE_IGNORE)
+    zone_names = config.get(CONF_ZONE_NAMES)
 
     if discovery_info is not None:
         name = discovery_info.get('name')
         model = discovery_info.get('model_name')
         ctrl_url = discovery_info.get('control_url')
         desc_url = discovery_info.get('description_url')
-        if ctrl_url in hass.data[KNOWN]:
-            _LOGGER.info("%s already manually configured", ctrl_url)
-            return
         receivers = rxv.RXV(
             ctrl_url, model_name=model, friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
@@ -80,20 +91,49 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ctrl_url = "http://{}:80/YamahaRemoteControl/ctrl".format(host)
         receivers = rxv.RXV(ctrl_url, name).zone_controllers()
 
+    devices = []
     for receiver in receivers:
-        if receiver.zone not in zone_ignore:
-            hass.data[KNOWN].add(receiver.ctrl_url)
-            add_devices([
-                YamahaDevice(name, receiver, source_ignore, source_names)
-            ], True)
+        if receiver.zone in zone_ignore:
+            continue
+
+        device = YamahaDevice(name, receiver, source_ignore,
+                              source_names, zone_names)
+
+        # Only add device if it's not already added
+        if device.unique_id not in hass.data[DATA_YAMAHA]:
+            hass.data[DATA_YAMAHA][device.unique_id] = device
+            devices.append(device)
+        else:
+            _LOGGER.debug('Ignoring duplicate receiver %s', name)
+
+    def service_handler(service):
+        """Handle for services."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+
+        devices = [device for device in hass.data[DATA_YAMAHA].values()
+                   if not entity_ids or device.entity_id in entity_ids]
+
+        for device in devices:
+            port = service.data[ATTR_PORT]
+            enabled = service.data[ATTR_ENABLED]
+
+            device.enable_output(port, enabled)
+            device.schedule_update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_ENABLE_OUTPUT, service_handler,
+        schema=ENABLE_OUTPUT_SCHEMA)
+
+    add_devices(devices)
 
 
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha device."""
 
-    def __init__(self, name, receiver, source_ignore, source_names):
+    def __init__(self, name, receiver, source_ignore,
+                 source_names, zone_names):
         """Initialize the Yamaha Receiver."""
-        self._receiver = receiver
+        self.receiver = receiver
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
@@ -101,6 +141,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._source_list = None
         self._source_ignore = source_ignore or []
         self._source_names = source_names or {}
+        self._zone_names = zone_names or {}
         self._reverse_mapping = None
         self._playback_support = None
         self._is_playback_supported = False
@@ -108,10 +149,15 @@ class YamahaDevice(MediaPlayerDevice):
         self._name = name
         self._zone = receiver.zone
 
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return '{0}:{1}'.format(self.receiver.ctrl_url, self._zone)
+
     def update(self):
         """Get the latest details from the device."""
-        self._play_status = self._receiver.play_status()
-        if self._receiver.on:
+        self._play_status = self.receiver.play_status()
+        if self.receiver.on:
             if self._play_status is None:
                 self._pwstate = STATE_ON
             elif self._play_status.playing:
@@ -121,17 +167,17 @@ class YamahaDevice(MediaPlayerDevice):
         else:
             self._pwstate = STATE_OFF
 
-        self._muted = self._receiver.mute
-        self._volume = (self._receiver.volume / 100) + 1
+        self._muted = self.receiver.mute
+        self._volume = (self.receiver.volume / 100) + 1
 
         if self.source_list is None:
             self.build_source_list()
 
-        current_source = self._receiver.input
+        current_source = self.receiver.input
         self._current_source = self._source_names.get(
             current_source, current_source)
-        self._playback_support = self._receiver.get_playback_support()
-        self._is_playback_supported = self._receiver.is_playback_supported(
+        self._playback_support = self.receiver.get_playback_support()
+        self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
 
     def build_source_list(self):
@@ -141,16 +187,17 @@ class YamahaDevice(MediaPlayerDevice):
 
         self._source_list = sorted(
             self._source_names.get(source, source) for source in
-            self._receiver.inputs()
+            self.receiver.inputs()
             if source not in self._source_ignore)
 
     @property
     def name(self):
         """Return the name of the device."""
         name = self._name
-        if self._zone != "Main_Zone":
+        zone_name = self._zone_names.get(self._zone, self._zone)
+        if zone_name != "Main_Zone":
             # Zone will be one of Main_Zone, Zone_2, Zone_3
-            name += " " + self._zone.replace('_', ' ')
+            name += " " + zone_name.replace('_', ' ')
         return name
 
     @property
@@ -196,42 +243,42 @@ class YamahaDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self._receiver.on = False
+        self.receiver.on = False
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         receiver_vol = 100 - (volume * 100)
         negative_receiver_vol = -receiver_vol
-        self._receiver.volume = negative_receiver_vol
+        self.receiver.volume = negative_receiver_vol
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        self._receiver.mute = mute
+        self.receiver.mute = mute
 
     def turn_on(self):
         """Turn the media player on."""
-        self._receiver.on = True
-        self._volume = (self._receiver.volume / 100) + 1
+        self.receiver.on = True
+        self._volume = (self.receiver.volume / 100) + 1
 
     def media_play(self):
         """Send play command."""
-        self._call_playback_function(self._receiver.play, "play")
+        self._call_playback_function(self.receiver.play, "play")
 
     def media_pause(self):
         """Send pause command."""
-        self._call_playback_function(self._receiver.pause, "pause")
+        self._call_playback_function(self.receiver.pause, "pause")
 
     def media_stop(self):
         """Send stop command."""
-        self._call_playback_function(self._receiver.stop, "stop")
+        self._call_playback_function(self.receiver.stop, "stop")
 
     def media_previous_track(self):
         """Send previous track command."""
-        self._call_playback_function(self._receiver.previous, "previous track")
+        self._call_playback_function(self.receiver.previous, "previous track")
 
     def media_next_track(self):
         """Send next track command."""
-        self._call_playback_function(self._receiver.next, "next track")
+        self._call_playback_function(self.receiver.next, "next track")
 
     def _call_playback_function(self, function, function_text):
         import rxv
@@ -243,7 +290,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self._receiver.input = self._reverse_mapping.get(source, source)
+        self.receiver.input = self._reverse_mapping.get(source, source)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from an ID.
@@ -268,7 +315,11 @@ class YamahaDevice(MediaPlayerDevice):
 
         """
         if media_type == "NET RADIO":
-            self._receiver.net_radio(media_id)
+            self.receiver.net_radio(media_id)
+
+    def enable_output(self, port, enabled):
+        """Enable or disable an output port.."""
+        self.receiver.enable_output(port, enabled)
 
     @property
     def media_artist(self):

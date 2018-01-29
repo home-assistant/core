@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/emulated_hue/
 """
 import asyncio
-import json
 import logging
 
 import voluptuous as vol
@@ -16,8 +15,10 @@ from homeassistant.const import (
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView)
@@ -38,6 +39,9 @@ CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
 CONF_TYPE = 'type'
+CONF_ENTITIES = 'entities'
+CONF_ENTITY_NAME = 'name'
+CONF_ENTITY_HIDDEN = 'hidden'
 
 TYPE_ALEXA = 'alexa'
 TYPE_GOOGLE = 'google_home'
@@ -51,6 +55,11 @@ DEFAULT_EXPOSED_DOMAINS = [
 ]
 DEFAULT_TYPE = TYPE_GOOGLE
 
+CONFIG_ENTITY_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ENTITY_NAME): cv.string,
+    vol.Optional(CONF_ENTITY_HIDDEN): cv.boolean
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST_IP): cv.string,
@@ -62,11 +71,14 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
         vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE):
-            vol.Any(TYPE_ALEXA, TYPE_GOOGLE)
+            vol.Any(TYPE_ALEXA, TYPE_GOOGLE),
+        vol.Optional(CONF_ENTITIES):
+            vol.Schema({cv.entity_id: CONFIG_ENTITY_SCHEMA})
     })
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
 ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
@@ -76,7 +88,6 @@ def setup(hass, yaml_config):
 
     server = HomeAssistantWSGI(
         hass,
-        development=False,
         server_host=config.host_ip_addr,
         server_port=config.listen_port,
         api_password=None,
@@ -130,14 +141,15 @@ class Config(object):
         self.cached_states = {}
 
         if self.type == TYPE_ALEXA:
-            _LOGGER.warning("Alexa type is deprecated and will be removed in a"
-                            " future version")
+            _LOGGER.warning(
+                'Emulated Hue running in legacy mode because type has been '
+                'specified. More info at https://goo.gl/M6tgz8')
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
         if self.host_ip_addr is None:
             self.host_ip_addr = util.get_local_ip()
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Listen IP address not specified, auto-detected address is %s",
                 self.host_ip_addr)
 
@@ -145,7 +157,7 @@ class Config(object):
         self.listen_port = conf.get(CONF_LISTEN_PORT)
         if not isinstance(self.listen_port, int):
             self.listen_port = DEFAULT_LISTEN_PORT
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Listen port not specified, defaulting to %s",
                 self.listen_port)
 
@@ -182,13 +194,15 @@ class Config(object):
         self.advertise_port = conf.get(
             CONF_ADVERTISE_PORT) or self.listen_port
 
+        self.entities = conf.get(CONF_ENTITIES, {})
+
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
             return entity_id
 
         if self.numbers is None:
-            self.numbers = self._load_numbers_json()
+            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         for number, ent_id in self.numbers.items():
@@ -199,7 +213,7 @@ class Config(object):
         if self.numbers:
             number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
-        self._save_numbers_json()
+        save_json(self.hass.config.path(NUMBERS_FILE), self.numbers)
         return number
 
     def number_to_entity_id(self, number):
@@ -208,11 +222,19 @@ class Config(object):
             return number
 
         if self.numbers is None:
-            self.numbers = self._load_numbers_json()
+            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         assert isinstance(number, str)
         return self.numbers.get(number)
+
+    def get_entity_name(self, entity):
+        """Get the name of an entity."""
+        if entity.entity_id in self.entities and \
+                CONF_ENTITY_NAME in self.entities[entity.entity_id]:
+            return self.entities[entity.entity_id][CONF_ENTITY_NAME]
+
+        return entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
 
     def is_entity_exposed(self, entity):
         """Determine if an entity should be exposed on the emulated bridge.
@@ -226,6 +248,12 @@ class Config(object):
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
         explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
+
+        if entity.entity_id in self.entities and \
+                CONF_ENTITY_HIDDEN in self.entities[entity.entity_id]:
+            explicit_hidden = \
+                self.entities[entity.entity_id][CONF_ENTITY_HIDDEN]
+
         if explicit_expose is True or explicit_hidden is False:
             expose = True
         elif explicit_expose is False or explicit_hidden is True:
@@ -245,25 +273,11 @@ class Config(object):
 
         return is_default_exposed or expose
 
-    def _load_numbers_json(self):
-        """Set up helper method to load numbers json."""
-        try:
-            with open(self.hass.config.path(NUMBERS_FILE),
-                      encoding='utf-8') as fil:
-                return json.loads(fil.read())
-        except (OSError, ValueError) as err:
-            # OSError if file not found or unaccessible/no permissions
-            # ValueError if could not parse JSON
-            if not isinstance(err, FileNotFoundError):
-                _LOGGER.warning("Failed to open %s: %s", NUMBERS_FILE, err)
-            return {}
 
-    def _save_numbers_json(self):
-        """Set up helper method to save numbers json."""
-        try:
-            with open(self.hass.config.path(NUMBERS_FILE), 'w',
-                      encoding='utf-8') as fil:
-                fil.write(json.dumps(self.numbers))
-        except OSError as err:
-            # OSError if file write permissions
-            _LOGGER.warning("Failed to write %s: %s", NUMBERS_FILE, err)
+def _load_json(filename):
+    """Wrapper, because we actually want to handle invalid json."""
+    try:
+        return load_json(filename)
+    except HomeAssistantError:
+        pass
+    return {}

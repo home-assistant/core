@@ -66,7 +66,7 @@ def valid_entity_id(entity_id: str) -> bool:
 
 
 def valid_state(state: str) -> bool:
-    """Test if an state is valid."""
+    """Test if a state is valid."""
     return len(state) < 256
 
 
@@ -387,7 +387,7 @@ class EventBus(object):
 
     @callback
     def async_fire(self, event_type: str, event_data=None,
-                   origin=EventOrigin.local, wait=False):
+                   origin=EventOrigin.local):
         """Fire an event.
 
         This method must be run in the event loop.
@@ -395,8 +395,10 @@ class EventBus(object):
         listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
-        if event_type != EVENT_HOMEASSISTANT_CLOSE:
-            listeners = self._listeners.get(MATCH_ALL, []) + listeners
+        match_all_listeners = self._listeners.get(MATCH_ALL)
+        if (match_all_listeners is not None and
+                event_type != EVENT_HOMEASSISTANT_CLOSE):
+            listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin)
 
@@ -673,15 +675,6 @@ class StateMachine(object):
         state_obj = self.get(entity_id)
         return state_obj is not None and state_obj.state == state
 
-    def is_state_attr(self, entity_id, name, value):
-        """Test if entity exists and has a state attribute set to value.
-
-        Async friendly.
-        """
-        state_obj = self.get(entity_id)
-        return state_obj is not None and \
-            state_obj.attributes.get(name, None) == value
-
     def remove(self, entity_id):
         """Remove the state of an entity.
 
@@ -761,24 +754,14 @@ class StateMachine(object):
 class Service(object):
     """Representation of a callable service."""
 
-    __slots__ = ['func', 'description', 'fields', 'schema',
-                 'is_callback', 'is_coroutinefunction']
+    __slots__ = ['func', 'schema', 'is_callback', 'is_coroutinefunction']
 
-    def __init__(self, func, description, fields, schema):
+    def __init__(self, func, schema):
         """Initialize a service."""
         self.func = func
-        self.description = description or ''
-        self.fields = fields or {}
         self.schema = schema
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
-
-    def as_dict(self):
-        """Return dictionary representation of this service."""
-        return {
-            'description': self.description,
-            'fields': self.fields,
-        }
 
 
 class ServiceCall(object):
@@ -794,7 +777,7 @@ class ServiceCall(object):
         self.call_id = call_id
 
     def __repr__(self):
-        """Return the represenation of the service."""
+        """Return the representation of the service."""
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
@@ -833,8 +816,7 @@ class ServiceRegistry(object):
 
         This method must be run in the event loop.
         """
-        return {domain: {key: value.as_dict() for key, value
-                         in self._services[domain].items()}
+        return {domain: self._services[domain].copy()
                 for domain in self._services}
 
     def has_service(self, domain, service):
@@ -844,30 +826,21 @@ class ServiceRegistry(object):
         """
         return service.lower() in self._services.get(domain.lower(), [])
 
-    def register(self, domain, service, service_func, description=None,
-                 schema=None):
+    def register(self, domain, service, service_func, schema=None):
         """
         Register a service.
-
-        Description is a dict containing key 'description' to describe
-        the service and a key 'fields' to describe the fields.
 
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
             self._hass.loop,
-            self.async_register, domain, service, service_func, description,
-            schema
+            self.async_register, domain, service, service_func, schema
         ).result()
 
     @callback
-    def async_register(self, domain, service, service_func, description=None,
-                       schema=None):
+    def async_register(self, domain, service, service_func, schema=None):
         """
         Register a service.
-
-        Description is a dict containing key 'description' to describe
-        the service and a key 'fields' to describe the fields.
 
         Schema is called to coerce and validate the service data.
 
@@ -875,9 +848,7 @@ class ServiceRegistry(object):
         """
         domain = domain.lower()
         service = service.lower()
-        description = description or {}
-        service_obj = Service(service_func, description.get('description'),
-                              description.get('fields', {}), schema)
+        service_obj = Service(service_func, schema)
 
         if domain in self._services:
             self._services[domain][service] = service_obj
@@ -1031,19 +1002,22 @@ class ServiceRegistry(object):
 
         service_call = ServiceCall(domain, service, service_data, call_id)
 
-        if service_handler.is_callback:
-            service_handler.func(service_call)
-            fire_service_executed()
-        elif service_handler.is_coroutinefunction:
-            yield from service_handler.func(service_call)
-            fire_service_executed()
-        else:
-            def execute_service():
-                """Execute a service and fires a SERVICE_EXECUTED event."""
+        try:
+            if service_handler.is_callback:
                 service_handler.func(service_call)
                 fire_service_executed()
+            elif service_handler.is_coroutinefunction:
+                yield from service_handler.func(service_call)
+                fire_service_executed()
+            else:
+                def execute_service():
+                    """Execute a service and fires a SERVICE_EXECUTED event."""
+                    service_handler.func(service_call)
+                    fire_service_executed()
 
-            self._hass.async_add_job(execute_service)
+                yield from self._hass.async_add_job(execute_service)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error executing service %s', service_call)
 
 
 class Config(object):

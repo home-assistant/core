@@ -1,6 +1,5 @@
 """All methods needed to bootstrap a Home Assistant instance."""
 import asyncio
-import logging
 import logging.handlers
 import os
 from timeit import default_timer as timer
@@ -9,13 +8,13 @@ from types import ModuleType
 from typing import Optional, Dict
 
 import homeassistant.config as conf_util
-from homeassistant.config import async_notify_setup_error
 import homeassistant.core as core
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.config import async_notify_setup_error
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED, PLATFORM_FORMAT, CONSTRAINT_FILE)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,9 +181,15 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-    warn_task = hass.loop.call_later(
-        SLOW_SETUP_WARNING, _LOGGER.warning,
-        "Setup of %s is taking over %s seconds.", domain, SLOW_SETUP_WARNING)
+
+    if hasattr(component, 'PLATFORM_SCHEMA'):
+        # Entity components have their own warning
+        warn_task = None
+    else:
+        warn_task = hass.loop.call_later(
+            SLOW_SETUP_WARNING, _LOGGER.warning,
+            "Setup of %s is taking over %s seconds.",
+            domain, SLOW_SETUP_WARNING)
 
     try:
         if async_comp:
@@ -198,7 +203,8 @@ def _async_setup_component(hass: core.HomeAssistant,
         return False
     finally:
         end = timer()
-        warn_task.cancel()
+        if warn_task:
+            warn_task.cancel()
     _LOGGER.info("Setup of domain %s took %.1f seconds.", domain, end - start)
 
     if result is False:

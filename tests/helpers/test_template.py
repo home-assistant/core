@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 import unittest
 import random
+import math
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -124,6 +125,29 @@ class TestHelpersTemplate(unittest.TestCase):
                 out,
                 template.Template('{{ %s | multiply(10) | round }}' % inp,
                                   self.hass).render())
+
+    def test_logarithm(self):
+        """Test logarithm."""
+        tests = [
+            (4, 2, '2.0'),
+            (1000, 10, '3.0'),
+            (math.e, '', '1.0'),
+            ('"invalid"', '_', 'invalid'),
+            (10, '"invalid"', '10.0'),
+        ]
+
+        for value, base, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | log(%s) | round(1) }}' % (value, base),
+                    self.hass).render())
+
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ log(%s, %s) | round(1) }}' % (value, base),
+                    self.hass).render())
 
     def test_strptime(self):
         """Test the parse timestamp method."""
@@ -254,6 +278,36 @@ class TestHelpersTemplate(unittest.TestCase):
         self.assertEqual(
             '127',
             template.Template('{{ hello }}', self.hass).render({'hello': 127}))
+
+    def test_passing_vars_as_list(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            "['foo', 'bar']",
+            template.render_complex(template.Template('{{ hello }}',
+                                    self.hass), {'hello': ['foo', 'bar']}))
+
+    def test_passing_vars_as_list_element(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            'bar',
+            template.render_complex(template.Template('{{ hello[1] }}',
+                                    self.hass),
+                                    {'hello': ['foo', 'bar']}))
+
+    def test_passing_vars_as_dict_element(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            'bar',
+            template.render_complex(template.Template('{{ hello.foo }}',
+                                    self.hass),
+                                    {'hello': {'foo': 'bar'}}))
+
+    def test_passing_vars_as_dict(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            "{'foo': 'bar'}",
+            template.render_complex(template.Template('{{ hello }}',
+                                    self.hass), {'hello': {'foo': 'bar'}}))
 
     def test_render_with_possible_json_value_with_valid_json(self):
         """Render with possible JSON value with valid JSON."""

@@ -8,22 +8,22 @@ https://home-assistant.io/components/notify.clicksend_tts/
 """
 import json
 import logging
-import requests
 
+from aiohttp.hdrs import CONTENT_TYPE
+import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_USERNAME, CONF_API_KEY, CONF_RECIPIENT, HTTP_HEADER_CONTENT_TYPE,
-    CONTENT_TYPE_JSON)
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_USERNAME, CONF_RECIPIENT, CONTENT_TYPE_JSON)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 BASE_API_URL = 'https://rest.clicksend.com/v3'
 
-HEADERS = {HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON}
+HEADERS = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
 CONF_LANGUAGE = 'language'
 CONF_VOICE = 'voice'

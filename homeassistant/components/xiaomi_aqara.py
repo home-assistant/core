@@ -1,106 +1,105 @@
-"""Support for Xiaomi Gateways."""
-import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.discovery import SERVICE_XIAOMI_GW
-from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_MAC, CONF_HOST, CONF_PORT)
+"""
+Support for Xiaomi Gateways.
 
-REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/xiaomi_aqara/
+"""
+import asyncio
+import logging
+
+from datetime import timedelta
+
+import voluptuous as vol
+
+from homeassistant.components.discovery import SERVICE_XIAOMI_GW
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, CONF_HOST, CONF_MAC, CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import utcnow
+
+REQUIREMENTS = ['PyXiaomiGateway==0.8.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_RINGTONE_VOL = 'ringtone_vol'
 ATTR_DEVICE_ID = 'device_id'
+
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
+CONF_KEY = 'key'
+
 DOMAIN = 'xiaomi_aqara'
+
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
+
+TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
 SERVICE_PLAY_RINGTONE = 'play_ringtone'
 SERVICE_STOP_RINGTONE = 'stop_ringtone'
 SERVICE_ADD_DEVICE = 'add_device'
 SERVICE_REMOVE_DEVICE = 'remove_device'
 
-XIAOMI_AQARA_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_GW_MAC): vol.All(cv.string,
-                                       vol.Any(vol.Length(min=12, max=12),
-                                               vol.Length(min=17, max=17)))
+GW_MAC = vol.All(
+    cv.string,
+    lambda value: value.replace(':', '').lower(),
+    vol.Length(min=12, max=12)
+)
+
+SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema({
+    vol.Required(ATTR_RINGTONE_ID):
+        vol.All(vol.Coerce(int), vol.NotIn([9, 14, 15, 16, 17, 18, 19])),
+    vol.Optional(ATTR_RINGTONE_VOL):
+        vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100))
 })
 
-SERVICE_SCHEMA_PLAY_RINGTONE = XIAOMI_AQARA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_RINGTONE_ID): vol.Coerce(int),
-    vol.Optional(ATTR_RINGTONE_VOL): vol.All(vol.Coerce(int),
-                                             vol.Clamp(min=0, max=100))
+SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema({
+    vol.Required(ATTR_DEVICE_ID):
+        vol.All(cv.string, vol.Length(min=14, max=14))
 })
 
-SERVICE_SCHEMA_REMOVE_DEVICE = XIAOMI_AQARA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_DEVICE_ID): vol.All(cv.string,
-                                          vol.Length(min=14, max=14))
+
+GATEWAY_CONFIG = vol.Schema({
+    vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None),
+    vol.Optional(CONF_KEY, default=None):
+        vol.All(cv.string, vol.Length(min=16, max=16)),
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=9898): cv.port,
 })
 
-SERVICE_TO_METHOD = {
-    SERVICE_PLAY_RINGTONE: {'method': 'play_ringtone_service',
-                            'schema': SERVICE_SCHEMA_PLAY_RINGTONE},
-    SERVICE_STOP_RINGTONE: {'method': 'stop_ringtone_service'},
-    SERVICE_ADD_DEVICE: {'method': 'add_device_service'},
-    SERVICE_REMOVE_DEVICE: {'method': 'remove_device_service',
-                            'schema': SERVICE_SCHEMA_REMOVE_DEVICE},
-}
+
+def _fix_conf_defaults(config):
+    """Update some configuration defaults."""
+    config['sid'] = config.pop(CONF_MAC, None)
+
+    if config.get(CONF_KEY) is None:
+        _LOGGER.warning(
+            'Key is not provided for gateway %s. Controlling the gateway '
+            'will not be possible', config['sid'])
+
+    if config.get(CONF_HOST) is None:
+        config.pop(CONF_PORT)
+
+    return config
 
 
-def _validate_conf(config):
-    """Validate a list of devices definitions."""
-    res_config = []
-    for gw_conf in config:
-        for _conf in gw_conf.keys():
-            if _conf not in [CONF_MAC, CONF_HOST, CONF_PORT, 'key']:
-                raise vol.Invalid('{} is not a valid config parameter'.
-                                  format(_conf))
-
-        res_gw_conf = {'sid': gw_conf.get(CONF_MAC)}
-        if res_gw_conf['sid'] is not None:
-            res_gw_conf['sid'] = res_gw_conf['sid'].replace(":", "").lower()
-            if len(res_gw_conf['sid']) != 12:
-                raise vol.Invalid('Invalid mac address', gw_conf.get(CONF_MAC))
-        key = gw_conf.get('key')
-
-        if key is None:
-            _LOGGER.warning(
-                'Gateway Key is not provided.'
-                ' Controlling gateway device will not be possible.')
-        elif len(key) != 16:
-            raise vol.Invalid('Invalid key {}.'
-                              ' Key must be 16 characters'.format(key))
-        res_gw_conf['key'] = key
-
-        host = gw_conf.get(CONF_HOST)
-        if host is not None:
-            res_gw_conf[CONF_HOST] = host
-            res_gw_conf['port'] = gw_conf.get(CONF_PORT, 9898)
-
-            _LOGGER.warning(
-                'Static address (%s:%s) of the gateway provided. '
-                'Discovery of this host will be skipped.',
-                res_gw_conf[CONF_HOST], res_gw_conf[CONF_PORT])
-
-        res_config.append(res_gw_conf)
-    return res_config
-
+DEFAULT_GATEWAY_CONFIG = [{CONF_MAC: None, CONF_KEY: None}]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=[{CONF_MAC: None, "key": None}]):
-            vol.All(cv.ensure_list, _validate_conf),
+        vol.Optional(CONF_GATEWAYS, default=DEFAULT_GATEWAY_CONFIG):
+            vol.All(cv.ensure_list, [GATEWAY_CONFIG], [_fix_conf_defaults]),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
     })
 }, extra=vol.ALLOW_EXTRA)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
@@ -113,30 +112,30 @@ def setup(hass, config):
         interface = config[DOMAIN][CONF_INTERFACE]
         discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
 
+    @asyncio.coroutine
     def xiaomi_gw_discovered(service, discovery_info):
-        """Called when Xiaomi Gateway device(s) has been found."""
-        # We don't need to do anything here, the purpose of HA's
+        """Perform action when Xiaomi Gateway device(s) has been found."""
+        # We don't need to do anything here, the purpose of Home Assistant's
         # discovery service is to just trigger loading of this
         # component, and then its own discovery process kicks in.
-        _LOGGER.info("Discovered: %s", discovery_info)
 
     discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
 
-    from PyXiaomiGateway import PyXiaomiGateway
-    hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass.add_job, gateways,
-                                                   interface)
+    from xiaomi_gateway import XiaomiGatewayDiscovery
+    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
+        hass.add_job, gateways, interface)
 
     _LOGGER.debug("Expecting %s gateways", len(gateways))
     for k in range(discovery_retry):
-        _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', k + 1)
-        hass.data[PY_XIAOMI_GATEWAY].discover_gateways()
-        if len(hass.data[PY_XIAOMI_GATEWAY].gateways) >= len(gateways):
+        _LOGGER.info("Discovering Xiaomi Gateways (Try %s)", k + 1)
+        xiaomi.discover_gateways()
+        if len(xiaomi.gateways) >= len(gateways):
             break
 
-    if not hass.data[PY_XIAOMI_GATEWAY].gateways:
+    if not xiaomi.gateways:
         _LOGGER.error("No gateway discovered")
         return False
-    hass.data[PY_XIAOMI_GATEWAY].listen()
+    xiaomi.listen()
     _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
     for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
@@ -144,82 +143,61 @@ def setup(hass, config):
 
     def stop_xiaomi(event):
         """Stop Xiaomi Socket."""
-        _LOGGER.info("Shutting down Xiaomi Hub.")
-        hass.data[PY_XIAOMI_GATEWAY].stop_listen()
+        _LOGGER.info("Shutting down Xiaomi Hub")
+        xiaomi.stop_listen()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
-    # pylint: disable=unused-variable
     def play_ringtone_service(call):
         """Service to play ringtone through Gateway."""
-        ring_id = int(call.data.get(ATTR_RINGTONE_ID))
-        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
+        ring_id = call.data.get(ATTR_RINGTONE_ID)
+        gateway = call.data.get(ATTR_GW_MAC)
 
-        if ring_id in [9, 14-19]:
-            _LOGGER.error('Specified mid: %s is not defined in gateway.',
-                          ring_id)
-            return
+        kwargs = {'mid': ring_id}
 
         ring_vol = call.data.get(ATTR_RINGTONE_VOL)
-        if ring_vol is None:
-            ringtone = {'mid': ring_id}
-        else:
-            ringtone = {'mid': ring_id, 'vol': int(ring_vol)}
+        if ring_vol is not None:
+            kwargs['vol'] = ring_vol
 
-        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-            if gateway.sid == gw_sid:
-                gateway.write_to_hub(gateway.sid, **ringtone)
-                break
-        else:
-            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+        gateway.write_to_hub(gateway.sid, **kwargs)
 
-    # pylint: disable=unused-variable
     def stop_ringtone_service(call):
         """Service to stop playing ringtone on Gateway."""
-        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
-        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-            if gateway.sid == gw_sid:
-                ringtone = {'mid': 10000}
-                gateway.write_to_hub(gateway.sid, **ringtone)
-                break
-        else:
-            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+        gateway = call.data.get(ATTR_GW_MAC)
+        gateway.write_to_hub(gateway.sid, mid=10000)
 
-    # pylint: disable=unused-variable
     def add_device_service(call):
         """Service to add a new sub-device within the next 30 seconds."""
-        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
-        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-            if gateway.sid == gw_sid:
-                join_permission = {'join_permission': 'yes'}
-                gateway.write_to_hub(gateway.sid, **join_permission)
-                hass.components.persistent_notification.async_create(
-                    'Join permission enabled for 30 seconds! '
-                    'Please press the pairing button of the new device once.',
-                    title='Xiaomi Aqara Gateway')
-                break
-        else:
-            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+        gateway = call.data.get(ATTR_GW_MAC)
+        gateway.write_to_hub(gateway.sid, join_permission='yes')
+        hass.components.persistent_notification.async_create(
+            'Join permission enabled for 30 seconds! '
+            'Please press the pairing button of the new device once.',
+            title='Xiaomi Aqara Gateway')
 
-    # pylint: disable=unused-variable
     def remove_device_service(call):
         """Service to remove a sub-device from the gateway."""
         device_id = call.data.get(ATTR_DEVICE_ID)
-        gw_sid = call.data.get(ATTR_GW_MAC).replace(":", "").lower()
-        remove_device = {'remove_device': device_id}
-        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-            if gateway.sid == gw_sid:
-                gateway.write_to_hub(gateway.sid, **remove_device)
-                break
-        else:
-            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+        gateway = call.data.get(ATTR_GW_MAC)
+        gateway.write_to_hub(gateway.sid, remove_device=device_id)
 
-    for xiaomi_aqara_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[xiaomi_aqara_service].get(
-            'schema', XIAOMI_AQARA_SERVICE_SCHEMA)
-        service_handler = SERVICE_TO_METHOD[xiaomi_aqara_service].get('method')
-        hass.services.async_register(
-            DOMAIN, xiaomi_aqara_service, service_handler,
-            description=None, schema=schema)
+    gateway_only_schema = _add_gateway_to_schema(xiaomi, vol.Schema({}))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_PLAY_RINGTONE, play_ringtone_service,
+        schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_PLAY_RINGTONE))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_STOP_RINGTONE, stop_ringtone_service,
+        schema=gateway_only_schema)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_DEVICE, add_device_service,
+        schema=gateway_only_schema)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_REMOVE_DEVICE, remove_device_service,
+        schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_REMOVE_DEVICE))
 
     return True
 
@@ -228,16 +206,26 @@ class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
     def __init__(self, device, name, xiaomi_hub):
-        """Initialize the xiaomi device."""
+        """Initialize the Xiaomi device."""
         self._state = None
+        self._is_available = True
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
-        xiaomi_hub.callbacks[self._sid].append(self.push_data)
-        self.parse_data(device['data'])
+        self._remove_unavailability_tracker = None
+        xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
+        self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
+
+    def _add_push_data_job(self, *args):
+        self.hass.add_job(self.push_data, *args)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Start unavailability tracking."""
+        self._async_track_unavailable()
 
     @property
     def name(self):
@@ -245,8 +233,13 @@ class XiaomiDevice(Entity):
         return self._name
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._is_available
+
+    @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state. No polling needed."""
         return False
 
     @property
@@ -254,11 +247,34 @@ class XiaomiDevice(Entity):
         """Return the state attributes."""
         return self._device_state_attributes
 
-    def push_data(self, data):
+    @callback
+    def _async_set_unavailable(self, now):
+        """Set state to UNAVAILABLE."""
+        self._remove_unavailability_tracker = None
+        self._is_available = False
+        self.async_schedule_update_ha_state()
+
+    @callback
+    def _async_track_unavailable(self):
+        if self._remove_unavailability_tracker:
+            self._remove_unavailability_tracker()
+        self._remove_unavailability_tracker = async_track_point_in_utc_time(
+            self.hass, self._async_set_unavailable,
+            utcnow() + TIME_TILL_UNAVAILABLE)
+        if not self._is_available:
+            self._is_available = True
+            return True
+        return False
+
+    @callback
+    def push_data(self, data, raw_data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
-        if self.parse_data(data) or self.parse_voltage(data):
-            self.schedule_update_ha_state()
+        was_unavailable = self._async_track_unavailable()
+        is_data = self.parse_data(data, raw_data)
+        is_voltage = self.parse_voltage(data)
+        if is_data or is_voltage or was_unavailable:
+            self.async_schedule_update_ha_state()
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
@@ -273,6 +289,30 @@ class XiaomiDevice(Entity):
         self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
         return True
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         raise NotImplementedError()
+
+
+def _add_gateway_to_schema(xiaomi, schema):
+    """Extend a voluptuous schema with a gateway validator."""
+    def gateway(sid):
+        """Convert sid to a gateway."""
+        sid = str(sid).replace(':', '').lower()
+
+        for gateway in xiaomi.gateways.values():
+            if gateway.sid == sid:
+                return gateway
+
+        raise vol.Invalid('Unknown gateway sid {}'.format(sid))
+
+    gateways = list(xiaomi.gateways.values())
+    kwargs = {}
+
+    # If the user has only 1 gateway, make it the default for services.
+    if len(gateways) == 1:
+        kwargs['default'] = gateways[0]
+
+    return schema.extend({
+        vol.Required(ATTR_GW_MAC, **kwargs): gateway
+    })

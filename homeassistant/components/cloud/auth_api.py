@@ -1,7 +1,5 @@
 """Package to communicate with the authentication API."""
-import hashlib
 import logging
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +21,7 @@ class UserNotConfirmed(CloudError):
 
 
 class ExpiredCode(CloudError):
-    """Raised when an expired code is encoutered."""
+    """Raised when an expired code is encountered."""
 
 
 class InvalidCode(CloudError):
@@ -39,7 +37,7 @@ class PasswordChangeRequired(CloudError):
 
 
 class UnknownError(CloudError):
-    """Raised when an unknown error occurrs."""
+    """Raised when an unknown error occurs."""
 
 
 AWS_EXCEPTIONS = {
@@ -58,18 +56,16 @@ def _map_aws_exception(err):
     return ex(err.response['Error']['Message'])
 
 
-def _generate_username(email):
-    """Generate a username from an email address."""
-    return hashlib.sha512(email.encode('utf-8')).hexdigest()
-
-
 def register(cloud, email, password):
     """Register a new account."""
     from botocore.exceptions import ClientError
 
     cognito = _cognito(cloud)
+    # Workaround for bug in Warrant. PR with fix:
+    # https://github.com/capless/warrant/pull/82
+    cognito.add_base_attributes()
     try:
-        cognito.register(_generate_username(email), password, email=email)
+        cognito.register(email, password)
     except ClientError as err:
         raise _map_aws_exception(err)
 
@@ -80,16 +76,32 @@ def confirm_register(cloud, confirmation_code, email):
 
     cognito = _cognito(cloud)
     try:
-        cognito.confirm_sign_up(confirmation_code, _generate_username(email))
+        cognito.confirm_sign_up(confirmation_code, email)
+    except ClientError as err:
+        raise _map_aws_exception(err)
+
+
+def resend_email_confirm(cloud, email):
+    """Resend email confirmation."""
+    from botocore.exceptions import ClientError
+
+    cognito = _cognito(cloud, username=email)
+
+    try:
+        cognito.client.resend_confirmation_code(
+            Username=email,
+            ClientId=cognito.client_id
+        )
     except ClientError as err:
         raise _map_aws_exception(err)
 
 
 def forgot_password(cloud, email):
-    """Initiate forgotten password flow."""
+    """Initialize forgotten password flow."""
     from botocore.exceptions import ClientError
 
-    cognito = _cognito(cloud, username=_generate_username(email))
+    cognito = _cognito(cloud, username=email)
+
     try:
         cognito.initiate_forgot_password()
     except ClientError as err:
@@ -100,7 +112,8 @@ def confirm_forgot_password(cloud, confirmation_code, email, new_password):
     """Confirm forgotten password code and change password."""
     from botocore.exceptions import ClientError
 
-    cognito = _cognito(cloud, username=_generate_username(email))
+    cognito = _cognito(cloud, username=email)
+
     try:
         cognito.confirm_forgot_password(confirmation_code, new_password)
     except ClientError as err:
@@ -113,7 +126,6 @@ def login(cloud, email, password):
     cloud.id_token = cognito.id_token
     cloud.access_token = cognito.access_token
     cloud.refresh_token = cognito.refresh_token
-    cloud.email = email
     cloud.write_user_info()
 
 

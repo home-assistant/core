@@ -7,7 +7,6 @@ https://home-assistant.io/components/vacuum.xiaomi_miio/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
@@ -16,12 +15,11 @@ from homeassistant.components.vacuum import (
     SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.3.0']
+REQUIREMENTS = ['python-miio==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +46,8 @@ FAN_SPEEDS = {
 
 ATTR_CLEANING_TIME = 'cleaning_time'
 ATTR_DO_NOT_DISTURB = 'do_not_disturb'
+ATTR_DO_NOT_DISTURB_START = 'do_not_disturb_start'
+ATTR_DO_NOT_DISTURB_END = 'do_not_disturb_end'
 ATTR_MAIN_BRUSH_LEFT = 'main_brush_left'
 ATTR_SIDE_BRUSH_LEFT = 'side_brush_left'
 ATTR_FILTER_LEFT = 'filter_left'
@@ -87,7 +87,7 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
-    from mirobo import Vacuum
+    from miio import Vacuum
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -128,16 +128,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for vacuum_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[vacuum_service].get(
             'schema', VACUUM_SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, vacuum_service, async_service_handler,
-            description=descriptions.get(vacuum_service), schema=schema)
+            schema=schema)
 
 
 class MiroboVacuum(VacuumDevice):
@@ -155,6 +151,7 @@ class MiroboVacuum(VacuumDevice):
 
         self.consumable_state = None
         self.clean_history = None
+        self.dnd_state = None
 
     @property
     def name(self):
@@ -200,7 +197,9 @@ class MiroboVacuum(VacuumDevice):
         if self.vacuum_state is not None:
             attrs.update({
                 ATTR_DO_NOT_DISTURB:
-                    STATE_ON if self.vacuum_state.dnd else STATE_OFF,
+                    STATE_ON if self.dnd_state.enabled else STATE_OFF,
+                ATTR_DO_NOT_DISTURB_START: str(self.dnd_state.start),
+                ATTR_DO_NOT_DISTURB_END: str(self.dnd_state.end),
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 ATTR_CLEANING_TIME: int(
@@ -223,7 +222,6 @@ class MiroboVacuum(VacuumDevice):
                     / 3600)})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
-
         return attrs
 
     @property
@@ -244,11 +242,11 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        from mirobo import DeviceException, VacuumException
+        from miio import DeviceException
         try:
             yield from self.hass.async_add_job(partial(func, *args, **kwargs))
             return True
-        except (DeviceException, VacuumException) as exc:
+        except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
             return False
 
@@ -365,12 +363,15 @@ class MiroboVacuum(VacuumDevice):
 
     def update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from miio import DeviceException
         try:
             state = self._vacuum.status()
             self.vacuum_state = state
+
             self.consumable_state = self._vacuum.consumable_status()
             self.clean_history = self._vacuum.clean_history()
+            self.dnd_state = self._vacuum.dnd_status()
+
             self._is_on = state.is_on
             self._available = True
         except OSError as exc:

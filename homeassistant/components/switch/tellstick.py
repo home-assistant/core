@@ -4,15 +4,10 @@ Support for Tellstick switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tellstick/
 """
-import voluptuous as vol
-
-from homeassistant.components.tellstick import (DEFAULT_SIGNAL_REPETITIONS,
-                                                ATTR_DISCOVER_DEVICES,
-                                                ATTR_DISCOVER_CONFIG,
-                                                DOMAIN, TellstickDevice)
+from homeassistant.components.tellstick import (
+    DEFAULT_SIGNAL_REPETITIONS, ATTR_DISCOVER_DEVICES,
+    ATTR_DISCOVER_CONFIG, DATA_TELLSTICK, TellstickDevice)
 from homeassistant.helpers.entity import ToggleEntity
-
-PLATFORM_SCHEMA = vol.Schema({vol.Required("platform"): DOMAIN})
 
 
 # pylint: disable=unused-argument
@@ -26,9 +21,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     signal_repetitions = discovery_info.get(ATTR_DISCOVER_CONFIG,
                                             DEFAULT_SIGNAL_REPETITIONS)
 
-    add_devices(TellstickSwitch(tellcore_id, hass.data['tellcore_registry'],
-                                signal_repetitions)
-                for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES])
+    add_devices([TellstickSwitch(hass.data[DATA_TELLSTICK][tellcore_id],
+                                 signal_repetitions)
+                 for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]],
+                True)
 
 
 class TellstickSwitch(TellstickDevice, ToggleEntity):
@@ -36,11 +32,11 @@ class TellstickSwitch(TellstickDevice, ToggleEntity):
 
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""
-        return None
+        pass
 
     def _parse_tellcore_data(self, tellcore_data):
         """Turn the value received from tellcore into something useful."""
-        return None
+        pass
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""

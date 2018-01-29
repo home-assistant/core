@@ -6,16 +6,17 @@ https://home-assistant.io/components/tesla/
 """
 from collections import defaultdict
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
-from homeassistant.helpers import discovery
+    ATTR_BATTERY_LEVEL, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.18']
+REQUIREMENTS = ['teslajsonpy==0.0.19']
 
 DOMAIN = 'tesla'
 
@@ -42,7 +43,7 @@ TESLA_COMPONENTS = [
 
 
 def setup(hass, base_config):
-    """Set up of Tesla platform."""
+    """Set up of Tesla component."""
     from teslajsonpy import Controller as teslaAPI, TeslaException
 
     config = base_config.get(DOMAIN)
@@ -53,8 +54,7 @@ def setup(hass, base_config):
     if hass.data.get(DOMAIN) is None:
         try:
             hass.data[DOMAIN] = {
-                'controller': teslaAPI(
-                    email, password, update_interval),
+                'controller': teslaAPI(email, password, update_interval),
                 'devices': defaultdict(list)
             }
             _LOGGER.debug("Connected to the Tesla API.")
@@ -95,7 +95,7 @@ class TeslaDevice(Entity):
     """Representation of a Tesla device."""
 
     def __init__(self, tesla_device, controller):
-        """Initialisation of the Tesla device."""
+        """Initialise of the Tesla device."""
         self.tesla_device = tesla_device
         self.controller = controller
         self._name = self.tesla_device.name
@@ -108,7 +108,7 @@ class TeslaDevice(Entity):
 
     @property
     def should_poll(self):
-        """Get polling requirement from tesla device."""
+        """Return the polling state."""
         return self.tesla_device.should_poll
 
     @property

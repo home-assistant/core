@@ -8,11 +8,9 @@ import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-import os
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
@@ -61,8 +59,7 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_DEVICE): cv.string,
     vol.Optional(
         ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
-    vol.Optional(
-        ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float)
+    vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
 })
 
 
@@ -141,25 +138,18 @@ def async_setup(hass, config):
     def async_handle_remote_service(service):
         """Handle calls to the remote services."""
         target_remotes = component.async_extract_from_service(service)
-
-        activity_id = service.data.get(ATTR_ACTIVITY)
-        device = service.data.get(ATTR_DEVICE)
-        command = service.data.get(ATTR_COMMAND)
-        num_repeats = service.data.get(ATTR_NUM_REPEATS)
-        delay_secs = service.data.get(ATTR_DELAY_SECS)
+        kwargs = service.data.copy()
 
         update_tasks = []
         for remote in target_remotes:
             if service.service == SERVICE_TURN_ON:
-                yield from remote.async_turn_on(activity=activity_id)
+                yield from remote.async_turn_on(**kwargs)
             elif service.service == SERVICE_TOGGLE:
-                yield from remote.async_toggle(activity=activity_id)
+                yield from remote.async_toggle(**kwargs)
             elif service.service == SERVICE_SEND_COMMAND:
-                yield from remote.async_send_command(
-                    device=device, command=command,
-                    num_repeats=num_repeats, delay_secs=delay_secs)
+                yield from remote.async_send_command(**kwargs)
             else:
-                yield from remote.async_turn_off(activity=activity_id)
+                yield from remote.async_turn_off(**kwargs)
 
             if not remote.should_poll:
                 continue
@@ -168,24 +158,17 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
-        descriptions.get(SERVICE_TURN_OFF),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_remote_service,
-        descriptions.get(SERVICE_TURN_ON),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_remote_service,
-        descriptions.get(SERVICE_TOGGLE),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_handle_remote_service,
-        descriptions.get(SERVICE_SEND_COMMAND),
         schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
 
     return True

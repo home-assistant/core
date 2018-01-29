@@ -4,6 +4,7 @@ import json
 import unittest
 
 import requests
+from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.core import callback
 from homeassistant import setup, const
@@ -18,7 +19,7 @@ INTENTS_API_URL = "{}{}".format(BASE_API_URL, dialogflow.INTENTS_API_ENDPOINT)
 
 HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
+    CONTENT_TYPE: const.CONTENT_TYPE_JSON,
 }
 
 SESSION_ID = "a9b84cec-46b6-484e-8f31-f65dba03ae6d"
@@ -434,7 +435,7 @@ class TestDialogflow(unittest.TestCase):
         self.assertEqual("virgo", call.data.get("hello"))
 
     def test_intent_with_no_action(self):
-        """Test a intent with no defined action."""
+        """Test an intent with no defined action."""
         data = {
             "id": REQUEST_ID,
             "timestamp": REQUEST_TIMESTAMP,
@@ -479,7 +480,7 @@ class TestDialogflow(unittest.TestCase):
             "You have not defined an action in your Dialogflow intent.", text)
 
     def test_intent_with_unknown_action(self):
-        """Test a intent with an action not defined in the conf."""
+        """Test an intent with an action not defined in the conf."""
         data = {
             "id": REQUEST_ID,
             "timestamp": REQUEST_TIMESTAMP,

@@ -6,7 +6,6 @@ https://home-assistant.io/components/verisure/
 """
 import logging
 import threading
-import os.path
 from datetime import timedelta
 
 import voluptuous as vol
@@ -15,7 +14,6 @@ from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
-import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['vsure==1.3.7', 'jsonpath==0.75']
@@ -27,6 +25,7 @@ ATTR_DEVICE_SERIAL = 'device_serial'
 CONF_ALARM = 'alarm'
 CONF_CODE_DIGITS = 'code_digits'
 CONF_DOOR_WINDOW = 'door_window'
+CONF_GIID = 'giid'
 CONF_HYDROMETERS = 'hygrometers'
 CONF_LOCKS = 'locks'
 CONF_MOUSE = 'mouse'
@@ -47,6 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ALARM, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
         vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
+        vol.Optional(CONF_GIID): cv.string,
         vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
         vol.Optional(CONF_LOCKS, default=True): cv.boolean,
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
@@ -76,9 +76,6 @@ def setup(hass, config):
                       'camera', 'binary_sensor'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
-    descriptions = conf_util.load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     def capture_smartcam(service):
         """Capture a new picture from a smartcam."""
         device_id = service.data.get(ATTR_DEVICE_SERIAL)
@@ -87,7 +84,6 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_CAPTURE_SMARTCAM,
                            capture_smartcam,
-                           descriptions[DOMAIN][SERVICE_CAPTURE_SMARTCAM],
                            schema=CAPTURE_IMAGE_SCHEMA)
 
     return True
@@ -110,6 +106,8 @@ class VerisureHub(object):
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
 
+        self.giid = domain_config.get(CONF_GIID)
+
         import jsonpath
         self.jsonpath = jsonpath.jsonpath
 
@@ -120,6 +118,8 @@ class VerisureHub(object):
         except self._verisure.Error as ex:
             _LOGGER.error('Could not log in to verisure, %s', ex)
             return False
+        if self.giid:
+            return self.set_giid()
         return True
 
     def logout(self):
@@ -128,6 +128,15 @@ class VerisureHub(object):
             self.session.logout()
         except self._verisure.Error as ex:
             _LOGGER.error('Could not log out from verisure, %s', ex)
+            return False
+        return True
+
+    def set_giid(self):
+        """Set installation GIID."""
+        try:
+            self.session.set_giid(self.giid)
+        except self._verisure.Error as ex:
+            _LOGGER.error('Could not set installation GIID, %s', ex)
             return False
         return True
 

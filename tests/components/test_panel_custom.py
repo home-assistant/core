@@ -5,21 +5,19 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import setup
+from homeassistant.components import frontend
 
-from tests.common import mock_coro, mock_component
+from tests.common import mock_component
 
 
-@pytest.fixture
-def mock_register(hass):
-    """Mock the frontend component being loaded and yield register method."""
+@pytest.fixture(autouse=True)
+def mock_frontend_loaded(hass):
+    """Mock frontend is loaded."""
     mock_component(hass, 'frontend')
-    with patch('homeassistant.components.frontend.async_register_panel',
-               return_value=mock_coro()) as mock_register:
-        yield mock_register
 
 
 @asyncio.coroutine
-def test_webcomponent_custom_path_not_found(hass, mock_register):
+def test_webcomponent_custom_path_not_found(hass):
     """Test if a web component is found in config panels dir."""
     filename = 'mock.file'
 
@@ -39,11 +37,11 @@ def test_webcomponent_custom_path_not_found(hass, mock_register):
             hass, 'panel_custom', config
         )
         assert not result
-        assert not mock_register.called
+        assert len(hass.data.get(frontend.DATA_PANELS, {})) == 0
 
 
 @asyncio.coroutine
-def test_webcomponent_custom_path(hass, mock_register):
+def test_webcomponent_custom_path(hass):
     """Test if a web component is found in config panels dir."""
     filename = 'mock.file'
 
@@ -65,15 +63,15 @@ def test_webcomponent_custom_path(hass, mock_register):
             )
             assert result
 
-            assert mock_register.called
+            panels = hass.data.get(frontend.DATA_PANELS, [])
 
-            args = mock_register.mock_calls[0][1]
-            assert args == (hass, 'todomvc', filename)
+            assert len(panels) == 1
+            assert 'nice_url' in panels
 
-            kwargs = mock_register.mock_calls[0][2]
-            assert kwargs == {
-                'config': 5,
-                'url_path': 'nice_url',
-                'sidebar_icon': 'mdi:iconicon',
-                'sidebar_title': 'Sidebar Title'
-            }
+            panel = panels['nice_url']
+
+            assert panel.config == 5
+            assert panel.frontend_url_path == 'nice_url'
+            assert panel.sidebar_icon == 'mdi:iconicon'
+            assert panel.sidebar_title == 'Sidebar Title'
+            assert panel.path == filename

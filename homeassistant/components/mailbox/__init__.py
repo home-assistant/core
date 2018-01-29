@@ -36,7 +36,7 @@ def async_setup(hass, config):
     """Track states and offer events for mailboxes."""
     mailboxes = []
     yield from hass.components.frontend.async_register_built_in_panel(
-        'mailbox', 'Mailbox', 'mdi:mailbox')
+        'mailbox', 'mailbox', 'mdi:mailbox')
     hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
     hass.http.register_view(MailboxMediaView(mailboxes))
@@ -82,7 +82,7 @@ def async_setup(hass, config):
         mailbox_entity = MailboxEntity(hass, mailbox)
         component = EntityComponent(
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
-        yield from component.async_add_entity(mailbox_entity)
+        yield from component.async_add_entities([mailbox_entity])
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
@@ -133,7 +133,7 @@ class MailboxEntity(Entity):
 
 
 class Mailbox(object):
-    """Represent an mailbox device."""
+    """Represent a mailbox device."""
 
     def __init__(self, hass, name):
         """Initialize mailbox object."""

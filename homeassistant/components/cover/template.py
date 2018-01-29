@@ -63,9 +63,14 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
+
+COVER_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    COVER_SCHEMA,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
@@ -301,7 +306,7 @@ class CoverTemplate(CoverDevice):
     def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         if self._stop_script:
-            self.hass.async_add_job(self._stop_script.async_run())
+            yield from self._stop_script.async_run()
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):

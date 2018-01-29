@@ -8,15 +8,16 @@ import asyncio
 import logging
 
 import aiohttp
+from aiohttp.hdrs import ACCEPT, AUTHORIZATION
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.thethingsnetwork import (
     DATA_TTN, TTN_APP_ID, TTN_ACCESS_KEY, TTN_DATA_STORAGE_URL)
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,8 +123,8 @@ class TtnDataStorage(object):
         self._url = TTN_DATA_STORAGE_URL.format(
             app_id=app_id, endpoint='api/v2/query', device_id=device_id)
         self._headers = {
-            'Accept': CONTENT_TYPE_JSON,
-            'Authorization': 'key {}'.format(access_key),
+            ACCEPT: CONTENT_TYPE_JSON,
+            AUTHORIZATION: 'key {}'.format(access_key),
         }
 
     @asyncio.coroutine

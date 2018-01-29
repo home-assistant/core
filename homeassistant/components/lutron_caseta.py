@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylutron-caseta==0.2.8']
+REQUIREMENTS = ['pylutron-caseta==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,9 +22,16 @@ LUTRON_CASETA_SMARTBRIDGE = 'lutron_smartbridge'
 
 DOMAIN = 'lutron_caseta'
 
+CONF_KEYFILE = 'keyfile'
+CONF_CERTFILE = 'certfile'
+CONF_CA_CERTS = 'ca_certs'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_KEYFILE): cv.string,
+        vol.Required(CONF_CERTFILE): cv.string,
+        vol.Required(CONF_CA_CERTS): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -33,14 +40,21 @@ LUTRON_CASETA_COMPONENTS = [
 ]
 
 
-def setup(hass, base_config):
+@asyncio.coroutine
+def async_setup(hass, base_config):
     """Set up the Lutron component."""
     from pylutron_caseta.smartbridge import Smartbridge
 
     config = base_config.get(DOMAIN)
-    hass.data[LUTRON_CASETA_SMARTBRIDGE] = Smartbridge(
-        hostname=config[CONF_HOST]
-    )
+    keyfile = hass.config.path(config[CONF_KEYFILE])
+    certfile = hass.config.path(config[CONF_CERTFILE])
+    ca_certs = hass.config.path(config[CONF_CA_CERTS])
+    bridge = Smartbridge.create_tls(hostname=config[CONF_HOST],
+                                    keyfile=keyfile,
+                                    certfile=certfile,
+                                    ca_certs=ca_certs)
+    hass.data[LUTRON_CASETA_SMARTBRIDGE] = bridge
+    yield from bridge.connect()
     if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
         _LOGGER.error("Unable to connect to Lutron smartbridge at %s",
                       config[CONF_HOST])
@@ -49,7 +63,8 @@ def setup(hass, base_config):
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
     for component in LUTRON_CASETA_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        hass.async_add_job(discovery.async_load_platform(hass, component,
+                                                         DOMAIN, {}, config))
 
     return True
 
@@ -73,13 +88,8 @@ class LutronCasetaDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
-            self._smartbridge.add_subscriber, self._device_id,
-            self._update_callback
-        )
-
-    def _update_callback(self):
-        self.schedule_update_ha_state()
+        self._smartbridge.add_subscriber(self._device_id,
+                                         self.async_schedule_update_ha_state)
 
     @property
     def name(self):
