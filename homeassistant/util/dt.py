@@ -3,7 +3,7 @@ import datetime as dt
 import re
 
 # pylint: disable=unused-import
-from typing import Any, Union, Optional, Tuple  # NOQA
+from typing import Any, Dict, Union, Optional, Tuple  # NOQA
 
 import pytz
 
