@@ -1,5 +1,7 @@
 """
-Platform for a generic modbus thermostat. This uses a setpoint and process
+Platform for a Generic Modbus Thermostat.
+
+This uses a setpoint and process
 value within the controller, so both the current temperature register and the
 target temperature register need to be configured.
 
@@ -20,6 +22,8 @@ climate:
     min_temp: 15
     max_temp: 25
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.modbus/
 """
 import logging
 import struct
@@ -85,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ModbusThermostat(ClimateDevice):
-    """Representation of a Modbus Thermostat """
+    """Representation of a Modbus Thermostat."""
 
     def __init__(self, name, modbus_slave, target_temp_register,
                  current_temp_register, data_type, count, precision,
@@ -117,7 +121,7 @@ class ModbusThermostat(ClimateDevice):
         return SUPPORT_FLAGS
 
     def update(self):
-        """Update Target Temperature"""
+        """Update Target & Current Temperature."""
         result = modbus.HUB.read_holding_registers(
             self._slave, self._target_temperature_register, self._count)
         byte_string = b''.join(
@@ -125,7 +129,6 @@ class ModbusThermostat(ClimateDevice):
         val = struct.unpack(self._structure, byte_string)[0]
         self._target_temperature = format(val, '.{}f'.format(self._precision))
 
-        """Update Current Temperature"""
         result = modbus.HUB.read_holding_registers(
             self._slave, self._current_temperature_register, self._count)
         byte_string = b''.join(
