@@ -119,7 +119,7 @@ class EntityRegistry:
         )
 
     @asyncio.coroutine
-    def _async_save(self, _):
+    def _async_save(self):
         """Save the entity registry to a file."""
         self._sched_save = None
         data = OrderedDict()

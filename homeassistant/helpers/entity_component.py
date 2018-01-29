@@ -410,9 +410,10 @@ class EntityPlatform(object):
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
-            suggested_object_id = entity.name
-            if suggested_object_id is None and entity.entity_id is not None:
+            if entity.entity_id is not None:
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
+            else:
+                suggested_object_id = entity.name
 
             entry = registry.async_get_or_create(
                 self.component.domain, self.platform, entity.unique_id,

@@ -730,3 +730,12 @@ def test_name_which_conflict_with_registered(hass):
         EntityTest(name='world')])
 
     assert 'test_domain.world_2' in hass.states.async_entity_ids()
+
+
+@asyncio.coroutine
+def test_entity_with_name_and_entity_id_getting_registered(hass):
+    """Ensure that entity ID is used for registration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        EntityTest(unique_id='1234', name='bla', entity_id='hello.world')])
+    assert 'hello.world' in hass.states.async_entity_ids()

@@ -89,7 +89,7 @@ def test_loading_saving_data(hass, registry):
     assert len(registry.entities) == 2
 
     with patch(yaml_path, mock_open(), create=True) as mock_write:
-        yield from registry._async_save(None)
+        yield from registry._async_save()
 
     # Mock open calls are: open file, context enter, write, context leave
     written = mock_write.mock_calls[2][1][0]
