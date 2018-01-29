@@ -23,23 +23,31 @@ DOMAIN = 'alarmdecoder'
 
 DATA_AD = 'alarmdecoder'
 
-CONF_DEVICE = 'device'
-CONF_DEVICE_BAUD = 'baudrate'
-CONF_DEVICE_HOST = 'host'
-CONF_DEVICE_PATH = 'path'
-CONF_DEVICE_PORT = 'port'
-CONF_DEVICE_TYPE = 'type'
-CONF_PANEL_DISPLAY = 'panel_display'
-CONF_ZONE_NAME = 'name'
-CONF_ZONE_TYPE = 'type'
-CONF_ZONE_RFID = 'rfid'
-CONF_ZONES = 'zones'
+CONF_DEVICE          = 'device'
+CONF_DEVICE_BAUD     = 'baudrate'
+CONF_DEVICE_HOST     = 'host'
+CONF_DEVICE_PATH     = 'path'
+CONF_DEVICE_PORT     = 'port'
+CONF_DEVICE_SSL      = 'ssl'
+CONF_DEVICE_SSL_CA   = 'ssl_ca'
+CONF_DEVICE_SSL_KEY  = 'ssl_key'
+CONF_DEVICE_SSL_CERT = 'ssl_cert'
+CONF_DEVICE_TYPE     = 'type'
+CONF_PANEL_DISPLAY   = 'panel_display'
+CONF_ZONE_NAME       = 'name'
+CONF_ZONE_TYPE       = 'type'
+CONF_ZONE_RFID       = 'rfid'
+CONF_ZONES           = 'zones'
 
-DEFAULT_DEVICE_TYPE = 'socket'
-DEFAULT_DEVICE_HOST = 'localhost'
-DEFAULT_DEVICE_PORT = 10000
-DEFAULT_DEVICE_PATH = '/dev/ttyUSB0'
-DEFAULT_DEVICE_BAUD = 115200
+DEFAULT_DEVICE_TYPE     = 'socket'
+DEFAULT_DEVICE_HOST     = 'localhost'
+DEFAULT_DEVICE_PORT     = 10000
+DEFAULT_DEVICE_SSL      = False
+DEFAULT_DEVICE_SSL_CA   = 'ca.pem'
+DEFAULT_DEVICE_SSL_KEY  = 'cert.key'
+DEFAULT_DEVICE_SSL_CERT = 'cert.pem'
+DEFAULT_DEVICE_PATH     = '/dev/ttyUSB0'
+DEFAULT_DEVICE_BAUD     = 115200
 
 DEFAULT_PANEL_DISPLAY = False
 
@@ -57,7 +65,11 @@ SIGNAL_RFX_MESSAGE = 'alarmdecoder.rfx_message'
 DEVICE_SOCKET_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_TYPE): 'socket',
     vol.Optional(CONF_DEVICE_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
-    vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port})
+    vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port,
+    vol.Optional(CONF_DEVICE_SSL, default=DEFAULT_DEVICE_SSL): cv.boolean,
+    vol.Optional(CONF_DEVICE_SSL_CA, default=DEFAULT_DEVICE_SSL_CA): cv.string,
+    vol.Optional(CONF_DEVICE_SSL_KEY, default=DEFAULT_DEVICE_SSL_KEY): cv.string,
+    vol.Optional(CONF_DEVICE_SSL_CERT, default=DEFAULT_DEVICE_SSL_CERT): cv.string})
 
 DEVICE_SERIAL_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_TYPE): 'serial',
@@ -157,7 +169,30 @@ def setup(hass, config):
     if device_type == 'socket':
         host = device.get(CONF_DEVICE_HOST)
         port = device.get(CONF_DEVICE_PORT)
-        controller = AlarmDecoder(SocketDevice(interface=(host, port)))
+
+        socket_device = SocketDevice(interface=(host, port))
+
+        ssl = device.get(CONF_DEVICE_SSL)
+        if ssl:
+            ssl_ca = device.get(CONF_DEVICE_SSL_CA)
+            ssl_key = device.get(CONF_DEVICE_SSL_KEY)
+            ssl_cert = device.get(CONF_DEVICE_SSL_CERT)
+
+            if not os.path.isabs(ssl_ca):
+                ssl_ca = hass.config.path(ssl_ca)
+
+            if not os.path.isabs(ssl_key):
+                ssl_key = hass.config.path(ssl_key)
+
+            if not os.path.isabs(ssl_cert):
+                ssl_cert = hass.config.path(ssl_cert)
+
+            socket_device.ssl = True
+            socket_device.ssl_ca = ssl_ca
+            socket_device.ssl_key = ssl_key
+            socket_device.ssl_cert = ssl_cert
+
+        controller = AlarmDecoder(socket_device)
     elif device_type == 'serial':
         path = device.get(CONF_DEVICE_PATH)
         baud = device.get(CONF_DEVICE_BAUD)
