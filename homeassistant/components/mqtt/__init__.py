@@ -173,7 +173,6 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
-
 # Service call validation schema
 MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
@@ -351,8 +350,8 @@ def async_setup(hass, config):
         return False
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
-    if certificate is None and 19999 < port < 30000 and \
-       broker.endswith('.cloudmqtt.com'):
+    if (certificate is None and 19999 < port < 30000 and
+            broker.endswith('.cloudmqtt.com')):
         certificate = os.path.join(os.path.dirname(__file__),
                                    'addtrustexternalcaroot.crt')
 
@@ -694,7 +693,7 @@ class MqttAvailability(Entity):
         if self._availability_topic is not None:
             yield from async_subscribe(
                 self.hass, self._availability_topic,
-                availability_message_received, self. _availability_qos)
+                availability_message_received, self._availability_qos)
 
     @property
     def available(self) -> bool:
