@@ -184,7 +184,8 @@ class TestClimateGenericThermostatHeat(unittest.TestCase):
             'cold_tolerance': 2,
             'hot_tolerance': 4,
             'heater_control': ENT_SWITCH_HEAT,
-            'target_sensor': ENT_SENSOR
+            'target_sensor': ENT_SENSOR,
+            'away_temp_heat': 18
         }})
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -1122,6 +1123,8 @@ class TestClimateGenericThermostatDualSwitch(unittest.TestCase):
             'name': 'test',
             'heater_control': ENT_SWITCH_HEAT,
             'ac_control': ENT_SWITCH_AC,
+            'away_temp_cool': DEFAULT_AWAY_TEMP_COOL,
+            'away_temp_heat': DEFAULT_AWAY_TEMP_HEAT,
             'target_sensor': ENT_SENSOR,
             'initial_operation_mode': climate.STATE_AUTO
         }})
