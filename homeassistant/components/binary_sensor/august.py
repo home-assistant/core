@@ -6,16 +6,12 @@ https://home-assistant.io/components/sensor.august/
 """
 from datetime import timedelta, datetime
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.august import DATA_AUGUST, \
-    DOMAIN, DEFAULT_SCAN_INTERVAL
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice)
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.components.august import DATA_AUGUST
+from homeassistant.components.binary_sensor import (BinarySensorDevice)
 
 DEPENDENCIES = ['august']
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 def _retrieve_online_state(data, doorbell):
@@ -56,13 +52,6 @@ SENSOR_TYPES = {
     'doorbell_online': ['Online', 'connectivity', _retrieve_online_state],
 }
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_SCAN_INTERVAL,
-                     default=DEFAULT_SCAN_INTERVAL): cv.time_period
-    })
-}, extra=vol.ALLOW_EXTRA)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the August binary sensors."""
@@ -74,7 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices.append(AugustBinarySensor(data, sensor_type, doorbell))
 
     add_devices(devices, True)
-    return True
 
 
 class AugustBinarySensor(BinarySensorDevice):
@@ -95,15 +83,15 @@ class AugustBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return SENSOR_TYPES.get(self._sensor_type)[1]
+        return SENSOR_TYPES[self._sensor_type][1]
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
         return "{} {}".format(self._doorbell.device_name,
-                              SENSOR_TYPES.get(self._sensor_type)[0])
+                              SENSOR_TYPES[self._sensor_type][0])
 
     def update(self):
         """Get the latest state of the sensor."""
-        state_provider = SENSOR_TYPES.get(self._sensor_type)[2]
+        state_provider = SENSOR_TYPES[self._sensor_type][2]
         self._state = state_provider(self._data, self._doorbell)
