@@ -24,25 +24,22 @@ STATES = {
     'UNKNOWN': STATE_UNKNOWN,
 }
 
-D_EGARDIASRV = 'egardiaserver'
 D_EGARDIASYS = 'egardiadevice'
-D_EGARDIANM = 'egardianame'
-D_EGARDIARSENABLED = 'egardia_rs_enabled'
-D_EGARDIARSCODES = 'egardia_rs_codes'
 D_EGARDIADEV = 'egardia_dev'
 CONF_REPORT_SERVER_CODES_IGNORE = 'ignore'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Egardia platform."""
-    eg_dev = EgardiaAlarm(
-        hass.data[D_EGARDIANM],
+    device = EgardiaAlarm(
+        discovery_info['name'],
         hass.data[D_EGARDIASYS],
-        hass.data[D_EGARDIARSENABLED],
-        hass.data[D_EGARDIARSCODES])
-    hass.data[D_EGARDIADEV] = eg_dev
+        discovery_info['report_server_enabled'],
+        discovery_info['report_server_codes'] if 'report_server_codes'
+        in discovery_info else None)
+    hass.data[D_EGARDIADEV] = device
     # add egardia alarm device
-    add_devices([eg_dev], True)
+    add_devices([device], True)
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
@@ -50,7 +47,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def __init__(self, name, egardiasystem,
                  rs_enabled=False, rs_codes=None):
-        """Initialize object."""
+        """Initialize the Egardia alarm."""
         self._name = name
         self._egardiasystem = egardiasystem
         self._status = None
@@ -78,7 +75,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         return False
 
     def handle_status_event(self, event):
-        """Handle egardia_system_status_event."""
+        """Handle the Egardia system status event."""
         statuscode = event.get('status')
         if statuscode is not None:
             status = self.lookupstatusfromcode(statuscode)

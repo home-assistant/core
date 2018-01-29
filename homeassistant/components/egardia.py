@@ -73,20 +73,21 @@ def setup(hass, config):
     from pythonegardia import egardiadevice
     from pythonegardia import egardiaserver
 
-    name = config[DOMAIN].get(CONF_NAME)
+    domainconf = config[DOMAIN]
+    name = domainconf.get(CONF_NAME)
     hass.data[D_EGARDIANM] = name
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    host = config[DOMAIN].get(CONF_HOST)
-    port = config[DOMAIN].get(CONF_PORT)
-    rs_enabled = config[DOMAIN].get(CONF_REPORT_SERVER_ENABLED)
+    username = domainconf.get(CONF_USERNAME)
+    password = domainconf.get(CONF_PASSWORD)
+    host = domainconf.get(CONF_HOST)
+    port = domainconf.get(CONF_PORT)
+    rs_enabled = domainconf.get(CONF_REPORT_SERVER_ENABLED)
     hass.data[D_EGARDIARSENABLED] = rs_enabled
-    rs_port = config[DOMAIN].get(CONF_REPORT_SERVER_PORT)
-    rs_codes = config[DOMAIN].get(CONF_REPORT_SERVER_CODES)
+    rs_port = domainconf.get(CONF_REPORT_SERVER_PORT)
+    rs_codes = domainconf.get(CONF_REPORT_SERVER_CODES)
     hass.data[D_EGARDIARSCODES] = rs_codes
-    version = config[DOMAIN].get(CONF_VERSION)
+    version = domainconf.get(CONF_VERSION)
     try:
-        hass.data[D_EGARDIASYS] = egardiadevice.EgardiaDevice(
+        device = hass.data[D_EGARDIASYS] = egardiadevice.EgardiaDevice(
             host, port, username, password, '', version)
     except requests.exceptions.RequestException:
         raise exc.PlatformNotReady()
@@ -119,9 +120,8 @@ def setup(hass, config):
     # register for callback since we might need to set up the egardia server
     discovery.listen_platform(hass, 'alarm_control_panel', alarm_loaded)
 
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'alarm_control_panel', DOMAIN,
-        discovered=None, hass_config=config))
+    discovery.load_platform(hass, 'alarm_control_panel', DOMAIN,
+                            discovered=domainconf, hass_config=config)
 
     def handle_stop_event(event):
         """Callback function for HA stop event."""
@@ -131,9 +131,8 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
 
     # get the sensors from the device and add those
-    sensors = hass.data[D_EGARDIASYS].getsensors()
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'binary_sensor', DOMAIN,
-        {ATTR_DISCOVER_DEVICES: sensors}, config))
+    sensors = device.getsensors()
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
+                            {ATTR_DISCOVER_DEVICES: sensors}, config)
 
     return True

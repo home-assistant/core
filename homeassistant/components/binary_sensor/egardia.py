@@ -18,23 +18,13 @@ EGARDIA_TYPE_TO_DEVICE_CLASS = {'IR Sensor': 'motion',
                                 'IR': 'motion'}
 
 
-def _get_device_class(egardia_type):
-    return EGARDIA_TYPE_TO_DEVICE_CLASS.get(egardia_type, None)
-
-
-def _get_sensor_state(egardia_input):
-    if egardia_input:
-        return STATE_ON
-    else:
-        return STATE_OFF
-
-
 def _create_sensor(hass, sensor):
     return EgardiaBinarySensor(
-        hass, senid=sensor["id"],
+        senid=sensor["id"],
         name=sensor['name'],
-        state=_get_sensor_state(sensor['cond']),
-        device_class=_get_device_class(sensor['type'])
+        egardiasystem=hass.data[D_EGARDIASYS],
+        state=STATE_ON if sensor['cond'] else STATE_OFF,
+        device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get(sensor['type'], None)
         )
 
 
@@ -57,19 +47,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class EgardiaBinarySensor(BinarySensorDevice):
     """Represents a sensor based on an Egardia sensor (IR, Door Contact)."""
 
-    def __init__(self, hass, senid, name, state, device_class):
+    def __init__(self, senid, name, egardiasystem, state, device_class):
         """Initialize the sensor device."""
         self._id = senid
         self._name = name
         self._state = state
         self._device_class = device_class
-        self._hass = hass
+        self._egardiasystem = egardiasystem
         # spc_registry.register_sensor_device(zone_id, self)
 
     def update(self):
         """Update the status."""
-        egardia_input = self._hass.data[D_EGARDIASYS].getsensorstate(self._id)
-        self._state = _get_sensor_state(egardia_input)
+        egardia_input = self._egardiasystem.getsensorstate(self._id)
+        self._state = STATE_ON if egardia_input else STATE_OFF
 
     @property
     def name(self):
