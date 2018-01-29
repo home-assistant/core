@@ -1187,7 +1187,7 @@ user-agents==1.1.0
 uvcclient==0.10.1
 
 # homeassistant.components.climate.venstar
-venstarcolortouch==0.5
+venstarcolortouch==0.6
 
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
