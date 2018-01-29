@@ -167,4 +167,4 @@ class ModbusThermostat(ClimateDevice):
         register_value = struct.unpack('>h', byte_string[0:2])[0]
         modbus.HUB.write_registers(self._slave,
                                    self._target_temperature_register,
-                                   [register_value,0])
+                                   [register_value, 0])
