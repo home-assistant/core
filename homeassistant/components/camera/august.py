@@ -7,23 +7,13 @@ https://home-assistant.io/components/camera.august/
 from datetime import timedelta
 
 import requests
-import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.august import DATA_AUGUST, DOMAIN, \
-    DEFAULT_TIMEOUT
+from homeassistant.components.august import DATA_AUGUST, DEFAULT_TIMEOUT
 from homeassistant.components.camera import Camera
-from homeassistant.const import CONF_SCAN_INTERVAL
 
 DEPENDENCIES = ['august']
 
 SCAN_INTERVAL = timedelta(seconds=5)
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period
-    })
-}, extra=vol.ALLOW_EXTRA)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -67,12 +57,12 @@ class AugustCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return "August"
+        return 'August'
 
     @property
     def model(self):
         """Return the camera model."""
-        return "Doorbell"
+        return 'Doorbell'
 
     def camera_image(self):
         """Return bytes of camera image."""
