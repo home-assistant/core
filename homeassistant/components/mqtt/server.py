@@ -39,7 +39,8 @@ def async_start(hass, server_config):
 
     try:
         # Create a temporary file to store the (hashed) credentials for HBMQTT.
-        # NOTE: Must use delete=False, otherwise Windows won't allow HBMQTT to open the file while we have it open.
+        # NOTE: Must use delete=False, otherwise Windows won't allow HBMQTT to
+        # open the file while we have it open.
         passwd = tempfile.NamedTemporaryFile(delete=False)
 
         if server_config is None:
