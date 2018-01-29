@@ -143,7 +143,7 @@ class SynoApi(object):
 
         try:
             self._api = SynologyDSM(host, port, username, password)
-        except:  # pylint: disable=bare-except  # noqa: E722
+        except:  # noqa: E722  # pylint: disable=bare-except
             _LOGGER.error("Error setting up Synology DSM")
 
         # Will be updated when update() gets called.
