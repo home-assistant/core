@@ -300,7 +300,8 @@ def async_setup(hass, config):
 
     if is_dev:
         for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels"]:
+                        "hass_frontend", "bower_components", "panels",
+                        "hassio"]:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),
                 os.path.join(repo_path, subpath),
