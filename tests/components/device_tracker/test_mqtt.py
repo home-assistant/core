@@ -56,7 +56,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
     def test_new_message(self):
         """Test new message."""
         dev_id = 'paulus'
-        enttiy_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         topic = '/location/paulus'
         location = 'work'
 
@@ -69,4 +69,4 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertEqual(location, self.hass.states.get(enttiy_id).state)
+        self.assertEqual(location, self.hass.states.get(entity_id).state)

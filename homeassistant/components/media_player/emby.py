@@ -273,7 +273,7 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_season(self):
-        """Season of curent playing media (TV Show only)."""
+        """Season of current playing media (TV Show only)."""
         return self.device.media_season
 
     @property

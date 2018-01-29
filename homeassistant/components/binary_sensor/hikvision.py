@@ -118,7 +118,7 @@ class HikvisionData(object):
     """Hikvision device event stream object."""
 
     def __init__(self, hass, url, port, name, username, password):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         from pyhik.hikvision import HikCamera
         self._url = url
         self._port = port

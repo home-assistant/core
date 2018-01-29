@@ -180,7 +180,7 @@ class WeatherData(object):
 
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
-        """Get the lastest forecast from OpenWeatherMap."""
+        """Get the latest forecast from OpenWeatherMap."""
         from pyowm.exceptions.api_call_error import APICallError
 
         try:

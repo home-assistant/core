@@ -232,8 +232,8 @@ def test_async_schedule_update_ha_state(hass):
 
 
 @asyncio.coroutine
-def test_async_pararell_updates_with_zero(hass):
-    """Test pararell updates with 0 (disabled)."""
+def test_async_parallel_updates_with_zero(hass):
+    """Test parallel updates with 0 (disabled)."""
     updates = []
     test_lock = asyncio.Event(loop=hass.loop)
 
@@ -269,11 +269,11 @@ def test_async_pararell_updates_with_zero(hass):
 
 
 @asyncio.coroutine
-def test_async_pararell_updates_with_one(hass):
-    """Test pararell updates with 1 (sequential)."""
+def test_async_parallel_updates_with_one(hass):
+    """Test parallel updates with 1 (sequential)."""
     updates = []
     test_lock = asyncio.Lock(loop=hass.loop)
-    test_semephore = asyncio.Semaphore(1, loop=hass.loop)
+    test_semaphore = asyncio.Semaphore(1, loop=hass.loop)
 
     yield from test_lock.acquire()
 
@@ -284,7 +284,7 @@ def test_async_pararell_updates_with_one(hass):
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
-            self.parallel_updates = test_semephore
+            self.parallel_updates = test_semaphore
 
         @asyncio.coroutine
         def async_update(self):
@@ -332,11 +332,11 @@ def test_async_pararell_updates_with_one(hass):
 
 
 @asyncio.coroutine
-def test_async_pararell_updates_with_two(hass):
-    """Test pararell updates with 2 (pararell)."""
+def test_async_parallel_updates_with_two(hass):
+    """Test parallel updates with 2 (parallel)."""
     updates = []
     test_lock = asyncio.Lock(loop=hass.loop)
-    test_semephore = asyncio.Semaphore(2, loop=hass.loop)
+    test_semaphore = asyncio.Semaphore(2, loop=hass.loop)
 
     yield from test_lock.acquire()
 
@@ -347,7 +347,7 @@ def test_async_pararell_updates_with_two(hass):
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
-            self.parallel_updates = test_semephore
+            self.parallel_updates = test_semaphore
 
         @asyncio.coroutine
         def async_update(self):

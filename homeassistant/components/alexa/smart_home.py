@@ -51,8 +51,8 @@ class _DisplayCategory(object):
 
     # Describes a combination of devices set to a specific state, when the
     # state change must occur in a specific order. For example, a "watch
-    # Neflix" scene might require the: 1. TV to be powered on & 2. Input set to
-    # HDMI1.    Applies to Scenes
+    # Netflix" scene might require the: 1. TV to be powered on & 2. Input set
+    # to HDMI1. Applies to Scenes
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
 
     # Indicates media devices with video or photo capabilities.
@@ -667,7 +667,7 @@ def api_message(request,
         }
     }
 
-    # If a correlation token exsits, add it to header / Need by Async requests
+    # If a correlation token exists, add it to header / Need by Async requests
     token = request[API_HEADER].get('correlationToken')
     if token:
         response[API_EVENT][API_HEADER]['correlationToken'] = token
