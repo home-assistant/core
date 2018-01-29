@@ -27,29 +27,34 @@ DEFAULT_TIMEOUT = 10
 ACTIVITY_FETCH_LIMIT = 10
 ACTIVITY_INITIAL_FETCH_LIMIT = 20
 
-CONF_LOGIN_METHOD = "login_method"
-CONF_INSTALL_ID = "install_id"
+CONF_LOGIN_METHOD = 'login_method'
+CONF_INSTALL_ID = 'install_id'
 
-NOTIFICATION_ID = "august_notification"
+NOTIFICATION_ID = 'august_notification'
 NOTIFICATION_TITLE = "August Setup"
 
-AUGUST_CONFIG_FILE = "august.conf"
+AUGUST_CONFIG_FILE = '.august.conf'
 
-DATA_AUGUST = "august"
-DOMAIN = "august"
+DATA_AUGUST = 'august'
+DOMAIN = 'august'
 DEFAULT_ENTITY_NAMESPACE = 'august'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
+LOGIN_METHODS = ['phone', 'email']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_LOGIN_METHOD): cv.string,
+        vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_INSTALL_ID): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
+
+AUGUST_COMPONENTS = [
+    'camera', 'binary_sensor', 'lock'
+]
 
 
 def request_configuration(hass, config, api, authenticator):
@@ -61,15 +66,13 @@ def request_configuration(hass, config, api, authenticator):
         from august.authenticator import ValidationResult
 
         result = authenticator.validate_verification_code(
-            data.get("verification_code"))
+            data.get('verification_code'))
 
         if result == ValidationResult.INVALID_VERIFICATION_CODE:
             configurator.notify_errors(_CONFIGURING[DOMAIN],
                                        "Invalid verification code")
         elif result == ValidationResult.VALIDATED:
-            return setup_august(hass, config, api, authenticator)
-
-        return False
+            setup_august(hass, config, api, authenticator)
 
     if DOMAIN not in _CONFIGURING:
         authenticator.send_verification_code()
@@ -83,11 +86,11 @@ def request_configuration(hass, config, api, authenticator):
         august_configuration_callback,
         description="Please check your {} ({}) and enter the "
                     "verification code below".format(login_method, username),
-        submit_caption="Verify",
+        submit_caption='Verify',
         fields=[{
-            "id": "verification_code",
-            "name": "Verification code",
-            "type": "string"}]
+            'id': 'verification_code',
+            'name': "Verification code",
+            'type': 'string'}]
     )
 
 
@@ -116,8 +119,8 @@ def setup_august(hass, config, api, authenticator):
 
         hass.data[DATA_AUGUST] = AugustData(api, authentication.access_token)
 
-        discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
-        discovery.load_platform(hass, 'lock', DOMAIN, {}, config)
+        for component in AUGUST_COMPONENTS:
+            discovery.load_platform(hass, component, DOMAIN, {}, config)
 
         return True
     elif state == AuthenticationState.BAD_PASSWORD:
@@ -200,8 +203,11 @@ class AugustData:
             activities = self._api.get_house_activities(self._access_token,
                                                         house_id,
                                                         limit=limit)
-            for activity in activities:
-                self._activities_by_id[activity.device_id] = activities
+
+            device_ids = {a.device_id for a in activities}
+            for device_id in device_ids:
+                self._activities_by_id[device_id] = [a for a in activities if
+                                                     a.device_id == device_id]
 
     def get_doorbell_detail(self, doorbell_id):
         """Return doorbell detail."""
