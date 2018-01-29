@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyota==2.0.3']
+REQUIREMENTS = ['pyota==2.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

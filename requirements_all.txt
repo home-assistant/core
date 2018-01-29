@@ -170,7 +170,7 @@ caldav==0.5.0
 ciscosparkapi==0.4.2
 
 # homeassistant.components.coinbase
-coinbase==2.0.6
+coinbase==2.0.7
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==4.2.1
@@ -821,7 +821,7 @@ pynut2==2.1.2
 pynx584==0.4
 
 # homeassistant.components.iota
-pyota==2.0.3
+pyota==2.0.4
 
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
