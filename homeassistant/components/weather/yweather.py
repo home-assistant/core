@@ -4,18 +4,17 @@ Support for the Yahoo! Weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.yweather/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA,
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["yahooweather==0.9"]
+REQUIREMENTS = ["yahooweather==0.10"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yahoo! weather platform."""
+    """Set up the Yahoo! weather platform."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
     unit = hass.config.units.temperature_unit
@@ -125,27 +124,28 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self._data.yahoo.Atmosphere['pressure']
+        return round(float(self._data.yahoo.Atmosphere['pressure'])/33.8637526,
+                     2)
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self._data.yahoo.Atmosphere['humidity']
+        return int(self._data.yahoo.Atmosphere['humidity'])
 
     @property
     def visibility(self):
         """Return the visibility."""
-        return self._data.yahoo.Atmosphere['visibility']
+        return round(float(self._data.yahoo.Atmosphere['visibility'])/1.61, 2)
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self._data.yahoo.Wind['speed']
+        return round(float(self._data.yahoo.Wind['speed'])/1.61, 2)
 
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return self._data.yahoo.Wind['direction']
+        return int(self._data.yahoo.Wind['direction'])
 
     @property
     def attribution(self):

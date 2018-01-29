@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
 )
 
-REQUIREMENTS = ['miflora==0.1.16']
+
+REQUIREMENTS = ['miflora==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,11 +61,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
+    try:
+        import bluepy.btle  # noqa: F401 # pylint: disable=unused-variable
+        from miflora.backends.bluepy import BluepyBackend
+        backend = BluepyBackend
+    except ImportError:
+        from miflora.backends.gatttool import GatttoolBackend
+        backend = GatttoolBackend
+    _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(
         config.get(CONF_MAC), cache_timeout=cache,
-        adapter=config.get(CONF_ADAPTER))
+        adapter=config.get(CONF_ADAPTER), backend=backend)
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)
@@ -134,7 +143,6 @@ class MiFloraSensor(Entity):
             data = self.poller.parameter_value(self.parameter)
         except IOError as ioerr:
             _LOGGER.info("Polling error %s", ioerr)
-            data = None
             return
 
         if data is not None:

@@ -279,6 +279,36 @@ class TestHelpersTemplate(unittest.TestCase):
             '127',
             template.Template('{{ hello }}', self.hass).render({'hello': 127}))
 
+    def test_passing_vars_as_list(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            "['foo', 'bar']",
+            template.render_complex(template.Template('{{ hello }}',
+                                    self.hass), {'hello': ['foo', 'bar']}))
+
+    def test_passing_vars_as_list_element(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            'bar',
+            template.render_complex(template.Template('{{ hello[1] }}',
+                                    self.hass),
+                                    {'hello': ['foo', 'bar']}))
+
+    def test_passing_vars_as_dict_element(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            'bar',
+            template.render_complex(template.Template('{{ hello.foo }}',
+                                    self.hass),
+                                    {'hello': {'foo': 'bar'}}))
+
+    def test_passing_vars_as_dict(self):
+        """Test passing variables as list."""
+        self.assertEqual(
+            "{'foo': 'bar'}",
+            template.render_complex(template.Template('{{ hello }}',
+                                    self.hass), {'hello': {'foo': 'bar'}}))
+
     def test_render_with_possible_json_value_with_valid_json(self):
         """Render with possible JSON value with valid JSON."""
         tpl = template.Template('{{ value_json.hello }}', self.hass)

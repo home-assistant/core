@@ -40,9 +40,14 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
+
+LIGHT_SCHEMA = vol.All(
+    cv.deprecated(CONF_ENTITY_ID),
+    LIGHT_SCHEMA,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),

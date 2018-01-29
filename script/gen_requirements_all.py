@@ -32,6 +32,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'pytradfri',
+    'bme680',
 )
 
 TEST_REQUIREMENTS = (
@@ -62,10 +63,12 @@ TEST_REQUIREMENTS = (
     'pilight',
     'pmsensor',
     'prometheus_client',
+    'pushbullet.py',
     'py-canary',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
+    'pymonoprice',
     'pynx584',
     'python-forecastio',
     'pyunifi',

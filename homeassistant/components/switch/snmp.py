@@ -13,11 +13,14 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysnmp==4.4.2']
+REQUIREMENTS = ['pysnmp==4.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BASEOID = 'baseoid'
+CONF_COMMAND_OID = 'command_oid'
+CONF_COMMAND_PAYLOAD_ON = 'command_payload_on'
+CONF_COMMAND_PAYLOAD_OFF = 'command_payload_off'
 CONF_COMMUNITY = 'community'
 CONF_VERSION = 'version'
 
@@ -36,6 +39,9 @@ SNMP_VERSIONS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BASEOID): cv.string,
+    vol.Optional(CONF_COMMAND_OID): cv.string,
+    vol.Optional(CONF_COMMAND_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_COMMAND_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -53,26 +59,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     community = config.get(CONF_COMMUNITY)
     baseoid = config.get(CONF_BASEOID)
+    command_oid = config.get(CONF_COMMAND_OID)
+    command_payload_on = config.get(CONF_COMMAND_PAYLOAD_ON)
+    command_payload_off = config.get(CONF_COMMAND_PAYLOAD_OFF)
     version = config.get(CONF_VERSION)
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
 
     add_devices(
-        [SnmpSwitch(name, host, port, community, baseoid, version, payload_on,
-                    payload_off)], True)
+        [SnmpSwitch(name, host, port, community, baseoid, command_oid, version,
+                    payload_on, payload_off,
+                    command_payload_on, command_payload_off)], True)
 
 
 class SnmpSwitch(SwitchDevice):
     """Represents a SNMP switch."""
 
     def __init__(self, name, host, port, community,
-                 baseoid, version, payload_on, payload_off):
+                 baseoid, commandoid, version, payload_on, payload_off,
+                 command_payload_on, command_payload_off):
         """Initialize the switch."""
         self._name = name
         self._host = host
         self._port = port
         self._community = community
         self._baseoid = baseoid
+
+        """Set the command OID to the base OID if command OID is unset"""
+        self._commandoid = commandoid or baseoid
+        self._command_payload_on = command_payload_on or payload_on
+        self._command_payload_off = command_payload_off or payload_off
+
         self._version = SNMP_VERSIONS[version]
         self._state = None
         self._payload_on = payload_on
@@ -82,13 +99,13 @@ class SnmpSwitch(SwitchDevice):
         """Turn on the switch."""
         from pyasn1.type.univ import (Integer)
 
-        self._set(Integer(self._payload_on))
+        self._set(Integer(self._command_payload_on))
 
     def turn_off(self):
         """Turn off the switch."""
         from pyasn1.type.univ import (Integer)
 
-        self._set(Integer(self._payload_off))
+        self._set(Integer(self._command_payload_off))
 
     def update(self):
         """Update the state."""
@@ -142,7 +159,7 @@ class SnmpSwitch(SwitchDevice):
             CommunityData(self._community, mpModel=self._version),
             UdpTransportTarget((self._host, self._port)),
             ContextData(),
-            ObjectType(ObjectIdentity(self._baseoid), value)
+            ObjectType(ObjectIdentity(self._commandoid), value)
         )
 
         next(request)

@@ -6,7 +6,7 @@ https://home-assistant.io/components/climate.tado/
 """
 import logging
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.components.climate import (
     ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE
@@ -193,6 +193,11 @@ class TadoClimate(ClimateDevice):
         return self._is_away
 
     @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return PRECISION_TENTHS
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
@@ -244,7 +249,7 @@ class TadoClimate(ClimateDevice):
         data = self._store.get_data(self._data_id)
 
         if data is None:
-            _LOGGER.debug("Recieved no data for zone %s", self.zone_name)
+            _LOGGER.debug("Received no data for zone %s", self.zone_name)
             return
 
         if 'sensorDataPoints' in data:
@@ -312,7 +317,7 @@ class TadoClimate(ClimateDevice):
                     fan_speed = setting_data['fanSpeed']
 
         if self._device_is_active:
-            # If you set mode manualy to off, there will be an overlay
+            # If you set mode manually to off, there will be an overlay
             # and a termination, but we want to see the mode "OFF"
             self._overlay_mode = termination
             self._current_operation = termination

@@ -21,6 +21,7 @@ from homeassistant.components import frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
@@ -263,7 +264,7 @@ class ActiveConnection:
     def handle(self):
         """Handle the websocket connection."""
         request = self.request
-        wsock = self.wsock = web.WebSocketResponse()
+        wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
         yield from wsock.prepare(request)
         self.debug("Connected")
 
@@ -436,7 +437,7 @@ class ActiveConnection:
     def handle_call_service(self, msg):
         """Handle call service command.
 
-        This is a coroutine.
+        Async friendly.
         """
         msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
 
@@ -466,8 +467,13 @@ class ActiveConnection:
         """
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.services.async_services()))
+        @asyncio.coroutine
+        def get_services_helper(msg):
+            """Get available services and fire complete message."""
+            descriptions = yield from async_get_all_descriptions(self.hass)
+            self.send_message_outside(result_message(msg['id'], descriptions))
+
+        self.hass.async_add_job(get_services_helper(msg))
 
     def handle_get_config(self, msg):
         """Handle get config command.

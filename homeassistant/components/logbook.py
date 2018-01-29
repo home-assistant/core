@@ -135,9 +135,8 @@ class LogbookView(HomeAssistantView):
         hass = request.app['hass']
 
         events = yield from hass.async_add_job(
-            _get_events, hass, start_day, end_day)
-        events = _exclude_events(events, self.config)
-        return self.json(humanify(events))
+            _get_events, hass, self.config, start_day, end_day)
+        return self.json(events)
 
 
 class Entry(object):
@@ -274,7 +273,7 @@ def humanify(events):
                     entity_id)
 
 
-def _get_events(hass, start_day, end_day):
+def _get_events(hass, config, start_day, end_day):
     """Get events for a period of time."""
     from homeassistant.components.recorder.models import Events
     from homeassistant.components.recorder.util import (
@@ -285,7 +284,8 @@ def _get_events(hass, start_day, end_day):
             Events.time_fired).filter(
                 (Events.time_fired > start_day) &
                 (Events.time_fired < end_day))
-        return execute(query)
+        events = execute(query)
+    return humanify(_exclude_events(events, config))
 
 
 def _exclude_events(events, config):

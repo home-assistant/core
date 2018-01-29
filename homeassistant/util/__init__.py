@@ -227,7 +227,7 @@ class OrderedSet(MutableSet):
         return '%s(%r)' % (self.__class__.__name__, list(self))
 
     def __eq__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
@@ -299,7 +299,7 @@ class Throttle(object):
                 return None
 
             # Check if method is never called or no_throttle is given
-            force = not throttle[1] or kwargs.pop('no_throttle', False)
+            force = kwargs.pop('no_throttle', False) or not throttle[1]
 
             try:
                 if force or utcnow() - throttle[1] > self.min_time:

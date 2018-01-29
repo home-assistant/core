@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.6']
+REQUIREMENTS = ['python-eq3bt==0.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=import-error
 class EQ3BTSmartThermostat(ClimateDevice):
-    """Representation of a eQ-3 Bluetooth Smart thermostat."""
+    """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""

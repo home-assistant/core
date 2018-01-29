@@ -148,7 +148,8 @@ class IrishRailTransportData(object):
         """Get the latest data from irishrail."""
         trains = self._ir_api.get_station_by_name(self.station,
                                                   direction=self.direction,
-                                                  destination=self.destination)
+                                                  destination=self.destination,
+                                                  stops_at=self.stops_at)
         stops_at = self.stops_at if self.stops_at else ''
         self.info = []
         for train in trains:

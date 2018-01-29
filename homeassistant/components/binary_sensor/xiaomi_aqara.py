@@ -101,7 +101,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         attrs.update(super().device_state_attributes)
         return attrs
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if DENSITY in data:
             self._density = int(data.get(DENSITY))
@@ -139,8 +139,16 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         attrs.update(super().device_state_attributes)
         return attrs
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
+        if raw_data['cmd'] == 'heartbeat':
+            _LOGGER.debug(
+                'Skipping heartbeat of the motion sensor. '
+                'It can introduce an incorrect state because of a firmware '
+                'bug (https://github.com/home-assistant/home-assistant/pull/'
+                '11631#issuecomment-357507744).')
+            return
+
         self._should_poll = False
         if NO_MOTION in data:  # handle push from the hub
             self._no_motion_since = data[NO_MOTION]
@@ -186,7 +194,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         attrs.update(super().device_state_attributes)
         return attrs
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         self._should_poll = False
         if NO_CLOSE in data:  # handle push from the hub
@@ -219,7 +227,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
         XiaomiBinarySensor.__init__(self, device, 'Water Leak Sensor',
                                     xiaomi_hub, 'status', 'moisture')
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         self._should_poll = False
 
@@ -256,7 +264,7 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         attrs.update(super().device_state_attributes)
         return attrs
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if DENSITY in data:
             self._density = int(data.get(DENSITY))
@@ -293,7 +301,7 @@ class XiaomiButton(XiaomiBinarySensor):
         attrs.update(super().device_state_attributes)
         return attrs
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
         if value is None:
@@ -343,7 +351,7 @@ class XiaomiCube(XiaomiBinarySensor):
         attrs.update(super().device_state_attributes)
         return attrs
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if 'status' in data:
             self._hass.bus.fire('cube_action', {

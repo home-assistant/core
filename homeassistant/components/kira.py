@@ -1,26 +1,23 @@
-"""KIRA interface to receive UDP packets from an IR-IP bridge."""
-# pylint: disable=import-error
+"""
+KIRA interface to receive UDP packets from an IR-IP bridge.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/kira/
+"""
 import logging
 import os
-import yaml
 
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
+import yaml
 
+from homeassistant.const import (
+    CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SENSORS, CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SENSORS,
-    CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNKNOWN)
-
-REQUIREMENTS = ["pykira==0.1.1"]
+REQUIREMENTS = ['pykira==0.1.1']
 
 DOMAIN = 'kira'
 
@@ -67,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def load_codes(path):
-    """Load Kira codes from specified file."""
+    """Load KIRA codes from specified file."""
     codes = []
     if os.path.exists(path):
         with open(path) as code_file:
@@ -77,7 +74,7 @@ def load_codes(path):
                 codes.append(CODE_SCHEMA(code))
             except VoluptuousError as exception:
                 # keep going
-                _LOGGER.warning('Kira Code Invalid Data: %s', exception)
+                _LOGGER.warning("KIRA code invalid data: %s", exception)
     else:
         with open(path, 'w') as code_file:
             code_file.write('')
@@ -85,7 +82,7 @@ def load_codes(path):
 
 
 def setup(hass, config):
-    """Setup KIRA capability."""
+    """Set up the KIRA component."""
     import pykira
 
     sensors = config.get(DOMAIN, {}).get(CONF_SENSORS, [])
@@ -99,10 +96,10 @@ def setup(hass, config):
     hass.data[DOMAIN] = {
         CONF_SENSOR: {},
         CONF_REMOTE: {},
-        }
+    }
 
     def load_module(platform, idx, module_conf):
-        """Set up Kira module and load platform."""
+        """Set up the KIRA module and load platform."""
         # note: module_name is not the HA device name. it's just a unique name
         # to ensure the component and platform can share information
         module_name = ("%s_%d" % (DOMAIN, idx)) if idx else DOMAIN
@@ -133,6 +130,7 @@ def setup(hass, config):
         load_module(CONF_REMOTE, idx, module_conf)
 
     def _stop_kira(_event):
+        """Stop the KIRA receiver."""
         for receiver in hass.data[DOMAIN][CONF_SENSOR].values():
             receiver.stop()
         _LOGGER.info("Terminated receivers")
