@@ -66,6 +66,7 @@ ICON = "mdi:thermometer"
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config.get(CONF_NAME)
@@ -79,15 +80,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     max_temp = config.get(CONF_MAX_TEMP)
 
     add_devices([ModbusThermostat(name, modbus_slave, target_temp_register,
-        current_temp_register, data_type, count, precision, min_temp,
-        max_temp)], True)
+                                  current_temp_register, data_type, count, precision, min_temp,
+                                  max_temp)], True)
+
 
 class ModbusThermostat(ClimateDevice):
     """Representation of a Modbus Thermostat """
 
     def __init__(self, name, modbus_slave, target_temp_register,
-            current_temp_register, data_type, count, precision,
-            min_temp, max_temp):
+                 current_temp_register, data_type, count, precision,
+                 min_temp, max_temp):
         """Initialize the unit."""
         self._name = name
         self._slave = modbus_slave
@@ -105,13 +107,9 @@ class ModbusThermostat(ClimateDevice):
         data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'}}
         data_types[DATA_TYPE_UINT] = {1: 'H', 2: 'I', 4: 'Q'}
         data_types[DATA_TYPE_FLOAT] = {1: 'e', 2: 'f', 4: 'd'}
-        try:
-            self._structure = '>{}'.format(data_types[self._data_type]
-            [self._count])
-        except KeyError:
-            _LOGGER.error("Unable to detect data type for %s sensor, try a"
-            " custom type.", register.get(CONF_NAME))
-            pass
+        
+        self._structure = '>{}'.format(data_types[self._data_type]
+                                       [self._count])
 
     @property
     def supported_features(self):
