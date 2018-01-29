@@ -5,9 +5,11 @@ from uuid import uuid4
 
 import pytest
 
-from homeassistant.const import TEMP_FAHRENHEIT, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    TEMP_FAHRENHEIT, CONF_UNIT_OF_MEASUREMENT, STATE_LOCKED, STATE_UNLOCKED,
+    STATE_UNKNOWN, STATE_ON, STATE_OFF)
 from homeassistant.setup import async_setup_component
-from homeassistant.components import alexa
+from homeassistant.components import alexa, light
 from homeassistant.components.alexa import smart_home
 from homeassistant.helpers import entityfilter
 
@@ -379,8 +381,8 @@ def test_discovery_request(hass):
             assert len(appliance['capabilities']) == 1
             capability = appliance['capabilities'][0]
             assert capability['interface'] == 'Alexa.TemperatureSensor'
-            assert capability['retrievable'] is True
             properties = capability['properties']
+            assert properties['retrievable'] is True
             assert {'name': 'temperature'} in properties['supported']
             continue
 
@@ -1246,6 +1248,99 @@ def test_api_report_temperature(hass):
     assert prop['namespace'] == 'Alexa.TemperatureSensor'
     assert prop['name'] == 'temperature'
     assert prop['value'] == {'value': 42.0, 'scale': 'FAHRENHEIT'}
+
+
+@asyncio.coroutine
+def test_report_lock_state(hass):
+    """Test LockController implements lockState property."""
+    hass.states.async_set(
+        'lock.locked', STATE_LOCKED, {})
+    hass.states.async_set(
+        'lock.unlocked', STATE_UNLOCKED, {})
+    hass.states.async_set(
+        'lock.unknown', STATE_UNKNOWN, {})
+
+    request = get_new_request('Alexa', 'ReportState', 'lock#locked')
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+    properties = msg['context']['properties']
+    assert len(properties) == 1
+    prop = properties[0]
+    assert prop['namespace'] == 'Alexa.LockController'
+    assert prop['name'] == 'lockState'
+    assert prop['value'] == 'LOCKED'
+
+    request = get_new_request('Alexa', 'ReportState', 'lock#unlocked')
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+    properties = msg['context']['properties']
+    prop = properties[0]
+    assert prop['value'] == 'UNLOCKED'
+
+    request = get_new_request('Alexa', 'ReportState', 'lock#unknown')
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+    properties = msg['context']['properties']
+    prop = properties[0]
+    assert prop['value'] == 'JAMMED'
+
+
+@asyncio.coroutine
+def test_report_power_state(hass):
+    """Test PowerController implements powerState property."""
+    hass.states.async_set(
+        'switch.on', STATE_ON, {})
+    hass.states.async_set(
+        'switch.off', STATE_OFF, {})
+
+    request = get_new_request('Alexa', 'ReportState', 'switch#on')
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+    properties = msg['context']['properties']
+    assert len(properties) == 1
+    prop = properties[0]
+    assert prop['namespace'] == 'Alexa.PowerController'
+    assert prop['name'] == 'powerState'
+    assert prop['value'] == 'ON'
+
+    request = get_new_request('Alexa', 'ReportState', 'switch#off')
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+
+@asyncio.coroutine
+def test_report_brightness(hass):
+    """Test BrightnessController implements brightness property."""
+    hass.states.async_set(
+        'light.test', STATE_ON, {
+            'brightness': 128,
+            'supported_features': light.SUPPORT_BRIGHTNESS,
+        }
+    )
+
+    request = get_new_request('Alexa', 'ReportState', 'light.test')
+    msg = yield from smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    yield from hass.async_block_till_done()
+
+    for prop in msg['context']['properties']:
+        if (
+            prop['namespace'] == 'Alexa.BrightnessController'
+            and prop['name'] == 'brightness'
+        ):
+            assert prop['value'] == 50
+            break
+    else:
+        assert False, 'no brightness property present'
 
 
 @asyncio.coroutine
