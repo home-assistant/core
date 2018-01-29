@@ -46,8 +46,8 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-def _refresh_on_acccess_denied(func):
-    """If remove rebooted, it lost our session so rebuld one and try again."""
+def _refresh_on_access_denied(func):
+    """If remove rebooted, it lost our session so rebuild one and try again."""
     def decorator(self, *args, **kwargs):
         """Wrap the function to refresh session_id on PermissionError."""
         try:
@@ -95,7 +95,7 @@ class UbusDeviceScanner(DeviceScanner):
         """Must be implemented depending on the software."""
         raise NotImplementedError
 
-    @_refresh_on_acccess_denied
+    @_refresh_on_access_denied
     def get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
@@ -104,7 +104,7 @@ class UbusDeviceScanner(DeviceScanner):
         self.mac2name = None
         return name
 
-    @_refresh_on_acccess_denied
+    @_refresh_on_access_denied
     def _update_info(self):
         """Ensure the information from the router is up to date.
 

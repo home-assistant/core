@@ -1,7 +1,7 @@
 """
 Support for BME680 Sensor over SMBus.
 
-Temperature, humidity, pressure and volitile gas support.
+Temperature, humidity, pressure and volatile gas support.
 Air Quality calculation based on humidity and volatile gas.
 
 For more details about this platform, please refer to the documentation at

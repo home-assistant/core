@@ -1,4 +1,4 @@
-"""Component to manage a shoppling list."""
+"""Component to manage a shopping list."""
 import asyncio
 import json
 import logging

@@ -220,7 +220,7 @@ class Script():
         def async_script_timeout(now):
             """Call after timeout is retrieve stop script."""
             self._async_listener.remove(unsub)
-            self._log("Timout reach, abort script.")
+            self._log("Timeout reached, abort script.")
             self.async_stop()
 
         unsub = async_track_point_in_utc_time(

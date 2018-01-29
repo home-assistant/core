@@ -19,9 +19,9 @@ from homeassistant.helpers.restore_state import async_get_last_state
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_CODE = 'off_code'
-CONF_OFF_CODE_RECIEVE = 'off_code_receive'
+CONF_OFF_CODE_RECEIVE = 'off_code_receive'
 CONF_ON_CODE = 'on_code'
-CONF_ON_CODE_RECIEVE = 'on_code_receive'
+CONF_ON_CODE_RECEIVE = 'on_code_receive'
 CONF_SYSTEMCODE = 'systemcode'
 CONF_UNIT = 'unit'
 CONF_UNITCODE = 'unitcode'
@@ -48,9 +48,9 @@ SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
     vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OFF_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+    vol.Optional(CONF_OFF_CODE_RECEIVE, default=[]): vol.All(cv.ensure_list,
                                                              [COMMAND_SCHEMA]),
-    vol.Optional(CONF_ON_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+    vol.Optional(CONF_ON_CODE_RECEIVE, default=[]): vol.All(cv.ensure_list,
                                                             [COMMAND_SCHEMA])
 })
 
@@ -72,8 +72,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 properties.get(CONF_NAME, dev_name),
                 properties.get(CONF_ON_CODE),
                 properties.get(CONF_OFF_CODE),
-                properties.get(CONF_ON_CODE_RECIEVE),
-                properties.get(CONF_OFF_CODE_RECIEVE)
+                properties.get(CONF_ON_CODE_RECEIVE),
+                properties.get(CONF_OFF_CODE_RECEIVE)
             )
         )
 
