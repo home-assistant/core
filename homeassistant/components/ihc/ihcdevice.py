@@ -14,7 +14,7 @@ class IHCDevice(Entity):
     """
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 product: Element=None):
+                 product: Element=None) -> None:
         """Initialize IHC attributes."""
         self.ihc_controller = ihc_controller
         self._name = name
