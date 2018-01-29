@@ -1,5 +1,5 @@
 """
-Support gahtering ted500 information.
+Support gathering ted500 information.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ted5000/

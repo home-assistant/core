@@ -247,7 +247,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up all groups found definded in the configuration."""
+    """Set up all groups found defined in the configuration."""
     component = hass.data.get(DOMAIN)
 
     if component is None:

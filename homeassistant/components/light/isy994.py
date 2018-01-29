@@ -27,7 +27,7 @@ def setup_platform(hass, config: ConfigType,
 
 
 class ISYLightDevice(ISYDevice, Light):
-    """Representation of an ISY994 light devie."""
+    """Representation of an ISY994 light device."""
 
     def __init__(self, node: object) -> None:
         """Initialize the ISY994 light device."""

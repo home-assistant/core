@@ -137,7 +137,7 @@ class InputBoolean(ToggleEntity):
 
     @property
     def icon(self):
-        """Returh the icon to be used for this entity."""
+        """Return the icon to be used for this entity."""
         return self._icon
 
     @property

@@ -330,7 +330,7 @@ class TelegramNotificationService:
         This can be one of (message_id, inline_message_id) from a msg dict,
         returning a tuple.
         **You can use 'last' as message_id** to edit
-        the last sended message in the chat_id.
+        the message last sent in the chat_id.
         """
         message_id = inline_message_id = None
         if ATTR_MESSAGEID in msg_data:
@@ -354,7 +354,7 @@ class TelegramNotificationService:
             chat_ids = [t for t in target if t in self.allowed_chat_ids]
             if chat_ids:
                 return chat_ids
-            _LOGGER.warning("Unallowed targets: %s, using default: %s",
+            _LOGGER.warning("Disallowed targets: %s, using default: %s",
                             target, self._default_user)
         return [self._default_user]
 

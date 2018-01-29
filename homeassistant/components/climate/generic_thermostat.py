@@ -249,7 +249,7 @@ class GenericThermostat(ClimateDevice):
         else:
             _LOGGER.error("Unrecognized operation mode: %s", operation_mode)
             return
-        # Ensure we updae the current operation after changing the mode
+        # Ensure we update the current operation after changing the mode
         self.schedule_update_ha_state()
 
     @asyncio.coroutine

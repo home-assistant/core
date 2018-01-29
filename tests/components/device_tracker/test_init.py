@@ -704,7 +704,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
 @asyncio.coroutine
 def test_async_added_to_hass(hass):
-    """Test resoring state."""
+    """Test restoring state."""
     attr = {
         device_tracker.ATTR_LONGITUDE: 18,
         device_tracker.ATTR_LATITUDE: -33,
