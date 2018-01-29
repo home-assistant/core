@@ -5,10 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
 import asyncio
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 from urllib.parse import urlparse
 
+import pytz
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -168,9 +169,12 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._volume = 0
         self._current_source = None
         self._current_source_id = None
+        self._current_channel_name = None
+        self._current_channel_id = None
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
+        self._now_playing = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -193,8 +197,14 @@ class LgWebOSDevice(MediaPlayerDevice):
 
                 self._source_list = {}
                 self._app_list = {}
+                self._current_channel_name = None
+                self._current_channel_id = None
+                self._now_playing = {}
                 conf_sources = self._customize.get(CONF_SOURCES, [])
 
+                info = self._client.get_channel_info()
+                if info.get('returnValue', False):
+                    self.update_channels(info)
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
                     if app['id'] == self._current_source_id:
@@ -259,6 +269,11 @@ class LgWebOSDevice(MediaPlayerDevice):
         return MEDIA_TYPE_CHANNEL
 
     @property
+    def media_content_id(self):
+        """Content ID of current playing media."""
+        return self._current_channel_id
+
+    @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self._current_source_id in self._app_list:
@@ -274,6 +289,47 @@ class LgWebOSDevice(MediaPlayerDevice):
         if self._on_script:
             return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
+
+    @property
+    def media_channel(self):
+        """Channel currently playing."""
+        return self._current_channel_name
+
+    @property
+    def app_id(self):
+        """ID of the current running app."""
+        return self._current_source_id
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        return self._current_source
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        if self.media_channel:
+            return "{}: {}".format(self.media_channel,
+                                   self._now_playing.get('programName'))
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if not self.media_title:
+            return None
+        start_time = pytz.utc.localize(datetime.strptime(
+            self._now_playing.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
+        return (datetime.now(pytz.UTC) - start_time).total_seconds()
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        return util.dt.now()
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        return self._now_playing.get('duration')
 
     def turn_off(self):
         """Turn off media player."""
@@ -348,3 +404,27 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self._client.rewind()
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        self._playing = True
+        self._state = STATE_PLAYING
+        if media_type != MEDIA_TYPE_CHANNEL:
+            self._client.play()
+        else:
+            self._client.set_channel(media_id)
+
+    def update_channels(self, info=None):
+        """Update channels info."""
+        info = info or self._client.get_channel_info()
+        self._current_channel_name = info.get('channel', {}) \
+            .get('channelName')
+        self._current_channel_id = info.get('channel', {}) \
+            .get('channelId')
+        for program in info.get('programList', []):
+            start_time = pytz.utc.localize(datetime.strptime(
+                program.get('startTime'), '%Y,%m,%d,%H,%M,%S'))
+            end_time = pytz.utc.localize(datetime.strptime(
+                program.get('endTime'), '%Y,%m,%d,%H,%M,%S'))
+            if start_time <= datetime.now(pytz.UTC) < end_time:
+                self._now_playing = program
