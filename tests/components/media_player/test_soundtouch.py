@@ -505,8 +505,8 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_pause(self, mocked_soundtouch_device, mocked_status, mocked_volume,
-                   mocked_pause):
+    def test_pause(self, mocked_soundtouch_device, mocked_status,
+                   mocked_volume, mocked_pause):
         """Test pause command."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),

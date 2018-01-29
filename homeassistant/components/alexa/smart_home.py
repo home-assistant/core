@@ -51,8 +51,8 @@ class _DisplayCategory(object):
 
     # Describes a combination of devices set to a specific state, when the
     # state change must occur in a specific order. For example, a "watch
-    # Netflix" scene might require the: 1. TV to be powered on & 2. Input set to
-    # HDMI1.    Applies to Scenes
+    # Netflix" scene might require the: 1. TV to be powered on & 2. Input set
+    # to HDMI1. Applies to Scenes
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
 
     # Indicates media devices with video or photo capabilities.
