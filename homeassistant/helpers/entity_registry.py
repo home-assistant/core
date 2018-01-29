@@ -1,4 +1,15 @@
-"""Provide a registry to track entity IDs."""
+"""Provide a registry to track entity IDs.
+
+The Entity Registry keeps a registry of entities. Entities are uniquely
+identified by their domain, platform and a unique id provided by that platform.
+
+The Entity Registry will persist itself 10 seconds after a new entity is
+registered. Registering a new entity while a timer is in progress resets the
+timer.
+
+After initializing, call EntityRegistry.async_ensure_loaded to load the data
+from disk.
+"""
 import asyncio
 from collections import namedtuple, OrderedDict
 from itertools import chain
