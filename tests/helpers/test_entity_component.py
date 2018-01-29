@@ -737,5 +737,6 @@ def test_entity_with_name_and_entity_id_getting_registered(hass):
     """Ensure that entity ID is used for registration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     yield from component.async_add_entities([
-        EntityTest(unique_id='1234', name='bla', entity_id='hello.world')])
-    assert 'hello.world' in hass.states.async_entity_ids()
+        EntityTest(unique_id='1234', name='bla',
+                   entity_id='test_domain.world')])
+    assert 'test_domain.world' in hass.states.async_entity_ids()
