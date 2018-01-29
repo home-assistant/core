@@ -203,7 +203,7 @@ class Volumio(MediaPlayerDevice):
         """Send mute command to media player."""
         mutecmd = 'mute' if mute else 'unmute'
         if mute:
-            # mute is implemenhted as 0 volume, do save last volume level
+            # mute is implemented as 0 volume, do save last volume level
             self._lastvol = self._state['volume']
             return self.send_volumio_msg(
                 'commands', params={'cmd': 'volume', 'volume': mutecmd})

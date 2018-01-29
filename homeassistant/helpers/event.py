@@ -231,7 +231,7 @@ def async_track_time_interval(hass, action, interval):
 
     @callback
     def interval_listener(now):
-        """Handle elaspsed intervals."""
+        """Handle elapsed intervals."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, interval_listener, next_interval())

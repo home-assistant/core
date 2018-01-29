@@ -66,7 +66,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "SevenSegement OCR {0}".format(
+            self._name = "SevenSegment OCR {0}".format(
                 split_entity_id(camera_entity)[1])
         self._state = None
 

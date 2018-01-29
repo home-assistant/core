@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SERVICE_CALL_METHOD = 'squeezebox_call_method'
 
-DATA_SQUEEZEBOX = 'squeexebox'
+DATA_SQUEEZEBOX = 'squeezebox'
 
 ATTR_PARAMETERS = 'parameters'
 

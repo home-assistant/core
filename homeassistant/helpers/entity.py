@@ -77,7 +77,7 @@ class Entity(object):
     # Protect for multiple updates
     _update_staged = False
 
-    # Process updates pararell
+    # Process updates in parallel
     parallel_updates = None
 
     @property

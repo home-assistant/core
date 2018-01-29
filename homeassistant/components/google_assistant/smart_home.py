@@ -429,7 +429,7 @@ def async_devices_query(hass, config, payload):
     devices = {}
     for device in payload.get('devices', []):
         devid = device.get('id')
-        # In theory this should never happpen
+        # In theory this should never happen
         if not devid:
             _LOGGER.error('Device missing ID: %s', device)
             continue

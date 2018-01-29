@@ -28,7 +28,7 @@ CONF_VERTICAL_FLIP = 'vertical_flip'
 
 DEFAULT_HORIZONTAL_FLIP = 0
 DEFAULT_IMAGE_HEIGHT = 480
-DEFAULT_IMAGE_QUALITIY = 7
+DEFAULT_IMAGE_QUALITY = 7
 DEFAULT_IMAGE_ROTATION = 0
 DEFAULT_IMAGE_WIDTH = 640
 DEFAULT_NAME = 'Raspberry Pi Camera'
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
     vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT):
         vol.Coerce(int),
-    vol.Optional(CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITIY):
+    vol.Optional(CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITY):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
     vol.Optional(CONF_IMAGE_ROTATION, default=DEFAULT_IMAGE_ROTATION):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=359)),
@@ -131,7 +131,7 @@ class RaspberryCamera(Camera):
                          stderr=subprocess.STDOUT)
 
     def camera_image(self):
-        """Return raspstill image response."""
+        """Return raspistill image response."""
         with open(self._config[CONF_FILE_PATH], 'rb') as file:
             return file.read()
 
