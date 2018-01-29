@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = 'to'
 CONF_START = 'from'
+CONF_ONLY_DIRECT = 'only_direct'
+DEFAULT_ONLY_DIRECT = False
 
 ICON = 'mdi:train'
 
@@ -28,6 +30,7 @@ SCAN_INTERVAL = timedelta(minutes=2)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_START): cv.string,
+    vol.Optional(CONF_ONLY_DIRECT, default=DEFAULT_ONLY_DIRECT): cv.boolean,
 })
 
 
@@ -35,17 +38,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
+    only_direct = config.get(CONF_ONLY_DIRECT)
 
-    add_devices([DeutscheBahnSensor(start, destination)], True)
+    add_devices([DeutscheBahnSensor(start, destination, only_direct)], True)
 
 
 class DeutscheBahnSensor(Entity):
     """Implementation of a Deutsche Bahn sensor."""
 
-    def __init__(self, start, goal):
+    def __init__(self, start, goal, only_direct):
         """Initialize the sensor."""
         self._name = '{} to {}'.format(start, goal)
-        self.data = SchieneData(start, goal)
+        self.data = SchieneData(start, goal, only_direct)
         self._state = None
 
     @property
@@ -82,19 +86,21 @@ class DeutscheBahnSensor(Entity):
 class SchieneData(object):
     """Pull data from the bahn.de web page."""
 
-    def __init__(self, start, goal):
+    def __init__(self, start, goal, only_direct):
         """Initialize the sensor."""
         import schiene
 
         self.start = start
         self.goal = goal
+        self.only_direct = only_direct
         self.schiene = schiene.Schiene()
         self.connections = [{}]
 
     def update(self):
         """Update the connection data."""
         self.connections = self.schiene.connections(
-            self.start, self.goal, dt_util.as_local(dt_util.utcnow()))
+            self.start, self.goal, dt_util.as_local(dt_util.utcnow()),
+            self.only_direct)
 
         for con in self.connections:
             # Detail info is not useful. Having a more consistent interface
