@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180126.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180130.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -300,7 +300,8 @@ def async_setup(hass, config):
 
     if is_dev:
         for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels"]:
+                        "hass_frontend", "bower_components", "panels",
+                        "hassio"]:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),
                 os.path.join(repo_path, subpath),
