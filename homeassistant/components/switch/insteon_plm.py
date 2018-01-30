@@ -77,7 +77,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._device)
+        return insteon_plm.common_attributes(self._device, self._state)
 
     @callback
     def async_switch_update(self, deviceid, statename, val):
