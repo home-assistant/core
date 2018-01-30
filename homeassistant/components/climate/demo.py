@@ -21,10 +21,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo climate devices."""
     add_devices([
         DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, None, 77,
-                    'Auto Low', None, None, 'Auto', 'heat', None, None,
-                    None, None),
+                    None, None, None, None, 'heat', None, None,
+                    None, True),
         DemoClimate('Hvac', 21, TEMP_CELSIUS, True, None, 22, 'On High',
-                    67, 54, 'Off', 'cool', False, None, None, True),
+                    67, 54, 'Off', 'cool', False, None, None, None),
         DemoClimate('Ecobee', None, TEMP_CELSIUS, None, 'home', 23, 'Auto Low',
                     None, None, 'Auto', 'auto', None, 24, 21, None)
     ])
