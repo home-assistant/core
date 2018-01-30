@@ -170,7 +170,7 @@ def _obj_to_dict(obj):
     """Convert an object into a hash for debug."""
     return {key: getattr(obj, key) for key
             in dir(obj)
-            if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
+            if key[0] != '_' and not callable(getattr(obj, key))}
 
 
 def _value_name(value):
