@@ -5,12 +5,13 @@ For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/custom_card/
 """
 import asyncio
+import json
 import logging
 
 import voluptuous as vol
 
-from aiohttp import web
 from homeassistant.components import http
+from homeassistant.const import HTTP_BAD_REQUEST
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'custom_card'
@@ -62,14 +63,14 @@ def async_setup(hass, config):
 
         attributes = {}
         if full_card:
-            attributes['full_card'] = full_card
+            attributes['custom_ui_full_card'] = full_card
         if state_card:
-            attributes['state_card'] = state_card
+            attributes['custom_ui_state_card'] = state_card
         if more_info_card:
-            attributes['more_info_card'] = more_info_card
+            attributes['custom_ui_more_info_card'] = more_info_card
 
         if config:
-            card_configs[entity_id] = config
+            card_configs[entity_id] = json.dumps(config)
 
         hass.states.async_set(entity_id, state, attributes)
 
@@ -97,14 +98,6 @@ class CustomCardView(http.HomeAssistantView):
         try:
             config = self._card_configs[data['entity_id']]
         except KeyError:
-            res = {"config": None}
-            state = 400
+            return self.json_message('For this entity is no config available.', HTTP_BAD_REQUEST)
         else:
-            res = {"config": config}
-            state = 200
-
-        return web.Response(
-            body=str(res),
-            status=state,
-            content_type='application/json',
-        )
+            return '{"config": ' + config + '}'
