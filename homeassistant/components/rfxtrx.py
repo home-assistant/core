@@ -171,7 +171,7 @@ def get_pt2262_cmd(device_id, data_bits):
 # pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
-    for dev_id, device in RFX_DEVICES.items():
+    for device in RFX_DEVICES.values():
         if (hasattr(device, 'is_lighting4') and
                 device.masked_id == get_pt2262_deviceid(device_id,
                                                         device.data_bits)):
