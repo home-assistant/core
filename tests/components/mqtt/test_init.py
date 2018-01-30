@@ -1,6 +1,6 @@
 """The tests for the MQTT component."""
 import asyncio
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 import unittest
 from unittest import mock
 import socket
@@ -17,6 +17,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message, mock_coro)
+
+MQTTMessage = namedtuple('MQTTMessage', ['topic', 'payload', 'qos', 'retain'])
+MQTTMessage.__new__.__defaults__ = (0, False)
 
 
 @asyncio.coroutine
@@ -56,11 +59,11 @@ class TestMQTT(unittest.TestCase):
         self.calls.append(args)
 
     def test_client_starts_on_home_assistant_mqtt_setup(self):
-        """Test if client is connect after mqtt init on bootstrap."""
+        """Test if client is connected after mqtt init on bootstrap."""
         assert self.hass.data['mqtt'].async_connect.called
 
     def test_client_stops_on_home_assistant_start(self):
-        """Test if client stops on HA launch."""
+        """Test if client stops on HA stop."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
         self.assertTrue(self.hass.data['mqtt'].async_disconnect.called)
@@ -318,7 +321,7 @@ class TestMQTT(unittest.TestCase):
             self.assertIn(
                 "ERROR:homeassistant.components.mqtt:Illegal payload "
                 "encoding utf-8 from MQTT "
-                "topic: test-topic, Payload: 154",
+                "topic: 'test-topic', Payload: '154'",
                 test_handle.output[0])
 
 
@@ -358,8 +361,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         async_dispatcher_connect(
             self.hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, record)
 
-        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
-        message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
+        message = MQTTMessage('test_topic', 'Hello World!'.encode('utf-8'), 1)
 
         self.hass.data['mqtt']._mqtt_on_message(
             None, {'hass': self.hass}, message)
@@ -392,8 +394,8 @@ class TestMQTTCallbacks(unittest.TestCase):
             'test/topic': 1,
         }
         self.hass.data['mqtt'].wanted_topics = {
-            'test/progress': 0,
-            'test/topic': 2,
+            'test/progress': [0, 1],
+            'test/topic': [2],
         }
         self.hass.data['mqtt'].progress = {
             1: 'test/progress'
@@ -406,7 +408,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.assertEqual([1, 2, 4],
                          [call[1][0] for call in mock_sleep.mock_calls])
 
-        self.assertEqual({'test/topic': 2, 'test/progress': 0},
+        self.assertEqual({'test/progress': [0, 1], 'test/topic': [2]},
                          self.hass.data['mqtt'].wanted_topics)
         self.assertEqual({}, self.hass.data['mqtt'].subscribed_topics)
         self.assertEqual({}, self.hass.data['mqtt'].progress)
@@ -416,6 +418,39 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
 
+    def test_retained_message_on_subscribe_received(self):
+        """Test every subscriber receives retained message on subscribe."""
+        message = MQTTMessage('test/state', 'online'.encode('utf-8'), 0, True)
+
+        def side_effect(*args):
+            self.hass.data['mqtt']._mqtt_on_message(None, None, message)
+            return 0, 0
+
+        self.hass.data['mqtt']._mqttc.subscribe.side_effect = side_effect
+
+        calls_a = mock.MagicMock()
+        mqtt.subscribe(self.hass, 'test/state', calls_a)
+        self.hass.block_till_done()
+        self.assertTrue(calls_a.called)
+
+        calls_b = mock.MagicMock()
+        mqtt.subscribe(self.hass, 'test/state', calls_b)
+        self.hass.block_till_done()
+        self.assertTrue(calls_b.called)
+
+    def test_not_calling_unsubscribe_with_active_subscribers(self):
+        """Test not calling unsubscribe() when other subscribers are active."""
+        self.hass.data['mqtt']._mqttc.unsubscribe = mock.MagicMock()
+        self.hass.data['mqtt']._mqttc.subscribe.side_effect = ((0, 1), (0, 1))
+
+        unsub = mqtt.subscribe(self.hass, 'test/state', None)
+        mqtt.subscribe(self.hass, 'test/state', None)
+        self.hass.block_till_done()
+        self.assertTrue(self.hass.data['mqtt']._mqttc.subscribe.called)
+
+        unsub()
+        self.hass.block_till_done()
+        self.assertFalse(self.hass.data['mqtt']._mqttc.unsubscribe.called)
 
 @asyncio.coroutine
 def test_setup_embedded_starts_with_no_config(hass):
@@ -561,15 +596,15 @@ def test_mqtt_subscribes_topics_on_connect(hass):
     """Test subscription to topic on connect."""
     mqtt_client = yield from mock_mqtt_client(hass)
 
-    subscribed_topics = OrderedDict()
-    subscribed_topics['topic/test'] = 1
-    subscribed_topics['home/sensor'] = 2
-
-    wanted_topics = subscribed_topics.copy()
-    wanted_topics['still/pending'] = 0
-
-    hass.data['mqtt'].wanted_topics = wanted_topics
-    hass.data['mqtt'].subscribed_topics = subscribed_topics
+    hass.data['mqtt'].subscribed_topics = {
+        'topic/test': 1,
+        'home/sensor': 2
+    }
+    hass.data['mqtt'].wanted_topics = {
+        'topic/test': [1],
+        'home/sensor': [2],
+        'still/pending': [0, 1]
+    }
     hass.data['mqtt'].progress = {1: 'still/pending'}
 
     # Return values for subscribe calls (rc, mid)
@@ -582,7 +617,11 @@ def test_mqtt_subscribes_topics_on_connect(hass):
 
     assert not mqtt_client.disconnect.called
 
-    expected = [(topic, qos) for topic, qos in wanted_topics.items()]
-
-    assert [call[1][1:] for call in hass.add_job.mock_calls] == expected
+    expected = {
+        'topic/test': 1,
+        'home/sensor': 2,
+        'still/pending': 1
+    }
+    calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
+    assert calls == expected
     assert hass.data['mqtt'].progress == {}

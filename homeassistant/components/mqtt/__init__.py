@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
 import asyncio
+import collections
 import logging
 import os
 import socket
@@ -220,7 +221,10 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 @bind_hass
 def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
                     encoding='utf-8'):
-    """Subscribe to an MQTT topic."""
+    """Subscribe to an MQTT topic.
+
+    Call the return value to unsubscribe.
+    """
     @callback
     def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
         """Match subscribed MQTT topic."""
@@ -230,14 +234,15 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
         if encoding is not None:
             try:
                 payload = dp_payload.decode(encoding)
-                _LOGGER.debug("Received message on %s: %s", dp_topic, payload)
+                _LOGGER.debug("Received message on '%s': '%s'",
+                              dp_topic, payload)
             except (AttributeError, UnicodeDecodeError):
                 _LOGGER.error("Illegal payload encoding %s from "
-                              "MQTT topic: %s, Payload: %s",
+                              "MQTT topic: '%s', Payload: '%s'",
                               encoding, dp_topic, dp_payload)
                 return
         else:
-            _LOGGER.debug("Received binary message on %s", dp_topic)
+            _LOGGER.debug("Received binary message on '%s'", dp_topic)
             payload = dp_payload
 
         hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
@@ -245,8 +250,14 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
     async_remove = async_dispatcher_connect(
         hass, SIGNAL_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
 
+    @callback
+    def async_remove_unsubscribe():
+        """Unsubscribe when removing signal listener."""
+        hass.async_run_job(hass.data[DATA_MQTT].async_unsubscribe(topic, qos))
+        async_remove()
+
     yield from hass.data[DATA_MQTT].async_subscribe(topic, qos)
-    return async_remove
+    return async_remove_unsubscribe
 
 
 @bind_hass
@@ -445,7 +456,7 @@ class MQTT(object):
         self.broker = broker
         self.port = port
         self.keepalive = keepalive
-        self.wanted_topics = {}
+        self.wanted_topics = collections.defaultdict(list)
         self.subscribed_topics = {}
         self.progress = {}
         self.birth_message = birth_message
@@ -526,36 +537,52 @@ class MQTT(object):
 
     @asyncio.coroutine
     def async_subscribe(self, topic, qos):
-        """Subscribe to a topic.
+        """Set up a subscription to a topic with the provided qos.
 
         This method is a coroutine.
         """
         if not isinstance(topic, str):
             raise HomeAssistantError("topic needs to be a string!")
 
-        _LOGGER.debug("Subscribing to %s", topic)
-
-        with (yield from self._paho_lock):
-            old_qos = self.wanted_topics.get(topic, 0)
-            self.wanted_topics[topic] = max(qos, old_qos)
-            result, mid = yield from self.hass.async_add_job(
-                self._mqttc.subscribe, topic, qos)
-
-            _raise_on_error(result)
-            self.progress[mid] = topic
+        self.wanted_topics[topic].append(qos)
+        yield from self._async_perform_subscription(topic, qos)
 
     @asyncio.coroutine
-    def async_unsubscribe(self, topic):
-        """Unsubscribe from topic.
+    def async_unsubscribe(self, topic, qos):
+        """Unsubscribe from a topic with the specified qos.
 
         This method is a coroutine.
         """
-        self.wanted_topics.pop(topic, None)
-        result, mid = yield from self.hass.async_add_job(
-            self._mqttc.unsubscribe, topic)
+        if not isinstance(topic, str):
+            raise HomeAssistantError("topic needs to be a string!")
+        if topic not in self.wanted_topics:
+            # Subscription with this topic doesn't exist. Ignore the request.
+            return
+        subscriptions = self.wanted_topics.get(topic)
+        if qos not in subscriptions:
+            # Subscription with the qos doesn't exist. Ignore the request.
+            return
 
-        _raise_on_error(result)
-        self.progress[mid] = topic
+        subscriptions.remove(qos)
+        if not subscriptions:
+            # Only unsubscribe if no subscriptions to this topic are active.
+            self.wanted_topics.pop(topic)
+            with (yield from self._paho_lock):
+                result, mid = yield from self.hass.async_add_job(
+                    self._mqttc.unsubscribe, topic)
+                _raise_on_error(result)
+                self.progress[mid] = topic
+
+    @asyncio.coroutine
+    def _async_perform_subscription(self, topic, qos):
+        """Perform a paho-mqtt subscription."""
+        _LOGGER.debug("Subscribing to '%s'", topic)
+
+        with (yield from self._paho_lock):
+            result, mid = yield from self.hass.async_add_job(
+                self._mqttc.subscribe, topic, qos)
+            _raise_on_error(result)
+            self.progress[mid] = topic
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code):
         """On connect callback.
@@ -573,8 +600,10 @@ class MQTT(object):
 
         self.progress = {}
         self.subscribed_topics = {}
-        for topic, qos in self.wanted_topics.items():
-            self.hass.add_job(self.async_subscribe, topic, qos)
+        for topic, qoses in self.wanted_topics.items():
+            # Re-subscribe with the highest requested qos
+            self.hass.add_job(self._async_perform_subscription, topic,
+                              max(qoses))
 
         if self.birth_message:
             self.hass.add_job(self.async_publish(
@@ -614,7 +643,6 @@ class MQTT(object):
             return
 
         tries = 0
-        wait_time = 0
 
         while True:
             try:
