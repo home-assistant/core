@@ -68,7 +68,7 @@ class TestSetup(unittest.TestCase):
         """Return a dict suitable for mocking api.get('lights')."""
         mock_bridge_lights = lights
 
-        for light_id, info in mock_bridge_lights.items():
+        for info in mock_bridge_lights.values():
             if 'state' not in info:
                 info['state'] = {'on': False}
 

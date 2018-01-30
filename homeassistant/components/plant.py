@@ -336,9 +336,9 @@ class DailyHistory(object):
         self._max_dict = dict()
         self.max = None
 
-    def add_measurement(self, value, timestamp=datetime.now()):
+    def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = timestamp.date()
+        day = (timestamp or datetime.now()).date()
         if value is None:
             return
         if self._days is None:

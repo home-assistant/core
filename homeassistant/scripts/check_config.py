@@ -134,7 +134,7 @@ def run(script_args: List) -> int:
 
         for sfn, sdict in res['secret_cache'].items():
             sss = []
-            for skey, sval in sdict.items():
+            for skey in sdict:
                 if skey in flatsecret:
                     _LOGGER.error('Duplicated secrets in files %s and %s',
                                   flatsecret[skey], sfn)
