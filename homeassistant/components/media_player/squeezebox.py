@@ -47,7 +47,7 @@ SERVICE_CALL_METHOD = 'squeezebox_call_method'
 
 DATA_SQUEEZEBOX = 'squeezebox'
 
-KNOWN_SERVERS = []
+KNOWN_SERVERS = 'squeezebox_known_servers'
 
 ATTR_PARAMETERS = 'parameters'
 
@@ -68,6 +68,11 @@ SERVICE_TO_METHOD = {
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the squeezebox platform."""
     import socket
+
+    known_servers = hass.data.get(KNOWN_SERVERS)
+    if known_servers is None:
+        known_servers = set()
+        hass.data[KNOWN_SERVERS] = known_servers
 
     if DATA_SQUEEZEBOX not in hass.data:
         hass.data[DATA_SQUEEZEBOX] = []
@@ -94,10 +99,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             "Could not communicate with %s:%d: %s", host, port, error)
         return False
 
-    if ipaddr in KNOWN_SERVERS:
+    if ipaddr in known_servers:
         return
 
-    KNOWN_SERVERS.append(ipaddr)
+    known_servers.add(ipaddr)
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
 
