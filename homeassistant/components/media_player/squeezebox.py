@@ -47,6 +47,8 @@ SERVICE_CALL_METHOD = 'squeezebox_call_method'
 
 DATA_SQUEEZEBOX = 'squeezebox'
 
+KNOWN_SERVERS = []
+
 ATTR_PARAMETERS = 'parameters'
 
 SQUEEZEBOX_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -92,6 +94,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             "Could not communicate with %s:%d: %s", host, port, error)
         return False
 
+    if ipaddr in KNOWN_SERVERS:
+        return
+
+    KNOWN_SERVERS.append(ipaddr)
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
 
