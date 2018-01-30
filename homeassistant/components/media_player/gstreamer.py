@@ -96,7 +96,7 @@ class GstreamerDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Next track."""
-        self._player.next()
+        self._player.next()  # noqa: B305
 
     @property
     def media_content_id(self):

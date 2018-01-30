@@ -86,12 +86,12 @@ def setup(hass, config):
                 "Error:<br />Can't communicate with Mercedes me API.<br />"
                 "Error code: {} Reason: {}"
                 "You will need to restart Home Assistant after fixing."
-                "".format(ex.code, ex.message),
+                "".format(ex.code, ex.message),  # noqa: B306
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 
         _LOGGER.error("Unable to communicate with Mercedes me API: %s",
-                      ex.message)
+                      ex.message)  # noqa: B306
         return False
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)

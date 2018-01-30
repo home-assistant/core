@@ -263,7 +263,7 @@ class MpdDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Service to send the MPD the command for next track."""
-        self._client.next()
+        self._client.next()  # noqa: B305
 
     def media_previous_track(self):
         """Service to send the MPD the command for previous track."""
