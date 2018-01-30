@@ -733,7 +733,7 @@ class TestRetryOnErrorDecorator(unittest.TestCase):
         self.assertEqual(mock_method.call_count, 2)
         mock_method.assert_called_with(1, 2, test=3)
 
-        for cnt in range(3):
+        for _ in range(3):
             start = dt_util.utcnow()
             shifted_time = start + (timedelta(seconds=20 + 1))
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED,

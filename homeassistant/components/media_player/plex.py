@@ -175,7 +175,7 @@ def setup_plexserver(
                 else:
                     plex_clients[machine_identifier].refresh(None, session)
 
-        for machine_identifier, client in plex_clients.items():
+        for client in plex_clients.values():
             # force devices to idle that do not have a valid session
             if client.session is None:
                 client.force_idle()
