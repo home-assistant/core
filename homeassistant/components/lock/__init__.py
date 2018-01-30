@@ -161,12 +161,12 @@ class LockDevice(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        data = {}
+        state_attr = {}
         for prop, attr in PROP_TO_ATTR.items():
             value = getattr(self, prop)
             if value is not None:
-                data[attr] = value
-        return data
+                state_attr[attr] = value
+        return state_attr
 
     @property
     def state(self):
