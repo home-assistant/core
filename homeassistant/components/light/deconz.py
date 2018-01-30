@@ -102,7 +102,7 @@ class DeconzLight(Light):
 
     @property
     def unique_id(self):
-        """Return a unique identifier for this sensor."""
+        """Return a unique identifier for this light."""
         return self._light.uniqueid
 
     @property

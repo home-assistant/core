@@ -146,7 +146,7 @@ class DeconzBattery(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique identifier for this sensor."""
+        """Return a unique identifier for the device."""
         return self._device.uniqueid
 
     @property
