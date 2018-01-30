@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.3.4']
+REQUIREMENTS = ['python-miio==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,8 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
-    from miio import ChuangmiIr
-    from construct import ChecksumError
+    from miio import ChuangmiIr, DeviceException
 
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
@@ -73,26 +72,26 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
     device = ChuangmiIr(host, token)
 
+    # Check that we can communicate with device.
     try:
         device.info()
-
-    # This should be DeviceError but python-miio returns wrong except.
-    except ChecksumError as ex:
+    except DeviceException as ex:
         _LOGGER.error("Token not accepted by device : %s", ex)
         return
 
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
-    entity_id = config.get(CONF_NAME, "xiaomi_miio_" +
-                           host.replace('.', '_'))
+    friendly_name = config.get(CONF_NAME, "xiaomi_miio_" +
+                               host.replace('.', '_'))
     slot = config.get(CONF_SLOT)
     timeout = config.get(CONF_TIMEOUT)
 
     hidden = config.get(ATTR_HIDDEN)
 
     xiaomi_miio_remote = XiaomiMiioRemote(
-        entity_id, device, slot, timeout, hidden, config.get(CONF_COMMANDS))
+        friendly_name, device, slot, timeout,
+        hidden, config.get(CONF_COMMANDS))
 
     hass.data[PLATFORM][host] = xiaomi_miio_remote
 
@@ -234,7 +233,7 @@ class XiaomiMiioRemote(RemoteDevice):
 
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
-            self.device.play(payload, None)
+            self.device.play(payload)
             return True
         except DeviceException as ex:
             _LOGGER.error(
