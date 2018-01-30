@@ -135,7 +135,6 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
     Returns a set of capabilities, in case you want to assert more things about
     them.
     """
-
     capabilities = endpoint['capabilities']
     supported = set(
         feature['interface']
@@ -354,7 +353,6 @@ def test_variable_fan(hass):
 
     This one has variable speed.
     """
-
     device = (
         'fan.test_2',
         'off', {
@@ -612,7 +610,6 @@ def assert_percentage_changes(
 
     AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
     """
-
     for result_volume, adjustment in adjustments:
         if parameter:
             payload = {parameter: adjustment}
@@ -1076,7 +1073,6 @@ def reported_properties(hass, endpoint):
     The result is a _ReportedProperties instance, which has methods to make
     assertions about the properties.
     """
-
     request = get_new_request('Alexa', 'ReportState', endpoint)
     msg = yield from smart_home.async_handle_message(
         hass, DEFAULT_CONFIG, request)
