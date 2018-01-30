@@ -61,7 +61,7 @@ def async_setup(hass, config):
             if platform is not None:
                 _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
                               device.address, 
-                              device.states[state].name, 
+                              device.states[stateKey].name, 
                               platform)
                 hass.async_add_job(
                     discovery.async_load_platform(
