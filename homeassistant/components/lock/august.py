@@ -6,25 +6,13 @@ https://home-assistant.io/components/lock.august/
 """
 from datetime import timedelta
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.august import DATA_AUGUST, DOMAIN
+from homeassistant.components.august import DATA_AUGUST
 from homeassistant.components.lock import LockDevice, ATTR_CHANGED_BY
-from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_SCAN_INTERVAL
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 DEPENDENCIES = ['august']
 
 SCAN_INTERVAL = timedelta(seconds=5)
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period
-    })
-}, extra=vol.ALLOW_EXTRA)
-
-ATTR_SERIAL_NUMBER = "serial_number"
-ATTR_FIRMWARE_VERSION = "firmware_version"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -90,8 +78,5 @@ class AugustLock(LockDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_BATTERY_LEVEL: "{}%".format(self._lock_detail.battery_level),
-            ATTR_SERIAL_NUMBER: self._lock_detail.serial_number,
-            ATTR_FIRMWARE_VERSION: self._lock_detail.firmware_version,
-            ATTR_CHANGED_BY: self._changed_by
+            ATTR_BATTERY_LEVEL: self._lock_detail.battery_level,
         }
