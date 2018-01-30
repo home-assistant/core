@@ -452,6 +452,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.block_till_done()
         self.assertFalse(self.hass.data['mqtt']._mqttc.unsubscribe.called)
 
+
 @asyncio.coroutine
 def test_setup_embedded_starts_with_no_config(hass):
     """Test setting up embedded server with no config."""
