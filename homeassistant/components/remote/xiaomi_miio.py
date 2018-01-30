@@ -232,43 +232,15 @@ class XiaomiMiioRemote(RemoteDevice):
         """Send a command."""
         from miio import DeviceException
 
-        if ':' in payload and len(payload.split(':')) >= 2:
-            command_list = payload.split(':')
-            command_type = command_list[0]
-            command = command_list[1]
-            if len(command_list) == 3:
-                command_optional = command_list[2]
-            else:
-                command_optional = None
-
-            _LOGGER.debug("Sending command: '%s'", command)
-            if command_type == 'raw':
-                try:
-                    self.device.play(command, int(command_optional))
-                    return True
-                except DeviceException as ex:
-                    _LOGGER.error(
-                        "Transmit of IR command failed, %s, exception: %s",
-                        payload, ex)
-                    return False
-            if command_type == 'pronto':
-                try:
-                    self.device.play_pronto(command,
-                                            repeats=int((
-                                                command_optional or 0)))
-                    return True
-                except DeviceException as ex:
-                    _LOGGER.error(
-                        "Transmit of IR command failed, %s, exception: %s",
-                        payload, ex)
-                    return False
-            _LOGGER.error("command_type: '%s' not supported", command_type)
+        _LOGGER.debug("Sending payload: '%s'", payload)
+        try:
+            self.device.play(payload, None)
+            return True
+        except DeviceException as ex:
+            _LOGGER.error(
+                "Transmit of IR command failed, %s, exception: %s",
+                payload, ex)
             return False
-
-        _LOGGER.error("command: '%s' is not the correct format, " +
-                      "format should be " +
-                      "command_type:command[:command_optional]", payload)
-        return False
 
     def send_command(self, command, **kwargs):
         """Wrapper for _send_command."""
