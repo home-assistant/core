@@ -9,6 +9,7 @@ import asyncio
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (STATE_ON, STATE_OFF)
+
 _LOGGER = logging.getLogger(__name__)
 ATTR_DISCOVER_DEVICES = 'egardia_sensor'
 D_EGARDIASYS = 'egardiadevice'
@@ -16,16 +17,6 @@ D_EGARDIASYS = 'egardiadevice'
 EGARDIA_TYPE_TO_DEVICE_CLASS = {'IR Sensor': 'motion',
                                 'Door Contact': 'opening',
                                 'IR': 'motion'}
-
-
-def _create_sensor(hass, sensor):
-    return EgardiaBinarySensor(
-        senid=sensor["id"],
-        name=sensor['name'],
-        egardiasystem=hass.data[D_EGARDIASYS],
-        state=STATE_ON if sensor['cond'] else STATE_OFF,
-        device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get(sensor['type'], None)
-        )
 
 
 @asyncio.coroutine
@@ -36,11 +27,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     discinfo = discovery_info[ATTR_DISCOVER_DEVICES]
-
+    _LOGGER.error(discinfo)
     # multiple devices here!
     async_add_devices(
         (
-            _create_sensor(hass, discinfo[sensor])
+            EgardiaBinarySensor(
+                senid=discinfo[sensor]['id'],
+                name=discinfo[sensor]['name'],
+                egardiasystem=hass.data[D_EGARDIASYS],
+                device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get
+                (
+                    discinfo[sensor]['type'], None
+                )
+            )
             for sensor in discinfo
         ), True)
 
@@ -48,11 +47,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class EgardiaBinarySensor(BinarySensorDevice):
     """Represents a sensor based on an Egardia sensor (IR, Door Contact)."""
 
-    def __init__(self, senid, name, egardiasystem, state, device_class):
+    def __init__(self, senid, name, egardiasystem, device_class):
         """Initialize the sensor device."""
         self._id = senid
         self._name = name
-        self._state = state
+        self._state = None
         self._device_class = device_class
         self._egardiasystem = egardiasystem
 
