@@ -248,7 +248,6 @@ def run(script_args: List) -> int:
         points = []
         step_start += step
 
-
     print("\nStatistics:")
     print("\n".join(["{:6}: {}".format(v, k) for k, v
                      in sorted(entities.items(), key=lambda x: x[1])]))
