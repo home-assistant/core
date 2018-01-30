@@ -18,8 +18,8 @@ from homeassistant.helpers import discovery
 
 from insteonplm.constants import *
 from insteonplm.states.onOff import (OnOffSwitch, OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom, OpenClosedRelay)
-from insteonplm.dimmable import (DimmableSwitch, DimmableSwitch_Fan)
-from insteonplm.sensor import (OnOffSensor, MotionSensor, SmokeCO2Sensor, IoLincSensor)
+from insteonplm.states.dimmable import (DimmableSwitch, DimmableSwitch_Fan)
+from insteonplm.states.sensor import (OnOffSensor, MotionSensor, SmokeCO2Sensor, IoLincSensor)
 
 REQUIREMENTS = ['insteonplm==0.7.5']
 
