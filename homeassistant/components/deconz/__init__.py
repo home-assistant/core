@@ -17,7 +17,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==25']
+REQUIREMENTS = ['pydeconz==27']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ SERVICE_DATA = 'data'
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Required(SERVICE_FIELD): cv.string,
-    vol.Required(SERVICE_DATA): cv.string,
+    vol.Required(SERVICE_DATA): dict,
 })
 
 CONFIG_INSTRUCTIONS = """
