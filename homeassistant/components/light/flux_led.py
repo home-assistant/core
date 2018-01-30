@@ -168,11 +168,6 @@ class FluxLight(Light):
         return self._bulb is not None
 
     @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return '{}.{}'.format(self.__class__, self._ipaddr)
-
-    @property
     def name(self):
         """Return the name of the device if any."""
         return self._name

@@ -98,6 +98,11 @@ class NestThermostat(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
+    def unique_id(self):
+        """Unique ID for this device."""
+        return self.device.serial
+
+    @property
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
