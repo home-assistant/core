@@ -71,20 +71,11 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Egardia platform."""
     from pythonegardia import egardiadevice
-    from pythonegardia import egardiaserver
-
     domainconf = config[DOMAIN]
-    name = domainconf.get(CONF_NAME)
-    hass.data[D_EGARDIANM] = name
     username = domainconf.get(CONF_USERNAME)
     password = domainconf.get(CONF_PASSWORD)
     host = domainconf.get(CONF_HOST)
     port = domainconf.get(CONF_PORT)
-    rs_enabled = domainconf.get(CONF_REPORT_SERVER_ENABLED)
-    hass.data[D_EGARDIARSENABLED] = rs_enabled
-    rs_port = domainconf.get(CONF_REPORT_SERVER_PORT)
-    rs_codes = domainconf.get(CONF_REPORT_SERVER_CODES)
-    hass.data[D_EGARDIARSCODES] = rs_codes
     version = domainconf.get(CONF_VERSION)
     try:
         device = hass.data[D_EGARDIASYS] = egardiadevice.EgardiaDevice(
@@ -94,31 +85,6 @@ def setup(hass, config):
     except egardiadevice.UnauthorizedError:
         _LOGGER.error("Unable to authorize. Wrong password or username")
         return
-
-    # add egardia alarm device
-    def alarm_loaded(event, data=None):
-        """Check if egardia platform has loaded."""
-        if event is DOMAIN:
-            # configure egardia server, including callback
-            if rs_enabled:
-                # Set up the egardia server
-                _LOGGER.info("Setting up EgardiaServer")
-                try:
-                    if D_EGARDIASRV not in hass.data:
-                        server = egardiaserver.EgardiaServer('', rs_port)
-                        bound = server.bind()
-                        if not bound:
-                            raise IOError("Binding error occurred while " +
-                                          "starting EgardiaServer")
-                        hass.data[D_EGARDIASRV] = server
-                        server.start()
-                except IOError:
-                    return
-                hass.data[D_EGARDIASRV].register_callback(
-                    hass.data[D_EGARDIADEV].handle_status_event)
-
-    # register for callback since we might need to set up the egardia server
-    discovery.listen_platform(hass, 'alarm_control_panel', alarm_loaded)
 
     discovery.load_platform(hass, 'alarm_control_panel', DOMAIN,
                             discovered=domainconf, hass_config=config)

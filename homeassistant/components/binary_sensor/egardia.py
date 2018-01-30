@@ -39,9 +39,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # multiple devices here!
     async_add_devices(
-        _create_sensor(hass, discinfo[sensor])
-        for sensor in discinfo
-        )
+        (
+            _create_sensor(hass, discinfo[sensor])
+            for sensor in discinfo
+        ), True)
 
 
 class EgardiaBinarySensor(BinarySensorDevice):
@@ -54,7 +55,6 @@ class EgardiaBinarySensor(BinarySensorDevice):
         self._state = state
         self._device_class = device_class
         self._egardiasystem = egardiasystem
-        # spc_registry.register_sensor_device(zone_id, self)
 
     def update(self):
         """Update the status."""
@@ -75,11 +75,6 @@ class EgardiaBinarySensor(BinarySensorDevice):
     def hidden(self):
         """Whether the device is hidden by default."""
         # these type of sensors are probably mainly used for automations
-        return True
-
-    @property
-    def should_poll(self):
-        """Polling required."""
         return True
 
     @property

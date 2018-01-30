@@ -13,6 +13,8 @@ from homeassistant.const import (
     STATE_UNKNOWN, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
 
+REQUIREMENTS = ['pythonegardia==1.0.36']
+
 _LOGGER = logging.getLogger(__name__)
 
 STATES = {
@@ -26,17 +28,23 @@ STATES = {
 
 D_EGARDIASYS = 'egardiadevice'
 D_EGARDIADEV = 'egardia_dev'
+D_EGARDIASRV = 'egardiaserver'
 CONF_REPORT_SERVER_CODES_IGNORE = 'ignore'
+CONF_REPORT_SERVER_CODES = 'report_server_codes'
+CONF_REPORT_SERVER_ENABLED = 'report_server_enabled'
+CONF_REPORT_SERVER_PORT = 'report_server_port'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Egardia platform."""
     device = EgardiaAlarm(
+        hass,
         discovery_info['name'],
         hass.data[D_EGARDIASYS],
-        discovery_info['report_server_enabled'],
-        discovery_info['report_server_codes'] if 'report_server_codes'
-        in discovery_info else None)
+        discovery_info[CONF_REPORT_SERVER_ENABLED],
+        discovery_info[CONF_REPORT_SERVER_CODES] if CONF_REPORT_SERVER_CODES
+        in discovery_info else None,
+        discovery_info[CONF_REPORT_SERVER_PORT])
     hass.data[D_EGARDIADEV] = device
     # add egardia alarm device
     add_devices([device], True)
@@ -45,9 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem,
-                 rs_enabled=False, rs_codes=None):
+    def __init__(self, hass, name, egardiasystem,
+                 rs_enabled=False, rs_codes=None, rs_port=52010):
         """Initialize the Egardia alarm."""
+        from pythonegardia import egardiaserver
         self._name = name
         self._egardiasystem = egardiasystem
         self._status = None
@@ -56,6 +65,25 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
             self._rs_codes = rs_codes[0]
         else:
             self._rs_codes = rs_codes
+        self._rs_port = rs_port
+
+        # configure egardia server, including callback
+        if self._rs_enabled:
+            # Set up the egardia server
+            _LOGGER.info("Setting up EgardiaServer")
+            try:
+                if D_EGARDIASRV not in hass.data:
+                    server = egardiaserver.EgardiaServer('', rs_port)
+                    bound = server.bind()
+                    if not bound:
+                        raise IOError("Binding error occurred while " +
+                                      "starting EgardiaServer")
+                    hass.data[D_EGARDIASRV] = server
+                    server.start()
+            except IOError:
+                return
+            hass.data[D_EGARDIASRV].register_callback(
+                self.handle_status_event)
 
     @property
     def name(self):
