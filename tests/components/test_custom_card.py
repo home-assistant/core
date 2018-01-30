@@ -63,9 +63,9 @@ class TestCustomCard(unittest.TestCase):
 
         self.assertEqual(count_start + 3, len(self.hass.states.entity_ids()))
 
-        state_1 = self.hass.states.get('custom_card.test_1')
-        state_2 = self.hass.states.get('custom_card.test_2')
-        state_3 = self.hass.states.get('custom_card.test_3')
+        state_1 = self.hass.states.get('custom_full_card.test_1')
+        state_2 = self.hass.states.get('custom_state_card.test_2')
+        state_3 = self.hass.states.get('custom_full_card.test_3')
 
         self.assertIsNotNone(state_1)
         self.assertIsNotNone(state_2)
@@ -75,9 +75,9 @@ class TestCustomCard(unittest.TestCase):
         self.assertEqual('state-card', state_2.state)
         self.assertEqual('full-card', state_3.state)
 
-        self.assertEqual('custom_ui_full-card',
-                         state_3.attributes.get('full_card'))
-        self.assertEqual('custom_ui_state-card',
-                         state_3.attributes.get('state_card'))
-        self.assertEqual('custom_ui_more-info-card',
-                         state_3.attributes.get('more_info_card'))
+        self.assertEqual('full-card',
+                         state_3.attributes.get('custom_ui_full_card'))
+        self.assertEqual('state-card',
+                         state_3.attributes.get('custom_ui_state_card'))
+        self.assertEqual('more-info-card',
+                         state_3.attributes.get('custom_ui_more_info_card'))
