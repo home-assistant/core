@@ -57,7 +57,7 @@ REQUIRES = [
     'yarl==0.18.0',
     'async_timeout==2.0.0',
     'chardet==3.0.4',
-    'astral==1.4',
+    'astral==1.5',
     'certifi>=2017.4.17',
 ]
 
