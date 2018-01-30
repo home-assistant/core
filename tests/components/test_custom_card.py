@@ -1,11 +1,9 @@
 """The tests the custom cards component."""
 # pylint: disable=protected-access
-import asyncio
 import unittest
 import logging
 
-from homeassistant.core import CoreState, State
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.custom_card import DOMAIN
 
 from tests.common import get_test_home_assistant
@@ -41,7 +39,6 @@ class TestCustomCard(unittest.TestCase):
             self.assertFalse(
                 setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
-
     def test_config_options(self):
         """Test configuration options."""
         count_start = len(self.hass.states.entity_ids())
@@ -53,7 +50,7 @@ class TestCustomCard(unittest.TestCase):
                 'full_card': 'full-card',
             },
             'test_2': {
-                'state_card': 'state-card',                
+                'state_card': 'state-card',
             },
             'test_3': {
                 'full_card': 'full-card',
@@ -78,9 +75,9 @@ class TestCustomCard(unittest.TestCase):
         self.assertEqual('state-card', state_2.state)
         self.assertEqual('full-card', state_3.state)
 
-        self.assertEqual('full-card',
+        self.assertEqual('custom_ui_full-card',
                          state_3.attributes.get('full_card'))
-        self.assertEqual('state-card',
-                         state_3.attributes.get('state_card'))                         
-        self.assertEqual('more-info-card',
+        self.assertEqual('custom_ui_state-card',
+                         state_3.attributes.get('state_card'))
+        self.assertEqual('custom_ui_more-info-card',
                          state_3.attributes.get('more_info_card'))
