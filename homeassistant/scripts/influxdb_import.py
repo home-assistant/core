@@ -164,7 +164,7 @@ def run(script_args: List) -> int:
         for event in query:
             event_data = json.loads(event.event_data)
 
-            if ('entity_id' not in event_data) or not (
+            if not ('entity_id' in event_data) or (
                     excl_entities and event_data[
                         'entity_id'] in excl_entities) or (
                             excl_domains and event_data[
@@ -235,15 +235,25 @@ def run(script_args: List) -> int:
                 # print("Write {} points to the database".format(len(points)))
                 client.write_points(points)
             count += len(points)
+            # This prevents the progress bar from going over 100% when
+            # the last step happens
+            print_progress((step_start + len(
+                points)), total_events, prefix_format.format(
+                    step_start, total_events))
+        else:
+            print_progress(
+                (step_start + step), total_events, prefix_format.format(
+                    step_start, total_events))
 
+        points = []
         step_start += step
-        print_progress(step_start, total_events, prefix_format.format(
-            step_start, total_events))
+
 
     print("\nStatistics:")
     print("\n".join(["{:6}: {}".format(v, k) for k, v
                      in sorted(entities.items(), key=lambda x: x[1])]))
-    print("\nImport finished {} points written".format(count))
+    print("\nInvalid Points: {}".format(len(invalid_points)))
+    print("\nImport finished: {} points written".format(count))
     return 0
 
 
