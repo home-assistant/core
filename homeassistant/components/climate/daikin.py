@@ -184,11 +184,6 @@ class DaikinClimate(ClimateDevice):
             self._api.device.set(values)
 
     @property
-    def unique_id(self):
-        """Return the ID of this AC."""
-        return "{}.{}".format(self.__class__, self._api.ip_address)
-
-    @property
     def supported_features(self):
         """Return the list of supported features."""
         return self._supported_features
