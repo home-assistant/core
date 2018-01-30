@@ -15,6 +15,7 @@ from homeassistant.const import HTTP_BAD_REQUEST
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'custom_card'
+DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ def async_setup(hass, config):
             entity_id = 'custom_full_card.{}'.format(object_id)
             state = full_card
         else:
-            entity_id = 'custom_sate_card.{}'.format(object_id)
+            entity_id = 'custom_state_card.{}'.format(object_id)
             state = state_card
 
         attributes = {}
@@ -101,4 +102,4 @@ class CustomCardView(http.HomeAssistantView):
             return self.json_message('For this entity is no config available.',
                                      HTTP_BAD_REQUEST)
         else:
-            return '{"config": ' + config + '}'
+            return self.json({'config': config})
