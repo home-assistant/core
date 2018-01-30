@@ -7,7 +7,7 @@ https://home-assistant.io/components/lock.august/
 from datetime import timedelta
 
 from homeassistant.components.august import DATA_AUGUST
-from homeassistant.components.lock import LockDevice, ATTR_CHANGED_BY
+from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
 DEPENDENCIES = ['august']
