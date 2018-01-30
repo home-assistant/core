@@ -14,6 +14,8 @@ from homeassistant.components.climate import (
     SUPPORT_ON_OFF)
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
+SUPPORT_FLAGS = SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo climate devices."""
@@ -38,7 +40,7 @@ class DemoClimate(ClimateDevice):
                  is_on):
         """Initialize the climate device."""
         self._name = name
-        self._support_flags = 0
+        self._support_flags = SUPPORT_FLAGS
         if target_temperature is not None:
             self._support_flags = \
                 self._support_flags | SUPPORT_TARGET_TEMPERATURE
@@ -50,8 +52,7 @@ class DemoClimate(ClimateDevice):
             self._support_flags = self._support_flags | SUPPORT_FAN_MODE
         if target_humidity is not None:
             self._support_flags = \
-                self._support_flags | SUPPORT_TARGET_HUMIDITY | \
-                SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH
+                self._support_flags | SUPPORT_TARGET_HUMIDITY
         if current_swing_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_SWING_MODE
         if current_operation is not None:
