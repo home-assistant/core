@@ -58,7 +58,7 @@ class WemoBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return the id of this WeMo device."""
-        return '{}.{}'.format(self.__class__, self.wemo.serialnumber)
+        return self.wemo.serialnumber
 
     @property
     def name(self):

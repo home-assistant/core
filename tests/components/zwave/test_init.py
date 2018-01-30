@@ -198,7 +198,7 @@ def test_device_entity(hass, mock_openzwave):
     yield from hass.async_block_till_done()
 
     assert not device.should_poll
-    assert device.unique_id == "ZWAVE-10-11"
+    assert device.unique_id == "10-11"
     assert device.name == 'Mock Node Sensor'
     assert device.device_state_attributes[zwave.ATTR_POWER] == 50.123
 
