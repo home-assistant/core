@@ -7,6 +7,7 @@ https://home-assistant.io/components/demo/
 from homeassistant.components.climate import (
     ClimateDevice, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_AUX_HEAT, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
@@ -22,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     None, None),
         DemoClimate('Hvac', 21, TEMP_CELSIUS, True, None, 22, 'On High',
                     67, 54, 'Off', 'cool', False, None, None, True),
-        DemoClimate('Ecobee', None, TEMP_CELSIUS, None, None, 23, 'Auto Low',
+        DemoClimate('Ecobee', None, TEMP_CELSIUS, None, 'home', 23, 'Auto Low',
                     None, None, 'Auto', 'auto', None, 24, 21, None)
     ])
 
@@ -49,7 +50,8 @@ class DemoClimate(ClimateDevice):
             self._support_flags = self._support_flags | SUPPORT_FAN_MODE
         if target_humidity is not None:
             self._support_flags = \
-                self._support_flags | SUPPORT_TARGET_HUMIDITY
+                self._support_flags | SUPPORT_TARGET_HUMIDITY | \
+                SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH
         if current_swing_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_SWING_MODE
         if current_operation is not None:
