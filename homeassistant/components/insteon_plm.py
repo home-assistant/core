@@ -65,7 +65,7 @@ def async_setup(hass, config):
                               platform)
                 hass.async_add_job(
                     discovery.async_load_platform(
-                        hass, platform, DOMAIN, discovered=[device, stateKey, subplatform],
+                        hass, platform, DOMAIN, discovered=[{'device':device, 'stateKey':stateKey, 'subplatform':subplatform}],
                         hass_config=config))
 
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
