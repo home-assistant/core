@@ -98,6 +98,7 @@ class CustomCardView(http.HomeAssistantView):
         try:
             config = self._card_configs[data['entity_id']]
         except KeyError:
-            return self.json_message('For this entity is no config available.', HTTP_BAD_REQUEST)
+            return self.json_message('For this entity is no config available.',
+                                     HTTP_BAD_REQUEST)
         else:
             return '{"config": ' + config + '}'
