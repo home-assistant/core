@@ -23,6 +23,11 @@ def async_setup(hass, config):
     yield from hass.components.frontend.async_register_built_in_panel(
         'config', 'config', 'mdi:settings')
 
+    # Temporary way of allowing people to opt-in for config-entries
+    if config.get(DOMAIN, {}).get('config_entries'):
+        global SECTIONS
+        SECTIONS = SECTIONS + ('config_entries',)
+
     @asyncio.coroutine
     def setup_panel(panel_name):
         """Set up a panel."""

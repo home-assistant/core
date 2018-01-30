@@ -1198,6 +1198,9 @@ uvcclient==0.10.1
 # homeassistant.components.climate.venstar
 venstarcolortouch==0.6
 
+# homeassistant.components.config.config_entries
+voluptuous-serialize==0.1
+
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
 
