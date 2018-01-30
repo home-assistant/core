@@ -17,6 +17,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 
 from insteonplm.constants import *
+from insteonplm.states.onOff import (OnOffSwitch, OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom, OpenClosedRelay)
+from insteonplm.dimmable import (DimmableSwitch, DimmableSwitch_Fan)
+from insteonplm.sensor import (OnOffSensor, MotionSensor, SmokeCO2Sensor, IoLincSensor)
 
 REQUIREMENTS = ['insteonplm==0.7.5']
 
@@ -51,17 +54,19 @@ def async_setup(hass, config):
         _LOGGER = logging.getLogger(__name__)
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
         _LOGGER.debug(device)
-        name = device.id
-        address = device.address.human
-        product = ipdb[[device.cat, device.subcat, device.groupbutton]]
-
-        _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
-                     name, address, product[4])
-        if product[4] is not None:
-            hass.async_add_job(
-                discovery.async_load_platform(
-                    hass, product[4], DOMAIN, discovered=[device],
-                    hass_config=config))
+        for stateKey in device.states:
+            platformInfo = ipdb[device.states[state]] 
+            platform = platformInfo.platform
+            subplatform = platformInfo.subplatform
+            if platform is not None:
+                _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
+                              device.address, 
+                              device.states[state].name, 
+                              platform)
+                hass.async_add_job(
+                    discovery.async_load_platform(
+                        hass, platform, DOMAIN, discovered=[device, stateKey, subplatform],
+                        hass_config=config))
 
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
 
@@ -93,7 +98,7 @@ def async_setup(hass, config):
 
     return True
 
-def common_attributes(entity):
+def common_attributes(entity, state):
     """Return the device state attributes."""
     attributes = {
         'INSTEON Address' : entity.address.human,
@@ -102,81 +107,43 @@ def common_attributes(entity):
         'Category': '{:02x}'.format(entity.cat),
         'Subcategory': '{:02x}'.format(entity.subcat),
         'Product Key / Firmware': '{:02x}'.format(entity.product_key),
-        'Group': entity.groupbutton
+        'Group': '{:02x}'.format(state.group)
     }
     return attributes
 
 
-Product = collections.namedtuple('Product', 'cat subcat product_key group platform')
+State = collections.namedtuple('Product', 'stateType platform subplatform')
 
 class IPDB(object):
     """Embodies the INSTEON Product Database static data and access methods."""
 
-    products = [
-        
-        Product(DEVICE_CATEGORY_GENERALIZED_CONTROLLERS_0X00, None, None, None, None),
-        Product(DEVICE_CATEGORY_DIMMABLE_LIGHTING_CONTROL_0X01, None, None, None, 'light'),
-        Product(DEVICE_CATEGORY_DIMMABLE_LIGHTING_CONTROL_0X01, 0x2e, None, 0x01, 'light'),  # FanLinc Light
-        Product(DEVICE_CATEGORY_DIMMABLE_LIGHTING_CONTROL_0X01, 0x2e, None, 0x02, 'fan'),    # FanLinc Fan
-        Product(DEVICE_CATEGORY_SWITCHED_LIGHTING_CONTROL_0X02, None, None, None, 'switch'),
-        Product(DEVICE_CATEGORY_SWITCHED_LIGHTING_CONTROL_0X02, 0x39, None, 0x01, 'switch'), # On/Off Outlet Top
-        Product(DEVICE_CATEGORY_SWITCHED_LIGHTING_CONTROL_0X02, 0x39, None, 0x02, 'switch'), # On/Off Outlet Bottom
-        Product(DEVICE_CATEGORY_NETWORK_BRIDGES_0X03, None, None, None, None),
-        Product(DEVICE_CATEGORY_IRRIGATION_CONTROL_0X04, None, None, None, None),
-        Product(DEVICE_CATEGORY_CLIMATE_CONTROL_0X05, None, None, None, None),
-        Product(DEVICE_CATEGORY_SENSORS_AND_ACTUATORS_0X07, None, None, None, None),
-        Product(DEVICE_CATEGORY_SENSORS_AND_ACTUATORS_0X07, 0x00, None, 0x01, 'switch'),  # Relay of the I/O Linc
-        Product(DEVICE_CATEGORY_SENSORS_AND_ACTUATORS_0X07, 0x00, None, 0x02, 'binary_sensor'), # Sensor of the I/O Linc
-        Product(DEVICE_CATEGORY_HOME_ENTERTAINMENT_0X08, None, None, None, None),
-        Product(DEVICE_CATEGORY_ENERGY_MANAGEMENT_0X09, None, None, None, None),
-        Product(DEVICE_CATEGORY_BUILT_IN_APPLIANCE_CONTROL_0X0A, None, None, None, None),
-        Product(DEVICE_CATEGORY_PLUMBING_0X0B, None, None, None, None),
-        Product(DEVICE_CATEGORY_COMMUNICATION_0X0C, None, None, None, None),
-        Product(DEVICE_CATEGORY_COMPUTER_CONTROL_0X0D, None, None, None, None),
-        Product(DEVICE_CATEGORY_WINDOW_COVERINGS_0X0E, None, None, None, None),
-        Product(DEVICE_CATEGORY_ACCESS_CONTROL_0X0F, None, None, None, None),
-        Product(DEVICE_CATEGORY_SECURITY_HEALTH_SAFETY_0X10, None, None, None, 'sensor'), # making the default sensor since this is more flexible than binary_sensor
-        Product(DEVICE_CATEGORY_SECURITY_HEALTH_SAFETY_0X10, 0x01, None, None, 'binary_sensor'),        
-        Product(DEVICE_CATEGORY_SECURITY_HEALTH_SAFETY_0X10, 0x02, None, None, 'binary_sensor'),
-        Product(DEVICE_CATEGORY_SECURITY_HEALTH_SAFETY_0X10, 0x08, None, None, 'binary_sensor'),
-        Product(DEVICE_CATEGORY_SECURITY_HEALTH_SAFETY_0X10, 0x11, None, None, 'binary_sensor'),
-        Product(DEVICE_CATEGORY_SURVEILLANCE_0X11, None, None, None, None),
-        Product(DEVICE_CATEGORY_AUTOMOTIVE_0X12, None, None, None, None),
-        Product(DEVICE_CATEGORY_PET_CARE_0X13, None, None, None, None),
-        Product(DEVICE_CATEGORY_TIMEKEEPING_0X15, None, None, None, None),
-        Product(DEVICE_CATEGORY_HOLIDAY_0X16, None, None, None, None)
-    ]
+    states = [
+        State(OnOffSwitch_OutletTop, 'switch', 'onOff'),
+        State(OnOffSwitch_OutletBottom,'switch', 'onOff'),
+        State(OpenClosedRelay, 'switch', 'openClosed'),
+        State(OnOffSwitch, 'switch', 'onOff'),
+
+        State(MotionSensor, 'binary_sensor', 'motion'),
+        State(SmokeCO2Sensor, 'sensor', None),
+        State(IoLincSensor, 'binary_sensor', 'opening'),
+        State(OnOffSensor, 'binary_sensor', None),
+
+        State(DimmableSwitch_Fan, 'fan', None),
+        State(DimmableSwitch, 'light', None)
+        ]
 
     def __init__(self):
         self.log = logging.getLogger(__name__)
 
     def __len__(self):
-        return len(self.products)
+        return len(self.states)
 
     def __iter__(self):
-        for product in self.products:
+        for product in self.states:
             yield product
 
     def __getitem__(self, key):
-        cat, subcat, group = key
-
-        # Check for a group specific device first
-        for product in self.products:
-            if cat == product.cat and subcat == product.subcat and group == product.group:
-                return product
-
-        # Check for a non-group sepecific device
-        for product in self.products:
-            if cat == product.cat and subcat == product.subcat:
-                return product
-
-        # We failed to find a device in the database, so we will make a best
-        # guess from the cat and return the generic class
-        #
-        
-        for product in self.products:
-            if cat == product.cat and product.subcat == None:
-                return product
-
-        # We did not find the device or even a generic device of that category
-        return Product(cat, subcat, None, None) 
+        for state in self.states:
+            if isinstance(key, state.stateType):
+                return state
+        return None

@@ -24,30 +24,27 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
 
-    device_list = []
-    for device in discovery_info:
+    state_list = []
+    
+    for deviceInfo in discovery_info:
+        device = deviceInfo[0]
+        state = device.states[deviceInfo[1]]
+       
+        state_list.append(InsteonPLMBinarySensor( hass, device, state, SUPPORT_SET_SPEED))
 
-        _LOGGER.info('Registered %s with switch platform.', device.id)
-
-        device_list.append(
-            InsteonPLMFan(hass, device, SUPPORT_SET_SPEED)
-        )
-
-    async_add_devices(device_list)
+    async_add_devices(state_list)
 
 class InsteonPLMFan(FanEntity):
     """An INSTEON fan component."""
 
-    def __init__(self, hass, device, supported_features: int) -> None:
+    def __init__(self, hass, state, supported_features: int) -> None:
         """Initialize the entity."""
-        self.hass = hass
-        self._device = device
-        self._supported_features = supported_features
-        self._speed = STATE_OFF
-        self.oscillating = False
-        self.direction = DIRECTION_FORWARD
+        self._hass = hass
+        self._state = state
+        self._device = device 
+        self._sensor_type = sensorType
 
-        self._device.fanSpeed.connect(self.async_fan_update)
+        self._state.register_updates(self.async_fan_update)
 
     @property
     def should_poll(self):
@@ -67,12 +64,18 @@ class InsteonPLMFan(FanEntity):
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
-        return self._device.id
+        return self._device.id + '_' + self._state.name
+
+    @property
+    def device_state_attributes(self):
+        """Provide attributes for display on device card."""
+        insteon_plm = get_component('insteon_plm')
+        return insteon_plm.common_attributes(self._device, self._state)
 
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return self._hex_to_speed(self._device.fanSpeed.value)
+        return self._hex_to_speed(self._state.value)
 
     @property
     def speed_list(self) -> list:
@@ -93,14 +96,14 @@ class InsteonPLMFan(FanEntity):
         """Set the speed of the fan."""
         fanSpeed = self._speed_to_hex(speed)
         if fanSpeed == 0x00:
-            self._device.fan_off()
+            self.state.off()
         else:
-            self._device.fan_on(fanSpeed)
+            self.state.set_level(fanSpeed)
 
     @callback
     def async_fan_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for %s', self._device.id)
+        _LOGGER.info('Received update calback from PLM for device %s state %s', deviceid, statename)
         self.hass.async_add_job(self.async_update_ha_state())
 
     @property

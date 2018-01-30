@@ -23,27 +23,27 @@ MAX_BRIGHTNESS = 255
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Insteon PLM device."""
 
-    device_list = []
-    for device in discovery_info:
+    state_list = []
+    
+    for deviceInfo in discovery_info:
+        device = deviceInfo[0]
+        state = device.states[deviceInfo[1]]
+       
+        state_list.append(InsteonPLMDimmerDevice( hass, device, state, SUPPORT_SET_SPEED))
 
-        _LOGGER.info("Registered %s with light platform", device.id)
-
-        device_list.append(
-            InsteonPLMDimmerDevice(hass, device)
-        )
-
-    async_add_devices(device_list)
+    async_add_devices(state_list)
 
 
 class InsteonPLMDimmerDevice(Light):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device):
+    def __init__(self, hass, device, state):
         """Initialize the light."""
         self._hass = hass
         self._device = device
+        self._state = state
 
-        self._device.lightOnLevel.connect(self.async_light_update)
+        self._state.register_updates(self.async_light_update)
 
     @property
     def should_poll(self):
@@ -63,12 +63,12 @@ class InsteonPLMDimmerDevice(Light):
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
-        return self._device.id
+        return self._device.id + '_' + self._state.name
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        onlevel = self._device.lightOnLevel.value
+        onlevel = self._state.value
         _LOGGER.debug("on level for %s is %s", self._device.address, onlevel)
         return int(onlevel)
 
@@ -87,7 +87,7 @@ class InsteonPLMDimmerDevice(Light):
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._device)
+        return insteon_plm.common_attributes(self._device, self._state)
 
     @callback
     def async_light_update(self, entity_id, statename, val):
@@ -100,11 +100,11 @@ class InsteonPLMDimmerDevice(Light):
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
+            self._state.set_level(brightness)
         else:
-            brightness = MAX_BRIGHTNESS
-        self._device.light_on(brightness)
+            self._state.on()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn device off."""
-        self._device.light_off()
+        self._state.off()

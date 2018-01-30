@@ -20,27 +20,26 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
 
-    device_list = []
-    for device in discovery_info:
+    state_list = []
+    
+    for deviceInfo in discovery_info:
+        device = deviceInfo[0]
+        state = device.states[deviceInfo[1]]
        
-        _LOGGER.info('Registered %s with binary_sensor platform.', device.id)
+        state_list.append(InsteonPLMDimmerDevice( hass, device, state, SUPPORT_SET_SPEED))
 
-        device_list.append(
-            InsteonPLMSensorDevice(hass, device)
-        )
-
-    async_add_devices(device_list)
-
+    async_add_devices(state_list)
 
 class InsteonPLMSensorDevice(Entity):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device):
+    def __init__(self, hass, device, state):
         """Initialize the binarysensor."""
         self._hass = hass
         self._device = device
+        self._state = state
 
-        self._device.sensor.connect(self.async_sensor_update)
+        self._state.register_updates(self.async_sensor_update)
 
     @property
     def should_poll(self):
@@ -65,7 +64,7 @@ class InsteonPLMSensorDevice(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        sensorstate = self._device.sensor.value
+        sensorstate = self._state.value
         _LOGGER.info("Sensor state for {} is {}", self.id, sensorstate)
         return sensorstate
 
@@ -73,7 +72,7 @@ class InsteonPLMSensorDevice(Entity):
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._device)
+        return insteon_plm.common_attributes(self._device, self._state)
 
     @callback
     def async_sensor_update(self, deviceid, statename, val):
