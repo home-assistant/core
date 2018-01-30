@@ -55,7 +55,7 @@ def async_setup(hass, config):
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
         _LOGGER.debug(device)
         for stateKey in device.states:
-            platformInfo = ipdb[device.states[state]] 
+            platformInfo = ipdb[device.states[stateKey]] 
             platform = platformInfo.platform
             subplatform = platformInfo.subplatform
             if platform is not None:
