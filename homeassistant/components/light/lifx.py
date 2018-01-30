@@ -398,6 +398,11 @@ class LIFXLight(Light):
         return self.registered
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.device.mac_addr
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self.device.label
