@@ -64,7 +64,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
-        return self._device.id
+        return self._device.id + '_' + self._state.name
 
     @property
     def is_on(self):
