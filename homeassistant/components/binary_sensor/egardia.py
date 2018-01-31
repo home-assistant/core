@@ -27,7 +27,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     discinfo = discovery_info[ATTR_DISCOVER_DEVICES]
-    _LOGGER.error(discinfo)
     # multiple devices here!
     async_add_devices(
         (
