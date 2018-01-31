@@ -88,18 +88,12 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn device on."""
-        if self._device.cat == 0x07: # I/O Linc
-            self._device.relay_open()
-        else:
-            self._device.light_on()
+        self._state.on()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn device off"""
-        if self._device.cat == 0x07: # I/O Linc
-            self._device.relay_close()
-        else:
-            self._device.light_off()
+        self._state.off()
 
 class InsteonPLMOpenClosedDevice(SwitchDevice):
     """A Class for an Insteon device."""
