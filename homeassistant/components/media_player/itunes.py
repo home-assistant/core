@@ -8,6 +8,7 @@ import logging
 
 import requests
 import voluptuous as vol
+import time
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
@@ -131,7 +132,7 @@ class Itunes(object):
 
     def artwork_url(self):
         """Return a URL of the current track's album art."""
-        return self._base_url + '/artwork'
+        return self._base_url + '/artwork?time=' + str(time.time())
 
     def airplay_devices(self):
         """Return a list of AirPlay devices."""
