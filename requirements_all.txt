@@ -425,7 +425,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
-keyring==10.6.0
+keyring==11.0.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==2.3
