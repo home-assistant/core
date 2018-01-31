@@ -585,9 +585,9 @@ def _is_latest(js_option, request):
         return useragent.os.version[0] >= 12
 
     family_min_version = {
-        'Chrome': 50,   # Probably can reduce this
-        'Firefox': 43,  # Array.prototype.includes added in 43
-        'Opera': 40,    # Probably can reduce this
+        'Chrome': 54,   # Object.values
+        'Firefox': 47,  # Object.values
+        'Opera': 41,    # Object.values
         'Edge': 14,     # Array.prototype.includes added in 14
         'Safari': 10,   # many features not supported by 9
     }
