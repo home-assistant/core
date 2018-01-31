@@ -26,7 +26,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
     sensors = hass.data[DECONZ_DATA].sensors
-    #entity_registry = hass.data[DECONZ_ENTITIES]
     entities = []
 
     for key in sorted(sensors.keys(), key=int):
@@ -38,7 +37,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     entities.append(DeconzBattery(sensor))
             else:
                 entities.append(DeconzSensor(sensor))
-                #entities.append(DeconzSensor(sensor, entity_registry))
     async_add_devices(entities, True)
 
 
