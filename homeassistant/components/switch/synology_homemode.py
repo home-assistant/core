@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_TIMEOUT)
+    CONF_URL)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
@@ -34,8 +34,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _url = config.get(CONF_URL)
     _username = config.get(CONF_USERNAME)
     _password = config.get(CONF_PASSWORD)
-    add_devices([SynologyHomeModeSwitch(DEFAULT_NAME, _url, 
-        _username, _password)])
+    add_devices([
+        SynologyHomeModeSwitch(DEFAULT_NAME, _url, _username, _password)])
 
 
 class SynologyHomeModeSwitch(ToggleEntity):
