@@ -440,8 +440,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_not_calling_unsubscribe_with_active_subscribers(self):
         """Test not calling unsubscribe() when other subscribers are active."""
-        self.hass.data['mqtt']._mqttc.unsubscribe = mock.MagicMock()
-        self.hass.data['mqtt']._mqttc.subscribe.side_effect = ((0, 1), (0, 1))
+        self.hass.data['mqtt']._mqttc.subscribe.side_effect = ((0, 1), (0, 2))
 
         unsub = mqtt.subscribe(self.hass, 'test/state', None)
         mqtt.subscribe(self.hass, 'test/state', None)
@@ -451,6 +450,50 @@ class TestMQTTCallbacks(unittest.TestCase):
         unsub()
         self.hass.block_till_done()
         self.assertFalse(self.hass.data['mqtt']._mqttc.unsubscribe.called)
+
+    def test_restore_subscriptions_on_reconnect(self):
+        """Test subscriptions are restored on reconnect."""
+        self.hass.data['mqtt']._mqttc.subscribe.side_effect = ((0, 1), (0, 2))
+
+        mqtt.subscribe(self.hass, 'test/state', None)
+        self.hass.block_till_done()
+        self.assertEqual(self.hass.data['mqtt']._mqttc.subscribe.call_count, 1)
+
+        self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 0)
+        self.hass.data['mqtt']._mqtt_on_connect(None, None, None, 0)
+        self.hass.block_till_done()
+        self.assertEqual(self.hass.data['mqtt']._mqttc.subscribe.call_count, 2)
+
+    def test_restore_all_active_subscriptions_on_reconnect(self):
+        """Test all active subscriptions are restored correctly on reconnect."""
+        self.hass.data['mqtt']._mqttc.subscribe.side_effect = (
+            (0, 1), (0, 2), (0, 3), (0, 4)
+        )
+
+        unsub = mqtt.subscribe(self.hass, 'test/state', None, qos=2)
+        mqtt.subscribe(self.hass, 'test/state', None)
+        mqtt.subscribe(self.hass, 'test/state', None, qos=1)
+        self.hass.block_till_done()
+
+        expected = [
+            mock.call('test/state', 2),
+            mock.call('test/state', 0),
+            mock.call('test/state', 1)
+        ]
+        self.assertEqual(self.hass.data['mqtt']._mqttc.subscribe.mock_calls,
+                         expected)
+
+        unsub()
+        self.hass.block_till_done()
+        self.assertFalse(self.hass.data['mqtt']._mqttc.unsubscribe.called)
+
+        self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 0)
+        self.hass.data['mqtt']._mqtt_on_connect(None, None, None, 0)
+        self.hass.block_till_done()
+
+        expected.append(mock.call('test/state', 1))
+        self.assertEqual(self.hass.data['mqtt']._mqttc.subscribe.mock_calls,
+                         expected)
 
 
 @asyncio.coroutine
