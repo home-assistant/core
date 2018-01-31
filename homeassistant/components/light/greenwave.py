@@ -38,18 +38,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     tokenfile = hass.config.path('.greenwave')
     if config.get(CONF_VERSION) == 3:
         if os.path.exists(tokenfile):
-            tokenfile = open(tokenfile)
-            token = tokenfile.read()
-            tokenfile.close()
+            with open(tokenfile) as tokenfile:
+                token = tokenfile.read()
         else:
             try:
                 token = greenwave.grab_token(host, 'hass', 'homeassistant')
             except PermissionError:
                 _LOGGER.error('The Gateway Is Not In Sync Mode')
                 raise
-            tokenfile = open(tokenfile, "w+")
-            tokenfile.write(token)
-            tokenfile.close()
+            with open(tokenfile, "w+") as tokenfile:
+                tokenfile.write(token)
     else:
         token = None
     bulbs = greenwave.grab_bulbs(host, token)
