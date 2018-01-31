@@ -71,8 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     known_servers = hass.data.get(KNOWN_SERVERS)
     if known_servers is None:
-        known_servers = set()
-        hass.data[KNOWN_SERVERS] = known_servers
+        hass.data[KNOWN_SERVERS] = known_servers = set()
 
     if DATA_SQUEEZEBOX not in hass.data:
         hass.data[DATA_SQUEEZEBOX] = []
