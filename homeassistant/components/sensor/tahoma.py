@@ -9,7 +9,6 @@ import logging
 from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 
