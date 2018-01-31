@@ -138,7 +138,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         return [{
-            ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
+            ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
             ATTR_FORECAST_TEMP: entry.get_temperature('celsius').get('temp')}
                 for entry in self.forecast_data.get_weathers()]
 
