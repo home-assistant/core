@@ -321,7 +321,7 @@ class TestMQTT(unittest.TestCase):
             self.assertIn(
                 "ERROR:homeassistant.components.mqtt:Illegal payload "
                 "encoding utf-8 from MQTT "
-                "topic: 'test-topic', Payload: '154'",
+                "topic: test-topic, Payload: 154",
                 test_handle.output[0])
 
 

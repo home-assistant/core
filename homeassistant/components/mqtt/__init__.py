@@ -234,15 +234,15 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
         if encoding is not None:
             try:
                 payload = dp_payload.decode(encoding)
-                _LOGGER.debug("Received message on '%s': '%s'",
+                _LOGGER.debug("Received message on %s: %s",
                               dp_topic, payload)
             except (AttributeError, UnicodeDecodeError):
                 _LOGGER.error("Illegal payload encoding %s from "
-                              "MQTT topic: '%s', Payload: '%s'",
+                              "MQTT topic: %s, Payload: %s",
                               encoding, dp_topic, dp_payload)
                 return
         else:
-            _LOGGER.debug("Received binary message on '%s'", dp_topic)
+            _LOGGER.debug("Received binary message on %s", dp_topic)
             payload = dp_payload
 
         hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
@@ -424,8 +424,8 @@ def async_setup(hass, config):
                     template.Template(payload_template, hass).async_render()
             except template.jinja2.TemplateError as exc:
                 _LOGGER.error(
-                    "Unable to publish to '%s': rendering payload template of "
-                    "'%s' failed because %s",
+                    "Unable to publish to %s: rendering payload template of "
+                    "%s failed because %s",
                     msg_topic, payload_template, exc)
                 return
 
@@ -576,7 +576,7 @@ class MQTT(object):
     @asyncio.coroutine
     def _async_perform_subscription(self, topic, qos):
         """Perform a paho-mqtt subscription."""
-        _LOGGER.debug("Subscribing to '%s'", topic)
+        _LOGGER.debug("Subscribing to %s", topic)
 
         with (yield from self._paho_lock):
             result, mid = yield from self.hass.async_add_job(
