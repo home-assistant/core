@@ -1,6 +1,6 @@
 import voluptuous as vol
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 import time
 import urllib
 
@@ -35,9 +35,16 @@ DATA_RANGE_AC_OFF = 'range_ac_off'
 
 CONF_NCONNECT = 'nissan_connect'
 CONF_INTERVAL = 'update_interval'
+CONF_CHARGING_INTERVAL = 'update_interval_charging'
+CONF_CLIMATE_INTERVAL = 'update_interval_climate'
 CONF_REGION = 'region'
 CONF_VALID_REGIONS = ['NNA', 'NE', 'NCI', 'NMA', 'NML']
+CONF_FORCE_MILES = 'force_miles'
 DEFAULT_INTERVAL = 30
+DEFAULT_CHARGING_INTERVAL = 15
+DEFAULT_CLIMATE_INTERVAL = 5
+
+CHECK_INTERVAL = 10
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -45,12 +52,15 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
         vol.Optional(CONF_NCONNECT, default=True): cv.boolean,
-        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int
+        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
+        vol.Optional(CONF_CHARGING_INTERVAL, default=DEFAULT_CHARGING_INTERVAL): cv.positive_int,
+        vol.Optional(CONF_CLIMATE_INTERVAL, default=DEFAULT_CLIMATE_INTERVAL): cv.positive_int,
+        vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
 
 LEAF_COMPONENTS = [
-    'sensor', 'switch', 'device_tracker',
+    'sensor', 'switch', 'binary_sensor'
 ]
 
 SIGNAL_UPDATE_LEAF = 'nissan_leaf_update'
@@ -92,7 +102,7 @@ def setup(hass, config):
         if (component != 'device_tracker') or (config[DOMAIN][CONF_NCONNECT] == True):
             load_platform(hass, component, DOMAIN, {}, config)
 
-    hass.data[DATA_LEAF][leaf.vin].refresh_leaf_if_necessary(0)
+    # hass.data[DATA_LEAF][leaf.vin].refresh_leaf_if_necessary(0)
 
     return True
 
@@ -106,18 +116,45 @@ class LeafDataStore:
         self.hass = hass
         self.data = {}
         self.data[DATA_CLIMATE] = False
-        self.data[DATA_BATTERY] = 1
+        self.data[DATA_BATTERY] = 0
         self.data[DATA_CHARGING] = False
         self.data[DATA_LOCATION] = False
+        self.data[DATA_RANGE_AC] = 0
+        self.data[DATA_RANGE_AC_OFF] = 0
+        self.data[DATA_PLUGGED_IN] = False
+        self.lastCheck = None
         track_time_interval(
-            hass, self.refresh_leaf_if_necessary, timedelta(minutes=config[DOMAIN][CONF_INTERVAL]))
+            hass, self.refresh_leaf_if_necessary, timedelta(seconds=CHECK_INTERVAL))
 
     def refresh_leaf_if_necessary(self, event_time):
-        _LOGGER.debug("Interval fired, refreshing data...")
-        self.refresh_data()
+        result = False
+        now = datetime.today()
+
+        if self.lastCheck is None:
+            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
+                          " as there has not been one yet.")
+            result = True
+        elif self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_INTERVAL]) < now:
+            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
+                          " as the interval has passed.")
+            result = True
+        elif self.data[DATA_CHARGING] == True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CHARGING_INTERVAL]) < now:
+            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
+                          " as it's charging and the charging interval has passed.")
+            result = True
+        elif self.data[DATA_CLIMATE] == True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CLIMATE_INTERVAL]) < now:
+            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
+                          " as climate control is on and the interval has passed.")
+            result = True
+
+        if result == True:
+            _LOGGER.debug("Interval fired, refreshing data...")
+            self.refresh_data()
 
     def refresh_data(self):
         _LOGGER.debug("Updating Nissan Leaf Data")
+
+        self.lastCheck = datetime.today()
 
         batteryResponse = self.get_battery()
         _LOGGER.debug("Got battery data for Leaf")
@@ -226,6 +263,14 @@ class LeafDataStore:
 class LeafEntity(Entity):
     def __init__(self, car):
         self.car = car
+
+    @property
+    def device_state_attributes(self):
+        return {
+            'homebridge_serial': self.car.leaf.vin,
+            'homebridge_mfg': 'Nissan',
+            'homebridge_model': 'Leaf'
+        }
 
     @asyncio.coroutine
     def async_added_to_hass(self):

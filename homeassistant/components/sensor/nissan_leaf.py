@@ -26,7 +26,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for key, value in hass.data[LeafCore.DATA_LEAF].items():
         devices.append(LeafBatterySensor(value))
-        devices.append(LeafPluggedInSensor(value))
         devices.append(LeafRangeSensor(value, True))
         devices.append(LeafRangeSensor(value, False))
 
@@ -51,20 +50,6 @@ class LeafBatterySensor(LeafCore.LeafEntity):
     @property
     def unit_of_measurement(self):
         return '%'
-
-
-class LeafPluggedInSensor(LeafCore.LeafEntity):
-    @property
-    def name(self):
-        return "Leaf Plugged In"
-
-    def log_registration(self):
-        _LOGGER.debug(
-            "Registered LeafPluggedInSensor component with HASS for VIN " + self.car.leaf.vin)
-
-    @property
-    def state(self):
-        return self.car.data[LeafCore.DATA_PLUGGED_IN]
 
 
 class LeafRangeSensor(LeafCore.LeafEntity):
@@ -92,14 +77,14 @@ class LeafRangeSensor(LeafCore.LeafEntity):
         else:
             ret = self.car.data[LeafCore.DATA_RANGE_AC_OFF]
 
-        if self.car.hass.config.units.is_metric == False:
+        if self.car.hass.config.units.is_metric == False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] == True:
             ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)
 
         return round(ret, 0)
 
     @property
     def unit_of_measurement(self):
-        if self.car.hass.config.units.is_metric:
-            return "km"
-        else:
+        if self.car.hass.config.units.is_metric == False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] == True:
             return "mi"
+        else:
+            return "km"
