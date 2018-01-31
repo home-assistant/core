@@ -17,6 +17,10 @@ def run(args):
     parser.add_argument(
         '--script', choices=['keyring'])
     parser.add_argument(
+        '--skip-pip',
+        action='store_true',
+        help='Skips pip install of required packages on startup')
+    parser.add_argument(
         'action', choices=['get', 'set', 'del', 'info'],
         help="Get, set or delete a secret")
     parser.add_argument(

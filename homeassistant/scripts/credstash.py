@@ -16,6 +16,10 @@ def run(args):
     parser.add_argument(
         '--script', choices=['credstash'])
     parser.add_argument(
+        '--skip-pip',
+        action='store_true',
+        help='Skips pip install of required packages on startup')
+    parser.add_argument(
         'action', choices=['get', 'put', 'del', 'list'],
         help="Get, put or delete a secret, or list all available secrets")
     parser.add_argument(

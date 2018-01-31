@@ -41,14 +41,17 @@ def run(args: List) -> int:
     mount_local_lib_path(config_dir)
     pip_kwargs = requirements.pip_kwargs(config_dir)
 
+    skip_pip = extract_skip_pip()
+
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-    for req in getattr(script, 'REQUIREMENTS', []):
-        returncode = install_package(req, **pip_kwargs)
+    if not skip_pip:
+        for req in getattr(script, 'REQUIREMENTS', []):
+            returncode = install_package(req, **pip_kwargs)
 
-        if not returncode:
-            print('Aborting script, could not install dependency', req)
-            return 1
+            if not returncode:
+                print('Aborting script, could not install dependency', req)
+                return 1
 
     return script.run(args[1:])  # type: ignore
 
@@ -60,3 +63,10 @@ def extract_config_dir(args=None) -> str:
     args = parser.parse_known_args(args)[0]
     return (os.path.join(os.getcwd(), args.config) if args.config
             else get_default_config_dir())
+
+
+def extract_skip_pip(args=None) -> bool:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--skip-pip', action='store_true')
+    args = parser.parse_known_args(args)[0]
+    return args.skip_pip

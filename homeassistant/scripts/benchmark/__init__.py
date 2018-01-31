@@ -23,6 +23,10 @@ def run(args):
         description=("Run a Home Assistant benchmark."))
     parser.add_argument('name', choices=BENCHMARKS)
     parser.add_argument('--script', choices=['benchmark'])
+    parser.add_argument(
+        '--skip-pip',
+        action='store_true',
+        help='Skips pip install of required packages on startup')
 
     args = parser.parse_args()
 

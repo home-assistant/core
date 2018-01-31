@@ -38,6 +38,10 @@ def run(script_args: List) -> int:
     parser = argparse.ArgumentParser(
         description="Migrate legacy influxDB.")
     parser.add_argument(
+        '--skip-pip',
+        action='store_true',
+        help='Skips pip install of required packages on startup')
+    parser.add_argument(
         '-d', '--dbname',
         metavar='dbname',
         required=True,
