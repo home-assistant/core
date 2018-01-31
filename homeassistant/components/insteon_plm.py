@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE, default=[]): vol.All(
             cv.ensure_list_csv, vol.Length(min=1)),
-        vol.Optional(CONF_NEWNAMES, default=[no]): cv.string
+        vol.Optional(CONF_NEWNAMES, default=['no']): cv.string
         })
 }, extra=vol.ALLOW_EXTRA)
 
