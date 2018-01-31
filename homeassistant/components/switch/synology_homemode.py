@@ -75,13 +75,11 @@ class SynologyHomeModeSwitch(ToggleEntity):
         """Turn the device on."""
         self._state = True
         self._set_state("true")
-        #self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._state = False
         self._set_state("false")
-        #self.schedule_update_ha_state()
 
 
     def _login(self):
@@ -95,7 +93,7 @@ class SynologyHomeModeSwitch(ToggleEntity):
             url = url.format(self._host, self._username, self._password)
             res = requests.get(url, data={}, timeout=15).json()
 
-            if res['success'] == True:
+            if res['success'] is True:
                 self._sid = res['data']['sid']
                 return True
             else:
