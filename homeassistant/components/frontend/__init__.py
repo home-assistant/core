@@ -591,5 +591,6 @@ def _is_latest(js_option, request):
         'Edge': 14,     # Array.prototype.includes added in 14
         'Safari': 10,   # many features not supported by 9
     }
-    version = family_min_version.get(useragent.browser.family)
+    version = family_min_version.get(useragent.browser.family
+                                     .replace('Mobile', '').strip())
     return version and useragent.browser.version[0] >= version
