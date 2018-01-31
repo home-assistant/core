@@ -586,7 +586,9 @@ def _is_latest(js_option, request):
 
     family_min_version = {
         'Chrome': 50,   # Probably can reduce this
+        'Chrome Mobile': 50,
         'Firefox': 43,  # Array.prototype.includes added in 43
+        'Firefox Mobile': 43,
         'Opera': 40,    # Probably can reduce this
         'Edge': 14,     # Array.prototype.includes added in 14
         'Safari': 10,   # many features not supported by 9
