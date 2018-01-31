@@ -109,7 +109,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
 class InsteonPLMOpenClosedDevice(SwitchDevice):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device, state, newnames):
+    def __init__(self, hass, device, stateKey, newnames):
         """Initialize the switch."""
         self._hass = hass
         self._state = device.states[stateKey]
