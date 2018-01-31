@@ -191,10 +191,10 @@ def get_age(date: dt.datetime) -> str:
     
     # Check if the date is in the future or the past
     if(date > now()):
-      delta = date - now()
+        delta = date - now()
     else:
-      delta = now() - date
-    
+        delta = now() - date
+
     day = delta.days
     second = delta.seconds
 
