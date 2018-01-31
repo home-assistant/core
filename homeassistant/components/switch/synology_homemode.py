@@ -19,25 +19,23 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Home Mode"
-DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Synology Home Mode switch."""
-    _timeout = config.get(CONF_TIMEOUT)
     _url = config.get(CONF_URL)
     _username = config.get(CONF_USERNAME)
     _password = config.get(CONF_PASSWORD)
-    add_devices([SynologyHomeModeSwitch(DEFAULT_NAME, _url, _username, _password)])
+    add_devices([SynologyHomeModeSwitch(DEFAULT_NAME, _url, 
+        _username, _password)])
 
 
 class SynologyHomeModeSwitch(ToggleEntity):
@@ -80,7 +78,6 @@ class SynologyHomeModeSwitch(ToggleEntity):
         """Turn the device off."""
         self._state = False
         self._set_state("false")
-
 
     def _login(self):
         """Login request"""
