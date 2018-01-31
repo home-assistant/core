@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_component import DATA_REGISTRY
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pydeconz==27']
@@ -23,7 +24,6 @@ REQUIREMENTS = ['pydeconz==27']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'deconz'
-DECONZ_ENTITIES = 'deconz_entities'
 
 CONFIG_FILE = 'deconz.conf'
 
@@ -105,7 +105,6 @@ def async_setup_deconz(hass, config, deconz_config):
         return False
 
     hass.data[DOMAIN] = deconz
-    hass.data[DECONZ_ENTITIES] = {}
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(discovery.async_load_platform(
@@ -128,12 +127,23 @@ def async_setup_deconz(hass, config, deconz_config):
         See Dresden Elektroniks REST API documentation for details:
         http://dresden-elektronik.github.io/deconz-rest-doc/rest/
         """
-        deconz = hass.data[DOMAIN]
-        entity_registry = hass.data[DECONZ_ENTITIES]
         field = call.data.get(SERVICE_FIELD)
         entity_id = call.data.get(SERVICE_ENTITY)
         data = call.data.get(SERVICE_DATA)
-        field = entity_registry.get(entity_id, field)
+        deconz = hass.data[DOMAIN]
+
+        registry = hass.data.get(DATA_REGISTRY)
+        if registry.async_is_registered(entity_id):
+            entity = registry.async_get_entry(entity_id)
+            groups = list(deconz.groups.values())
+            lights = list(deconz.lights.values())
+            sensors = list(deconz.sensors.values())
+            devices = groups + lights + sensors
+            for device in devices:
+                if device.uniqueid == entity.unique_id:
+                    field = device._deconz_id
+                    break
+
         if field:
             yield from deconz.async_put_state(field, data)
         elif entity_id:

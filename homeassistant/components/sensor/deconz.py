@@ -6,8 +6,7 @@ https://home-assistant.io/components/sensor.deconz/
 """
 import asyncio
 
-from homeassistant.components.deconz import (
-    DOMAIN as DECONZ_DATA, DECONZ_ENTITIES)
+from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers.entity import Entity
@@ -27,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
     sensors = hass.data[DECONZ_DATA].sensors
-    entity_registry = hass.data[DECONZ_ENTITIES]
+    #entity_registry = hass.data[DECONZ_ENTITIES]
     entities = []
 
     for key in sorted(sensors.keys(), key=int):
@@ -38,23 +37,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))
             else:
-                entities.append(DeconzSensor(sensor, entity_registry))
+                entities.append(DeconzSensor(sensor))
+                #entities.append(DeconzSensor(sensor, entity_registry))
     async_add_devices(entities, True)
 
 
 class DeconzSensor(Entity):
     """Representation of a sensor."""
 
-    def __init__(self, sensor, registry):
+    def __init__(self, sensor):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
-        self._registry = registry
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
-        self._registry[self.entity_id] = self._sensor._deconz_id
 
     @callback
     def async_update_callback(self, reason):

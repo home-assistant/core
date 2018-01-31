@@ -6,8 +6,7 @@ https://home-assistant.io/components/scene.deconz/
 """
 import asyncio
 
-from homeassistant.components.deconz import (
-    DOMAIN as DECONZ_DATA, DECONZ_ENTITIES)
+from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.scene import Scene
 
 DEPENDENCIES = ['deconz']
@@ -20,26 +19,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     scenes = hass.data[DECONZ_DATA].scenes
-    entity_registry = hass.data[DECONZ_ENTITIES]
     entities = []
 
     for scene in scenes.values():
-        entities.append(DeconzScene(scene, entity_registry))
+        entities.append(DeconzScene(scene))
     async_add_devices(entities)
 
 
 class DeconzScene(Scene):
     """Representation of a deCONZ scene."""
 
-    def __init__(self, scene, registry):
+    def __init__(self, scene):
         """Set up a scene."""
         self._scene = scene
-        self._registry = registry
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Add scene entity id and deconz id to entity registry."""
-        self._registry[self.entity_id] = self._scene._deconz_id
 
     @asyncio.coroutine
     def async_activate(self):

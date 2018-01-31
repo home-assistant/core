@@ -6,8 +6,7 @@ https://home-assistant.io/components/light.deconz/
 """
 import asyncio
 
-from homeassistant.components.deconz import (
-    DOMAIN as DECONZ_DATA, DECONZ_ENTITIES)
+from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -27,25 +26,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     lights = hass.data[DECONZ_DATA].lights
     groups = hass.data[DECONZ_DATA].groups
-    entity_registry = hass.data[DECONZ_ENTITIES]
     entities = []
 
     for light in lights.values():
-        entities.append(DeconzLight(light, entity_registry))
+        entities.append(DeconzLight(light))
 
     for group in groups.values():
         if group.lights:  # Don't create entity for group not containing light
-            entities.append(DeconzLight(group, entity_registry))
+            entities.append(DeconzLight(group))
     async_add_devices(entities, True)
 
 
 class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
-    def __init__(self, light, registry):
+    def __init__(self, light):
         """Set up light and add update callback to get data from websocket."""
         self._light = light
-        self._registry = registry
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
@@ -65,7 +62,6 @@ class DeconzLight(Light):
     def async_added_to_hass(self):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
-        self._registry[self.entity_id] = self._light._deconz_id
 
     @callback
     def async_update_callback(self, reason):
