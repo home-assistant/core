@@ -40,10 +40,7 @@ class InsteonPLMSensorDevice(Entity):
         self._hass = hass
         self._state = device.states[stateKey]
         self._device = device 
-        if self._state.group == 0x01 and not newnames:
-            self._newnames = False
-        else:
-            self._newnames = True
+        self._newnames = newnames
 
         self._state.register_updates(self.async_sensor_update)
 
