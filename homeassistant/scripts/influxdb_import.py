@@ -1,4 +1,4 @@
-"""Script to import recorded data into influxdb."""
+"""Script to import recorded data into an Influx database."""
 import argparse
 import json
 import os
@@ -102,8 +102,8 @@ def run(script_args: List) -> int:
 
     client = None
     if not simulate:
-        client = InfluxDBClient(args.host, args.port,
-                                args.username, args.password)
+        client = InfluxDBClient(
+            args.host, args.port, args.username, args.password)
         client.switch_database(args.dbname)
 
     config_dir = os.path.join(os.getcwd(), args.config)  # type: str
@@ -119,10 +119,10 @@ def run(script_args: List) -> int:
 
     if not os.path.exists(src_db) and not args.uri:
         print("Fatal Error: Database '{}' does not exist "
-              "and no uri given".format(src_db))
+              "and no URI given".format(src_db))
         return 1
 
-    uri = args.uri or "sqlite:///{}".format(src_db)
+    uri = args.uri or 'sqlite:///{}'.format(src_db)
     engine = create_engine(uri, echo=False)
     session_factory = sessionmaker(bind=engine)
     session = session_factory()
@@ -131,14 +131,14 @@ def run(script_args: List) -> int:
 
     tags = {}
     if args.tags:
-        tags.update(dict(elem.split(":") for elem in args.tags.split(",")))
-    excl_entities = args.exclude_entities.split(",")
-    excl_domains = args.exclude_domains.split(",")
+        tags.update(dict(elem.split(':') for elem in args.tags.split(',')))
+    excl_entities = args.exclude_entities.split(',')
+    excl_domains = args.exclude_domains.split(',')
     override_measurement = args.override_measurement
     default_measurement = args.default_measurement
 
     query = session.query(func.count(models.Events.event_type)).filter(
-        models.Events.event_type == "state_changed")
+        models.Events.event_type == 'state_changed')
 
     total_events = query.scalar()
     prefix_format = '{} of {}'
@@ -173,7 +173,7 @@ def run(script_args: List) -> int:
                 continue
 
             try:
-                state = State.from_dict(event_data.get("new_state"))
+                state = State.from_dict(event_data.get('new_state'))
             except HomeAssistantError:
                 invalid_points.append(event_data)
 
@@ -183,10 +183,10 @@ def run(script_args: List) -> int:
 
             try:
                 _state = float(state_helper.state_as_number(state))
-                _state_key = "value"
+                _state_key = 'value'
             except ValueError:
                 _state = state.state
-                _state_key = "state"
+                _state_key = 'state'
 
             if override_measurement:
                 measurement = override_measurement
@@ -214,7 +214,7 @@ def run(script_args: List) -> int:
                 if key != 'unit_of_measurement':
                     # If the key is already in fields
                     if key in point['fields']:
-                        key = key + "_"
+                        key = key + '_'
                     # Prevent column data errors in influxDB.
                     # For each value we try to cast it as float
                     # But if we can not do it we store the value
@@ -222,7 +222,7 @@ def run(script_args: List) -> int:
                     try:
                         point['fields'][key] = float(value)
                     except (ValueError, TypeError):
-                        new_key = "{}_str".format(key)
+                        new_key = '{}_str'.format(key)
                         point['fields'][new_key] = str(value)
 
             entities[state.entity_id] += 1
@@ -232,7 +232,6 @@ def run(script_args: List) -> int:
 
         if points:
             if not simulate:
-                # print("Write {} points to the database".format(len(points)))
                 client.write_points(points)
             count += len(points)
             # This prevents the progress bar from going over 100% when
@@ -278,4 +277,4 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
                                             percents, '%', suffix))
     sys.stdout.flush()
     if iteration == total:
-        print("\n")
+        print('\n')
