@@ -142,12 +142,14 @@ class OpenWeatherMapWeather(WeatherEntity):
         data = []
         for entry in self.forecast_data.get_weathers():
             data.append({
-                ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
-                ATTR_FORECAST_TEMP: entry.get_temperature('celsius').get('temp')
+                ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
+                ATTR_FORECAST_TEMP:
+                    entry.get_temperature('celsius').get('temp')
             })
             if (len(data) - 1) % MIN_OFFSET_BETWEEN_FORECAST_CONDITIONS == 0:
                data[len(data) - 1][ATTR_FORECAST_CONDITION] = \
-                   [k for k, v in CONDITION_CLASSES.items() if entry.get_weather_code() in v][0]
+                   [k for k, v in CONDITION_CLASSES.items() 
+                    if entry.get_weather_code() in v][0]
         return data
 
     def update(self):
