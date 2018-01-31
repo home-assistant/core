@@ -34,8 +34,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE, default=[]): vol.All(
-            cv.ensure_list_csv, vol.Length(min=1))
-    })
+            cv.ensure_list_csv, vol.Length(min=1)),
+        vol.Optional(CONF_NEWNAMES, default=[no]): cv.string
+        })
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -50,7 +51,7 @@ def async_setup(hass, config):
     overrides = conf.get(CONF_OVERRIDE)
     newnames = conf.get(CONF_NEWNAMES)
 
-    use_newnames = False
+    use_newnames = fal
     if newnames.lower() == 'y' or newnames.lower() == 'yes':
         use_newnames == True
 
