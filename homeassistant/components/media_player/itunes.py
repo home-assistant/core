@@ -5,10 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.itunes/
 """
 import logging
-
+import time
 import requests
 import voluptuous as vol
-import time
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
