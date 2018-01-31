@@ -29,9 +29,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         newnames = deviceInfo['newnames']
        
         if subplatform == 'onOff':
-            state_list.append(InsteonPLMSwitchDevice( hass, device, state))
+            state_list.append(InsteonPLMSwitchDevice( hass, device, stateKey, newnames))
         elif subplatform == 'openClosed':
-            state_list.append(InsteonPLMOpenClosedDevice( hass, device, state))
+            state_list.append(InsteonPLMOpenClosedDevice( hass, device, stateKey, newnames))
 
     async_add_devices(state_list)
 
@@ -39,7 +39,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMSwitchDevice(SwitchDevice):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device, state):
+    def __init__(self, hass, device, stateKey, newnames):
         """Initialize the switch."""
         self._hass = hass
         self._state = device.states[stateKey]

@@ -27,7 +27,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
        
-        _LOGGER.info('Registered device %s state %s with binary_sensor platform %s', state.address, state.name, subplatform)
+        _LOGGER.info('Registered device %s state %s with binary_sensor platform %s', device.address, device.states[stateKey].name, subplatform)
         state_list.append(InsteonPLMBinarySensor( hass, device, stateKey, subplatform, newnames))
 
 

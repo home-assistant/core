@@ -28,7 +28,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
        
-        state_list.append(InsteonPLMDimmerDevice( hass, device, stateKey, SUPPORT_SET_SPEED))
+        state_list.append(InsteonPLMDimmerDevice( hass, device, stateKey, newnames, SUPPORT_SET_SPEED))
 
     async_add_devices(state_list)
 
