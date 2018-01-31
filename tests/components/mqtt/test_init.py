@@ -465,7 +465,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.assertEqual(self.hass.data['mqtt']._mqttc.subscribe.call_count, 2)
 
     def test_restore_all_active_subscriptions_on_reconnect(self):
-        """Test all active subscriptions are restored correctly on reconnect."""
+        """Test active subscriptions are restored correctly on reconnect."""
         self.hass.data['mqtt']._mqttc.subscribe.side_effect = (
             (0, 1), (0, 2), (0, 3), (0, 4)
         )
