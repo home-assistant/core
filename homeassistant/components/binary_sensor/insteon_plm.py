@@ -23,11 +23,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     state_list = []
     for deviceInfo in discovery_info:
         device = deviceInfo['device']
-        state = device.states[deviceInfo['stateKey']]
+        statekey = deviceInfo['stateKey']
         subplatform = deviceInfo['subplatform']
+        newnames = deviceInfo['newnames']
        
         _LOGGER.info('Registered device %s state %s with binary_sensor platform %s', state.address, state.name, subplatform)
-        state_list.append(InsteonPLMBinarySensor( hass, device, state, subplatform))
+        state_list.append(InsteonPLMBinarySensor( hass, device, stateKey, subplatform, newnames))
 
 
     async_add_devices(state_list)
@@ -36,12 +37,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMBinarySensor(BinarySensorDevice):
     """A Class for an Insteon device state."""
 
-    def __init__(self, hass, device, state, sensorType):
+    def __init__(self, hass, device, stateKey, sensorType, newnames):
         """Initialize the binarysensor."""
         self._hass = hass
-        self._state = state
+        self._state = device.states[stateKey]
         self._device = device 
         self._sensor_type = sensorType
+        if self._state.group == 0x01 and not newnames:
+            self._newnames = False
+        else:
+            self._newnames = True
 
         self._state.register_updates(self.async_binarysensor_update)
 
@@ -63,7 +68,13 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
-        return self._device.id + '_' + self._state.name
+        if self._newnames:
+            return self._device.id + '_' + self._state.name
+        else:
+            if self._state.group == 0x01:
+                return self._device.id
+            else:
+                return self._device.id+'_'+str(self._state.group)
 
     @property
     def device_state_attributes(self):

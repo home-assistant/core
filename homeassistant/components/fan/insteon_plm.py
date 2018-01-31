@@ -28,8 +28,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     
     for deviceInfo in discovery_info:
         device = deviceInfo['device']
-        state = device.states[deviceInfo['stateKey']]
+        statekey = deviceInfo['stateKey']
         subplatform = deviceInfo['subplatform']
+        newnames = deviceInfo['newnames']
        
         state_list.append(InsteonPLMBinarySensor( hass, device, state, SUPPORT_SET_SPEED))
 
@@ -41,9 +42,12 @@ class InsteonPLMFan(FanEntity):
     def __init__(self, hass, state, supported_features: int) -> None:
         """Initialize the entity."""
         self._hass = hass
-        self._state = state
+        self._state = device.states[stateKey]
         self._device = device 
-        self._sensor_type = sensorType
+        if self._state.group == 0x01 and not newnames:
+            self._newnames = False
+        else:
+            self._newnames = True
 
         self._state.register_updates(self.async_fan_update)
 
@@ -65,7 +69,13 @@ class InsteonPLMFan(FanEntity):
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
-        return self._device.id + '_' + self._state.name
+        if self._newnames:
+            return self._device.id + '_' + self._state.name
+        else:
+            if self._state.group == 0x01:
+                return self._device.id
+            else:
+                return self._device.id+'_'+str(self._state.group)
 
     @property
     def device_state_attributes(self):

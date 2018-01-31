@@ -28,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'insteon_plm'
 
 CONF_OVERRIDE = 'device_override'
+CONF_NEWNAMES = 'new_names'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -47,6 +48,11 @@ def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE)
+    newnames = conf.get(CONF_NEWNAMES)
+
+    use_newnames = False
+    if newnames.lower() == 'y' or newnames.lower() == 'yes':
+        use_newnames == True
 
     @callback
     def async_plm_new_device(device):
@@ -65,7 +71,10 @@ def async_setup(hass, config):
                               platform)
                 hass.async_add_job(
                     discovery.async_load_platform(
-                        hass, platform, DOMAIN, discovered=[{'device':device, 'stateKey':stateKey, 'subplatform':subplatform}],
+                        hass, platform, DOMAIN, discovered=[{'device':device, 
+                                                             'stateKey':stateKey, 
+                                                             'subplatform':subplatform,
+                                                             'newnames': use_newnames}],
                         hass_config=config))
 
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
