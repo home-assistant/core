@@ -188,8 +188,7 @@ def get_age(date: dt.datetime) -> str:
         """Return quotient and remaining."""
         return first // second, first % second
 
-    """ Check if the date is in the future or the past """
-    if(date > now()):
+    if date > now():
         delta = date - now()
     else:
         delta = now() - date
