@@ -23,7 +23,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     state_list = []
     for deviceInfo in discovery_info:
         device = deviceInfo['device']
-        statekey = deviceInfo['stateKey']
+        stateKey = deviceInfo['stateKey']
         subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
        

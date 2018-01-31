@@ -28,18 +28,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     
     for deviceInfo in discovery_info:
         device = deviceInfo['device']
-        statekey = deviceInfo['stateKey']
+        stateKey = deviceInfo['stateKey']
         subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
        
-        state_list.append(InsteonPLMBinarySensor( hass, device, statekey, SUPPORT_SET_SPEED))
+        state_list.append(InsteonPLMBinarySensor( hass, device, stateKey, newnames, SUPPORT_SET_SPEED))
 
     async_add_devices(state_list)
 
 class InsteonPLMFan(FanEntity):
     """An INSTEON fan component."""
 
-    def __init__(self, hass, state, supported_features: int) -> None:
+    def __init__(self, hass, device, stateKey, newnames, supported_features: int, ) -> None:
         """Initialize the entity."""
         self._hass = hass
         self._state = device.states[stateKey]
