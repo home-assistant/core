@@ -4,6 +4,7 @@ Interfaces with Egardia/Woonveilig alarm control panel.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.egardia/
 """
+import asyncio
 import logging
 
 import requests
@@ -56,7 +57,6 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     def __init__(self, hass, name, egardiasystem,
                  rs_enabled=False, rs_codes=None, rs_port=52010):
         """Initialize the Egardia alarm."""
-        from pythonegardia import egardiaserver
         self._name = name
         self._egardiasystem = egardiasystem
         self._status = None
@@ -66,23 +66,14 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         else:
             self._rs_codes = rs_codes
         self._rs_port = rs_port
+        self._hass = hass
 
-        # configure egardia server, including callback
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Add Egardiaserver callback if enabled."""
         if self._rs_enabled:
-            # Set up the egardia server
-            _LOGGER.info("Setting up EgardiaServer")
-            try:
-                if D_EGARDIASRV not in hass.data:
-                    server = egardiaserver.EgardiaServer('', rs_port)
-                    bound = server.bind()
-                    if not bound:
-                        raise IOError("Binding error occurred while " +
-                                      "starting EgardiaServer")
-                    hass.data[D_EGARDIASRV] = server
-                    server.start()
-            except IOError:
-                return
-            hass.data[D_EGARDIASRV].register_callback(
+            _LOGGER.info("Registering callback to Egardiaserver")
+            self._hass.data[D_EGARDIASRV].register_callback(
                 self.handle_status_event)
 
     @property
