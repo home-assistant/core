@@ -29,7 +29,7 @@ def run(args):
 
     if args.action == 'info':
         keyr = keyring.get_keyring()
-        print('Keyring version {}\n'.format(keyring.__version__))
+        print('Keyring version {}\n'.format(REQUIREMENTS[0].split('==')[1]))
         print('Active keyring  : {}'.format(keyr.__module__))
         config_name = os.path.join(platform.config_root(), 'keyringrc.cfg')
         print('Config location : {}'.format(config_name))
