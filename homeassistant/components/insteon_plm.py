@@ -79,9 +79,9 @@ def async_setup(hass, config):
                         hass_config=config))
 
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
-
+    _LOGGER.info('Config dir %s', hass.config.config_dir)
     _LOGGER.info("Looking for PLM on %s", port)
-    plm = yield from insteonplm.Connection.create(device=port, loop=hass.loop)
+    plm = yield from insteonplm.Connection.create(device=port, loop=hass.loop, workdir=hass.config.config_dir)
 
     for device_override in overrides:
         #
