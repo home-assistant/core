@@ -9,13 +9,14 @@ from .util import session_scope
 _LOGGER = logging.getLogger(__name__)
 
 
-def purge_old_data(instance, purge_days):
+def purge_old_data(instance, purge_days, repack):
     """Purge events and states older than purge_days ago."""
     from .models import States, Events
     from sqlalchemy import orm
     from sqlalchemy.sql import exists
 
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
+    _LOGGER.debug("Purging events before %s", purge_before)
 
     with session_scope(session=instance.get_session()) as session:
         # For each entity, the most recent state is protected from deletion
@@ -55,10 +56,10 @@ def purge_old_data(instance, purge_days):
 
     # Execute sqlite vacuum command to free up space on disk
     _LOGGER.debug("DB engine driver: %s", instance.engine.driver)
-    if instance.engine.driver == 'pysqlite' and not instance.did_vacuum:
+    if repack and instance.engine.driver == 'pysqlite':
         from sqlalchemy import exc
 
-        _LOGGER.info("Vacuuming SQLite to free space")
+        _LOGGER.debug("Vacuuming SQLite to free space")
         try:
             instance.engine.execute("VACUUM")
             instance.did_vacuum = True

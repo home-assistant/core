@@ -95,10 +95,6 @@ conversation:
 # Enables support for tracking state changes over time
 history:
 
-# Tracked history is kept for 10 days
-recorder:
-  purge_keep_days: 10
-
 # View all events in a logbook
 logbook:
 
