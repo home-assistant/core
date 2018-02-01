@@ -116,7 +116,7 @@ class Itunes(object):
         return self._command('previous')
 
     def stop(self):
-        """Stops playback and returns the current state."""
+        """Stop playback and return the current state."""
         return self._command('stop')
 
     def play_playlist(self, playlist_id_or_name):
