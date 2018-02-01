@@ -234,8 +234,9 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         assert setup_component(self.hass, DOMAIN, config)
 
-        self.assertEqual(len(self.hass.data[sonos.DATA_SONOS].devices), 2)
-        self.assertEqual(self.hass.data[sonos.DATA_SONOS].devices[0].name, 'Kitchen')
+        devices = self.hass.data[sonos.DATA_SONOS].devices
+        self.assertEqual(len(devices), 2)
+        self.assertEqual(devices[0].name, 'Kitchen')
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
