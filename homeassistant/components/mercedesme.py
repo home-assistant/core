@@ -139,11 +139,6 @@ class MercedesMeEntity(Entity):
         self.schedule_update_ha_state(True)
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return None
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit

@@ -39,13 +39,7 @@ class MercedesMEBinarySensor(MercedesMeEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
-        retval = True if bool(self._state == "On") else False
-        return retval
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        return self._state == "On"
 
     @property
     def device_state_attributes(self):
@@ -76,7 +70,6 @@ class MercedesMEBinarySensor(MercedesMeEntity, BinarySensorDevice):
                     self._car["lastUpdate"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
                 "car": self._car["license"],
-                "Is_On": self.is_on,
             }
         return {
             "originalValue": self._car[self._name],
