@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import DATA_REGISTRY
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==27']
+REQUIREMENTS = ['pydeconz==28']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ def async_setup_deconz(hass, config, deconz_config):
             devices = groups + lights + sensors
             for device in devices:
                 if device.uniqueid == entity.unique_id:
-                    field = device._deconz_id
+                    field = device.deconz_id
                     break
 
         if field:
