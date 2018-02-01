@@ -160,8 +160,9 @@ class TestSonosMediaPlayer(unittest.TestCase):
             'host': '192.0.2.1'
         })
 
-        self.assertEqual(len(self.hass.data[sonos.DATA_SONOS].devices), 1)
-        self.assertEqual(self.hass.data[sonos.DATA_SONOS].devices[0].name, 'Kitchen')
+        devices = self.hass.data[sonos.DATA_SONOS].devices
+        self.assertEqual(len(devices), 1)
+        self.assertEqual(devices[0].name, 'Kitchen')
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -216,8 +217,9 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         assert setup_component(self.hass, DOMAIN, config)
 
-        self.assertEqual(len(self.hass.data[sonos.DATA_SONOS].devices), 1)
-        self.assertEqual(self.hass.data[sonos.DATA_SONOS].devices[0].name, 'Kitchen')
+        devices = self.hass.data[sonos.DATA_SONOS].devices
+        self.assertEqual(len(devices), 1)
+        self.assertEqual(devices[0].name, 'Kitchen')
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -248,8 +250,9 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         assert setup_component(self.hass, DOMAIN, config)
 
-        self.assertEqual(len(self.hass.data[sonos.DATA_SONOS].devices), 2)
-        self.assertEqual(self.hass.data[sonos.DATA_SONOS].devices[0].name, 'Kitchen')
+        devices = self.hass.data[sonos.DATA_SONOS].devices
+        self.assertEqual(len(devices), 2)
+        self.assertEqual(devices[0].name, 'Kitchen')
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(soco, 'discover', new=socoDiscoverMock.discover)
@@ -257,8 +260,9 @@ class TestSonosMediaPlayer(unittest.TestCase):
     def test_ensure_setup_sonos_discovery(self, *args):
         """Test a single device using the autodiscovery provided by Sonos."""
         sonos.setup_platform(self.hass, {}, fake_add_device)
-        self.assertEqual(len(self.hass.data[sonos.DATA_SONOS].devices), 1)
-        self.assertEqual(self.hass.data[sonos.DATA_SONOS].devices[0].name, 'Kitchen')
+        devices = self.hass.data[sonos.DATA_SONOS].devices
+        self.assertEqual(len(devices), 1)
+        self.assertEqual(devices[0].name, 'Kitchen')
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())

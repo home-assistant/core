@@ -28,7 +28,7 @@ from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = [
     'https://github.com/SoCo/SoCo/archive/'
-    '9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#soco==0.14a5']
+    '9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.14a5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +107,7 @@ SONOS_SET_OPTION_SCHEMA = SONOS_SCHEMA.extend({
     vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
     vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
 })
+
 
 class SonosData:
     """Storage class for platform global data."""
@@ -309,7 +310,7 @@ def _timespan_secs(timespan):
 def _is_radio_uri(uri):
     """Return whether the URI is a radio stream."""
     return uri.startswith('x-rincon-mp3radio:') or \
-           uri.startswith('x-sonosapi-stream:')
+        uri.startswith('x-sonosapi-stream:')
 
 
 class SonosDevice(MediaPlayerDevice):
