@@ -43,9 +43,6 @@ PyXiaomiGateway==0.8.0
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
 
-# homeassistant.components.media_player.sonos
-SoCo==0.13
-
 # homeassistant.components.sensor.travisci
 TravisPy==0.3.5
 
@@ -359,6 +356,9 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
+
+# homeassistant.components.media_player.sonos
+https://github.com/SoCo/SoCo/archive/9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.14a5
 
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
