@@ -61,8 +61,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]),
     vol.Optional(CONF_COUNT, default=2): cv.positive_int,
     vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
-    vol.Optional(CONF_MIN_TEMP): cv.positive_int,
-    vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    vol.Optional(CONF_MIN_TEMP, default=10): cv.positive_int,
+    vol.Optional(CONF_MAX_TEMP, default=30): cv.positive_int,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,6 +159,16 @@ class ModbusThermostat(ClimateDevice):
         if self._error:
             return STATE_OK
         return STATE_PROBLEM
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return self._min_temp
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return self._max_temp
 
     @property
     def temperature_unit(self):
