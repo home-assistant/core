@@ -1,16 +1,13 @@
 """
-Battery Charge and Range Support for the Nissan Leaf Carwings/Nissan Connect API.
+Battery Charge and Range Support for the Nissan Leaf
 
-Documentation pending, please refer to the main platform component for configuration details
+Documentation pending.
+Please refer to the main platform component for configuration details
 """
 
 import logging
-from .. import nissan_leaf as LeafCore
-from ..nissan_leaf import LeafEntity
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from .. import nissan_leaf as LeafCore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +36,8 @@ class LeafBatterySensor(LeafCore.LeafEntity):
 
     def log_registration(self):
         _LOGGER.debug(
-            "Registered LeafBatterySensor component with HASS for VIN " + self.car.leaf.vin)
+            "Registered LeafBatterySensor component with HASS for VIN %s",
+            self.car.leaf.vin)
 
     @property
     def state(self):
@@ -64,7 +62,8 @@ class LeafRangeSensor(LeafCore.LeafEntity):
 
     def log_registration(self):
         _LOGGER.debug(
-            "Registered LeafRangeSensor component with HASS for VIN " + self.car.leaf.vin)
+            "Registered LeafRangeSensor component with HASS for VIN %s",
+            self.car.leaf.vin)
 
     @property
     def state(self):
@@ -75,14 +74,16 @@ class LeafRangeSensor(LeafCore.LeafEntity):
         else:
             ret = self.car.data[LeafCore.DATA_RANGE_AC_OFF]
 
-        if self.car.hass.config.units.is_metric is False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] is True:
+        if (self.car.hass.config.units.is_metric is False or
+                self.car.force_miles is True):
             ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)
 
         return round(ret, 0)
 
     @property
     def unit_of_measurement(self):
-        if self.car.hass.config.units.is_metric is False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] is True:
+        if (self.car.hass.config.units.is_metric is False or
+                self.car.force_miles is True):
             return "mi"
         else:
             return "km"

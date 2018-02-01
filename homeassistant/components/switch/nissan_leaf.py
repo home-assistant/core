@@ -1,12 +1,13 @@
 """
-Charge and Climate Control Support for the Nissan Leaf Carwings/Nissan Connect API.
+Charge and Climate Control Support for the Nissan Leaf
 
-Documentation pending, please refer to the main platform component for configuration details
+Documentation pending.
+Please refer to the main platform component for configuration details
 """
 
 import logging
-from .. import nissan_leaf as LeafCore
 from homeassistant.helpers.entity import ToggleEntity
+from .. import nissan_leaf as LeafCore
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +32,8 @@ class LeafClimateSwitch(LeafCore.LeafEntity, ToggleEntity):
 
     def log_registration(self):
         _LOGGER.debug(
-            "Registered LeafClimateSwitch component with HASS for VIN " + self.car.leaf.vin)
+            "Registered LeafClimateSwitch component with HASS for VIN %s",
+            self.car.leaf.vin)
 
     @property
     def is_on(self):
@@ -57,7 +59,8 @@ class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
 
     def log_registration(self):
         _LOGGER.debug(
-            "Registered LeafChargeSwitch component with HASS for VIN " + self.car.leaf.vin)
+            "Registered LeafChargeSwitch component with HASS for VIN %s",
+            self.car.leaf.vin)
 
     @property
     def is_on(self):
@@ -71,4 +74,5 @@ class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
 
     def turn_off(self, **kwargs):
         _LOGGER.debug(
-            "Cannot turn off Leaf charging - Nissan does not support that remotely.")
+            "Cannot turn off Leaf charging -"
+            " Nissan does not support that remotely.")

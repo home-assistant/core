@@ -2,9 +2,9 @@
 Support for the Nissan Leaf Carwings/Nissan Connect API.
 
 Please note this is the pre-2018 API, which is still functional in the US.
-The old API should continue to work as the new one is not being released outside the US.
+The old API should continue to work for the forseeable future.
 
-Documentation pages have not been created yet, here is an example configuration block:
+Documentation has not been created yet, here is an example configuration block:
 
 nissan_leaf:
   username: "username"
@@ -17,11 +17,13 @@ nissan_leaf:
   force_miles: true
 """
 
-import voluptuous as vol
 import logging
 from datetime import timedelta, datetime
 import time
 import urllib
+import asyncio
+import sys
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
@@ -29,11 +31,10 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.entity import Entity
-import asyncio
-import sys
 from homeassistant.helpers.event import track_time_interval
 
-# Currently waiting on the pycarwings2 author to pull this PR in and update pip, so using my fork for now.
+# Currently waiting on the lib author to review a PR
+# So using my fork for now.
 # https://github.com/jdhorne/pycarwings2/pull/28
 
 REQUIREMENTS = ['https://github.com/BenWoodford/pycarwings2/archive/master.zip'
@@ -72,8 +73,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
         vol.Optional(CONF_NCONNECT, default=True): cv.boolean,
         vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
-        vol.Optional(CONF_CHARGING_INTERVAL, default=DEFAULT_CHARGING_INTERVAL): cv.positive_int,
-        vol.Optional(CONF_CLIMATE_INTERVAL, default=DEFAULT_CLIMATE_INTERVAL): cv.positive_int,
+        vol.Optional(CONF_CHARGING_INTERVAL,
+                     default=DEFAULT_CHARGING_INTERVAL): cv.positive_int,
+        vol.Optional(CONF_CLIMATE_INTERVAL,
+                     default=DEFAULT_CLIMATE_INTERVAL): cv.positive_int,
         vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -102,26 +105,31 @@ def setup(hass, config):
         _LOGGER.error(
             "Unable to connect to Nissan Connect with username and password")
         return False
-    except(KeyError):
+    except KeyError:
         _LOGGER.error(
-            "Unable to fetch car details... do you actually have a Leaf connected to your account?")
+            "Unable to fetch car details..."
+            " do you actually have a Leaf connected to your account?")
         return False
     except:
         _LOGGER.error(
-            "An unknown error occurred while connecting to Nissan's servers: ", sys.exc_info()[0])
+            "An unknown error occurred while connecting to Nissan: %s",
+            sys.exc_info()[0])
 
     _LOGGER.info("Successfully logged in and fetched Leaf info")
-    _LOGGER.info("WARNING: This component may poll your Leaf too often, and drain the 12V. If you drain your car's 12V it won't start as the drive train battery won't connect, so you have been warned.")
+    _LOGGER.info(
+        "WARNING: This may poll your Leaf too often, and drain the 12V."
+        " If you drain your car's 12V it won't start"
+        " as the drive train battery won't connect"
+        " Don't set the intervals too low.")
 
     hass.data[DATA_LEAF] = {}
     hass.data[DATA_LEAF][leaf.vin] = LeafDataStore(
         leaf, hass, config)
 
     for component in LEAF_COMPONENTS:
-        if (component != 'device_tracker') or (config[DOMAIN][CONF_NCONNECT] is True):
+        if (component != 'device_tracker' or
+                config[DOMAIN][CONF_NCONNECT] is True):
             load_platform(hass, component, DOMAIN, {}, config)
-
-    # hass.data[DATA_LEAF][leaf.vin].refresh_leaf_if_necessary(0)
 
     return True
 
@@ -131,8 +139,9 @@ class LeafDataStore:
     def __init__(self, leaf, hass, config):
         self.leaf = leaf
         self.config = config
-        #self.nissan_connect = config[DOMAIN][CONF_NCONNECT]
+        # self.nissan_connect = config[DOMAIN][CONF_NCONNECT]
         self.nissan_connect = False  # Disabled until tested and implemented
+        self.force_miles = config[DOMAIN][CONF_FORCE_MILES]
         self.hass = hass
         self.data = {}
         self.data[DATA_CLIMATE] = False
@@ -142,7 +151,7 @@ class LeafDataStore:
         self.data[DATA_RANGE_AC] = 0
         self.data[DATA_RANGE_AC_OFF] = 0
         self.data[DATA_PLUGGED_IN] = False
-        self.lastCheck = None
+        self.last_check = None
         track_time_interval(
             hass, self.refresh_leaf_if_necessary, timedelta(seconds=CHECK_INTERVAL))
 
@@ -150,21 +159,35 @@ class LeafDataStore:
         result = False
         now = datetime.today()
 
-        if self.lastCheck is None:
-            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
-                          " as there has not been one yet.")
+        base_interval = timedelta(minutes=self.config[DOMAIN][CONF_INTERVAL])
+        climate_interval = timedelta(
+            minutes=self.config[DOMAIN][CONF_CLIMATE_INTERVAL])
+        charging_interval = timedelta(
+            minutes=self.config[DOMAIN][CONF_CHARGING_INTERVAL])
+
+        if self.last_check is None:
+            _LOGGER.debug("Firing Refresh on %s"
+                          " as there has not been one yet.",
+                          self.leaf.nickname)
             result = True
-        elif self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_INTERVAL]) < now:
-            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
-                          " as the interval has passed.")
+        elif self.last_check + base_interval < now:
+            _LOGGER.debug("Firing Refresh on %s"
+                          " as the interval has passed.",
+                          self.leaf.nickname)
             result = True
-        elif self.data[DATA_CHARGING] is True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CHARGING_INTERVAL]) < now:
-            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
-                          " as it's charging and the charging interval has passed.")
+        elif (self.data[DATA_CHARGING] is True and
+              self.last_check + charging_interval < now):
+            _LOGGER.debug("Firing Refresh on %s "
+                          " as it's charging and the charging interval"
+                          " has passed.",
+                          self.leaf.nickname)
             result = True
-        elif self.data[DATA_CLIMATE] is True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CLIMATE_INTERVAL]) < now:
-            _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
-                          " as climate control is on and the interval has passed.")
+        elif (self.data[DATA_CLIMATE] is True and
+              self.last_check + climate_interval < now):
+            _LOGGER.debug("Firing Refresh on %s"
+                          " as climate control is on and"
+                          " the interval has passed.",
+                          self.leaf.nickname)
             result = True
 
         if result is True:
@@ -173,42 +196,44 @@ class LeafDataStore:
     def refresh_data(self):
         _LOGGER.debug("Updating Nissan Leaf Data")
 
-        self.lastCheck = datetime.today()
+        self.last_check = datetime.today()
 
-        batteryResponse = self.get_battery()
+        battery_response = self.get_battery()
         _LOGGER.debug("Got battery data for Leaf")
 
-        if batteryResponse.answer['status'] == 200:
-            self.data[DATA_BATTERY] = batteryResponse.battery_percent
-            self.data[DATA_CHARGING] = batteryResponse.is_charging
-            self.data[DATA_PLUGGED_IN] = batteryResponse.is_connected
-            self.data[DATA_RANGE_AC] = batteryResponse.cruising_range_ac_on_km
-            self.data[DATA_RANGE_AC_OFF] = batteryResponse.cruising_range_ac_off_km
+        if battery_response.answer['status'] == 200:
+            self.data[DATA_BATTERY] = battery_response.battery_percent
+            self.data[DATA_CHARGING] = battery_response.is_charging
+            self.data[DATA_PLUGGED_IN] = battery_response.is_connected
+            self.data[DATA_RANGE_AC] = battery_response.cruising_range_ac_on_km
+            self.data[DATA_RANGE_AC_OFF] = (
+                battery_response.cruising_range_ac_off_km
+            )
 
         _LOGGER.debug("Battery Response: ")
-        _LOGGER.debug(batteryResponse.__dict__)
+        _LOGGER.debug(battery_response.__dict__)
 
-        climateResponse = self.get_climate()
+        climate_response = self.get_climate()
 
-        if climateResponse is not None:
+        if climate_response is not None:
             _LOGGER.debug("Got climate data for Leaf")
-            _LOGGER.debug(climateResponse.__dict__)
-            self.data[DATA_CLIMATE] = climateResponse.is_hvac_running
+            _LOGGER.debug(climate_response.__dict__)
+            self.data[DATA_CLIMATE] = climate_response.is_hvac_running
 
         if self.nissan_connect:
             try:
-                locationResponse = self.get_location()
+                location_response = self.get_location()
 
-                if locationResponse is None:
+                if location_response is None:
                     _LOGGER.debug("Empty Location Response Received")
                     self.data[DATA_LOCATION] = None
                 else:
-                    LOGGER.debug("Got location data for Leaf")
-                    self.data[DATA_LOCATION] = locationResponse
+                    _LOGGER.debug("Got location data for Leaf")
+                    self.data[DATA_LOCATION] = location_response
 
                     _LOGGER.debug("Location Response: ")
-                    _LOGGER.debug(locationResponse.__dict__)
-            except Exception as e:
+                    _LOGGER.debug(location_response.__dict__)
+            except:
                 _LOGGER.error("Error fetching location info")
 
         self.signal_components()

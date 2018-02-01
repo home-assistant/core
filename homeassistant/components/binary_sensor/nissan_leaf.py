@@ -1,15 +1,13 @@
 """
-Plugged In Status Support for the Nissan Leaf Carwings/Nissan Connect API.
+Plugged In Status Support for the Nissan Leaf
 
-Documentation pending, please refer to the main platform component for configuration details
+Documentation pending.
+Please refer to the main platform component for configuration details
 """
 
 import logging
 
 from .. import nissan_leaf as LeafCore
-from ..nissan_leaf import LeafEntity
-from homeassistant.helpers.entity import Entity
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +34,8 @@ class LeafPluggedInSensor(LeafCore.LeafEntity):
 
     def log_registration(self):
         _LOGGER.debug(
-            "Registered LeafPluggedInSensor component with HASS for VIN " + self.car.leaf.vin)
+            "Registered LeafPluggedInSensor component with HASS for VIN %s",
+            self.car.leaf.vin)
 
     @property
     def state(self):
