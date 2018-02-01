@@ -51,6 +51,8 @@ def async_setup(hass, config):
     overrides = conf.get(CONF_OVERRIDE)
     newnames = conf.get(CONF_NEWNAMES)
 
+    if isinstance(newnames, list):
+        newnames = ''
     use_newnames = False
     if newnames.lower() == 'y' or newnames.lower() == 'yes':
         use_newnames == True
