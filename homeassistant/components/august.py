@@ -84,8 +84,8 @@ def request_configuration(hass, config, api, authenticator):
     _CONFIGURING[DOMAIN] = configurator.request_config(
         NOTIFICATION_TITLE,
         august_configuration_callback,
-        description="Please check your {} ({}) and enter the "
-                    "verification code below".format(login_method, username),
+        description="Please check your {} ({}) and enter the verification "
+                    "code below".format(login_method, username),
         submit_caption='Verify',
         fields=[{
             'id': 'verification_code',
