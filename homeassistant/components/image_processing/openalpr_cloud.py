@@ -109,12 +109,13 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         websession = async_get_clientsession(self.hass)
         params = self._params.copy()
 
-        params['image_bytes'] = str(b64encode(image), 'utf-8')
+        image_to_send = {}
+        image_to_send['image_bytes'] = str(b64encode(image), 'utf-8')
 
         try:
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 request = yield from websession.post(
-                    OPENALPR_API_URL, params=params
+                    OPENALPR_API_URL, params=params, data=image_to_send
                 )
 
                 data = yield from request.json()
