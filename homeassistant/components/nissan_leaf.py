@@ -153,7 +153,9 @@ class LeafDataStore:
         self.data[DATA_PLUGGED_IN] = False
         self.last_check = None
         track_time_interval(
-            hass, self.refresh_leaf_if_necessary, timedelta(seconds=CHECK_INTERVAL))
+            hass,
+            self.refresh_leaf_if_necessary,
+            timedelta(seconds=CHECK_INTERVAL))
 
     def refresh_leaf_if_necessary(self, event_time):
         result = False
@@ -324,5 +326,4 @@ class LeafEntity(Entity):
 
     def _update_callback(self):
         """Callback update method."""
-        #_LOGGER.debug("Got dispatcher update from Leaf platform")
         self.schedule_update_ha_state(True)
