@@ -1,5 +1,7 @@
 """
-Battery Level Sensor for Nissan Leaf
+Battery Charge and Range Support for the Nissan Leaf Carwings/Nissan Connect API.
+
+Documentation pending, please refer to the main platform component for configuration details
 """
 
 import logging
@@ -37,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LeafBatterySensor(LeafCore.LeafEntity):
     @property
     def name(self):
-        return "Leaf Charge"
+        return self.car.leaf.nickname + " Charge"
 
     def log_registration(self):
         _LOGGER.debug(
@@ -60,9 +62,9 @@ class LeafRangeSensor(LeafCore.LeafEntity):
     @property
     def name(self):
         if self.ac_on == True:
-            return "Leaf Range (AC)"
+            return self.car.leaf.nickname + " Range (AC)"
         else:
-            return "Leaf Range"
+            return self.car.leaf.nickname + " Range"
 
     def log_registration(self):
         _LOGGER.debug(

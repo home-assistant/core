@@ -1,3 +1,22 @@
+"""
+Support for the Nissan Leaf Carwings/Nissan Connect API.
+
+Please note this is the pre-2018 API, which is still functional in the US.
+The old API should continue to work as the new one is not being released outside the US.
+
+Documentation pages have not been created yet, here is an example configuration block:
+
+nissan_leaf:
+  username: "username"
+  password: "password"
+  nissan_connect: false
+  region: 'NE'
+  update_interval: 30
+  update_interval_charging: 15
+  update_interval_climate: 5
+  force_miles: true
+"""
+
 import voluptuous as vol
 import logging
 from datetime import timedelta, datetime
@@ -5,7 +24,6 @@ import time
 import urllib
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
@@ -14,8 +32,9 @@ from homeassistant.helpers.entity import Entity
 import asyncio
 import sys
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.util.async import fire_coroutine_threadsafe
 
+# Currently waiting on the pycarwings2 author to pull this PR in and update pip, so using my fork for now.
+# https://github.com/jdhorne/pycarwings2/pull/28
 
 REQUIREMENTS = ['https://github.com/BenWoodford/pycarwings2/archive/master.zip'
                 '#pycarwings']
@@ -148,7 +167,6 @@ class LeafDataStore:
             result = True
 
         if result == True:
-            _LOGGER.debug("Interval fired, refreshing data...")
             self.refresh_data()
 
     def refresh_data(self):
@@ -176,6 +194,10 @@ class LeafDataStore:
             _LOGGER.debug(climateResponse.__dict__)
             self.data[DATA_CLIMATE] = climateResponse.is_hvac_running
 
+
+"""
+# Removing this block for now, as I do not have a Leaf with Nissan Connect to test it with.
+
         if self.nissan_connect:
             try:
                 locationResponse = self.get_location()
@@ -192,7 +214,8 @@ class LeafDataStore:
             except Exception as e:
                 _LOGGER.error("Error fetching location info")
 
-        _LOGGER.debug("Notifying Components")
+"""
+
         self.signal_components()
 
     def signal_components(self):

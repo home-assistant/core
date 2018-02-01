@@ -1,5 +1,7 @@
 """
-Plugged In Sensor for Nissan Leaf
+Plugged In Status Support for the Nissan Leaf Carwings/Nissan Connect API.
+
+Documentation pending, please refer to the main platform API f
 """
 
 import logging
@@ -35,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LeafPluggedInSensor(LeafCore.LeafEntity):
     @property
     def name(self):
-        return "Leaf Plugged In"
+        return self.car.leaf.nickname + " Plug Status"
 
     def log_registration(self):
         _LOGGER.debug(

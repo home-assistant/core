@@ -1,5 +1,7 @@
 """
-Charge and Climate Switch for Nissan Leaf
+Charge and Climate Control Support for the Nissan Leaf Carwings/Nissan Connect API.
+
+Documentation pending, please refer to the main platform component for configuration details
 """
 
 import logging
@@ -31,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LeafClimateSwitch(LeafCore.LeafEntity, ToggleEntity):
     @property
     def name(self):
-        return "Leaf Climate Control"
+        return self.car.leaf.nickname + " Climate Control"
 
     def log_registration(self):
         _LOGGER.debug(
@@ -57,7 +59,7 @@ class LeafClimateSwitch(LeafCore.LeafEntity, ToggleEntity):
 class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
     @property
     def name(self):
-        return "Leaf Charging Status"
+        return self.car.leaf.nickname + " Charging Status"
 
     def log_registration(self):
         _LOGGER.debug(
