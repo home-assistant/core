@@ -50,7 +50,7 @@ REQUIRES = [
     'pyyaml>=3.11,<4',
     'pytz>=2017.02',
     'pip>=8.0.3',
-    'jinja2>=2.9.6',
+    'jinja2>=2.10',
     'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.3.7',   # If updated, check if yarl also needs an update!
