@@ -10,9 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_VOLUME_MUTE,
-	SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, 
-	MEDIA_TYPE_MUSIC)
-	
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, 
+    MEDIA_TYPE_MUSIC)
+
 from homeassistant.const import (CONF_NAME, STATE_IDLE, STATE_PAUSED,
                                  STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
