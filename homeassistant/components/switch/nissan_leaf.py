@@ -5,14 +5,8 @@ Documentation pending, please refer to the main platform component for configura
 """
 
 import logging
-from datetime import timedelta
-
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from .. import nissan_leaf as LeafCore
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
-import asyncio
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +35,7 @@ class LeafClimateSwitch(LeafCore.LeafEntity, ToggleEntity):
 
     @property
     def is_on(self):
-        return self.car.data[LeafCore.DATA_CLIMATE] == True
+        return self.car.data[LeafCore.DATA_CLIMATE] is True
 
     def turn_on(self, **kwargs):
         if self.car.set_climate(True):
@@ -67,7 +61,7 @@ class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
 
     @property
     def is_on(self):
-        return self.car.data[LeafCore.DATA_CHARGING] == True
+        return self.car.data[LeafCore.DATA_CHARGING] is True
 
     def turn_on(self, **kwargs):
         if self.car.start_charging():

@@ -118,7 +118,7 @@ def setup(hass, config):
         leaf, hass, config)
 
     for component in LEAF_COMPONENTS:
-        if (component != 'device_tracker') or (config[DOMAIN][CONF_NCONNECT] == True):
+        if (component != 'device_tracker') or (config[DOMAIN][CONF_NCONNECT] is True):
             load_platform(hass, component, DOMAIN, {}, config)
 
     # hass.data[DATA_LEAF][leaf.vin].refresh_leaf_if_necessary(0)
@@ -131,7 +131,8 @@ class LeafDataStore:
     def __init__(self, leaf, hass, config):
         self.leaf = leaf
         self.config = config
-        self.nissan_connect = config[DOMAIN][CONF_NCONNECT]
+        #self.nissan_connect = config[DOMAIN][CONF_NCONNECT]
+        self.nissan_connect = False  # Disabled until tested and implemented
         self.hass = hass
         self.data = {}
         self.data[DATA_CLIMATE] = False
@@ -157,16 +158,16 @@ class LeafDataStore:
             _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
                           " as the interval has passed.")
             result = True
-        elif self.data[DATA_CHARGING] == True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CHARGING_INTERVAL]) < now:
+        elif self.data[DATA_CHARGING] is True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CHARGING_INTERVAL]) < now:
             _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
                           " as it's charging and the charging interval has passed.")
             result = True
-        elif self.data[DATA_CLIMATE] == True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CLIMATE_INTERVAL]) < now:
+        elif self.data[DATA_CLIMATE] is True and self.lastCheck + timedelta(minutes=self.config[DOMAIN][CONF_CLIMATE_INTERVAL]) < now:
             _LOGGER.debug("Firing Refresh on " + self.leaf.vin +
                           " as climate control is on and the interval has passed.")
             result = True
 
-        if result == True:
+        if result is True:
             self.refresh_data()
 
     def refresh_data(self):
@@ -194,10 +195,6 @@ class LeafDataStore:
             _LOGGER.debug(climateResponse.__dict__)
             self.data[DATA_CLIMATE] = climateResponse.is_hvac_running
 
-
-"""
-# Removing this block for now, as I do not have a Leaf with Nissan Connect to test it with.
-
         if self.nissan_connect:
             try:
                 locationResponse = self.get_location()
@@ -213,8 +210,6 @@ class LeafDataStore:
                     _LOGGER.debug(locationResponse.__dict__)
             except Exception as e:
                 _LOGGER.error("Error fetching location info")
-
-"""
 
         self.signal_components()
 
@@ -266,7 +261,7 @@ class LeafDataStore:
 
             self.signal_components()
 
-            return climate_result.is_hvac_running == False
+            return climate_result.is_hvac_running is False
 
     def get_location(self):
         request = self.leaf.request_location()

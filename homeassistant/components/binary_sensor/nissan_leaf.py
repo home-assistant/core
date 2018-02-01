@@ -1,19 +1,14 @@
 """
 Plugged In Status Support for the Nissan Leaf Carwings/Nissan Connect API.
 
-Documentation pending, please refer to the main platform API f
+Documentation pending, please refer to the main platform component for configuration details
 """
 
 import logging
-from datetime import timedelta
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from .. import nissan_leaf as LeafCore
 from ..nissan_leaf import LeafEntity
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
-import asyncio
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)

@@ -5,15 +5,11 @@ Documentation pending, please refer to the main platform component for configura
 """
 
 import logging
-from datetime import timedelta
-
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from .. import nissan_leaf as LeafCore
 from ..nissan_leaf import LeafEntity
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
-import asyncio
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +57,7 @@ class LeafRangeSensor(LeafCore.LeafEntity):
 
     @property
     def name(self):
-        if self.ac_on == True:
+        if self.ac_on is True:
             return self.car.leaf.nickname + " Range (AC)"
         else:
             return self.car.leaf.nickname + " Range"
@@ -74,19 +70,19 @@ class LeafRangeSensor(LeafCore.LeafEntity):
     def state(self):
         ret = 0
 
-        if self.ac_on == True:
+        if self.ac_on is True:
             ret = self.car.data[LeafCore.DATA_RANGE_AC]
         else:
             ret = self.car.data[LeafCore.DATA_RANGE_AC_OFF]
 
-        if self.car.hass.config.units.is_metric == False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] == True:
+        if self.car.hass.config.units.is_metric is False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] is True:
             ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)
 
         return round(ret, 0)
 
     @property
     def unit_of_measurement(self):
-        if self.car.hass.config.units.is_metric == False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] == True:
+        if self.car.hass.config.units.is_metric is False or self.car.config[LeafCore.DOMAIN][LeafCore.CONF_FORCE_MILES] is True:
             return "mi"
         else:
             return "km"
