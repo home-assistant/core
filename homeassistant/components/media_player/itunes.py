@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.itunes/
 """
 import logging
-import time
+
 import requests
 import voluptuous as vol
 
@@ -131,7 +131,7 @@ class Itunes(object):
 
     def artwork_url(self):
         """Return a URL of the current track's album art."""
-        return self._base_url + '/artwork?time=' + str(time.time())
+        return self._base_url + '/artwork'
 
     def airplay_devices(self):
         """Return a list of AirPlay devices."""
@@ -280,7 +280,7 @@ class ItunesDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED) and \
            self.current_title is not None:
-            return self.client.artwork_url()
+            return self.client.artwork_url() + '?id=' + self.content_id
 
         return 'https://cloud.githubusercontent.com/assets/260/9829355' \
             '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
