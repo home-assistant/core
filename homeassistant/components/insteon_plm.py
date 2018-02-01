@@ -19,7 +19,7 @@ from homeassistant.helpers import discovery
 from insteonplm.constants import *
 from insteonplm.states.onOff import (OnOffSwitch, OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom, OpenClosedRelay)
 from insteonplm.states.dimmable import (DimmableSwitch, DimmableSwitch_Fan)
-from insteonplm.states.sensor import (OnOffSensor, MotionSensor, SmokeCO2Sensor, IoLincSensor)
+from insteonplm.states.sensor import (VariableSensor, MotionSensor, SmokeCO2Sensor, IoLincSensor)
 
 REQUIREMENTS = ['insteonplm==0.7.5']
 
@@ -138,7 +138,7 @@ class IPDB(object):
         State(MotionSensor, 'binary_sensor', 'motion'),
         State(SmokeCO2Sensor, 'sensor', None),
         State(IoLincSensor, 'binary_sensor', 'opening'),
-        State(OnOffSensor, 'binary_sensor', None),
+        State(VariableSensor, 'sensor', None),
 
         State(DimmableSwitch_Fan, 'fan', None),
         State(DimmableSwitch, 'light', None)
