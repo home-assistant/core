@@ -54,7 +54,7 @@ def setup(hass, config):
         channel.bind('goal', goal_handler)
 
     pusher = pysher.Pusher(GOALFEED_APP_ID, secure=False, port=8080,
-                           custom_host=GOALFEED_HOST, timeout=30)
+                           custom_host=GOALFEED_HOST)
 
     pusher.connection.bind('pusher:connection_established', connect_handler)
     pusher.connect()
