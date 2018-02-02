@@ -145,6 +145,9 @@ omit =
     homeassistant/components/maxcube.py
     homeassistant/components/*/maxcube.py
 
+    homeassistant/components/mercedesme.py
+    homeassistant/components/*/mercedesme.py
+
     homeassistant/components/mochad.py
     homeassistant/components/*/mochad.py
 
