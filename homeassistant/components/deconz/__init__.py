@@ -7,6 +7,7 @@ https://home-assistant.io/components/deconz/
 
 import asyncio
 import logging
+from itertools import chain
 
 import voluptuous as vol
 
@@ -135,11 +136,7 @@ def async_setup_deconz(hass, config, deconz_config):
         registry = hass.data.get(DATA_REGISTRY)
         if registry.async_is_registered(entity_id):
             entity = registry.async_get_entry(entity_id)
-            groups = list(deconz.groups.values())
-            lights = list(deconz.lights.values())
-            sensors = list(deconz.sensors.values())
-            devices = groups + lights + sensors
-            for device in devices:
+            for device in chain(deconz.groups.values(), deconz.lights.values(), deconz.sensors.values()):
                 if device.uniqueid == entity.unique_id:
                     field = device.deconz_id
                     break
