@@ -178,10 +178,6 @@ class GenericThermostat(ClimateDevice):
             async_track_time_interval(
                 hass, self._async_keep_alive, self._keep_alive)
 
-        sensor_state = hass.states.get(sensor_entity_id)
-        if sensor_state and sensor_state.state != STATE_UNKNOWN:
-            self._async_update_temp(sensor_state)
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Run when entity about to be added."""
