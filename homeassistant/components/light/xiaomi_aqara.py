@@ -51,13 +51,13 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
             return True
 
         rgbhexstr = "%x" % value
-        if len(rgbhexstr) == 7:
-            rgbhexstr = '0' + rgbhexstr
-        elif len(rgbhexstr) != 8:
-            _LOGGER.error('Light RGB data error.'
-                          ' Must be 8 characters. Received: %s', rgbhexstr)
+        if len(rgbhexstr) > 8:
+            _LOGGER.error("Light RGB data error."
+                          " Can't be more than 8 characters. Received: %s",
+                          rgbhexstr)
             return False
 
+        rgbhexstr = rgbhexstr.zfill(8)
         rgbhex = bytes.fromhex(rgbhexstr)
         rgba = struct.unpack('BBBB', rgbhex)
         brightness = rgba[0]
