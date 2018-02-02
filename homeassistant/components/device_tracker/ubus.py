@@ -101,7 +101,6 @@ class UbusDeviceScanner(DeviceScanner):
         if self.mac2name is None:
             self._generate_mac2name()
         name = self.mac2name.get(mac.upper(), None)
-        self.mac2name = None
         return name
 
     @_refresh_on_access_denied
