@@ -47,12 +47,7 @@ class UpCloudSwitch(UpCloudServerMixin, SwitchDevice):
         except AttributeError:
             return
         if state == 'stopped':
-            old_timeout = self.data.cloud_manager.timeout
-            try:
-                self.data.cloud_manager.timeout = None
-                self.data.start()
-            finally:
-                self.data.cloud_manager.timeout = old_timeout
+            self.data.start()
 
     def turn_off(self, **kwargs):
         """Stop the server."""

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['upcloud-api==0.3.9']
+REQUIREMENTS = ['upcloud-api==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
