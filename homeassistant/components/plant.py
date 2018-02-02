@@ -92,7 +92,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 # Flag for enabling/disabling the loading of the history from the database.
-# This feature is turned off right now as it's tests are not 100% stable.
+# This feature is turned off right now as its tests are not 100% stable.
 ENABLE_LOAD_HISTORY = False
 
 
