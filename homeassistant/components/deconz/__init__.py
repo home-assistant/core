@@ -136,8 +136,9 @@ def async_setup_deconz(hass, config, deconz_config):
         if entity_id:
             registry = hass.data.get(DATA_REGISTRY)
             entity = registry.async_get_entry(entity_id)
-            for device in chain(
-                    deconz.groups.values(), deconz.lights.values(), deconz.sensors.values()):
+            for device in chain(deconz.groups.values(),
+                                deconz.lights.values(),
+                                deconz.sensors.values()):
                 if device.uniqueid == entity.unique_id:
                     field = device.deconz_id
                     break
