@@ -88,10 +88,10 @@ class TrafikverketWeatherStation(Entity):
         """
         url = 'http://api.trafikinfo.trafikverket.se/v1.3/data.json'
 
-        if self._type == 'air':
-            air_vs_road = "Air"
+        if self._type == 'road':
+            air_vs_road = 'Road'
         else:
-            air_vs_road = "Road"
+            air_vs_road = 'Air'
 
         xml = """
         <REQUEST>
