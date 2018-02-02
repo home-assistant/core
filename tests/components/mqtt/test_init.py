@@ -553,7 +553,24 @@ def test_birth_message(hass):
     mqtt_client.publish = lambda *args: calls.append(args)
     hass.data['mqtt']._mqtt_on_connect(None, None, 0, 0)
     yield from hass.async_block_till_done()
+    assert len(calls) == 1
     assert calls[-1] == ('birth', 'birth', 0, False)
+
+
+@asyncio.coroutine
+def test_last_will_message_on_graceful_disconnect(hass):
+    """Test sending last will message on graceful disconnect."""
+    mqtt_client = yield from mock_mqtt_client(hass, {
+        mqtt.CONF_BROKER: 'mock-broker',
+        mqtt.CONF_WILL_MESSAGE: {mqtt.ATTR_TOPIC: 'will',
+                                 mqtt.ATTR_PAYLOAD: 'will'}
+    })
+    calls = []
+    mqtt_client.publish = lambda *args: calls.append(args)
+    yield from hass.data['mqtt'].async_disconnect()
+    yield from hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[-1] == ('will', 'will', 0, False)
 
 
 @asyncio.coroutine
