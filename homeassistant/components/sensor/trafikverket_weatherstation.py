@@ -4,6 +4,9 @@ Weather information for air and road temperature, provided by Trafikverket.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.trafikverket_weatherstation/
 """
+import requests
+import json
+
 import logging
 from datetime import timedelta
 
@@ -12,7 +15,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, TEMP_CELSIUS)
+    CONF_NAME, ATTR_ATTRIBUTION, TEMP_CELSIUS, CONF_API_KEY, CONF_TYPE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -20,16 +23,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by Trafikverket API"
 
-CONF_API = 'api'
 CONF_STATION = 'station'
-CONF_TYPE = 'type'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SCAN_INTERVAL = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_API): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_STATION): cv.string,
     vol.Required(CONF_TYPE): vol.In(['air', 'road']),
 })
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     sensor_name = config.get(CONF_NAME)
-    sensor_api = config.get(CONF_API)
+    sensor_api = config.get(CONF_API_KEY)
     sensor_station = config.get(CONF_STATION)
     sensor_type = config.get(CONF_TYPE)
 
@@ -86,44 +87,34 @@ class TrafikverketWeatherStation(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        import requests
-        import json
-
         url = 'http://api.trafikinfo.trafikverket.se/v1.3/data.json'
 
         if self._type == 'air':
-            xml = """
-            <REQUEST>
-                  <LOGIN authenticationkey='""" + self._api + """' />
-                  <QUERY objecttype="WeatherStation">
-                        <FILTER>
-                              <EQ name="Name" value='""" + self._station + """' />
-                        </FILTER>
-                        <INCLUDE>Measurement.Air.Temp</INCLUDE>
-                  </QUERY>
-            </REQUEST>"""
+            air_vs_road = "Air"
         else:
-            xml = """
-            <REQUEST>
-                  <LOGIN authenticationkey='""" + self._api + """' />
-                  <QUERY objecttype="WeatherStation">
-                        <FILTER>
-                              <EQ name="Name" value='""" + self._station + """' />
-                        </FILTER>
-                        <INCLUDE>Measurement.Road.Temp</INCLUDE>
-                  </QUERY>
-            </REQUEST>"""
+            air_vs_road = "Road"
+
+        xml = """
+        <REQUEST>
+              <LOGIN authenticationkey='""" + self._api + """' />
+              <QUERY objecttype="WeatherStation">
+                    <FILTER>
+                          <EQ name="Name" value='""" + self._station + """' />
+                    </FILTER>
+                    <INCLUDE>Measurement.""" + air_vs_road + """.Temp</INCLUDE>
+              </QUERY>
+        </REQUEST>"""
 
         post = requests.post(url, data=xml.encode('utf-8'))
 
-        # lj = loaded json
-        lj = json.loads(post.text)
+        # loa (load) = loaded json
+        loa = json.loads(post.text)
 
-        # mm = measurement
-        mm = lj["RESPONSE"]["RESULT"][0]["WeatherStation"][0]["Measurement"]
+        # mea = measurement
+        mea = loa["RESPONSE"]["RESULT"][0]["WeatherStation"][0]["Measurement"]
         if self._type == 'air':
-            result = mm["Air"]["Temp"]
+            result = mea["Air"]["Temp"]
         else:
-            result = mm["Road"]["Temp"]
+            result = mea["Road"]["Temp"]
 
         self._state = result
