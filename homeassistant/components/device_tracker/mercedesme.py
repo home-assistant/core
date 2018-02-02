@@ -2,7 +2,7 @@
 Support for Mercedes cars with Mercedes ME.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mercedesme/
+https://home-assistant.io/components/device_tracker.mercedesme/
 """
 import logging
 from datetime import timedelta
