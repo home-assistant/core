@@ -8,7 +8,7 @@ def deprecated_substitute(substitute_name):
 
     When a property is added to replace an older property, this decorator can
     be added to the new property, listing the old property as the substitute.
-    If the old property is defined, it's value will be used instead, and a log
+    If the old property is defined, its value will be used instead, and a log
     warning will be issued alerting the user of the impending change.
     """
     def decorator(func):
