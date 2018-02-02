@@ -164,3 +164,15 @@ class TestDateUtil(unittest.TestCase):
 
         diff = dt_util.now() - timedelta(minutes=365*60*24)
         self.assertEqual(dt_util.get_age(diff), "1 year")
+        
+        diff = dt_util.now() + timedelta(seconds=1)
+        self.assertEqual(dt_util.get_age(diff), "1 second")
+
+        diff = dt_util.now() + timedelta(seconds=30)
+        self.assertEqual(dt_util.get_age(diff), "30 seconds")
+
+        diff = dt_util.now() + timedelta(minutes=5)
+        self.assertEqual(dt_util.get_age(diff), "5 minutes")
+
+        diff = dt_util.now() + timedelta(minutes=1)
+        self.assertEqual(dt_util.get_age(diff), "1 minute")
