@@ -65,9 +65,10 @@ def _read_frame(req):
     # Read in HTTP headers:
     stream = req.content
     # multipart/x-mixed-replace; boundary=--frameboundary
-    __mimetype, options = cgi.parse_header(req.headers['content-type'])
+    _mimetype, options = cgi.parse_header(req.headers['content-type'])
     boundary = options.get('boundary').encode('utf-8')
     if not boundary:
+        _LOGGER.error("Malformed MJPEG missing boundary")
         raise Exception("Can't find content-type")
 
     line = yield from stream.readline()
@@ -106,7 +107,7 @@ def _resize_image(image, opts):
     old_size = len(image)
     if old_width <= new_width:
         if opts.quality is None:
-            _LOGGER.debug("Image is smaller than requested width")
+            _LOGGER.debug("Image is smaller-than / equal-to requested width")
             return image
         new_width = old_width
 
@@ -119,7 +120,7 @@ def _resize_image(image, opts):
     newimage = imgbuf.getvalue()
     if not opts.force_resize and len(newimage) >= old_size:
         _LOGGER.debug("Using original image(%d bytes) "
-                      "because resized image (%d bytes) is larger",
+                      "because resized image (%d bytes) is not smaller",
                       old_size, len(newimage))
         return image
 
@@ -141,7 +142,7 @@ class ImageOpts():
         self.force_resize = force_resize
 
     def __bool__(self):
-        """Bool evaution rules."""
+        """Bool evalution rules."""
         return True if self.max_width or self.quality else False
 
 
@@ -153,10 +154,9 @@ class ProxyCamera(Camera):
         super().__init__()
         self.hass = hass
         self._proxied_camera = config.get(CONF_ENTITY_ID)
-        self._name = config.get(CONF_NAME)
-        if not self._name:
-            self._name = "{} - {}".format(DEFAULT_BASENAME,
-                                          self._proxied_camera)
+        self._name = (
+            config.get(CONF_NAME) or
+            "{} - {}".format(DEFAULT_BASENAME, self._proxied_camera))
         self._image_opts = ImageOpts(
             config.get(CONF_MAX_IMAGE_WIDTH),
             config.get(CONF_IMAGE_QUALITY),
