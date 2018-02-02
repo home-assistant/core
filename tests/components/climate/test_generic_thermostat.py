@@ -14,6 +14,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_OFF,
+    STATE_IDLE,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE
 )
@@ -170,7 +171,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_setup_defaults_to_unknown(self):
         """Test the setting of defaults to unknown."""
-        self.assertEqual('idle', self.hass.states.get(ENTITY).state)
+        self.assertEqual(STATE_IDLE, self.hass.states.get(ENTITY).state)
 
     def test_default_setup_params(self):
         """Test the setup with default parameters."""
@@ -964,6 +965,7 @@ def test_restore_state(hass):
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
     assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
+    assert(state.state == STATE_OFF)
 
 
 @asyncio.coroutine
@@ -990,3 +992,4 @@ def test_no_restore_state(hass):
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 22)
+    assert(state.state == STATE_OFF)

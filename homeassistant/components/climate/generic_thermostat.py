@@ -173,8 +173,8 @@ class GenericThermostat(ClimateDevice):
                     old_state.attributes[ATTR_OPERATION_MODE] is not None):
                 self._current_operation = \
                     old_state.attributes[ATTR_OPERATION_MODE]
-                if self._current_operation != STATE_OFF:
-                    self._enabled = True
+                self._enabled = self._current_operation != STATE_OFF
+
         else:
             # No previous state, try and restore defaults
             if self._target_temp is None:
