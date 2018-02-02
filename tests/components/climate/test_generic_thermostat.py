@@ -44,7 +44,6 @@ DEFAULT_AWAY_TEMP_COOL = 30.0
 DEFAULT_AWAY_TEMP_HEAT = 16.0
 DEFAULT_TARGET_TEMP_HIGH = 21.0
 DEFAULT_TARGET_TEMP_LOW = 18.0
-DEFAULT_TARGET_TEMP = 20.0
 
 
 class TestSetupClimateGenericThermostat(unittest.TestCase):
@@ -132,7 +131,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         self.assertEqual(STATE_OFF,
                          self.hass.states.get(heater_switch).state)
 
-        self._setup_sensor(18)
+        self._setup_sensor(16)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ON,
@@ -158,7 +157,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         self.assertEqual(STATE_OFF,
                          self.hass.states.get(heater_switch).state)
 
-        self._setup_sensor(18)
+        self._setup_sensor(16)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ON,
@@ -185,7 +184,7 @@ class TestClimateGenericThermostatHeat(unittest.TestCase):
             'hot_tolerance': 4,
             'heater_control': ENT_SWITCH_HEAT,
             'target_sensor': ENT_SENSOR,
-            'away_temp_heat': 18
+            'away_temp_heat': 16
         }})
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -201,7 +200,7 @@ class TestClimateGenericThermostatHeat(unittest.TestCase):
         state = self.hass.states.get(ENTITY)
         self.assertEqual(DEFAULT_MIN_TEMP, state.attributes.get('min_temp'))
         self.assertEqual(DEFAULT_MAX_TEMP, state.attributes.get('max_temp'))
-        self.assertEqual(DEFAULT_TARGET_TEMP,
+        self.assertEqual(DEFAULT_TARGET_TEMP_LOW,
                          state.attributes.get(ATTR_TEMPERATURE))
 
     def test_get_operation_modes(self):
@@ -334,7 +333,7 @@ class TestClimateGenericThermostatHeat(unittest.TestCase):
         self.hass.block_till_done()
         climate.set_temperature(self.hass, 25)
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
@@ -485,7 +484,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)

@@ -384,7 +384,7 @@ class GenericThermostat(ClimateDevice):
         self.async_schedule_update_ha_state()
 
     @callback
-    def _async_keep_alive(self):
+    def _async_keep_alive(self, time):
         """Call at constant intervals for keep-alive purposes."""
         if self._is_heating:
             self._heater_turn_on()
@@ -449,13 +449,11 @@ class GenericThermostat(ClimateDevice):
                 too_cold = target_temp - self._cur_temp >= \
                     self._cold_tolerance
                 if too_cold:
-                    _LOGGER.info('Turning off AC %s', self.ac_entity_id)
                     self._ac_turn_off()
             else:
                 too_hot = self._cur_temp - target_temp >= \
                     self._hot_tolerance
                 if too_hot:
-                    _LOGGER.info('Turning on AC %s', self.ac_entity_id)
                     self._ac_turn_on()
         if self.heater_entity_id:
             target_temp = self._target_temp_low
@@ -463,15 +461,11 @@ class GenericThermostat(ClimateDevice):
                 too_hot = self._cur_temp - target_temp >= \
                     self._hot_tolerance
                 if too_hot:
-                    _LOGGER.info('Turning off heater %s',
-                                    self.heater_entity_id)
                     self._heater_turn_off()
             else:
                 too_cold = target_temp - self._cur_temp >= \
                     self._cold_tolerance
                 if too_cold:
-                    _LOGGER.info('Turning on heater %s',
-                                    self.heater_entity_id)
                     self._heater_turn_on()
 
     @property
@@ -505,6 +499,7 @@ class GenericThermostat(ClimateDevice):
         """Turn heater toggleable device on."""
         if self.heater_entity_id:
             data = {ATTR_ENTITY_ID: self.heater_entity_id}
+            _LOGGER.info('Turning on heater %s', self.heater_entity_id)
             self.hass.async_add_job(
                 self.hass.services.async_call(HA_DOMAIN,
                                               SERVICE_TURN_ON, data))
@@ -514,6 +509,7 @@ class GenericThermostat(ClimateDevice):
         """Turn A/C toggleable device on."""
         if self.ac_entity_id:
             data = {ATTR_ENTITY_ID: self.ac_entity_id}
+            _LOGGER.info('Turning on AC %s', self.heater_entity_id)
             self.hass.async_add_job(
                 self.hass.services.async_call(HA_DOMAIN,
                                               SERVICE_TURN_ON, data))
@@ -523,6 +519,7 @@ class GenericThermostat(ClimateDevice):
         """Turn heater toggleable device off."""
         if self.heater_entity_id:
             data = {ATTR_ENTITY_ID: self.heater_entity_id}
+            _LOGGER.info('Turning off heater %s', self.heater_entity_id)
             self.hass.async_add_job(
                 self.hass.services.async_call(HA_DOMAIN,
                                               SERVICE_TURN_OFF, data))
@@ -532,6 +529,7 @@ class GenericThermostat(ClimateDevice):
         """Turn A/C toggleable device off."""
         if self.ac_entity_id:
             data = {ATTR_ENTITY_ID: self.ac_entity_id}
+            _LOGGER.info('Turning off AC %s', self.heater_entity_id)
             self.hass.async_add_job(
                 self.hass.services.async_call(HA_DOMAIN,
                                               SERVICE_TURN_OFF, data))
@@ -543,6 +541,7 @@ class GenericThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away mode on by setting it on away hold indefinitely."""
+        _LOGGER.info('Turning on away mode')
         self._is_away = True
         self._saved_target_temp_low = self._target_temp_low
         self._target_temp_low = self._away_temp_heat
@@ -553,6 +552,7 @@ class GenericThermostat(ClimateDevice):
 
     def turn_away_mode_off(self):
         """Turn away off."""
+        _LOGGER.info('Turning off away mode')
         self._is_away = False
         self._target_temp_high = self._saved_target_temp_high
         self._target_temp_low = self._saved_target_temp_low
