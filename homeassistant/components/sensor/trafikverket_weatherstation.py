@@ -4,11 +4,10 @@ Weather information for air and road temperature, provided by Trafikverket.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.trafikverket_weatherstation/
 """
-import requests
 import json
-
 import logging
 from datetime import timedelta
+import requests
 
 import voluptuous as vol
 
@@ -105,16 +104,17 @@ class TrafikverketWeatherStation(Entity):
               </QUERY>
         </REQUEST>"""
 
-        post = requests.post(url, data=xml.encode('utf-8'))
+        try:
+            post = requests.post(url, data=xml.encode('utf-8'), timeout=5)
+        except requests.exceptions.RequestException as err:
+            _LOGGER.error("Please check network connection: %s", err)
+            return None
 
         # loa (load) = loaded json
         loa = json.loads(post.text)
 
         # mea = measurement
         mea = loa["RESPONSE"]["RESULT"][0]["WeatherStation"][0]["Measurement"]
-        if self._type == 'air':
-            result = mea["Air"]["Temp"]
-        else:
-            result = mea["Road"]["Temp"]
 
-        self._state = result
+        # air_vs_road contains "Air" or "Road" depending on user input.
+        self._state = mea[air_vs_road]["Temp"]
