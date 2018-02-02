@@ -417,7 +417,6 @@ class GenericThermostat(ClimateDevice):
 
         if self.current_operation == STATE_OFF:
             return
-
         if self.min_cycle_duration:
             if self.ac_entity_id:
                 if self._is_cooling:
@@ -444,36 +443,36 @@ class GenericThermostat(ClimateDevice):
                                   "Cancelling current heating change.")
                     return
 
-            if self.ac_entity_id:
-                target_temp = self._target_temp_high
-                if self._is_cooling:
-                    too_cold = target_temp - self._cur_temp >= \
-                        self._cold_tolerance
-                    if too_cold:
-                        _LOGGER.info('Turning off AC %s', self.ac_entity_id)
-                        self._ac_turn_off()
-                else:
-                    too_hot = self._cur_temp - target_temp >= \
-                        self._hot_tolerance
-                    if too_hot:
-                        _LOGGER.info('Turning on AC %s', self.ac_entity_id)
-                        self._ac_turn_on()
-            if self.heater_entity_id:
-                target_temp = self._target_temp_low
-                if self._is_heating:
-                    too_hot = self._cur_temp - target_temp >= \
-                        self._hot_tolerance
-                    if too_hot:
-                        _LOGGER.info('Turning off heater %s',
-                                     self.heater_entity_id)
-                        self._heater_turn_off()
-                else:
-                    too_cold = target_temp - self._cur_temp >= \
-                        self._cold_tolerance
-                    if too_cold:
-                        _LOGGER.info('Turning on heater %s',
-                                     self.heater_entity_id)
-                        self._heater_turn_on()
+        if self.ac_entity_id:
+            target_temp = self._target_temp_high
+            if self._is_cooling:
+                too_cold = target_temp - self._cur_temp >= \
+                    self._cold_tolerance
+                if too_cold:
+                    _LOGGER.info('Turning off AC %s', self.ac_entity_id)
+                    self._ac_turn_off()
+            else:
+                too_hot = self._cur_temp - target_temp >= \
+                    self._hot_tolerance
+                if too_hot:
+                    _LOGGER.info('Turning on AC %s', self.ac_entity_id)
+                    self._ac_turn_on()
+        if self.heater_entity_id:
+            target_temp = self._target_temp_low
+            if self._is_heating:
+                too_hot = self._cur_temp - target_temp >= \
+                    self._hot_tolerance
+                if too_hot:
+                    _LOGGER.info('Turning off heater %s',
+                                    self.heater_entity_id)
+                    self._heater_turn_off()
+            else:
+                too_cold = target_temp - self._cur_temp >= \
+                    self._cold_tolerance
+                if too_cold:
+                    _LOGGER.info('Turning on heater %s',
+                                    self.heater_entity_id)
+                    self._heater_turn_on()
 
     @property
     def is_on(self):
