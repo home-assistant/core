@@ -122,17 +122,17 @@ class PlexSensor(Entity):
                 now_playing.append((user, "{0} ({1})".format(title, year)))
             elif sess.TYPE == 'episode':
                 season_year = (str(sess.show().year)
-                              if sess.show().year is not None
-                              else "")
-                season_title = (sess.grandparentTitle
-                               if sess.grandparentTitle is not None
+                               if sess.show().year is not None
                                else "")
-                season_episode = (sess.seasonEpisode
-                                 if sess.seasonEpisode is not None
-                                 else "")
-                episode_title = (sess.title
-                                if sess.title is not None
+                season_title = (sess.grandparentTitle
+                                if sess.grandparentTitle is not None
                                 else "")
+                season_episode = (sess.seasonEpisode
+                                  if sess.seasonEpisode is not None
+                                  else "")
+                episode_title = (sess.title
+                                 if sess.title is not None
+                                 else "")
                 title = season_title + ' (' + season_year + ')' + ' - ' + \
                     season_episode + ' - ' + episode_title
                 now_playing.append((user, "{0}".format(title)))
