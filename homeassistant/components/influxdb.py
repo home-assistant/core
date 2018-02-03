@@ -39,6 +39,7 @@ CONF_RETRY_QUEUE = 'retry_queue_limit'
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
+
 TIMEOUT = 5
 
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
