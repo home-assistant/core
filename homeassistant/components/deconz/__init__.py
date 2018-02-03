@@ -132,21 +132,19 @@ def async_setup_deconz(hass, config, deconz_config):
         entity_id = call.data.get(SERVICE_ENTITY)
         data = call.data.get(SERVICE_DATA)
         deconz = hass.data[DOMAIN]
-
         if entity_id:
             registry = hass.data.get(DATA_REGISTRY)
             entity = registry.async_get_entry(entity_id)
             for device in chain(deconz.groups.values(),
                                 deconz.lights.values(),
                                 deconz.sensors.values()):
-                if device.uniqueid == entity.unique_id:
+                if entity is not None and device.uniqueid == entity.unique_id:
                     field = device.deconz_id
                     break
-
-        if field:
-            yield from deconz.async_put_state(field, data)
-        elif entity_id:
-            _LOGGER.error('Could\'nt find the entity %s', entity_id)
+            if field is None:
+                _LOGGER.error('Could\'nt find the entity %s', entity_id)
+                return
+        yield from deconz.async_put_state(field, data)
     hass.services.async_register(
         DOMAIN, 'configure', async_configure, schema=SERVICE_SCHEMA)
 
