@@ -197,7 +197,6 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         return state
 
-            
     @callback
     def async_check_state(self):
         """Update the state from the template."""
