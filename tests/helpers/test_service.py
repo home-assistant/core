@@ -28,7 +28,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.stop()
 
     def test_template_service_call(self):
-        """Test service call with tempating."""
+        """Test service call with templating."""
         config = {
             'service_template': '{{ \'test_domain.test_service\' }}',
             'entity_id': 'hello.world',
@@ -102,7 +102,7 @@ class TestServiceHelpers(unittest.TestCase):
 
     @patch('homeassistant.helpers.service._LOGGER.error')
     def test_fail_silently_if_no_service(self, mock_log):
-        """Test failling if service is missing."""
+        """Test failing if service is missing."""
         service.call_from_config(self.hass, None)
         self.assertEqual(1, mock_log.call_count)
 

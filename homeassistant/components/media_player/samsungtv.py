@@ -8,6 +8,9 @@ import logging
 import socket
 from datetime import timedelta
 
+import sys
+
+import subprocess
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -122,12 +125,19 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
+        if sys.platform == 'win32':
+            _ping_cmd = ['ping', '-n 1', '-w', '1000', self._config['host']]
+        else:
+            _ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
+                         self._config['host']]
+
+        ping = subprocess.Popen(
+            _ping_cmd,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(self._config[CONF_TIMEOUT])
-            sock.connect((self._config['host'], self._config['port']))
-            self._state = STATE_ON
-        except socket.error:
+            ping.communicate()
+            self._state = STATE_ON if ping.returncode == 0 else STATE_OFF
+        except subprocess.CalledProcessError:
             self._state = STATE_OFF
 
     def get_remote(self):

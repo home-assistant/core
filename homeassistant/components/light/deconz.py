@@ -101,6 +101,11 @@ class DeconzLight(Light):
         return self._light.name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this light."""
+        return self._light.uniqueid
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return self._features

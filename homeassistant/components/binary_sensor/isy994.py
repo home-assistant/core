@@ -67,8 +67,8 @@ def setup_platform(hass, config: ConfigType,
                 elif subnode_id == 2:
                     parent_device.add_negative_node(node)
             elif device_type == 'moisture':
-                # Moisure nodes have a subnode 2, but we ignore it because it's
-                # just the inverse of the primary node.
+                # Moisture nodes have a subnode 2, but we ignore it because
+                # it's just the inverse of the primary node.
                 if subnode_id == 4:
                     # Heartbeat node
                     device = ISYBinarySensorHeartbeat(node, parent_device)

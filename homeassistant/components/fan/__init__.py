@@ -205,7 +205,7 @@ def async_setup(hass, config: dict):
 
     @asyncio.coroutine
     def async_handle_fan_service(service):
-        """Hande service call for fans."""
+        """Handle service call for fans."""
         method = SERVICE_TO_METHOD.get(service.service)
         params = service.data.copy()
 

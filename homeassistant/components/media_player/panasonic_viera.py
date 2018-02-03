@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.2',
+REQUIREMENTS = ['panasonic_viera==0.3',
                 'wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
+        name = discovery_info.get('name')
         host = discovery_info.get('host')
         port = discovery_info.get('port')
         remote = RemoteControl(host, port)

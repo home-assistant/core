@@ -56,6 +56,9 @@ SENSOR_TYPES = {
     'precip_probability': ['Precip Probability',
                            '%', '%', '%', '%', '%', 'mdi:water-percent',
                            ['currently', 'minutely', 'hourly', 'daily']],
+    'precip_accumulation': ['Precip Accumulation',
+                            'cm', 'in', 'cm', 'cm', 'cm', 'mdi:weather-snowy',
+                            ['hourly', 'daily']],
     'temperature': ['Temperature',
                     '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                     ['currently', 'hourly']],
@@ -269,7 +272,8 @@ class DarkSkySensor(Entity):
                               'temperature_max',
                               'apparent_temperature_min',
                               'apparent_temperature_max',
-                              'precip_intensity_max']):
+                              'precip_intensity_max',
+                              'precip_accumulation']):
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
             if self.type == 'daily_summary':
@@ -309,6 +313,7 @@ class DarkSkySensor(Entity):
                             'temperature_min', 'temperature_max',
                             'apparent_temperature_min',
                             'apparent_temperature_max',
+                            'precip_accumulation',
                             'pressure', 'ozone', 'uvIndex']):
             return round(state, 1)
         return state

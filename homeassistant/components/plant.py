@@ -92,7 +92,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 # Flag for enabling/disabling the loading of the history from the database.
-# This feature is turned off right now as it's tests are not 100% stable.
+# This feature is turned off right now as its tests are not 100% stable.
 ENABLE_LOAD_HISTORY = False
 
 
@@ -336,9 +336,9 @@ class DailyHistory(object):
         self._max_dict = dict()
         self.max = None
 
-    def add_measurement(self, value, timestamp=datetime.now()):
+    def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = timestamp.date()
+        day = (timestamp or datetime.now()).date()
         if value is None:
             return
         if self._days is None:

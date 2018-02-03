@@ -42,7 +42,7 @@ def setup_platform(hass, config: ConfigType,
 class ISYCoverDevice(ISYDevice, CoverDevice):
     """Representation of an ISY994 cover device."""
 
-    def __init__(self, node: object):
+    def __init__(self, node: object) -> None:
         """Initialize the ISY994 cover device."""
         super().__init__(node)
 

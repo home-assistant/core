@@ -111,6 +111,13 @@ class CanaryData(object):
         """Return a list of readings based on device_id."""
         return self._readings_by_device_id.get(device_id, [])
 
+    def get_reading(self, device_id, sensor_type):
+        """Return reading for device_id and sensor type."""
+        readings = self._readings_by_device_id.get(device_id, [])
+        return next((
+            reading.value for reading in readings
+            if reading.sensor_type == sensor_type), None)
+
     def set_location_mode(self, location_id, mode_name, is_private=False):
         """Set location mode."""
         self._api.set_location_mode(location_id, mode_name, is_private)

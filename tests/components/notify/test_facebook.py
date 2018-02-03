@@ -6,7 +6,7 @@ import homeassistant.components.notify.facebook as facebook
 
 
 class TestFacebook(unittest.TestCase):
-    """Tests for Facebook notifification service."""
+    """Tests for Facebook notification service."""
 
     def setUp(self):
         """Set up test variables."""

@@ -76,12 +76,12 @@ def is_socket_address(value):
 
 
 def has_parent_dir(value):
-    """Validate that value is in an existing directory which is writetable."""
+    """Validate that value is in an existing directory which is writeable."""
     parent = os.path.dirname(os.path.realpath(value))
     is_dir_writable = os.path.isdir(parent) and os.access(parent, os.W_OK)
     if not is_dir_writable:
         raise vol.Invalid(
-            '{} directory does not exist or is not writetable'.format(parent))
+            '{} directory does not exist or is not writeable'.format(parent))
     return value
 
 
