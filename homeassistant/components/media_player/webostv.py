@@ -35,6 +35,7 @@ CONF_SOURCES = 'sources'
 CONF_ON_ACTION = 'turn_on_action'
 
 DEFAULT_NAME = 'LG webOS Smart TV'
+DEFAULT_TIMEOUT = 8
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
@@ -56,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
@@ -64,24 +65,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the LG WebOS TV platform."""
     if discovery_info is not None:
-        host = urlparse(discovery_info[1]).hostname
+        host = discovery_info.get('host')
+        name = discovery_info.get('name', DEFAULT_NAME)
+        customize = {}
+        timeout = DEFAULT_TIMEOUT
+        turn_on_action = None
+        config_file_path = WEBOSTV_CONFIG_FILE
     else:
         host = config.get(CONF_HOST)
+        name = config.get(CONF_NAME)
+        customize = config.get(CONF_CUSTOMIZE)
+        timeout = config.get(CONF_TIMEOUT)
+        turn_on_action = config.get(CONF_ON_ACTION)
+        config_file_path = config.get(CONF_FILENAME)
 
-    if host is None:
-        _LOGGER.error("No TV found in configuration file or with discovery")
-        return False
+        if host is None:
+            _LOGGER.error("No TV found in configuration file")
+            return False
 
     # Only act if we are not already configuring this host
     if host in _CONFIGURING:
         return
 
-    name = config.get(CONF_NAME)
-    customize = config.get(CONF_CUSTOMIZE)
-    timeout = config.get(CONF_TIMEOUT)
-    turn_on_action = config.get(CONF_ON_ACTION)
-
-    config = hass.config.path(config.get(CONF_FILENAME))
+    config = hass.config.path(config_file_path)
 
     setup_tv(host, name, customize, config, timeout, hass,
              add_devices, turn_on_action)
