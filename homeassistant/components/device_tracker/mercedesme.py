@@ -38,13 +38,13 @@ class MercedesMEDeviceTracker(object):
 
     def __init__(self, hass, config, see, data):
         """Initialize the Mercedes ME device tracker."""
-        self.hass = hass
+        #self.hass = hass
         self.see = see
         self.data = data
         self.update_info()
 
         track_time_interval(
-            self.hass, self.update_info, MIN_TIME_BETWEEN_SCANS)
+            hass, self.update_info, MIN_TIME_BETWEEN_SCANS)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_info(self, now=None):
