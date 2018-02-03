@@ -61,7 +61,7 @@ LOCK_ALARM_TYPE = {
     '112': 'Master code changed or User added: ',
     '113': 'Duplicate Pin-code: ',
     '130': 'RF module, power restored',
-    '144': 'Unlocked by NFC Tag or Card by user ',	
+    '144': 'Unlocked by NFC Tag or Card by user ',
     '161': 'Tamper Alarm: ',
     '167': 'Low Battery',
     '168': 'Critical Battery Level',
