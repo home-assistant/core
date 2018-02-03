@@ -972,7 +972,7 @@ python-wink==1.7.3
 python_opendata_transport==0.0.3
 
 # homeassistant.components.zwave
-python_openzwave==0.4.0.35
+python_openzwave==0.4.3
 
 # homeassistant.components.alarm_control_panel.egardia
 pythonegardia==1.0.26
