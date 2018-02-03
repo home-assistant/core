@@ -77,9 +77,11 @@ holidays==0.9.3
 # homeassistant.components.frontend
 home-assistant-frontend==20180130.0
 
-# homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==4.1.1
+
+# homeassistant.components.influxdb
+influxdb==5.0.0
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2

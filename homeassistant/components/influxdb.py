@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.util import utcnow
 
-REQUIREMENTS = ['influxdb==4.1.1']
+REQUIREMENTS = ['influxdb==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ def setup(hass, config):
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file (host, "
                       "port, etc.) and verify that the database exists and is "
-                      "READ/WRITE.", exc)
+                      "READ/WRITE", exc)
         return False
 
     def influx_event_listener(event):
@@ -145,8 +145,7 @@ def setup(hass, config):
         state = event.data.get('new_state')
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist_e or \
-                state.domain in blacklist_d:
+                state.entity_id in blacklist_e or state.domain in blacklist_d:
             return
 
         try:
@@ -301,11 +300,9 @@ class RetryOnError(object):
 
                     target = utcnow() + self.retry_delay
                     tracking = {'target': target}
-                    remove = track_point_in_utc_time(self.hass,
-                                                     partial(scheduled,
-                                                             retry + 1,
-                                                             tracking),
-                                                     target)
+                    remove = track_point_in_utc_time(
+                        self.hass, partial(scheduled, retry + 1, tracking),
+                        target)
                     tracking['remove'] = remove
                     tracking["exc"] = ex
                     wrapper._retry_queue.append(tracking)
