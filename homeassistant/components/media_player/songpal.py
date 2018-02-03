@@ -20,8 +20,9 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-songpal==0.0.5']
 
-SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
+                  SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE | \
+                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,11 +58,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
         entity_id = service.data.get("entity_id", None)
-        _LOGGER.debug("Calling %s (entity: %s) with params %s", service, entity_id, params)
+        _LOGGER.debug("Calling %s (entity: %s) with params %s",
+                      service, entity_id, params)
 
         for device in devices:
             if entity_id is None or device.entity_id == entity_id:
-                yield from device.async_set_sound_setting(params[PARAM_NAME], params[PARAM_VALUE])
+                yield from device.async_set_sound_setting(params[PARAM_NAME],
+                                                          params[PARAM_VALUE])
 
     schema = vol.Schema({vol.Required(PARAM_NAME): cv.string,
                          vol.Required(PARAM_VALUE): cv.string})
