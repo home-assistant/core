@@ -8,7 +8,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
 import homeassistant.components as component
 from homeassistant.helpers import intent
-from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import async_mock_intent, async_mock_service
 
