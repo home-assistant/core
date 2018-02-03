@@ -789,6 +789,9 @@ pylutron==0.1.0
 # homeassistant.components.notify.mailgun
 pymailgunner==1.4
 
+# homeassistant.components.media_player.mediaroom
+pymediaroom==0.5
+
 # homeassistant.components.mochad
 pymochad==0.2.0
 
