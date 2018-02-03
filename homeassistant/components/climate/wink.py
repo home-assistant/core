@@ -71,17 +71,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Wink climate devices."""
     import pywink
     for climate in pywink.get_thermostats():
-        _id = climate.object_id() + climate.name()
+        _id = climate.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkThermostat(climate, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkThermostat(climate, hass)])
     for climate in pywink.get_air_conditioners():
-        _id = climate.object_id() + climate.name()
+        _id = climate.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkAC(climate, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkAC(climate, hass)])
     for water_heater in pywink.get_water_heaters():
-        _id = water_heater.object_id() + water_heater.name()
+        _id = water_heater.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkWaterHeater(water_heater, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkWaterHeater(water_heater, hass)])
 
 
 # pylint: disable=abstract-method
@@ -107,7 +110,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the optional device state attributes."""
-        data = {}
+        data = super().device_state_attributes
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
         if target_temp_high is not None:

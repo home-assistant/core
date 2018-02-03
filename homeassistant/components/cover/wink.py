@@ -17,13 +17,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for shade in pywink.get_shades():
-        _id = shade.object_id() + shade.name()
+        _id = shade.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkCoverDevice(shade, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkCoverDevice(shade, hass)])
     for door in pywink.get_garage_doors():
-        _id = door.object_id() + door.name()
+        _id = door.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkCoverDevice(door, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkCoverDevice(door, hass)])
 
 
 class WinkCoverDevice(WinkDevice, CoverDevice):

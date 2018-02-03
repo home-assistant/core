@@ -27,8 +27,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for fan in pywink.get_fans():
-        if fan.object_id() + fan.name() not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkFanDevice(fan, hass)])
+        if fan.object_id() not in hass.data[DOMAIN]['unique_ids']:
+            if fan.object_id() not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkFanDevice(fan, hass)])
 
 
 class WinkFanDevice(WinkDevice, FanEntity):

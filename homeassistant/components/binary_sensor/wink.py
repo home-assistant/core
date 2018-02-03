@@ -36,54 +36,65 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for sensor in pywink.get_sensors():
-        _id = sensor.object_id() + sensor.name()
+        _id = sensor.object_id() + "_" + sensor.capability()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            if sensor.capability() in SENSOR_TYPES:
-                add_devices([WinkBinarySensorDevice(sensor, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                if sensor.capability() in SENSOR_TYPES:
+                    add_devices([WinkBinarySensorDevice(sensor, hass)])
 
     for key in pywink.get_keys():
-        _id = key.object_id() + key.name()
+        _id = key.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkBinarySensorDevice(key, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkBinarySensorDevice(key, hass)])
 
     for sensor in pywink.get_smoke_and_co_detectors():
-        _id = sensor.object_id() + sensor.name()
+        _id = sensor.object_id() + "_" + sensor.capability()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkSmokeDetector(sensor, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkSmokeDetector(sensor, hass)])
 
     for hub in pywink.get_hubs():
-        _id = hub.object_id() + hub.name()
+        _id = hub.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkHub(hub, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkHub(hub, hass)])
 
     for remote in pywink.get_remotes():
-        _id = remote.object_id() + remote.name()
+        _id = remote.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkRemote(remote, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkRemote(remote, hass)])
 
     for button in pywink.get_buttons():
-        _id = button.object_id() + button.name()
+        _id = button.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkButton(button, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkButton(button, hass)])
 
     for gang in pywink.get_gangs():
-        _id = gang.object_id() + gang.name()
+        _id = gang.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkGang(gang, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkGang(gang, hass)])
 
     for door_bell_sensor in pywink.get_door_bells():
-        _id = door_bell_sensor.object_id() + door_bell_sensor.name()
+        _id = door_bell_sensor.object_id() + "_" + \
+            door_bell_sensor.capability()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkBinarySensorDevice(door_bell_sensor, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkBinarySensorDevice(door_bell_sensor, hass)])
 
     for camera_sensor in pywink.get_cameras():
-        _id = camera_sensor.object_id() + camera_sensor.name()
+        _id = camera_sensor.object_id() + "_" + camera_sensor.capability()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            try:
-                if camera_sensor.capability() in SENSOR_TYPES:
-                    add_devices([WinkBinarySensorDevice(camera_sensor, hass)])
-            except AttributeError:
-                _LOGGER.info("Device isn't a sensor, skipping")
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                try:
+                    if camera_sensor.capability() in SENSOR_TYPES:
+                        add_devices([WinkBinarySensorDevice(camera_sensor,
+                                                            hass)])
+                except AttributeError:
+                    _LOGGER.info("Device isn't a sensor, skipping")
 
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice):

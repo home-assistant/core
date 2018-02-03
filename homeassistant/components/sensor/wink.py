@@ -23,29 +23,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for sensor in pywink.get_sensors():
-        _id = sensor.object_id() + sensor.name()
+        _id = sensor.object_id() + "_" + sensor.capability()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            if sensor.capability() in SENSOR_TYPES:
-                add_devices([WinkSensorDevice(sensor, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                if sensor.capability() in SENSOR_TYPES:
+                    add_devices([WinkSensorDevice(sensor, hass)])
 
     for eggtray in pywink.get_eggtrays():
-        _id = eggtray.object_id() + eggtray.name()
+        _id = eggtray.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkSensorDevice(eggtray, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkSensorDevice(eggtray, hass)])
 
     for tank in pywink.get_propane_tanks():
-        _id = tank.object_id() + tank.name()
+        _id = tank.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkSensorDevice(tank, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkSensorDevice(tank, hass)])
 
     for piggy_bank in pywink.get_piggy_banks():
-        _id = piggy_bank.object_id() + piggy_bank.name()
+        _id = piggy_bank.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            try:
-                if piggy_bank.capability() in SENSOR_TYPES:
-                    add_devices([WinkSensorDevice(piggy_bank, hass)])
-            except AttributeError:
-                _LOGGER.info("Device is not a sensor")
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                try:
+                    if piggy_bank.capability() in SENSOR_TYPES:
+                        add_devices([WinkSensorDevice(piggy_bank, hass)])
+                except AttributeError:
+                    _LOGGER.info("Device is not a sensor")
 
 
 class WinkSensorDevice(WinkDevice, Entity):

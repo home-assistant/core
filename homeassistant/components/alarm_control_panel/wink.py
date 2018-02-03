@@ -30,9 +30,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             camera.capability()
         except AttributeError:
-            _id = camera.object_id() + camera.name()
+            _id = camera.object_id()
             if _id not in hass.data[DOMAIN]['unique_ids']:
-                add_devices([WinkCameraDevice(camera, hass)])
+                if _id not in hass.data[DOMAIN]['ignored_ids']:
+                    add_devices([WinkCameraDevice(camera, hass)])
 
 
 class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
