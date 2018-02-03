@@ -83,7 +83,7 @@ def async_setup(hass, config):
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
     _LOGGER.info('Config dir %s', hass.config.config_dir)
     _LOGGER.info("Looking for PLM on %s", port)
-    plm = yield from insteonplm.Connection.create(device=port, loop=hass.loop, workdir=hass.config.config_dir)
+    conn = yield from insteonplm.Connection.create(device=port, loop=hass.loop, workdir=hass.config.config_dir)
 
     for device_override in overrides:
         #
@@ -102,7 +102,7 @@ def async_setup(hass, config):
             plm.protocol.devices.add_override(
                 device_override['address'], 'product_key', device_override['product_key'])
 
-    hass.data['insteon_plm'] = plm
+    hass.data['insteon_plm'] = conn.protocol
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, plm.close)
 
