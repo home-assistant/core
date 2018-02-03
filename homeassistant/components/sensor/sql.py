@@ -44,24 +44,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     db_url = config.get(CONF_DB_URL)
-    s = []
+    queries = []
 
-    for q in config.get(CONF_QUERIES):
-        name = q.get(CONF_NAME)
-        query = q.get(CONF_QUERY)
-        unit = q.get(CONF_UNIT_OF_MEASUREMENT)
-        value_template = q.get(CONF_VALUE_TEMPLATE)
-        column_name = q.get(CONF_COLUMN_NAME)
+    for query in config.get(CONF_QUERIES):
+        name = query.get(CONF_NAME)
+        query_str = query.get(CONF_QUERY)
+        unit = query.get(CONF_UNIT_OF_MEASUREMENT)
+        value_template = query.get(CONF_VALUE_TEMPLATE)
+        column_name = query.get(CONF_COLUMN_NAME)
 
         if value_template is not None:
             value_template.hass = hass
 
         sensor = SQLSensor(
-            name, db_url, query, column_name, unit, value_template
+            name, db_url, query_str, column_name, unit, value_template
             )
-        s.append(sensor)
+        queries.append(sensor)
 
-    add_devices(s, True)
+    add_devices(queries, True)
 
 
 class SQLSensor(Entity):
@@ -82,7 +82,7 @@ class SQLSensor(Entity):
         from sqlalchemy.orm import sessionmaker, scoped_session
 
         engine = sqlalchemy.create_engine(db_url)
-        self.Session = scoped_session(sessionmaker(bind=engine))
+        self.session = scoped_session(sessionmaker(bind=engine))
 
         self._state = STATE_UNKNOWN
         self._attributes = None
@@ -109,17 +109,17 @@ class SQLSensor(Entity):
 
     def update(self):
         """Retrieve sensor data from the query."""
-        s = self.Session()
-        result = s.execute(self._query)
+        sess = self.session()
+        result = sess.execute(self._query)
 
-        for r in result:
-            _LOGGER.debug(r.items())
-            data = r[self._column_name]
-            self._attributes = {k: str(v) for k, v in r.items()}
+        for res in result:
+            _LOGGER.debug(res.items())
+            data = res[self._column_name]
+            self._attributes = {k: str(v) for k, v in res.items()}
 
         if data is None:
-            _LOGGER.error("{} returned no results".format(self._query))
-            raise
+            _LOGGER.error("%s returned no results", self._query)
+            return False
 
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
@@ -127,4 +127,4 @@ class SQLSensor(Entity):
         else:
             self._state = data
 
-        s.close()
+        sess.close()

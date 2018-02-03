@@ -9,7 +9,7 @@ from tests.common import get_test_home_assistant
 class TestSQLSensor(unittest.TestCase):
     """Test the SQL sensor."""
 
-    def setup_method(self, method):
+    def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
@@ -22,7 +22,7 @@ class TestSQLSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'sql',
-                'db_url': 'sqlite:///test.db',
+                'db_url': 'sqlite://',
                 'queries': [{
                     'name': 'count_tables',
                     'query': 'SELECT count(*) value FROM sqlite_master;',
