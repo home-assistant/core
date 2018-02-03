@@ -74,7 +74,7 @@ def async_setup(hass, config):
                               platform)
                 hass.async_add_job(
                     discovery.async_load_platform(
-                        hass, platform, DOMAIN, discovered=[{'device':device, 
+                        hass, platform, DOMAIN, discovered=[{'address':device.address.hex, 
                                                              'stateKey':stateKey, 
                                                              'subplatform':subplatform,
                                                              'newnames': use_newnames}],
