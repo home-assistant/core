@@ -91,21 +91,21 @@ def async_setup(hass, config):
         # Override the device default capabilities for a specific address
         #
         if device_override.get('cat', False):
-            plm.protocol.devices.add_override(
+            plm.devices.add_override(
                     device_override['address'], 'cat', device_override['cat'])
         if device_override.get('subcat', False):
-            plm.protocol.devices.add_override(
+            plm.devices.add_override(
                     device_override['address'], 'subcat', device_override['subcat'])
         if device_override.get('firmware', False):
-            plm.protocol.devices.add_override(
+            plm.devices.add_override(
                     device_override['address'], 'product_key', device_override['firmware'])
         if device_override.get('product_key', False):
-            plm.protocol.devices.add_override(
+            plm.devices.add_override(
                 device_override['address'], 'product_key', device_override['product_key'])
 
     hass.data['insteon_plm'] = plm
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, plm.close)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
     plm.devices.add_device_callback(async_plm_new_device)
 
