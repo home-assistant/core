@@ -294,7 +294,7 @@ class TadoClimate(ClimateDevice):
 
         overlay = False
         overlay_data = None
-        termination = self._current_operation
+        termination = CONST_MODE_SMART_SCHEDULE
         cooling = False
         fan_speed = CONST_MODE_OFF
 
