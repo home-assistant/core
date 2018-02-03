@@ -75,9 +75,9 @@ class DaikinClimate(ClimateDevice):
         self._api = api
         self._force_refresh = False
         self._list = {
-            ATTR_OPERATION_MODE: list(
+            ATTR_OPERATION_MODE: sorted(list(
                 map(str.title, set(HA_STATE_TO_DAIKIN.values()))
-            ),
+            )),
             ATTR_FAN_MODE: list(
                 map(
                     str.title,
