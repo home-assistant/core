@@ -497,7 +497,7 @@ miniupnpc==2.0.2
 motorparts==1.0.2
 
 # homeassistant.components.tts
-mutagen==1.39
+mutagen==1.40.0
 
 # homeassistant.components.mychevy
 mychevy==0.1.1
