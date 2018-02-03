@@ -16,7 +16,7 @@ from homeassistant.helpers.event import (
     async_track_state_change, async_track_utc_time_change)
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.8.0']
+REQUIREMENTS = ['xknx==0.8.1']
 
 DOMAIN = "knx"
 DATA_KNX = "data_knx"
@@ -301,8 +301,7 @@ class KNXExposeTime(object):
 
     def register(self):
         """Register listener."""
-        from xknx.devices import DateTime
-        from xknx.devices.datetime import DateTimeBroadcastType
+        from xknx.devices import DateTime, DateTimeBroadcastType
         broadcast_type_string = self.type.upper()
         broadcast_type = DateTimeBroadcastType[broadcast_type_string]
         self.device = DateTime(
