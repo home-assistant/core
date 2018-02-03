@@ -198,7 +198,6 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         else:
             _LOGGER.warning("Unsupported media_type: %s", media_type)
 
-
     def media_stop(self):
         """Stop playback."""
         self.send_key('NRC_CANCEL-ONOFF')
