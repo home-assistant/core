@@ -19,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['sqlalchemy==1.2.2']
 
-DEFAULT_URL = 'sqlite:///{hass_config_path}/home-assistant_v2.db'
 DEFAULT_NAME = 'Sql_sensor'
 
 CONF_QUERIES = 'queries'
@@ -37,7 +36,7 @@ _QUERY_SCHEME = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
-    vol.Optional(CONF_DB_URL, default=DEFAULT_URL): cv.string,
+    vol.Required(CONF_DB_URL): cv.string,
 })
 
 
