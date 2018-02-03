@@ -144,8 +144,8 @@ class MercedesMeEntity(Entity):
 
     def _update_callback(self):
         """Callback update method."""
-        #If the method is made a callback this should be changed
-        #to the async version. Check core.callback
+        # If the method is made a callback this should be changed
+        # to the async version. Check core.callback
         self.schedule_update_ha_state(True)
 
     @property

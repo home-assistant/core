@@ -38,7 +38,6 @@ class MercedesMEDeviceTracker(object):
 
     def __init__(self, hass, config, see, data):
         """Initialize the Mercedes ME device tracker."""
-        #self.hass = hass
         self.see = see
         self.data = data
         self.update_info()

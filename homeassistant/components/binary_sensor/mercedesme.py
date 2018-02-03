@@ -80,7 +80,6 @@ class MercedesMEBinarySensor(MercedesMeEntity, BinarySensorDevice):
 
     def update(self):
         """Fetch new state data for the sensor."""
-
         self._car = next(
             car for car in self._data.cars if car["vin"] == self._vin)
 
