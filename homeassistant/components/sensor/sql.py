@@ -10,8 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    STATE_UNKNOWN)
+    CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
+from homeassistant.components.recorder import (
+    CONF_DB_URL, DEFAULT_URL, DEFAULT_DB_FILE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -24,7 +25,6 @@ DEFAULT_NAME = 'Sql_sensor'
 CONF_QUERIES = 'queries'
 CONF_QUERY = 'query'
 CONF_COLUMN_NAME = 'column'
-CONF_DB_URL = 'db_url'
 
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -36,13 +36,32 @@ _QUERY_SCHEME = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
-    vol.Required(CONF_DB_URL): cv.string,
+    vol.Optional(CONF_DB_URL): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    db_url = config.get(CONF_DB_URL)
+    db_url = config.get(CONF_DB_URL, None)
+    if not db_url:
+        db_url = DEFAULT_URL.format(
+            hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+
+    import sqlalchemy
+    from sqlalchemy.orm import sessionmaker, scoped_session
+
+    try:
+        engine = sqlalchemy.create_engine(db_url)
+        sessionmaker = scoped_session(sessionmaker(bind=engine))
+
+        # run a dummy query just to test the db_url
+        sess = sessionmaker()
+        sess.execute("SELECT 1;")
+
+    except sqlalchemy.exc.SQLAlchemyError as err:
+        _LOGGER.error("Couldn't connect using %s DB_URL: %s", db_url, err)
+        return
+
     queries = []
 
     for query in config.get(CONF_QUERIES):
@@ -56,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             value_template.hass = hass
 
         sensor = SQLSensor(
-            name, db_url, query_str, column_name, unit, value_template
+            name, sessionmaker, query_str, column_name, unit, value_template
             )
         queries.append(sensor)
 
@@ -66,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SQLSensor(Entity):
     """An SQL sensor."""
 
-    def __init__(self, name, db_url, query, column, unit, value_template):
+    def __init__(self, name, sessmaker, query, column, unit, value_template):
         """Initialize SQL sensor."""
         self._name = name
         if "LIMIT" in query:
@@ -76,14 +95,8 @@ class SQLSensor(Entity):
         self._unit_of_measurement = unit
         self._template = value_template
         self._column_name = column
-
-        import sqlalchemy
-        from sqlalchemy.orm import sessionmaker, scoped_session
-
-        engine = sqlalchemy.create_engine(db_url)
-        self.session = scoped_session(sessionmaker(bind=engine))
-
-        self._state = STATE_UNKNOWN
+        self.sessionmaker = sessmaker
+        self._state = None
         self._attributes = None
 
     @property
@@ -108,8 +121,13 @@ class SQLSensor(Entity):
 
     def update(self):
         """Retrieve sensor data from the query."""
-        sess = self.session()
-        result = sess.execute(self._query)
+        import sqlalchemy
+        try:
+            sess = self.sessionmaker()
+            result = sess.execute(self._query)
+        except sqlalchemy.exc.SQLAlchemyError as err:
+            _LOGGER.error("Error executing query %s: %s", self._query, err)
+            return
 
         for res in result:
             _LOGGER.debug(res.items())
