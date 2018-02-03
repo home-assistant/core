@@ -195,6 +195,9 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
                 self._remote.open_webpage(media_id)
             except (TimeoutError, OSError):
                 self._state = STATE_OFF
+        else:
+            _LOGGER.warning("Unsupported media_type: %s", media_type)
+
 
     def media_stop(self):
         """Stop playback."""
