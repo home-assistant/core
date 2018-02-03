@@ -193,3 +193,21 @@ def test_authorization_header_must_be_basic_type(mock_api_client, caplog):
         })
 
     assert req.status == 401
+
+
+@asyncio.coroutine
+def test_session_auth(mock_api_client, caplog):
+    """Test access with session based authentication."""
+    # Unauthorized request -> 401.
+    req = yield from mock_api_client.get(const.URL_API)
+    assert req.status == 401
+
+    # Now authorize -> 200.
+    req = yield from mock_api_client.get(
+        const.URL_API,
+        auth=aiohttp.BasicAuth('homeassistant', API_PASSWORD))
+    assert req.status == 200
+
+    # Session is authorized -> 200.
+    req = yield from mock_api_client.get(const.URL_API)
+    assert req.status == 200
