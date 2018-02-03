@@ -75,6 +75,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
+    python_requires=">=3.4",
     test_suite='tests',
     keywords=['home', 'automation'],
     entry_points={
