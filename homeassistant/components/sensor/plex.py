@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Plex'
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -116,8 +116,16 @@ class PlexSensor(Entity):
         now_playing = []
         for sess in sessions:
             user = sess.usernames[0] if sess.usernames is not None else ""
-            title = sess.title if sess.title is not None else ""
-            year = sess.year if sess.year is not None else ""
-            now_playing.append((user, "{0} ({1})".format(title, year)))
+            if sess.TYPE == 'movie':
+                title = sess.title if sess.title is not None else ""
+                year = sess.year if sess.year is not None else ""
+                now_playing.append((user, "{0} ({1})".format(title, year)))
+            elif sess.TYPE == 'episode':
+                seasonYear = str(sess.show().year) if sess.show().year is not None else ""
+                seasonTitle = sess.grandparentTitle if sess.grandparentTitle is not None else ""
+                seasonEpisode = sess.seasonEpisode if sess.seasonEpisode is not None else ""
+                episodeTitle = sess.title if sess.title is not None else ""
+                title = seasonTitle + ' (' + seasonYear + ')' + ' - ' + seasonEpisode + ' - ' + episodeTitle
+                now_playing.append((user, "{0}".format(title)))
         self._state = len(sessions)
         self._now_playing = now_playing
