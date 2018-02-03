@@ -8,7 +8,7 @@ import logging
 import datetime
 
 from homeassistant.components.mercedesme import (
-DATA_MME, MercedesMeEntity, SENSORS)
+    DATA_MME, MercedesMeEntity, SENSORS)
 
 
 DEPENDENCIES = ['mercedesme']
