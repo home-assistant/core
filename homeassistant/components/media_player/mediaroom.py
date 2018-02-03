@@ -46,8 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Mediaroom platform."""
     hosts = []
 
-    if hass.data.get(DATA_MEDIAROOM) is None:
-        hass.data[DATA_MEDIAROOM] = []
+    known_hosts = hass.data.get(DATA_MEDIAROOM)
+    if known_hosts is None:
+        known_hosts = hass.data[DATA_MEDIAROOM] = []
 
     host = config.get(CONF_HOST, None)
     if host is None:
@@ -55,12 +56,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         from pymediaroom import Remote
 
-        host = Remote.discover(hass.data[DATA_MEDIAROOM])
+        host = Remote.discover(known_hosts)
         if host is None:
             _LOGGER.warning("Can't find any STB")
             return
     hosts.append(host)
-    hass.data[DATA_MEDIAROOM].append(host)
+    known_hosts.append(host)
 
     stbs = []
 
