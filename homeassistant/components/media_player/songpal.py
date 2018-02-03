@@ -8,7 +8,7 @@ import logging
 import asyncio
 
 import voluptuous as vol
-from typing import List
+from typing import List  # pylint: disable=F401
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
@@ -74,7 +74,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class SongpalDevice(MediaPlayerDevice):
+    """Class representing a Songpal device."""
     def __init__(self, name, endpoint):
+        """Init."""
         import songpal
         self._name = name
         self.endpoint = endpoint
@@ -213,7 +215,7 @@ class SongpalDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_volume_up(self):
-        """Set volume up!"""
+        """Set volume up."""
         return self._volume_control.set_volume("+1")
 
     @asyncio.coroutine
