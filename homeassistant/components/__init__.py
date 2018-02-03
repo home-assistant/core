@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
 SERVICE_CHECK_CONFIG = 'check_config'
 
+
 def is_on(hass, entity_id=None):
     """Load up the module to call the is_on method.
 
@@ -160,7 +161,6 @@ def async_setup(hass, config):
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
     hass.helpers.intent.async_register(TurnOnIntent())
     hass.helpers.intent.async_register(TurnOffIntent())
-
 
     @asyncio.coroutine
     def async_handle_core_service(call):

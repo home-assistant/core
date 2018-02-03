@@ -7,7 +7,6 @@ https://home-assistant.io/components/conversation/
 import asyncio
 import logging
 import re
-import warnings
 
 import voluptuous as vol
 
@@ -71,7 +70,6 @@ def async_register(hass, intent_type, utterances):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Register the process service."""
-
     config = config.get(DOMAIN, {})
     intents = hass.data.get(DOMAIN)
 
@@ -146,7 +144,6 @@ def _process(hass, text):
 
 class ConversationProcessView(http.HomeAssistantView):
     """View to retrieve shopping list content."""
-
     url = '/api/conversation/process'
     name = "api:conversation:process"
 
