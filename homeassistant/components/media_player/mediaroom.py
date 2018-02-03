@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mediaroom/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -26,8 +27,7 @@ NOTIFICATION_TITLE = 'Mediaroom Media Player Setup'
 NOTIFICATION_ID = 'mediaroom_notification'
 DEFAULT_NAME = 'Mediaroom STB'
 DEFAULT_TIMEOUT = 9
-
-KNOWN_HOSTS = []
+DATA_MEDIAROOM = "mediaroom_known_stb"
 
 SUPPORT_MEDIAROOM = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
@@ -46,18 +46,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Mediaroom platform."""
     hosts = []
 
+    known_hosts = hass.data.get(DATA_MEDIAROOM)
+    if known_hosts is None:
+        known_hosts = hass.data[DATA_MEDIAROOM] = []
+
     host = config.get(CONF_HOST, None)
     if host is None:
         _LOGGER.info("Trying to discover Mediaroom STB")
 
         from pymediaroom import Remote
 
-        host = Remote.discover(KNOWN_HOSTS)
+        host = Remote.discover(known_hosts)
         if host is None:
-            # Can't find any STB
-            return False
+            _LOGGER.warning("Can't find any STB")
+            return
     hosts.append(host)
-    KNOWN_HOSTS.append(host)
+    known_hosts.append(host)
 
     stbs = []
 
@@ -81,8 +85,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             notification_id=NOTIFICATION_ID)
 
     add_devices(stbs)
-
-    return True
 
 
 class MediaroomDevice(MediaPlayerDevice):
