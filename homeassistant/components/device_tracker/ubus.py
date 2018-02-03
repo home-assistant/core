@@ -122,13 +122,18 @@ class UbusDeviceScanner(DeviceScanner):
 
         self.last_results = []
         results = 0
+        # for each access point
         for hostapd in self.hostapd:
             result = _req_json_rpc(
                 self.url, self.session_id, 'call', hostapd, 'get_clients')
 
             if result:
                 results = results + 1
-                self.last_results.extend(result['clients'].keys())
+                # Check for each device is authorized (valid wpa key)
+                for key in result['clients'].keys():
+                    device = result['clients'][key]
+                    if device['authorized']:
+                        self.last_results.append(key)
 
         return bool(results)
 
