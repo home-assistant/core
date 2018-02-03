@@ -6,6 +6,7 @@ https://home-assistant.io/developers/websocket_api/
 """
 import asyncio
 from contextlib import suppress
+from concurrent.futures import CancelledError
 from functools import partial
 import json
 import logging
@@ -231,7 +232,7 @@ class ActiveConnection:
     def _writer(self):
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
-        with suppress(RuntimeError, asyncio.CancelledError):
+        with suppress(RuntimeError, asyncio.CancelledError, CancelledError):
             while not self.wsock.closed:
                 message = yield from self.to_write.get()
                 if message is None:
@@ -363,7 +364,7 @@ class ActiveConnection:
             self.log_error(msg)
             self._writer_task.cancel()
 
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, CancelledError):
             self.debug("Connection cancelled by server")
 
         except asyncio.QueueFull:
