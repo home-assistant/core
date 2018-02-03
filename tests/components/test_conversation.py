@@ -6,7 +6,9 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
+import homeassistant.components as component
 from homeassistant.helpers import intent
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import async_mock_intent, async_mock_service
 
@@ -15,6 +17,9 @@ from tests.common import async_mock_intent, async_mock_service
 def test_calling_intent(hass):
     """Test calling an intent from a conversation."""
     intents = async_mock_intent(hass, 'OrderBeer')
+
+    result = yield from component.async_setup(hass, {})
+    assert result
 
     result = yield from async_setup_component(hass, 'conversation', {
         'conversation': {
@@ -45,6 +50,9 @@ def test_calling_intent(hass):
 def test_register_before_setup(hass):
     """Test calling an intent from a conversation."""
     intents = async_mock_intent(hass, 'OrderBeer')
+
+    result = yield from component.async_setup(hass, {})
+    assert result
 
     hass.components.conversation.async_register('OrderBeer', [
         'A {type} beer, please'
@@ -107,6 +115,9 @@ def test_http_processing_intent(hass, test_client):
 
     intent.async_register(hass, TestIntentHandler())
 
+    result = yield from component.async_setup(hass, {})
+    assert result
+
     result = yield from async_setup_component(hass, 'conversation', {
         'conversation': {
             'intents': {
@@ -145,6 +156,9 @@ def test_http_processing_intent(hass, test_client):
 @pytest.mark.parametrize('sentence', ('turn on kitchen', 'turn kitchen on'))
 def test_turn_on_intent(hass, sentence):
     """Test calling the turn on intent."""
+    result = yield from component.async_setup(hass, {})
+    assert result
+
     result = yield from async_setup_component(hass, 'conversation', {})
     assert result
 
@@ -168,6 +182,9 @@ def test_turn_on_intent(hass, sentence):
 @pytest.mark.parametrize('sentence', ('turn off kitchen', 'turn kitchen off'))
 def test_turn_off_intent(hass, sentence):
     """Test calling the turn on intent."""
+    result = yield from component.async_setup(hass, {})
+    assert result
+
     result = yield from async_setup_component(hass, 'conversation', {})
     assert result
 
@@ -190,6 +207,9 @@ def test_turn_off_intent(hass, sentence):
 @asyncio.coroutine
 def test_http_api(hass, test_client):
     """Test the HTTP conversation API."""
+    result = yield from component.async_setup(hass, {})
+    assert result
+
     result = yield from async_setup_component(hass, 'conversation', {})
     assert result
 
@@ -212,6 +232,9 @@ def test_http_api(hass, test_client):
 @asyncio.coroutine
 def test_http_api_wrong_data(hass, test_client):
     """Test the HTTP conversation API."""
+    result = yield from component.async_setup(hass, {})
+    assert result
+
     result = yield from async_setup_component(hass, 'conversation', {})
     assert result
 

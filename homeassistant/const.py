@@ -165,6 +165,10 @@ EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
 
+# #### INTENTS ####
+INTENT_TURN_OFF = 'HassTurnOff'
+INTENT_TURN_ON = 'HassTurnOn'
+
 # #### STATES ####
 STATE_ON = 'on'
 STATE_OFF = 'off'
