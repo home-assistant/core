@@ -20,8 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['sqlalchemy==1.2.2']
 
-DEFAULT_NAME = 'Sql_sensor'
-
 CONF_QUERIES = 'queries'
 CONF_QUERY = 'query'
 CONF_COLUMN_NAME = 'column'
