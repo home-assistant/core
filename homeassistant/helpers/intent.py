@@ -84,6 +84,7 @@ class IntentHandleError(IntentError):
 
     pass
 
+
 @callback
 @bind_hass
 def _match_entity(hass, name):
