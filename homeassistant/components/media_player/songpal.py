@@ -16,9 +16,10 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, MediaPlayerDevice, DOMAIN)
 from homeassistant.const import (
     CONF_NAME, STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-songpal==0.0.5']
+REQUIREMENTS = ['python-songpal==0.0.6']
 
 SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
                   SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE | \
@@ -132,7 +133,7 @@ class SongpalDevice(MediaPlayerDevice):
                 self._initialized = True
             except SongpalException as ex:
                 _LOGGER.error("Unable to get methods from songpal: %s", ex)
-                return
+                raise PlatformNotReady
 
         try:
             volumes = yield from self.dev.get_volume_information()
