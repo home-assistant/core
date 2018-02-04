@@ -131,8 +131,19 @@ class ApplicationListener:
     def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
         import bellows.zigbee.profiles
+
         import homeassistant.components.zha.const as zha_const
+        # Remove the following lines when this is merged
+        # https://github.com/rcloran/bellows/pull/71
+        from bellows.zigbee.profiles import zha
+        zha.CLUSTERS[zha.DeviceType.THERMOSTAT] = ([0x0004, 0x0201], [])
+        # END
         zha_const.populate_data()
+        # Remove the following lines when this is merged
+        # https://github.com/rcloran/bellows/pull/71
+        zha_const.DEVICE_CLASS[zha.PROFILE_ID][zha.DeviceType.THERMOSTAT] = \
+            'climate'
+        # END
 
         for endpoint_id, endpoint in device.endpoints.items():
             if endpoint_id == 0:  # ZDO

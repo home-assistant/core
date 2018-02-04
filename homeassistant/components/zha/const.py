@@ -17,6 +17,7 @@ def populate_data():
     DEVICE_CLASS[zha.PROFILE_ID] = {
         zha.DeviceType.ON_OFF_SWITCH: 'switch',
         zha.DeviceType.SMART_PLUG: 'switch',
+        zha.DeviceType.THERMOSTAT: 'climate',
 
         zha.DeviceType.ON_OFF_LIGHT: 'light',
         zha.DeviceType.DIMMABLE_LIGHT: 'light',
@@ -47,6 +48,7 @@ def populate_data():
         for device_type, component in classes.items():
             if component not in COMPONENT_CLUSTERS:
                 COMPONENT_CLUSTERS[component] = (set(), set())
+
             clusters = profile.CLUSTERS[device_type]
             COMPONENT_CLUSTERS[component][0].update(clusters[0])
             COMPONENT_CLUSTERS[component][1].update(clusters[1])
