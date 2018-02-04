@@ -5,6 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alarmdecoder/
 """
 import logging
+import os
+import OpenSSL
 
 from datetime import timedelta
 import voluptuous as vol
@@ -44,8 +46,8 @@ DEFAULT_DEVICE_HOST     = 'localhost'
 DEFAULT_DEVICE_PORT     = 10000
 DEFAULT_DEVICE_SSL      = False
 DEFAULT_DEVICE_SSL_CA   = 'ca.pem'
-DEFAULT_DEVICE_SSL_KEY  = 'cert.key'
-DEFAULT_DEVICE_SSL_CERT = 'cert.pem'
+DEFAULT_DEVICE_SSL_KEY  = 'client.key'
+DEFAULT_DEVICE_SSL_CERT = 'client.pem'
 DEFAULT_DEVICE_PATH     = '/dev/ttyUSB0'
 DEFAULT_DEVICE_BAUD     = 115200
 
@@ -188,9 +190,10 @@ def setup(hass, config):
                 ssl_cert = hass.config.path(ssl_cert)
 
             socket_device.ssl = True
-            socket_device.ssl_ca = ssl_ca
-            socket_device.ssl_key = ssl_key
-            socket_device.ssl_cert = ssl_cert
+            socket_device.ssl_ca = ssl_ca.encode('utf-8')
+            socket_device.ssl_key = ssl_key.encode('utf-8')
+            socket_device.ssl_certificate = ssl_cert.encode('utf-8')
+
 
         controller = AlarmDecoder(socket_device)
     elif device_type == 'serial':
