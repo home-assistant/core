@@ -99,7 +99,7 @@ def async_setup(hass, config):
     async_register(hass, INTENT_TURN_OFF,
                    ['Turn {name} off', 'Turn off {name}'])
     async_register(hass, INTENT_TOGGLE,
-                   ['Toggle {name}', 'Toggle {name}'])
+                   ['Toggle {name}', '{name} toggle'])
 
     return True
 

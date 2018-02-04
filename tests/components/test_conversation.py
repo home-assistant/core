@@ -204,7 +204,7 @@ def test_turn_off_intent(hass, sentence):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize('sentence', ('toggle kitchen'))
+@pytest.mark.parametrize('sentence', ('toggle kitchen', 'kitchen toggle'))
 def test_toggle_intent(hass, sentence):
     """Test calling the turn on intent."""
     result = yield from component.async_setup(hass, {})
