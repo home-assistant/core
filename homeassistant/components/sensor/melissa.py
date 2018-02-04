@@ -6,11 +6,11 @@ https://home-assistant.io/components/sensor.melissa/
 """
 import logging
 
-from homeassistant.components.melissa import DOMAIN, DATA_MELISSA
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.components.melissa import DATA_MELISSA
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = [DOMAIN]
+DEPENDENCIES = ['melissa']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class MelissaSensor(Entity):
     def __init__(self, device, api):
         """Initialize the sensor."""
         self._api = api
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._name = '{0} {1}'.format(
             device['name'],
             self._type
