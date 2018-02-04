@@ -459,4 +459,6 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._source_list[source['label']] = source
 
     def _date_helper(self, date_str):
-        return pytz.utc.localize(datetime.strptime(date_str, '%Y,%m,%d,%H,%M,%S'))
+        return pytz.utc.localize(
+            datetime.strptime(date_str, '%Y,%m,%d,%H,%M,%S')
+        )
