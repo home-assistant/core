@@ -406,7 +406,7 @@ ihcsdk==2.1.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==4.1.1
+influxdb==5.0.0
 
 # homeassistant.components.insteon_local
 insteonlocal==0.53
