@@ -48,10 +48,14 @@ class SmartPlugSwitch(SwitchDevice):
 
     def __init__(self, smartplug, name, leds_on):
         """Initialize the switch."""
+        from pyHS100 import SmartDeviceException
         self.smartplug = smartplug
         self._name = name
         if leds_on is not None:
-            self.smartplug.led = leds_on
+            try:
+                self.smartplug.led = leds_on
+            except (SmartDeviceException, OSError) as ex:
+                _LOGGER.warning('Could not set LED state for %s: %s', name, ex)
         self._state = None
         self._available = True
         # Set up emeter cache
