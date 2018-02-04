@@ -204,6 +204,32 @@ def test_turn_off_intent(hass, sentence):
 
 
 @asyncio.coroutine
+@pytest.mark.parametrize('sentence', ('toggle kitchen'))
+def test_toggle_intent(hass, sentence):
+    """Test calling the turn on intent."""
+    result = yield from component.async_setup(hass, {})
+    assert result
+
+    result = yield from async_setup_component(hass, 'conversation', {})
+    assert result
+
+    hass.states.async_set('light.kitchen', 'on')
+    calls = async_mock_service(hass, 'homeassistant', 'toggle')
+
+    yield from hass.services.async_call(
+        'conversation', 'process', {
+            conversation.ATTR_TEXT: sentence
+        })
+    yield from hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'homeassistant'
+    assert call.service == 'toggle'
+    assert call.data == {'entity_id': 'light.kitchen'}
+
+
+@asyncio.coroutine
 def test_http_api(hass, test_client):
     """Test the HTTP conversation API."""
     result = yield from component.async_setup(hass, {})
