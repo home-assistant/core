@@ -116,4 +116,5 @@ class SchieneData(object):
                                           'delay_arrival': 0})
                 # IMHO only delay_departure is useful
                 con['delay'] = delay['delay_departure']
+                con['delay_arrival'] = delay['delay_arrival']
                 con['ontime'] = con.get('ontime', False)
