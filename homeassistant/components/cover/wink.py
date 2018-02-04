@@ -6,7 +6,7 @@ https://home-assistant.io/components/cover.wink/
 """
 import asyncio
 
-from homeassistant.components.cover import CoverDevice, STATE_UNKNOWN
+from homeassistant.components.cover import CoverDevice
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
@@ -53,8 +53,7 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
         """Return the current position of cover shutter."""
         if self.wink.state() is not None:
             return int(self.wink.state()*100)
-        else:
-            return STATE_UNKNOWN
+        return self.wink.state()
 
     @property
     def is_closed(self):
