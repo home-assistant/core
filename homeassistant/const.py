@@ -168,6 +168,7 @@ EVENT_THEMES_UPDATED = 'themes_updated'
 # #### INTENTS ####
 INTENT_TURN_OFF = 'HassTurnOff'
 INTENT_TURN_ON = 'HassTurnOn'
+INTENT_TOGGLE = 'HassToggle'
 
 # #### STATES ####
 STATE_ON = 'on'

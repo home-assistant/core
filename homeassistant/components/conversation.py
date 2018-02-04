@@ -12,12 +12,11 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http
-from homeassistant.const import INTENT_TURN_ON, INTENT_TURN_OFF
+from homeassistant.const import (INTENT_TURN_ON,
+                                 INTENT_TURN_OFF, INTENT_TOGGLE)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
-
-REQUIREMENTS = ['fuzzywuzzy==0.16.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,8 +96,10 @@ def async_setup(hass, config):
 
     async_register(hass, INTENT_TURN_ON,
                    ['Turn {name} on', 'Turn on {name}'])
-    async_register(hass, INTENT_TURN_OFF, [
-        'Turn {name} off', 'Turn off {name}'])
+    async_register(hass, INTENT_TURN_OFF,
+                   ['Turn {name} off', 'Turn off {name}'])
+    async_register(hass, INTENT_TOGGLE,
+                   ['Toggle {name}', 'Toggle {name}'])
 
     return True
 

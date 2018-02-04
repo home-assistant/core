@@ -18,12 +18,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.helpers import intent
 from homeassistant.const import (
-    ATTR_ENTITY_ID, INTENT_TURN_ON, INTENT_TURN_OFF,
+    ATTR_ENTITY_ID, INTENT_TURN_ON, INTENT_TURN_OFF, INTENT_TOGGLE,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
     RESTART_EXIT_CODE)
-
-REQUIREMENTS = ['fuzzywuzzy==0.16.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,6 +159,7 @@ def async_setup(hass, config):
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
     hass.helpers.intent.async_register(TurnOnIntent())
     hass.helpers.intent.async_register(TurnOffIntent())
+    hass.helpers.intent.async_register(ToggleIntent())
 
     @asyncio.coroutine
     def async_handle_core_service(call):
@@ -209,74 +208,37 @@ def async_setup(hass, config):
     return True
 
 
-@ha.callback
-def _match_entity(hass, name):
-    """Match a name to an entity."""
-    from fuzzywuzzy import process as fuzzyExtract
-    entities = {state.entity_id: state.name for state
-                in hass.states.async_all()}
-    entity_id = fuzzyExtract.extractOne(
-        name, entities, score_cutoff=65)[2]
-    return hass.states.get(entity_id) if entity_id else None
-
-
 class TurnOnIntent(intent.IntentHandler):
-    """Handle turning item on intents."""
+    """Handle component turn intents."""
 
     intent_type = INTENT_TURN_ON
     slot_schema = {
         'name': cv.string,
     }
-
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle turn on intent."""
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
-        entity = _match_entity(hass, name)
-
-        if not entity:
-            _LOGGER.error("Could not find entity id for %s", name)
-            return None
-
-        yield from hass.services.async_call(
-            ha.DOMAIN, SERVICE_TURN_ON, {
-                ATTR_ENTITY_ID: entity.entity_id,
-            }, blocking=True)
-
-        response = intent_obj.create_response()
-        response.async_set_speech(
-            'Turned on {}'.format(entity.name))
-        return response
+    domain = ha.DOMAIN
+    service = SERVICE_TURN_ON
+    response = "Turned on {}"
 
 
 class TurnOffIntent(intent.IntentHandler):
-    """Handle turning item off intents."""
+    """Handle component turn intents."""
 
     intent_type = INTENT_TURN_OFF
     slot_schema = {
         'name': cv.string,
     }
+    domain = ha.DOMAIN
+    service = SERVICE_TURN_OFF
+    response = "Turned off {}"
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle turn off intent."""
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
-        entity = _match_entity(hass, name)
 
-        if not entity:
-            _LOGGER.error("Could not find entity id for %s", name)
-            return None
+class ToggleIntent(intent.IntentHandler):
+    """Handle component turn intents."""
 
-        yield from hass.services.async_call(
-            ha.DOMAIN, SERVICE_TURN_OFF, {
-                ATTR_ENTITY_ID: entity.entity_id,
-            }, blocking=True)
-
-        response = intent_obj.create_response()
-        response.async_set_speech(
-            'Turned off {}'.format(entity.name))
-        return response
+    intent_type = INTENT_TOGGLE
+    slot_schema = {
+        'name': cv.string,
+    }
+    domain = ha.DOMAIN
+    service = SERVICE_TOGGLE
+    response = "Toggled {}"

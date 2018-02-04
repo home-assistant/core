@@ -7,13 +7,17 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
+from homeassistant.const import ATTR_ENTITY_ID
+
+REQUIREMENTS = ['fuzzywuzzy==0.16.0', 'python-Levenshtein==0.12.0']
 
 
-DATA_KEY = 'intent'
 _LOGGER = logging.getLogger(__name__)
 
 SLOT_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
+
+DATA_KEY = 'intent'
 
 SPEECH_TYPE_PLAIN = 'plain'
 SPEECH_TYPE_SSML = 'ssml'
@@ -80,6 +84,17 @@ class IntentHandleError(IntentError):
 
     pass
 
+@callback
+@bind_hass
+def _match_entity(hass, name):
+    """Match a name to an entity."""
+    from fuzzywuzzy import process as fuzzyExtract
+    entities = {state.entity_id: state.name for state
+                in hass.states.async_all()}
+    entity_id = fuzzyExtract.extractOne(
+        name, entities, score_cutoff=65)[2]
+    return hass.states.get(entity_id) if entity_id else None
+
 
 class IntentHandler:
     """Intent handler registration."""
@@ -88,11 +103,15 @@ class IntentHandler:
     slot_schema = None
     _slot_schema = None
     platforms = None
+    domain = None
+    service = None
+    response = ''
 
     @callback
     def async_can_handle(self, intent_obj):
         """Test if an intent can be handled."""
         return self.platforms is None or intent_obj.platform in self.platforms
+
 
     @callback
     def async_validate_slots(self, slots):
@@ -110,7 +129,27 @@ class IntentHandler:
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
-        raise NotImplementedError()
+        if not self.service:
+            raise NotImplementedError()
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots['name']['value']
+        entity = _match_entity(hass, name)
+
+        if not entity:
+            _LOGGER.error("Could not find entity id for %s", name)
+            return None
+
+        yield from hass.services.async_call(
+            self.domain, self.service, {
+                ATTR_ENTITY_ID: entity.entity_id,
+            }, blocking=True)
+
+        response = intent_obj.create_response()
+        response.async_set_speech(
+            self.response.format(entity.name))
+        return response
+
 
     def __repr__(self):
         """Represent a string of an intent handler."""
