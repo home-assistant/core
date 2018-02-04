@@ -460,7 +460,7 @@ class SonosDevice(MediaPlayerDevice):
         if new_status == 'TRANSITIONING':
             return
 
-        self._play_mode = variables.get('current_play_mode')
+        self._play_mode = variables.get('current_play_mode', self._play_mode)
 
         if self.soco.is_playing_tv:
             self._refresh_linein(SOURCE_TV)
