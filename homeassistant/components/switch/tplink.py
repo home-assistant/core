@@ -50,8 +50,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
-        if leds_on is not None:
-            self.smartplug.led = leds_on
+        self._leds_on = leds_on
         self._state = None
         self._available = True
         # Set up emeter cache
@@ -93,6 +92,10 @@ class SmartPlugSwitch(SwitchDevice):
 
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
+
+            if self._leds_on is not None:
+                self.smartplug.led = self._leds_on
+                self._leds_on = None
 
             # Pull the name from the device if a name was not specified
             if self._name == DEFAULT_NAME:
