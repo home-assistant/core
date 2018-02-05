@@ -16,7 +16,7 @@ from homeassistant.helpers.event import (
     async_track_state_change, async_track_utc_time_change)
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.8.1']
+REQUIREMENTS = ['xknx==0.8.2']
 
 DOMAIN = "knx"
 DATA_KNX = "data_knx"
