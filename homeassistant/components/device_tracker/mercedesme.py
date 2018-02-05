@@ -2,7 +2,7 @@
 Support for Mercedes cars with Mercedes ME.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mercedesme/
+https://home-assistant.io/components/device_tracker.mercedesme/
 """
 import logging
 from datetime import timedelta
@@ -38,13 +38,12 @@ class MercedesMEDeviceTracker(object):
 
     def __init__(self, hass, config, see, data):
         """Initialize the Mercedes ME device tracker."""
-        self.hass = hass
         self.see = see
         self.data = data
         self.update_info()
 
         track_time_interval(
-            self.hass, self.update_info, MIN_TIME_BETWEEN_SCANS)
+            hass, self.update_info, MIN_TIME_BETWEEN_SCANS)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_info(self, now=None):
