@@ -224,8 +224,8 @@ def setup(hass, config):
 
         json_body[0]['tags'].update(tags)
 
+        nonlocal write_error
         for retry in range(max_tries+1):
-            nonlocal write_error
             try:
                 influx.write_points(json_body)
                 if write_error:
