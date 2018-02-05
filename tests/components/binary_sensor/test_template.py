@@ -98,13 +98,75 @@ class TestBinarySensorTemplate(unittest.TestCase):
                 }
             })
 
+    def test_icon_template(self):
+        """Test icon template."""
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "State",
+                            'icon_template':
+                                "{% if "
+                                "states.binary_sensor.test_state.state == "
+                                "'Works' %}"
+                                "mdi:check"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_template_sensor')
+        assert state.attributes.get('icon') == ''
+
+        self.hass.states.set('binary_sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test_template_sensor')
+        assert state.attributes['icon'] == 'mdi:check'
+
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "State",
+                            'entity_picture_template':
+                                "{% if "
+                                "states.binary_sensor.test_state.state == "
+                                "'Works' %}"
+                                "/local/sensor.png"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_template_sensor')
+        assert state.attributes.get('entity_picture') == ''
+
+        self.hass.states.set('binary_sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test_template_sensor')
+        assert state.attributes['entity_picture'] == '/local/sensor.png'
+
     def test_attributes(self):
         """"Test the attributes."""
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL,
-            None, None
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass),
+            None, None, MATCH_ALL, None, None
         ).result()
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.device_class)
@@ -156,8 +218,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL,
-            None, None
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass),
+            None, None, MATCH_ALL, None, None
         ).result()
         mock_render.side_effect = TemplateError('foo')
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
