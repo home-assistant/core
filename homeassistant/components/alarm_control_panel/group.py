@@ -64,7 +64,7 @@ class GroupAlarm(alarm.AlarmControlPanel):
         self._code_format = code_format if code_format else None
         self._entity_ids = [entity.get(CONF_PANEL) for entity in entities]
         self._triggered_panels = []
-        self._state = STATE_ALARM_DISARMED
+        self._state = None
         self._pre_state = self._state
         self._post_state = self._state
 
@@ -164,7 +164,7 @@ class GroupAlarm(alarm.AlarmControlPanel):
         def _common_state(states):
             # This can happen if the sub-panels have not loaded yet.
             if len(states) == 0:
-                return STATE_ALARM_DISARMED
+                return None
 
             # One triggered sub-panel is enough to trigger the whole panel.
             if states[STATE_ALARM_TRIGGERED]:
