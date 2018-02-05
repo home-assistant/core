@@ -450,6 +450,7 @@ class MQTT(object):
         self.subscribed_topics = {}
         self.progress = {}
         self.birth_message = birth_message
+        self.will_message = will_message
         self._mqttc = None
         self._paho_lock = asyncio.Lock(loop=hass.loop)
 
@@ -490,7 +491,7 @@ class MQTT(object):
     def async_publish(self, topic, payload, qos, retain):
         """Publish a MQTT message.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         with (yield from self._paho_lock):
             yield from self.hass.async_add_job(
@@ -513,17 +514,22 @@ class MQTT(object):
 
         return not result
 
+    @asyncio.coroutine
     def async_disconnect(self):
         """Stop the MQTT client.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
-        def stop():
-            """Stop the MQTT client."""
+        if self.will_message:
+            yield from self.async_publish(
+                self.will_message.get(ATTR_TOPIC),
+                self.will_message.get(ATTR_PAYLOAD),
+                self.will_message.get(ATTR_QOS),
+                self.will_message.get(ATTR_RETAIN))
+
+        with (yield from self._paho_lock):
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
-
-        return self.hass.async_add_job(stop)
 
     @asyncio.coroutine
     def async_subscribe(self, topic, qos):
