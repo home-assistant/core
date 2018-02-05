@@ -11,7 +11,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 REQUIREMENTS = ['fuzzywuzzy==0.16.0', 'python-Levenshtein==0.12.0']
 
-
 _LOGGER = logging.getLogger(__name__)
 
 SLOT_SCHEMA = vol.Schema({

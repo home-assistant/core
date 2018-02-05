@@ -66,6 +66,7 @@ TEST_REQUIREMENTS = (
     'pushbullet.py',
     'py-canary',
     'pydispatcher',
+    'python-Levenshtein',
     'PyJWT',
     'pylitejet',
     'pymonoprice',
@@ -150,7 +151,8 @@ def gather_modules():
     errors = []
 
     for package in sorted(explore_module('homeassistant.components', True) +
-                          explore_module('homeassistant.scripts', True)):
+                          explore_module('homeassistant.scripts', True) +
+                          explore_module('homeassistant.helpers', True)):
         try:
             module = importlib.import_module(package)
         except ImportError:
