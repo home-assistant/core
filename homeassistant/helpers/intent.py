@@ -93,7 +93,8 @@ def _match_entity(hass, name):
                 in hass.states.async_all()}
     entity_id = fuzzyExtract.extractOne(
         name, entities, score_cutoff=65)[2]
-    return hass.states.get(entity_id) if entity_id else None
+    state = hass.states.get(entity_id) if entity_id else None
+    return state.entity_id if state else None
 
 
 class IntentHandler:
@@ -142,7 +143,7 @@ class IntentHandler:
 
         yield from hass.services.async_call(
             self.domain, self.service, {
-                ATTR_ENTITY_ID: entity.entity_id,
+                ATTR_ENTITY_ID: entity,
             }, blocking=True)
 
         response = intent_obj.create_response()
