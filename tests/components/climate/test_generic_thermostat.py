@@ -1271,10 +1271,12 @@ class TestClimateGenericThermostatDualSwitch(unittest.TestCase):
     @mock.patch('logging.Logger.error')
     def test_invalid_both_heating_and_cooling_on(self, log_mock):
         """Test error handling for state of heat and cool."""
-        self._setup_switch_heat(True)
+        self._setup_switch_heat(False)
         self._setup_switch_ac(False)
         self.hass.block_till_done()
         self._setup_switch_ac(True)
+        self.hass.block_till_done()
+        self._setup_switch_heat(True)
         self.hass.block_till_done()
         self.assertEqual(log_mock.call_count, 1)
         self.assertEqual(2, len(self.calls))
