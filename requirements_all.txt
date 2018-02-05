@@ -358,7 +358,7 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 httplib2==0.10.3
 
 # homeassistant.components.media_player.sonos
-https://github.com/SoCo/SoCo/archive/9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.14a5
+https://github.com/SoCo/SoCo/archive/9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.12-
 
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2

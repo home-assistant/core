@@ -75,7 +75,7 @@ holidays==0.9.3
 home-assistant-frontend==20180130.0
 
 # homeassistant.components.media_player.sonos
-https://github.com/SoCo/SoCo/archive/9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.14a5
+https://github.com/SoCo/SoCo/archive/9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.12-
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
