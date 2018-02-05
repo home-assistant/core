@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.homematic/
 """
 import logging
-from homeassistant.components.lock import LockDevice, SUPPORT_OPENING
+from homeassistant.components.lock import LockDevice, SUPPORT_OPEN
 from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import STATE_UNKNOWN
 
@@ -34,7 +34,10 @@ class HMLock(HMDevice, LockDevice):
     @property
     def is_locked(self):
         """Return true if the lock is locked."""
-        return self._hmdevice.is_locked()
+        try:
+            return not self._hm_get_state()
+        except TypeError:
+            return False
 
     def lock(self, **kwargs):
         """Lock the lock."""
@@ -56,4 +59,4 @@ class HMLock(HMDevice, LockDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPENING
+        return SUPPORT_OPEN

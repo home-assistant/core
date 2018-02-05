@@ -40,7 +40,7 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
 })
 
 # Bitfield of features supported by the lock entity
-SUPPORT_OPENING = 1
+SUPPORT_OPEN = 1
 
 _LOGGER = logging.getLogger(__name__)
 
