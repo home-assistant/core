@@ -85,11 +85,11 @@ class TestAlarmControlPanelGroup(unittest.TestCase):
                 }, {
                     'platform': 'group',
                     'name': 'testgroup',
-                    'panels': [
-                        {'panel': 'alarm_control_panel.livingroom'},
-                        {'panel': 'alarm_control_panel.garage'},
-                        {'panel': 'alarm_control_panel.bedroom'},
-                        {'panel': 'alarm_control_panel.tamper'},
+                    'entities': [
+                        'alarm_control_panel.livingroom',
+                        'alarm_control_panel.garage',
+                        'alarm_control_panel.bedroom',
+                        'alarm_control_panel.tamper',
                     ]
                 }]
             })
