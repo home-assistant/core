@@ -984,7 +984,7 @@ pythonwhois==2.4.3
 pytile==1.1.0
 
 # homeassistant.components.climate.touchline
-pytouchline==0.6
+pytouchline==0.7
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
