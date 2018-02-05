@@ -14,7 +14,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_OFF,
-    STATE_IDLE,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE
 )
