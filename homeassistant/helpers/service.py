@@ -74,6 +74,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
                 config[CONF_SERVICE_DATA_TEMPLATE], variables))
         except TemplateError as ex:
             _LOGGER.error('Error rendering data template: %s', ex)
+            return
 
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
