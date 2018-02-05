@@ -35,13 +35,14 @@ CONF_COMPONENT_CONFIG = 'component_config'
 CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
 CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
 CONF_RETRY_COUNT = 'max_retries'
-CONF_RETRY_QUEUE = 'retry_queue_limit'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
 
 TIMEOUT = 5
+RETRY_DELAY = 20
+QUEUE_BACKLOG_SECONDS = 10
 
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
@@ -66,7 +67,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
         vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRY_QUEUE, default=100): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
@@ -129,7 +129,8 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
         conf[CONF_COMPONENT_CONFIG_GLOB])
     max_tries = conf.get(CONF_RETRY_COUNT)
-    queue_limit = conf.get(CONF_RETRY_QUEUE)
+
+    write_error = False
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -224,18 +225,24 @@ def setup(hass, config):
         json_body[0]['tags'].update(tags)
 
         for retry in range(max_tries+1):
+            nonlocal write_error
             try:
                 influx.write_points(json_body)
+                if write_error:
+                    _LOGGER.error("Resumed writing to InfluxDB")
+                    write_error = False
                 break
             except (exceptions.InfluxDBClientError, IOError):
                 if retry == max_tries:
-                    _LOGGER.debug(
-                        "Error saving event %s, retry=%d", json_body, retry)
+                    if not write_error:
+                        _LOGGER.error("Error writing to InfluxDB")
+                        write_error = True
                 else:
-                    time.sleep(20)
+                    time.sleep(RETRY_DELAY)
 
+    queue_seconds = QUEUE_BACKLOG_SECONDS + max_tries*RETRY_DELAY
     instance = hass.data[DOMAIN] = InfluxThread(
-        hass, influx_handle_event, queue_limit)
+        hass, influx_handle_event, queue_seconds)
     instance.start()
 
     def shutdown(event):
@@ -251,28 +258,38 @@ def setup(hass, config):
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, event_handler, max_size):
+    def __init__(self, hass, event_handler, queue_seconds):
         """Initialize the listener."""
         threading.Thread.__init__(self, name='InfluxDB')
-        self.queue = queue.Queue(maxsize=max_size)
+        self.queue = queue.Queue()
         self.event_handler = event_handler
+        self.queue_seconds = queue_seconds
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Influx."""
-        try:
-            self.queue.put_nowait(event)
-        except queue.Full:
-            _LOGGER.warning("Queue full, dropping event")
+        item = (time.monotonic(), event)
+        self.queue.put(item)
 
     def run(self):
         """Process incoming events."""
-        event = True
-        while event:
-            event = self.queue.get()
+        dropped = False
+        while True:
+            item = self.queue.get()
 
-            if event:
+            if item is None:
+                self.queue.task_done()
+                return
+
+            timestamp, event = item
+            age = time.monotonic() - timestamp
+
+            if age < self.queue_seconds:
                 self.event_handler(event)
+                dropped = False
+            elif not dropped:
+                _LOGGER.warning("Dropping old events to catch up")
+                dropped = True
 
             self.queue.task_done()
 

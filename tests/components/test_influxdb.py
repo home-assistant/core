@@ -693,3 +693,30 @@ class TestInfluxDB(unittest.TestCase):
         json_data = mock_client.return_value.write_points.call_args[0][0]
         self.assertEqual(mock_client.return_value.write_points.call_count, 2)
         mock_client.return_value.write_points.assert_called_with(json_data)
+
+    def test_queue_backlog_full(self, mock_client):
+        """Test the event listener to drop old events."""
+        self._setup()
+
+        state = mock.MagicMock(
+            state=1, domain='fake', entity_id='entity.id', object_id='entity',
+            attributes={})
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+
+        monotonic_time = 0
+
+        def fast_monotonic():
+            nonlocal monotonic_time
+            monotonic_time += 60
+            return monotonic_time
+
+        with patch('homeassistant.components.influxdb.time.monotonic',
+                   new=fast_monotonic):
+            self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
+
+            self.assertEqual(
+                mock_client.return_value.write_points.call_count, 0
+            )
+
+        mock_client.return_value.write_points.reset_mock()
