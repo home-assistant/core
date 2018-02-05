@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import CONF_HOST, TEMP_CELSIUS, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pytouchline==0.6']
+REQUIREMENTS = ['pytouchline==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
