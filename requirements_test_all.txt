@@ -121,7 +121,7 @@ prometheus_client==0.1.0
 pushbullet.py==0.11.0
 
 # homeassistant.components.canary
-py-canary==0.2.3
+py-canary==0.4.0
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

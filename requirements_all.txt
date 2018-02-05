@@ -618,7 +618,7 @@ pushetta==1.0.15
 pwmled==1.2.1
 
 # homeassistant.components.canary
-py-canary==0.2.3
+py-canary==0.4.0
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==3.3.0
