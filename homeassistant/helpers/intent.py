@@ -113,7 +113,6 @@ class IntentHandler:
         """Test if an intent can be handled."""
         return self.platforms is None or intent_obj.platform in self.platforms
 
-
     @callback
     def async_validate_slots(self, slots):
         """Validate slot information."""
@@ -143,14 +142,13 @@ class IntentHandler:
 
         yield from hass.services.async_call(
             self.domain, self.service, {
-                ATTR_ENTITY_ID: entity,
+                ATTR_ENTITY_ID: entity
             }, blocking=True)
 
         response = intent_obj.create_response()
         response.async_set_speech(
             self.response.format(entity.name))
         return response
-
 
     def __repr__(self):
         """Represent a string of an intent handler."""
