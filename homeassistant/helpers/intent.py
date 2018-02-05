@@ -147,7 +147,7 @@ class IntentHandler:
 
         response = intent_obj.create_response()
         response.async_set_speech(
-            self.response.format(entity.name))
+            self.response.format(entity))
         return response
 
     def __repr__(self):

@@ -145,6 +145,7 @@ def _process(hass, text):
 
 class ConversationProcessView(http.HomeAssistantView):
     """View to retrieve shopping list content."""
+
     url = '/api/conversation/process'
     name = "api:conversation:process"
 
