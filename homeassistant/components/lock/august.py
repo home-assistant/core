@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AugustLock(LockDevice):
-    """Representation of an Abode lock."""
+    """Representation of an August lock."""
 
     def __init__(self, data, lock):
         """Initialize the lock."""
