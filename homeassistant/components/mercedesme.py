@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+    CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL, LENGTH_KILOMETERS)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
@@ -23,12 +23,20 @@ REQUIREMENTS = ['mercedesmejsonpy==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_SENSORS = [
-    'doorsClosed',
-    'windowsClosed',
-    'locked',
-    'tireWarningLight'
-]
+BINARY_SENSORS = {
+    'doorsClosed': ['Doors closed'],
+    'windowsClosed': ['Windows closed'],
+    'locked': ['Doors locked'],
+    'tireWarningLight': ['Tire Warning']
+}
+
+SENSORS = {
+    'fuelLevelPercent': ['Fuel Level', '%'],
+    'fuelRangeKm': ['Fuel Range', LENGTH_KILOMETERS],
+    'latestTrip': ['Latest Trip', None],
+    'odometerKm': ['Odometer', LENGTH_KILOMETERS],
+    'serviceIntervalDays': ['Next Service', 'days']
+}
 
 DATA_MME = 'mercedesme'
 DOMAIN = 'mercedesme'
@@ -136,6 +144,8 @@ class MercedesMeEntity(Entity):
 
     def _update_callback(self):
         """Callback update method."""
+        # If the method is made a callback this should be changed
+        # to the async version. Check core.callback
         self.schedule_update_ha_state(True)
 
     @property
