@@ -705,7 +705,7 @@ pydroid-ipcam==0.8
 pyebox==0.1.0
 
 # homeassistant.components.climate.econet
-pyeconet==0.0.4
+pyeconet==0.0.5
 
 # homeassistant.components.eight_sleep
 pyeight==0.0.7
