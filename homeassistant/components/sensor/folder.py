@@ -67,15 +67,14 @@ class Folder(Entity):
         return
 
     def get_sorted_files_list(self, folder_path, filter_term):
-        """Rerturn the sorted list of files in a directory, applying filter.
-        List entired sorted by modified time, with most recent first."""
+        """Return the sorted list of files, applying filter."""
         query = folder_path + filter_term
         files_list = glob.glob(query)
         sorted_files_list = sorted(files_list, key=os.path.getmtime)
         return sorted_files_list
 
     def get_last_updated(self, recent_modified_file):
-        """Rerturn the datetime a file was last modified."""
+        """Return the time a file was last modified."""
         modified_time = os.path.getmtime(recent_modified_file)
         modified_time_datetime = dt.fromtimestamp(modified_time)
         return modified_time_datetime.strftime(DATE_STR_FORMAT)
