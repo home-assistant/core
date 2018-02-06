@@ -260,8 +260,11 @@ class InfluxThread(threading.Thread):
 
     def run(self):
         """Process incoming events."""
+        queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries*RETRY_DELAY
+
         write_error = False
         dropped = False
+
         while True:
             item = self.queue.get()
 
@@ -272,7 +275,6 @@ class InfluxThread(threading.Thread):
             timestamp, event = item
             age = time.monotonic() - timestamp
 
-            queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries*RETRY_DELAY
             if age < queue_seconds:
                 for retry in range(self.max_tries+1):
                     if self.event_handler(event):
