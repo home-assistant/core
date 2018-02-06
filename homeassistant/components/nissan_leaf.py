@@ -204,7 +204,11 @@ class LeafDataStore:
         _LOGGER.debug("Got battery data for Leaf")
 
         if battery_response.answer['status'] == 200:
-            self.data[DATA_BATTERY] = battery_response.battery_percent
+            if int(battery_response.battery_capacity) > 100:
+                self.data[DATA_BATTERY] = battery_response.battery_percent * 0.05
+            else:
+                self.data[DATA_BATTERY] = battery_response.battery_percent
+
             self.data[DATA_CHARGING] = battery_response.is_charging
             self.data[DATA_PLUGGED_IN] = battery_response.is_connected
             self.data[DATA_RANGE_AC] = battery_response.cruising_range_ac_on_km
@@ -254,8 +258,11 @@ class LeafDataStore:
         return battery_status
 
     def get_climate(self):
-        request = self.leaf.get_latest_hvac_status()
-        return request
+        try:
+            request = self.leaf.get_latest_hvac_status()
+            return request
+        except TypeError:
+            return None
 
     def set_climate(self, toggle):
         if toggle:
