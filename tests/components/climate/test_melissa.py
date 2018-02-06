@@ -5,14 +5,16 @@ import json
 
 from asynctest import mock
 
-from homeassistant.components.climate import melissa, \
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF, \
-    SUPPORT_FAN_MODE, STATE_HEAT, STATE_FAN_ONLY, STATE_DRY, STATE_COOL, \
-    STATE_AUTO
+from homeassistant.components.climate import (
+    melissa, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    SUPPORT_ON_OFF, SUPPORT_FAN_MODE, STATE_HEAT, STATE_FAN_ONLY, STATE_DRY,
+    STATE_COOL, STATE_AUTO
+)
 from homeassistant.components.fan import SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
 from homeassistant.components.melissa import DATA_MELISSA
-from homeassistant.const import TEMP_CELSIUS, STATE_ON, ATTR_TEMPERATURE, \
-    STATE_OFF, STATE_IDLE, STATE_UNKNOWN
+from homeassistant.const import (
+    TEMP_CELSIUS, STATE_ON, ATTR_TEMPERATURE, STATE_OFF, STATE_IDLE
+)
 from tests.common import get_test_home_assistant, load_fixture
 
 
@@ -86,16 +88,16 @@ class TestMelissa(unittest.TestCase):
 
     def test_is_on(self):
         """Test name property."""
-        self.assertEqual(self.thermostat.is_on, True)
+        self.assertTrue(self.thermostat.is_on)
         self.thermostat._cur_settings = None
-        self.assertEqual(STATE_UNKNOWN, self.thermostat.is_on)
+        self.assertFalse(self.thermostat.is_on)
 
     def test_current_fan_mode(self):
         """Test current_fan_mode property."""
         self.thermostat.update()
         self.assertEqual(SPEED_LOW, self.thermostat.current_fan_mode)
         self.thermostat._cur_settings = None
-        self.assertEqual(STATE_UNKNOWN, self.thermostat.current_fan_mode)
+        self.assertEqual(None, self.thermostat.current_fan_mode)
 
     def test_current_temperature(self):
         """Test current temperature."""
@@ -115,19 +117,19 @@ class TestMelissa(unittest.TestCase):
         self.thermostat.update()
         self.assertEqual(self.thermostat.current_operation, STATE_HEAT)
         self.thermostat._cur_settings = None
-        self.assertEqual(STATE_UNKNOWN, self.thermostat.current_operation)
+        self.assertEqual(None, self.thermostat.current_operation)
 
     def test_operation_list(self):
         """Test the operation list."""
         self.assertEqual(
-            [STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY],
+            [STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT],
             self.thermostat.operation_list
         )
 
     def test_fan_list(self):
         """Test the fan list."""
         self.assertEqual(
-            [STATE_AUTO, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+            [STATE_AUTO, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM],
             self.thermostat.fan_list
         )
 
@@ -135,13 +137,13 @@ class TestMelissa(unittest.TestCase):
         """Test target temperature."""
         self.assertEqual(16, self.thermostat.target_temperature)
         self.thermostat._cur_settings = None
-        self.assertEqual(STATE_UNKNOWN, self.thermostat.target_temperature)
+        self.assertEqual(None, self.thermostat.target_temperature)
 
     def test_state(self):
         """Test state."""
         self.assertEqual(STATE_ON, self.thermostat.state)
         self.thermostat._cur_settings = None
-        self.assertEqual(STATE_UNKNOWN, self.thermostat.state)
+        self.assertEqual(None, self.thermostat.state)
 
     def test_temperature_unit(self):
         """Test temperature unit."""
@@ -165,29 +167,30 @@ class TestMelissa(unittest.TestCase):
         """Test set_temperature."""
         self.api.send.return_value = True
         self.thermostat.update()
-        self.assertTrue(self.thermostat.set_temperature(
-            **{ATTR_TEMPERATURE: 25}))
+        self.thermostat.set_temperature(**{ATTR_TEMPERATURE: 25})
         self.assertEqual(25, self.thermostat.target_temperature)
 
     def test_fan_mode(self):
         """Test set_fan_mode."""
         self.api.send.return_value = True
-        self.assertTrue(self.thermostat.set_fan_mode(SPEED_LOW))
-        self.assertEqual(SPEED_LOW, self.thermostat.current_fan_mode)
+        self.thermostat.set_fan_mode(SPEED_HIGH)
+        self.assertEqual(SPEED_HIGH, self.thermostat.current_fan_mode)
 
     def test_set_operation_mode(self):
         """Test set_operation_mode."""
         self.api.send.return_value = True
-        self.assertTrue(self.thermostat.set_operation_mode(STATE_COOL))
+        self.thermostat.set_operation_mode(STATE_COOL)
         self.assertEqual(STATE_COOL, self.thermostat.current_operation)
 
     def test_turn_on(self):
         """Test turn_on."""
-        self.assertTrue(self.thermostat.turn_on())
+        self.thermostat.turn_on()
+        self.assertTrue(self.thermostat.state)
 
     def test_turn_off(self):
         """Test turn_off."""
-        self.assertTrue(self.thermostat.turn_off())
+        self.thermostat.turn_off()
+        self.assertEqual(STATE_OFF, self.thermostat.state)
 
     def test_send(self):
         """Test send."""
@@ -211,14 +214,14 @@ class TestMelissa(unittest.TestCase):
         self.thermostat._api.status.side_effect = KeyError('boom')
         self.thermostat.update()
         mocked_warning.assert_called_once_with(
-            'Unable to update component %s', self.thermostat.entity_id)
+            'Unable to update entity %s', self.thermostat.entity_id)
 
     def test_melissa_state_to_hass(self):
         """Test for translate melissa states to hass."""
         self.assertEqual(STATE_OFF, self.thermostat.melissa_state_to_hass(0))
         self.assertEqual(STATE_ON, self.thermostat.melissa_state_to_hass(1))
         self.assertEqual(STATE_IDLE, self.thermostat.melissa_state_to_hass(2))
-        self.assertEqual(STATE_UNKNOWN,
+        self.assertEqual(None,
                          self.thermostat.melissa_state_to_hass(3))
 
     def test_melissa_op_to_hass(self):
@@ -229,7 +232,7 @@ class TestMelissa(unittest.TestCase):
         self.assertEqual(STATE_COOL, self.thermostat.melissa_op_to_hass(3))
         self.assertEqual(STATE_DRY, self.thermostat.melissa_op_to_hass(4))
         self.assertEqual(
-            STATE_UNKNOWN, self.thermostat.melissa_op_to_hass(5))
+            None, self.thermostat.melissa_op_to_hass(5))
 
     def test_melissa_fan_to_hass(self):
         """Test for translate melissa fan state to hass."""
@@ -237,7 +240,7 @@ class TestMelissa(unittest.TestCase):
         self.assertEqual(SPEED_LOW, self.thermostat.melissa_fan_to_hass(1))
         self.assertEqual(SPEED_MEDIUM, self.thermostat.melissa_fan_to_hass(2))
         self.assertEqual(SPEED_HIGH, self.thermostat.melissa_fan_to_hass(3))
-        self.assertEqual(STATE_UNKNOWN, self.thermostat.melissa_fan_to_hass(4))
+        self.assertEqual(None, self.thermostat.melissa_fan_to_hass(4))
 
     @mock.patch('homeassistant.components.climate.melissa._LOGGER.warning')
     def test_hass_mode_to_melissa(self, mocked_warning):
