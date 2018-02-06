@@ -14,7 +14,10 @@ from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['bellows==0.4.0']
+REQUIREMENTS = [
+    'bellows==0.5.0',
+    'zigpy==0.0.1',
+]
 
 DOMAIN = 'zha'
 
@@ -130,7 +133,7 @@ class ApplicationListener:
     @asyncio.coroutine
     def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
-        import bellows.zigbee.profiles
+        import zigpy.profiles
         import homeassistant.components.zha.const as zha_const
         zha_const.populate_data()
 
@@ -146,8 +149,8 @@ class ApplicationListener:
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
 
-            if endpoint.profile_id in bellows.zigbee.profiles.PROFILES:
-                profile = bellows.zigbee.profiles.PROFILES[endpoint.profile_id]
+            if endpoint.profile_id in zigpy.profiles.PROFILES:
+                profile = zigpy.profiles.PROFILES[endpoint.profile_id]
                 if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
                                               {}).get(endpoint.device_type,
                                                       None):

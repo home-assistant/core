@@ -126,7 +126,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.4.0
+bellows==0.5.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -1271,3 +1271,6 @@ zeroconf==0.19.1
 
 # homeassistant.components.media_player.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.0.0
+
+# homeassistant.components.zha
+zigpy==0.0.1
