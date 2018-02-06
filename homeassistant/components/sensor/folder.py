@@ -1,5 +1,8 @@
 """
-Sensor for monitoring a folder.
+Sensor for monitoring the contents of a folder.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.folder/
 """
 from datetime import datetime as dt
 from datetime import timedelta
@@ -36,6 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class Folder(Entity):
     """Representation of a folder."""
+
     ICON = 'mdi:folder'
 
     def __init__(self, folder_path, filter_term):
