@@ -126,11 +126,12 @@ class ThresholdSensor(BinarySensorDevice):
     @property
     def threshold_type(self):
         """Return the type of threshold this sensor represents."""
-        if self._threshold_lower and self._threshold_upper:
+        if self._threshold_lower is not None and \
+                self._threshold_upper is not None:
             return TYPE_RANGE
-        elif self._threshold_lower:
+        elif self._threshold_lower is not None:
             return TYPE_LOWER
-        elif self._threshold_upper:
+        elif self._threshold_upper is not None:
             return TYPE_UPPER
 
     @property
