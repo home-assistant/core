@@ -1,8 +1,7 @@
 """The tests for the InfluxDB component."""
-import unittest
 import datetime
+import unittest
 from unittest import mock
-from unittest.mock import patch
 
 import influxdb as influx_client
 
@@ -210,18 +209,6 @@ class TestInfluxDB(unittest.TestCase):
                 mock.call(body)
             )
             mock_client.return_value.write_points.reset_mock()
-
-    def test_event_listener_fail_write(self, mock_client):
-        """Test the event listener for write failures."""
-        self._setup()
-
-        state = mock.MagicMock(
-            state=1, domain='fake', entity_id='fake.entity-id',
-            object_id='entity', attributes={})
-        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-        mock_client.return_value.write_points.side_effect = \
-            influx_client.exceptions.InfluxDBClientError('foo')
-        self.handler_method(event)
 
     def test_event_listener_states(self, mock_client):
         """Test the event listener against ignored states."""
@@ -686,13 +673,22 @@ class TestInfluxDB(unittest.TestCase):
         mock_client.return_value.write_points.side_effect = \
             IOError('foo')
 
-        with patch.object(influxdb.time, 'sleep') as mock_sleep:
+        # Write fails
+        with mock.patch.object(influxdb.time, 'sleep') as mock_sleep:
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             assert mock_sleep.called
         json_data = mock_client.return_value.write_points.call_args[0][0]
         self.assertEqual(mock_client.return_value.write_points.call_count, 2)
         mock_client.return_value.write_points.assert_called_with(json_data)
+
+        # Write works again
+        mock_client.return_value.write_points.side_effect = None
+        with mock.patch.object(influxdb.time, 'sleep') as mock_sleep:
+            self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
+            assert not mock_sleep.called
+        self.assertEqual(mock_client.return_value.write_points.call_count, 3)
 
     def test_queue_backlog_full(self, mock_client):
         """Test the event listener to drop old events."""
@@ -706,12 +702,13 @@ class TestInfluxDB(unittest.TestCase):
         monotonic_time = 0
 
         def fast_monotonic():
+            """Monotonic time that ticks fast enough to cause a timeout."""
             nonlocal monotonic_time
             monotonic_time += 60
             return monotonic_time
 
-        with patch('homeassistant.components.influxdb.time.monotonic',
-                   new=fast_monotonic):
+        with mock.patch('homeassistant.components.influxdb.time.monotonic',
+                        new=fast_monotonic):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
 

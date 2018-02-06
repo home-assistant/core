@@ -130,8 +130,6 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_GLOB])
     max_tries = conf.get(CONF_RETRY_COUNT)
 
-    write_error = False
-
     try:
         influx = InfluxDBClient(**kwargs)
         influx.query("SHOW SERIES LIMIT 1;", database=conf[CONF_DB_NAME])
@@ -149,12 +147,12 @@ def setup(hass, config):
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
                 state.entity_id in blacklist_e or state.domain in blacklist_d:
-            return
+            return True
 
         try:
             if (whitelist_e and state.entity_id not in whitelist_e) or \
                     (whitelist_d and state.domain not in whitelist_d):
-                return
+                return True
 
             _include_state = _include_value = False
 
@@ -224,25 +222,14 @@ def setup(hass, config):
 
         json_body[0]['tags'].update(tags)
 
-        nonlocal write_error
-        for retry in range(max_tries+1):
-            try:
-                influx.write_points(json_body)
-                if write_error:
-                    _LOGGER.error("Resumed writing to InfluxDB")
-                    write_error = False
-                break
-            except (exceptions.InfluxDBClientError, IOError):
-                if retry == max_tries:
-                    if not write_error:
-                        _LOGGER.error("Error writing to InfluxDB")
-                        write_error = True
-                else:
-                    time.sleep(RETRY_DELAY)
+        try:
+            influx.write_points(json_body)
+            return True
+        except (exceptions.InfluxDBClientError, IOError):
+            return False
 
-    queue_seconds = QUEUE_BACKLOG_SECONDS + max_tries*RETRY_DELAY
     instance = hass.data[DOMAIN] = InfluxThread(
-        hass, influx_handle_event, queue_seconds)
+        hass, influx_handle_event, max_tries)
     instance.start()
 
     def shutdown(event):
@@ -258,12 +245,12 @@ def setup(hass, config):
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, event_handler, queue_seconds):
+    def __init__(self, hass, event_handler, max_tries):
         """Initialize the listener."""
         threading.Thread.__init__(self, name='InfluxDB')
         self.queue = queue.Queue()
         self.event_handler = event_handler
-        self.queue_seconds = queue_seconds
+        self.max_tries = max_tries
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
     def _event_listener(self, event):
@@ -273,6 +260,7 @@ class InfluxThread(threading.Thread):
 
     def run(self):
         """Process incoming events."""
+        write_error = False
         dropped = False
         while True:
             item = self.queue.get()
@@ -284,9 +272,20 @@ class InfluxThread(threading.Thread):
             timestamp, event = item
             age = time.monotonic() - timestamp
 
-            if age < self.queue_seconds:
-                self.event_handler(event)
-                dropped = False
+            queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries*RETRY_DELAY
+            if age < queue_seconds:
+                for retry in range(self.max_tries+1):
+                    if self.event_handler(event):
+                        if write_error:
+                            _LOGGER.error("Resumed writing to InfluxDB")
+                            write_error = False
+                        dropped = False
+                        break
+                    elif retry < self.max_tries:
+                        time.sleep(RETRY_DELAY)
+                    elif not write_error:
+                        _LOGGER.error("Error writing to InfluxDB")
+                        write_error = True
             elif not dropped:
                 _LOGGER.warning("Dropping old events to catch up")
                 dropped = True
