@@ -2,7 +2,6 @@
 import asyncio
 import logging
 
-import fuzzywuzzy
 import voluptuous as vol
 
 from homeassistant.core import callback
