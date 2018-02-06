@@ -13,6 +13,7 @@ import logging
 
 import homeassistant.core as ha
 import homeassistant.config as conf_util
+from homeassistant.components import http
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
@@ -28,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
 SERVICE_CHECK_CONFIG = 'check_config'
-
 
 def is_on(hass, entity_id=None):
     """Load up the module to call the is_on method.
@@ -161,6 +161,7 @@ def async_setup(hass, config):
     hass.helpers.intent.async_register(TurnOnIntent())
     hass.helpers.intent.async_register(TurnOffIntent())
     hass.helpers.intent.async_register(ToggleIntent())
+
 
     @asyncio.coroutine
     def async_handle_core_service(call):

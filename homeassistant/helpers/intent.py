@@ -24,6 +24,8 @@ DATA_KEY = 'intent'
 SPEECH_TYPE_PLAIN = 'plain'
 SPEECH_TYPE_SSML = 'ssml'
 
+DEPENDENCIES = ['http']
+
 
 @callback
 @bind_hass
