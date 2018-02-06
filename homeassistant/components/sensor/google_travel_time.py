@@ -25,6 +25,7 @@ REQUIREMENTS = ['googlemaps==2.5.1']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TRAFFIC_MODEL = 'traffic_model'
+ATTR_AVOID = 'avoid'
 
 CONF_DESTINATION = 'destination'
 CONF_OPTIONS = 'options'
@@ -62,11 +63,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         dict, vol.Schema({
             vol.Optional(CONF_MODE, default='driving'): vol.In(TRAVEL_MODE),
             vol.Optional('language'): vol.In(ALL_LANGUAGES),
-            vol.Optional('avoid'): vol.In(AVOID),
+            vol.Optional(ATTR_AVOID): vol.In(AVOID),
             vol.Optional('units'): vol.In(UNITS),
             vol.Exclusive('arrival_time', 'time'): cv.string,
             vol.Exclusive('departure_time', 'time'): cv.string,
-            vol.Optional('traffic_model'): vol.In(TRAVEL_MODEL),
+            vol.Optional(ATTR_TRAFFIC_MODEL): vol.In(TRAVEL_MODEL),
             vol.Optional('transit_mode'): vol.In(TRANSPORT_TYPE),
             vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
         }))
@@ -75,10 +76,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
 SERVICE_SET_TRAFFIC_MODEL = 'google_travel_time_set_traffic_model'
+SERVICE_SET_AVOID = 'google_travel_time_set_avoid'
 
 SET_TRAFFIC_MODEL_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_TRAFFIC_MODEL): vol.In(TRAVEL_MODEL)
+})
+
+SET_AVOID_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AVOID): vol.In(AVOID)
 })
 
 
@@ -147,9 +154,28 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             for target in targets:
                 target.set_traffic_model(traffic_model)
 
+        def avoid_set_service(service):
+            """Set the avoid option on the target sensor(s)."""
+            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            avoid = service.data[ATTR_AVOID]
+
+            if entity_ids:
+                targets = [target for target
+                           in hass.data[DATA_GOOGLE_TRAVEL_TIME]
+                           if target.entity_id in entity_ids]
+            else:
+                targets = hass.data[DATA_GOOGLE_TRAVEL_TIME]
+
+            _LOGGER.debug("Targets = %s", targets)
+            for target in targets:
+                target.set_avoid(avoid)
+
         hass.services.register(
             DOMAIN, SERVICE_SET_TRAFFIC_MODEL, traffic_model_set_service,
             schema=SET_TRAFFIC_MODEL_SCHEMA)
+        hass.services.register(
+            DOMAIN, SERVICE_SET_AVOID, avoid_set_service,
+            schema=SET_AVOID_SCHEMA)
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
@@ -234,7 +260,12 @@ class GoogleTravelTimeSensor(Entity):
 
     def set_traffic_model(self, traffic_model):
         """Set the traffic model used by the sensor."""
-        self._options["traffic_model"] = traffic_model
+        self._options[ATTR_TRAFFIC_MODEL] = traffic_model
+        _LOGGER.debug("Set %s Options = %s", self.name, self._options)
+
+    def set_avoid(self, avoid):
+        """Set the avoid used by the sensor."""
+        self._options[ATTR_AVOID] = avoid
         _LOGGER.debug("Set %s Options = %s", self.name, self._options)
 
     def _update(self):
