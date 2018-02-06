@@ -26,6 +26,7 @@ DOMAIN = 'zha'
 
 class RadioType(enum.Enum):
     """Possible options for radio type in config."""
+
     ezsp = 'ezsp'
     xbee = 'xbee'
 
