@@ -17,9 +17,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.helpers import intent
+from homeassistant.helpers.intent import (INTENT_TURN_ON,
+                                          INTENT_TURN_OFF, INTENT_TOGGLE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, INTENT_TURN_ON, INTENT_TURN_OFF, INTENT_TOGGLE,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
     RESTART_EXIT_CODE)
 

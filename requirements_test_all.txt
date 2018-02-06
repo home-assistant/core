@@ -56,7 +56,7 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
-# homeassistant.helpers.intent
+# homeassistant.components.conversation
 fuzzywuzzy==0.16.0
 
 # homeassistant.components.tts.google
@@ -136,7 +136,7 @@ pymonoprice==0.3
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
 
-# homeassistant.helpers.intent
+# homeassistant.components.conversation
 python-Levenshtein==0.12.0
 
 # homeassistant.components.sensor.darksky

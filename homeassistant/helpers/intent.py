@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import fuzzywuzzy
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -9,9 +10,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.const import ATTR_ENTITY_ID
 
-REQUIREMENTS = ['fuzzywuzzy==0.16.0', 'python-Levenshtein==0.12.0']
-
 _LOGGER = logging.getLogger(__name__)
+
+# #### INTENTS ####
+INTENT_TURN_OFF = 'HassTurnOff'
+INTENT_TURN_ON = 'HassTurnOn'
+INTENT_TOGGLE = 'HassToggle'
 
 SLOT_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
@@ -103,7 +107,7 @@ class IntentHandler:
     intent_type = None
     slot_schema = None
     _slot_schema = None
-    platforms = None
+    platforms = []
     domain = None
     service = None
     response = ''
