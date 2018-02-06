@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.3.5']
+REQUIREMENTS = ['python-miio==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -234,12 +234,10 @@ class XiaomiMiioRemote(RemoteDevice):
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
             self.device.play(payload)
-            return True
         except DeviceException as ex:
             _LOGGER.error(
                 "Transmit of IR command failed, %s, exception: %s",
                 payload, ex)
-            return False
 
     def send_command(self, command, **kwargs):
         """Wrapper for _send_command."""
