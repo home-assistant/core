@@ -205,7 +205,9 @@ class LeafDataStore:
 
         if battery_response.answer['status'] == 200:
             if int(battery_response.battery_capacity) > 100:
-                self.data[DATA_BATTERY] = battery_response.battery_percent * 0.05
+                self.data[DATA_BATTERY] = (
+                    battery_response.battery_percent * 0.05
+                )
             else:
                 self.data[DATA_BATTERY] = battery_response.battery_percent
 
