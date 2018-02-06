@@ -76,10 +76,11 @@ def _figure_out_source(record, call_stack, hass):
 
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in Home Assistant. Try to figure out where error happened.
+    paths_re = r'(?:{})/(.*)'.format('|'.join([re.escape(x) for x in paths]))
     for pathname in reversed(stack):
 
         # Try to match with a file within Home Assistant
-        match = re.match(r'(?:{})/(.*)'.format('|'.join(paths)), pathname)
+        match = re.match(paths_re, pathname)
         if match:
             return match.group(1)
     # Ok, we don't know what this is
