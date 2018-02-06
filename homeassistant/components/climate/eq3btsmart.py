@@ -179,16 +179,17 @@ class EQ3BTSmartThermostat(ClimateDevice):
         from bluepy.btle import BTLEException
         try:
             self._thermostat.update()
-            if (self._target_temperature and
-                    self._thermostat.target_temperature
-                    != self._target_temperature):
-                self.set_temperature(temperature=self._target_temperature)
-            else:
-                self._target_temperature = None
-            if (self._target_mode and
-                    self.modes[self._thermostat.mode] != self._target_mode):
-                self.set_operation_mode(operation_mode=self._target_mode)
-            else:
-                self._target_mode = None
         except BTLEException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)
+
+        if (self._target_temperature and
+                self._thermostat.target_temperature
+                != self._target_temperature):
+            self.set_temperature(temperature=self._target_temperature)
+        else:
+            self._target_temperature = None
+        if (self._target_mode and
+                self.modes[self._thermostat.mode] != self._target_mode):
+            self.set_operation_mode(operation_mode=self._target_mode)
+        else:
+            self._target_mode = None
