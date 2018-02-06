@@ -243,8 +243,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if playlist_diff is not None:
             for removed_playlist in playlist_diff:
                 _LOGGER.info("Playlist removed: %s (%s)"
-                             % (discovered_playlist['name'],
-                                discovered_playlist['uri']))
+                             % (removed_playlist['name'],
+                                removed_playlist['uri']))
                 del self._playlistdata.playlists[removed_playlist]
                 self._playlistdata.update()
 
