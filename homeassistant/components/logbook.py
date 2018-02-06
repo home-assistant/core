@@ -116,7 +116,7 @@ class LogbookView(HomeAssistantView):
     extra_urls = ['/api/logbook/{datetime}']
 
     def __init__(self, config):
-        """Initilalize the logbook view."""
+        """Initialize the logbook view."""
         self.config = config
 
     @asyncio.coroutine

@@ -91,7 +91,7 @@ class StatisticsSensor(Entity):
 
         if 'recorder' in self._hass.config.components:
             # only use the database if it's configured
-            hass.async_add_job(self._initzialize_from_database)
+            hass.async_add_job(self._initialize_from_database)
 
         @callback
         # pylint: disable=invalid-name
@@ -202,7 +202,7 @@ class StatisticsSensor(Entity):
                 self.average_change = self.change = STATE_UNKNOWN
 
     @asyncio.coroutine
-    def _initzialize_from_database(self):
+    def _initialize_from_database(self):
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we

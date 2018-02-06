@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180126.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180130.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -300,7 +300,8 @@ def async_setup(hass, config):
 
     if is_dev:
         for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels"]:
+                        "hass_frontend", "bower_components", "panels",
+                        "hassio"]:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),
                 os.path.join(repo_path, subpath),
@@ -585,9 +586,11 @@ def _is_latest(js_option, request):
 
     family_min_version = {
         'Chrome': 50,   # Probably can reduce this
-        'Firefox': 43,  # Array.protopype.includes added in 43
+        'Chrome Mobile': 50,
+        'Firefox': 43,  # Array.prototype.includes added in 43
+        'Firefox Mobile': 43,
         'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Array.protopype.includes added in 14
+        'Edge': 14,     # Array.prototype.includes added in 14
         'Safari': 10,   # many features not supported by 9
     }
     version = family_min_version.get(useragent.browser.family)

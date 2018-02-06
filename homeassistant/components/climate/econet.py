@@ -18,7 +18,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyeconet==0.0.4']
+REQUIREMENTS = ['pyeconet==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

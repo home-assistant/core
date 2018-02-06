@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, MockModule, fire_time_changed,
-    mock_coro, async_fire_time_changed)
+    mock_coro, async_fire_time_changed, mock_registry)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -184,7 +184,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 2 == len(self.hass.states.entity_ids())
 
-    def test_update_state_adds_entities_with_update_befor_add_true(self):
+    def test_update_state_adds_entities_with_update_before_add_true(self):
         """Test if call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -197,7 +197,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 1 == len(self.hass.states.entity_ids())
         assert ent.update.called
 
-    def test_update_state_adds_entities_with_update_befor_add_false(self):
+    def test_update_state_adds_entities_with_update_before_add_false(self):
         """Test if not call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -209,30 +209,6 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 1 == len(self.hass.states.entity_ids())
         assert not ent.update.called
-
-    def test_not_adding_duplicate_entities(self):
-        """Test for not adding duplicate entities."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
-
-        assert 0 == len(self.hass.states.entity_ids())
-
-        component.add_entities([EntityTest(unique_id='not_very_unique')])
-
-        assert 1 == len(self.hass.states.entity_ids())
-
-        component.add_entities([EntityTest(unique_id='not_very_unique')])
-
-        assert 1 == len(self.hass.states.entity_ids())
-
-    def test_not_assigning_entity_id_if_prescribes_one(self):
-        """Test for not assigning an entity ID."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
-
-        assert 'hello.world' not in self.hass.states.entity_ids()
-
-        component.add_entities([EntityTest(entity_id='hello.world')])
-
-        assert 'hello.world' in self.hass.states.entity_ids()
 
     def test_extract_from_service_returns_all_if_no_entity_id(self):
         """Test the extraction of everything from service."""
@@ -579,7 +555,7 @@ def test_platform_not_ready(hass):
 
 
 @asyncio.coroutine
-def test_pararell_updates_async_platform(hass):
+def test_parallel_updates_async_platform(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
@@ -606,7 +582,7 @@ def test_pararell_updates_async_platform(hass):
 
 
 @asyncio.coroutine
-def test_pararell_updates_async_platform_with_constant(hass):
+def test_parallel_updates_async_platform_with_constant(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
@@ -634,7 +610,7 @@ def test_pararell_updates_async_platform_with_constant(hass):
 
 
 @asyncio.coroutine
-def test_pararell_updates_sync_platform(hass):
+def test_parallel_updates_sync_platform(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
@@ -684,3 +660,83 @@ def test_async_remove_with_platform(hass):
     assert len(hass.states.async_entity_ids()) == 1
     yield from entity1.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
+
+
+@asyncio.coroutine
+def test_not_adding_duplicate_entities_with_unique_id(hass):
+    """Test for not adding duplicate entities."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    yield from component.async_add_entities([
+        EntityTest(name='test1', unique_id='not_very_unique')])
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    yield from component.async_add_entities([
+        EntityTest(name='test2', unique_id='not_very_unique')])
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+
+@asyncio.coroutine
+def test_using_prescribed_entity_id(hass):
+    """Test for using predefined entity ID."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        EntityTest(name='bla', entity_id='hello.world')])
+    assert 'hello.world' in hass.states.async_entity_ids()
+
+
+@asyncio.coroutine
+def test_using_prescribed_entity_id_with_unique_id(hass):
+    """Test for ammending predefined entity ID because currently exists."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    yield from component.async_add_entities([
+        EntityTest(entity_id='test_domain.world')])
+    yield from component.async_add_entities([
+        EntityTest(entity_id='test_domain.world', unique_id='bla')])
+
+    assert 'test_domain.world_2' in hass.states.async_entity_ids()
+
+
+@asyncio.coroutine
+def test_using_prescribed_entity_id_which_is_registered(hass):
+    """Test not allowing predefined entity ID that already registered."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    registry = mock_registry(hass)
+    # Register test_domain.world
+    registry.async_get_or_create(
+        DOMAIN, 'test', '1234', suggested_object_id='world')
+
+    # This entity_id will be rewritten
+    yield from component.async_add_entities([
+        EntityTest(entity_id='test_domain.world')])
+
+    assert 'test_domain.world_2' in hass.states.async_entity_ids()
+
+
+@asyncio.coroutine
+def test_name_which_conflict_with_registered(hass):
+    """Test not generating conflicting entity ID based on name."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    registry = mock_registry(hass)
+
+    # Register test_domain.world
+    registry.async_get_or_create(
+        DOMAIN, 'test', '1234', suggested_object_id='world')
+
+    yield from component.async_add_entities([
+        EntityTest(name='world')])
+
+    assert 'test_domain.world_2' in hass.states.async_entity_ids()
+
+
+@asyncio.coroutine
+def test_entity_with_name_and_entity_id_getting_registered(hass):
+    """Ensure that entity ID is used for registration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        EntityTest(unique_id='1234', name='bla',
+                   entity_id='test_domain.world')])
+    assert 'test_domain.world' in hass.states.async_entity_ids()

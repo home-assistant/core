@@ -242,7 +242,7 @@ class _Connection:
         return self._connected
 
     def connect(self):
-        """Mark currenct connection state as connected."""
+        """Mark current connection state as connected."""
         self._connected = True
 
     def disconnect(self):
