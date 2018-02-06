@@ -52,12 +52,14 @@ class Filesize(Entity):
         self._size = self.get_file_size(self._path)
 
     def get_file_size(self, path):
+        """Returns the size of the file in MB."""
         statinfo = os.stat(path)
         decimals = 2
         file_size = round(statinfo.st_size/1e6, decimals)
         return file_size
 
     def get_last_updated(self, path):
+        """Returns the time the file was last modified."""
         statinfo = os.stat(path)
         last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime)
         last_updated = last_updated.strftime(DATE_STR_FORMAT)
