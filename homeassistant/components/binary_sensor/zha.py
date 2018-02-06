@@ -78,7 +78,7 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 
-    def cluster_command(self, aps_frame, tsn, command_id, args):
+    def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         if command_id == 0:
             self._state = args[0] & 3
