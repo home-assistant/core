@@ -3,6 +3,8 @@ Volumio Platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.volumio/
+
+Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
 from datetime import timedelta
 import logging
@@ -247,9 +249,9 @@ class Volumio(MediaPlayerDevice):
 
     def async_clear_playlist(self):
         """Clear players playlist."""
-        # FIXME
         self._currentplaylist = None
-        return self.send_volumio_msg('clearQueue')
+        return self.send_volumio_msg('commands',
+                                     params={'cmd': 'clearQueue'})
 
     @asyncio.coroutine
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
