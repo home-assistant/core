@@ -13,7 +13,6 @@ import logging
 
 import homeassistant.core as ha
 import homeassistant.config as conf_util
-from homeassistant.components import http
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
