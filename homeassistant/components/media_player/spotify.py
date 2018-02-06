@@ -384,6 +384,7 @@ class SpotifyPlaylistView(HomeAssistantView):
 
 class PlaylistData:
     """Class to hold Spotify playlist data."""
+
     def __init__(self, hass):
         """Initialize the Spotify playlist store list."""
         self.hass = hass
