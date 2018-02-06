@@ -19,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['panasonic_viera==0.3',
-                'wakeonlan==0.2.2']
+                'wakeonlan==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,9 +72,9 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     def __init__(self, mac, name, remote):
         """Initialize the Panasonic device."""
-        from wakeonlan import wol
+        import wakeonlan
         # Save a reference to the imported class
-        self._wol = wol
+        self._wol = wakeonlan
         self._mac = mac
         self._name = name
         self._muted = False
