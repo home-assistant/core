@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_REPORT_SERVER_CODES = 'report_server_codes'
 CONF_REPORT_SERVER_ENABLED = 'report_server_enabled'
 CONF_REPORT_SERVER_PORT = 'report_server_port'
-CONF_REPORT_SERVER_CODES_IGNORE = 'ignore'
+REPORT_SERVER_CODES_IGNORE = 'ignore'
 CONF_VERSION = 'version'
 
 DEFAULT_NAME = 'Egardia'
