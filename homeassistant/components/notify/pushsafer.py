@@ -78,10 +78,9 @@ class PushsaferNotificationService(BaseNotificationService):
             _LOGGER.debug("%s target(s) specified", len(targets))
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        data = dict()
         data = kwargs.get(ATTR_DATA)
 
-        if data is None:
-            data = {}
         # Converting the specified image to base64
         picture1 = data.get(ATTR_PICTURE1)
         picture1_encoded = ""
@@ -95,7 +94,7 @@ class PushsaferNotificationService(BaseNotificationService):
 
             if url is not None:
                 _LOGGER.debug("Loading image from url %s", url)
-                picture1_encoded = self.loadfromurl(url, username, password,
+                picture1_encoded = self.load_from_url(url, username, password,
                                                     auth)
             elif local_path is not None:
                 _LOGGER.debug("Loading image from file %s", local_path)
@@ -119,8 +118,6 @@ class PushsaferNotificationService(BaseNotificationService):
             'p': picture1_encoded
         }
 
-        _LOGGER.debug("using push data: %s", str(payload))
-
         for target in targets:
             payload['d'] = target
             response = requests.post(_RESOURCE, data=payload,
@@ -131,20 +128,17 @@ class PushsaferNotificationService(BaseNotificationService):
                 _LOGGER.debug("Push send: %s", response.json())
 
     @classmethod
-    def getbase64(cls, filebyte, mimetype):
+    def get_base64(cls, filebyte, mimetype):
         """Convert the image to the expected base64 string of pushsafer."""
         if mimetype not in _ALLOWED_IMAGES:
             _LOGGER.warning("%s is a not supported mimetype for images",
                             mimetype)
             return None
         else:
-            if filebyte is not None:
-                base64_image = base64.b64encode(filebyte).decode('utf8')
-                return "data:" + mimetype + ";base64," + base64_image
-            else:
-                _LOGGER.warning("Base64 encode no image passed")
+            base64_image = base64.b64encode(filebyte).decode('utf8')
+            return "data:{};base64,{}".format(mimetype,base64_image)
 
-    def loadfromurl(self, url=None, username=None, password=None, auth=None):
+    def load_from_url(self, url=None, username=None, password=None, auth=None):
         """Load image/document/etc from URL."""
         if url is not None:
             _LOGGER.debug("Downloading image from %s", url)
@@ -154,7 +148,7 @@ class PushsaferNotificationService(BaseNotificationService):
                                         timeout=CONF_TIMEOUT)
             else:
                 response = requests.get(url, timeout=CONF_TIMEOUT)
-            return self.getbase64(response.content,
+            return self.get_base64(response.content,
                                   response.headers['content-type'])
         else:
             _LOGGER.warning("url not found in param")
@@ -171,7 +165,7 @@ class PushsaferNotificationService(BaseNotificationService):
                     _LOGGER.debug("Detected mimetype %s", file_mimetype)
                     with open(local_path, "rb") as binary_file:
                         data = binary_file.read()
-                    return self.getbase64(data, file_mimetype[0])
+                    return self.get_base64(data, file_mimetype[0])
             else:
                 _LOGGER.warning("Local path not found in params!")
         except OSError as error:
