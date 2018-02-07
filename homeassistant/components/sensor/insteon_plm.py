@@ -30,14 +30,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
        
-        state_list.append(InsteonPLMDimmerDevice( hass, device, stateKey, newnames, SUPPORT_SET_SPEED))
+        state_list.append(InsteonPLMSensorDevice( hass, device, stateKey, newnames))
 
     async_add_devices(state_list)
 
 class InsteonPLMSensorDevice(Entity):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device, state):
+    def __init__(self, hass, device, state, newnames):
         """Initialize the binarysensor."""
         self._hass = hass
         self._state = device.states[stateKey]
