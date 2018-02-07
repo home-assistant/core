@@ -34,12 +34,14 @@ class RadioType(enum.Enum):
 CONF_BAUDRATE = 'baudrate'
 CONF_DATABASE = 'database_path'
 CONF_DEVICE_CONFIG = 'device_config'
+CONF_ENTITY_NAME = 'entity_name'
 CONF_RADIO_TYPE = 'radio_type'
 CONF_USB_PATH = 'usb_path'
 DATA_DEVICE_CONFIG = 'zha_device_config'
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(ha_const.CONF_TYPE): cv.string,
+    vol.Optional(CONF_ENTITY_NAME): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -193,6 +195,7 @@ class ApplicationListener:
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
                     'new_join': join,
+                    'node_config': node_config,
                 }
                 discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
@@ -218,6 +221,7 @@ class ApplicationListener:
                     'in_clusters': {cluster.cluster_id: cluster},
                     'out_clusters': {},
                     'new_join': join,
+                    'node_config': node_config,
                 }
                 discovery_info.update(discovered_info)
                 cluster_key = '%s-%s' % (device_key, cluster_id)
@@ -238,13 +242,18 @@ class Entity(entity.Entity):
     _domain = None  # Must be overridden by subclasses
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
-                 model, **kwargs):
+                 model, node_config, **kwargs):
         """Init ZHA entity."""
         self._device_state_attributes = {}
         ieeetail = ''.join([
             '%02x' % (o, ) for o in endpoint.device.ieee[-4:]
         ])
-        if manufacturer and model is not None:
+        if node_config.get(CONF_ENTITY_NAME) is not None:
+            self.entity_id = '%s.%s' % (
+                self._domain,
+                node_config[CONF_ENTITY_NAME],
+            )
+        elif manufacturer and model is not None:
             self.entity_id = '%s.%s_%s_%s_%s' % (
                 self._domain,
                 slugify(manufacturer),
