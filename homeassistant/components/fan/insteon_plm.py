@@ -47,6 +47,7 @@ class InsteonPLMFan(FanEntity):
         self._state = device.states[stateKey]
         self._device = device 
         self._newnames = newnames
+        self._supported_features = supported_features
 
         self._state.register_updates(self.async_fan_update)
 
