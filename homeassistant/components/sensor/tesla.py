@@ -10,7 +10,8 @@ import logging
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
 from homeassistant.components.tesla import TeslaDevice
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
