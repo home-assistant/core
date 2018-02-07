@@ -98,7 +98,7 @@ class PushsaferNotificationService(BaseNotificationService):
                                                       password, auth)
             elif local_path is not None:
                 _LOGGER.debug("Loading image from file %s", local_path)
-                picture1_encoded = self.loadfromfile(local_path)
+                picture1_encoded = self.load_from_file(local_path)
             else:
                 _LOGGER.warning("missing url or local_path for picture1")
         else:
@@ -155,7 +155,7 @@ class PushsaferNotificationService(BaseNotificationService):
 
         return None
 
-    def loadfromfile(self, local_path=None):
+    def load_from_file(self, local_path=None):
         """Load image/document/etc from a local path."""
         try:
             if local_path is not None:
