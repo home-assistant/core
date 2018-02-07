@@ -11,9 +11,13 @@ import requests
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
-    STATE_UNKNOWN, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
-
+from homeassistant.components.egardia import (
+    EGARDIA_DEVICE, EGARDIA_SERVER,
+    CONF_REPORT_SERVER_CODES_IGNORE, CONF_REPORT_SERVER_CODES,
+    CONF_REPORT_SERVER_ENABLED, CONF_REPORT_SERVER_PORT
+    )
 REQUIREMENTS = ['pythonegardia==1.0.36']
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,30 +27,18 @@ STATES = {
     'DAY HOME': STATE_ALARM_ARMED_HOME,
     'DISARM': STATE_ALARM_DISARMED,
     'HOME': STATE_ALARM_ARMED_HOME,
-    'TRIGGERED': STATE_ALARM_TRIGGERED,
-    'UNKNOWN': STATE_UNKNOWN,
+    'TRIGGERED': STATE_ALARM_TRIGGERED
 }
-
-D_EGARDIASYS = 'egardiadevice'
-D_EGARDIADEV = 'egardia_dev'
-D_EGARDIASRV = 'egardiaserver'
-CONF_REPORT_SERVER_CODES_IGNORE = 'ignore'
-CONF_REPORT_SERVER_CODES = 'report_server_codes'
-CONF_REPORT_SERVER_ENABLED = 'report_server_enabled'
-CONF_REPORT_SERVER_PORT = 'report_server_port'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Egardia platform."""
     device = EgardiaAlarm(
-        hass,
         discovery_info['name'],
-        hass.data[D_EGARDIASYS],
+        hass.data[EGARDIA_DEVICE],
         discovery_info[CONF_REPORT_SERVER_ENABLED],
-        discovery_info[CONF_REPORT_SERVER_CODES] if CONF_REPORT_SERVER_CODES
-        in discovery_info else None,
+        discovery_info.get(CONF_REPORT_SERVER_CODES),
         discovery_info[CONF_REPORT_SERVER_PORT])
-    hass.data[D_EGARDIADEV] = device
     # add egardia alarm device
     add_devices([device], True)
 
@@ -54,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, hass, name, egardiasystem,
+    def __init__(self, name, egardiasystem,
                  rs_enabled=False, rs_codes=None, rs_port=52010):
         """Initialize the Egardia alarm."""
         self._name = name
@@ -66,14 +58,13 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         else:
             self._rs_codes = rs_codes
         self._rs_port = rs_port
-        self._hass = hass
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add Egardiaserver callback if enabled."""
         if self._rs_enabled:
-            _LOGGER.info("Registering callback to Egardiaserver")
-            self._hass.data[D_EGARDIASRV].register_callback(
+            _LOGGER.debug("Registering callback to Egardiaserver")
+            self.hass.data[EGARDIA_SERVER].register_callback(
                 self.handle_status_event)
 
     @property
@@ -126,8 +117,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         # Ignore the statuscode if it is IGNORE
         if status.lower().strip() != CONF_REPORT_SERVER_CODES_IGNORE:
             _LOGGER.debug("Not ignoring status")
-            newstatus = ([v for k, v in STATES.items()
-                          if status.upper() == k][0])
+            newstatus = STATES.get(status.upper())
             self._status = newstatus
         else:
             _LOGGER.error("Ignoring status")

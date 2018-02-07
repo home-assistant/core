@@ -4,15 +4,14 @@ Interfaces with Egardia/Woonveilig alarm control panel.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.egardia/
 """
-import logging
 import asyncio
+import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import (STATE_ON, STATE_OFF)
-
+from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.egardia import (
+    EGARDIA_DEVICE, ATTR_DISCOVER_DEVICES)
 _LOGGER = logging.getLogger(__name__)
-ATTR_DISCOVER_DEVICES = 'egardia_sensor'
-D_EGARDIASYS = 'egardiadevice'
 
 EGARDIA_TYPE_TO_DEVICE_CLASS = {'IR Sensor': 'motion',
                                 'Door Contact': 'opening',
@@ -26,37 +25,35 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
 
-    discinfo = discovery_info[ATTR_DISCOVER_DEVICES]
+    disc_info = discovery_info[ATTR_DISCOVER_DEVICES]
     # multiple devices here!
     async_add_devices(
         (
             EgardiaBinarySensor(
-                senid=discinfo[sensor]['id'],
-                name=discinfo[sensor]['name'],
-                egardiasystem=hass.data[D_EGARDIASYS],
-                device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get
-                (
-                    discinfo[sensor]['type'], None
-                )
+                sensor_id=disc_info[sensor]['id'],
+                name=disc_info[sensor]['name'],
+                egardia_system=hass.data[EGARDIA_DEVICE],
+                device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get(
+                    disc_info[sensor]['type'], None)
             )
-            for sensor in discinfo
+            for sensor in disc_info
         ), True)
 
 
 class EgardiaBinarySensor(BinarySensorDevice):
     """Represents a sensor based on an Egardia sensor (IR, Door Contact)."""
 
-    def __init__(self, senid, name, egardiasystem, device_class):
+    def __init__(self, sensor_id, name, egardia_system, device_class):
         """Initialize the sensor device."""
-        self._id = senid
+        self._id = sensor_id
         self._name = name
         self._state = None
         self._device_class = device_class
-        self._egardiasystem = egardiasystem
+        self._egardia_system = egardia_system
 
     def update(self):
         """Update the status."""
-        egardia_input = self._egardiasystem.getsensorstate(self._id)
+        egardia_input = self._egardia_system.getsensorstate(self._id)
         self._state = STATE_ON if egardia_input else STATE_OFF
 
     @property

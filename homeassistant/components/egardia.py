@@ -5,16 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/egardia/
 """
 import logging
-
 import requests
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN,
-    CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED, EVENT_HOMEASSISTANT_STOP)
+    CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['pythonegardia==1.0.36']
 
@@ -32,23 +30,14 @@ DEFAULT_REPORT_SERVER_ENABLED = False
 DEFAULT_REPORT_SERVER_PORT = 52010
 DEFAULT_VERSION = 'GATE-01'
 DOMAIN = 'egardia'
-D_EGARDIASRV = 'egardiaserver'
-D_EGARDIASYS = 'egardiadevice'
-D_EGARDIANM = 'egardianame'
-D_EGARDIARSENABLED = 'egardia_rs_enabled'
-D_EGARDIARSCODES = 'egardia_rs_codes'
-D_EGARDIADEV = 'egardia_dev'
+EGARDIA_SERVER = 'egardia_server'
+EGARDIA_DEVICE = 'egardiadevice'
+EGARDIA_NAME = 'egardianame'
+EGARDIA_REPORT_SERVER_ENABLED = 'egardia_rs_enabled'
+EGARDIA_REPORT_SERVER_CODES = 'egardia_rs_codes'
 NOTIFICATION_ID = 'egardia_notification'
 NOTIFICATION_TITLE = 'Egardia'
 ATTR_DISCOVER_DEVICES = 'egardia_sensor'
-STATES = {
-    'ARM': STATE_ALARM_ARMED_AWAY,
-    'DAY HOME': STATE_ALARM_ARMED_HOME,
-    'DISARM': STATE_ALARM_DISARMED,
-    'HOME': STATE_ALARM_ARMED_HOME,
-    'TRIGGERED': STATE_ALARM_TRIGGERED,
-    'UNKNOWN': STATE_UNKNOWN,
-}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -71,46 +60,51 @@ def setup(hass, config):
     """Set up the Egardia platform."""
     from pythonegardia import egardiadevice
     from pythonegardia import egardiaserver
-    domainconf = config[DOMAIN]
-    username = domainconf.get(CONF_USERNAME)
-    password = domainconf.get(CONF_PASSWORD)
-    host = domainconf.get(CONF_HOST)
-    port = domainconf.get(CONF_PORT)
-    version = domainconf.get(CONF_VERSION)
-    rs_enabled = domainconf.get(CONF_REPORT_SERVER_ENABLED)
-    rs_port = domainconf.get(CONF_REPORT_SERVER_PORT)
+    conf = config[DOMAIN]
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    host = conf.get(CONF_HOST)
+    port = conf.get(CONF_PORT)
+    version = conf.get(CONF_VERSION)
+    rs_enabled = conf.get(CONF_REPORT_SERVER_ENABLED)
+    rs_port = conf.get(CONF_REPORT_SERVER_PORT)
     try:
-        device = hass.data[D_EGARDIASYS] = egardiadevice.EgardiaDevice(
+        device = hass.data[EGARDIA_DEVICE] = egardiadevice.EgardiaDevice(
             host, port, username, password, '', version)
     except requests.exceptions.RequestException:
+        _LOGGER.error("An error occurred accessing your Egardia device. " +
+                      "Please check config.")
         return False
     except egardiadevice.UnauthorizedError:
-        _LOGGER.error("Unable to authorize. Wrong password or username")
+        _LOGGER.error("Unable to authorize. Wrong password or username.")
         return False
     # Set up the egardia server if enabled
     if rs_enabled:
-        _LOGGER.info("Setting up EgardiaServer")
+        _LOGGER.debug("Setting up EgardiaServer")
         try:
-            if D_EGARDIASRV not in hass.data:
+            if EGARDIA_SERVER not in hass.data:
                 server = egardiaserver.EgardiaServer('', rs_port)
                 bound = server.bind()
                 if not bound:
                     raise IOError("Binding error occurred while " +
-                                  "starting EgardiaServer")
-                hass.data[D_EGARDIASRV] = server
+                                  "starting EgardiaServer.")
+                hass.data[EGARDIA_SERVER] = server
                 server.start()
+
+            def handle_stop_event(event):
+                """Callback function for HA stop event."""
+                server.stop()
+
+            # listen to home assistant stop event
+            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
+
         except IOError:
-            return
+            _LOGGER.error("Binding error occurred while starting " +
+                          "EgardiaServer.")
+            return False
 
     discovery.load_platform(hass, 'alarm_control_panel', DOMAIN,
-                            discovered=domainconf, hass_config=config)
-
-    def handle_stop_event(event):
-        """Callback function for HA stop event."""
-        hass.data[D_EGARDIASRV].stop()
-
-    # listen to home assistant stop event
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
+                            discovered=conf, hass_config=config)
 
     # get the sensors from the device and add those
     sensors = device.getsensors()
