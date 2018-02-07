@@ -7,10 +7,10 @@ https://home-assistant.io/components/sensor.filesize/
 import datetime
 import logging
 import os
+
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -18,9 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONF_FILE_PATHS = 'file_paths'
+ICON = 'mdi:file'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATHS): [cv.isfile],
+    vol.Required(CONF_FILE_PATHS):
+        vol.All(cv.ensure_list, [cv.isfile]),
 })
 
 
@@ -34,9 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Filesize(Entity):
-    """Representation of the HA database."""
-
-    ICON = 'mdi:file'
+    """Encapsulates file size information."""
 
     def __init__(self, path):
         """Initialize the data object."""
@@ -45,24 +45,24 @@ class Filesize(Entity):
         self._last_updated = None
         self._name = path.split("/")[-1]
         self._unit_of_measurement = 'MB'
-        self.update()
 
     def update(self):
         """Get the size of the file."""
         self._size = self.get_file_size(self._path)
+        self._last_updated = self.get_last_updated(self._path)
 
     def get_file_size(self, path):
-        """Returns the size of the file in MB."""
+        """Return the size of the file in MB."""
         statinfo = os.stat(path)
         decimals = 2
         file_size = round(statinfo.st_size/1e6, decimals)
         return file_size
 
     def get_last_updated(self, path):
-        """Returns the time the file was last modified."""
+        """Return the time the file was last modified."""
         statinfo = os.stat(path)
         last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime)
-        last_updated = last_updated.strftime(DATE_STR_FORMAT)
+        last_updated = last_updated.isoformat(' ')
         return last_updated
 
     @property
@@ -78,14 +78,14 @@ class Filesize(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return self.ICON
+        return ICON
 
     @property
     def device_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         attrs['path'] = self._path
-        attrs['last_updated'] = self.get_last_updated(self._path)
+        attrs['last_updated'] = self._last_updated
         return attrs
 
     @property
