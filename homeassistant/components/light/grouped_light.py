@@ -229,6 +229,8 @@ class GroupedLight(light.Light):
         yield from self.async_update_ha_state()
 
 
+# https://github.com/PyCQA/pylint/issues/1543
+# pylint: disable=bad-whitespace
 def _find_state_attributes(states: List[State], key: str,
                            force_on: bool = True) -> Iterator[T]:
     """Find attributes with matching key from states.
@@ -241,6 +243,8 @@ def _find_state_attributes(states: List[State], key: str,
             yield state.attributes.get(key)
 
 
+# https://github.com/PyCQA/pylint/issues/1543
+# pylint: disable=bad-whitespace
 def _reduce_attribute(states: List[State], key: str,
                       default: Optional[T] = None, force_on: bool = True) -> T:
     """Find the first attribute matching key from states.
