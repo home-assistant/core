@@ -123,13 +123,14 @@ class IntentHandler:
         """Represent a string of an intent handler."""
         return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
 
+
 def fuzzyfinder(name, entities):
     """Semi fuzzy matching function."""
     matches = []
     pattern = '.*?'.join(name)
-    regex = re.compile(pattern)  # Compiles a regex.
+    regex = re.compile(pattern)
     for entity in entities:
-        match = regex.search(entity)   # Checks if the current item matches the regex.
+        match = regex.search(entity)
         if match:
             matches.append((len(match.group()), match.start(), entity))
     return [x for _, _, x in sorted(matches)]
@@ -157,7 +158,7 @@ class ServiceIntentHandler(IntentHandler):
 
         matches = fuzzyfinder(entity_name, entities)
         entity_id = matches[0] if matches else None
-        _LOGGER.error("%s matched entity: %s", name, entity_id)
+        _LOGGER.debug("%s matched entity: %s", name, entity_id)
 
         response = intent_obj.create_response()
         if not entity_id:
