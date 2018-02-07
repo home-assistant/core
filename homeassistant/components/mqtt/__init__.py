@@ -5,7 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
 import asyncio
-import collections
+from collections import namedtuple
+from itertools import groupby
 import logging
 import os
 import socket
@@ -21,8 +22,6 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
@@ -40,7 +39,6 @@ DOMAIN = 'mqtt'
 DATA_MQTT = 'mqtt'
 
 SERVICE_PUBLISH = 'publish'
-SIGNAL_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
 
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
@@ -225,39 +223,10 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
 
     Call the return value to unsubscribe.
     """
-    @callback
-    def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
-        """Match subscribed MQTT topic."""
-        if not _match_topic(topic, dp_topic):
-            return
-
-        if encoding is not None:
-            try:
-                payload = dp_payload.decode(encoding)
-                _LOGGER.debug("Received message on %s: %s",
-                              dp_topic, payload)
-            except (AttributeError, UnicodeDecodeError):
-                _LOGGER.error("Illegal payload encoding %s from "
-                              "MQTT topic: %s, Payload: %s",
-                              encoding, dp_topic, dp_payload)
-                return
-        else:
-            _LOGGER.debug("Received binary message on %s", dp_topic)
-            payload = dp_payload
-
-        hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
-
-    async_remove = async_dispatcher_connect(
-        hass, SIGNAL_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
-
-    @callback
-    def async_remove_unsubscribe():
-        """Unsubscribe when removing signal listener."""
-        hass.async_run_job(hass.data[DATA_MQTT].async_unsubscribe(topic, qos))
-        async_remove()
-
-    yield from hass.data[DATA_MQTT].async_subscribe(topic, qos)
-    return async_remove_unsubscribe
+    async_remove = \
+        yield from hass.data[DATA_MQTT].async_subscribe(topic, msg_callback,
+                                                        qos, encoding)
+    return async_remove
 
 
 @bind_hass
@@ -442,6 +411,10 @@ def async_setup(hass, config):
     return True
 
 
+Subscription = namedtuple('Subscription',
+                          ['topic', 'callback', 'qos', 'encoding'])
+
+
 class MQTT(object):
     """Home Assistant MQTT client."""
 
@@ -456,9 +429,7 @@ class MQTT(object):
         self.broker = broker
         self.port = port
         self.keepalive = keepalive
-        self.wanted_topics = collections.defaultdict(list)
-        self.subscribed_topics = {}
-        self.progress = {}
+        self.subscriptions = []
         self.birth_message = birth_message
         self._mqttc = None
         self._paho_lock = asyncio.Lock(loop=hass.loop)
@@ -484,8 +455,6 @@ class MQTT(object):
             if tls_insecure is not None:
                 self._mqttc.tls_insecure_set(tls_insecure)
 
-        self._mqttc.on_subscribe = self._mqtt_on_subscribe
-        self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
@@ -536,7 +505,7 @@ class MQTT(object):
         return self.hass.async_add_job(stop)
 
     @asyncio.coroutine
-    def async_subscribe(self, topic, qos):
+    def async_subscribe(self, topic, msg_callback, qos, encoding):
         """Set up a subscription to a topic with the provided qos.
 
         This method is a coroutine.
@@ -544,34 +513,36 @@ class MQTT(object):
         if not isinstance(topic, str):
             raise HomeAssistantError("topic needs to be a string!")
 
-        self.wanted_topics[topic].append(qos)
+        subscription = Subscription(topic, msg_callback, qos, encoding)
+        self.subscriptions.append(subscription)
+
         yield from self._async_perform_subscription(topic, qos)
 
+        @callback
+        def async_remove():
+            """Remove subscription."""
+            if subscription not in self.subscriptions:
+                raise HomeAssistantError("Can't remove subscription twice")
+            self.subscriptions.remove(subscription)
+
+            grouped = self._grouped_subscriptions()
+            if grouped[topic]:
+                # Other subscriptions on topic remaining - don't unsubscribe.
+                return
+            self.hass.async_add_job(self._async_unsubscribe(topic))
+
+        return async_remove
+
     @asyncio.coroutine
-    def async_unsubscribe(self, topic, qos):
-        """Unsubscribe from a topic with the specified qos.
+    def _async_unsubscribe(self, topic):
+        """Unsubscribe from a topic.
 
         This method is a coroutine.
         """
-        if not isinstance(topic, str):
-            raise HomeAssistantError("topic needs to be a string!")
-        if topic not in self.wanted_topics:
-            # Subscription with this topic doesn't exist. Ignore the request.
-            return
-        subscriptions = self.wanted_topics.get(topic)
-        if qos not in subscriptions:
-            # Subscription with the qos doesn't exist. Ignore the request.
-            return
-
-        subscriptions.remove(qos)
-        if not subscriptions:
-            # Only unsubscribe if no subscriptions to this topic are active.
-            self.wanted_topics.pop(topic)
-            with (yield from self._paho_lock):
-                result, mid = yield from self.hass.async_add_job(
-                    self._mqttc.unsubscribe, topic)
-                _raise_on_error(result)
-                self.progress[mid] = topic
+        with (yield from self._paho_lock):
+            result, mid = yield from self.hass.async_add_job(
+                self._mqttc.unsubscribe, topic)
+            _raise_on_error(result)
 
     @asyncio.coroutine
     def _async_perform_subscription(self, topic, qos):
@@ -582,7 +553,6 @@ class MQTT(object):
             result, mid = yield from self.hass.async_add_job(
                 self._mqttc.subscribe, topic, qos)
             _raise_on_error(result)
-            self.progress[mid] = topic
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code):
         """On connect callback.
@@ -598,12 +568,10 @@ class MQTT(object):
             self._mqttc.disconnect()
             return
 
-        self.progress = {}
-        self.subscribed_topics = {}
-        for topic, qoses in self.wanted_topics.items():
+        for topic, subs in self._grouped_subscriptions().items():
             # Re-subscribe with the highest requested qos
-            self.hass.add_job(self._async_perform_subscription, topic,
-                              max(qoses))
+            max_qos = max(subscription.qos for subscription in subs)
+            self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
         if self.birth_message:
             self.hass.add_job(self.async_publish(
@@ -612,32 +580,19 @@ class MQTT(object):
                 self.birth_message.get(ATTR_QOS),
                 self.birth_message.get(ATTR_RETAIN)))
 
-    def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos):
-        """Subscribe successful callback."""
-        topic = self.progress.pop(mid, None)
-        if topic is None:
-            return
-        self.subscribed_topics[topic] = granted_qos[0]
-
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        dispatcher_send(
-            self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, msg.payload,
-            msg.qos
-        )
+        _LOGGER.debug("Received message on %s: %s", msg.topic, msg.payload)
 
-    def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid, granted_qos):
-        """Unsubscribe successful callback."""
-        topic = self.progress.pop(mid, None)
-        if topic is None:
-            return
-        self.subscribed_topics.pop(topic, None)
+        for subscription_topic, subs in self._grouped_subscriptions().items():
+            if not _match_topic(subscription_topic, msg.topic):
+                continue
+
+            for subscription in subs:
+                self._run_subscription_callback(subscription, msg)
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code):
         """Disconnected callback."""
-        self.progress = {}
-        self.subscribed_topics = {}
-
         # When disconnected because of calling disconnect()
         if result_code == 0:
             return
@@ -659,6 +614,29 @@ class MQTT(object):
             # It is ok to sleep here as we are in the MQTT thread.
             time.sleep(wait_time)
             tries += 1
+
+    def _run_subscription_callback(self, subscription: Subscription,
+                                   msg) -> None:
+        """Prepare message payload and run the subscription callback."""
+        if subscription.callback is None:
+            return
+
+        payload = subscription.encoding
+        if subscription.encoding is not None:
+            try:
+                payload = msg.payload.decode(subscription.encoding)
+            except (AttributeError, UnicodeDecodeError):
+                _LOGGER.warning("Can't decode payload %s on %s "
+                                "with encoding %s",
+                                msg.payload, msg.topic, subscription.encoding)
+                return
+
+        self.hass.add_job(subscription.callback, msg.topic, payload, msg.qos)
+
+    def _grouped_subscriptions(self):
+        """Return a dict with all subscriptions grouped by their topics."""
+        iterator = groupby(self.subscriptions, lambda sub: sub.topic)
+        return {topic: list(sub) for topic, sub in iterator}
 
 
 def _raise_on_error(result):
