@@ -94,8 +94,8 @@ class PushsaferNotificationService(BaseNotificationService):
 
             if url is not None:
                 _LOGGER.debug("Loading image from url %s", url)
-                picture1_encoded = self.load_from_url(url, username, password,
-                                                    auth)
+                picture1_encoded = self.load_from_url(url, username,
+                                                      password, auth)
             elif local_path is not None:
                 _LOGGER.debug("Loading image from file %s", local_path)
                 picture1_encoded = self.loadfromfile(local_path)
@@ -136,7 +136,7 @@ class PushsaferNotificationService(BaseNotificationService):
             return None
         else:
             base64_image = base64.b64encode(filebyte).decode('utf8')
-            return "data:{};base64,{}".format(mimetype,base64_image)
+            return "data:{};base64,{}".format(mimetype, base64_image)
 
     def load_from_url(self, url=None, username=None, password=None, auth=None):
         """Load image/document/etc from URL."""
@@ -149,7 +149,7 @@ class PushsaferNotificationService(BaseNotificationService):
             else:
                 response = requests.get(url, timeout=CONF_TIMEOUT)
             return self.get_base64(response.content,
-                                  response.headers['content-type'])
+                                   response.headers['content-type'])
         else:
             _LOGGER.warning("url not found in param")
 
