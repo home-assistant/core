@@ -125,7 +125,7 @@ class PushsaferNotificationService(BaseNotificationService):
             _LOGGER.warning("%s is a not supported mimetype for images",
                             mimetype)
             return None
-  
+
         base64_image = base64.b64encode(filebyte).decode('utf8')
         return "data:{};base64,{}".format(mimetype, base64_image)
 
