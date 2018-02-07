@@ -7,6 +7,7 @@ https://home-assistant.io/components/mqtt/
 import asyncio
 from collections import namedtuple
 from itertools import groupby
+from typing import Optional
 import logging
 import os
 import socket
@@ -339,8 +340,20 @@ def async_setup(hass, config):
     if certificate == 'auto':
         certificate = requests.certs.where()
 
-    will_message = conf.get(CONF_WILL_MESSAGE)
-    birth_message = conf.get(CONF_BIRTH_MESSAGE)
+    will_message = None
+    if conf.get(CONF_WILL_MESSAGE) is not None:
+        will_conf = conf.get(CONF_WILL_MESSAGE)
+        will_message = Message(will_conf.get(ATTR_TOPIC),
+                               will_conf.get(ATTR_PAYLOAD),
+                               will_conf.get(ATTR_QOS),
+                               will_conf.get(ATTR_RETAIN))
+    birth_message = None
+    if conf.get(CONF_BIRTH_MESSAGE) is not None:
+        birth_conf = conf.get(CONF_BIRTH_MESSAGE)
+        birth_message = Message(birth_conf.get(ATTR_TOPIC),
+                                birth_conf.get(ATTR_PAYLOAD),
+                                birth_conf.get(ATTR_QOS),
+                                birth_conf.get(ATTR_RETAIN))
 
     # Be able to override versions other than TLSv1.0 under Python3.6
     conf_tls_version = conf.get(CONF_TLS_VERSION)
@@ -413,6 +426,10 @@ def async_setup(hass, config):
 
 Subscription = namedtuple('Subscription',
                           ['topic', 'callback', 'qos', 'encoding'])
+Subscription.__new__.__defaults__ = (0, 'utf-8')
+
+Message = namedtuple('Message', ['topic', 'payload', 'qos', 'retain'])
+Message.__new__.__defaults__ = (0, False)
 
 
 class MQTT(object):
@@ -420,8 +437,8 @@ class MQTT(object):
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
                  password, certificate, client_key, client_cert,
-                 tls_insecure, protocol, will_message, birth_message,
-                 tls_version):
+                 tls_insecure, protocol, will_message: Optional[Message],
+                 birth_message: Optional[Message], tls_version):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -460,10 +477,8 @@ class MQTT(object):
         self._mqttc.on_message = self._mqtt_on_message
 
         if will_message:
-            self._mqttc.will_set(will_message.get(ATTR_TOPIC),
-                                 will_message.get(ATTR_PAYLOAD),
-                                 will_message.get(ATTR_QOS),
-                                 will_message.get(ATTR_RETAIN))
+            self._mqttc.will_set(will_message.topic, will_message.payload,
+                                 will_message.qos, will_message.retain)
 
     @asyncio.coroutine
     def async_publish(self, topic, payload, qos, retain):
@@ -526,7 +541,7 @@ class MQTT(object):
             self.subscriptions.remove(subscription)
 
             grouped = self._grouped_subscriptions()
-            if grouped[topic]:
+            if topic in grouped:
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
             self.hass.async_add_job(self._async_unsubscribe(topic))
@@ -540,7 +555,7 @@ class MQTT(object):
         This method is a coroutine.
         """
         with (yield from self._paho_lock):
-            result, mid = yield from self.hass.async_add_job(
+            result, _ = yield from self.hass.async_add_job(
                 self._mqttc.unsubscribe, topic)
             _raise_on_error(result)
 
@@ -550,7 +565,7 @@ class MQTT(object):
         _LOGGER.debug("Subscribing to %s", topic)
 
         with (yield from self._paho_lock):
-            result, mid = yield from self.hass.async_add_job(
+            result, _ = yield from self.hass.async_add_job(
                 self._mqttc.subscribe, topic, qos)
             _raise_on_error(result)
 
@@ -574,11 +589,10 @@ class MQTT(object):
             self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
         if self.birth_message:
-            self.hass.add_job(self.async_publish(
-                self.birth_message.get(ATTR_TOPIC),
-                self.birth_message.get(ATTR_PAYLOAD),
-                self.birth_message.get(ATTR_QOS),
-                self.birth_message.get(ATTR_RETAIN)))
+            self.hass.add_job(self.async_publish(self.birth_message.topic,
+                                                 self.birth_message.payload,
+                                                 self.birth_message.qos,
+                                                 self.birth_message.retain))
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
@@ -621,7 +635,7 @@ class MQTT(object):
         if subscription.callback is None:
             return
 
-        payload = subscription.encoding
+        payload = msg.payload
         if subscription.encoding is not None:
             try:
                 payload = msg.payload.decode(subscription.encoding)
