@@ -35,6 +35,7 @@ CONF_COMPONENT_CONFIG = 'component_config'
 CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
 CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
 CONF_RETRY_COUNT = 'max_retries'
+CONF_RETRY_QUEUE = 'retry_queue_limit'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -49,7 +50,7 @@ COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.deprecated(CONF_RETRY_QUEUE), vol.Schema({
         vol.Optional(CONF_HOST): cv.string,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
@@ -67,6 +68,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
         vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
+        vol.Optional(CONF_RETRY_QUEUE, default=20): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
@@ -80,7 +82,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
-    }),
+    })),
 }, extra=vol.ALLOW_EXTRA)
 
 RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
