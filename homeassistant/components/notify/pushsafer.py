@@ -34,14 +34,6 @@ ATTR_URLTITLE = 'urltitle'
 ATTR_TIME2LIVE = 'time2live'
 ATTR_PICTURE1 = 'picture1'
 
-ATTR_SOUND_DEFAULT = ''
-ATTR_VIBRATION_DEFAULT = ''
-ATTR_ICON_DEFAULT = ''
-ATTR_ICONCOLOR_DEFAULT = ''
-ATTR_URL_DEFAULT = ''
-ATTR_URLTITLE_DEFAULT = ''
-ATTR_TIME2LIVE_DEFAULT = ''
-
 # Attributes contained in picture1
 ATTR_PICTURE1_URL = 'url'
 ATTR_PICTURE1_PATH = 'path'
@@ -78,8 +70,7 @@ class PushsaferNotificationService(BaseNotificationService):
             _LOGGER.debug("%s target(s) specified", len(targets))
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = dict()
-        data = kwargs.get(ATTR_DATA)
+        data = kwargs.get(ATTR_DATA, {})
 
         # Converting the specified image to base64
         picture1 = data.get(ATTR_PICTURE1)
@@ -108,13 +99,13 @@ class PushsaferNotificationService(BaseNotificationService):
             'k': self._private_key,
             't': title,
             'm': message,
-            's': data.get(ATTR_SOUND, ATTR_SOUND_DEFAULT),
-            'v': data.get(ATTR_VIBRATION, ATTR_VIBRATION_DEFAULT),
-            'i': data.get(ATTR_ICON, ATTR_ICON_DEFAULT),
-            'c': data.get(ATTR_ICONCOLOR, ATTR_ICONCOLOR_DEFAULT),
-            'u': data.get(ATTR_URL, ATTR_URL_DEFAULT),
-            'ut': data.get(ATTR_URLTITLE, ATTR_URLTITLE_DEFAULT),
-            'l': data.get(ATTR_TIME2LIVE, ATTR_TIME2LIVE_DEFAULT),
+            's': data.get(ATTR_SOUND, ""),
+            'v': data.get(ATTR_VIBRATION, ""),
+            'i': data.get(ATTR_ICON, ""),
+            'c': data.get(ATTR_ICONCOLOR, ""),
+            'u': data.get(ATTR_URL, ""),
+            'ut': data.get(ATTR_URLTITLE, ""),
+            'l': data.get(ATTR_TIME2LIVE, ""),
             'p': picture1_encoded
         }
 
@@ -134,9 +125,9 @@ class PushsaferNotificationService(BaseNotificationService):
             _LOGGER.warning("%s is a not supported mimetype for images",
                             mimetype)
             return None
-        else:
-            base64_image = base64.b64encode(filebyte).decode('utf8')
-            return "data:{};base64,{}".format(mimetype, base64_image)
+  
+        base64_image = base64.b64encode(filebyte).decode('utf8')
+        return "data:{};base64,{}".format(mimetype, base64_image)
 
     def load_from_url(self, url=None, username=None, password=None, auth=None):
         """Load image/document/etc from URL."""
