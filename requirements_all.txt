@@ -294,9 +294,6 @@ fritzhome==1.0.4
 # homeassistant.components.media_player.frontier_silicon
 fsapi==0.0.7
 
-# homeassistant.components.conversation
-fuzzywuzzy==0.16.0
-
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
@@ -865,9 +862,6 @@ pyteleloisirs==3.3
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
 pythinkingcleaner==0.0.3
-
-# homeassistant.components.conversation
-python-Levenshtein==0.12.0
 
 # homeassistant.components.sensor.blockchain
 python-blockchain-api==0.0.2

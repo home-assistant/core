@@ -1,6 +1,7 @@
 """Module to coordinate user intentions."""
 import asyncio
 import logging
+import re
 
 import voluptuous as vol
 
@@ -23,8 +24,6 @@ DATA_KEY = 'intent'
 
 SPEECH_TYPE_PLAIN = 'plain'
 SPEECH_TYPE_SSML = 'ssml'
-
-DEPENDENCIES = ['http']
 
 
 @callback
@@ -89,19 +88,6 @@ class IntentHandleError(IntentError):
     pass
 
 
-@callback
-@bind_hass
-def _match_entity(hass, name):
-    """Match a name to an entity."""
-    from fuzzywuzzy import process as fuzzyExtract
-    entities = {state.entity_id: state.name for state
-                in hass.states.async_all()}
-    entity_id = fuzzyExtract.extractOne(
-        name, entities, score_cutoff=65)[2]
-    state = hass.states.get(entity_id) if entity_id else None
-    return state.entity_id if state else None
-
-
 class IntentHandler:
     """Intent handler registration."""
 
@@ -109,9 +95,6 @@ class IntentHandler:
     slot_schema = None
     _slot_schema = None
     platforms = []
-    domain = None
-    service = None
-    response = ''
 
     @callback
     def async_can_handle(self, intent_obj):
@@ -134,30 +117,64 @@ class IntentHandler:
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
-        if not self.service:
-            raise NotImplementedError()
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
-        entity = _match_entity(hass, name)
-
-        if not entity:
-            _LOGGER.error("Could not find entity id for %s", name)
-            return None
-
-        yield from hass.services.async_call(
-            self.domain, self.service, {
-                ATTR_ENTITY_ID: entity
-            }, blocking=True)
-
-        response = intent_obj.create_response()
-        response.async_set_speech(
-            self.response.format(entity))
-        return response
+        raise NotImplementedError()
 
     def __repr__(self):
         """Represent a string of an intent handler."""
         return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
+
+def fuzzyfinder(name, entities):
+    """Semi fuzzy matching function."""
+    matches = []
+    pattern = '.*?'.join(name)
+    regex = re.compile(pattern)  # Compiles a regex.
+    for entity in entities:
+        match = regex.search(entity)   # Checks if the current item matches the regex.
+        if match:
+            matches.append((len(match.group()), match.start(), entity))
+    return [x for _, _, x in sorted(matches)]
+
+
+class ServiceIntentHandler(IntentHandler):
+    """Intent handler registration."""
+
+    domain = None
+    service = None
+    response = ''
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the hass intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        response = intent_obj.create_response()
+
+        name = slots['name']['value']
+        entities = {state.entity_id: state.name for state
+                    in hass.states.async_all()}
+        entity_name = name.replace(' ', '_').lower()
+        entity_name = entity_name.replace('the_', '')
+
+        matches = fuzzyfinder(entity_name, entities)
+        entity_id = matches[0] if matches else None
+        _LOGGER.error("%s matched entity: %s", name, entity_id)
+
+        response = intent_obj.create_response()
+        if not entity_id:
+            response.async_set_speech(
+                "Could not find entity id matching {}".format(name))
+            _LOGGER.error("Could not find entity id matching %s (%s)", name,
+                          entity_name)
+            return response
+
+        yield from hass.services.async_call(
+            self.domain, self.service, {
+                ATTR_ENTITY_ID: entity_id
+            }, blocking=True)
+
+        response.async_set_speech(
+            self.response.format(name))
+        return response
 
 
 class Intent:

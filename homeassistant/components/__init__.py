@@ -209,7 +209,7 @@ def async_setup(hass, config):
     return True
 
 
-class TurnOnIntent(intent.IntentHandler):
+class TurnOnIntent(intent.ServiceIntentHandler):
     """Handle component turn intents."""
 
     intent_type = INTENT_TURN_ON
@@ -221,7 +221,7 @@ class TurnOnIntent(intent.IntentHandler):
     response = "Turned on {}"
 
 
-class TurnOffIntent(intent.IntentHandler):
+class TurnOffIntent(intent.ServiceIntentHandler):
     """Handle component turn intents."""
 
     intent_type = INTENT_TURN_OFF
@@ -233,7 +233,7 @@ class TurnOffIntent(intent.IntentHandler):
     response = "Turned off {}"
 
 
-class ToggleIntent(intent.IntentHandler):
+class ToggleIntent(intent.ServiceIntentHandler):
     """Handle component turn intents."""
 
     intent_type = INTENT_TOGGLE
