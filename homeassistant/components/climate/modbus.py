@@ -88,8 +88,8 @@ class ModbusThermostat(ClimateDevice):
         self.hass = hass
         self._name = name
         self._slave = modbus_slave
-        self._target_temperature_register = int(target_temp_register)
-        self._current_temperature_register = int(current_temp_register)
+        self._target_temperature_register = target_temp_register
+        self._current_temperature_register = current_temp_register
         self._target_temperature = None
         self._current_temperature = None
         self._data_type = data_type
@@ -98,9 +98,9 @@ class ModbusThermostat(ClimateDevice):
         self._structure = '>f'
         self._error = False
 
-        data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'}}
-        data_types[DATA_TYPE_UINT] = {1: 'H', 2: 'I', 4: 'Q'}
-        data_types[DATA_TYPE_FLOAT] = {1: 'e', 2: 'f', 4: 'd'}
+        data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
+                      DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
+                      DATA_TYPE_FLOAT: {1: 'e', 2: 'f', 4: 'd'}}
 
         self._structure = '>{}'.format(data_types[self._data_type]
                                        [self._count])
@@ -147,8 +147,8 @@ class ModbusThermostat(ClimateDevice):
     def state(self):
         """Return the current state - implied."""
         if self._error:
-            return STATE_OK
-        return STATE_PROBLEM
+            return STATE_PROBLEM
+        return STATE_OK
 
     @property
     def temperature_unit(self):
