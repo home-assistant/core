@@ -5,21 +5,6 @@ This uses a setpoint and process
 value within the controller, so both the current temperature register and the
 target temperature register need to be configured.
 
-TODO:
- - add support for offsetting register values
- - add support for scaling register values
- - add support for uint and int data types
- - add support for input registers (default is holding registers)
-
-# Example Modbus Thermostat configuration (required & optional attributes):
-climate:
-  - platform: modbus
-    name: Watlow F4T
-    slave: 1
-    target_temp_register: 2782 # Control Loop 1 Setpoint
-    current_temp_register: 27586 # Universal Input 1 Module 1
-    data_type: float
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.modbus/
 """
