@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
 from homeassistant.components.egardia import (
     EGARDIA_DEVICE, EGARDIA_SERVER,
-    CONF_REPORT_SERVER_CODES_IGNORE, CONF_REPORT_SERVER_CODES,
+    REPORT_SERVER_CODES_IGNORE, CONF_REPORT_SERVER_CODES,
     CONF_REPORT_SERVER_ENABLED, CONF_REPORT_SERVER_PORT
     )
 REQUIREMENTS = ['pythonegardia==1.0.36']
@@ -115,7 +115,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         """Parse the status."""
         _LOGGER.debug("Parsing status %s", status)
         # Ignore the statuscode if it is IGNORE
-        if status.lower().strip() != CONF_REPORT_SERVER_CODES_IGNORE:
+        if status.lower().strip() != REPORT_SERVER_CODES_IGNORE:
             _LOGGER.debug("Not ignoring status")
             newstatus = STATES.get(status.upper())
             self._status = newstatus
