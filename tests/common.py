@@ -17,6 +17,7 @@ from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
     intent, dispatcher, entity, restore_state,  entity_registry,
     entity_platform)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -218,8 +219,8 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
-    hass.data['mqtt']._mqtt_on_message(None, None, mqtt.Message(topic, payload,
-                                                                qos, retain))
+    dispatcher.async_dispatcher_send(hass, 'mqtt_message_received',
+                                     topic, payload, qos, retain)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -292,14 +293,29 @@ def mock_http_component_app(hass, api_password=None):
 
 
 @asyncio.coroutine
-def async_mock_mqtt_component(hass):
+def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
+    if config is None:
+        config = {mqtt.CONF_BROKER: 'mock-broker'}
+
+    @asyncio.coroutine
+    def async_subscribe(topic, msg_callback, qos, encoding):
+        @ha.callback
+        def async_message_callback(msg_topic, payload, qos, retain):
+            msg = mqtt.Message(msg_topic, payload, qos, retain)
+            if not mqtt._match_topic(topic, msg.topic):
+                return
+            sub = mqtt.Subscription(topic, msg_callback, 0, encoding)
+            mqtt._run_subscription_callback(hass, sub, msg)
+
+        return async_dispatcher_connect(hass, 'mqtt_message_received',
+                                        async_message_callback)
+
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         mock_mqtt().async_connect.return_value = mock_coro(True)
+        mock_mqtt().async_subscribe.side_effect = async_subscribe
         yield from async_setup_component(hass, mqtt.DOMAIN, {
-            mqtt.DOMAIN: {
-                mqtt.CONF_BROKER: 'mock-broker',
-            }
+            mqtt.DOMAIN: config
         })
         return mock_mqtt
 

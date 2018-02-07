@@ -603,7 +603,7 @@ class MQTT(object):
                 continue
 
             for subscription in subs:
-                self._run_subscription_callback(subscription, msg)
+                _run_subscription_callback(self.hass, subscription, msg)
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code):
         """Disconnected callback."""
@@ -628,24 +628,6 @@ class MQTT(object):
             # It is ok to sleep here as we are in the MQTT thread.
             time.sleep(wait_time)
             tries += 1
-
-    def _run_subscription_callback(self, subscription: Subscription,
-                                   msg) -> None:
-        """Prepare message payload and run the subscription callback."""
-        if subscription.callback is None:
-            return
-
-        payload = msg.payload
-        if subscription.encoding is not None:
-            try:
-                payload = msg.payload.decode(subscription.encoding)
-            except (AttributeError, UnicodeDecodeError):
-                _LOGGER.warning("Can't decode payload %s on %s "
-                                "with encoding %s",
-                                msg.payload, msg.topic, subscription.encoding)
-                return
-
-        self.hass.add_job(subscription.callback, msg.topic, payload, msg.qos)
 
     def _grouped_subscriptions(self):
         """Return a dict with all subscriptions grouped by their topics."""
@@ -681,6 +663,25 @@ def _match_topic(subscription, topic):
     reg = re.compile(reg_ex)
 
     return reg.match(topic) is not None
+
+
+def _run_subscription_callback(hass, subscription: Subscription,
+                               msg) -> None:
+    """Prepare message payload and run the subscription callback."""
+    if subscription.callback is None:
+        return
+
+    payload = msg.payload
+    if subscription.encoding is not None:
+        try:
+            payload = msg.payload.decode(subscription.encoding)
+        except (AttributeError, UnicodeDecodeError):
+            _LOGGER.warning("Can't decode payload %s on %s "
+                            "with encoding %s",
+                            msg.payload, msg.topic, subscription.encoding)
+            return
+
+    hass.add_job(subscription.callback, msg.topic, payload, msg.qos)
 
 
 class MqttAvailability(Entity):
