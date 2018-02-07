@@ -214,13 +214,12 @@ def async_mock_intent(hass, intent_typ):
 
 
 @ha.callback
-def async_fire_mqtt_message(hass, topic, payload, qos=0):
+def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
-    dispatcher.async_dispatcher_send(
-        hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic,
-        payload, qos)
+    hass.data['mqtt']._mqtt_on_message(None, None, mqtt.Message(topic, payload,
+                                                                qos, retain))
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
