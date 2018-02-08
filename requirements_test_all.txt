@@ -31,6 +31,9 @@ aioautomatic==0.6.4
 # homeassistant.components.http
 aiohttp_cors==0.6.0
 
+# homeassistant.components.http.auth
+aiohttp_session==1.2.1
+
 # homeassistant.components.notify.apns
 apns2==0.3.0
 

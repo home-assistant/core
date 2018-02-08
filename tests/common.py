@@ -24,7 +24,8 @@ from homeassistant.const import (
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.helpers import entity_component, entity_registry
 from homeassistant.components import mqtt, recorder
-from homeassistant.components.http.auth import auth_middleware
+from homeassistant.components.http.auth import (
+    auth_middleware, session_middleware_factory)
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
 from homeassistant.util.async import (
@@ -283,7 +284,8 @@ def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
     if 'http' not in hass.config.components:
         mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware])
+    middleware = [session_middleware_factory(), auth_middleware]
+    app = web.Application(middlewares=middleware)
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
     app[KEY_BANS_ENABLED] = False

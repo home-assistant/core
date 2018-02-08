@@ -27,7 +27,7 @@ import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 
-from .auth import auth_middleware
+from .auth import auth_middleware, session_middleware_factory
 from .ban import ban_middleware
 from .const import (
     KEY_BANS_ENABLED, KEY_AUTHENTICATED, KEY_LOGIN_THRESHOLD,
@@ -182,7 +182,8 @@ class HomeAssistantWSGI(object):
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
-        middlewares = [auth_middleware, staticresource_middleware]
+        middlewares = [session_middleware_factory(),
+                       auth_middleware, staticresource_middleware]
 
         if is_ban_enabled:
             middlewares.insert(0, ban_middleware)
