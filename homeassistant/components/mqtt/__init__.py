@@ -609,7 +609,8 @@ class MQTT(object):
                                     subscription.encoding)
                     return
 
-            self.hass.async_run_job(subscription, msg.topic, payload, msg.qos)
+            self.hass.async_run_job(subscription.callback,
+                                    msg.topic, payload, msg.qos)
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code):
         """Disconnected callback."""

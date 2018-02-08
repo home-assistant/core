@@ -219,8 +219,8 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
-    dispatcher.async_dispatcher_send(hass, 'mqtt_message_received',
-                                     topic, payload, qos, retain)
+    msg = mqtt.Message(topic, payload, qos, retain)
+    hass.async_run_job(hass.data['mqtt']._mqtt_on_message, None, None, msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -298,26 +298,20 @@ def async_mock_mqtt_component(hass, config=None):
     if config is None:
         config = {mqtt.CONF_BROKER: 'mock-broker'}
 
-    @asyncio.coroutine
-    def async_subscribe(topic, msg_callback, qos, encoding):
-        @ha.callback
-        def async_message_callback(msg_topic, payload, qos, retain):
-            msg = mqtt.Message(msg_topic, payload, qos, retain)
-            if not mqtt._match_topic(topic, msg.topic):
-                return
-            sub = mqtt.Subscription(topic, msg_callback, 0, encoding)
-            mqtt._run_subscription_callback(hass, sub, msg)
+    with patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect.return_value = 0
+        mock_client().subscribe.return_value = (0, 0)
+        mock_client().publish.return_value = (0, 0)
 
-        return async_dispatcher_connect(hass, 'mqtt_message_received',
-                                        async_message_callback)
-
-    with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
-        mock_mqtt().async_connect.return_value = mock_coro(True)
-        mock_mqtt().async_subscribe.side_effect = async_subscribe
-        yield from async_setup_component(hass, mqtt.DOMAIN, {
+        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
         })
-        return mock_mqtt
+        assert result
+
+        hass.data['mqtt'] = MagicMock(spec_set=hass.data['mqtt'],
+                                      wraps=hass.data['mqtt'])
+
+        return hass.data['mqtt']
 
 
 mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)

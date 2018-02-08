@@ -65,10 +65,6 @@ class TestMQTTComponent(unittest.TestCase):
         """Helper for recording calls."""
         self.calls.append(args)
 
-    def test_client_starts_on_home_assistant_mqtt_setup(self):
-        """Test if client is connected after mqtt init on bootstrap."""
-        assert self.hass.data['mqtt'].async_connect.called
-
     def test_client_stops_on_home_assistant_start(self):
         """Test if client stops on HA stop."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
@@ -165,6 +161,10 @@ class TestMQTTCallbacks(unittest.TestCase):
     def record_calls(self, *args):
         """Helper for recording calls."""
         self.calls.append(args)
+
+    def test_client_starts_on_home_assistant_mqtt_setup(self):
+        """Test if client is connected after mqtt init on bootstrap."""
+        self.hass.data['mqtt']._mqttc.connect.assert_called_once()
 
     def test_receiving_non_utf8_message_gets_logged(self):
         """Test receiving a non utf8 encoded message."""
