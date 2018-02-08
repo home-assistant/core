@@ -157,7 +157,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_client_starts_on_home_assistant_mqtt_setup(self):
         """Test if client is connected after mqtt init on bootstrap."""
-        assert self.hass.data['mqtt']._mqttc.connect.called
+        self.assertEqual(self.hass.data['mqtt']._mqttc.connect.call_count, 1)
 
     def test_receiving_non_utf8_message_gets_logged(self):
         """Test receiving a non utf8 encoded message."""
@@ -427,7 +427,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         unsub()
         self.hass.block_till_done()
-        self.assertFalse(self.hass.data['mqtt']._mqttc.unsubscribe.called)
+        self.assertEqual(self.hass.data['mqtt']._mqttc.unsubscribe.call_count,
+                         0)
 
         self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 0)
         self.hass.data['mqtt']._mqtt_on_connect(None, None, None, 0)
@@ -594,7 +595,7 @@ def test_mqtt_subscribes_topics_on_connect(hass):
 
     yield from hass.async_block_till_done()
 
-    assert not mqtt_client.disconnect.called
+    assert mqtt_client.disconnect.call_count == 0
 
     expected = {
         'topic/test': 0,
