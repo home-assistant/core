@@ -92,5 +92,5 @@ class PilightSensor(Entity):
                 self.schedule_update_ha_state()
             except KeyError:
                 _LOGGER.error(
-                    'No variable %s in received code data %s',
+                    "No variable %s in received code data %s",
                     str(self._variable), str(call.data))

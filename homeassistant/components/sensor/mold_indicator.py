@@ -101,7 +101,7 @@ class MoldIndicator(Entity):
         temp = util.convert(state.state, float)
 
         if temp is None:
-            _LOGGER.error('Unable to parse sensor temperature: %s',
+            _LOGGER.error("Unable to parse sensor temperature: %s",
                           state.state)
             return None
 
@@ -123,7 +123,7 @@ class MoldIndicator(Entity):
         hum = util.convert(state.state, float)
 
         if hum is None:
-            _LOGGER.error('Unable to parse sensor humidity: %s',
+            _LOGGER.error("Unable to parse sensor humidity: %s",
                           state.state)
             return None
 

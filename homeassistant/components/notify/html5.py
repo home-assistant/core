@@ -180,7 +180,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
             yield from hass.async_add_job(save_json, self.json_path,
                                           self.registrations)
             return self.json_message(
-                'Push notification subscriber registered.')
+                "Push notification subscriber registered.")
         except HomeAssistantError:
             if previous_registration is not None:
                 self.registrations[name] = previous_registration
@@ -188,7 +188,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
                 self.registrations.pop(name)
 
             return self.json_message(
-                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
+                "Error saving registration.", HTTP_INTERNAL_SERVER_ERROR)
 
     def find_registration_name(self, data):
         """Find a registration name matching data or generate a unique one."""
@@ -218,7 +218,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         if not found:
             # If not found, unregistering was already done. Return 200
-            return self.json_message('Registration not found.')
+            return self.json_message("Registration not found.")
 
         reg = self.registrations.pop(found)
 
@@ -230,9 +230,9 @@ class HTML5PushRegistrationView(HomeAssistantView):
         except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
-                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
+                "Error saving registration.", HTTP_INTERNAL_SERVER_ERROR)
 
-        return self.json_message('Push notification subscriber unregistered.')
+        return self.json_message("Push notification subscriber unregistered.")
 
 
 class HTML5PushCallbackView(HomeAssistantView):
@@ -264,7 +264,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             except jwt.exceptions.DecodeError:
                 pass
 
-        return self.json_message('No target found in JWT',
+        return self.json_message("No target found in JWT",
                                  status_code=HTTP_UNAUTHORIZED)
 
     # The following is based on code from Auth0
@@ -274,25 +274,25 @@ class HTML5PushCallbackView(HomeAssistantView):
         import jwt
         auth = request.headers.get(AUTHORIZATION, None)
         if not auth:
-            return self.json_message('Authorization header is expected',
+            return self.json_message("Authorization header is expected",
                                      status_code=HTTP_UNAUTHORIZED)
 
         parts = auth.split()
 
         if parts[0].lower() != 'bearer':
-            return self.json_message('Authorization header must '
-                                     'start with Bearer',
+            return self.json_message("Authorization header must "
+                                     "start with Bearer",
                                      status_code=HTTP_UNAUTHORIZED)
         elif len(parts) != 2:
-            return self.json_message('Authorization header must '
-                                     'be Bearer token',
+            return self.json_message("Authorization header must "
+                                     "be Bearer token",
                                      status_code=HTTP_UNAUTHORIZED)
 
         token = parts[1]
         try:
             payload = self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
-            return self.json_message('token is invalid',
+            return self.json_message("token is invalid",
                                      status_code=HTTP_UNAUTHORIZED)
         return payload
 

@@ -125,16 +125,16 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     origin_stop_time_dict = {
         'Arrival Time': origin_stoptime_arrival_time,
         'Departure Time': origin_stoptime_departure_time,
-        'Drop Off Type': item[6], 'Pickup Type': item[7],
-        'Shape Dist Traveled': item[8], 'Headsign': item[9],
+        "Drop Off Type": item[6], 'Pickup Type': item[7],
+        "Shape Dist Traveled": item[8], 'Headsign': item[9],
         'Sequence': item[10]
     }
 
     destination_stop_time_dict = {
         'Arrival Time': dest_stoptime_arrival_time,
         'Departure Time': dest_stoptime_depart_time,
-        'Drop Off Type': item[13], 'Pickup Type': item[14],
-        'Shape Dist Traveled': item[15], 'Headsign': item[16],
+        "Drop Off Type": item[13], 'Pickup Type': item[14],
+        "Shape Dist Traveled": item[15], 'Headsign': item[16],
         'Sequence': item[17]
     }
 
@@ -234,7 +234,7 @@ class GTFSDepartureSensor(Entity):
                 self._pygtfs, self.origin, self.destination, self._offset)
             if not self._departure:
                 self._state = 0
-                self._attributes = {'Info': 'No more departures today'}
+                self._attributes = {'Info': "No more departures today"}
                 if self._name == '':
                     self._name = (self._custom_name or DEFAULT_NAME)
                 return
@@ -249,7 +249,7 @@ class GTFSDepartureSensor(Entity):
             route = self._departure['route']
             trip = self._departure['trip']
 
-            name = '{} {} to {} next departure'
+            name = "{} {} to {} next departure"
             self._name = (self._custom_name or
                           name.format(agency.agency_name,
                                       origin_station.stop_id,

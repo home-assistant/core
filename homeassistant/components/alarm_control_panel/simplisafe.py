@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for location in locations:
             add_devices([SimpliSafeAlarm(location, name, code)])
     else:
-        message = 'Failed to log into SimpliSafe. Check credentials.'
+        message = "Failed to log into SimpliSafe. Check credentials."
         _LOGGER.error(message)
         hass.components.persistent_notification.create(
             message,

@@ -29,24 +29,24 @@ def run(args):
 
     if args.action == 'info':
         keyr = keyring.get_keyring()
-        print('Keyring version {}\n'.format(REQUIREMENTS[0].split('==')[1]))
-        print('Active keyring  : {}'.format(keyr.__module__))
+        print("Keyring version {}\n".format(REQUIREMENTS[0].split('==')[1]))
+        print("Active keyring  : {}".format(keyr.__module__))
         config_name = os.path.join(platform.config_root(), 'keyringrc.cfg')
-        print('Config location : {}'.format(config_name))
-        print('Data location   : {}\n'.format(platform.data_root()))
+        print("Config location : {}".format(config_name))
+        print("Data location   : {}\n".format(platform.data_root()))
     elif args.name is None:
         parser.print_help()
         return 1
 
     if args.action == 'set':
         the_secret = getpass.getpass(
-            'Please enter the secret for {}: '.format(args.name))
+            "Please enter the secret for {}: ".format(args.name))
         keyring.set_password(_SECRET_NAMESPACE, args.name, the_secret)
-        print('Secret {} set successfully'.format(args.name))
+        print("Secret {} set successfully".format(args.name))
     elif args.action == 'get':
         the_secret = keyring.get_password(_SECRET_NAMESPACE, args.name)
         if the_secret is None:
-            print('Secret {} not found'.format(args.name))
+            print("Secret {} not found".format(args.name))
         else:
             print('Secret {}={}'.format(args.name, the_secret))
     elif args.action == 'del':
@@ -54,4 +54,4 @@ def run(args):
             keyring.delete_password(_SECRET_NAMESPACE, args.name)
             print('Deleted secret {}'.format(args.name))
         except keyring.errors.PasswordDeleteError:
-            print('Secret {} not found'.format(args.name))
+            print("Secret {} not found".format(args.name))

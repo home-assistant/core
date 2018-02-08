@@ -430,7 +430,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic, self._payload_stop,
                            self._qos, self._retain)
-        self._status = 'Stopping the current task'
+        self._status = "Stopping the current task"
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine

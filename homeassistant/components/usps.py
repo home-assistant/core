@@ -50,7 +50,7 @@ def setup(hass, config):
         session = myusps.get_session(username, password,
                                      cookie_path=cookie, cache_path=cache)
     except myusps.USPSError:
-        _LOGGER.exception('Could not connect to My USPS')
+        _LOGGER.exception("Could not connect to My USPS")
         return False
 
     hass.data[DATA_USPS] = USPSData(session, name)

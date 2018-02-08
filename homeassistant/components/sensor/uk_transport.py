@@ -129,10 +129,10 @@ class UkTransportSensor(Entity):
 
         response = requests.get(self._url, params=request_params)
         if response.status_code != 200:
-            _LOGGER.warning('Invalid response from API')
+            _LOGGER.warning("Invalid response from API")
         elif 'error' in response.json():
             if 'exceeded' in response.json()['error']:
-                self._state = 'Usage limits exceeded'
+                self._state = "Usage limits exceeded"
             if 'invalid' in response.json()['error']:
                 self._state = 'Credentials invalid'
         else:
@@ -154,7 +154,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
             '{}'.format(bus_direction), re.IGNORECASE
         )
 
-        sensor_name = 'Next bus to {}'.format(bus_direction)
+        sensor_name = "Next bus to {}".format(bus_direction)
         stop_url = 'bus/stop/{}/live.json'.format(stop_atcocode)
 
         UkTransportSensor.__init__(
@@ -214,7 +214,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._calling_at = calling_at
         self._next_trains = []
 
-        sensor_name = 'Next train to {}'.format(calling_at)
+        sensor_name = "Next train to {}".format(calling_at)
         query_url = 'train/station/{}/live.json'.format(station_code)
 
         UkTransportSensor.__init__(

@@ -92,7 +92,7 @@ def valid_subscribe_topic(value, invalid_chars='\0'):
     value = cv.string(value)
     if all(c not in value for c in invalid_chars):
         return vol.Length(min=1, max=65535)(value)
-    raise vol.Invalid('Invalid MQTT topic name')
+    raise vol.Invalid("Invalid MQTT topic name")
 
 
 def valid_publish_topic(value):
@@ -107,8 +107,8 @@ def valid_discovery_topic(value):
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
-CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
-                      'the MQTT broker configuration'
+CLIENT_KEY_AUTH_MSG = "client_key and client_cert must both be present in " \
+                      "the MQTT broker configuration"
 
 MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
@@ -507,7 +507,7 @@ class MQTT(object):
 
         if result != 0:
             import paho.mqtt.client as mqtt
-            _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
+            _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
         else:
             self._mqttc.loop_start()
 
@@ -566,7 +566,7 @@ class MQTT(object):
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
-            _LOGGER.error('Unable to connect to the MQTT broker: %s',
+            _LOGGER.error("Unable to connect to the MQTT broker: %s",
                           mqtt.connack_string(result_code))
             self._mqttc.disconnect()
             return
@@ -639,7 +639,7 @@ def _raise_on_error(result):
         import paho.mqtt.client as mqtt
 
         raise HomeAssistantError(
-            'Error talking to MQTT: {}'.format(mqtt.error_string(result)))
+            "Error talking to MQTT: {}".format(mqtt.error_string(result)))
 
 
 def _match_topic(subscription, topic):

@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'myq'
 
 NOTIFICATION_ID = 'myq_notification'
-NOTIFICATION_TITLE = 'MyQ Cover Setup'
+NOTIFICATION_TITLE = "MyQ Cover Setup"
 
 COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_TYPE): cv.string,
@@ -51,8 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)

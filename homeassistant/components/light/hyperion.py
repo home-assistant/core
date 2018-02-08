@@ -28,16 +28,16 @@ DEFAULT_NAME = 'Hyperion'
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST = ['HDMI', 'Cinema brighten lights', 'Cinema dim lights',
-                       'Knight rider', 'Blue mood blobs', 'Cold mood blobs',
-                       'Full color mood blobs', 'Green mood blobs',
-                       'Red mood blobs', 'Warm mood blobs',
-                       'Police Lights Single', 'Police Lights Solid',
-                       'Rainbow mood', 'Rainbow swirl fast',
+DEFAULT_EFFECT_LIST = ['HDMI', "Cinema brighten lights", "Cinema dim lights",
+                       'Knight rider', "Blue mood blobs", "Cold mood blobs",
+                       "Full color mood blobs", "Green mood blobs",
+                       "Red mood blobs", "Warm mood blobs",
+                       "Police Lights Single", "Police Lights Solid",
+                       'Rainbow mood', "Rainbow swirl fast",
                        'Rainbow swirl', 'Random', 'Running dots',
                        'System Shutdown', 'Snake', 'Sparks Color', 'Sparks',
                        'Strobe blue', 'Strobe Raspbmc', 'Strobe white',
-                       'Color traces', 'UDP multicast listener',
+                       'Color traces', "UDP multicast listener",
                        'UDP listener', 'X-Mas']
 
 SUPPORT_HYPERION = (SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)

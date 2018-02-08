@@ -23,7 +23,7 @@ REQUIREMENTS = ['pymediaroom==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-NOTIFICATION_TITLE = 'Mediaroom Media Player Setup'
+NOTIFICATION_TITLE = "Mediaroom Media Player Setup"
 NOTIFICATION_ID = 'mediaroom_notification'
 DEFAULT_NAME = 'Mediaroom STB'
 DEFAULT_TIMEOUT = 9
@@ -76,10 +76,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     except ConnectionRefusedError:
         hass.components.persistent_notification.create(
-            'Error: Unable to initialize mediaroom at {}<br />'
-            'Check its network connection or consider '
-            'using auto discovery.<br />'
-            'You will need to restart hass after fixing.'
+            "Error: Unable to initialize mediaroom at {}<br />"
+            "Check its network connection or consider "
+            "using auto discovery.<br />"
+            "You will need to restart hass after fixing."
             ''.format(host),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
@@ -122,7 +122,7 @@ class MediaroomDevice(MediaPlayerDevice):
             "%s(%s) Play media: %s (%s)",
             self._name, self.stb.stb_ip, media_id, media_type)
         if media_type != MEDIA_TYPE_CHANNEL:
-            _LOGGER.error('invalid media type')
+            _LOGGER.error("invalid media type")
             return
         if media_id.isdigit():
             media_id = int(media_id)

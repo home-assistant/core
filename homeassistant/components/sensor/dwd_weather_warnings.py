@@ -38,9 +38,9 @@ CONF_REGION_NAME = 'region_name'
 SCAN_INTERVAL = timedelta(minutes=15)
 
 MONITORED_CONDITIONS = {
-    'current_warning_level': ['Current Warning Level',
+    'current_warning_level': ["Current Warning Level",
                               None, 'mdi:close-octagon-outline'],
-    'advance_warning_level': ['Advance Warning Level',
+    'advance_warning_level': ["Advance Warning Level",
                               None, 'mdi:close-octagon-outline'],
 }
 
@@ -127,7 +127,7 @@ class DwdWeatherWarningsSensor(Entity):
         elif self._var_id == 'advance_warning_level':
             prefix = 'advance'
         else:
-            raise Exception('Unknown warning type')
+            raise Exception("Unknown warning type")
 
         data['warning_count'] = self._api.data[prefix + '_warning_count']
         i = 0

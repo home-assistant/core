@@ -306,10 +306,10 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
                     entity_folder = folder[node_id]
                     try:
                         status = entity_folder[KEY_STATUS]
-                        assert status.dtype == 'program', 'Not a program'
+                        assert status.dtype == 'program', "Not a program"
                         if domain != 'binary_sensor':
                             actions = entity_folder[KEY_ACTIONS]
-                            assert actions.dtype == 'program', 'Not a program'
+                            assert actions.dtype == 'program', "Not a program"
                         else:
                             actions = None
                     except (AttributeError, KeyError, AssertionError):

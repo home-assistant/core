@@ -26,7 +26,7 @@ MYCHEVY_SUCCESS = "success"
 MYCHEVY_ERROR = "error"
 
 NOTIFICATION_ID = 'mychevy_website_notification'
-NOTIFICATION_TITLE = 'MyChevy website status'
+NOTIFICATION_TITLE = "MyChevy website status"
 
 _LOGGER = logging.getLogger(__name__)
 

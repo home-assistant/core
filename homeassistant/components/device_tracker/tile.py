@@ -56,18 +56,18 @@ class TileDeviceScanner(DeviceScanner):
         """Initialize."""
         from pytile import Client
 
-        _LOGGER.debug('Received configuration data: %s', config)
+        _LOGGER.debug("Received configuration data: %s", config)
 
         # Load the client UUID (if it exists):
         config_data = load_json(hass.config.path(CLIENT_UUID_CONFIG_FILE))
         if config_data:
-            _LOGGER.debug('Using existing client UUID')
+            _LOGGER.debug("Using existing client UUID")
             self._client = Client(
                 config[CONF_USERNAME],
                 config[CONF_PASSWORD],
                 config_data['client_uuid'])
         else:
-            _LOGGER.debug('Generating new client UUID')
+            _LOGGER.debug("Generating new client UUID")
             self._client = Client(
                 config[CONF_USERNAME],
                 config[CONF_PASSWORD])
@@ -77,8 +77,8 @@ class TileDeviceScanner(DeviceScanner):
                     {'client_uuid': self._client.client_uuid}):
                 _LOGGER.error("Failed to save configuration file")
 
-        _LOGGER.debug('Client UUID: %s', self._client.client_uuid)
-        _LOGGER.debug('User UUID: %s', self._client.user_uuid)
+        _LOGGER.debug("Client UUID: %s", self._client.client_uuid)
+        _LOGGER.debug("User UUID: %s", self._client.user_uuid)
 
         self._show_inactive = config.get(CONF_SHOW_INACTIVE)
         self._types = config.get(CONF_MONITORED_VARIABLES)
@@ -97,7 +97,7 @@ class TileDeviceScanner(DeviceScanner):
             type_whitelist=self._types, show_inactive=self._show_inactive)
 
         if not self.devices:
-            _LOGGER.warning('No Tiles found')
+            _LOGGER.warning("No Tiles found")
             return
 
         for dev in self.devices:

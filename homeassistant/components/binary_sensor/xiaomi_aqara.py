@@ -13,7 +13,7 @@ ATTR_OPEN_SINCE = 'Open since'
 MOTION = 'motion'
 NO_MOTION = 'no_motion'
 ATTR_LAST_ACTION = 'last_action'
-ATTR_NO_MOTION_SINCE = 'No motion since'
+ATTR_NO_MOTION_SINCE = "No motion since"
 
 DENSITY = 'density'
 ATTR_DENSITY = 'Density'
@@ -42,11 +42,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
                                             hass, gateway))
             elif model == '86sw2':
-                devices.append(XiaomiButton(device, 'Wall Switch (Left)',
+                devices.append(XiaomiButton(device, "Wall Switch (Left)",
                                             'channel_0', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Right)',
+                devices.append(XiaomiButton(device, "Wall Switch (Right)",
                                             'channel_1', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Both)',
+                devices.append(XiaomiButton(device, "Wall Switch (Both)",
                                             'dual_channel', hass, gateway))
             elif model == 'cube':
                 devices.append(XiaomiCube(device, hass, gateway))
@@ -81,7 +81,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
 
     def update(self):
         """Update the sensor state."""
-        _LOGGER.debug('Updating xiaomi sensor by polling')
+        _LOGGER.debug("Updating xiaomi sensor by polling")
         self._get_from_hub(self._sid)
 
 
@@ -143,8 +143,8 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Parse data sent by gateway."""
         if raw_data['cmd'] == 'heartbeat':
             _LOGGER.debug(
-                'Skipping heartbeat of the motion sensor. '
-                'It can introduce an incorrect state because of a firmware '
+                "Skipping heartbeat of the motion sensor. "
+                "It can introduce an incorrect state because of a firmware "
                 'bug (https://github.com/home-assistant/home-assistant/pull/'
                 '11631#issuecomment-357507744).')
             return
@@ -184,7 +184,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
-        XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor',
+        XiaomiBinarySensor.__init__(self, device, "Door Window Sensor",
                                     xiaomi_hub, 'status', 'opening')
 
     @property
@@ -224,7 +224,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiWaterLeakSensor."""
-        XiaomiBinarySensor.__init__(self, device, 'Water Leak Sensor',
+        XiaomiBinarySensor.__init__(self, device, "Water Leak Sensor",
                                     xiaomi_hub, 'status', 'moisture')
 
     def parse_data(self, data, raw_data):

@@ -16,7 +16,7 @@ from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Random Binary Sensor'
+DEFAULT_NAME = "Random Binary Sensor"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

@@ -242,7 +242,7 @@ class RadioThermostat(ClimateDevice):
 
         current_temp = data['temp']
         if current_temp == -1:
-            _LOGGER.error('%s (%s) was busy (temp == -1)', self._name,
+            _LOGGER.error("%s (%s) was busy (temp == -1)", self._name,
                           self.device.host)
             return
 
@@ -260,7 +260,7 @@ class RadioThermostat(ClimateDevice):
             self._target_temperature = data['t_heat']
         elif self._tmode == STATE_AUTO:
             # This doesn't really work - tstate is only set if the HVAC is
-            # active. If it's idle, we don't know what to do with the target
+            # active. If it"s idle, we don"t know what to do with the target
             # temperature.
             if self._tstate == STATE_COOL:
                 self._target_temperature = data['t_cool']

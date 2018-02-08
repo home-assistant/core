@@ -31,7 +31,7 @@ def _load_restore_cache(hass: HomeAssistant):
     last_run = last_recorder_run(hass)
 
     if last_run is None or last_run.end is None:
-        _LOGGER.debug('Not creating cache - no suitable last run found: %s',
+        _LOGGER.debug("Not creating cache - no suitable last run found: %s",
                       last_run)
         hass.data[DATA_RESTORE_CACHE] = {}
         return
@@ -46,7 +46,7 @@ def _load_restore_cache(hass: HomeAssistant):
     # Cache the states
     hass.data[DATA_RESTORE_CACHE] = {
         state.entity_id: state for state in states}
-    _LOGGER.debug('Created cache with %s', list(hass.data[DATA_RESTORE_CACHE]))
+    _LOGGER.debug("Created cache with %s", list(hass.data[DATA_RESTORE_CACHE]))
 
 
 @asyncio.coroutine

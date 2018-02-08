@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 NORMAL_INPUTS = {'Cd': 'CD', 'Dvd': 'DVD', 'Blue ray': 'BD', 'TV': 'TV',
-                 'Satelite / Cable': 'SAT/CBL', 'Game': 'GAME',
+                 "Satelite / Cable": 'SAT/CBL', 'Game': 'GAME',
                  'Game2': 'GAME2', 'Video Aux': 'V.AUX', 'Dock': 'DOCK'}
 
 MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',

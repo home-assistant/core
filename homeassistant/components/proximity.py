@@ -251,8 +251,8 @@ class Proximity(Entity):
         self.dir_of_travel = direction_of_travel
         self.nearest = entity_name
         self.schedule_update_ha_state()
-        _LOGGER.debug('proximity.%s update entity: distance=%s: direction=%s: '
+        _LOGGER.debug("proximity.%s update entity: distance=%s: direction=%s: "
                       'device=%s', self.friendly_name, round(dist_to_zone),
                       direction_of_travel, entity_name)
 
-        _LOGGER.info('%s: proximity calculation complete', entity_name)
+        _LOGGER.info("%s: proximity calculation complete", entity_name)

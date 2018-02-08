@@ -52,14 +52,14 @@ def ensure_config_path(config_dir: str) -> None:
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
-            print(('Fatal Error: Specified configuration directory does '
+            print(("Fatal Error: Specified configuration directory does "
                    'not exist {} ').format(config_dir))
             sys.exit(1)
 
         try:
             os.mkdir(config_dir)
         except OSError:
-            print(('Fatal Error: Unable to create default configuration '
+            print(("Fatal Error: Unable to create default configuration "
                    'directory {} ').format(config_dir))
             sys.exit(1)
 
@@ -68,7 +68,7 @@ def ensure_config_path(config_dir: str) -> None:
         try:
             os.mkdir(lib_dir)
         except OSError:
-            print(('Fatal Error: Unable to create library '
+            print(("Fatal Error: Unable to create library "
                    'directory {} ').format(lib_dir))
             sys.exit(1)
 
@@ -79,7 +79,7 @@ def ensure_config_file(config_dir: str) -> str:
     config_path = config_util.ensure_config_exists(config_dir)
 
     if config_path is None:
-        print('Error getting configuration path')
+        print("Error getting configuration path")
         sys.exit(1)
 
     return config_path
@@ -99,19 +99,19 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         '--demo-mode',
         action='store_true',
-        help='Start Home Assistant in demo mode')
+        help="Start Home Assistant in demo mode")
     parser.add_argument(
         '--debug',
         action='store_true',
-        help='Start Home Assistant in debug mode')
+        help="Start Home Assistant in debug mode")
     parser.add_argument(
         '--open-ui',
         action='store_true',
-        help='Open the webinterface in a browser')
+        help="Open the webinterface in a browser")
     parser.add_argument(
         '--skip-pip',
         action='store_true',
-        help='Skips pip install of required packages on startup')
+        help="Skips pip install of required packages on startup")
     parser.add_argument(
         '-v', '--verbose',
         action='store_true',
@@ -120,31 +120,31 @@ def get_arguments() -> argparse.Namespace:
         '--pid-file',
         metavar='path_to_pid_file',
         default=None,
-        help='Path to PID file useful for running as daemon')
+        help="Path to PID file useful for running as daemon")
     parser.add_argument(
         '--log-rotate-days',
         type=int,
         default=None,
-        help='Enables daily log rotation and keeps up to the specified days')
+        help="Enables daily log rotation and keeps up to the specified days")
     parser.add_argument(
         '--log-file',
         type=str,
         default=None,
-        help='Log file to write to.  If not set, CONFIG/home-assistant.log '
+        help="Log file to write to.  If not set, CONFIG/home-assistant.log "
              'is used')
     parser.add_argument(
         '--runner',
         action='store_true',
-        help='On restart exit with code {}'.format(RESTART_EXIT_CODE))
+        help="On restart exit with code {}".format(RESTART_EXIT_CODE))
     parser.add_argument(
         '--script',
         nargs=argparse.REMAINDER,
-        help='Run one of the embedded scripts')
+        help="Run one of the embedded scripts")
     if os.name == "posix":
         parser.add_argument(
             '--daemon',
             action='store_true',
-            help='Run Home Assistant as daemon')
+            help="Run Home Assistant as daemon")
 
     arguments = parser.parse_args()
     if os.name != "posix" or arguments.debug or arguments.runner:
@@ -197,7 +197,7 @@ def check_pid(pid_file: str) -> None:
     except OSError:
         # PID does not exist
         return
-    print('Fatal Error: HomeAssistant is already running.')
+    print("Fatal Error: HomeAssistant is already running.")
     sys.exit(1)
 
 
@@ -208,7 +208,7 @@ def write_pid(pid_file: str) -> None:
         with open(pid_file, 'w') as file:
             file.write(str(pid))
     except IOError:
-        print('Fatal Error: Unable to write pid file {}'.format(pid_file))
+        print("Fatal Error: Unable to write pid file {}".format(pid_file))
         sys.exit(1)
 
 
@@ -299,7 +299,7 @@ def try_to_restart() -> None:
     """Attempt to clean up state and start a new Home Assistant instance."""
     # Things should be mostly shut down already at this point, now just try
     # to clean up things that may have been left behind.
-    sys.stderr.write('Home Assistant attempting to restart.\n')
+    sys.stderr.write("Home Assistant attempting to restart.\n")
 
     # Count remaining threads, ideally there should only be one non-daemonized
     # thread left (which is us). Nothing we really do with it, but it might be

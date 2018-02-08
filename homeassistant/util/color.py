@@ -171,7 +171,7 @@ def color_name_to_rgb(color_name):
     # spaces in it as well for matching purposes
     hex_value = COLORS.get(color_name.replace(' ', '').lower())
     if not hex_value:
-        _LOGGER.error('unknown color supplied %s default to white', color_name)
+        _LOGGER.error("unknown color supplied %s default to white", color_name)
         hex_value = COLORS['white']
 
     return hex_value

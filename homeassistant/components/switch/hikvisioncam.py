@@ -20,7 +20,7 @@ REQUIREMENTS = ['hikvision==0.4']
 
 _LOGGING = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Hikvision Camera Motion Detection'
+DEFAULT_NAME = "Hikvision Camera Motion Detection"
 DEFAULT_PASSWORD = '12345'
 DEFAULT_PORT = 80
 DEFAULT_USERNAME = 'admin'

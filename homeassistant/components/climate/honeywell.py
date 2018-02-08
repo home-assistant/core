@@ -346,7 +346,7 @@ class HoneywellUSThermostat(ClimateDevice):
             # Get current mode
             mode = self._device.system_mode
         except somecomfort.SomeComfortError:
-            _LOGGER.error('Can not get system mode')
+            _LOGGER.error("Can not get system mode")
             return
         try:
 
@@ -359,7 +359,7 @@ class HoneywellUSThermostat(ClimateDevice):
                     "setpoint_{}".format(mode),
                     getattr(self, "_{}_away_temp".format(mode)))
         except somecomfort.SomeComfortError:
-            _LOGGER.error('Temperature %.1f out of range',
+            _LOGGER.error("Temperature %.1f out of range",
                           getattr(self, "_{}_away_temp".format(mode)))
 
     def turn_away_mode_off(self):
@@ -371,7 +371,7 @@ class HoneywellUSThermostat(ClimateDevice):
             self._device.hold_cool = False
             self._device.hold_heat = False
         except somecomfort.SomeComfortError:
-            _LOGGER.error('Can not stop hold mode')
+            _LOGGER.error("Can not stop hold mode")
 
     def set_operation_mode(self: ClimateDevice, operation_mode: str) -> None:
         """Set the system mode (Cool, Heat, etc)."""

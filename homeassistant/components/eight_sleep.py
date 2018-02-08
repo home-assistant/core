@@ -42,18 +42,18 @@ SIGNAL_UPDATE_HEAT = 'eight_heat_update'
 SIGNAL_UPDATE_USER = 'eight_user_update'
 
 NAME_MAP = {
-    'left_current_sleep': 'Left Sleep Session',
-    'left_last_sleep': 'Left Previous Sleep Session',
-    'left_bed_state': 'Left Bed State',
-    'left_presence': 'Left Bed Presence',
-    'left_bed_temp': 'Left Bed Temperature',
-    'left_sleep_stage': 'Left Sleep Stage',
-    'right_current_sleep': 'Right Sleep Session',
-    'right_last_sleep': 'Right Previous Sleep Session',
-    'right_bed_state': 'Right Bed State',
-    'right_presence': 'Right Bed Presence',
-    'right_bed_temp': 'Right Bed Temperature',
-    'right_sleep_stage': 'Right Sleep Stage',
+    'left_current_sleep': "Left Sleep Session",
+    'left_last_sleep': "Left Previous Sleep Session",
+    'left_bed_state': "Left Bed State",
+    'left_presence': "Left Bed Presence",
+    'left_bed_temp': "Left Bed Temperature",
+    'left_sleep_stage': "Left Sleep Stage",
+    'right_current_sleep': "Right Sleep Session",
+    'right_last_sleep': "Right Previous Sleep Session",
+    'right_bed_state': "Right Bed State",
+    'right_presence': "Right Bed Presence",
+    'right_bed_temp': "Right Bed Temperature",
+    'right_sleep_stage': "Right Sleep Stage",
     'room_temp': 'Room Temperature',
 }
 
@@ -97,7 +97,7 @@ def async_setup(hass, config):
     partner = conf.get(CONF_PARTNER)
 
     if hass.config.time_zone is None:
-        _LOGGER.error('Timezone is not set in Home Assistant.')
+        _LOGGER.error("Timezone is not set in Home Assistant.")
         return False
 
     timezone = hass.config.time_zone

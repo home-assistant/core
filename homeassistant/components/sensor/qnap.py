@@ -48,7 +48,7 @@ DEFAULT_TIMEOUT = 5
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 NOTIFICATION_ID = 'qnap_notification'
-NOTIFICATION_TITLE = 'QNAP Sensor Setup'
+NOTIFICATION_TITLE = "QNAP Sensor Setup"
 
 _SYSTEM_MON_COND = {
     'status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
@@ -111,9 +111,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if not api.data:
         hass.components.persistent_notification.create(
-            'Error: Failed to set up QNAP sensor.<br />'
-            'Check the logs for additional information. '
-            'You will need to restart hass after fixing.',
+            "Error: Failed to set up QNAP sensor.<br />"
+            "Check the logs for additional information. "
+            "You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
@@ -347,7 +347,7 @@ class QNAPSystemSensor(QNAPSensor):
                 ATTR_NAME: data['system']['name'],
                 ATTR_MODEL: data['system']['model'],
                 ATTR_SERIAL: data['system']['serial_number'],
-                ATTR_UPTIME: '{:0>2d}d {:0>2d}h {:0>2d}m'.format(
+                ATTR_UPTIME: "{:0>2d}d {:0>2d}h {:0>2d}m".format(
                     days, hours, minutes)
             }
 

@@ -325,7 +325,7 @@ class ActiveConnection:
                 if cur_id <= last_id:
                     self.to_write.put_nowait(error_message(
                         cur_id, ERR_ID_REUSE,
-                        'Identifier values have to increase.'))
+                        "Identifier values have to increase."))
 
                 else:
                     handler_name = 'handle_{}'.format(msg['type'])
@@ -438,7 +438,7 @@ class ActiveConnection:
         else:
             self.to_write.put_nowait(error_message(
                 msg['id'], ERR_NOT_FOUND,
-                'Subscription not found.'))
+                "Subscription not found."))
 
     def handle_call_service(self, msg):
         """Handle call service command.

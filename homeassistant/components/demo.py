@@ -71,7 +71,7 @@ def async_setup(hass, config):
         hass, 'input_select',
         {'input_select':
          {'living_room_preset': {'options': ['Visitors',
-                                             'Visitors with kids',
+                                             "Visitors with kids",
                                              'Home Alone']},
           'who_cooks': {'icon': 'mdi:panda',
                         'initial': 'Anne Therese',
@@ -83,7 +83,7 @@ def async_setup(hass, config):
         {'input_boolean': {'notify': {
             'icon': 'mdi:car',
             'initial': False,
-            'name': 'Notify Anne Therese is home'}}}))
+            'name': "Notify Anne Therese is home"}}}))
 
     # Set up input boolean
     tasks.append(bootstrap.async_setup_component(
@@ -108,7 +108,7 @@ def async_setup(hass, config):
 
     # Set up example persistent notification
     persistent_notification.async_create(
-        'This is an example of a persistent notification.',
+        "This is an example of a persistent notification.",
         title='Example Notification')
 
     # Set up room groups
@@ -150,7 +150,7 @@ def async_setup(hass, config):
                  lights[1]: {'state': 'on', 'xy_color': [0.33, 0.66],
                              'brightness': 200},
              }},
-            {'name': 'Switch on and off',
+            {'name': "Switch on and off",
              'entities': {
                  switches[0]: True,
                  switches[1]: False,

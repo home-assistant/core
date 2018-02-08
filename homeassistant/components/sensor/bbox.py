@@ -31,13 +31,13 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # Sensor types are defined like so: Name, unit, icon
 SENSOR_TYPES = {
-    'down_max_bandwidth': ['Maximum Download Bandwidth',
+    'down_max_bandwidth': ["Maximum Download Bandwidth",
                            BANDWIDTH_MEGABITS_SECONDS, 'mdi:download'],
-    'up_max_bandwidth': ['Maximum Upload Bandwidth',
+    'up_max_bandwidth': ["Maximum Upload Bandwidth",
                          BANDWIDTH_MEGABITS_SECONDS, 'mdi:upload'],
-    'current_down_bandwidth': ['Currently Used Download Bandwidth',
+    'current_down_bandwidth': ["Currently Used Download Bandwidth",
                                BANDWIDTH_MEGABITS_SECONDS, 'mdi:download'],
-    'current_up_bandwidth': ['Currently Used Upload Bandwidth',
+    'current_up_bandwidth': ["Currently Used Upload Bandwidth",
                              BANDWIDTH_MEGABITS_SECONDS, 'mdi:upload'],
 }
 

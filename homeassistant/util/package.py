@@ -29,7 +29,7 @@ def install_package(package: str, upgrade: bool=True,
         if check_package_exists(package):
             return True
 
-        _LOGGER.info('Attempting install of %s', package)
+        _LOGGER.info("Attempting install of %s", package)
         env = os.environ.copy()
         args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
         if upgrade:

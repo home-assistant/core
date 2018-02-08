@@ -47,7 +47,7 @@ SIGNAL_UPDATE_DATA = 'android_ip_webcam_update'
 
 KEY_MAP = {
     'audio_connections': 'Audio Connections',
-    'adet_limit': 'Audio Trigger Limit',
+    'adet_limit': "Audio Trigger Limit",
     'antibanding': 'Anti-banding',
     'audio_only': 'Audio Only',
     'battery_level': 'Battery Level',
@@ -75,8 +75,8 @@ KEY_MAP = {
     'motion_event': 'Motion Event',
     'motion_limit': 'Motion Limit',
     'night_vision': 'Night Vision',
-    'night_vision_average': 'Night Vision Average',
-    'night_vision_gain': 'Night Vision Gain',
+    'night_vision_average': "Night Vision Average",
+    'night_vision_gain': "Night Vision Gain",
     'orientation': 'Orientation',
     'overlay': 'Overlay',
     'photo_size': 'Photo Size',
@@ -89,11 +89,11 @@ KEY_MAP = {
     'sound_timeout': 'Sound Timeout',
     'torch': 'Torch',
     'video_connections': 'Video Connections',
-    'video_chunk_len': 'Video Chunk Length',
+    'video_chunk_len': "Video Chunk Length",
     'video_recording': 'Video Recording',
     'video_size': 'Video Size',
     'whitebalance': 'White Balance',
-    'whitebalance_lock': 'White Balance Lock',
+    'whitebalance_lock': "White Balance Lock",
     'zoom': 'Zoom'
 }
 

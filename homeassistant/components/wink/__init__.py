@@ -39,7 +39,7 @@ CONF_CLIENT_SECRET = 'client_secret'
 CONF_USER_AGENT = 'user_agent'
 CONF_OAUTH = 'oauth'
 CONF_LOCAL_CONTROL = 'local_control'
-CONF_MISSING_OAUTH_MSG = 'Missing oauth2 credentials.'
+CONF_MISSING_OAUTH_MSG = "Missing oauth2 credentials."
 
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'

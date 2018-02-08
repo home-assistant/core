@@ -64,7 +64,7 @@ class ISYLockDevice(ISYDevice, LockDevice):
         response = self._conn.request(req_url)
 
         if response is None:
-            _LOGGER.error('Unable to lock device')
+            _LOGGER.error("Unable to lock device")
 
         self._node.update(0.5)
 
@@ -76,7 +76,7 @@ class ISYLockDevice(ISYDevice, LockDevice):
         response = self._conn.request(req_url)
 
         if response is None:
-            _LOGGER.error('Unable to lock device')
+            _LOGGER.error("Unable to lock device")
 
         self._node.update(0.5)
 

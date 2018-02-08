@@ -72,5 +72,5 @@ class LutronCover(LutronDevice, CoverDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        attr['Lutron Integration ID'] = self._lutron_device.id
+        attr["Lutron Integration ID"] = self._lutron_device.id
         return attr

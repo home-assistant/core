@@ -210,7 +210,7 @@ class OrderedSet(MutableSet):
         Set last=False to pop from the beginning.
         """
         if not self:
-            raise KeyError('set is empty')
+            raise KeyError("set is empty")
         key = self.end[1][0] if last else self.end[2][0]
         self.discard(key)
         return key

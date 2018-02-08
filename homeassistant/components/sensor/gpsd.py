@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #     gpsd_socket = gps3.GPSDSocket()
     #     gpsd_socket.connect(host=host, port=port)
     # except GPSError:
-    #     _LOGGER.warning('Not able to connect to GPSD')
+    #     _LOGGER.warning("Not able to connect to GPSD")
     #     return False
     import socket
 

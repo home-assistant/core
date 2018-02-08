@@ -93,7 +93,7 @@ class BaseEditConfigView(HomeAssistantView):
         value = self._get_value(hass, current, config_key)
 
         if value is None:
-            return self.json_message('Resource not found', 404)
+            return self.json_message("Resource not found", 404)
 
         return self.json(value)
 
@@ -103,7 +103,7 @@ class BaseEditConfigView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON specified', 400)
+            return self.json_message("Invalid JSON specified", 400)
 
         try:
             self.key_schema(config_key)

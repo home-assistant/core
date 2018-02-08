@@ -34,7 +34,7 @@ ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
 CONF_CLOCK_FORMAT = 'clock_format'
-CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
+CONF_ATTRIBUTION = "Data provided by Fitbit.com"
 
 DEPENDENCIES = ['http']
 
@@ -57,29 +57,29 @@ FITBIT_RESOURCES_LIST = {
     'activities/distance': ['Distance', '', 'map-marker'],
     'activities/elevation': ['Elevation', '', 'walk'],
     'activities/floors': ['Floors', 'floors', 'walk'],
-    'activities/heart': ['Resting Heart Rate', 'bpm', 'heart-pulse'],
+    'activities/heart': ["Resting Heart Rate", 'bpm', 'heart-pulse'],
     'activities/minutesFairlyActive':
-        ['Minutes Fairly Active', 'minutes', 'walk'],
+        ["Minutes Fairly Active", 'minutes', 'walk'],
     'activities/minutesLightlyActive':
-        ['Minutes Lightly Active', 'minutes', 'walk'],
+        ["Minutes Lightly Active", 'minutes', 'walk'],
     'activities/minutesSedentary':
         ['Minutes Sedentary', 'minutes', 'seat-recline-normal'],
-    'activities/minutesVeryActive': ['Minutes Very Active', 'minutes', 'run'],
+    'activities/minutesVeryActive': ["Minutes Very Active", 'minutes', 'run'],
     'activities/steps': ['Steps', 'steps', 'walk'],
     'activities/tracker/activityCalories':
-        ['Tracker Activity Calories', 'cal', 'fire'],
+        ["Tracker Activity Calories", 'cal', 'fire'],
     'activities/tracker/calories': ['Tracker Calories', 'cal', 'fire'],
     'activities/tracker/distance': ['Tracker Distance', '', 'map-marker'],
     'activities/tracker/elevation': ['Tracker Elevation', '', 'walk'],
     'activities/tracker/floors': ['Tracker Floors', 'floors', 'walk'],
     'activities/tracker/minutesFairlyActive':
-        ['Tracker Minutes Fairly Active', 'minutes', 'walk'],
+        ["Tracker Minutes Fairly Active", 'minutes', 'walk'],
     'activities/tracker/minutesLightlyActive':
-        ['Tracker Minutes Lightly Active', 'minutes', 'walk'],
+        ["Tracker Minutes Lightly Active", 'minutes', 'walk'],
     'activities/tracker/minutesSedentary':
-        ['Tracker Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+        ["Tracker Minutes Sedentary", 'minutes', 'seat-recline-normal'],
     'activities/tracker/minutesVeryActive':
-        ['Tracker Minutes Very Active', 'minutes', 'run'],
+        ["Tracker Minutes Very Active", 'minutes', 'run'],
     'activities/tracker/steps': ['Tracker Steps', 'steps', 'walk'],
     'body/bmi': ['BMI', 'BMI', 'human'],
     'body/fat': ['Body Fat', '%', 'human'],
@@ -88,13 +88,13 @@ FITBIT_RESOURCES_LIST = {
     'sleep/awakeningsCount':
         ['Awakenings Count', 'times awaken', 'sleep'],
     'sleep/efficiency': ['Sleep Efficiency', '%', 'sleep'],
-    'sleep/minutesAfterWakeup': ['Minutes After Wakeup', 'minutes', 'sleep'],
-    'sleep/minutesAsleep': ['Sleep Minutes Asleep', 'minutes', 'sleep'],
-    'sleep/minutesAwake': ['Sleep Minutes Awake', 'minutes', 'sleep'],
+    'sleep/minutesAfterWakeup': ["Minutes After Wakeup", 'minutes', 'sleep'],
+    'sleep/minutesAsleep': ["Sleep Minutes Asleep", 'minutes', 'sleep'],
+    'sleep/minutesAwake': ["Sleep Minutes Awake", 'minutes', 'sleep'],
     'sleep/minutesToFallAsleep':
-        ['Sleep Minutes to Fall Asleep', 'minutes', 'sleep'],
-    'sleep/startTime': ['Sleep Start Time', None, 'clock'],
-    'sleep/timeInBed': ['Sleep Time in Bed', 'minutes', 'hotel']
+        ["Sleep Minutes to Fall Asleep", 'minutes', 'sleep'],
+    'sleep/startTime': ["Sleep Start Time", None, 'clock'],
+    'sleep/timeInBed': ["Sleep Time in Bed", 'minutes', 'hotel']
 }
 
 FITBIT_MEASUREMENTS = {

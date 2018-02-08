@@ -26,7 +26,7 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'GPM Desktop Player'
+DEFAULT_NAME = "GPM Desktop Player"
 DEFAULT_PORT = 5672
 
 GPMDP_CONFIG_FILE = 'gpmpd.conf'
@@ -96,8 +96,8 @@ def request_configuration(hass, config, url, add_devices_callback):
     _CONFIGURING['gpmdp'] = configurator.request_config(
         DEFAULT_NAME, gpmdp_configuration_callback,
         description=(
-            'Enter the pin that is displayed in the '
-            'Google Play Music Desktop Player.'),
+            "Enter the pin that is displayed in the "
+            "Google Play Music Desktop Player."),
         submit_caption="Submit",
         fields=[{'id': 'pin', 'name': 'Pin Code', 'type': 'number'}]
     )
@@ -301,7 +301,7 @@ class GPMDP(MediaPlayerDevice):
         websocket = self.get_ws()
         if websocket is None:
             return
-        websocket.send('{"namespace": "volume", "method": "increaseVolume"}')
+        websocket.send("{"namespace": "volume", "method": "increaseVolume"}")
         self.schedule_update_ha_state()
 
     def volume_down(self):
@@ -309,7 +309,7 @@ class GPMDP(MediaPlayerDevice):
         websocket = self.get_ws()
         if websocket is None:
             return
-        websocket.send('{"namespace": "volume", "method": "decreaseVolume"}')
+        websocket.send("{"namespace": "volume", "method": "decreaseVolume"}")
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):

@@ -69,12 +69,12 @@ class GPSLoggerView(HomeAssistantView):
                 raise HTTPUnauthorized()
 
         if 'latitude' not in data or 'longitude' not in data:
-            return ('Latitude and longitude not specified.',
+            return ("Latitude and longitude not specified.",
                     HTTP_UNPROCESSABLE_ENTITY)
 
         if 'device' not in data:
             _LOGGER.error("Device id not specified")
-            return ('Device id not specified.',
+            return ("Device id not specified.",
                     HTTP_UNPROCESSABLE_ENTITY)
 
         device = data['device'].replace('-', '')
@@ -106,4 +106,4 @@ class GPSLoggerView(HomeAssistantView):
             attributes=attrs
         ))
 
-        return 'Setting location for {}'.format(device)
+        return "Setting location for {}".format(device)

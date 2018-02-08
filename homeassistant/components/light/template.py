@@ -249,7 +249,7 @@ class LightTemplate(Light):
                 self._state = state in ('true', STATE_ON)
             else:
                 _LOGGER.error(
-                    'Received invalid light is_on state: %s. ' +
+                    "Received invalid light is_on state: %s. " +
                     'Expected: %s',
                     state, ', '.join(_VALID_STATES))
                 self._state = None
@@ -265,7 +265,7 @@ class LightTemplate(Light):
                 self._brightness = brightness
             else:
                 _LOGGER.error(
-                    'Received invalid brightness : %s' +
+                    "Received invalid brightness : %s" +
                     'Expected: 0-255',
                     brightness)
                 self._brightness = None
@@ -283,8 +283,8 @@ class LightTemplate(Light):
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.',
+                    _LOGGER.warning("Could not render %s template %s,"
+                                    " the state is unknown.",
                                     friendly_property_name, self._name)
                     return
 
@@ -292,5 +292,5 @@ class LightTemplate(Light):
                     setattr(self, property_name,
                             getattr(super(), property_name))
                 except AttributeError:
-                    _LOGGER.error('Could not render %s template %s: %s',
+                    _LOGGER.error("Could not render %s template %s: %s",
                                   friendly_property_name, self._name, ex)

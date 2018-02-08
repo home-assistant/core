@@ -351,7 +351,7 @@ class DailyHistory(object):
             elif day > current_day:
                 self._add_day(day, value)
             else:
-                _LOGGER.warning('received old measurement, not storing it!')
+                _LOGGER.warning("received old measurement, not storing it!")
 
         self.max = max(self._max_dict.values())
 

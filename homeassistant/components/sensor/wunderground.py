@@ -302,7 +302,7 @@ SENSOR_TYPES = {
     'heat_index_f': WUCurrentConditionsSensorConfig(
         'Heat index', 'heat_index_f', "mdi:thermometer", TEMP_FAHRENHEIT),
     'heat_index_string': WUCurrentConditionsSensorConfig(
-        'Heat Index Summary', 'heat_index_string', "mdi:thermometer"),
+        "Heat Index Summary", 'heat_index_string', "mdi:thermometer"),
     'elevation': WUSensorConfig(
         'Elevation',
         'conditions',
@@ -377,32 +377,32 @@ SENSOR_TYPES = {
     'wind_string': WUCurrentConditionsSensorConfig(
         'Wind Summary', 'wind_string', "mdi:weather-windy"),
     'temp_high_record_c': WUAlmanacSensorConfig(
-        lambda wu: 'High Temperature Record ({})'.format(
+        lambda wu: "High Temperature Record ({})".format(
             wu.data['almanac']['temp_high']['recordyear']),
         'temp_high', 'record', 'C', TEMP_CELSIUS, 'mdi:thermometer'),
     'temp_high_record_f': WUAlmanacSensorConfig(
-        lambda wu: 'High Temperature Record ({})'.format(
+        lambda wu: "High Temperature Record ({})".format(
             wu.data['almanac']['temp_high']['recordyear']),
         'temp_high', 'record', 'F', TEMP_FAHRENHEIT, 'mdi:thermometer'),
     'temp_low_record_c': WUAlmanacSensorConfig(
-        lambda wu: 'Low Temperature Record ({})'.format(
+        lambda wu: "Low Temperature Record ({})".format(
             wu.data['almanac']['temp_low']['recordyear']),
         'temp_low', 'record', 'C', TEMP_CELSIUS, 'mdi:thermometer'),
     'temp_low_record_f': WUAlmanacSensorConfig(
-        lambda wu: 'Low Temperature Record ({})'.format(
+        lambda wu: "Low Temperature Record ({})".format(
             wu.data['almanac']['temp_low']['recordyear']),
         'temp_low', 'record', 'F', TEMP_FAHRENHEIT, 'mdi:thermometer'),
     'temp_low_avg_c': WUAlmanacSensorConfig(
-        'Historic Average of Low Temperatures for Today',
+        "Historic Average of Low Temperatures for Today",
         'temp_low', 'normal', 'C', TEMP_CELSIUS, 'mdi:thermometer'),
     'temp_low_avg_f': WUAlmanacSensorConfig(
-        'Historic Average of Low Temperatures for Today',
+        "Historic Average of Low Temperatures for Today",
         'temp_low', 'normal', 'F', TEMP_FAHRENHEIT, 'mdi:thermometer'),
     'temp_high_avg_c': WUAlmanacSensorConfig(
-        'Historic Average of High Temperatures for Today',
+        "Historic Average of High Temperatures for Today",
         'temp_high', 'normal', 'C', TEMP_CELSIUS, "mdi:thermometer"),
     'temp_high_avg_f': WUAlmanacSensorConfig(
-        'Historic Average of High Temperatures for Today',
+        "Historic Average of High Temperatures for Today",
         'temp_high', 'normal', 'F', TEMP_FAHRENHEIT, "mdi:thermometer"),
     'weather_1d': WUDailyTextForecastSensorConfig(0, "fcttext"),
     'weather_1d_metric': WUDailyTextForecastSensorConfig(0, "fcttext_metric"),
@@ -619,9 +619,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PWS_ID): cv.string,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.All(vol.In(LANG_CODES)),
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
+                  "Latitude and longitude must exist together"): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+                  "Latitude and longitude must exist together"): cv.longitude,
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
 })

@@ -19,12 +19,12 @@ def load_json(filename: str) -> Union[List, Dict]:
             return json.loads(fdesc.read())
     except FileNotFoundError:
         # This is not a fatal error
-        _LOGGER.debug('JSON file not found: %s', filename)
+        _LOGGER.debug("JSON file not found: %s", filename)
     except ValueError as error:
-        _LOGGER.exception('Could not parse JSON content: %s', filename)
+        _LOGGER.exception("Could not parse JSON content: %s", filename)
         raise HomeAssistantError(error)
     except OSError as error:
-        _LOGGER.exception('JSON file reading failed: %s', filename)
+        _LOGGER.exception("JSON file reading failed: %s", filename)
         raise HomeAssistantError(error)
     return {}  # (also evaluates to False)
 
@@ -40,11 +40,11 @@ def save_json(filename: str, config: Union[List, Dict]):
             fdesc.write(data)
             return True
     except TypeError as error:
-        _LOGGER.exception('Failed to serialize to JSON: %s',
+        _LOGGER.exception("Failed to serialize to JSON: %s",
                           filename)
         raise HomeAssistantError(error)
     except OSError as error:
-        _LOGGER.exception('Saving JSON file failed: %s',
+        _LOGGER.exception("Saving JSON file failed: %s",
                           filename)
         raise HomeAssistantError(error)
     return False

@@ -50,7 +50,7 @@ ACTION = {
     2: 'Spot cleaning',
     3: 'Manual cleaning',
     4: 'Docking',
-    5: 'User menu active',
+    5: "User menu active",
     6: 'Cleaning cancelled',
     7: 'Updating...',
     8: 'Copying logs...',
@@ -62,21 +62,21 @@ ERRORS = {
     'ui_error_brush_stuck': 'Brush stuck',
     'ui_error_brush_overloaded': 'Brush overloaded',
     'ui_error_bumper_stuck': 'Bumper stuck',
-    'ui_error_dust_bin_missing': 'Dust bin missing',
-    'ui_error_dust_bin_full': 'Dust bin full',
-    'ui_error_dust_bin_emptied': 'Dust bin emptied',
-    'ui_error_navigation_backdrop_leftbump': 'Clear my path',
-    'ui_error_navigation_noprogress': 'Clear my path',
-    'ui_error_navigation_origin_unclean': 'Clear my path',
-    'ui_error_navigation_pathproblems_returninghome': 'Cannot return to base',
-    'ui_error_navigation_falling': 'Clear my path',
+    'ui_error_dust_bin_missing': "Dust bin missing",
+    'ui_error_dust_bin_full': "Dust bin full",
+    'ui_error_dust_bin_emptied': "Dust bin emptied",
+    'ui_error_navigation_backdrop_leftbump': "Clear my path",
+    'ui_error_navigation_noprogress': "Clear my path",
+    'ui_error_navigation_origin_unclean': "Clear my path",
+    'ui_error_navigation_pathproblems_returninghome': "Cannot return to base",
+    'ui_error_navigation_falling': "Clear my path",
     'ui_error_picked_up': 'Picked up',
     'ui_error_stuck': 'Stuck!'
 }
 
 ALERTS = {
-    'ui_alert_dust_bin_full': 'Please empty dust bin',
-    'ui_alert_recovering_location': 'Returning to start'
+    'ui_alert_dust_bin_full': "Please empty dust bin",
+    'ui_alert_recovering_location': "Returning to start"
 }
 
 

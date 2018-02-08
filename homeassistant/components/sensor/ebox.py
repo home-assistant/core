@@ -1,7 +1,7 @@
 """
 Support for EBox.
 
-Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
+Get data from "My Usage Page" page: https://client.ebox.ca/myusage
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ebox/
@@ -39,11 +39,11 @@ SENSOR_TYPES = {
     'limit': ['Data limit', GIGABITS, 'mdi:download'],
     'days_left': ['Days left', DAYS, 'mdi:calendar-today'],
     'before_offpeak_download':
-        ['Download before offpeak', GIGABITS, 'mdi:download'],
+        ["Download before offpeak", GIGABITS, 'mdi:download'],
     'before_offpeak_upload':
-        ['Upload before offpeak', GIGABITS, 'mdi:upload'],
+        ["Upload before offpeak", GIGABITS, 'mdi:upload'],
     'before_offpeak_total':
-        ['Total before offpeak', GIGABITS, 'mdi:download'],
+        ["Total before offpeak", GIGABITS, 'mdi:download'],
     'offpeak_download': ['Offpeak download', GIGABITS, 'mdi:download'],
     'offpeak_upload': ['Offpeak Upload', GIGABITS, 'mdi:upload'],
     'offpeak_total': ['Offpeak Total', GIGABITS, 'mdi:download'],

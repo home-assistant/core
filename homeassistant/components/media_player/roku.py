@@ -22,7 +22,7 @@ KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
 
 NOTIFICATION_ID = 'roku_notification'
-NOTIFICATION_TITLE = 'Roku Media Player Setup'
+NOTIFICATION_TITLE = "Roku Media Player Setup"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,10 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         except AttributeError:
             _LOGGER.error("Unable to initialize roku at %s", host)
             hass.components.persistent_notification.create(
-                'Error: Unable to initialize roku at {}<br />'
-                'Check its network connection or consider '
-                'using auto discovery.<br />'
-                'You will need to restart hass after fixing.'
+                "Error: Unable to initialize roku at {}<br />"
+                "Check its network connection or consider "
+                "using auto discovery.<br />"
+                "You will need to restart hass after fixing."
                 ''.format(config.get(CONF_HOST)),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)

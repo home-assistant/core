@@ -53,18 +53,18 @@ def run(args):
         if args.value:
             the_secret = args.value
         else:
-            the_secret = getpass.getpass('Please enter the secret for {}: '
+            the_secret = getpass.getpass("Please enter the secret for {}: "
                                          .format(args.name))
         current_version = credstash.getHighestVersion(args.name, table=table)
         credstash.putSecret(args.name,
                             the_secret,
                             version=int(current_version) + 1,
                             table=table)
-        print('Secret {} put successfully'.format(args.name))
+        print("Secret {} put successfully".format(args.name))
     elif args.action == 'get':
         the_secret = credstash.getSecret(args.name, table=table)
         if the_secret is None:
-            print('Secret {} not found'.format(args.name))
+            print("Secret {} not found".format(args.name))
         else:
             print('Secret {}={}'.format(args.name, the_secret))
     elif args.action == 'del':

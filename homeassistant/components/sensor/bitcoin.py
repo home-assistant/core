@@ -28,14 +28,14 @@ ICON = 'mdi:currency-btc'
 SCAN_INTERVAL = timedelta(minutes=5)
 
 OPTION_TYPES = {
-    'exchangerate': ['Exchange rate (1 BTC)', None],
+    'exchangerate': ["Exchange rate (1 BTC)", None],
     'trade_volume_btc': ['Trade volume', 'BTC'],
     'miners_revenue_usd': ['Miners revenue', 'USD'],
     'btc_mined': ['Mined', 'BTC'],
     'trade_volume_usd': ['Trade volume', 'USD'],
     'difficulty': ['Difficulty', None],
-    'minutes_between_blocks': ['Time between Blocks', 'min'],
-    'number_of_transactions': ['No. of Transactions', None],
+    'minutes_between_blocks': ["Time between Blocks", 'min'],
+    'number_of_transactions': ["No. of Transactions", None],
     'hash_rate': ['Hash rate', 'PH/s'],
     'timestamp': ['Timestamp', None],
     'mined_blocks': ['Mined Blocks', None],
@@ -46,7 +46,7 @@ OPTION_TYPES = {
     'total_btc': ['Total', 'BTC'],
     'total_blocks': ['Total Blocks', None],
     'next_retarget': ['Next retarget', None],
-    'estimated_transaction_volume_usd': ['Est. Transaction volume', 'USD'],
+    'estimated_transaction_volume_usd': ["Est. Transaction volume", 'USD'],
     'miners_revenue_btc': ['Miners revenue', 'BTC'],
     'market_price_usd': ['Market price', 'USD']
 }

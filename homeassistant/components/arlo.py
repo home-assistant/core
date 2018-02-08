@@ -23,7 +23,7 @@ DEFAULT_BRAND = 'Netgear Arlo'
 DOMAIN = 'arlo'
 
 NOTIFICATION_ID = 'arlo_notification'
-NOTIFICATION_TITLE = 'Arlo Component Setup'
+NOTIFICATION_TITLE = "Arlo Component Setup"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -49,8 +49,8 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Netgear Arlo: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)

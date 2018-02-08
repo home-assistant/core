@@ -34,7 +34,7 @@ def _get_image_url(hass, monitor, mode):
         zms_url=urljoin(zm_data['server_origin'], zm_data['path_zms']),
         query=query,
     )
-    _LOGGER.debug('Monitor %s %s URL (without auth): %s',
+    _LOGGER.debug("Monitor %s %s URL (without auth): %s",
                   monitor['Id'], mode, url)
 
     if not zm_data['username']:

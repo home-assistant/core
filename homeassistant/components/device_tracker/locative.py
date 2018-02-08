@@ -55,22 +55,22 @@ class LocativeView(HomeAssistantView):
     def _handle(self, hass, data):
         """Handle locative request."""
         if 'latitude' not in data or 'longitude' not in data:
-            return ('Latitude and longitude not specified.',
+            return ("Latitude and longitude not specified.",
                     HTTP_UNPROCESSABLE_ENTITY)
 
         if 'device' not in data:
-            _LOGGER.error('Device id not specified.')
-            return ('Device id not specified.',
+            _LOGGER.error("Device id not specified.")
+            return ("Device id not specified.",
                     HTTP_UNPROCESSABLE_ENTITY)
 
         if 'trigger' not in data:
-            _LOGGER.error('Trigger is not specified.')
-            return ('Trigger is not specified.',
+            _LOGGER.error("Trigger is not specified.")
+            return ("Trigger is not specified.",
                     HTTP_UNPROCESSABLE_ENTITY)
 
         if 'id' not in data and data['trigger'] != 'test':
-            _LOGGER.error('Location id not specified.')
-            return ('Location id not specified.',
+            _LOGGER.error("Location id not specified.")
+            return ("Location id not specified.",
                     HTTP_UNPROCESSABLE_ENTITY)
 
         device = data['device'].replace('-', '')
@@ -82,7 +82,7 @@ class LocativeView(HomeAssistantView):
             yield from hass.async_add_job(
                 partial(self.see, dev_id=device, location_name=location_name,
                         gps=gps_location))
-            return 'Setting location to {}'.format(location_name)
+            return "Setting location to {}".format(location_name)
 
         elif direction == 'exit':
             current_state = hass.states.get(
@@ -93,21 +93,21 @@ class LocativeView(HomeAssistantView):
                 yield from hass.async_add_job(
                     partial(self.see, dev_id=device,
                             location_name=location_name, gps=gps_location))
-                return 'Setting location to not home'
+                return "Setting location to not home"
 
             # Ignore the message if it is telling us to exit a zone that we
             # aren't currently in. This occurs when a zone is entered
             # before the previous zone was exited. The enter message will
             # be sent first, then the exit message will be sent second.
-            return 'Ignoring exit from {} (already in {})'.format(
+            return "Ignoring exit from {} (already in {})".format(
                 location_name, current_state)
 
         elif direction == 'test':
             # In the app, a test message can be sent. Just return something to
             # the user to let them know that it works.
-            return 'Received test message.'
+            return "Received test message."
 
-        _LOGGER.error('Received unidentified message from Locative: %s',
+        _LOGGER.error("Received unidentified message from Locative: %s",
                       direction)
-        return ('Received unidentified message: {}'.format(direction),
+        return ("Received unidentified message: {}".format(direction),
                 HTTP_UNPROCESSABLE_ENTITY)

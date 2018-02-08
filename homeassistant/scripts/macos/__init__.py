@@ -25,10 +25,10 @@ def install_osx():
         with open(path, 'w', encoding='utf-8') as outp:
             outp.write(plist)
     except IOError as err:
-        print('Unable to write to ' + path, err)
+        print("Unable to write to " + path, err)
         return
 
-    os.popen('launchctl load -w -F ' + path)
+    os.popen("launchctl load -w -F " + path)
 
     print("Home Assistant has been installed. \
         Open it here: http://localhost:8123")
@@ -46,7 +46,7 @@ def run(args):
     """Handle OSX commandline script."""
     commands = 'install', 'uninstall', 'restart'
     if not args or args[0] not in commands:
-        print('Invalid command. Available commands:', ', '.join(commands))
+        print("Invalid command. Available commands:", ', '.join(commands))
         return 1
 
     if args[0] == 'install':

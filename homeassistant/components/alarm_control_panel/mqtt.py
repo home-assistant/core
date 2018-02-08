@@ -157,5 +157,5 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
         """Validate given code."""
         check = self._code is None or code == self._code
         if not check:
-            _LOGGER.warning('Wrong code entered for %s', state)
+            _LOGGER.warning("Wrong code entered for %s", state)
         return check

@@ -63,14 +63,14 @@ SENSOR_TYPES = {
     'name': ['Station Name', None],
     'weather': ['Weather', None],
     'temperature': ['Temperature', TEMP_CELSIUS],
-    'feels_like_temperature': ['Feels Like Temperature', TEMP_CELSIUS],
+    'feels_like_temperature': ["Feels Like Temperature", TEMP_CELSIUS],
     'wind_speed': ['Wind Speed', 'mph'],
     'wind_direction': ['Wind Direction', None],
     'wind_gust': ['Wind Gust', 'mph'],
     'visibility': ['Visibility', None],
     'visibility_distance': ['Visibility Distance', 'km'],
     'uv': ['UV', None],
-    'precipitation': ['Probability of Precipitation', '%'],
+    'precipitation': ["Probability of Precipitation", '%'],
     'humidity': ['Humidity', '%']
 }
 
@@ -80,9 +80,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
+                  "Latitude and longitude must exist together"): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+                  "Latitude and longitude must exist together"): cv.longitude,
 })
 
 

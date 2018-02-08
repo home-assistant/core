@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass.data[DATA_YAMAHA][device.unique_id] = device
             devices.append(device)
         else:
-            _LOGGER.debug('Ignoring duplicate receiver %s', name)
+            _LOGGER.debug("Ignoring duplicate receiver %s", name)
 
     def service_handler(service):
         """Handle for services."""

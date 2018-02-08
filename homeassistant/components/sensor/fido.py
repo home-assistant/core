@@ -47,18 +47,18 @@ SENSOR_TYPES = {
     'mms_used': ['MMS used', MESSAGES, 'mdi:message-image'],
     'mms_limit': ['MMS limit', MESSAGES, 'mdi:message-image'],
     'mms_remaining': ['MMS remaining', MESSAGES, 'mdi:message-image'],
-    'text_int_used': ['International text used',
+    'text_int_used': ["International text used",
                       MESSAGES, 'mdi:message-alert'],
-    'text_int_limit': ['International text limit',
+    'text_int_limit': ["International text limit",
                        MESSAGES, 'mdi:message-alert'],
     'text_int_remaining': ['International remaining',
                            MESSAGES, 'mdi:message-alert'],
     'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
     'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
     'talk_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
-    'other_talk_used': ['Other Talk used', MINUTES, 'mdi:cellphone'],
-    'other_talk_limit': ['Other Talk limit', MINUTES, 'mdi:cellphone'],
-    'other_talk_remaining': ['Other Talk remaining', MINUTES, 'mdi:cellphone'],
+    'other_talk_used': ["Other Talk used", MINUTES, 'mdi:cellphone'],
+    'other_talk_limit': ["Other Talk limit", MINUTES, 'mdi:cellphone'],
+    'other_talk_remaining': ["Other Talk remaining", MINUTES, 'mdi:cellphone'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

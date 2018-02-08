@@ -23,11 +23,11 @@ CONF_LOCATIONS = 'locations'
 SCAN_INTERVAL = timedelta(minutes=30)
 
 AUTHORITIES = [
-    'Barking and Dagenham',
+    "Barking and Dagenham",
     'Bexley',
     'Brent',
     'Camden',
-    'City of London',
+    "City of London",
     'Croydon',
     'Ealing',
     'Enfield',
@@ -38,7 +38,7 @@ AUTHORITIES = [
     'Havering',
     'Hillingdon',
     'Islington',
-    'Kensington and Chelsea',
+    "Kensington and Chelsea",
     'Kingston',
     'Lambeth',
     'Lewisham',

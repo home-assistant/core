@@ -421,7 +421,7 @@ def _async_get_action(hass, config, name):
         """Execute an action."""
         _LOGGER.info('Executing %s', name)
         logbook.async_log_entry(
-            hass, name, 'has been triggered', DOMAIN, entity_id)
+            hass, name, "has been triggered", DOMAIN, entity_id)
         yield from script_obj.async_run(variables)
 
     return action
@@ -436,7 +436,7 @@ def _async_process_if(hass, config, p_config):
         try:
             checks.append(condition.async_from_config(if_config, False))
         except HomeAssistantError as ex:
-            _LOGGER.warning('Invalid condition: %s', ex)
+            _LOGGER.warning("Invalid condition: %s", ex)
             return None
 
     def if_action(variables=None):

@@ -25,10 +25,10 @@ DEFAULT_INCLUDE_ARCHIVED = False
 
 SENSOR_TYPES = {
     'all': ['Events'],
-    'hour': ['Events Last Hour'],
-    'day': ['Events Last Day'],
-    'week': ['Events Last Week'],
-    'month': ['Events Last Month'],
+    'hour': ["Events Last Hour"],
+    'day': ["Events Last Day"],
+    'week': ["Events Last Week"],
+    'month': ["Events Last Month"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

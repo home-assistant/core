@@ -100,7 +100,7 @@ class NuimoThread(threading.Thread):
     # pylint: disable=unused-argument
     def stop(self, event):
         """Terminate Thread by unsetting flag."""
-        _LOGGER.debug('Stopping thread for Nuimo %s', self._mac)
+        _LOGGER.debug("Stopping thread for Nuimo %s", self._mac)
         self._hass_is_running = False
 
     def _attach(self):

@@ -56,8 +56,8 @@ def exactly_two_period_keys(conf):
             provided += 1
 
     if provided != 2:
-        raise vol.Invalid('You must provide exactly 2 of the following:'
-                          ' start, end, duration')
+        raise vol.Invalid("You must provide exactly 2 of the following:"
+                          " start, end, duration")
     return conf
 
 

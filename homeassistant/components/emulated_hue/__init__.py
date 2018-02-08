@@ -142,8 +142,8 @@ class Config(object):
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning(
-                'Emulated Hue running in legacy mode because type has been '
-                'specified. More info at https://goo.gl/M6tgz8')
+                "Emulated Hue running in legacy mode because type has been "
+                "specified. More info at https://goo.gl/M6tgz8")
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)

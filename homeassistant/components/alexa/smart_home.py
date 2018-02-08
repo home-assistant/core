@@ -498,7 +498,7 @@ class _MediaPlayerCapabilities(_AlexaEntity):
 class _SceneCapabilities(_AlexaEntity):
     def description(self):
         # Required description as per Amazon Scene docs
-        scene_fmt = '{} (Scene connected via Home Assistant)'
+        scene_fmt = "{} (Scene connected via Home Assistant)"
         return scene_fmt.format(_AlexaEntity.description(self))
 
     def default_display_categories(self):
@@ -1116,7 +1116,7 @@ def async_api_select_input(hass, config, request, entity):
             media_input = source
             break
     else:
-        msg = 'failed to map input {} to a media source on {}'.format(
+        msg = "failed to map input {} to a media source on {}".format(
             media_input, entity.entity_id)
         _LOGGER.error(msg)
         return api_error(

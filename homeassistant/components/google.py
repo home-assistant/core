@@ -49,7 +49,7 @@ DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
 
 NOTIFICATION_ID = 'google_calendar_notification'
-NOTIFICATION_TITLE = 'Google Calendar Setup'
+NOTIFICATION_TITLE = "Google Calendar Setup"
 GROUP_NAME_ALL_CALENDARS = "Google Calendar Sensors"
 
 SERVICE_SCAN_CALENDARS = 'scan_for_calendars'
@@ -109,15 +109,15 @@ def do_authentication(hass, config):
         dev_flow = oauth.step1_get_device_and_user_codes()
     except OAuth2DeviceCodeError as err:
         hass.components.persistent_notification.create(
-            'Error: {}<br />You will need to restart hass after fixing.'
+            "Error: {}<br />You will need to restart hass after fixing."
             ''.format(err),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
 
     hass.components.persistent_notification.create(
-        'In order to authorize Home-Assistant to view your calendars '
-        'you must visit: <a href="{}" target="_blank">{}</a> and enter '
+        "In order to authorize Home-Assistant to view your calendars "
+        "you must visit: <a href=\"{}\" target=\"_blank\">{}</a> and enter "
         'code: {}'.format(dev_flow.verification_url,
                           dev_flow.verification_url,
                           dev_flow.user_code),
@@ -128,8 +128,8 @@ def do_authentication(hass, config):
         """Keep trying to validate the user_code until it expires."""
         if now >= dt.as_local(dev_flow.user_code_expiry):
             hass.components.persistent_notification.create(
-                'Authentication code expired, please restart '
-                'Home-Assistant and try again',
+                "Authentication code expired, please restart "
+                "Home-Assistant and try again",
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
             listener()
@@ -145,7 +145,7 @@ def do_authentication(hass, config):
         do_setup(hass, config)
         listener()
         hass.components.persistent_notification.create(
-            'We are all setup now. Check {} for calendars that have '
+            "We are all setup now. Check {} for calendars that have "
             'been found'.format(YAML_DEVICES),
             title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID)
 

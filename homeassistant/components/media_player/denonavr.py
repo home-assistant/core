@@ -30,7 +30,7 @@ DEFAULT_TIMEOUT = 2
 CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 CONF_ZONES = 'zones'
 CONF_VALID_ZONES = ['Zone2', 'Zone3']
-CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
+CONF_INVALID_ZONES_ERR = "Invalid Zone (expected Zone2 or Zone3)"
 KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \

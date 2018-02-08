@@ -53,7 +53,7 @@ def hassbian_status(hass, test_mode=False):
     if test_mode:
         return json.loads(_TEST_OUTPUT)
 
-    raise Exception('Real mode not implemented yet.')
+    raise Exception("Real mode not implemented yet.")
 
 
 class HassbianSuitesView(HomeAssistantView):

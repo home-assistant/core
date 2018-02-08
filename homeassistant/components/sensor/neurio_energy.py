@@ -25,7 +25,7 @@ CONF_API_SECRET = 'api_secret'
 CONF_SENSOR_ID = 'sensor_id'
 
 ACTIVE_NAME = 'Energy Usage'
-DAILY_NAME = 'Daily Energy Usage'
+DAILY_NAME = "Daily Energy Usage"
 
 ACTIVE_TYPE = 'active'
 DAILY_TYPE = 'daily'
@@ -121,7 +121,7 @@ class NeurioData(object):
             .astimezone(dt_util.UTC).isoformat()
         end_time = dt_util.utcnow().isoformat()
 
-        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+        _LOGGER.debug("Start: %s, End: %s", start_time, end_time)
 
         try:
             history = self.neurio_client.get_samples_stats(

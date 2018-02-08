@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'SSL Certificate Expiry'
+DEFAULT_NAME = "SSL Certificate Expiry"
 DEFAULT_PORT = 443
 
 SCAN_INTERVAL = timedelta(hours=12)

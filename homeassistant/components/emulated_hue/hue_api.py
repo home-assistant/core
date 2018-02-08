@@ -45,7 +45,7 @@ class HueUsernameView(HomeAssistantView):
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         if 'devicetype' not in data:
-            return self.json_message('devicetype not specified',
+            return self.json_message("devicetype not specified",
                                      HTTP_BAD_REQUEST)
 
         return self.json([{'success': {'username': '12345678901234567890'}}])
@@ -98,11 +98,11 @@ class HueOneLightStateView(HomeAssistantView):
         entity = hass.states.get(entity_id)
 
         if entity is None:
-            _LOGGER.error('Entity not found: %s', entity_id)
+            _LOGGER.error("Entity not found: %s", entity_id)
             return web.Response(text="Entity not found", status=404)
 
         if not self.config.is_entity_exposed(entity):
-            _LOGGER.error('Entity not exposed: %s', entity_id)
+            _LOGGER.error("Entity not exposed: %s", entity_id)
             return web.Response(text="Entity not exposed", status=404)
 
         state, brightness = get_entity_state(self.config, entity)
@@ -131,30 +131,30 @@ class HueOneLightChangeView(HomeAssistantView):
         entity_id = config.number_to_entity_id(entity_number)
 
         if entity_id is None:
-            _LOGGER.error('Unknown entity number: %s', entity_number)
-            return self.json_message('Entity not found', HTTP_NOT_FOUND)
+            _LOGGER.error("Unknown entity number: %s", entity_number)
+            return self.json_message("Entity not found", HTTP_NOT_FOUND)
 
         entity = hass.states.get(entity_id)
 
         if entity is None:
-            _LOGGER.error('Entity not found: %s', entity_id)
-            return self.json_message('Entity not found', HTTP_NOT_FOUND)
+            _LOGGER.error("Entity not found: %s", entity_id)
+            return self.json_message("Entity not found", HTTP_NOT_FOUND)
 
         if not config.is_entity_exposed(entity):
-            _LOGGER.error('Entity not exposed: %s', entity_id)
+            _LOGGER.error("Entity not exposed: %s", entity_id)
             return web.Response(text="Entity not exposed", status=404)
 
         try:
             request_json = yield from request.json()
         except ValueError:
-            _LOGGER.error('Received invalid json')
+            _LOGGER.error("Received invalid json")
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         # Parse the request into requested "on" status and brightness
         parsed = parse_hue_api_put_light_body(request_json, entity)
 
         if parsed is None:
-            _LOGGER.error('Unable to parse data: %s', request_json)
+            _LOGGER.error("Unable to parse data: %s", request_json)
             return web.Response(text="Bad request", status=400)
 
         result, brightness = parsed

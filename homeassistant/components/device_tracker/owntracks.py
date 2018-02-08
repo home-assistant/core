@@ -482,13 +482,13 @@ def async_handle_encrypted_message(hass, context, message):
 @asyncio.coroutine
 def async_handle_not_impl_msg(hass, context, message):
     """Handle valid but not implemented message types."""
-    _LOGGER.debug('Not handling %s message: %s', message.get("_type"), message)
+    _LOGGER.debug("Not handling %s message: %s", message.get("_type"), message)
 
 
 @asyncio.coroutine
 def async_handle_unsupported_msg(hass, context, message):
     """Handle an unsupported or invalid message type."""
-    _LOGGER.warning('Received unsupported message type: %s.',
+    _LOGGER.warning("Received unsupported message type: %s.",
                     message.get('_type'))
 
 

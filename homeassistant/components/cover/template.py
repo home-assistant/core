@@ -94,7 +94,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tilt_optimistic = device_config.get(CONF_TILT_OPTIMISTIC)
 
         if position_action is None and open_action is None:
-            _LOGGER.error('Must specify at least one of %s' or '%s',
+            _LOGGER.error("Must specify at least one of %s" or '%s',
                           OPEN_ACTION, POSITION_ACTION)
             continue
         template_entity_ids = set()
@@ -350,7 +350,7 @@ class CoverTemplate(CoverDevice):
                         self._position = 0
                 else:
                     _LOGGER.error(
-                        'Received invalid cover is_on state: %s. Expected: %s',
+                        "Received invalid cover is_on state: %s. Expected: %s",
                         state, ', '.join(_VALID_STATES))
                     self._position = None
             except TemplateError as ex:
@@ -401,8 +401,8 @@ class CoverTemplate(CoverDevice):
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.',
+                    _LOGGER.warning("Could not render %s template %s,"
+                                    " the state is unknown.",
                                     friendly_property_name, self._name)
                     return
 
@@ -410,5 +410,5 @@ class CoverTemplate(CoverDevice):
                     setattr(self, property_name,
                             getattr(super(), property_name))
                 except AttributeError:
-                    _LOGGER.error('Could not render %s template %s: %s',
+                    _LOGGER.error("Could not render %s template %s: %s",
                                   friendly_property_name, self._name, ex)

@@ -50,7 +50,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     def __init__(self, hass, name, code, username, password):
         """Initialize the Alarm.com status."""
         from pyalarmdotcom import Alarmdotcom
-        _LOGGER.debug('Setting up Alarm.com...')
+        _LOGGER.debug("Setting up Alarm.com...")
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None

@@ -109,7 +109,7 @@ class ComfoConnectSensor(Entity):
 
         def _handle_update(var):
             if var == self._sensor_id:
-                _LOGGER.debug('Dispatcher update for %s.', var)
+                _LOGGER.debug("Dispatcher update for %s.", var)
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates

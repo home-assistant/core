@@ -26,7 +26,7 @@ TUBE_LINES = [
     'Circle',
     'District',
     'DLR',
-    'Hammersmith & City',
+    "Hammersmith & City",
     'Jubilee',
     'London Overground',
     'Metropolitan',
@@ -34,7 +34,7 @@ TUBE_LINES = [
     'Piccadilly',
     'TfL Rail',
     'Victoria',
-    'Waterloo & City']
+    "Waterloo & City"]
 URL = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -124,7 +124,7 @@ def parse_api_response(response):
         state = ' + '.join(sorted(set(statuses)))
 
         if state == 'Good Service':
-            reason = 'Nothing to report'
+            reason = "Nothing to report"
         else:
             reason = ' *** '.join(
                 [status['reason'] for status in line['lineStatuses']])

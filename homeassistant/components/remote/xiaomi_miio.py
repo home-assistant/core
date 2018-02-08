@@ -133,7 +133,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 log_msg = "Received command is: {}".format(message['code'])
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(
-                    log_msg, title='Xiaomi Miio Remote')
+                    log_msg, title="Xiaomi Miio Remote")
                 return
 
             if ('error' in message and
@@ -145,7 +145,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Timeout. No infrared command captured")
         hass.components.persistent_notification.async_create(
             "Timeout. No infrared command captured",
-            title='Xiaomi Miio Remote')
+            title="Xiaomi Miio Remote")
 
     hass.services.async_register(DOMAIN, SERVICE_LEARN, async_service_handler,
                                  schema=LEARN_COMMAND_SCHEMA)

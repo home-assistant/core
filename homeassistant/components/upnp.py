@@ -64,7 +64,7 @@ def setup(hass, config):
 
     if host == '127.0.0.1':
         _LOGGER.error(
-            'Unable to determine local IP. Add it to your configuration.')
+            "Unable to determine local IP. Add it to your configuration.")
         return False
 
     import miniupnpc
@@ -105,10 +105,10 @@ def setup(hass, config):
             _LOGGER.exception("UPnP failed to configure port mapping for %s",
                               external)
             hass.components.persistent_notification.create(
-                '<b>ERROR: tcp port {} is already mapped in your router.'
-                '</b><br />Please disable port_mapping in the <i>upnp</i> '
-                'configuration section.<br />'
-                'You will need to restart hass after fixing.'
+                "<b>ERROR: tcp port {} is already mapped in your router."
+                "</b><br />Please disable port_mapping in the <i>upnp</i> "
+                "configuration section.<br />"
+                "You will need to restart hass after fixing."
                 ''.format(external),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)

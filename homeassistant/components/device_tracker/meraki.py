@@ -82,7 +82,7 @@ class MerakiView(HomeAssistantView):
             _LOGGER.debug('Valid Secret')
             if data['type'] not in ('DevicesSeen', 'BluetoothDevicesSeen'):
                 _LOGGER.error("Unknown Device %s", data['type'])
-                return self.json_message('Invalid device type',
+                return self.json_message("Invalid device type",
                                          HTTP_UNPROCESSABLE_ENTITY)
             _LOGGER.debug("Processing %s", data['type'])
         if len(data["data"]["observations"]) == 0:

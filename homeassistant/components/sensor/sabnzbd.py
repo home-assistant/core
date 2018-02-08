@@ -91,7 +91,7 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
-                                   'Failed to register, please try again.')
+                                   "Failed to register, please try again.")
 
         return
 
@@ -115,7 +115,7 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
     _CONFIGURING[host] = configurator.request_config(
         DEFAULT_NAME,
         sabnzbd_configuration_callback,
-        description=('Enter the API Key'),
+        description=("Enter the API Key"),
         submit_caption='Confirm',
         fields=[{
             'id': 'api_key',

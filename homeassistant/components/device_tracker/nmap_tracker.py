@@ -26,7 +26,7 @@ CONF_EXCLUDE = 'exclude'
 # Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = 'home_interval'
 CONF_OPTIONS = 'scan_options'
-DEFAULT_OPTIONS = '-F --host-timeout 5s'
+DEFAULT_OPTIONS = "-F --host-timeout 5s"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -57,7 +57,7 @@ def _arp(ip_address):
     match = re.search(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})', str(out))
     if match:
         return match.group(0)
-    _LOGGER.info('No MAC address found for %s', ip_address)
+    _LOGGER.info("No MAC address found for %s", ip_address)
     return None
 
 

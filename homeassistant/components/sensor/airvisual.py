@@ -42,7 +42,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 POLLUTANT_LEVEL_MAPPING = [
     {'label': 'Good', 'minimum': 0, 'maximum': 50},
     {'label': 'Moderate', 'minimum': 51, 'maximum': 100},
-    {'label': 'Unhealthy for sensitive group', 'minimum': 101, 'maximum': 150},
+    {'label': "Unhealthy for sensitive group", 'minimum': 101, 'maximum': 150},
     {'label': 'Unhealthy', 'minimum': 151, 'maximum': 200},
     {'label': 'Very Unhealthy', 'minimum': 201, 'maximum': 300},
     {'label': 'Hazardous', 'minimum': 301, 'maximum': 10000}
@@ -59,8 +59,8 @@ POLLUTANT_MAPPING = {
 
 SENSOR_LOCALES = {'cn': 'Chinese', 'us': 'U.S.'}
 SENSOR_TYPES = [
-    ('AirPollutionLevelSensor', 'Air Pollution Level', 'mdi:scale'),
-    ('AirQualityIndexSensor', 'Air Quality Index', 'mdi:format-list-numbers'),
+    ('AirPollutionLevelSensor', "Air Pollution Level", 'mdi:scale'),
+    ('AirQualityIndexSensor', "Air Quality Index", 'mdi:format-list-numbers'),
     ('MainPollutantSensor', 'Main Pollutant', 'mdi:chemical-weapon'),
 ]
 

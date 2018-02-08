@@ -38,13 +38,13 @@ MODEL = 'Model'
 
 # Commands known to the projector
 CMD_DICT = {
-    LAMP: '* 0 Lamp ?\r',
-    LAMP_HOURS: '* 0 Lamp\r',
-    INPUT_SOURCE: '* 0 Src ?\r',
-    ECO_MODE: '* 0 IR 052\r',
-    MODEL: '* 0 IR 035\r',
-    STATE_ON: '* 0 IR 001\r',
-    STATE_OFF: '* 0 IR 002\r',
+    LAMP: "* 0 Lamp ?\r",
+    LAMP_HOURS: "* 0 Lamp\r",
+    INPUT_SOURCE: "* 0 Src ?\r",
+    ECO_MODE: "* 0 IR 052\r",
+    MODEL: "* 0 IR 035\r",
+    STATE_ON: "* 0 IR 001\r",
+    STATE_OFF: "* 0 IR 002\r",
 }
 
 
@@ -103,7 +103,7 @@ class AcerSwitch(SwitchDevice):
             # need to wait for timeout
             ret = self.ser.read_until(size=20).decode('utf-8')
         except serial.SerialException:
-            _LOGGER.error('Problem communicating with %s', self._serial_port)
+            _LOGGER.error("Problem communicating with %s", self._serial_port)
         self.ser.close()
         return ret
 

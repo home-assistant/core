@@ -193,7 +193,7 @@ class FritzDectSwitchData(object):
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
-            raise Exception('Request to actor registry failed')
+            raise Exception("Request to actor registry failed")
 
         if actor is None:
             _LOGGER.error("Actor could not be found")
@@ -201,7 +201,7 @@ class FritzDectSwitchData(object):
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
-            raise Exception('Actor could not be found')
+            raise Exception("Actor could not be found")
 
         try:
             self.state = actor.get_state()
@@ -213,7 +213,7 @@ class FritzDectSwitchData(object):
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
-            raise Exception('Request to actor failed')
+            raise Exception("Request to actor failed")
 
         self.temperature = actor.temperature
         self.has_switch = actor.has_switch

@@ -134,7 +134,7 @@ def _check_deprecated_turn_off(hass, turn_off_action):
         new_config = OrderedDict(
             [('service', '{}.{}'.format(DOMAIN, SERVICE_CALL_METHOD)),
              ('data_template', OrderedDict(
-                 [('entity_id', '{{ entity_id }}'),
+                 [('entity_id', "{{ entity_id }}"),
                   ('method', method)]))])
         example_conf = dump(OrderedDict(
             [(CONF_TURN_OFF_ACTION, new_config)]))

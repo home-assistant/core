@@ -138,7 +138,7 @@ class Dominos():
         """Return the products from the closest stores menu."""
         self.update_closest_store()
         if self.closest_store is None:
-            _LOGGER.warning('Cannot get menu. Store may be closed')
+            _LOGGER.warning("Cannot get menu. Store may be closed")
             return []
         else:
             menu = self.closest_store.get_menu()
@@ -251,4 +251,4 @@ class DominosOrder(Entity):
         except StoreException:
             self._orderable = False
             _LOGGER.warning(
-                'Attempted to order Dominos - Order invalid or store closed')
+                "Attempted to order Dominos - Order invalid or store closed")

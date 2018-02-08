@@ -108,7 +108,7 @@ class Metrics(object):
             metric = self._metric(
                 'battery_level_percent',
                 self.prometheus_client.Gauge,
-                'Battery level as a percentage of its capacity',
+                "Battery level as a percentage of its capacity",
             )
             try:
                 value = float(state.attributes['battery_level'])
@@ -120,7 +120,7 @@ class Metrics(object):
         metric = self._metric(
             'binary_sensor_state',
             self.prometheus_client.Gauge,
-            'State of the binary sensor (0/1)',
+            "State of the binary sensor (0/1)",
         )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
@@ -129,7 +129,7 @@ class Metrics(object):
         metric = self._metric(
             'device_tracker_state',
             self.prometheus_client.Gauge,
-            'State of the device tracker (0/1)',
+            "State of the device tracker (0/1)",
         )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
@@ -138,7 +138,7 @@ class Metrics(object):
         metric = self._metric(
             'light_state',
             self.prometheus_client.Gauge,
-            'Load level of a light (0..1)',
+            "Load level of a light (0..1)",
         )
 
         try:
@@ -155,7 +155,7 @@ class Metrics(object):
         metric = self._metric(
             'lock_state',
             self.prometheus_client.Gauge,
-            'State of the lock (0/1)',
+            "State of the lock (0/1)",
         )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
@@ -168,12 +168,12 @@ class Metrics(object):
                 temp = fahrenheit_to_celsius(temp)
             metric = self._metric(
                 'temperature_c', self.prometheus_client.Gauge,
-                'Temperature in degrees Celsius')
+                "Temperature in degrees Celsius")
             metric.labels(**self._labels(state)).set(temp)
 
         metric = self._metric(
             'climate_state', self.prometheus_client.Gauge,
-            'State of the thermostat (0/1)')
+            "State of the thermostat (0/1)")
         try:
             value = state_helper.state_as_number(state)
             metric.labels(**self._labels(state)).set(value)
@@ -208,7 +208,7 @@ class Metrics(object):
         metric = self._metric(
             'switch_state',
             self.prometheus_client.Gauge,
-            'State of the switch (0/1)',
+            "State of the switch (0/1)",
         )
 
         try:
@@ -224,7 +224,7 @@ class Metrics(object):
         metric = self._metric(
             'automation_triggered_count',
             self.prometheus_client.Counter,
-            'Count of times an automation has been triggered',
+            "Count of times an automation has been triggered",
         )
 
         metric.labels(**self._labels(state)).inc()

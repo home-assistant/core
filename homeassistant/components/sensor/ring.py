@@ -45,11 +45,11 @@ SENSOR_TYPES = {
         'bell-ring', None],
 
     'wifi_signal_category': [
-        'WiFi Signal Category', ['chime', 'doorbell', 'stickup_cams'], None,
+        "WiFi Signal Category", ['chime', 'doorbell', 'stickup_cams'], None,
         'wifi', None],
 
     'wifi_signal_strength': [
-        'WiFi Signal Strength', ['chime', 'doorbell', 'stickup_cams'], 'dBm',
+        "WiFi Signal Strength", ['chime', 'doorbell', 'stickup_cams'], 'dBm',
         'wifi', None],
 }
 

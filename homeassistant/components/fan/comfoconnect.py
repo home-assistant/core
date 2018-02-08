@@ -99,7 +99,7 @@ class ComfoConnectFan(FanEntity):
 
     def set_speed(self, mode):
         """Set fan speed."""
-        _LOGGER.debug('Changing fan mode to %s.', mode)
+        _LOGGER.debug("Changing fan mode to %s.", mode)
 
         from pycomfoconnect import (
             CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW, CMD_FAN_MODE_MEDIUM,

@@ -95,7 +95,7 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         except aiohttp.ClientResponseError:
             body = yield from res.read()
             _LOGGER.error(
-                'request_sync request failed: %d %s', res.status, body)
+                "request_sync request failed: %d %s", res.status, body)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Could not contact Google for request_sync")
 

@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Data provided by Skybell.com"
 
 NOTIFICATION_ID = 'skybell_notification'
-NOTIFICATION_TITLE = 'Skybell Sensor Setup'
+NOTIFICATION_TITLE = "Skybell Sensor Setup"
 
 DOMAIN = 'skybell'
 DEFAULT_CACHEDB = './skybell_cache.pickle'
@@ -52,8 +52,8 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Skybell service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)

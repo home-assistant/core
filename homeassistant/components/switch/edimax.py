@@ -18,7 +18,7 @@ REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Edimax Smart Plug'
+DEFAULT_NAME = "Edimax Smart Plug"
 DEFAULT_PASSWORD = '1234'
 DEFAULT_USERNAME = 'admin'
 

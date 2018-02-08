@@ -42,21 +42,21 @@ SENSOR_TYPES = {
     'name': ['Station Name', None],
     'history_product': ['Zone', None],
     'local_date_time': ['Local Time', None],
-    'local_date_time_full': ['Local Time Full', None],
-    'aifstime_utc': ['UTC Time Full', None],
+    'local_date_time_full': ["Local Time Full", None],
+    'aifstime_utc': ["UTC Time Full", None],
     'lat': ['Lat', None],
     'lon': ['Long', None],
-    'apparent_t': ['Feels Like C', TEMP_CELSIUS],
+    'apparent_t': ["Feels Like C", TEMP_CELSIUS],
     'cloud': ['Cloud', None],
     'cloud_base_m': ['Cloud Base', None],
     'cloud_oktas': ['Cloud Oktas', None],
-    'cloud_type_id': ['Cloud Type ID', None],
+    'cloud_type_id': ["Cloud Type ID", None],
     'cloud_type': ['Cloud Type', None],
-    'delta_t': ['Delta Temp C', TEMP_CELSIUS],
-    'gust_kmh': ['Wind Gust kmh', 'km/h'],
-    'gust_kt': ['Wind Gust kt', 'kt'],
-    'air_temp': ['Air Temp C', TEMP_CELSIUS],
-    'dewpt': ['Dew Point C', TEMP_CELSIUS],
+    'delta_t': ["Delta Temp C", TEMP_CELSIUS],
+    'gust_kmh': ["Wind Gust kmh", 'km/h'],
+    'gust_kt': ["Wind Gust kt", 'kt'],
+    'air_temp': ["Air Temp C", TEMP_CELSIUS],
+    'dewpt': ["Dew Point C", TEMP_CELSIUS],
     'press': ['Pressure mb', 'mbar'],
     'press_qnh': ['Pressure qnh', 'qnh'],
     'press_msl': ['Pressure msl', 'msl'],
@@ -70,8 +70,8 @@ SENSOR_TYPES = {
     'vis_km': ['Visability km', 'km'],
     'weather': ['Weather', None],
     'wind_dir': ['Wind Direction', None],
-    'wind_spd_kmh': ['Wind Speed kmh', 'km/h'],
-    'wind_spd_kt': ['Wind Direction kt', 'kt']
+    'wind_spd_kmh': ["Wind Speed kmh", 'km/h'],
+    'wind_spd_kt': ["Wind Direction kt", 'kt']
 }
 
 
@@ -81,13 +81,13 @@ def validate_station(station):
         return
     station = station.replace('.shtml', '')
     if not re.fullmatch(r'ID[A-Z]\d\d\d\d\d\.\d\d\d\d\d', station):
-        raise vol.error.Invalid('Malformed station ID')
+        raise vol.error.Invalid("Malformed station ID")
     return station
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
-    vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
+    vol.Inclusive(CONF_ZONE_ID, "Deprecated partial station ID"): cv.string,
+    vol.Inclusive(CONF_WMO_ID, "Deprecated partial station ID"): cv.string,
     vol.Optional(CONF_NAME, default=None): cv.string,
     vol.Optional(CONF_STATION): validate_station,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):

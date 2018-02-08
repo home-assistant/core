@@ -114,7 +114,7 @@ def request_configuration(hass, config, name, host, serialnumber):
         title, configuration_callback,
         description='Functionality: ' + str(AXIS_INCLUDE),
         entity_picture="/static/images/logo_axis.png",
-        link_name='Axis platform documentation',
+        link_name="Axis platform documentation",
         link_url='https://home-assistant.io/components/axis/',
         submit_caption="Confirm",
         fields=[

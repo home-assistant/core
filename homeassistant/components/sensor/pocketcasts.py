@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:rss'
 
-SENSOR_NAME = 'Pocketcasts unlistened episodes'
+SENSOR_NAME = "Pocketcasts unlistened episodes"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

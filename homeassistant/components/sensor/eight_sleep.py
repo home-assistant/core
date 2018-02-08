@@ -14,22 +14,22 @@ from homeassistant.components.eight_sleep import (
 DEPENDENCIES = ['eight_sleep']
 
 ATTR_ROOM_TEMP = 'Room Temperature'
-ATTR_AVG_ROOM_TEMP = 'Average Room Temperature'
+ATTR_AVG_ROOM_TEMP = "Average Room Temperature"
 ATTR_BED_TEMP = 'Bed Temperature'
-ATTR_AVG_BED_TEMP = 'Average Bed Temperature'
+ATTR_AVG_BED_TEMP = "Average Bed Temperature"
 ATTR_RESP_RATE = 'Respiratory Rate'
-ATTR_AVG_RESP_RATE = 'Average Respiratory Rate'
+ATTR_AVG_RESP_RATE = "Average Respiratory Rate"
 ATTR_HEART_RATE = 'Heart Rate'
-ATTR_AVG_HEART_RATE = 'Average Heart Rate'
+ATTR_AVG_HEART_RATE = "Average Heart Rate"
 ATTR_SLEEP_DUR = 'Time Slept'
-ATTR_LIGHT_PERC = 'Light Sleep %'
-ATTR_DEEP_PERC = 'Deep Sleep %'
-ATTR_TNT = 'Tosses & Turns'
+ATTR_LIGHT_PERC = "Light Sleep %"
+ATTR_DEEP_PERC = "Deep Sleep %"
+ATTR_TNT = "Tosses & Turns"
 ATTR_SLEEP_STAGE = 'Sleep Stage'
-ATTR_TARGET_HEAT = 'Target Heating Level'
+ATTR_TARGET_HEAT = "Target Heating Level"
 ATTR_ACTIVE_HEAT = 'Heating Active'
-ATTR_DURATION_HEAT = 'Heating Time Remaining'
-ATTR_LAST_SEEN = 'Last In Bed'
+ATTR_DURATION_HEAT = "Heating Time Remaining"
+ATTR_LAST_SEEN = "Last In Bed"
 ATTR_PROCESSING = 'Processing'
 ATTR_SESSION_START = 'Session Start'
 

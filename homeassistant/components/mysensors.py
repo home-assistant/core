@@ -72,7 +72,7 @@ def is_socket_address(value):
         socket.getaddrinfo(value, None)
         return value
     except OSError:
-        raise vol.Invalid('Device is not a valid domain name or ip address')
+        raise vol.Invalid("Device is not a valid domain name or ip address")
 
 
 def has_parent_dir(value):
@@ -81,7 +81,7 @@ def has_parent_dir(value):
     is_dir_writable = os.path.isdir(parent) and os.access(parent, os.W_OK)
     if not is_dir_writable:
         raise vol.Invalid(
-            '{} directory does not exist or is not writeable'.format(parent))
+            "{} directory does not exist or is not writeable".format(parent))
     return value
 
 
@@ -92,7 +92,7 @@ def has_all_unique_files(value):
     if None in persistence_files and any(
             name is not None for name in persistence_files):
         raise vol.Invalid(
-            'persistence file name of all devices must be set if any is set')
+            "persistence file name of all devices must be set if any is set")
     if not all(name is None for name in persistence_files):
         schema = vol.Schema(vol.Unique())
         schema(persistence_files)
@@ -105,7 +105,7 @@ def is_persistence_file(value):
         return value
     else:
         raise vol.Invalid(
-            '{} does not end in either `.json` or `.pickle`'.format(value))
+            "{} does not end in either `.json` or `.pickle`".format(value))
 
 
 def is_serial_port(value):
@@ -115,7 +115,7 @@ def is_serial_port(value):
         if value in ports:
             return value
         else:
-            raise vol.Invalid('{} is not a serial port'.format(value))
+            raise vol.Invalid("{} is not a serial port".format(value))
     else:
         return cv.isdevice(value)
 
@@ -127,7 +127,7 @@ def deprecated(key):
         if key not in config:
             return config
         _LOGGER.warning(
-            '%s option for %s is deprecated. Please remove %s from your '
+            "%s option for %s is deprecated. Please remove %s from your "
             'configuration file', key, DOMAIN, key)
         config.pop(key)
         return config

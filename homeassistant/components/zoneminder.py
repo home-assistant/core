@@ -114,7 +114,7 @@ def _zm_request(method, api_url, data=None):
     try:
         return req.json()
     except ValueError:
-        _LOGGER.exception('JSON decode exception caught while attempting to '
+        _LOGGER.exception("JSON decode exception caught while attempting to "
                           'decode "%s"', req.text)
 
 

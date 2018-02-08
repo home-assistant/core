@@ -94,7 +94,7 @@ class UPSSensor(Entity):
                     continue
                 status_counts[status] += 1
         except upsmychoice.UPSError:
-            _LOGGER.error('Could not connect to UPS My Choice account')
+            _LOGGER.error("Could not connect to UPS My Choice account")
 
         self._attributes = {
             ATTR_ATTRIBUTION: upsmychoice.ATTRIBUTION

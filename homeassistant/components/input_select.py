@@ -61,7 +61,7 @@ def _cv_input_select(cfg):
     options = cfg[CONF_OPTIONS]
     initial = cfg.get(CONF_INITIAL)
     if initial is not None and initial not in options:
-        raise vol.Invalid('initial state "{}" is not part of the options: {}'
+        raise vol.Invalid("initial state \"{}\" is not part of the options: {}"
                           .format(initial, ','.join(options)))
     return cfg
 
@@ -243,7 +243,7 @@ class InputSelect(Entity):
     def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
-            _LOGGER.warning('Invalid option: %s (possible options: %s)',
+            _LOGGER.warning("Invalid option: %s (possible options: %s)",
                             option, ', '.join(self._options))
             return
         self._current_option = option

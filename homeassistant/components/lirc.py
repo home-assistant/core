@@ -88,4 +88,4 @@ class LircInterface(threading.Thread):
             else:
                 time.sleep(0.2)
         lirc.deinit()
-        _LOGGER.debug('LIRC interface thread stopped')
+        _LOGGER.debug("LIRC interface thread stopped")

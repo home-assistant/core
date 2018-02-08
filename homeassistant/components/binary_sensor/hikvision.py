@@ -39,14 +39,14 @@ DEVICE_CLASS_MAP = {
     'Shelter Alarm': None,
     'Disk Full': None,
     'Disk Error': None,
-    'Net Interface Broken': 'connectivity',
+    "Net Interface Broken": 'connectivity',
     'IP Conflict': 'connectivity',
     'Illegal Access': None,
     'Video Mismatch': None,
     'Bad Video': None,
     'PIR Alarm': 'motion',
     'Face Detection': 'motion',
-    'Scene Change Detection': 'motion',
+    "Scene Change Detection": 'motion',
     'I/O': None,
 }
 
@@ -246,7 +246,7 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
     def _update_callback(self, msg):
         """Update the sensor's state, if needed."""
-        _LOGGER.debug('Callback signal from: %s', msg)
+        _LOGGER.debug("Callback signal from: %s", msg)
 
         if self._delay > 0 and not self.is_on:
             # Set timer to wait until updating the state

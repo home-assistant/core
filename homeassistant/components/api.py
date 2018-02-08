@@ -98,7 +98,7 @@ class APIEventStream(HomeAssistantView):
             if restrict and event.event_type not in restrict:
                 return
 
-            _LOGGER.debug('STREAM %s FORWARDING %s', id(stop_obj), event)
+            _LOGGER.debug("STREAM %s FORWARDING %s", id(stop_obj), event)
 
             if event.event_type == EVENT_HOMEASSISTANT_STOP:
                 data = stop_obj
@@ -114,7 +114,7 @@ class APIEventStream(HomeAssistantView):
         unsub_stream = hass.bus.async_listen(MATCH_ALL, forward_events)
 
         try:
-            _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
+            _LOGGER.debug("STREAM %s ATTACHED", id(stop_obj))
 
             # Fire off one message so browsers fire open event right away
             yield from to_write.put(STREAM_PING_PAYLOAD)
@@ -129,7 +129,7 @@ class APIEventStream(HomeAssistantView):
                         break
 
                     msg = "data: {}\n\n".format(payload)
-                    _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
+                    _LOGGER.debug("STREAM %s WRITING %s", id(stop_obj),
                                   msg.strip())
                     response.write(msg.encode("UTF-8"))
                     yield from response.drain()
@@ -137,10 +137,10 @@ class APIEventStream(HomeAssistantView):
                     yield from to_write.put(STREAM_PING_PAYLOAD)
 
         except asyncio.CancelledError:
-            _LOGGER.debug('STREAM %s ABORT', id(stop_obj))
+            _LOGGER.debug("STREAM %s ABORT", id(stop_obj))
 
         finally:
-            _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
+            _LOGGER.debug("STREAM %s RESPONSE CLOSED", id(stop_obj))
             unsub_stream()
 
 
@@ -200,7 +200,7 @@ class APIEntityStateView(HomeAssistantView):
         state = request.app['hass'].states.get(entity_id)
         if state:
             return self.json(state)
-        return self.json_message('Entity not found', HTTP_NOT_FOUND)
+        return self.json_message("Entity not found", HTTP_NOT_FOUND)
 
     @asyncio.coroutine
     def post(self, request, entity_id):
@@ -209,13 +209,13 @@ class APIEntityStateView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON specified',
+            return self.json_message("Invalid JSON specified",
                                      HTTP_BAD_REQUEST)
 
         new_state = data.get('state')
 
         if new_state is None:
-            return self.json_message('No state specified', HTTP_BAD_REQUEST)
+            return self.json_message("No state specified", HTTP_BAD_REQUEST)
 
         attributes = data.get('attributes')
         force_update = data.get('force_update', False)
@@ -238,7 +238,7 @@ class APIEntityStateView(HomeAssistantView):
         """Remove entity."""
         if request.app['hass'].states.async_remove(entity_id):
             return self.json_message('Entity removed')
-        return self.json_message('Entity not found', HTTP_NOT_FOUND)
+        return self.json_message("Entity not found", HTTP_NOT_FOUND)
 
 
 class APIEventListenersView(HomeAssistantView):
@@ -266,11 +266,11 @@ class APIEventView(HomeAssistantView):
         try:
             event_data = json.loads(body) if body else None
         except ValueError:
-            return self.json_message('Event data should be valid JSON',
+            return self.json_message("Event data should be valid JSON",
                                      HTTP_BAD_REQUEST)
 
         if event_data is not None and not isinstance(event_data, dict):
-            return self.json_message('Event data should be a JSON object',
+            return self.json_message("Event data should be a JSON object",
                                      HTTP_BAD_REQUEST)
 
         # Special case handling for event STATE_CHANGED
@@ -318,7 +318,7 @@ class APIDomainServicesView(HomeAssistantView):
         try:
             data = json.loads(body) if body else None
         except ValueError:
-            return self.json_message('Data should be valid JSON',
+            return self.json_message("Data should be valid JSON",
                                      HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
@@ -353,7 +353,7 @@ class APITemplateView(HomeAssistantView):
             tpl = template.Template(data['template'], request.app['hass'])
             return tpl.async_render(data.get('variables'))
         except (ValueError, TemplateError) as ex:
-            return self.json_message('Error rendering template: {}'.format(ex),
+            return self.json_message("Error rendering template: {}".format(ex),
                                      HTTP_BAD_REQUEST)
 
 

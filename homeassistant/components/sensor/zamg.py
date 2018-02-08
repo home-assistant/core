@@ -41,13 +41,13 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
     ATTR_WEATHER_PRESSURE: ('Pressure', 'hPa', 'LDstat hPa', float),
-    'pressure_sealevel': ('Pressure at Sea Level', 'hPa', 'LDred hPa', float),
+    'pressure_sealevel': ("Pressure at Sea Level", 'hPa', 'LDred hPa', float),
     ATTR_WEATHER_HUMIDITY: ('Humidity', '%', 'RF %', int),
     ATTR_WEATHER_WIND_SPEED: ('Wind Speed', 'km/h', 'WG km/h', float),
     ATTR_WEATHER_WIND_BEARING: ('Wind Bearing', '°', 'WR °', int),
-    'wind_max_speed': ('Top Wind Speed', 'km/h', 'WSG km/h', float),
-    'wind_max_bearing': ('Top Wind Bearing', '°', 'WSR °', int),
-    'sun_last_hour': ('Sun Last Hour', '%', 'SO %', int),
+    'wind_max_speed': ("Top Wind Speed", 'km/h', 'WSG km/h', float),
+    'wind_max_bearing': ("Top Wind Bearing", '°', 'WSR °', int),
+    'sun_last_hour': ("Sun Last Hour", '%', 'SO %', int),
     ATTR_WEATHER_TEMPERATURE: ('Temperature', '°C', 'T °C', float),
     'precipitation': ('Precipitation', 'l/m²', 'N l/m²', float),
     'dewpoint': ('Dew Point', '°C', 'TP °C', float),
@@ -65,9 +65,9 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
+                  "Latitude and longitude must exist together"): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+                  "Latitude and longitude must exist together"): cv.longitude,
 })
 
 

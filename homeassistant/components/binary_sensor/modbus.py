@@ -66,6 +66,6 @@ class ModbusCoilSensor(BinarySensorDevice):
             self._value = result.bits[0]
         except AttributeError:
             _LOGGER.error(
-                'No response from modbus slave %s coil %s',
+                "No response from modbus slave %s coil %s",
                 self._slave,
                 self._coil)

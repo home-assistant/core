@@ -61,8 +61,9 @@ def async_from_config(config: ConfigType, config_validation: bool=True):
             break
 
     if factory is None:
-        raise HomeAssistantError('Invalid condition "{}" specified {}'.format(
-            config.get(CONF_CONDITION), config))
+        raise HomeAssistantError(
+            "Invalid condition \"{}\" specified {}".format(
+                config.get(CONF_CONDITION), config))
 
     return factory(config, config_validation)
 

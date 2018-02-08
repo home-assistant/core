@@ -118,7 +118,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @callback
     def playstatus_error(self, updater, exception):
         """Inform about an error and restart push updates."""
-        _LOGGER.warning('A %s error occurred: %s',
+        _LOGGER.warning("A %s error occurred: %s",
                         exception.__class__, exception)
 
         # This will wait 10 seconds before restarting push updates. If the
@@ -191,7 +191,7 @@ class AppleTvDevice(MediaPlayerDevice):
             title = self._playing.title
             return title if title else 'No title'
 
-        return 'Establishing a connection to {0}...'.format(self._name)
+        return "Establishing a connection to {0}...".format(self._name)
 
     @property
     def supported_features(self):

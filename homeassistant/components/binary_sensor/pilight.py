@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_VARIABLE = 'variable'
 CONF_RESET_DELAY_SEC = 'reset_delay_sec'
 
-DEFAULT_NAME = 'Pilight Binary Sensor'
+DEFAULT_NAME = "Pilight Binary Sensor"
 DEPENDENCIES = ['pilight']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

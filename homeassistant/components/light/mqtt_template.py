@@ -28,7 +28,7 @@ DOMAIN = 'mqtt_template'
 
 DEPENDENCIES = ['mqtt']
 
-DEFAULT_NAME = 'MQTT Template Light'
+DEFAULT_NAME = "MQTT Template Light"
 DEFAULT_OPTIMISTIC = False
 
 CONF_BLUE_TEMPLATE = 'blue_template'
@@ -207,7 +207,7 @@ class MqttTemplate(MqttAvailability, Light):
                         async_render_with_possible_json_value(payload)
                     )
                 except ValueError:
-                    _LOGGER.warning('Invalid white value received')
+                    _LOGGER.warning("Invalid white value received")
 
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[CONF_EFFECT_TEMPLATE].\

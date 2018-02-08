@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except ImportError:
         from miflora.backends.gatttool import GatttoolBackend
         backend = GatttoolBackend
-    _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
+    _LOGGER.debug("Miflora is using %s backend.", backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(

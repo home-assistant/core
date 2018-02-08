@@ -17,7 +17,7 @@ from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Xiaomi Miio Switch'
+DEFAULT_NAME = "Xiaomi Miio Switch"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -80,9 +80,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             devices.append(device)
         else:
             _LOGGER.error(
-                'Unsupported device found! Please create an issue at '
+                "Unsupported device found! Please create an issue at "
                 'https://github.com/rytilahti/python-miio/issues '
-                'and provide the following data: %s', device_info.model)
+                "and provide the following data: %s", device_info.model)
     except DeviceException:
         raise PlatformNotReady
 

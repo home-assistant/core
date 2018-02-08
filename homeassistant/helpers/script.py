@@ -193,7 +193,7 @@ class Script():
                 event_data.update(template.render_complex(
                     action[CONF_EVENT_DATA_TEMPLATE], variables))
             except TemplateError as ex:
-                _LOGGER.error('Error rendering event data template: %s', ex)
+                _LOGGER.error("Error rendering event data template: %s", ex)
 
         self.hass.bus.async_fire(action[CONF_EVENT],
                                  event_data)

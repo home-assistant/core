@@ -116,7 +116,7 @@ class VerisureHub(object):
         try:
             self.session.login()
         except self._verisure.Error as ex:
-            _LOGGER.error('Could not log in to verisure, %s', ex)
+            _LOGGER.error("Could not log in to verisure, %s", ex)
             return False
         if self.giid:
             return self.set_giid()
@@ -127,7 +127,7 @@ class VerisureHub(object):
         try:
             self.session.logout()
         except self._verisure.Error as ex:
-            _LOGGER.error('Could not log out from verisure, %s', ex)
+            _LOGGER.error("Could not log out from verisure, %s", ex)
             return False
         return True
 
@@ -136,7 +136,7 @@ class VerisureHub(object):
         try:
             self.session.set_giid(self.giid)
         except self._verisure.Error as ex:
-            _LOGGER.error('Could not set installation GIID, %s', ex)
+            _LOGGER.error("Could not set installation GIID, %s", ex)
             return False
         return True
 
@@ -146,9 +146,9 @@ class VerisureHub(object):
         try:
             self.overview = self.session.get_overview()
         except self._verisure.ResponseError as ex:
-            _LOGGER.error('Could not read overview, %s', ex)
+            _LOGGER.error("Could not read overview, %s", ex)
             if ex.status_code == 503:  # Service unavailable
-                _LOGGER.info('Trying to log in again')
+                _LOGGER.info("Trying to log in again")
                 self.login()
             else:
                 raise

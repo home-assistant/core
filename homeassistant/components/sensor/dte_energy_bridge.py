@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_IP_ADDRESS = 'ip'
 CONF_VERSION = 'version'
 
-DEFAULT_NAME = 'Current Energy Usage'
+DEFAULT_NAME = "Current Energy Usage"
 DEFAULT_VERSION = 1
 
 ICON = 'mdi:flash'
@@ -86,13 +86,13 @@ class DteEnergyBridgeSensor(Entity):
             response = requests.get(self._url, timeout=5)
         except (requests.exceptions.RequestException, ValueError):
             _LOGGER.warning(
-                'Could not update status for DTE Energy Bridge (%s)',
+                "Could not update status for DTE Energy Bridge (%s)",
                 self._name)
             return
 
         if response.status_code != 200:
             _LOGGER.warning(
-                'Invalid status_code from DTE Energy Bridge: %s (%s)',
+                "Invalid status_code from DTE Energy Bridge: %s (%s)",
                 response.status_code, self._name)
             return
 
@@ -100,7 +100,7 @@ class DteEnergyBridgeSensor(Entity):
 
         if len(response_split) != 2:
             _LOGGER.warning(
-                'Invalid response from DTE Energy Bridge: "%s" (%s)',
+                "Invalid response from DTE Energy Bridge: \"%s\" (%s)",
                 response.text, self._name)
             return
 

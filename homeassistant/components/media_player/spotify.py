@@ -32,7 +32,7 @@ SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
 
-SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
+SCOPE = "user-read-playback-state user-modify-playback-state user-read-private"
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
 AUTH_CALLBACK_PATH = '/api/spotify'
 AUTH_CALLBACK_NAME = 'api:spotify'
@@ -43,10 +43,10 @@ CONF_ALIASES = 'aliases'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 CONF_CACHE_PATH = 'cache_path'
-CONFIGURATOR_LINK_NAME = 'Link Spotify account'
-CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
-CONFIGURATOR_DESCRIPTION = 'To link your Spotify account, ' \
-                           'click the link, login, and authorize:'
+CONFIGURATOR_LINK_NAME = "Link Spotify account"
+CONFIGURATOR_SUBMIT_CAPTION = "I authorized successfully"
+CONFIGURATOR_DESCRIPTION = "To link your Spotify account, " \
+                           "click the link, login, and authorize:"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,

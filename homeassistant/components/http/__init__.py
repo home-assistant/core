@@ -229,13 +229,13 @@ class HomeAssistantWSGI(object):
         if not hasattr(view, 'url'):
             class_name = view.__class__.__name__
             raise AttributeError(
-                '{0} missing required attribute "url"'.format(class_name)
+                "{0} missing required attribute \"url\"".format(class_name)
             )
 
         if not hasattr(view, 'name'):
             class_name = view.__class__.__name__
             raise AttributeError(
-                '{0} missing required attribute "name"'.format(class_name)
+                "{0} missing required attribute \"name\"".format(class_name)
             )
 
         view.register(self.app.router)
@@ -378,12 +378,12 @@ class HomeAssistantView(object):
     # pylint: disable=no-self-use
     def file(self, request, fil):
         """Return a file."""
-        assert isinstance(fil, str), 'only string paths allowed'
+        assert isinstance(fil, str), "only string paths allowed"
         return web.FileResponse(fil)
 
     def register(self, router):
         """Register the view with a router."""
-        assert self.url is not None, 'No url set for view'
+        assert self.url is not None, "No url set for view"
         urls = [self.url] + self.extra_urls
 
         for method in ('get', 'post', 'delete', 'put'):
@@ -421,7 +421,7 @@ def request_handler_factory(view, handler):
         if view.requires_auth and not authenticated:
             raise HTTPUnauthorized()
 
-        _LOGGER.info('Serving %s to %s (auth: %s)',
+        _LOGGER.info("Serving %s to %s (auth: %s)",
                      request.path, remote_addr, authenticated)
 
         result = handler(request, **request.match_info)
@@ -443,7 +443,7 @@ def request_handler_factory(view, handler):
         elif result is None:
             result = b''
         elif not isinstance(result, bytes):
-            assert False, ('Result should be None, string, bytes or Response. '
+            assert False, ("Result should be None, string, bytes or Response. "
                            'Got: {}').format(result)
 
         return web.Response(body=result, status=status_code)
@@ -473,15 +473,15 @@ class RequestDataValidator:
             try:
                 data = yield from request.json()
             except ValueError:
-                _LOGGER.error('Invalid JSON received.')
+                _LOGGER.error("Invalid JSON received.")
                 return view.json_message('Invalid JSON.', 400)
 
             try:
                 kwargs['data'] = self._schema(data)
             except vol.Invalid as err:
-                _LOGGER.error('Data does not match schema: %s', err)
+                _LOGGER.error("Data does not match schema: %s", err)
                 return view.json_message(
-                    'Message format incorrect: {}'.format(err), 400)
+                    "Message format incorrect: {}".format(err), 400)
 
             result = yield from method(view, request, *args, **kwargs)
             return result

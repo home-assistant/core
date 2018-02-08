@@ -184,9 +184,9 @@ class HomeAssistant(object):
                 yield from self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                'Something is blocking Home Assistant from wrapping up the '
-                'start up phase. We\'re going to continue anyway. Please '
-                'report the following info at http://bit.ly/2ogP58T : %s',
+                "Something is blocking Home Assistant from wrapping up the "
+                "start up phase. We\'re going to continue anyway. Please "
+                "report the following info at http://bit.ly/2ogP58T : %s",
                 ', '.join(self.config.components))
 
         # Allow automations to set up the start triggers before changing state
@@ -1017,7 +1017,7 @@ class ServiceRegistry(object):
 
                 yield from self._hass.async_add_job(execute_service)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error executing service %s', service_call)
+            _LOGGER.exception("Error executing service %s", service_call)
 
 
 class Config(object):
@@ -1119,7 +1119,7 @@ def _async_create_timer(hass):
         slp_seconds = nxt - monotonic()
 
         if slp_seconds < 0:
-            _LOGGER.error('Timer got out of sync. Resetting')
+            _LOGGER.error("Timer got out of sync. Resetting")
             nxt = monotonic() + 1
             slp_seconds = 1
 

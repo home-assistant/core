@@ -28,7 +28,7 @@ def async_register(hass, handler):
         intents = hass.data[DATA_KEY] = {}
 
     if handler.intent_type in intents:
-        _LOGGER.warning('Intent %s is being overwritten by %s.',
+        _LOGGER.warning("Intent %s is being overwritten by %s.",
                         handler.intent_type, handler)
 
     intents[handler.intent_type] = handler
@@ -51,7 +51,7 @@ def async_handle(hass, platform, intent_type, slots=None, text_input=None):
         return result
     except vol.Invalid as err:
         raise InvalidSlotInfo(
-            'Received invalid slot info for {}'.format(intent_type)) from err
+            "Received invalid slot info for {}".format(intent_type)) from err
     except Exception as err:
         raise IntentHandleError(
             'Error handling {}'.format(intent_type)) from err

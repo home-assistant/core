@@ -82,7 +82,7 @@ class GstreamerDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
         if media_type != MEDIA_TYPE_MUSIC:
-            _LOGGER.error('invalid media type')
+            _LOGGER.error("invalid media type")
             return
         self._player.queue(media_id)
 

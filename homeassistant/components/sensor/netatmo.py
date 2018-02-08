@@ -45,7 +45,7 @@ SENSOR_TYPES = {
     'windangle_value': ['Angle Value', 'º', 'mdi:compass'],
     'windstrength': ['Strength', 'km/h', 'mdi:weather-windy'],
     'gustangle': ['Gust Angle', '', 'mdi:compass'],
-    'gustangle_value': ['Gust Angle Value', 'º', 'mdi:compass'],
+    'gustangle_value': ["Gust Angle Value", 'º', 'mdi:compass'],
     'guststrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
     'rf_status': ['Radio', '', 'mdi:signal'],
     'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal'],
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     config[CONF_MODULES].items():
                 # Test if module exist """
                 if module_name not in data.get_module_names():
-                    _LOGGER.error('Module name: "%s" not found', module_name)
+                    _LOGGER.error("Module name: "%s" not found", module_name)
                     continue
                 # Only create sensor for monitored """
                 for variable in monitored_conditions:

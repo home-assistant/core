@@ -49,30 +49,30 @@ LOCK_NOTIFICATION = {
 
 LOCK_ALARM_TYPE = {
     '9': 'Deadbolt Jammed',
-    '18': 'Locked with Keypad by user ',
-    '19': 'Unlocked with Keypad by user ',
+    '18': "Locked with Keypad by user ",
+    '19': "Unlocked with Keypad by user ",
     '21': 'Manually Locked ',
     '22': 'Manually Unlocked ',
-    '24': 'Locked by RF',
-    '25': 'Unlocked by RF',
+    '24': "Locked by RF",
+    '25': "Unlocked by RF",
     '27': 'Auto re-lock',
     '33': 'User deleted: ',
-    '112': 'Master code changed or User added: ',
+    '112': "Master code changed or User added: ",
     '113': 'Duplicate Pin-code: ',
-    '130': 'RF module, power restored',
+    '130': "RF module, power restored",
     '161': 'Tamper Alarm: ',
     '167': 'Low Battery',
-    '168': 'Critical Battery Level',
-    '169': 'Battery too low to operate'
+    '168': "Critical Battery Level",
+    '169': "Battery too low to operate"
 }
 
 MANUAL_LOCK_ALARM_LEVEL = {
-    '1': 'by Key Cylinder or Inside thumb turn',
-    '2': 'by Touch function (lock and leave)'
+    '1': "by Key Cylinder or Inside thumb turn",
+    '2': "by Touch function (lock and leave)"
 }
 
 TAMPER_ALARM_LEVEL = {
-    '1': 'Too many keypresses',
+    '1': "Too many keypresses",
     '2': 'Cover removed'
 }
 
@@ -173,7 +173,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             for i in range(len(value.data)):
                 data += '\0'
                 i += 1
-            _LOGGER.debug('Data to clear lock: %s', data)
+            _LOGGER.debug("Data to clear lock: %s", data)
             value.data = data
             _LOGGER.info("Usercode at slot %s is cleared", value.index)
             break

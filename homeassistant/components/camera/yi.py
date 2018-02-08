@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_BRAND = 'YI Home Camera'
+DEFAULT_BRAND = "YI Home Camera"
 DEFAULT_PASSWORD = ''
 DEFAULT_PATH = '/tmp/sd/record'
 DEFAULT_PORT = 21
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a Yi Camera."""
-    _LOGGER.debug('Received configuration: %s', config)
+    _LOGGER.debug("Received configuration: %s", config)
     async_add_devices([YiCamera(hass, config)], True)
 
 
@@ -80,14 +80,14 @@ class YiCamera(Camera):
         try:
             ftp.login(self.user, self.passwd)
         except error_perm as exc:
-            _LOGGER.error('There was an error while logging into the camera')
+            _LOGGER.error("There was an error while logging into the camera")
             _LOGGER.debug(exc)
             return False
 
         try:
             ftp.cwd(self.path)
         except error_perm as exc:
-            _LOGGER.error('Unable to find path: %s', self.path)
+            _LOGGER.error("Unable to find path: %s", self.path)
             _LOGGER.debug(exc)
             return False
 
@@ -100,7 +100,7 @@ class YiCamera(Camera):
         ftp.cwd(latest_dir)
         videos = ftp.nlst()
         if not videos:
-            _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
+            _LOGGER.info("Video folder "%s" is empty; delaying", latest_dir)
             return False
 
         return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(

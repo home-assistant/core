@@ -32,7 +32,7 @@ class AlarmDecoderSensor(Entity):
         self._display = ""
         self._state = None
         self._icon = 'mdi:alarm-check'
-        self._name = 'Alarm Panel Display'
+        self._name = "Alarm Panel Display"
 
     @asyncio.coroutine
     def async_added_to_hass(self):

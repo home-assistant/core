@@ -30,14 +30,14 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 SENSOR_TYPES = {
     'server_name': ['Server Name', 'get_server_name'],
     'server_fqdn': ['Server FQDN', 'get_server_fqdn'],
-    'server_host_data': ['Server Host Data', 'get_host_data'],
-    'server_oa_info': ['Server Onboard Administrator Info', 'get_oa_info'],
-    'server_power_status': ['Server Power state', 'get_host_power_status'],
-    'server_power_readings': ['Server Power readings', 'get_power_readings'],
-    'server_power_on_time': ['Server Power On time',
+    'server_host_data': ["Server Host Data", 'get_host_data'],
+    'server_oa_info': ["Server Onboard Administrator Info", 'get_oa_info'],
+    'server_power_status': ["Server Power state", 'get_host_power_status'],
+    'server_power_readings': ["Server Power readings", 'get_power_readings'],
+    'server_power_on_time': ["Server Power On time",
                              'get_server_power_on_time'],
-    'server_asset_tag': ['Server Asset Tag', 'get_asset_tag'],
-    'server_uid_status': ['Server UID light', 'get_uid_status'],
+    'server_asset_tag': ["Server Asset Tag", 'get_asset_tag'],
+    'server_uid_status': ["Server UID light", 'get_uid_status'],
     'server_health': ['Server Health', 'get_embedded_health'],
     'network_settings': ['Network Settings', 'get_network_settings']
 }

@@ -19,7 +19,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Binary Command Sensor'
+DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 

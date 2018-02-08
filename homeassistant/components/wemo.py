@@ -69,7 +69,7 @@ def setup(hass, config):
         # Only register a device once
         if serial in KNOWN_DEVICES:
             return
-        _LOGGER.debug('Discovered unique device %s', serial)
+        _LOGGER.debug("Discovered unique device %s", serial)
         KNOWN_DEVICES.append(serial)
 
         component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
@@ -89,9 +89,9 @@ def setup(hass, config):
     for address, device in devices:
         port = pywemo.ouimeaux_device.probe_wemo(address)
         if not port:
-            _LOGGER.warning('Unable to probe wemo at %s', address)
+            _LOGGER.warning("Unable to probe wemo at %s", address)
             continue
-        _LOGGER.info('Adding wemo at %s:%i', address, port)
+        _LOGGER.info("Adding wemo at %s:%i", address, port)
 
         url = 'http://%s:%i/setup.xml' % (address, port)
         if device is None:

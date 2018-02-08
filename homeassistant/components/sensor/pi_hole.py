@@ -35,21 +35,21 @@ DEFAULT_VERIFY_SSL = True
 SCAN_INTERVAL = timedelta(minutes=5)
 
 MONITORED_CONDITIONS = {
-    'dns_queries_today': ['DNS Queries Today',
+    'dns_queries_today': ["DNS Queries Today",
                           'queries', 'mdi:comment-question-outline'],
-    'ads_blocked_today': ['Ads Blocked Today',
+    'ads_blocked_today': ["Ads Blocked Today",
                           'ads', 'mdi:close-octagon-outline'],
-    'ads_percentage_today': ['Ads Percentage Blocked Today',
+    'ads_percentage_today': ["Ads Percentage Blocked Today",
                              '%', 'mdi:close-octagon-outline'],
     'domains_being_blocked': ['Domains Blocked',
                               'domains', 'mdi:block-helper'],
-    'queries_cached': ['DNS Queries Cached',
+    'queries_cached': ["DNS Queries Cached",
                        'queries', 'mdi:comment-question-outline'],
-    'queries_forwarded': ['DNS Queries Forwarded',
+    'queries_forwarded': ["DNS Queries Forwarded",
                           'queries', 'mdi:comment-question-outline'],
-    'unique_clients': ['DNS Unique Clients',
+    'unique_clients': ["DNS Unique Clients",
                        'clients', 'mdi:account-outline'],
-    'unique_domains': ['DNS Unique Domains',
+    'unique_domains': ["DNS Unique Domains",
                        'domains', 'mdi:domain'],
 }
 

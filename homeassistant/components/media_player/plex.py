@@ -128,7 +128,7 @@ def setup_plexserver(
             'verify': verify_ssl,
         }})
 
-    _LOGGER.info('Connected to: %s://%s', http_prefix, host)
+    _LOGGER.info("Connected to: %s://%s", http_prefix, host)
 
     plex_clients = {}
     plex_sessions = {}
@@ -211,7 +211,7 @@ def request_configuration(host, hass, config, add_devices_callback):
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
-                                   'Failed to register, please try again.')
+                                   "Failed to register, please try again.")
 
         return
 
@@ -225,9 +225,9 @@ def request_configuration(host, hass, config, add_devices_callback):
         )
 
     _CONFIGURING[host] = configurator.request_config(
-        'Plex Media Server',
+        "Plex Media Server",
         plex_configuration_callback,
-        description='Enter the X-Plex-Token',
+        description="Enter the X-Plex-Token",
         entity_picture='/static/images/logo_plex_mediaserver.png',
         submit_caption='Confirm',
         fields=[{
@@ -240,7 +240,7 @@ def request_configuration(host, hass, config, add_devices_callback):
             'type': ''
         }, {
             'id': 'do_not_verify_ssl',
-            'name': 'Do not verify SSL',
+            'name': "Do not verify SSL",
             'type': ''
         }])
 
@@ -645,7 +645,7 @@ class PlexClient(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute the volume.
 
-        Since we can't actually mute, we'll:
+        Since we can"t actually mute, we"ll:
         - On mute, store volume and set volume to 0
         - On unmute, set volume to previously stored volume
         """

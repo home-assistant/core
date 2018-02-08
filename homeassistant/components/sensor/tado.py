@@ -203,7 +203,7 @@ class TadoSensor(Entity):
                     "time": activity_data['heatingPower']['timestamp'],
                 }
 
-        elif self.zone_variable == 'tado bridge status':
+        elif self.zone_variable == "tado bridge status":
             if 'connectionState' in data:
                 self._state = data['connectionState']['value']
 

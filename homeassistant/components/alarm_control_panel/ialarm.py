@@ -27,7 +27,7 @@ def no_application_protocol(value):
     protocol_separator = "://"
     if not value or protocol_separator in value:
         raise vol.Invalid(
-            'Invalid host, {} is not allowed'.format(protocol_separator))
+            "Invalid host, {} is not allowed".format(protocol_separator))
 
     return value
 
@@ -79,7 +79,7 @@ class IAlarmPanel(alarm.AlarmControlPanel):
     def update(self):
         """Return the state of the device."""
         status = self._client.get_status()
-        _LOGGER.debug('iAlarm status: %s', status)
+        _LOGGER.debug("iAlarm status: %s", status)
         if status:
             status = int(status)
 

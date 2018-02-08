@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'remember_the_milk'
 DEFAULT_NAME = DOMAIN
-GROUP_NAME_RTM = 'remember the milk accounts'
+GROUP_NAME_RTM = "remember the milk accounts"
 
 CONF_SHARED_SECRET = 'shared_secret'
 CONF_ID_MAP = 'id_map'
@@ -113,7 +113,7 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
             _LOGGER.error("Failed to register, please try again")
             configurator.notify_errors(
                 request_id,
-                'Failed to register, please try again.')
+                "Failed to register, please try again.")
             return
 
         stored_rtm_config.set_token(account_name, token)
@@ -128,11 +128,11 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
     request_id = configurator.async_request_config(
         '{} - {}'.format(DOMAIN, account_name),
         callback=register_account_callback,
-        description='You need to log in to Remember The Milk to' +
-        'connect your account. \n\n' +
-        'Step 1: Click on the link "Remember The Milk login"\n\n' +
-        'Step 2: Click on "login completed"',
-        link_name='Remember The Milk login',
+        description="You need to log in to Remember The Milk to"
+        "connect your account. \n\n"
+        "Step 1: Click on the link \"Remember The Milk login\"\n\n"
+        "Step 2: Click on \"login completed\"",
+        link_name="Remember The Milk login",
         link_url=url,
         submit_caption="login completed",
     )

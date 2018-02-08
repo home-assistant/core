@@ -182,7 +182,7 @@ class Components:
         """Fetch a component."""
         component = get_component(comp_name)
         if component is None:
-            raise ImportError('Unable to load {}'.format(comp_name))
+            raise ImportError("Unable to load {}".format(comp_name))
         wrapped = ModuleWrapper(self._hass, component)
         setattr(self, comp_name, wrapped)
         return wrapped

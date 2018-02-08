@@ -96,14 +96,14 @@ class CloudIoT:
                     break
 
                 elif msg.type != WSMsgType.TEXT:
-                    disconnect_warn = 'Received non-Text message: {}'.format(
+                    disconnect_warn = "Received non-Text message: {}".format(
                         msg.type)
                     break
 
                 try:
                     msg = msg.json()
                 except ValueError:
-                    disconnect_warn = 'Received invalid JSON.'
+                    disconnect_warn = "Received invalid JSON."
                     break
 
                 _LOGGER.debug("Received message: %s", msg)

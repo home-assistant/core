@@ -42,7 +42,7 @@ DEFAULT_THEME_COLOR = '#03A9F4'
 
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
-    'description': 'Open-source home automation platform running on Python 3.',
+    'description': "Open-source home automation platform running on Python 3.",
     'dir': 'ltr',
     'display': 'standalone',
     'icons': [],
@@ -223,7 +223,7 @@ class ExternalPanel(AbstractPanel):
                 self.md5 = yield from hass.async_add_job(
                     _fingerprint, self.path)
         except OSError:
-            _LOGGER.error('Cannot find or access %s at %s',
+            _LOGGER.error("Cannot find or access %s at %s",
                           self.component_name, self.path)
             hass.data[DATA_PANELS].pop(self.frontend_url_path)
             return

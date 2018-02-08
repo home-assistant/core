@@ -25,7 +25,7 @@ REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'LG TV Remote'
+DEFAULT_NAME = "LG TV Remote"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)

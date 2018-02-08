@@ -172,7 +172,7 @@ class SwitchTemplate(SwitchDevice):
                 self._state = state in ('true', STATE_ON)
             else:
                 _LOGGER.error(
-                    'Received invalid switch is_on state: %s. Expected: %s',
+                    "Received invalid switch is_on state: %s. Expected: %s",
                     state, ', '.join(_VALID_STATES))
                 self._state = None
 
@@ -193,8 +193,8 @@ class SwitchTemplate(SwitchDevice):
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.',
+                    _LOGGER.warning("Could not render %s template %s,"
+                                    " the state is unknown.",
                                     friendly_property_name, self._name)
                     return
 
@@ -202,5 +202,5 @@ class SwitchTemplate(SwitchDevice):
                     setattr(self, property_name,
                             getattr(super(), property_name))
                 except AttributeError:
-                    _LOGGER.error('Could not render %s template %s: %s',
+                    _LOGGER.error("Could not render %s template %s: %s",
                                   friendly_property_name, self._name, ex)

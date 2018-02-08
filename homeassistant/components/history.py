@@ -87,7 +87,7 @@ def get_significant_states(hass, start_time, end_time=None, entity_ids=None,
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug(
-            'get_significant_states took %fs', elapsed)
+            "get_significant_states took %fs", elapsed)
 
     return states_to_json(
         hass, states, start_time, entity_ids, filters,
@@ -221,7 +221,7 @@ def states_to_json(
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug(
-            'getting %d first datapoints took %fs', len(result), elapsed)
+            "getting %d first datapoints took %fs", len(result), elapsed)
 
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
@@ -310,7 +310,7 @@ class HistoryPeriodView(HomeAssistantView):
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
             _LOGGER.debug(
-                'Extracted %d states in %fs', sum(map(len, result)), elapsed)
+                "Extracted %d states in %fs", sum(map(len, result)), elapsed)
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.

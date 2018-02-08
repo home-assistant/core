@@ -29,7 +29,7 @@ CONF_OPTIONS = 'options'
 CONF_ORIGIN = 'origin'
 CONF_TRAVEL_MODE = 'travel_mode'
 
-DEFAULT_NAME = 'Google Travel Time'
+DEFAULT_NAME = "Google Travel Time"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 

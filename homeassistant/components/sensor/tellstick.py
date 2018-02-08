@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         tellcore_lib = telldus.TelldusCore()
     except OSError:
-        _LOGGER.exception('Could not initialize Tellstick')
+        _LOGGER.exception("Could not initialize Tellstick")
         return
 
     sensors = []

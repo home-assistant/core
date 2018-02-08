@@ -14,7 +14,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([
         DemoCover(hass, 'Kitchen Window'),
         DemoCover(hass, 'Hall Window', 10),
-        DemoCover(hass, 'Living Room Window', 70, 50),
+        DemoCover(hass, "Living Room Window", 70, 50),
         DemoCover(hass, 'Garage Door', device_class='garage',
                   supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE)),
     ])

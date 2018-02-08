@@ -195,6 +195,6 @@ class VeraDevice(Entity):
         if energy:
             attr[ATTR_CURRENT_ENERGY_KWH] = convert(energy, float, 0.0)
 
-        attr['Vera Device Id'] = self.vera_device.vera_device_id
+        attr["Vera Device Id"] = self.vera_device.vera_device_id
 
         return attr

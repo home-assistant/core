@@ -48,7 +48,7 @@ class CiscoDeviceScanner(DeviceScanner):
         self.last_results = {}
 
         self.success_init = self._update_info()
-        _LOGGER.info('cisco_ios scanner initialized')
+        _LOGGER.info("cisco_ios scanner initialized")
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):

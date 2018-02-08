@@ -42,7 +42,7 @@ DATA_MME = 'mercedesme'
 DOMAIN = 'mercedesme'
 
 NOTIFICATION_ID = 'mercedesme_integration_notification'
-NOTIFICATION_TITLE = 'Mercedes me integration setup'
+NOTIFICATION_TITLE = "Mercedes me integration setup"
 
 SIGNAL_UPDATE_MERCEDESME = "mercedesme_update"
 

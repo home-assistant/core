@@ -1,7 +1,7 @@
 """
 Support for HydroQuebec.
 
-Get data from 'My Consumption Profile' page:
+Get data from "My Consumption Profile" page:
 https://www.hydroquebec.com/portail/en/group/clientele/portrait-de-consommation
 
 For more details about this platform, please refer to the documentation at
@@ -40,31 +40,31 @@ SENSOR_TYPES = {
     'balance':
     ['Balance', PRICE, 'mdi:square-inc-cash'],
     'period_total_bill':
-    ['Period total bill', PRICE, 'mdi:square-inc-cash'],
+    ["Period total bill", PRICE, 'mdi:square-inc-cash'],
     'period_length':
     ['Period length', DAYS, 'mdi:calendar-today'],
     'period_total_days':
-    ['Period total days', DAYS, 'mdi:calendar-today'],
+    ["Period total days", DAYS, 'mdi:calendar-today'],
     'period_mean_daily_bill':
-    ['Period mean daily bill', PRICE, 'mdi:square-inc-cash'],
+    ["Period mean daily bill", PRICE, 'mdi:square-inc-cash'],
     'period_mean_daily_consumption':
-    ['Period mean daily consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ["Period mean daily consumption", KILOWATT_HOUR, 'mdi:flash'],
     'period_total_consumption':
-    ['Period total consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ["Period total consumption", KILOWATT_HOUR, 'mdi:flash'],
     'period_lower_price_consumption':
-    ['Period lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ["Period lower price consumption", KILOWATT_HOUR, 'mdi:flash'],
     'period_higher_price_consumption':
-    ['Period higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ["Period higher price consumption", KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_total_consumption':
-    ['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ["Yesterday total consumption", KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_lower_price_consumption':
-    ['Yesterday lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ["Yesterday lower price consumption", KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_higher_price_consumption':
-    ['Yesterday higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ["Yesterday higher price consumption", KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_average_temperature':
-    ['Yesterday average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    ["Yesterday average temperature", TEMP_CELSIUS, 'mdi:thermometer'],
     'period_average_temperature':
-    ['Period average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    ["Period average temperature", TEMP_CELSIUS, 'mdi:thermometer'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

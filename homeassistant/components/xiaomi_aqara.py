@@ -81,8 +81,8 @@ def _fix_conf_defaults(config):
 
     if config.get(CONF_KEY) is None:
         _LOGGER.warning(
-            'Key is not provided for gateway %s. Controlling the gateway '
-            'will not be possible', config['sid'])
+            "Key is not provided for gateway %s. Controlling the gateway "
+            "will not be possible", config['sid'])
 
     if config.get(CONF_HOST) is None:
         config.pop(CONF_PORT)
@@ -171,9 +171,9 @@ def setup(hass, config):
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, join_permission='yes')
         hass.components.persistent_notification.async_create(
-            'Join permission enabled for 30 seconds! '
-            'Please press the pairing button of the new device once.',
-            title='Xiaomi Aqara Gateway')
+            "Join permission enabled for 30 seconds! "
+            "Please press the pairing button of the new device once.",
+            title="Xiaomi Aqara Gateway")
 
     def remove_device_service(call):
         """Service to remove a sub-device from the gateway."""
@@ -304,7 +304,7 @@ def _add_gateway_to_schema(xiaomi, schema):
             if gateway.sid == sid:
                 return gateway
 
-        raise vol.Invalid('Unknown gateway sid {}'.format(sid))
+        raise vol.Invalid("Unknown gateway sid {}".format(sid))
 
     gateways = list(xiaomi.gateways.values())
     kwargs = {}

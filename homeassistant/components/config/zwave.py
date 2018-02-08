@@ -77,11 +77,11 @@ class ZWaveConfigWriteView(HomeAssistantView):
         hass = request.app['hass']
         network = hass.data.get(const.DATA_NETWORK)
         if network is None:
-            return self.json_message('No Z-Wave network data found',
+            return self.json_message("No Z-Wave network data found",
                                      HTTP_NOT_FOUND)
         _LOGGER.info("Z-Wave configuration written to file.")
         network.write_config()
-        return self.json_message('Z-Wave configuration saved to file.',
+        return self.json_message("Z-Wave configuration saved to file.",
                                  HTTP_OK)
 
 
@@ -128,7 +128,7 @@ class ZWaveNodeGroupView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
-            return self.json_message('Node not found', HTTP_NOT_FOUND)
+            return self.json_message("Node not found", HTTP_NOT_FOUND)
         groupdata = node.groups
         groups = {}
         for key, value in groupdata.items():
@@ -154,7 +154,7 @@ class ZWaveNodeConfigView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
-            return self.json_message('Node not found', HTTP_NOT_FOUND)
+            return self.json_message("Node not found", HTTP_NOT_FOUND)
         config = {}
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
@@ -183,7 +183,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
-            return self.json_message('Node not found', HTTP_NOT_FOUND)
+            return self.json_message("Node not found", HTTP_NOT_FOUND)
         usercodes = {}
         if not node.has_command_class(const.COMMAND_CLASS_USER_CODE):
             return self.json(usercodes)

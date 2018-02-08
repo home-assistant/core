@@ -62,7 +62,7 @@ def setup(hass, config):
             ]
         )
 
-        _LOGGER.debug('Sent event %s', event.data.get('entity_id'))
+        _LOGGER.debug("Sent event %s", event.data.get('entity_id'))
 
     def state_changed_listener(event):
         """Listen for new messages on the bus and sends them to Datadog."""
@@ -96,7 +96,7 @@ def setup(hass, config):
 
         statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
 
-        _LOGGER.debug('Sent metric %s: %s (tags: %s)', metric, value, tags)
+        _LOGGER.debug("Sent metric %s: %s (tags: %s)", metric, value, tags)
 
     hass.bus.listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
     hass.bus.listen(EVENT_STATE_CHANGED, state_changed_listener)

@@ -107,7 +107,7 @@ class NetioApiView(HomeAssistantView):
                 float(data.get('%s_cumulatedConsumption' % out, 0)) / 1000)
             start_dates.append(data.get('%s_consumptionStart' % out, ""))
 
-        _LOGGER.debug('%s: %s, %s, %s since %s', host, states,
+        _LOGGER.debug("%s: %s, %s, %s since %s", host, states,
                       consumptions, cumulated_consumptions, start_dates)
 
         ndev = DEVICES[host].netio
@@ -152,7 +152,7 @@ class NetioSwitch(SwitchDevice):
     def _set(self, value):
         val = list('uuuu')
         val[self.outlet - 1] = '1' if value else '0'
-        self.netio.get('port list %s' % ''.join(val))
+        self.netio.get("port list %s" % ''.join(val))
         self.netio.states[self.outlet - 1] = value
         self.schedule_update_ha_state()
 

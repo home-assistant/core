@@ -25,7 +25,7 @@ SENSOR_TYPES = {
     'package_name': ['Package name'],
     'receiver_email': ['Receiver email'],
     'sender_email': ['Sender email'],
-    'source_device_iden': ['Sender device ID'],
+    'source_device_iden': ["Sender device ID"],
     'title': ['Title'],
     'type': ['Type'],
 }

@@ -146,7 +146,7 @@ def _req_json_rpc(url, method, *args, **kwargs):
         raise InvalidLuciTokenError
 
     else:
-        _LOGGER.error('Invalid response from luci: %s', res)
+        _LOGGER.error("Invalid response from luci: %s", res)
 
 
 def _get_token(host, username, password):

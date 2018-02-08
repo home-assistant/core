@@ -25,7 +25,7 @@ REQUIREMENTS = ['sharp_aquos_rc==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Sharp Aquos TV'
+DEFAULT_NAME = "Sharp Aquos TV"
 DEFAULT_PORT = 10002
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = 'password'
@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional('power_on_enabled', default=False): cv.boolean,
 })
 
-SOURCES = {0: 'TV / Antenna',
+SOURCES = {0: "TV / Antenna",
            1: 'HDMI_IN_1',
            2: 'HDMI_IN_2',
            3: 'HDMI_IN_3',

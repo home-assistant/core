@@ -23,7 +23,7 @@ _RESOURCE = 'https://openexchangerates.org/api/latest.json'
 CONF_ATTRIBUTION = "Data provided by openexchangerates.org"
 
 DEFAULT_BASE = 'USD'
-DEFAULT_NAME = 'Exchange Rate Sensor'
+DEFAULT_NAME = "Exchange Rate Sensor"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 

@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_TIMEOUT = 'timeout'
 
-DEFAULT_NAME = 'Samsung TV Remote'
+DEFAULT_NAME = "Samsung TV Remote"
 DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 0
 

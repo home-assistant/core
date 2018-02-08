@@ -57,10 +57,10 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
                 variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
-            _LOGGER.error('Error rendering service name template: %s', ex)
+            _LOGGER.error("Error rendering service name template: %s", ex)
             return
         except vol.Invalid as ex:
-            _LOGGER.error('Template rendered invalid service: %s',
+            _LOGGER.error("Template rendered invalid service: %s",
                           domain_service)
             return
 
@@ -73,7 +73,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
             service_data.update(template.render_complex(
                 config[CONF_SERVICE_DATA_TEMPLATE], variables))
         except TemplateError as ex:
-            _LOGGER.error('Error rendering data template: %s', ex)
+            _LOGGER.error("Error rendering data template: %s", ex)
             return
 
     if CONF_SERVICE_ENTITY_ID in config:

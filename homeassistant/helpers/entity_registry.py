@@ -72,7 +72,7 @@ class EntityRegistry:
             domain=domain,
         )
         self.entities[entity_id] = entity
-        _LOGGER.info('Registered new %s.%s entity: %s',
+        _LOGGER.info("Registered new %s.%s entity: %s",
                      domain, platform, entity_id)
         self.async_schedule_save()
         return entity

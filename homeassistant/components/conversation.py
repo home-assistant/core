@@ -105,9 +105,9 @@ def async_setup(hass, config):
     hass.helpers.intent.async_register(TurnOnIntent())
     hass.helpers.intent.async_register(TurnOffIntent())
     async_register(hass, INTENT_TURN_ON,
-                   ['Turn {name} on', 'Turn on {name}'])
+                   ["Turn {name} on", "Turn on {name}"])
     async_register(hass, INTENT_TURN_OFF, [
-        'Turn {name} off', 'Turn off {name}'])
+        "Turn {name} off", "Turn off {name}"])
 
     return True
 

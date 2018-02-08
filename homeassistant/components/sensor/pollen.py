@@ -33,49 +33,49 @@ ATTR_ZIP_CODE = 'zip_code'
 
 CONF_ZIP_CODE = 'zip_code'
 
-DEFAULT_ATTRIBUTION = 'Data provided by IQVIA™'
+DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 
 MIN_TIME_UPDATE_AVERAGES = timedelta(hours=12)
 MIN_TIME_UPDATE_INDICES = timedelta(minutes=10)
 
 CONDITIONS = {
     'allergy_average_forecasted': (
-        'Allergy Index: Forecasted Average',
+        "Allergy Index: Forecasted Average",
         'AllergyAverageSensor',
         'allergy_average_data',
         {'data_attr': 'extended_data'},
         'mdi:flower'
     ),
     'allergy_average_historical': (
-        'Allergy Index: Historical Average',
+        "Allergy Index: Historical Average",
         'AllergyAverageSensor',
         'allergy_average_data',
         {'data_attr': 'historic_data'},
         'mdi:flower'
     ),
     'allergy_index_today': (
-        'Allergy Index: Today',
+        "Allergy Index: Today",
         'AllergyIndexSensor',
         'allergy_index_data',
         {'key': 'Today'},
         'mdi:flower'
     ),
     'allergy_index_tomorrow': (
-        'Allergy Index: Tomorrow',
+        "Allergy Index: Tomorrow",
         'AllergyIndexSensor',
         'allergy_index_data',
         {'key': 'Tomorrow'},
         'mdi:flower'
     ),
     'allergy_index_yesterday': (
-        'Allergy Index: Yesterday',
+        "Allergy Index: Yesterday",
         'AllergyIndexSensor',
         'allergy_index_data',
         {'key': 'Yesterday'},
         'mdi:flower'
     ),
     'disease_average_forecasted': (
-        'Cold & Flu: Forecasted Average',
+        "Cold & Flu: Forecasted Average",
         'AllergyAverageSensor',
         'disease_average_data',
         {'data_attr': 'extended_data'},
@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
     from pypollencom import Client
 
-    _LOGGER.debug('Configuration data: %s', config)
+    _LOGGER.debug("Configuration data: %s", config)
 
     client = Client(config[CONF_ZIP_CODE])
     datas = {
@@ -267,10 +267,10 @@ class DataBase(object):
 
         try:
             data = getattr(getattr(self._client, module), operation)()
-            _LOGGER.debug('Received "%s_%s" data: %s', module,
+            _LOGGER.debug("Received "%s_%s" data: %s", module,
                           operation, data)
         except HTTPError as exc:
-            _LOGGER.error('An error occurred while retrieving data')
+            _LOGGER.error("An error occurred while retrieving data")
             _LOGGER.debug(exc)
 
         return data

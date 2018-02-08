@@ -26,7 +26,7 @@ BRAVIA_CONFIG_FILE = 'bravia.conf'
 
 CLIENTID_PREFIX = 'HomeAssistant'
 
-DEFAULT_NAME = 'Sony Bravia TV'
+DEFAULT_NAME = "Sony Bravia TV"
 
 NICKNAME = 'Home Assistant'
 
@@ -137,11 +137,11 @@ def request_configuration(config, hass, add_devices):
 
     _CONFIGURING[host] = configurator.request_config(
         name, bravia_configuration_callback,
-        description='Enter the Pin shown on your Sony Bravia TV.' +
-        'If no Pin is shown, enter 0000 to let TV show you a Pin.',
+        description="Enter the Pin shown on your Sony Bravia TV." +
+        "If no Pin is shown, enter 0000 to let TV show you a Pin.",
         description_image="/static/images/smart-tv.png",
         submit_caption="Confirm",
-        fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
+        fields=[{'id': 'pin', 'name': "Enter the pin", 'type': ''}]
     )
 
 

@@ -87,7 +87,7 @@ def run(script_args: List) -> int:
     config_dir = os.path.join(os.getcwd(), args.config)
     config_path = os.path.join(config_dir, 'configuration.yaml')
     if not os.path.isfile(config_path):
-        print('Config does not exist:', config_path)
+        print("Config does not exist:", config_path)
         return 1
 
     print(color('bold', "Testing configuration at", config_dir))
@@ -117,12 +117,12 @@ def run(script_args: List) -> int:
 
     if domain_info:
         if 'all' in domain_info:
-            print(color('bold_white', 'Successful config (all)'))
+            print(color('bold_white', "Successful config (all)"))
             for domain, config in res['components'].items():
                 print(' ', color(C_HEAD, domain + ':'))
                 dump_dict(config)
         else:
-            print(color('bold_white', 'Successful config (partial)'))
+            print(color('bold_white', "Successful config (partial)"))
             for domain in domain_info:
                 if domain == ERROR_STR:
                     continue
@@ -136,7 +136,7 @@ def run(script_args: List) -> int:
             sss = []
             for skey in sdict:
                 if skey in flatsecret:
-                    _LOGGER.error('Duplicated secrets in files %s and %s',
+                    _LOGGER.error("Duplicated secrets in files %s and %s",
                                   flatsecret[skey], sfn)
                 flatsecret[skey] = sfn
                 sss.append(color('green', skey) if skey in res['secrets']
@@ -251,7 +251,7 @@ def check(config_path):
             bootstrap.from_config_file(config_path, skip_pip=True)
         res['secret_cache'] = dict(yaml.__SECRET_CACHE)
     except Exception as err:  # pylint: disable=broad-except
-        print(color('red', 'Fatal error while loading config:'), str(err))
+        print(color('red', "Fatal error while loading config:"), str(err))
         res['except'].setdefault(ERROR_STR, []).append(err)
     finally:
         # Stop all patches

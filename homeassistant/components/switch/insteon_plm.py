@@ -26,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         name = device.get('address')
         address = device.get('address_hex')
 
-        _LOGGER.info('Registered %s with switch platform.', name)
+        _LOGGER.info("Registered %s with switch platform.", name)
 
         device_list.append(
             InsteonPLMSwitchDevice(hass, plm, address, name)
@@ -67,7 +67,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     def is_on(self):
         """Return the boolean response if the node is on."""
         onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.debug('on level for %s is %s', self._address, onlevel)
+        _LOGGER.debug("on level for %s is %s", self._address, onlevel)
         return bool(onlevel)
 
     @property
@@ -83,7 +83,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @callback
     def async_switch_update(self, message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update callback from PLM for %s', self._address)
+        _LOGGER.info("Received update callback from PLM for %s", self._address)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine

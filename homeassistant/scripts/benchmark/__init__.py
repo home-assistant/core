@@ -28,7 +28,7 @@ def run(args):
 
     bench = BENCHMARKS[args.name]
 
-    print('Using event loop:', asyncio.get_event_loop_policy().__module__)
+    print("Using event loop:", asyncio.get_event_loop_policy().__module__)
 
     with suppress(KeyboardInterrupt):
         while True:
@@ -36,7 +36,7 @@ def run(args):
             hass = core.HomeAssistant(loop)
             hass.async_stop_track_tasks()
             runtime = loop.run_until_complete(bench(hass))
-            print('Benchmark {} done in {}s'.format(bench.__name__, runtime))
+            print("Benchmark {} done in {}s".format(bench.__name__, runtime))
             loop.run_until_complete(hass.async_stop())
             loop.close()
 

@@ -21,7 +21,7 @@ DEPENDENCIES = ['octoprint']
 DOMAIN = "octoprint"
 DEFAULT_NAME = 'OctoPrint'
 NOTIFICATION_ID = 'octoprint_notification'
-NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
+NOTIFICATION_TITLE = "OctoPrint sensor setup error"
 
 SENSOR_TYPES = {
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
@@ -49,11 +49,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if "Temperatures" in monitored_conditions:
         if not tools:
             hass.components.persistent_notification.create(
-                'Your printer appears to be offline.<br />'
-                'If you do not want to have your printer on <br />'
-                ' at all times, and you would like to monitor <br /> '
-                'temperatures, please add <br />'
-                'bed and/or number&#95of&#95tools to your config <br />'
+                "Your printer appears to be offline.<br />"
+                "If you do not want to have your printer on <br />"
+                " at all times, and you would like to monitor <br /> "
+                "temperatures, please add <br />"
+                "bed and/or number&#95of&#95tools to your config <br />"
                 'and restart.',
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
