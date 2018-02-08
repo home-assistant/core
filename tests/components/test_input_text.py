@@ -64,6 +64,41 @@ class TestInputText(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual('testing', str(state.state))
 
+    def test_mode(self):
+        """Test mode settings."""
+        self.assertTrue(
+            setup_component(self.hass, DOMAIN, {DOMAIN: {
+                'test_default_text': {
+                    'initial': 'test',
+                    'min': 3,
+                    'max': 10,
+                },
+                'test_explicit_text': {
+                    'initial': 'test',
+                    'min': 3,
+                    'max': 10,
+                    'mode': 'text',
+                },
+                'test_explicit_password': {
+                    'initial': 'test',
+                    'min': 3,
+                    'max': 10,
+                    'mode': 'password',
+                },
+            }}))
+
+        state = self.hass.states.get('input_text.test_default_text')
+        assert state
+        self.assertEqual('text', state.attributes['mode'])
+
+        state = self.hass.states.get('input_text.test_explicit_text')
+        assert state
+        self.assertEqual('text', state.attributes['mode'])
+
+        state = self.hass.states.get('input_text.test_explicit_password')
+        assert state
+        self.assertEqual('password', state.attributes['mode'])
+
 
 @asyncio.coroutine
 def test_restore_state(hass):
