@@ -2,27 +2,18 @@
 Support for Mercedes cars with Mercedes ME.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mercedesme/
+https://home-assistant.io/components/sensor.mercedesme/
 """
 import logging
 import datetime
 
-from homeassistant.const import LENGTH_KILOMETERS
-from homeassistant.components.mercedesme import DATA_MME, MercedesMeEntity
+from homeassistant.components.mercedesme import (
+    DATA_MME, MercedesMeEntity, SENSORS)
 
 
 DEPENDENCIES = ['mercedesme']
 
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_TYPES = {
-    'fuelLevelPercent': ['Fuel Level', '%'],
-    'fuelRangeKm': ['Fuel Range', LENGTH_KILOMETERS],
-    'latestTrip': ['Latest Trip', None],
-    'odometerKm': ['Odometer', LENGTH_KILOMETERS],
-    'serviceIntervalDays': ['Next Service', 'days'],
-    'doorsClosed': ['doorsClosed', None],
-}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -37,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for car in data.cars:
-        for key, value in sorted(SENSOR_TYPES.items()):
+        for key, value in sorted(SENSORS.items()):
             devices.append(
                 MercedesMESensor(data, key, value[0], car["vin"], value[1]))
 
@@ -69,24 +60,24 @@ class MercedesMESensor(MercedesMeEntity):
         """Return the state attributes."""
         if self._internal_name == "latestTrip":
             return {
-                "durationSeconds":
+                "duration_seconds":
                     self._car["latestTrip"]["durationSeconds"],
-                "distanceTraveledKm":
+                "distance_traveled_km":
                     self._car["latestTrip"]["distanceTraveledKm"],
-                "startedAt": datetime.datetime.fromtimestamp(
+                "started_at": datetime.datetime.fromtimestamp(
                     self._car["latestTrip"]["startedAt"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
-                "averageSpeedKmPerHr":
+                "average_speed_km_per_hr":
                     self._car["latestTrip"]["averageSpeedKmPerHr"],
                 "finished": self._car["latestTrip"]["finished"],
-                "lastUpdate": datetime.datetime.fromtimestamp(
+                "last_update": datetime.datetime.fromtimestamp(
                     self._car["lastUpdate"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
                 "car": self._car["license"]
             }
 
         return {
-            "lastUpdate": datetime.datetime.fromtimestamp(
+            "last_update": datetime.datetime.fromtimestamp(
                 self._car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
             "car": self._car["license"]
         }

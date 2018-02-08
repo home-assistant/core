@@ -2,7 +2,7 @@
 Support for Mercedes cars with Mercedes ME.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mercedesme/
+https://home-assistant.io/components/binary_sensor.mercedesme/
 """
 import logging
 import datetime
@@ -21,14 +21,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = hass.data[DATA_MME].data
 
     if not data.cars:
-        _LOGGER.error("setup_platform data.cars is none")
+        _LOGGER.error("No cars found. Check component log.")
         return
 
     devices = []
     for car in data.cars:
-        for dev in BINARY_SENSORS:
+        for key, value in sorted(BINARY_SENSORS.items()):
             devices.append(MercedesMEBinarySensor(
-                data, dev, dev, car["vin"], None))
+                data, key, value[0], car["vin"], None))
 
     add_devices(devices, True)
 
@@ -39,62 +39,56 @@ class MercedesMEBinarySensor(MercedesMeEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
-        return self._state == "On"
+        return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._name == "windowsClosed":
+        if self._internal_name == "windowsClosed":
             return {
-                "windowStatusFrontLeft": self._car["windowStatusFrontLeft"],
-                "windowStatusFrontRight": self._car["windowStatusFrontRight"],
-                "windowStatusRearLeft": self._car["windowStatusRearLeft"],
-                "windowStatusRearRight": self._car["windowStatusRearRight"],
-                "originalValue": self._car[self._name],
-                "lastUpdate": datetime.datetime.fromtimestamp(
+                "window_front_left": self._car["windowStatusFrontLeft"],
+                "window_front_right": self._car["windowStatusFrontRight"],
+                "window_rear_left": self._car["windowStatusRearLeft"],
+                "window_rear_right": self._car["windowStatusRearRight"],
+                "original_value": self._car[self._internal_name],
+                "last_update": datetime.datetime.fromtimestamp(
                     self._car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
                 "car": self._car["license"]
             }
-        elif self._name == "tireWarningLight":
+        elif self._internal_name == "tireWarningLight":
             return {
-                "frontRightTirePressureKpa":
+                "front_right_tire_pressure_kpa":
                     self._car["frontRightTirePressureKpa"],
-                "frontLeftTirePressureKpa":
+                "front_left_tire_pressure_kpa":
                     self._car["frontLeftTirePressureKpa"],
-                "rearRightTirePressureKpa":
+                "rear_right_tire_pressure_kpa":
                     self._car["rearRightTirePressureKpa"],
-                "rearLeftTirePressureKpa":
+                "rear_left_tire_pressure_kpa":
                     self._car["rearLeftTirePressureKpa"],
-                "originalValue": self._car[self._name],
-                "lastUpdate": datetime.datetime.fromtimestamp(
+                "original_value": self._car[self._internal_name],
+                "last_update": datetime.datetime.fromtimestamp(
                     self._car["lastUpdate"]
                     ).strftime('%Y-%m-%d %H:%M:%S'),
                 "car": self._car["license"],
             }
         return {
-            "originalValue": self._car[self._name],
-            "lastUpdate": datetime.datetime.fromtimestamp(
+            "original_value": self._car[self._internal_name],
+            "last_update": datetime.datetime.fromtimestamp(
                 self._car["lastUpdate"]).strftime('%Y-%m-%d %H:%M:%S'),
             "car": self._car["license"]
         }
 
     def update(self):
         """Fetch new state data for the sensor."""
-        _LOGGER.debug("Updating %s", self._name)
-
         self._car = next(
             car for car in self._data.cars if car["vin"] == self._vin)
 
-        result = False
-
-        if self._name == "windowsClosed":
-            result = bool(self._car[self._name] == "CLOSED")
-        elif self._name == "tireWarningLight":
-            result = bool(self._car[self._name] != "INACTIVE")
+        if self._internal_name == "windowsClosed":
+            self._state = bool(self._car[self._internal_name] == "CLOSED")
+        elif self._internal_name == "tireWarningLight":
+            self._state = bool(self._car[self._internal_name] != "INACTIVE")
         else:
-            result = self._car[self._name] is True
-
-        self._state = "On" if result else "Off"
+            self._state = self._car[self._internal_name] is True
 
         _LOGGER.debug("Updated %s Value: %s IsOn: %s",
-                      self._name, self._state, self.is_on)
+                      self._internal_name, self._state, self.is_on)

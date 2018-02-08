@@ -429,6 +429,7 @@ def test_media_player(hass):
         'Alexa.InputController',
         'Alexa.PowerController',
         'Alexa.Speaker',
+        'Alexa.StepSpeaker',
         'Alexa.PlaybackController',
     )
 
@@ -491,6 +492,34 @@ def test_media_player(hass):
         'volume',
         'media_player.volume_set',
         'volume_level')
+
+    call, _ = yield from assert_request_calls_service(
+        'Alexa.StepSpeaker', 'SetMute', 'media_player#test',
+        'media_player.volume_mute',
+        hass,
+        payload={'mute': True})
+    assert call.data['is_volume_muted']
+
+    call, _, = yield from assert_request_calls_service(
+        'Alexa.StepSpeaker', 'SetMute', 'media_player#test',
+        'media_player.volume_mute',
+        hass,
+        payload={'mute': False})
+    assert not call.data['is_volume_muted']
+
+    call, _ = yield from assert_request_calls_service(
+        'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
+        'media_player.volume_set',
+        hass,
+        payload={'volume': 20})
+    assert call.data['volume_level'] == 0.95
+
+    call, _ = yield from assert_request_calls_service(
+        'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
+        'media_player.volume_set',
+        hass,
+        payload={'volume': -20})
+    assert call.data['volume_level'] == 0.55
 
 
 @asyncio.coroutine

@@ -2,14 +2,16 @@
 """Home Assistant setup script."""
 import os
 from setuptools import setup, find_packages
+import sys
 
-from homeassistant.const import __version__
+import homeassistant.const as hass_const
+
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
 PROJECT_LICENSE = 'Apache License 2.0'
 PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2013-2017, {}'.format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = ' 2013-2018, {}'.format(PROJECT_AUTHOR)
 PROJECT_URL = 'https://home-assistant.io/'
 PROJECT_EMAIL = 'hello@home-assistant.io'
 PROJECT_DESCRIPTION = ('Open-source home automation platform '
@@ -41,7 +43,7 @@ GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, __version__)
+DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
@@ -61,9 +63,15 @@ REQUIRES = [
     'certifi>=2017.4.17',
 ]
 
+MIN_PY_VERSION = '.'.join(map(
+    str,
+    hass_const.REQUIRED_PYTHON_VER_WIN
+    if sys.platform.startswith('win')
+    else hass_const.REQUIRED_PYTHON_VER))
+
 setup(
     name=PROJECT_PACKAGE_NAME,
-    version=__version__,
+    version=hass_const.__version__,
     license=PROJECT_LICENSE,
     url=PROJECT_URL,
     download_url=DOWNLOAD_URL,
@@ -75,6 +83,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
+    python_requires='>={}'.format(MIN_PY_VERSION),
     test_suite='tests',
     keywords=['home', 'automation'],
     entry_points={
