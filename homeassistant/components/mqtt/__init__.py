@@ -8,6 +8,7 @@ import asyncio
 from collections import namedtuple
 from itertools import groupby
 from typing import Optional
+from operator import attrgetter
 import logging
 import os
 import socket
@@ -18,11 +19,12 @@ import requests.certs
 
 import voluptuous as vol
 
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.core import callback
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
-from homeassistant.helpers import template, config_validation as cv
+from homeassistant.helpers import template, ConfigType, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
@@ -288,7 +290,7 @@ def _async_setup_discovery(hass, config):
 
 
 @asyncio.coroutine
-def async_setup(hass, config):
+def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Start the MQTT protocol service."""
     conf = config.get(DOMAIN)
 
@@ -342,18 +344,10 @@ def async_setup(hass, config):
 
     will_message = None
     if conf.get(CONF_WILL_MESSAGE) is not None:
-        will_conf = conf.get(CONF_WILL_MESSAGE)
-        will_message = Message(will_conf.get(ATTR_TOPIC),
-                               will_conf.get(ATTR_PAYLOAD),
-                               will_conf.get(ATTR_QOS),
-                               will_conf.get(ATTR_RETAIN))
+        will_message = Message(**conf.get(CONF_WILL_MESSAGE))
     birth_message = None
     if conf.get(CONF_BIRTH_MESSAGE) is not None:
-        birth_conf = conf.get(CONF_BIRTH_MESSAGE)
-        birth_message = Message(birth_conf.get(ATTR_TOPIC),
-                                birth_conf.get(ATTR_PAYLOAD),
-                                birth_conf.get(ATTR_QOS),
-                                birth_conf.get(ATTR_RETAIN))
+        birth_message = Message(**conf.get(CONF_BIRTH_MESSAGE))
 
     # Be able to override versions other than TLSv1.0 under Python3.6
     conf_tls_version = conf.get(CONF_TLS_VERSION)
@@ -477,8 +471,7 @@ class MQTT(object):
         self._mqttc.on_message = self._mqtt_on_message
 
         if will_message:
-            self._mqttc.will_set(will_message.topic, will_message.payload,
-                                 will_message.qos, will_message.retain)
+            self._mqttc.will_set(*will_message)
 
     @asyncio.coroutine
     def async_publish(self, topic, payload, qos, retain):
@@ -540,8 +533,7 @@ class MQTT(object):
                 raise HomeAssistantError("Can't remove subscription twice")
             self.subscriptions.remove(subscription)
 
-            grouped = self._grouped_subscriptions()
-            if topic in grouped:
+            if any(other.topic == topic for other in self.subscriptions):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
             self.hass.async_add_job(self._async_unsubscribe(topic))
@@ -583,27 +575,41 @@ class MQTT(object):
             self._mqttc.disconnect()
             return
 
-        for topic, subs in self._grouped_subscriptions().items():
+        # Group subscriptions to only re-subscribe once for each topic.
+        keyfunc = attrgetter('topic')
+        for topic, subs in groupby(sorted(self.subscriptions, key=keyfunc),
+                                   keyfunc):
             # Re-subscribe with the highest requested qos
             max_qos = max(subscription.qos for subscription in subs)
             self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
         if self.birth_message:
-            self.hass.add_job(self.async_publish(self.birth_message.topic,
-                                                 self.birth_message.payload,
-                                                 self.birth_message.qos,
-                                                 self.birth_message.retain))
+            self.hass.add_job(self.async_publish(*self.birth_message))
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
+        self.hass.async_add_job(self._mqtt_handle_message, msg)
+
+    @callback
+    def _mqtt_handle_message(self, msg):
         _LOGGER.debug("Received message on %s: %s", msg.topic, msg.payload)
 
-        for subscription_topic, subs in self._grouped_subscriptions().items():
-            if not _match_topic(subscription_topic, msg.topic):
+        for subscription in self.subscriptions:
+            if not _match_topic(subscription.topic, msg.topic):
                 continue
 
-            for subscription in subs:
-                _run_subscription_callback(self.hass, subscription, msg)
+            payload = msg.payload
+            if subscription.encoding is not None:
+                try:
+                    payload = msg.payload.decode(subscription.encoding)
+                except (AttributeError, UnicodeDecodeError):
+                    _LOGGER.warning("Can't decode payload %s on %s "
+                                    "with encoding %s",
+                                    msg.payload, msg.topic,
+                                    subscription.encoding)
+                    return
+
+            self.hass.async_run_job(subscription, msg.topic, payload, msg.qos)
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code):
         """Disconnected callback."""
@@ -628,11 +634,6 @@ class MQTT(object):
             # It is ok to sleep here as we are in the MQTT thread.
             time.sleep(wait_time)
             tries += 1
-
-    def _grouped_subscriptions(self):
-        """Return a dict with all subscriptions grouped by their topics."""
-        iterator = groupby(self.subscriptions, lambda sub: sub.topic)
-        return {topic: list(sub) for topic, sub in iterator}
 
 
 def _raise_on_error(result):
@@ -663,25 +664,6 @@ def _match_topic(subscription, topic):
     reg = re.compile(reg_ex)
 
     return reg.match(topic) is not None
-
-
-def _run_subscription_callback(hass, subscription: Subscription,
-                               msg) -> None:
-    """Prepare message payload and run the subscription callback."""
-    if subscription.callback is None:
-        return
-
-    payload = msg.payload
-    if subscription.encoding is not None:
-        try:
-            payload = msg.payload.decode(subscription.encoding)
-        except (AttributeError, UnicodeDecodeError):
-            _LOGGER.warning("Can't decode payload %s on %s "
-                            "with encoding %s",
-                            msg.payload, msg.topic, subscription.encoding)
-            return
-
-    hass.add_job(subscription.callback, msg.topic, payload, msg.qos)
 
 
 class MqttAvailability(Entity):
