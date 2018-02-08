@@ -25,7 +25,7 @@ CONF_ARG = 'arg'
 SENSOR_TYPES = {
     'disk_free': ['Disk free', 'GiB', 'mdi:harddisk'],
     'disk_use': ['Disk used', 'GiB', 'mdi:harddisk'],
-    'disk_use_percent': ['Disk used (percent)', '%', 'mdi:harddisk'],
+    'disk_use_percent': ['Disk use (percent)', '%', 'mdi:harddisk'],
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last boot', '', 'mdi:clock'],
@@ -34,7 +34,7 @@ SENSOR_TYPES = {
     'load_5m': ['Average load (5m)', '', 'mdi:memory'],
     'memory_free': ['RAM available', 'MiB', 'mdi:memory'],
     'memory_use': ['RAM used', 'MiB', 'mdi:memory'],
-    'memory_use_percent': ['RAM used (percent)', '%', 'mdi:memory'],
+    'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory'],
     'network_in': ['Received', 'MiB', 'mdi:server-network'],
     'network_out': ['Sent', 'MiB', 'mdi:server-network'],
     'packets_in': ['Packets received', ' ', 'mdi:server-network'],
@@ -44,7 +44,7 @@ SENSOR_TYPES = {
     'since_last_boot': ['Since last boot', '', 'mdi:clock'],
     'swap_free': ['Swap free', 'GiB', 'mdi:harddisk'],
     'swap_use': ['Swap used', 'GiB', 'mdi:harddisk'],
-    'swap_use_percent': ['Swap used (percent)', '%', 'mdi:harddisk'],
+    'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
