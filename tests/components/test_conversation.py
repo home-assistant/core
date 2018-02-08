@@ -114,9 +114,6 @@ def test_http_processing_intent(hass, test_client):
 
     intent.async_register(hass, TestIntentHandler())
 
-    result = yield from component.async_setup(hass, {})
-    assert result
-
     result = yield from async_setup_component(hass, 'conversation', {
         'conversation': {
             'intents': {

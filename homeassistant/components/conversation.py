@@ -14,8 +14,7 @@ from homeassistant import core
 from homeassistant.components import http
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent
-from homeassistant.helpers.intent import (INTENT_TURN_ON, INTENT_TURN_OFF,
-                                          INTENT_TOGGLE)
+
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,11 +93,11 @@ def async_setup(hass, config):
 
     hass.http.register_view(ConversationProcessView)
 
-    async_register(hass, INTENT_TURN_ON,
+    async_register(hass, intent.INTENT_TURN_ON,
                    ['Turn {name} on', 'Turn on {name}'])
-    async_register(hass, INTENT_TURN_OFF,
+    async_register(hass, intent.INTENT_TURN_OFF,
                    ['Turn {name} off', 'Turn off {name}'])
-    async_register(hass, INTENT_TOGGLE,
+    async_register(hass, intent.INTENT_TOGGLE,
                    ['Toggle {name}', '{name} toggle'])
 
     return True
