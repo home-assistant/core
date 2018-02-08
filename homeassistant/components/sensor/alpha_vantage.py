@@ -87,6 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     timeseries = TimeSeries(key=api_key)
 
     dev = []
+    _LOGGER.debug('Configuring timeseries for symbols: %s', symbols)
     for symbol in symbols:
         try:
             timeseries.get_intraday(symbol[CONF_SYMBOL])
@@ -95,6 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 "API Key is not valid or symbol '%s' not known", symbol)
         dev.append(AlphaVantageSensor(timeseries, symbol))
 
+    _LOGGER.debug('Configuring forex')
     forex = ForeignExchange(key=api_key)
     for conversion in config.get(CONF_FOREIGN_EXCHANGE):
         from_cur = conversion.get(CONF_FROM)
@@ -110,6 +112,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
     add_devices(dev, True)
+    _LOGGER.debug('setup complated')
 
 
 class AlphaVantageSensor(Entity):
@@ -158,8 +161,10 @@ class AlphaVantageSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
+        _LOGGER.debug('requesting new data for symbol %s', self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         self.values = next(iter(all_values.values()))
+        _LOGGER.debug('received new values for symbol %s', self._symbol)
 
 
 class AlphaVantageForeignExchange(Entity):
@@ -210,5 +215,11 @@ class AlphaVantageForeignExchange(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
+        _LOGGER.debug('requesting new data for forex %s - %s',
+                      self._from_currency,
+                      self._to_currency)
         self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency)
+        _LOGGER.debug('received new data for forex %s - %s',
+                      self._from_currency,
+                      self._to_currency)
