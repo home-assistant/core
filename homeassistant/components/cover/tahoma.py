@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tahoma/
 """
 import logging
-from datetime import timedelta
 
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.tahoma import (
@@ -14,8 +13,6 @@ from homeassistant.components.tahoma import (
 DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
