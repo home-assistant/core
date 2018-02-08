@@ -21,7 +21,7 @@ from insteonplm.states.onOff import (OnOffSwitch, OnOffSwitch_OutletTop, OnOffSw
 from insteonplm.states.dimmable import (DimmableSwitch, DimmableSwitch_Fan)
 from insteonplm.states.sensor import (VariableSensor, MotionSensor, SmokeCO2Sensor, IoLincSensor)
 
-REQUIREMENTS = ['insteonplm==0.8.0']
+REQUIREMENTS = ['insteonplm==0.8.1']
 
 _LOGGER = logging.getLogger(__name__)
 
