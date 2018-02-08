@@ -68,49 +68,6 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert group.attributes.get('entity_id') == \
             ('test_domain.goodbye', 'test_domain.unnamed_device')
 
-    def test_extract_from_service_returns_all_if_no_entity_id(self):
-        """Test the extraction of everything from service."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
-        component.add_entities([
-            MockEntity(name='test_1'),
-            MockEntity(name='test_2'),
-        ])
-
-        call = ha.ServiceCall('test', 'service')
-
-        assert ['test_domain.test_1', 'test_domain.test_2'] == \
-            sorted(ent.entity_id for ent in
-                   component.extract_from_service(call))
-
-    def test_extract_from_service_filter_out_non_existing_entities(self):
-        """Test the extraction of non existing entities from service."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
-        component.add_entities([
-            MockEntity(name='test_1'),
-            MockEntity(name='test_2'),
-        ])
-
-        call = ha.ServiceCall('test', 'service', {
-            'entity_id': ['test_domain.test_2', 'test_domain.non_exist']
-        })
-
-        assert ['test_domain.test_2'] == \
-               [ent.entity_id for ent in component.extract_from_service(call)]
-
-    def test_extract_from_service_no_group_expand(self):
-        """Test not expanding a group."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
-        test_group = group.Group.create_group(
-            self.hass, 'test_group', ['light.Ceiling', 'light.Kitchen'])
-        component.add_entities([test_group])
-
-        call = ha.ServiceCall('test', 'service', {
-            'entity_id': ['group.test_group']
-        })
-
-        extracted = component.extract_from_service(call, expand_group=False)
-        self.assertEqual([test_group], extracted)
-
     def test_setup_loads_platforms(self):
         """Test the loading of the platforms."""
         component_setup = Mock(return_value=True)
@@ -298,3 +255,53 @@ def test_platform_not_ready(hass):
         yield from hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 3
         assert 'test_domain.mod1' in hass.config.components
+
+
+@asyncio.coroutine
+def test_extract_from_service_returns_all_if_no_entity_id(hass):
+    """Test the extraction of everything from service."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service')
+
+    assert ['test_domain.test_1', 'test_domain.test_2'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call))
+
+
+@asyncio.coroutine
+def test_extract_from_service_filter_out_non_existing_entities(hass):
+    """Test the extraction of non existing entities from service."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service', {
+        'entity_id': ['test_domain.test_2', 'test_domain.non_exist']
+    })
+
+    assert ['test_domain.test_2'] == \
+           [ent.entity_id for ent
+            in component.async_extract_from_service(call)]
+
+
+@asyncio.coroutine
+def test_extract_from_service_no_group_expand(hass):
+    """Test not expanding a group."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    test_group = yield from group.Group.async_create_group(
+        hass, 'test_group', ['light.Ceiling', 'light.Kitchen'])
+    yield from component.async_add_entities([test_group])
+
+    call = ha.ServiceCall('test', 'service', {
+        'entity_id': ['group.test_group']
+    })
+
+    extracted = component.async_extract_from_service(call, expand_group=False)
+    assert extracted == [test_group]

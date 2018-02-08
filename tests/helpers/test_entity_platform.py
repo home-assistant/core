@@ -8,8 +8,8 @@ from datetime import timedelta
 import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import (
-    EntityComponent, DEFAULT_SCAN_INTERVAL, SLOW_SETUP_WARNING)
-from homeassistant.helpers import entity_component
+    EntityComponent, DEFAULT_SCAN_INTERVAL)
+from homeassistant.helpers import entity_component, entity_platform
 
 import homeassistant.util.dt as dt_util
 
@@ -197,7 +197,7 @@ def test_platform_warn_slow_setup(hass):
 
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
-        assert timeout == SLOW_SETUP_WARNING
+        assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
 
         assert mock_call().cancel.called
@@ -206,7 +206,7 @@ def test_platform_warn_slow_setup(hass):
 @asyncio.coroutine
 def test_platform_error_slow_setup(hass, caplog):
     """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
-    with patch.object(entity_component, 'SLOW_SETUP_MAX_WAIT', 0):
+    with patch.object(entity_platform, 'SLOW_SETUP_MAX_WAIT', 0):
         called = []
 
         @asyncio.coroutine
