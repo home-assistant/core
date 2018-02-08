@@ -157,7 +157,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_client_starts_on_home_assistant_mqtt_setup(self):
         """Test if client is connected after mqtt init on bootstrap."""
-        self.hass.data['mqtt']._mqttc.connect.assert_called_once()
+        assert self.hass.data['mqtt']._mqttc.connect.called
 
     def test_receiving_non_utf8_message_gets_logged(self):
         """Test receiving a non utf8 encoded message."""
