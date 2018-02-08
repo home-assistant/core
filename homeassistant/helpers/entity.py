@@ -221,9 +221,9 @@ class Entity(object):
             if device_attr is not None:
                 attr.update(device_attr)
 
-            unit_of_measurement = self.unit_of_measurement
-            if unit_of_measurement is not None:
-                attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
+        unit_of_measurement = self.unit_of_measurement
+        if unit_of_measurement is not None:
+            attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         name = self.name
         if name is not None:
