@@ -1161,7 +1161,7 @@ tellduslive==0.10.4
 temperusb==1.5.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.0.19
+teslajsonpy==0.0.23
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1
