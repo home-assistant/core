@@ -170,7 +170,7 @@ class TestHelpersEntityPlatform(unittest.TestCase):
         def create_entity(number):
             """Create entity helper."""
             entity = MockEntity()
-            entity.entity_id = generate_entity_id(component.entity_id_format,
+            entity.entity_id = generate_entity_id(DOMAIN + '.{}',
                                                   'Number', hass=self.hass)
             return entity
 
