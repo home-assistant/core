@@ -9,7 +9,7 @@ import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import (
     EntityComponent, DEFAULT_SCAN_INTERVAL)
-from homeassistant.helpers import entity_component, entity_platform
+from homeassistant.helpers import entity_platform
 
 import homeassistant.util.dt as dt_util
 
