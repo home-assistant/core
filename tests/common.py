@@ -15,9 +15,8 @@ from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
-    intent, dispatcher, entity, restore_state,  entity_registry,
+    intent, entity, restore_state,  entity_registry,
     entity_platform)
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
