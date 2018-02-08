@@ -87,21 +87,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     timeseries = TimeSeries(key=api_key)
 
     dev = []
-    _LOGGER.debug('Configuring timeseries for symbols: %s', symbols)
     for symbol in symbols:
         try:
+            _LOGGER.debug('Configuring timeseries for symbols: %s',
+                          symbol[CONF_SYMBOL])
             timeseries.get_intraday(symbol[CONF_SYMBOL])
         except ValueError:
             _LOGGER.error(
                 "API Key is not valid or symbol '%s' not known", symbol)
         dev.append(AlphaVantageSensor(timeseries, symbol))
 
-    _LOGGER.debug('Configuring forex')
     forex = ForeignExchange(key=api_key)
     for conversion in config.get(CONF_FOREIGN_EXCHANGE):
         from_cur = conversion.get(CONF_FROM)
         to_cur = conversion.get(CONF_TO)
         try:
+            _LOGGER.debug('Configuring forex %s - %s',
+                          from_cur, to_cur)
             forex.get_currency_exchange_rate(
                 from_currency=from_cur, to_currency=to_cur)
         except ValueError as error:
@@ -112,7 +114,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
     add_devices(dev, True)
-    _LOGGER.debug('setup complated')
+    _LOGGER.debug('setup completed')
 
 
 class AlphaVantageSensor(Entity):
