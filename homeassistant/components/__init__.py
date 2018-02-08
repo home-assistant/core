@@ -14,11 +14,8 @@ import logging
 import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.helpers import intent
-from homeassistant.helpers.intent import (INTENT_TURN_ON,
-                                          INTENT_TURN_OFF, INTENT_TOGGLE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
@@ -28,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
 SERVICE_CHECK_CONFIG = 'check_config'
+
 
 def is_on(hass, entity_id=None):
     """Load up the module to call the is_on method.
@@ -157,10 +155,12 @@ def async_setup(hass, config):
         ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
-    hass.helpers.intent.async_register(TurnOnIntent())
-    hass.helpers.intent.async_register(TurnOffIntent())
-    hass.helpers.intent.async_register(ToggleIntent())
-
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TURN_ON, ha.DOMAIN, SERVICE_TURN_ON, "Turned on {}"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TURN_OFF, ha.DOMAIN, SERVICE_TURN_OFF, "Turned off {}"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"))
 
     @asyncio.coroutine
     def async_handle_core_service(call):
@@ -207,39 +207,3 @@ def async_setup(hass, config):
         ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config)
 
     return True
-
-
-class TurnOnIntent(intent.ServiceIntentHandler):
-    """Handle component turn intents."""
-
-    intent_type = INTENT_TURN_ON
-    slot_schema = {
-        'name': cv.string,
-    }
-    domain = ha.DOMAIN
-    service = SERVICE_TURN_ON
-    response = "Turned on {}"
-
-
-class TurnOffIntent(intent.ServiceIntentHandler):
-    """Handle component turn intents."""
-
-    intent_type = INTENT_TURN_OFF
-    slot_schema = {
-        'name': cv.string,
-    }
-    domain = ha.DOMAIN
-    service = SERVICE_TURN_OFF
-    response = "Turned off {}"
-
-
-class ToggleIntent(intent.ServiceIntentHandler):
-    """Handle component turn intents."""
-
-    intent_type = INTENT_TOGGLE
-    slot_schema = {
-        'name': cv.string,
-    }
-    domain = ha.DOMAIN
-    service = SERVICE_TOGGLE
-    response = "Toggled {}"

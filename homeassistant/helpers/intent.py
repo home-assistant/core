@@ -7,12 +7,12 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.const import ATTR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-# #### INTENTS ####
 INTENT_TURN_OFF = 'HassTurnOff'
 INTENT_TURN_ON = 'HassTurnOn'
 INTENT_TOGGLE = 'HassToggle'
@@ -125,7 +125,7 @@ class IntentHandler:
 
 
 def fuzzymatch(name, entities):
-    """Semi fuzzy matching function."""
+    """Fuzzy matching function."""
     matches = []
     pattern = '.*?'.join(name)
     regex = re.compile(pattern)
@@ -137,11 +137,17 @@ def fuzzymatch(name, entities):
 
 
 class ServiceIntentHandler(IntentHandler):
-    """Intent handler registration."""
+    """Service Intent handler registration."""
 
-    domain = None
-    service = None
-    response = ''
+    slot_schema = {
+        'name': cv.string,
+    }
+
+    def __init__(self, intent_type, domain, service, response):
+        self.intent_type = intent_type
+        self.domain = domain
+        self.service = service
+        self.response = response
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
@@ -157,7 +163,9 @@ class ServiceIntentHandler(IntentHandler):
         entity_name = entity_name.replace('the_', '')
 
         matches = fuzzymatch(entity_name, entities)
-        entity_id = matches[0] if matches else None
+        entity_id = next((x for x in matches if self.domain in x), None)
+        if not entity_id:
+            entity_id = matches[0] if matches else None
         _LOGGER.debug("%s matched entity: %s", name, entity_id)
 
         response = intent_obj.create_response()
