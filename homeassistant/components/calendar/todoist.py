@@ -277,7 +277,7 @@ class TodoistProjectData(object):
     The 'event' is a representation of a Todoist Task, with defined parameters
     of 'due_today' (is the task due today?), 'all_day' (does the task have a
     due date?), 'task_labels' (all labels assigned to the task), 'message'
-    (the content of the task, e.g. 'Fetch Mail'), 'description' (a URL pointing
+    (the content of the task, e.g. "Fetch Mail"), 'description' (a URL pointing
     to the task on the Todoist website), 'end_time' (what time the event is
     due), 'start_time' (what time this event was last updated), 'overdue' (is
     the task past its due date?), 'priority' (1-4, how important the task is,

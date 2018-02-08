@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
-DEFAULT_NAME = 'ADS Light'
+DEFAULT_NAME = "ADS Light"
 CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,

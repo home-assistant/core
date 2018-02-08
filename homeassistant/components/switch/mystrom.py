@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-mystrom==0.3.8']
 
-DEFAULT_NAME = 'myStrom Switch'
+DEFAULT_NAME = "myStrom Switch"
 
 _LOGGER = logging.getLogger(__name__)
 

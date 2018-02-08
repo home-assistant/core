@@ -250,7 +250,7 @@ class LightTemplate(Light):
             else:
                 _LOGGER.error(
                     "Received invalid light is_on state: %s. " +
-                    'Expected: %s',
+                    "Expected: %s",
                     state, ', '.join(_VALID_STATES))
                 self._state = None
 
@@ -266,7 +266,7 @@ class LightTemplate(Light):
             else:
                 _LOGGER.error(
                     "Received invalid brightness : %s" +
-                    'Expected: 0-255',
+                    "Expected: 0-255",
                     brightness)
                 self._brightness = None
 

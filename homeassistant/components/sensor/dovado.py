@@ -32,11 +32,11 @@ SENSOR_NETWORK = 'network'
 SENSOR_SMS_UNREAD = 'sms'
 
 SENSORS = {
-    SENSOR_NETWORK: ('signal strength', 'Network', None,
+    SENSOR_NETWORK: ("signal strength", 'Network', None,
                      'mdi:access-point-network'),
-    SENSOR_SIGNAL: ('signal strength', 'Signal Strength', '%',
+    SENSOR_SIGNAL: ("signal strength", "Signal Strength", '%',
                     'mdi:signal'),
-    SENSOR_SMS_UNREAD: ('sms unread', 'SMS unread', '',
+    SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", '',
                         'mdi:message-text-outline'),
     SENSOR_UPLOAD: ("traffic modem tx", 'Sent', 'GB',
                     'mdi:cloud-upload'),

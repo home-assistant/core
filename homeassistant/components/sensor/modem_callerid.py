@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['basicmodem==0.7']
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = 'Modem CallerID'
+DEFAULT_NAME = "Modem CallerID"
 ICON = 'mdi:phone-classic'
 DEFAULT_DEVICE = '/dev/ttyACM0'
 

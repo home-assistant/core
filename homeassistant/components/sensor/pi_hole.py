@@ -41,7 +41,7 @@ MONITORED_CONDITIONS = {
                           'ads', 'mdi:close-octagon-outline'],
     'ads_percentage_today': ["Ads Percentage Blocked Today",
                              '%', 'mdi:close-octagon-outline'],
-    'domains_being_blocked': ['Domains Blocked',
+    'domains_being_blocked': ["Domains Blocked",
                               'domains', 'mdi:block-helper'],
     'queries_cached': ["DNS Queries Cached",
                        'queries', 'mdi:comment-question-outline'],

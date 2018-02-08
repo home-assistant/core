@@ -26,7 +26,7 @@ CONF_PEAK = 'peak'
 CONF_DURATION = 'duration'
 CONF_RESET = 'reset'
 
-DEFAULT_NAME = 'FFmpeg Noise'
+DEFAULT_NAME = "FFmpeg Noise"
 DEFAULT_INIT_STATE = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

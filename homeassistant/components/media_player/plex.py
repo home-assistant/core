@@ -236,7 +236,7 @@ def request_configuration(host, hass, config, add_devices_callback):
             'type': ''
         }, {
             'id': 'has_ssl',
-            'name': 'Use SSL',
+            'name': "Use SSL",
             'type': ''
         }, {
             'id': 'do_not_verify_ssl',

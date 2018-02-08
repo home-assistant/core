@@ -56,7 +56,7 @@ SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema({
     vol.Required('slaves'): cv.entity_ids
 })
 
-DEFAULT_NAME = 'Bose Soundtouch'
+DEFAULT_NAME = "Bose Soundtouch"
 DEFAULT_PORT = 8090
 
 SUPPORT_SOUNDTOUCH = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \

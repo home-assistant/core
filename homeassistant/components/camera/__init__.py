@@ -268,8 +268,8 @@ class Camera(Entity):
             """Write image to stream."""
             response.write(bytes(
                 '--frameboundary\r\n'
-                'Content-Type: {}\r\n'
-                'Content-Length: {}\r\n\r\n'.format(
+                "Content-Type: {}\r\n"
+                "Content-Length: {}\r\n\r\n".format(
                     self.content_type, len(img_bytes)),
                 'utf-8') + img_bytes + b'\r\n')
 

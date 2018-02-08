@@ -28,7 +28,7 @@ CLIENTID_PREFIX = 'HomeAssistant'
 
 DEFAULT_NAME = "Sony Bravia TV"
 
-NICKNAME = 'Home Assistant'
+NICKNAME = "Home Assistant"
 
 # Map ip to request id for configuring
 _CONFIGURING = {}

@@ -27,14 +27,14 @@ DEFAULT_PORT = 6789
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 SENSOR_TYPES = {
-    'article_cache': ['ArticleCacheMB', 'Article Cache', 'MB'],
-    'average_download_rate': ['AverageDownloadRate', 'Average Speed', 'MB/s'],
-    'download_paused': ['DownloadPaused', 'Download Paused', None],
+    'article_cache': ['ArticleCacheMB', "Article Cache", 'MB'],
+    'average_download_rate': ['AverageDownloadRate', "Average Speed", 'MB/s'],
+    'download_paused': ['DownloadPaused', "Download Paused", None],
     'download_rate': ['DownloadRate', 'Speed', 'MB/s'],
     'download_size': ['DownloadedSizeMB', 'Size', 'MB'],
-    'free_disk_space': ['FreeDiskSpaceMB', 'Disk Free', 'MB'],
+    'free_disk_space': ['FreeDiskSpaceMB', "Disk Free", 'MB'],
     'post_paused': ['PostPaused', "Post Processing Paused", None],
-    'remaining_size': ['RemainingSizeMB', 'Queue Size', 'MB'],
+    'remaining_size': ['RemainingSizeMB', "Queue Size", 'MB'],
     'uptime': ['UpTimeSec', 'Uptime', 'min'],
 }
 

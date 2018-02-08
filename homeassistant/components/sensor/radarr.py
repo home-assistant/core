@@ -33,7 +33,7 @@ DEFAULT_UNIT = 'GB'
 SCAN_INTERVAL = timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    'diskspace': ['Disk Space', 'GB', 'mdi:harddisk'],
+    'diskspace': ["Disk Space", 'GB', 'mdi:harddisk'],
     'upcoming': ['Upcoming', 'Movies', 'mdi:television'],
     'wanted': ['Wanted', 'Movies', 'mdi:television'],
     'movies': ['Movies', 'Movies', 'mdi:television'],
@@ -137,7 +137,7 @@ class RadarrSensor(Entity):
                 total_space = to_unit(data['totalSpace'], self._unit)
                 percentage_used = (0 if total_space == 0
                                    else free_space / total_space * 100)
-                attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
+                attributes[data['path']] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
                     free_space, total_space, self._unit, percentage_used)
         elif self.type == 'movies':
             for movie in self.data:

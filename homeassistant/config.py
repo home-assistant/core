@@ -59,7 +59,7 @@ DEFAULT_CORE_CONFIG = (
                                              CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', "Pick yours from here: http://en.wiki"
      'pedia.org/wiki/List_of_tz_database_time_zones'),
-    (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
+    (CONF_CUSTOMIZE, "!include customize.yaml", None, "Customization file"),
 )  # type: Tuple[Tuple[str, Any, Any, str], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
@@ -524,7 +524,7 @@ def _identify_config_schema(module):
     t_schema = str(schema)
     if t_schema.startswith('{'):
         return ('dict', schema)
-    if t_schema.startswith(('[', 'All(<function ensure_list')):
+    if t_schema.startswith(('[', "All(<function ensure_list")):
         return ('list', schema)
     return '', schema
 
@@ -704,4 +704,4 @@ def async_notify_setup_error(hass, component, link=False):
     message += "\nPlease check your config."
 
     persistent_notification.async_create(
-        hass, message, 'Invalid config', 'invalid_config')
+        hass, message, "Invalid config", 'invalid_config')

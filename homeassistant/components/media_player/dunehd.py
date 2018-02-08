@@ -139,7 +139,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         self.__update_title()
         if self._media_title:
             return self._media_title
-        return self._state.get('playback_url', 'Not playing')
+        return self._state.get('playback_url', "Not playing")
 
     def __update_title(self):
         if self._state['player_state'] == 'bluray_playback':

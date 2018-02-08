@@ -24,7 +24,7 @@ CONF_ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric" \
 CONF_THRESHOLD = 'forecast_threshold'
 
 DEFAULT_DEVICE_CLASS = 'visible'
-DEFAULT_NAME = 'Aurora Visibility'
+DEFAULT_NAME = "Aurora Visibility"
 DEFAULT_THRESHOLD = 75
 
 HA_USER_AGENT = "Home Assistant Aurora Tracker v.0.1.0"

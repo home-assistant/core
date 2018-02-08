@@ -26,7 +26,7 @@ CONF_STATION = 'station'
 CONF_ATTRIBUTION = "Data provided by the Swiss Federal Office for the " \
                    "Environment FOEN"
 
-DEFAULT_NAME = 'Water temperature'
+DEFAULT_NAME = "Water temperature"
 
 ICON = 'mdi:cup-water'
 

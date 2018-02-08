@@ -43,7 +43,7 @@ SILENCE = (
 PATCHES = {}
 
 C_HEAD = 'bold'
-ERROR_STR = 'General Errors'
+ERROR_STR = "General Errors"
 
 
 def color(the_color, *args, reset=None):
@@ -98,8 +98,8 @@ def run(script_args: List) -> int:
 
     res = check(config_path)
     if args.files:
-        print(color(C_HEAD, 'yaml files'), '(used /',
-              color('red', 'not used') + ')')
+        print(color(C_HEAD, "yaml files"), "(used /",
+              color('red', "not used") + ')')
         # Python 3.5 gets a recursive, but not in 3.4
         for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
                           glob(os.path.join(config_dir, '*/*.yaml'))):
@@ -107,7 +107,7 @@ def run(script_args: List) -> int:
             print(color(the_color, '-', yfn))
 
     if res['except']:
-        print(color('bold_white', 'Failed config'))
+        print(color('bold_white', "Failed config"))
         for domain, config in res['except'].items():
             domain_info.append(domain)
             print(' ', color('bold_red', domain + ':'),
@@ -141,9 +141,9 @@ def run(script_args: List) -> int:
                 flatsecret[skey] = sfn
                 sss.append(color('green', skey) if skey in res['secrets']
                            else skey)
-            print(color(C_HEAD, 'Secrets from', sfn + ':'), ', '.join(sss))
+            print(color(C_HEAD, "Secrets from", sfn + ':'), ', '.join(sss))
 
-        print(color(C_HEAD, 'Used Secrets:'))
+        print(color(C_HEAD, "Used Secrets:"))
         for skey, sval in res['secrets'].items():
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
@@ -180,7 +180,7 @@ def check(config_path):
 
         if module is None:
             # Ensure list
-            msg = '{} not found: {}'.format(
+            msg = "{} not found: {}".format(
                 'Platform' if '.' in comp_name else 'Component', comp_name)
             res['except'].setdefault(ERROR_STR, []).append(msg)
             return None

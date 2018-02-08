@@ -22,7 +22,7 @@ DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
 
-OPERATION_LIST = ['Heat', 'Cool', 'Auto Changeover', 'Off']
+OPERATION_LIST = ['Heat', 'Cool', "Auto Changeover", 'Off']
 FAN_OPERATION_LIST = ['On', 'Auto', 'Cycle']
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |

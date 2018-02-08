@@ -22,7 +22,7 @@ REQUIREMENTS = ['total_connect_client==0.16']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Total Connect'
+DEFAULT_NAME = "Total Connect"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,

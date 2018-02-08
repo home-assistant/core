@@ -35,7 +35,7 @@ CONF_ATTRIBUTION = "Data provided by transport.opendata.ch"
 CONF_DESTINATION = 'to'
 CONF_START = 'from'
 
-DEFAULT_NAME = 'Next Departure'
+DEFAULT_NAME = "Next Departure"
 
 ICON = 'mdi:bus'
 

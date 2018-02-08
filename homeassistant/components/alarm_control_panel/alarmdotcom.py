@@ -87,9 +87,9 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         """Return the state of the device."""
         if self._alarm.state.lower() == 'disarmed':
             return STATE_ALARM_DISARMED
-        elif self._alarm.state.lower() == 'armed stay':
+        elif self._alarm.state.lower() == "armed stay":
             return STATE_ALARM_ARMED_HOME
-        elif self._alarm.state.lower() == 'armed away':
+        elif self._alarm.state.lower() == "armed away":
             return STATE_ALARM_ARMED_AWAY
         return STATE_UNKNOWN
 

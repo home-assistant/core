@@ -29,7 +29,7 @@ DOMAIN = 'cover'
 DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=15)
 
-GROUP_NAME_ALL_COVERS = 'all covers'
+GROUP_NAME_ALL_COVERS = "all covers"
 ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

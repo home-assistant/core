@@ -90,7 +90,7 @@ def run(script_args: List) -> int:
     # Get DB list
     db_list = [db['name'] for db in client.get_list_database()]
     # Get measurements of the old DB
-    res = client.query('SHOW MEASUREMENTS')
+    res = client.query("SHOW MEASUREMENTS")
     measurements = [measurement['name'] for measurement in res.get_points()]
     nb_measurements = len(measurements)
     # Move data

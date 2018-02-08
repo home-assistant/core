@@ -99,7 +99,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # Used for value change event handling
         self._refreshing = False
         self._timer = None
-        _LOGGER.debug('self._refreshing=%s self.delay=%s',
+        _LOGGER.debug("self._refreshing=%s self.delay=%s",
                       self._refresh_value, self._delay)
         self.value_added()
         self.update_properties()

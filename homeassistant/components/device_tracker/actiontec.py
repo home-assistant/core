@@ -97,7 +97,7 @@ class ActiontecDeviceScanner(DeviceScanner):
             telnet.write((self.password + '\n').encode('ascii'))
             prompt = telnet.read_until(
                 b"Wireless Broadband Router> ").split(b'\n')[-1]
-            telnet.write('firewall mac_cache_dump\n'.encode('ascii'))
+            telnet.write("firewall mac_cache_dump\n".encode('ascii'))
             telnet.write('\n'.encode('ascii'))
             telnet.read_until(prompt)
             leases_result = telnet.read_until(prompt).split(b'\n')[1:-1]

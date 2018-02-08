@@ -31,13 +31,13 @@ SENSOR_TYPES = {
         'Battery', ['doorbell', 'stickup_cams'], '%', 'battery-50', None],
 
     'last_activity': [
-        'Last Activity', ['doorbell', 'stickup_cams'], None, 'history', None],
+        "Last Activity", ['doorbell', 'stickup_cams'], None, 'history', None],
 
     'last_ding': [
-        'Last Ding', ['doorbell'], None, 'history', 'ding'],
+        "Last Ding", ['doorbell'], None, 'history', 'ding'],
 
     'last_motion': [
-        'Last Motion', ['doorbell', 'stickup_cams'], None,
+        "Last Motion", ['doorbell', 'stickup_cams'], None,
         'history', 'motion'],
 
     'volume': [

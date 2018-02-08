@@ -31,7 +31,7 @@ CONF_UNITS = 'unit'
 CONF_HASS = 'hass'
 
 NOTIFICATION_ID = 'upnp_notification'
-NOTIFICATION_TITLE = 'UPnP Setup'
+NOTIFICATION_TITLE = "UPnP Setup"
 
 UNITS = {
     "Bytes": 1,
@@ -99,7 +99,7 @@ def setup(hass, config):
             internal = internal_port
         try:
             upnp.addportmapping(
-                external, 'TCP', host, internal, 'Home Assistant', '')
+                external, 'TCP', host, internal, "Home Assistant", '')
             registered.append(external)
         except Exception:
             _LOGGER.exception("UPnP failed to configure port mapping for %s",

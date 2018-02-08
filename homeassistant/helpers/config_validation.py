@@ -33,9 +33,9 @@ byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 positive_int = vol.All(vol.Coerce(int), vol.Range(min=0))
 latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
-                   msg='invalid latitude')
+                   msg="invalid latitude")
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
-                    msg='invalid longitude')
+                    msg="invalid longitude")
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
@@ -50,7 +50,7 @@ def has_at_least_one_key(*keys: str) -> Callable:
     def validate(obj: Dict) -> Dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
+            raise vol.Invalid("expected dictionary")
 
         for k in obj.keys():
             if k in keys:
@@ -65,7 +65,7 @@ def has_at_least_one_key_value(*items: list) -> Callable:
     def validate(obj: Dict) -> Dict:
         """Test (key,value) exist in dict."""
         if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
+            raise vol.Invalid("expected dictionary")
 
         for item in obj.items():
             if item in items:
@@ -414,7 +414,7 @@ def url(value: Any) -> str:
     if urlparse(url_in).scheme in ['http', 'https']:
         return vol.Schema(vol.Url())(url_in)
 
-    raise vol.Invalid('invalid url')
+    raise vol.Invalid("invalid url")
 
 
 def x10_address(value):
@@ -480,8 +480,8 @@ EVENT_SCHEMA = vol.Schema({
 
 SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_ALIAS): string,
-    vol.Exclusive('service', 'service name'): service,
-    vol.Exclusive('service_template', 'service name'): template,
+    vol.Exclusive('service', "service name"): service,
+    vol.Exclusive('service_template', "service name"): template,
     vol.Optional('data'): dict,
     vol.Optional('data_template'): {match_all: template_complex},
     vol.Optional(CONF_ENTITY_ID): entity_ids,

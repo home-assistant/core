@@ -83,11 +83,11 @@ class WorldTidesInfoSensor(Entity):
         """Return the state of the device."""
         if self.data:
             if "High" in str(self.data['extremes'][0]['type']):
-                tidetime = time.strftime('%I:%M %p', time.localtime(
+                tidetime = time.strftime("%I:%M %p", time.localtime(
                     self.data['extremes'][0]['dt']))
                 return "High tide at %s" % (tidetime)
             elif "Low" in str(self.data['extremes'][0]['type']):
-                tidetime = time.strftime('%I:%M %p', time.localtime(
+                tidetime = time.strftime("%I:%M %p", time.localtime(
                     self.data['extremes'][0]['dt']))
                 return "Low tide at %s" % (tidetime)
             else:

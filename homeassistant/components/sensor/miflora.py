@@ -30,7 +30,7 @@ DEFAULT_ADAPTER = 'hci0'
 DEFAULT_UPDATE_INTERVAL = 1200
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
-DEFAULT_NAME = 'Mi Flora'
+DEFAULT_NAME = "Mi Flora"
 DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
 
@@ -38,7 +38,7 @@ DEFAULT_TIMEOUT = 10
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
-    'light': ['Light intensity', 'lux'],
+    'light': ["Light intensity", 'lux'],
     'moisture': ['Moisture', '%'],
     'conductivity': ['Conductivity', 'µS/cm'],
     'battery': ['Battery', '%'],

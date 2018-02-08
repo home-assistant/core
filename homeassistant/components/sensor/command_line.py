@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Command Sensor'
+DEFAULT_NAME = "Command Sensor"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 

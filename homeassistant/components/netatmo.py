@@ -53,8 +53,8 @@ def setup(hass, config):
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             "read_station read_camera access_camera "
-            'read_thermostat write_thermostat '
-            'read_presence access_presence')
+            "read_thermostat write_thermostat "
+            "read_presence access_presence")
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False

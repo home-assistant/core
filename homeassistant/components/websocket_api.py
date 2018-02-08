@@ -304,7 +304,7 @@ class ActiveConnection:
                 else:
                     self.debug("Invalid password")
                     yield from self.wsock.send_json(
-                        auth_invalid_message('Invalid password'))
+                        auth_invalid_message("Invalid password"))
 
             if not authenticated:
                 yield from process_wrong_login(request)

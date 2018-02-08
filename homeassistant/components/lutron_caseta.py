@@ -100,8 +100,8 @@ class LutronCasetaDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {
-            'Device ID': self._device_id,
-            'Zone ID': self._device_zone,
+            "Device ID": self._device_id,
+            "Zone ID": self._device_zone,
         }
         return attr
 

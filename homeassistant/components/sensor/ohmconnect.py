@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ID = 'id'
 
-DEFAULT_NAME = 'OhmConnect Status'
+DEFAULT_NAME = "OhmConnect Status"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 

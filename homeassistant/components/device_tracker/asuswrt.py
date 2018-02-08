@@ -149,7 +149,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info('Checking Devices')
+        _LOGGER.info("Checking Devices")
         data = self.get_asuswrt_data()
         if not data:
             return False

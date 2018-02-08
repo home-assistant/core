@@ -21,18 +21,18 @@ _LOGGER = logging.getLogger(__name__)
 CONF_TIMEOUT = 'timeout'
 CONF_WRITE_TIMEOUT = 'write_timeout'
 
-DEFAULT_NAME = 'Acer Projector'
+DEFAULT_NAME = "Acer Projector"
 DEFAULT_TIMEOUT = 1
 DEFAULT_WRITE_TIMEOUT = 1
 
-ECO_MODE = 'ECO Mode'
+ECO_MODE = "ECO Mode"
 
 ICON = 'mdi:projector'
 
-INPUT_SOURCE = 'Input Source'
+INPUT_SOURCE = "Input Source"
 
 LAMP = 'Lamp'
-LAMP_HOURS = 'Lamp Hours'
+LAMP_HOURS = "Lamp Hours"
 
 MODEL = 'Model'
 
@@ -140,10 +140,10 @@ class AcerSwitch(SwitchDevice):
         """Get the latest state from the projector."""
         msg = CMD_DICT[LAMP]
         awns = self._write_read_format(msg)
-        if awns == 'Lamp 1':
+        if awns == "Lamp 1":
             self._state = True
             self._available = True
-        elif awns == 'Lamp 0':
+        elif awns == "Lamp 0":
             self._state = False
             self._available = True
         else:

@@ -22,17 +22,17 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation'
 
-ATTR_STOP_ID = 'Stop ID'
+ATTR_STOP_ID = "Stop ID"
 ATTR_ROUTE = 'Route'
-ATTR_DUE_IN = 'Due in'
-ATTR_DUE_AT = 'Due at'
-ATTR_NEXT_UP = 'Later Bus'
+ATTR_DUE_IN = "Due in"
+ATTR_DUE_AT = "Due at"
+ATTR_NEXT_UP = "Later Bus"
 
 CONF_ATTRIBUTION = "Data provided by data.dublinked.ie"
 CONF_STOP_ID = 'stopid'
 CONF_ROUTE = 'route'
 
-DEFAULT_NAME = 'Next Bus'
+DEFAULT_NAME = "Next Bus"
 ICON = 'mdi:bus'
 
 SCAN_INTERVAL = timedelta(minutes=1)

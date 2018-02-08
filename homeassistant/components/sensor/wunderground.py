@@ -290,17 +290,17 @@ SENSOR_TYPES = {
     'dewpoint_f': WUCurrentConditionsSensorConfig(
         'Dewpoint', 'dewpoint_f', 'mdi:water', TEMP_FAHRENHEIT),
     'dewpoint_string': WUCurrentConditionsSensorConfig(
-        'Dewpoint Summary', 'dewpoint_string', 'mdi:water'),
+        "Dewpoint Summary", 'dewpoint_string', 'mdi:water'),
     'feelslike_c': WUCurrentConditionsSensorConfig(
-        'Feels Like', 'feelslike_c', 'mdi:thermometer', TEMP_CELSIUS),
+        "Feels Like", 'feelslike_c', 'mdi:thermometer', TEMP_CELSIUS),
     'feelslike_f': WUCurrentConditionsSensorConfig(
-        'Feels Like', 'feelslike_f', 'mdi:thermometer', TEMP_FAHRENHEIT),
+        "Feels Like", 'feelslike_f', 'mdi:thermometer', TEMP_FAHRENHEIT),
     'feelslike_string': WUCurrentConditionsSensorConfig(
-        'Feels Like', 'feelslike_string', "mdi:thermometer"),
+        "Feels Like", 'feelslike_string', "mdi:thermometer"),
     'heat_index_c': WUCurrentConditionsSensorConfig(
-        'Heat index', 'heat_index_c', "mdi:thermometer", TEMP_CELSIUS),
+        "Heat index", 'heat_index_c', "mdi:thermometer", TEMP_CELSIUS),
     'heat_index_f': WUCurrentConditionsSensorConfig(
-        'Heat index', 'heat_index_f', "mdi:thermometer", TEMP_FAHRENHEIT),
+        "Heat index", 'heat_index_f', "mdi:thermometer", TEMP_FAHRENHEIT),
     'heat_index_string': WUCurrentConditionsSensorConfig(
         "Heat Index Summary", 'heat_index_string', "mdi:thermometer"),
     'elevation': WUSensorConfig(
@@ -317,39 +317,39 @@ SENSOR_TYPES = {
             'display_location']['full'],
         icon="mdi:map-marker"),
     'observation_time': WUCurrentConditionsSensorConfig(
-        'Observation Time', 'observation_time', "mdi:clock"),
+        "Observation Time", 'observation_time', "mdi:clock"),
     'precip_1hr_in': WUCurrentConditionsSensorConfig(
-        'Precipitation 1hr', 'precip_1hr_in', "mdi:umbrella", LENGTH_INCHES),
+        "Precipitation 1hr", 'precip_1hr_in', "mdi:umbrella", LENGTH_INCHES),
     'precip_1hr_metric': WUCurrentConditionsSensorConfig(
-        'Precipitation 1hr', 'precip_1hr_metric', "mdi:umbrella", 'mm'),
+        "Precipitation 1hr", 'precip_1hr_metric', "mdi:umbrella", 'mm'),
     'precip_1hr_string': WUCurrentConditionsSensorConfig(
-        'Precipitation 1hr', 'precip_1hr_string', "mdi:umbrella"),
+        "Precipitation 1hr", 'precip_1hr_string', "mdi:umbrella"),
     'precip_today_in': WUCurrentConditionsSensorConfig(
-        'Precipitation Today', 'precip_today_in', "mdi:umbrella",
+        "Precipitation Today", 'precip_today_in', "mdi:umbrella",
         LENGTH_INCHES),
     'precip_today_metric': WUCurrentConditionsSensorConfig(
-        'Precipitation Today', 'precip_today_metric', "mdi:umbrella", 'mm'),
+        "Precipitation Today", 'precip_today_metric', "mdi:umbrella", 'mm'),
     'precip_today_string': WUCurrentConditionsSensorConfig(
-        'Precipitation Today', 'precip_today_string', "mdi:umbrella"),
+        "Precipitation Today", 'precip_today_string', "mdi:umbrella"),
     'pressure_in': WUCurrentConditionsSensorConfig(
         'Pressure', 'pressure_in', "mdi:gauge", 'inHg'),
     'pressure_mb': WUCurrentConditionsSensorConfig(
         'Pressure', 'pressure_mb', "mdi:gauge", 'mb'),
     'pressure_trend': WUCurrentConditionsSensorConfig(
-        'Pressure Trend', 'pressure_trend', "mdi:gauge"),
+        "Pressure Trend", 'pressure_trend', "mdi:gauge"),
     'relative_humidity': WUSensorConfig(
-        'Relative Humidity',
+        "Relative Humidity",
         'conditions',
         value=lambda wu: int(wu.data['current_observation'][
             'relative_humidity'][:-1]),
         unit_of_measurement='%',
         icon="mdi:water-percent"),
     'station_id': WUCurrentConditionsSensorConfig(
-        'Station ID', 'station_id', "mdi:home"),
+        "Station ID", 'station_id', "mdi:home"),
     'solarradiation': WUCurrentConditionsSensorConfig(
-        'Solar Radiation', 'solarradiation', "mdi:weather-sunny", "w/m2"),
+        "Solar Radiation", 'solarradiation', "mdi:weather-sunny", "w/m2"),
     'temperature_string': WUCurrentConditionsSensorConfig(
-        'Temperature Summary', 'temperature_string', "mdi:thermometer"),
+        "Temperature Summary", 'temperature_string', "mdi:thermometer"),
     'temp_c': WUCurrentConditionsSensorConfig(
         'Temperature', 'temp_c', "mdi:thermometer", TEMP_CELSIUS),
     'temp_f': WUCurrentConditionsSensorConfig(
@@ -357,25 +357,25 @@ SENSOR_TYPES = {
     'UV': WUCurrentConditionsSensorConfig(
         'UV', 'UV', "mdi:sunglasses"),
     'visibility_km': WUCurrentConditionsSensorConfig(
-        'Visibility (km)', 'visibility_km', "mdi:eye", LENGTH_KILOMETERS),
+        "Visibility (km)", 'visibility_km', "mdi:eye", LENGTH_KILOMETERS),
     'visibility_mi': WUCurrentConditionsSensorConfig(
-        'Visibility (miles)', 'visibility_mi', "mdi:eye", LENGTH_MILES),
+        "Visibility (miles)", 'visibility_mi', "mdi:eye", LENGTH_MILES),
     'weather': WUCurrentConditionsSensorConfig(
-        'Weather Summary', 'weather', None),
+        "Weather Summary", 'weather', None),
     'wind_degrees': WUCurrentConditionsSensorConfig(
-        'Wind Degrees', 'wind_degrees', "mdi:weather-windy", "°"),
+        "Wind Degrees", 'wind_degrees', "mdi:weather-windy", "°"),
     'wind_dir': WUCurrentConditionsSensorConfig(
-        'Wind Direction', 'wind_dir', "mdi:weather-windy"),
+        "Wind Direction", 'wind_dir', "mdi:weather-windy"),
     'wind_gust_kph': WUCurrentConditionsSensorConfig(
-        'Wind Gust', 'wind_gust_kph', "mdi:weather-windy", 'kph'),
+        "Wind Gust", 'wind_gust_kph', "mdi:weather-windy", 'kph'),
     'wind_gust_mph': WUCurrentConditionsSensorConfig(
-        'Wind Gust', 'wind_gust_mph', "mdi:weather-windy", 'mph'),
+        "Wind Gust", 'wind_gust_mph', "mdi:weather-windy", 'mph'),
     'wind_kph': WUCurrentConditionsSensorConfig(
-        'Wind Speed', 'wind_kph', "mdi:weather-windy", 'kph'),
+        "Wind Speed", 'wind_kph', "mdi:weather-windy", 'kph'),
     'wind_mph': WUCurrentConditionsSensorConfig(
-        'Wind Speed', 'wind_mph', "mdi:weather-windy", 'mph'),
+        "Wind Speed", 'wind_mph', "mdi:weather-windy", 'mph'),
     'wind_string': WUCurrentConditionsSensorConfig(
-        'Wind Summary', 'wind_string', "mdi:weather-windy"),
+        "Wind Summary", 'wind_string', "mdi:weather-windy"),
     'temp_high_record_c': WUAlmanacSensorConfig(
         lambda wu: "High Temperature Record ({})".format(
             wu.data['almanac']['temp_high']['recordyear']),

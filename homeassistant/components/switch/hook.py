@@ -22,9 +22,9 @@ HOOK_ENDPOINT = 'https://api.gethook.io/v1/'
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Exclusive(CONF_PASSWORD, 'hook_secret', msg='hook: provide ' +
+    vol.Exclusive(CONF_PASSWORD, 'hook_secret', msg="hook: provide " +
                   "username/password OR token"): cv.string,
-    vol.Exclusive(CONF_TOKEN, 'hook_secret', msg='hook: provide ' +
+    vol.Exclusive(CONF_TOKEN, 'hook_secret', msg="hook: provide " +
                   "username/password OR token"): cv.string,
     vol.Inclusive(CONF_USERNAME, 'hook_auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'hook_auth'): cv.string,

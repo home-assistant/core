@@ -47,7 +47,7 @@ MANIFEST_JSON = {
     'display': 'standalone',
     'icons': [],
     'lang': 'en-US',
-    'name': 'Home Assistant',
+    'name': "Home Assistant",
     'short_name': 'Assistant',
     'start_url': '/states',
     'theme_color': DEFAULT_THEME_COLOR
@@ -586,9 +586,9 @@ def _is_latest(js_option, request):
 
     family_min_version = {
         'Chrome': 54,          # Object.values
-        'Chrome Mobile': 54,
+        "Chrome Mobile": 54,
         'Firefox': 47,         # Object.values
-        'Firefox Mobile': 47,
+        "Firefox Mobile": 47,
         'Opera': 41,           # Object.values
         'Edge': 14,            # Array.prototype.includes added in 14
         'Safari': 10,          # Many features not supported by 9

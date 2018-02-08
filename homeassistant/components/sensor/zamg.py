@@ -40,23 +40,23 @@ DEFAULT_NAME = 'zamg'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    ATTR_WEATHER_PRESSURE: ('Pressure', 'hPa', 'LDstat hPa', float),
-    'pressure_sealevel': ("Pressure at Sea Level", 'hPa', 'LDred hPa', float),
-    ATTR_WEATHER_HUMIDITY: ('Humidity', '%', 'RF %', int),
-    ATTR_WEATHER_WIND_SPEED: ('Wind Speed', 'km/h', 'WG km/h', float),
-    ATTR_WEATHER_WIND_BEARING: ('Wind Bearing', '°', 'WR °', int),
-    'wind_max_speed': ("Top Wind Speed", 'km/h', 'WSG km/h', float),
-    'wind_max_bearing': ("Top Wind Bearing", '°', 'WSR °', int),
-    'sun_last_hour': ("Sun Last Hour", '%', 'SO %', int),
-    ATTR_WEATHER_TEMPERATURE: ('Temperature', '°C', 'T °C', float),
-    'precipitation': ('Precipitation', 'l/m²', 'N l/m²', float),
-    'dewpoint': ('Dew Point', '°C', 'TP °C', float),
+    ATTR_WEATHER_PRESSURE: ('Pressure', 'hPa', "LDstat hPa", float),
+    'pressure_sealevel': ("Pressure at Sea Level", 'hPa', "LDred hPa", float),
+    ATTR_WEATHER_HUMIDITY: ('Humidity', '%', "RF %", int),
+    ATTR_WEATHER_WIND_SPEED: ("Wind Speed", 'km/h', "WG km/h", float),
+    ATTR_WEATHER_WIND_BEARING: ("Wind Bearing", '°', "WR °", int),
+    'wind_max_speed': ("Top Wind Speed", 'km/h', "WSG km/h", float),
+    'wind_max_bearing': ("Top Wind Bearing", '°', "WSR °", int),
+    'sun_last_hour': ("Sun Last Hour", '%', "SO %", int),
+    ATTR_WEATHER_TEMPERATURE: ('Temperature', '°C', "T °C", float),
+    'precipitation': ('Precipitation', 'l/m²', "N l/m²", float),
+    'dewpoint': ("Dew Point", '°C', "TP °C", float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
-    'station_name': ('Station Name', None, 'Name', str),
-    'station_elevation': ('Station Elevation', 'm', 'Höhe m', int),
-    'update_date': ('Update Date', None, 'Datum', str),
-    'update_time': ('Update Time', None, 'Zeit', str),
+    'station_name': ("Station Name", None, 'Name', str),
+    'station_elevation': ("Station Elevation", 'm', "Höhe m", int),
+    'update_date': ("Update Date", None, 'Datum', str),
+    'update_time': ("Update Time", None, 'Zeit', str),
 }
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({

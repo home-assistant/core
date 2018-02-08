@@ -161,7 +161,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         try:
             data = REGISTER_SCHEMA(data)
@@ -197,7 +197,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
             subscription = registration.get(ATTR_SUBSCRIPTION)
             if subscription.get(ATTR_ENDPOINT) == endpoint:
                 return key
-        return ensure_unique_string('unnamed device', self.registrations)
+        return ensure_unique_string("unnamed device", self.registrations)
 
     @asyncio.coroutine
     def delete(self, request):
@@ -205,7 +205,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         subscription = data.get(ATTR_SUBSCRIPTION)
 
@@ -306,7 +306,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         event_payload = {
             ATTR_TAG: data.get(ATTR_TAG),

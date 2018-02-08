@@ -28,7 +28,7 @@ CONF_IS_ON_TEMPLATE = 'is_on_template'
 DEFAULT_METHOD = 'post'
 DEFAULT_BODY_OFF = Template('OFF')
 DEFAULT_BODY_ON = Template('ON')
-DEFAULT_NAME = 'REST Switch'
+DEFAULT_NAME = "REST Switch"
 DEFAULT_TIMEOUT = 10
 
 SUPPORT_REST_METHODS = ['post', 'put']

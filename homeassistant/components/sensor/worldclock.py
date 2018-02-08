@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Worldclock Sensor'
+DEFAULT_NAME = "Worldclock Sensor"
 
 ICON = 'mdi:clock'
 

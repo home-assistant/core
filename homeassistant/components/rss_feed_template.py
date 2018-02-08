@@ -79,7 +79,7 @@ class RssView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, entity_id=None):
         """Generate the RSS view XML."""
-        response = '<?xml version="1.0" encoding="utf-8"?>\n\n'
+        response = "<?xml version="1.0" encoding="utf-8"?>\n\n"
 
         response += '<rss>\n'
         if self._title is not None:

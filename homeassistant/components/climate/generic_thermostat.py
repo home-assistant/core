@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['switch', 'sensor']
 
 DEFAULT_TOLERANCE = 0.3
-DEFAULT_NAME = 'Generic Thermostat'
+DEFAULT_NAME = "Generic Thermostat"
 
 CONF_HEATER = 'heater'
 CONF_SENSOR = 'target_sensor'

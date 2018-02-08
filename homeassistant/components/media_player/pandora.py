@@ -99,7 +99,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._pianobar = pexpect.spawn('pianobar')
         _LOGGER.info("Started pianobar subprocess")
         mode = self._pianobar.expect(["Receiving new playlist",
-                                      'Select station:',
+                                      "Select station:",
                                       'Email:'])
         if mode == 1:
             # station list was presented. dismiss it.
@@ -215,12 +215,12 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         import pexpect
         self._pianobar.send('s')
         try:
-            self._pianobar.expect('Select station:', timeout=1)
+            self._pianobar.expect("Select station:", timeout=1)
         except pexpect.exceptions.TIMEOUT:
             # try again. Buffer was contaminated.
             self._clear_buffer()
             self._pianobar.send('s')
-            self._pianobar.expect('Select station:')
+            self._pianobar.expect("Select station:")
 
     def update_playing_status(self):
         """Query pianobar for info about current media_title, station."""
@@ -239,7 +239,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         try:
             match_idx = self._pianobar.expect([br'(\d\d):(\d\d)/(\d\d):(\d\d)',
                                                "No song playing",
-                                               'Select station',
+                                               "Select station",
                                                "Receiving new playlist"])
         except pexpect.exceptions.EOF:
             _LOGGER.info("Pianobar process already exited")

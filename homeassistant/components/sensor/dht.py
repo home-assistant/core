@@ -29,7 +29,7 @@ CONF_SENSOR = 'sensor'
 CONF_HUMIDITY_OFFSET = 'humidity_offset'
 CONF_TEMPERATURE_OFFSET = 'temperature_offset'
 
-DEFAULT_NAME = 'DHT Sensor'
+DEFAULT_NAME = "DHT Sensor"
 
 # DHT11 is able to deliver data once per second, DHT22 once every two
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)

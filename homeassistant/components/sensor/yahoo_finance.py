@@ -25,7 +25,7 @@ ATTR_PREV_CLOSE = 'prev_close'
 CONF_ATTRIBUTION = "Stock market information provided by Yahoo! Inc."
 CONF_SYMBOLS = 'symbols'
 
-DEFAULT_NAME = 'Yahoo Stock'
+DEFAULT_NAME = "Yahoo Stock"
 DEFAULT_SYMBOL = 'YHOO'
 
 ICON = 'mdi:currency-usd'

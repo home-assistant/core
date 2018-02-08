@@ -28,7 +28,7 @@ DOMAIN = 'light'
 DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
-GROUP_NAME_ALL_LIGHTS = 'all lights'
+GROUP_NAME_ALL_LIGHTS = "all lights"
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

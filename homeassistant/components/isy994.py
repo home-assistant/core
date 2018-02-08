@@ -29,12 +29,12 @@ CONF_SENSOR_STRING = 'sensor_string'
 CONF_ENABLE_CLIMATE = 'enable_climate'
 CONF_TLS_VER = 'tls'
 
-DEFAULT_IGNORE_STRING = '{IGNORE ME}'
+DEFAULT_IGNORE_STRING = "{IGNORE ME}"
 DEFAULT_SENSOR_STRING = 'sensor'
 
 KEY_ACTIONS = 'actions'
 KEY_FOLDER = 'folder'
-KEY_MY_PROGRAMS = 'My Programs'
+KEY_MY_PROGRAMS = "My Programs"
 KEY_STATUS = 'status'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -375,7 +375,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _categorize_nodes(hass, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass, isy.programs)
 
-    if enable_climate and isy.configuration.get('Weather Information'):
+    if enable_climate and isy.configuration.get("Weather Information"):
         _categorize_weather(hass, isy.climate)
 
     def stop(event: object) -> None:

@@ -36,12 +36,12 @@ DOMAIN = 'raincloud'
 DEFAULT_WATERING_TIME = 15
 
 KEY_MAP = {
-    'auto_watering': 'Automatic Watering',
+    'auto_watering': "Automatic Watering",
     'battery': 'Battery',
     'is_watering': 'Watering',
-    'manual_watering': 'Manual Watering',
-    'next_cycle': 'Next Cycle',
-    'rain_delay': 'Rain Delay',
+    'manual_watering': "Manual Watering",
+    'next_cycle': "Next Cycle",
+    'rain_delay': "Rain Delay",
     'status': 'Status',
     'watering_time': "Remaining Watering Time",
 }

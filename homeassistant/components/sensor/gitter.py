@@ -21,7 +21,7 @@ ATTR_MENTION = 'mention'
 ATTR_ROOM = 'room'
 ATTR_USERNAME = 'username'
 
-DEFAULT_NAME = 'Gitter messages'
+DEFAULT_NAME = "Gitter messages"
 DEFAULT_ROOM = 'home-assistant/home-assistant'
 
 ICON = 'mdi:message-settings-variant'

@@ -51,13 +51,13 @@ class CloudIoT:
 
             if self.cloud.subscription_expired:
                 hass.components.persistent_notification.async_create(
-                    MESSAGE_EXPIRATION, 'Subscription expired',
+                    MESSAGE_EXPIRATION, "Subscription expired",
                     'cloud_subscription_expired')
                 self.state = STATE_DISCONNECTED
                 return
 
         if self.state == STATE_CONNECTED:
-            raise RuntimeError('Already connected')
+            raise RuntimeError("Already connected")
 
         @asyncio.coroutine
         def _handle_hass_stop(event):
@@ -92,7 +92,7 @@ class CloudIoT:
 
                 if msg.type in (WSMsgType.ERROR, WSMsgType.CLOSED,
                                 WSMsgType.CLOSING):
-                    disconnect_warn = 'Connection cancelled.'
+                    disconnect_warn = "Connection cancelled."
                     break
 
                 elif msg.type != WSMsgType.TEXT:
@@ -136,7 +136,7 @@ class CloudIoT:
 
         except client_exceptions.WSServerHandshakeError as err:
             if err.code == 401:
-                disconnect_warn = 'Invalid auth.'
+                disconnect_warn = "Invalid auth."
                 self.close_requested = True
                 # Should we notify user?
             else:

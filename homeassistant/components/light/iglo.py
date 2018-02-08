@@ -20,7 +20,7 @@ REQUIREMENTS = ['iglo==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'iGlo Light'
+DEFAULT_NAME = "iGlo Light"
 DEFAULT_PORT = 8080
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -18,7 +18,7 @@ REQUIREMENTS = ['python-mystrom==0.3.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'myStrom bulb'
+DEFAULT_NAME = "myStrom bulb"
 
 SUPPORT_MYSTROM = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH)
 

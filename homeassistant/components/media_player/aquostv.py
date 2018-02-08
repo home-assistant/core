@@ -53,7 +53,7 @@ SOURCES = {0: "TV / Antenna",
            2: 'HDMI_IN_2',
            3: 'HDMI_IN_3',
            4: 'HDMI_IN_4',
-           5: 'COMPONENT IN',
+           5: "COMPONENT IN",
            6: 'VIDEO_IN_1',
            7: 'VIDEO_IN_2',
            8: 'PC_IN'}

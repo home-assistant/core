@@ -187,9 +187,9 @@ class AppleTvDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if self._playing:
             if self.state == STATE_IDLE:
-                return 'Nothing playing'
+                return "Nothing playing"
             title = self._playing.title
-            return title if title else 'No title'
+            return title if title else "No title"
 
         return "Establishing a connection to {0}...".format(self._name)
 

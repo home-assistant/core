@@ -30,7 +30,7 @@ ATTR_HOURLY_FORECAST_SUMMARY = 'hourly_forecast_summary'
 
 CONF_UNITS = 'units'
 
-DEFAULT_NAME = 'Dark Sky'
+DEFAULT_NAME = "Dark Sky"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,

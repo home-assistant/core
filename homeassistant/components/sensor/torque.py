@@ -24,7 +24,7 @@ DEFAULT_NAME = 'vehicle'
 DEPENDENCIES = ['http']
 DOMAIN = 'torque'
 
-ENTITY_NAME_FORMAT = '{0} {1}'
+ENTITY_NAME_FORMAT = "{0} {1}"
 
 SENSOR_EMAIL_FIELD = 'eml'
 SENSOR_NAME_KEY = r'userFullName(\w+)'

@@ -24,7 +24,7 @@ REQUIREMENTS = ['py-synology==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Synology Camera'
+DEFAULT_NAME = "Synology Camera"
 DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

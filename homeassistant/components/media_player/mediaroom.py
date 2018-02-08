@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_TITLE = "Mediaroom Media Player Setup"
 NOTIFICATION_ID = 'mediaroom_notification'
-DEFAULT_NAME = 'Mediaroom STB'
+DEFAULT_NAME = "Mediaroom STB"
 DEFAULT_TIMEOUT = 9
 DATA_MEDIAROOM = "mediaroom_known_stb"
 

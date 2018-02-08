@@ -32,7 +32,7 @@ REQUEST_TIMEOUT = 5  # seconds
 SENSOR_TYPES = {
     'usage': ['Usage', PERCENT, 'mdi:percent'],
     'usage_gb': ['Usage', GIGABYTES, 'mdi:download'],
-    'limit': ['Data limit', GIGABYTES, 'mdi:download'],
+    'limit': ["Data limit", GIGABYTES, 'mdi:download'],
     'onpeak_download': ["On Peak Download", GIGABYTES, 'mdi:download'],
     'onpeak_upload': ["On Peak Upload ", GIGABYTES, 'mdi:upload'],
     'onpeak_total': ["On Peak Total", GIGABYTES, 'mdi:download'],

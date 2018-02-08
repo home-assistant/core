@@ -33,7 +33,7 @@ CONF_LOGIN_ID = 'login_id'
 CONF_START_OFF = 'start_off'
 CONF_CREDENTIALS = 'credentials'
 
-DEFAULT_NAME = 'Apple TV'
+DEFAULT_NAME = "Apple TV"
 
 DATA_APPLE_TV = 'data_apple_tv'
 DATA_ENTITIES = 'data_apple_tv_entities'
@@ -95,7 +95,7 @@ def request_configuration(hass, config, atv, credentials):
         except exceptions.DeviceAuthenticationError as ex:
             hass.components.persistent_notification.async_create(
                 "Authentication failed! Did you enter correct PIN?<br /><br />"
-                'Details: {0}'.format(ex),
+                "Details: {0}".format(ex),
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID)
 
@@ -105,7 +105,7 @@ def request_configuration(hass, config, atv, credentials):
         "Apple TV Authentication", configuration_callback,
         description="Please enter PIN code shown on screen.",
         submit_caption='Confirm',
-        fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]
+        fields=[{'id': 'pin', 'name': "PIN Code", 'type': 'password'}]
     )
 
 

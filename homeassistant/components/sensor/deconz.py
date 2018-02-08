@@ -119,7 +119,7 @@ class DeconzBattery(Entity):
     def __init__(self, device):
         """Register dispatcher callback for update of battery state."""
         self._device = device
-        self._name = '{} {}'.format(self._device.name, 'Battery Level')
+        self._name = '{} {}'.format(self._device.name, "Battery Level")
         self._device_class = 'battery'
         self._unit_of_measurement = "%"
 

@@ -19,7 +19,7 @@ REQUIREMENTS = ['libpyfoscam==1.0']
 
 CONF_IP = 'ip'
 
-DEFAULT_NAME = 'Foscam Camera'
+DEFAULT_NAME = "Foscam Camera"
 DEFAULT_PORT = 88
 
 FOSCAM_COMM_ERROR = -8

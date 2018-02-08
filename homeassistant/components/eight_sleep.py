@@ -54,7 +54,7 @@ NAME_MAP = {
     'right_presence': "Right Bed Presence",
     'right_bed_temp': "Right Bed Temperature",
     'right_sleep_stage': "Right Sleep Stage",
-    'room_temp': 'Room Temperature',
+    'room_temp': "Room Temperature",
 }
 
 SENSORS = ['current_sleep',

@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE_PATH = 'file_path'
 
-DEFAULT_NAME = 'Local File'
+DEFAULT_NAME = "Local File"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FILE_PATH): cv.string,

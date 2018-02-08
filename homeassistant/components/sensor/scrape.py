@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SELECT = 'select'
 CONF_ATTR = 'attribute'
 
-DEFAULT_NAME = 'Web scrape'
+DEFAULT_NAME = "Web scrape"
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

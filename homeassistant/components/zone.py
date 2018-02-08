@@ -26,7 +26,7 @@ ATTR_RADIUS = 'radius'
 
 CONF_PASSIVE = 'passive'
 
-DEFAULT_NAME = 'Unnamed zone'
+DEFAULT_NAME = "Unnamed zone"
 DEFAULT_PASSIVE = False
 DEFAULT_RADIUS = 100
 DOMAIN = 'zone'

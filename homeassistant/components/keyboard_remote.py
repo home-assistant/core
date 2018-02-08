@@ -21,7 +21,7 @@ REQUIREMENTS = ['evdev==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DESCRIPTOR = 'device_descriptor'
-DEVICE_ID_GROUP = 'Device description'
+DEVICE_ID_GROUP = "Device description"
 DEVICE_NAME = 'device_name'
 DOMAIN = 'keyboard_remote'
 

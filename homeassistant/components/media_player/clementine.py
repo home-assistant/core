@@ -27,7 +27,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Clementine Remote'
+DEFAULT_NAME = "Clementine Remote"
 DEFAULT_PORT = 5500
 
 SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \

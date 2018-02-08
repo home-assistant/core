@@ -11,7 +11,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo binary sensor platform."""
     add_devices([
         DemoBinarySensor("Basement Floor Wet", False, 'moisture'),
-        DemoBinarySensor('Movement Backyard', True, 'motion'),
+        DemoBinarySensor("Movement Backyard", True, 'motion'),
     ])
 
 

@@ -91,7 +91,7 @@ class FoursquarePushReceiver(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         secret = data.pop('secret', None)
 
@@ -100,6 +100,6 @@ class FoursquarePushReceiver(HomeAssistantView):
         if self.push_secret != secret:
             _LOGGER.error("Received Foursquare push with invalid"
                           "push secret: %s", secret)
-            return self.json_message('Incorrect secret', HTTP_BAD_REQUEST)
+            return self.json_message("Incorrect secret", HTTP_BAD_REQUEST)
 
         request.app['hass'].bus.async_fire(EVENT_PUSH, data)

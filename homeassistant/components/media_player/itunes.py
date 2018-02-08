@@ -379,7 +379,7 @@ class AirPlayDevice(MediaPlayerDevice):
 
         if 'name' in state_hash:
             name = state_hash.get('name', '')
-            self.device_name = (name + ' AirTunes Speaker').strip()
+            self.device_name = (name + " AirTunes Speaker").strip()
 
         if 'kind' in state_hash:
             self.kind = state_hash.get('kind', None)

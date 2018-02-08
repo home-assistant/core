@@ -27,7 +27,7 @@ DOMAIN = 'fan'
 DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
-GROUP_NAME_ALL_FANS = 'all fans'
+GROUP_NAME_ALL_FANS = "all fans"
 ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

@@ -30,7 +30,7 @@ ATTR_CURRENT_POWER_W = 'current_power_w'
 ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
 ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
-DEFAULT_NAME = 'TP-Link Light'
+DEFAULT_NAME = "TP-Link Light"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

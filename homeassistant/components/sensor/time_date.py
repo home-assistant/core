@@ -25,10 +25,10 @@ TIME_STR_FORMAT = '%H:%M'
 OPTION_TYPES = {
     'time': 'Time',
     'date': 'Date',
-    'date_time': 'Date & Time',
-    'time_date': 'Time & Date',
-    'beat': 'Internet Time',
-    'time_utc': 'Time (UTC)',
+    'date_time': "Date & Time",
+    'time_date': "Time & Date",
+    'beat': "Internet Time",
+    'time_utc': "Time (UTC)",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

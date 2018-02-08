@@ -13,10 +13,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # sensor_type: [friendly_name, convert_unit, icon]
 SENSOR_TYPES = {
-    'byte_received': ['received bytes', True, 'mdi:server-network'],
-    'byte_sent': ['sent bytes', True, 'mdi:server-network'],
-    'packets_in': ['packets received', False, 'mdi:server-network'],
-    'packets_out': ['packets sent', False, 'mdi:server-network'],
+    'byte_received': ["received bytes", True, 'mdi:server-network'],
+    'byte_sent': ["sent bytes", True, 'mdi:server-network'],
+    'packets_in': ["packets received", False, 'mdi:server-network'],
+    'packets_out': ["packets sent", False, 'mdi:server-network'],
 }
 
 

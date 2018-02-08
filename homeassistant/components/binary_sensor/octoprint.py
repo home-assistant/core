@@ -23,7 +23,7 @@ DEFAULT_NAME = 'OctoPrint'
 SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit
     'Printing': ['printer', 'state', 'printing', None],
-    'Printing Error': ['printer', 'state', 'error', None]
+    "Printing Error": ['printer', 'state', 'error', None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

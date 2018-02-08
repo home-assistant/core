@@ -134,7 +134,7 @@ class UkTransportSensor(Entity):
             if 'exceeded' in response.json()['error']:
                 self._state = "Usage limits exceeded"
             if 'invalid' in response.json()['error']:
-                self._state = 'Credentials invalid'
+                self._state = "Credentials invalid"
         else:
             self._data = response.json()
 
@@ -233,7 +233,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
 
         if self._data != {}:
             if self._data['departures']['all'] == []:
-                self._state = 'No departures'
+                self._state = "No departures"
             else:
                 for departure in self._data['departures']['all']:
                     self._next_trains.append({

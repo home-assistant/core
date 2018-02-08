@@ -35,7 +35,7 @@ ATTR_SENSORS = 'sensors'
 PROBLEM_NONE = 'none'
 ATTR_MAX_BRIGHTNESS_HISTORY = 'max_brightness'
 
-# we're not returning only one value, we're returning a dict here. So we need
+# we"re not returning only one value, we"re returning a dict here. So we need
 # to have a separate literal for it to avoid confusion.
 ATTR_DICT_OF_UNITS_OF_MEASUREMENT = 'unit_of_measurement_dict'
 
@@ -81,7 +81,7 @@ PLANT_SCHEMA = vol.Schema({
 DOMAIN = 'plant'
 DEPENDENCIES = ['zone', 'group']
 
-GROUP_NAME_ALL_PLANTS = 'all plants'
+GROUP_NAME_ALL_PLANTS = "all plants"
 ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
 
 CONFIG_SCHEMA = vol.Schema({

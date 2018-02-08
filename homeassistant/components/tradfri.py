@@ -96,7 +96,7 @@ def request_configuration(hass, config, host):
         description="Please enter the security code written at the bottom of "
                     "your IKEA Trådfri Gateway.",
         submit_caption="Confirm",
-        fields=[{'id': 'security_code', 'name': 'Security Code',
+        fields=[{'id': 'security_code', 'name': "Security Code",
                  'type': 'password'}]
     )
 

@@ -11,8 +11,8 @@ from homeassistant.helpers.icon import icon_for_battery_level
 DEPENDENCIES = ['ios']
 
 SENSOR_TYPES = {
-    'level': ['Battery Level', '%'],
-    'state': ['Battery State', None]
+    'level': ["Battery Level", '%'],
+    'state': ["Battery State", None]
 }
 
 DEFAULT_ICON_LEVEL = 'mdi:battery'

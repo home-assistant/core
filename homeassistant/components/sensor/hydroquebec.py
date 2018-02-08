@@ -42,7 +42,7 @@ SENSOR_TYPES = {
     'period_total_bill':
     ["Period total bill", PRICE, 'mdi:square-inc-cash'],
     'period_length':
-    ['Period length', DAYS, 'mdi:calendar-today'],
+    ["Period length", DAYS, 'mdi:calendar-today'],
     'period_total_days':
     ["Period total days", DAYS, 'mdi:calendar-today'],
     'period_mean_daily_bill':

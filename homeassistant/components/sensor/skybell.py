@@ -24,7 +24,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {
-    'chime_level': ['Chime Level', 'bell-ring'],
+    'chime_level': ["Chime Level", 'bell-ring'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -134,14 +134,14 @@ class TravisCISensor(Entity):
 
         if self._build and self._state is not STATE_UNKNOWN:
             if self._user and self._sensor_type == 'state':
-                attrs['Owner Name'] = self._user.name
-                attrs['Owner Email'] = self._user.email
+                attrs["Owner Name"] = self._user.name
+                attrs["Owner Email"] = self._user.email
             else:
-                attrs['Committer Name'] = self._build.commit.committer_name
-                attrs['Committer Email'] = self._build.commit.committer_email
-                attrs['Commit Branch'] = self._build.commit.branch
-                attrs['Committed Date'] = self._build.commit.committed_at
-                attrs['Commit SHA'] = self._build.commit.sha
+                attrs["Committer Name"] = self._build.commit.committer_name
+                attrs["Committer Email"] = self._build.commit.committer_email
+                attrs["Commit Branch"] = self._build.commit.branch
+                attrs["Committed Date"] = self._build.commit.committed_at
+                attrs["Commit SHA"] = self._build.commit.sha
 
         return attrs
 

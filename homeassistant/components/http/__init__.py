@@ -474,7 +474,7 @@ class RequestDataValidator:
                 data = yield from request.json()
             except ValueError:
                 _LOGGER.error("Invalid JSON received.")
-                return view.json_message('Invalid JSON.', 400)
+                return view.json_message("Invalid JSON.", 400)
 
             try:
                 kwargs['data'] = self._schema(data)

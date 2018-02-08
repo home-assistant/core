@@ -23,17 +23,17 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = 'sources'
 
-DEFAULT_NAME = 'Onkyo Receiver'
+DEFAULT_NAME = "Onkyo Receiver"
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 KNOWN_HOSTS = []  # type: List[str]
 DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
-                   'video1': 'Video 1', 'video2': 'Video 2',
-                   'video3': 'Video 3', 'video4': 'Video 4',
-                   'video5': 'Video 5', 'video6': 'Video 6',
-                   'video7': 'Video 7'}
+                   'video1': "Video 1", 'video2': "Video 2",
+                   'video3': "Video 3", 'video4': "Video 4",
+                   'video5': "Video 5", 'video6': "Video 6",
+                   'video7': "Video 7"}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
@@ -99,7 +99,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        status = self.command('system-power query')
+        status = self.command("system-power query")
         if not status:
             return
         if status[1] == 'on':
@@ -107,9 +107,9 @@ class OnkyoDevice(MediaPlayerDevice):
         else:
             self._pwstate = STATE_OFF
             return
-        volume_raw = self.command('volume query')
-        mute_raw = self.command('audio-muting query')
-        current_source_raw = self.command('input-selector query')
+        volume_raw = self.command("volume query")
+        mute_raw = self.command("audio-muting query")
+        current_source_raw = self.command("input-selector query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -167,7 +167,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.command('system-power standby')
+        self.command("system-power standby")
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
@@ -176,13 +176,13 @@ class OnkyoDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self.command('audio-muting on')
+            self.command("audio-muting on")
         else:
-            self.command('audio-muting off')
+            self.command("audio-muting off")
 
     def turn_on(self):
         """Turn the media player on."""
-        self.command('system-power on')
+        self.command("system-power on")
 
     def select_source(self, source):
         """Set the input source."""

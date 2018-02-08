@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['light']:
             model = device['model']
             if model == 'gateway':
-                devices.append(XiaomiGatewayLight(device, 'Gateway Light',
+                devices.append(XiaomiGatewayLight(device, "Gateway Light",
                                                   gateway))
     add_devices(devices)
 

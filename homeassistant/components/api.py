@@ -68,7 +68,7 @@ class APIStatusView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Retrieve if API is running."""
-        return self.json_message('API running.')
+        return self.json_message("API running.")
 
 
 class APIEventStream(HomeAssistantView):
@@ -237,7 +237,7 @@ class APIEntityStateView(HomeAssistantView):
     def delete(self, request, entity_id):
         """Remove entity."""
         if request.app['hass'].states.async_remove(entity_id):
-            return self.json_message('Entity removed')
+            return self.json_message("Entity removed")
         return self.json_message("Entity not found", HTTP_NOT_FOUND)
 
 

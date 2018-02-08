@@ -75,7 +75,7 @@ class GoogleAssistantAuthView(HomeAssistantView):
 
         _LOGGER.info("user login in from Google Assistant")
         return self.json_message(
-            'redirect success',
+            "redirect success",
             status_code=HTTP_MOVED_PERMANENTLY,
             headers={'Location': generated_url})
 

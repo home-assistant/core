@@ -58,7 +58,7 @@ class SpeedtestSensor(Entity):
 
     def __init__(self, speedtest_data):
         """Initialize the sensor."""
-        self._name = 'Fast.com Download'
+        self._name = "Fast.com Download"
         self.speedtest_client = speedtest_data
         self._state = None
         self._unit_of_measurement = 'Mbit/s'

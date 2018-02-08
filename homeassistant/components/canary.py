@@ -20,7 +20,7 @@ REQUIREMENTS = ['py-canary==0.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_ID = 'canary_notification'
-NOTIFICATION_TITLE = 'Canary Setup'
+NOTIFICATION_TITLE = "Canary Setup"
 
 DOMAIN = 'canary'
 DATA_CANARY = 'canary'

@@ -30,7 +30,7 @@ CONF_SOURCE_IGNORE = 'source_ignore'
 CONF_ZONE_NAMES = 'zone_names'
 CONF_ZONE_IGNORE = 'zone_ignore'
 
-DEFAULT_NAME = 'Yamaha Receiver'
+DEFAULT_NAME = "Yamaha Receiver"
 DATA_YAMAHA = 'yamaha_known_receivers'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -22,7 +22,7 @@ _RESOURCE = 'http://apilayer.net/api/live'
 CONF_ATTRIBUTION = "Data provided by currencylayer.com"
 
 DEFAULT_BASE = 'USD'
-DEFAULT_NAME = 'CurrencyLayer Sensor'
+DEFAULT_NAME = "CurrencyLayer Sensor"
 
 ICON = 'mdi:currency'
 

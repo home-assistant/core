@@ -252,7 +252,7 @@ class Entity(entity.Entity):
                 ieeetail,
                 endpoint.endpoint_id,
             )
-            self._device_state_attributes['friendly_name'] = '%s %s' % (
+            self._device_state_attributes['friendly_name'] = "%s %s" % (
                 manufacturer,
                 model,
             )

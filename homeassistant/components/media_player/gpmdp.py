@@ -57,7 +57,7 @@ def request_configuration(hass, config, url, add_devices_callback):
     websocket = create_connection((url), timeout=1)
     websocket.send(json.dumps({'namespace': 'connect',
                                'method': 'connect',
-                               'arguments': ['Home Assistant']}))
+                               'arguments': ["Home Assistant"]}))
 
     # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
@@ -75,7 +75,7 @@ def request_configuration(hass, config, url, add_devices_callback):
             pin = callback_data.get('pin')
             websocket.send(json.dumps({'namespace': 'connect',
                                        'method': 'connect',
-                                       'arguments': ['Home Assistant', pin]}))
+                                       'arguments': ["Home Assistant", pin]}))
             tmpmsg = json.loads(websocket.recv())
             if tmpmsg['channel'] == 'time':
                 _LOGGER.error("Error setting up GPMDP. Please pause "
@@ -89,7 +89,7 @@ def request_configuration(hass, config, url, add_devices_callback):
             save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
             websocket.send(json.dumps({'namespace': 'connect',
                                        'method': 'connect',
-                                       'arguments': ['Home Assistant', code]}))
+                                       'arguments': ["Home Assistant", code]}))
             websocket.close()
             break
 
@@ -99,7 +99,7 @@ def request_configuration(hass, config, url, add_devices_callback):
             "Enter the pin that is displayed in the "
             "Google Play Music Desktop Player."),
         submit_caption="Submit",
-        fields=[{'id': 'pin', 'name': 'Pin Code', 'type': 'number'}]
+        fields=[{'id': 'pin', 'name': "Pin Code", 'type': 'number'}]
     )
 
 
@@ -162,7 +162,7 @@ class GPMDP(MediaPlayerDevice):
                 self._ws = self._connection((self._url), timeout=1)
                 msg = json.dumps({'namespace': 'connect',
                                   'method': 'connect',
-                                  'arguments': ['Home Assistant',
+                                  'arguments': ["Home Assistant",
                                                 self._authorization_code]})
                 self._ws.send(msg)
             except (socket.timeout, ConnectionRefusedError,

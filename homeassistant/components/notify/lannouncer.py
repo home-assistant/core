@@ -73,7 +73,7 @@ class LannouncerNotificationService(BaseNotificationService):
 
             # Check response
             buffer = sock.recv(1024)
-            if buffer != b'LANnouncer: OK':
+            if buffer != b"LANnouncer: OK":
                 _LOGGER.error("Error sending data to Lannnouncer: %s",
                               buffer.decode())
 

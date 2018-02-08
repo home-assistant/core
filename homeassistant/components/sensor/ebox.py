@@ -36,17 +36,17 @@ SCAN_INTERVAL = timedelta(minutes=5)
 SENSOR_TYPES = {
     'usage': ['Usage', PERCENT, 'mdi:percent'],
     'balance': ['Balance', PRICE, 'mdi:square-inc-cash'],
-    'limit': ['Data limit', GIGABITS, 'mdi:download'],
-    'days_left': ['Days left', DAYS, 'mdi:calendar-today'],
+    'limit': ["Data limit", GIGABITS, 'mdi:download'],
+    'days_left': ["Days left", DAYS, 'mdi:calendar-today'],
     'before_offpeak_download':
         ["Download before offpeak", GIGABITS, 'mdi:download'],
     'before_offpeak_upload':
         ["Upload before offpeak", GIGABITS, 'mdi:upload'],
     'before_offpeak_total':
         ["Total before offpeak", GIGABITS, 'mdi:download'],
-    'offpeak_download': ['Offpeak download', GIGABITS, 'mdi:download'],
-    'offpeak_upload': ['Offpeak Upload', GIGABITS, 'mdi:upload'],
-    'offpeak_total': ['Offpeak Total', GIGABITS, 'mdi:download'],
+    'offpeak_download': ["Offpeak download", GIGABITS, 'mdi:download'],
+    'offpeak_upload': ["Offpeak Upload", GIGABITS, 'mdi:upload'],
+    'offpeak_total': ["Offpeak Total", GIGABITS, 'mdi:download'],
     'download': ['Download', GIGABITS, 'mdi:download'],
     'upload': ['Upload', GIGABITS, 'mdi:upload'],
     'total': ['Total', GIGABITS, 'mdi:download'],

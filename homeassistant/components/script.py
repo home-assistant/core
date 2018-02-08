@@ -37,7 +37,7 @@ CONF_SEQUENCE = 'sequence'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_SCRIPTS = 'all scripts'
+GROUP_NAME_ALL_SCRIPTS = "all scripts"
 
 SCRIPT_ENTRY_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,

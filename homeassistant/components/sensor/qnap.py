@@ -22,21 +22,21 @@ REQUIREMENTS = ['qnapstats==0.2.4']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DRIVE = 'Drive'
-ATTR_DRIVE_SIZE = 'Drive Size'
-ATTR_IP = 'IP Address'
-ATTR_MAC = 'MAC Address'
+ATTR_DRIVE_SIZE = "Drive Size"
+ATTR_IP = "IP Address"
+ATTR_MAC = "MAC Address"
 ATTR_MASK = 'Mask'
-ATTR_MAX_SPEED = 'Max Speed'
-ATTR_MEMORY_SIZE = 'Memory Size'
+ATTR_MAX_SPEED = "Max Speed"
+ATTR_MEMORY_SIZE = "Memory Size"
 ATTR_MODEL = 'Model'
 ATTR_NAME = 'Name'
-ATTR_PACKETS_TX = 'Packets (TX)'
-ATTR_PACKETS_RX = 'Packets (RX)'
-ATTR_PACKETS_ERR = 'Packets (Err)'
-ATTR_SERIAL = 'Serial #'
+ATTR_PACKETS_TX = "Packets (TX)"
+ATTR_PACKETS_RX = "Packets (RX)"
+ATTR_PACKETS_ERR = "Packets (Err)"
+ATTR_SERIAL = "Serial #"
 ATTR_TYPE = 'Type'
 ATTR_UPTIME = 'Uptime'
-ATTR_VOLUME_SIZE = 'Volume Size'
+ATTR_VOLUME_SIZE = "Volume Size"
 
 CONF_DRIVES = 'drives'
 CONF_NICS = 'nics'
@@ -52,32 +52,32 @@ NOTIFICATION_TITLE = "QNAP Sensor Setup"
 
 _SYSTEM_MON_COND = {
     'status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
-    'system_temp': ['System Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'system_temp': ["System Temperature", TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _CPU_MON_COND = {
-    'cpu_temp': ['CPU Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'cpu_usage': ['CPU Usage', '%', 'mdi:chip'],
+    'cpu_temp': ["CPU Temperature", TEMP_CELSIUS, 'mdi:thermometer'],
+    'cpu_usage': ["CPU Usage", '%', 'mdi:chip'],
 }
 _MEMORY_MON_COND = {
-    'memory_free': ['Memory Available', 'GB', 'mdi:memory'],
-    'memory_used': ['Memory Used', 'GB', 'mdi:memory'],
-    'memory_percent_used': ['Memory Usage', '%', 'mdi:memory'],
+    'memory_free': ["Memory Available", 'GB', 'mdi:memory'],
+    'memory_used': ["Memory Used", 'GB', 'mdi:memory'],
+    'memory_percent_used': ["Memory Usage", '%', 'mdi:memory'],
 }
 _NETWORK_MON_COND = {
-    'network_link_status': ['Network Link', None,
+    'network_link_status': ["Network Link", None,
                             'mdi:checkbox-marked-circle-outline'],
-    'network_tx': ['Network Up', 'MB/s', 'mdi:upload'],
-    'network_rx': ['Network Down', 'MB/s', 'mdi:download'],
+    'network_tx': ["Network Up", 'MB/s', 'mdi:upload'],
+    'network_rx': ["Network Down", 'MB/s', 'mdi:download'],
 }
 _DRIVE_MON_COND = {
-    'drive_smart_status': ['SMART Status', None,
+    'drive_smart_status': ["SMART Status", None,
                            'mdi:checkbox-marked-circle-outline'],
     'drive_temp': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _VOLUME_MON_COND = {
-    'volume_size_used': ['Used Space', 'GB', 'mdi:chart-pie'],
-    'volume_size_free': ['Free Space', 'GB', 'mdi:chart-pie'],
-    'volume_percentage_used': ['Volume Used', '%', 'mdi:chart-pie'],
+    'volume_size_used': ["Used Space", 'GB', 'mdi:chart-pie'],
+    'volume_size_free': ["Free Space", 'GB', 'mdi:chart-pie'],
+    'volume_percentage_used': ["Volume Used", '%', 'mdi:chart-pie'],
 }
 
 _MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \

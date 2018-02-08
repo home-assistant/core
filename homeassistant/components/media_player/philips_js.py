@@ -35,7 +35,7 @@ CONF_ON_ACTION = 'turn_on_action'
 
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
-DEFAULT_NAME = 'Philips TV'
+DEFAULT_NAME = "Philips TV"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,

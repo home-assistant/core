@@ -24,7 +24,7 @@ CONF_COMMAND_PAYLOAD_OFF = 'command_payload_off'
 CONF_COMMUNITY = 'community'
 CONF_VERSION = 'version'
 
-DEFAULT_NAME = 'SNMP Switch'
+DEFAULT_NAME = "SNMP Switch"
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = '161'
 DEFAULT_COMMUNITY = 'private'

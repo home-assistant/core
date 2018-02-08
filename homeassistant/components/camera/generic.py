@@ -29,7 +29,7 @@ CONF_CONTENT_TYPE = 'content_type'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
 CONF_STILL_IMAGE_URL = 'still_image_url'
 
-DEFAULT_NAME = 'Generic Camera'
+DEFAULT_NAME = "Generic Camera"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STILL_IMAGE_URL): cv.template,

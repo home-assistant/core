@@ -15,7 +15,7 @@ PLATFORM_FORMAT = '{}.{}'
 MATCH_ALL = '*'
 
 # If no name is specified
-DEVICE_DEFAULT_NAME = 'Unnamed Device'
+DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 # Sun events
 SUN_EVENT_SUNSET = 'sunset'
@@ -311,7 +311,7 @@ VOLUME_LITERS = 'L'  # type: str
 VOLUME_MILLILITERS = 'mL'  # type: str
 
 VOLUME_GALLONS = 'gal'  # type: str
-VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
+VOLUME_FLUID_OUNCE = "fl. oz."  # type: str
 
 # Mass units
 MASS_GRAMS = 'g'  # type: str
@@ -321,7 +321,7 @@ MASS_OUNCES = 'oz'  # type: str
 MASS_POUNDS = 'lb'  # type: str
 
 # UV Index units
-UNIT_UV_INDEX = 'UV index'  # type: str
+UNIT_UV_INDEX = "UV index"  # type: str
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
@@ -406,7 +406,7 @@ HTTP_HEADER_HA_AUTH = 'X-HA-access'
 HTTP_HEADER_X_REQUESTED_WITH = 'X-Requested-With'
 
 CONTENT_TYPE_JSON = 'application/json'
-CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
+CONTENT_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary={}"
 CONTENT_TYPE_TEXT_PLAIN = 'text/plain'
 
 # The exit code to send to request a restart

@@ -126,7 +126,7 @@ class LogbookView(HomeAssistantView):
             datetime = dt_util.parse_datetime(datetime)
 
             if datetime is None:
-                return self.json_message('Invalid datetime', HTTP_BAD_REQUEST)
+                return self.json_message("Invalid datetime", HTTP_BAD_REQUEST)
         else:
             datetime = dt_util.start_of_local_day()
 
@@ -366,13 +366,13 @@ def _entry_message_from_state(domain, state):
     # We pass domain in so we don't have to split entity_id again
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
-            return 'is away'
-        return 'is at {}'.format(state.state)
+            return "is away"
+        return "is at {}".format(state.state)
 
     elif domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
-            return 'has risen'
-        return 'has set'
+            return "has risen"
+        return "has set"
 
     elif state.state == STATE_ON:
         # Future: combine groups and its entity entries ?

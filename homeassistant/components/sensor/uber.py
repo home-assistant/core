@@ -120,13 +120,13 @@ class UberSensor(Entity):
         """Return the state attributes."""
         time_estimate = self._product.get('time_estimate_seconds')
         params = {
-            'Product ID': self._product['product_id'],
+            "Product ID": self._product['product_id'],
             "Product short description": self._product['short_description'],
             "Product display name": self._product['display_name'],
-            'Product description': self._product['description'],
+            "Product description": self._product['description'],
             "Pickup time estimate (in seconds)": time_estimate,
             "Trip duration (in seconds)": self._product.get('duration'),
-            'Vehicle Capacity': self._product['capacity']
+            "Vehicle Capacity": self._product['capacity']
         }
 
         if self._product.get('price_details') is not None:
@@ -135,17 +135,17 @@ class UberSensor(Entity):
             distance_key = "Trip distance (in {}s)".format(dunit)
             distance_val = self._product.get('distance')
             params["Cost per minute"] = price_details.get('cost_per_minute')
-            params['Distance units'] = price_details.get('distance_unit')
-            params['Cancellation fee'] = price_details.get('cancellation_fee')
+            params["Distance units"] = price_details.get('distance_unit')
+            params["Cancellation fee"] = price_details.get('cancellation_fee')
             cpd = price_details.get('cost_per_distance')
             params["Cost per distance"] = cpd
-            params['Base price'] = price_details.get('base')
-            params['Minimum price'] = price_details.get('minimum')
-            params['Price estimate'] = price_details.get('estimate')
+            params["Base price"] = price_details.get('base')
+            params["Minimum price"] = price_details.get('minimum')
+            params["Price estimate"] = price_details.get('estimate')
             params["Price currency code"] = price_details.get('currency_code')
             params["High price estimate"] = price_details.get('high_estimate')
             params["Low price estimate"] = price_details.get('low_estimate')
-            params['Surge multiplier'] = price_details.get('surge_multiplier')
+            params["Surge multiplier"] = price_details.get('surge_multiplier')
         else:
             distance_key = "Trip distance (in miles)"
             distance_val = self._product.get('distance')

@@ -104,7 +104,7 @@ class MikrotikScanner(DeviceScanner):
                 if not self.capsman_exist:
                     _LOGGER.info(
                         "Mikrotik %s: Not a CAPSman controller. Trying "
-                        'local interfaces ',
+                        "local interfaces ",
                         self.host
                     )
 

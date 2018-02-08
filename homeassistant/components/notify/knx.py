@@ -15,7 +15,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
-DEFAULT_NAME = 'KNX Notify'
+DEFAULT_NAME = "KNX Notify"
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

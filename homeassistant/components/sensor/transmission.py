@@ -26,10 +26,10 @@ DEFAULT_NAME = 'Transmission'
 DEFAULT_PORT = 9091
 
 SENSOR_TYPES = {
-    'active_torrents': ['Active Torrents', None],
+    'active_torrents': ["Active Torrents", None],
     'current_status': ['Status', None],
-    'download_speed': ['Down Speed', 'MB/s'],
-    'upload_speed': ['Up Speed', 'MB/s'],
+    'download_speed': ["Down Speed", 'MB/s'],
+    'upload_speed': ["Up Speed", 'MB/s'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

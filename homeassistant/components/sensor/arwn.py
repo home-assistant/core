@@ -49,9 +49,9 @@ def discover_sensors(topic, payload):
         return ArwnSensor('Barometer', 'pressure', unit,
                           "mdi:thermometer-lines")
     if domain == 'wind':
-        return (ArwnSensor('Wind Speed', 'speed', unit, "mdi:speedometer"),
-                ArwnSensor('Wind Gust', 'gust', unit, "mdi:speedometer"),
-                ArwnSensor('Wind Direction', 'direction', '°', "mdi:compass"))
+        return (ArwnSensor("Wind Speed", 'speed', unit, "mdi:speedometer"),
+                ArwnSensor("Wind Gust", 'gust', unit, "mdi:speedometer"),
+                ArwnSensor("Wind Direction", 'direction', '°', "mdi:compass"))
 
 
 def _slug(name):

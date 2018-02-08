@@ -52,7 +52,7 @@ CMD_UP = 'up'
 CMD_DOWN = 'down'
 CMD_MUTE = 'mute'
 CMD_UNMUTE = 'unmute'
-CMD_MUTE_TOGGLE = 'toggle mute'
+CMD_MUTE_TOGGLE = "toggle mute"
 CMD_PRESS = 'press'
 CMD_RELEASE = 'release'
 

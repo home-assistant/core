@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ADDRESSES = 'addresses'
 CONF_ATTRIBUTION = "Data provided by blockchain.info"
 
-DEFAULT_NAME = 'Bitcoin Balance'
+DEFAULT_NAME = "Bitcoin Balance"
 
 ICON = 'mdi:currency-btc'
 

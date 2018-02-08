@@ -51,9 +51,9 @@ DEFAULT_CONFIG = {
 }
 
 FITBIT_RESOURCES_LIST = {
-    'activities/activityCalories': ['Activity Calories', 'cal', 'fire'],
+    'activities/activityCalories': ["Activity Calories", 'cal', 'fire'],
     'activities/calories': ['Calories', 'cal', 'fire'],
-    'activities/caloriesBMR': ['Calories BMR', 'cal', 'fire'],
+    'activities/caloriesBMR': ["Calories BMR", 'cal', 'fire'],
     'activities/distance': ['Distance', '', 'map-marker'],
     'activities/elevation': ['Elevation', '', 'walk'],
     'activities/floors': ['Floors', 'floors', 'walk'],
@@ -63,15 +63,15 @@ FITBIT_RESOURCES_LIST = {
     'activities/minutesLightlyActive':
         ["Minutes Lightly Active", 'minutes', 'walk'],
     'activities/minutesSedentary':
-        ['Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+        ["Minutes Sedentary", 'minutes', 'seat-recline-normal'],
     'activities/minutesVeryActive': ["Minutes Very Active", 'minutes', 'run'],
     'activities/steps': ['Steps', 'steps', 'walk'],
     'activities/tracker/activityCalories':
         ["Tracker Activity Calories", 'cal', 'fire'],
-    'activities/tracker/calories': ['Tracker Calories', 'cal', 'fire'],
-    'activities/tracker/distance': ['Tracker Distance', '', 'map-marker'],
-    'activities/tracker/elevation': ['Tracker Elevation', '', 'walk'],
-    'activities/tracker/floors': ['Tracker Floors', 'floors', 'walk'],
+    'activities/tracker/calories': ["Tracker Calories", 'cal', 'fire'],
+    'activities/tracker/distance': ["Tracker Distance", '', 'map-marker'],
+    'activities/tracker/elevation': ["Tracker Elevation", '', 'walk'],
+    'activities/tracker/floors': ["Tracker Floors", 'floors', 'walk'],
     'activities/tracker/minutesFairlyActive':
         ["Tracker Minutes Fairly Active", 'minutes', 'walk'],
     'activities/tracker/minutesLightlyActive':
@@ -80,14 +80,14 @@ FITBIT_RESOURCES_LIST = {
         ["Tracker Minutes Sedentary", 'minutes', 'seat-recline-normal'],
     'activities/tracker/minutesVeryActive':
         ["Tracker Minutes Very Active", 'minutes', 'run'],
-    'activities/tracker/steps': ['Tracker Steps', 'steps', 'walk'],
+    'activities/tracker/steps': ["Tracker Steps", 'steps', 'walk'],
     'body/bmi': ['BMI', 'BMI', 'human'],
-    'body/fat': ['Body Fat', '%', 'human'],
+    'body/fat': ["Body Fat", '%', 'human'],
     'body/weight': ['Weight', '', 'human'],
     'devices/battery': ['Battery', None, None],
     'sleep/awakeningsCount':
-        ['Awakenings Count', 'times awaken', 'sleep'],
-    'sleep/efficiency': ['Sleep Efficiency', '%', 'sleep'],
+        ["Awakenings Count", "times awaken", 'sleep'],
+    'sleep/efficiency': ["Sleep Efficiency", '%', 'sleep'],
     'sleep/minutesAfterWakeup': ["Minutes After Wakeup", 'minutes', 'sleep'],
     'sleep/minutesAsleep': ["Sleep Minutes Asleep", 'minutes', 'sleep'],
     'sleep/minutesAwake': ["Sleep Minutes Awake", 'minutes', 'sleep'],
@@ -105,8 +105,8 @@ FITBIT_MEASUREMENTS = {
         'height': 'in',
         'weight': 'lbs',
         'body': 'in',
-        'liquids': 'fl. oz.',
-        'blood glucose': 'mg/dL',
+        'liquids': "fl. oz.",
+        "blood glucose": 'mg/dL',
         'battery': '',
     },
     'en_GB': {
@@ -117,7 +117,7 @@ FITBIT_MEASUREMENTS = {
         'weight': 'stone',
         'body': 'centimeters',
         'liquids': 'milliliters',
-        'blood glucose': 'mmol/L',
+        "blood glucose": 'mmol/L',
         'battery': '',
     },
     'metric': {
@@ -128,7 +128,7 @@ FITBIT_MEASUREMENTS = {
         'weight': 'kilograms',
         'body': 'centimeters',
         'liquids': 'milliliters',
-        'blood glucose': 'mmol/L',
+        "blood glucose": 'mmol/L',
         'battery': '',
     }
 }
@@ -381,7 +381,7 @@ class FitbitSensor(Entity):
         self.extra = extra
         self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
         if self.extra:
-            self._name = '{0} Battery'.format(self.extra.get('deviceVersion'))
+            self._name = "{0} Battery".format(self.extra.get('deviceVersion'))
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
         if unit_type == "":
             split_resource = self.resource_type.split('/')

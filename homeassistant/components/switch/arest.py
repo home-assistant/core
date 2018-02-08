@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FUNCTIONS = 'functions'
 CONF_PINS = 'pins'
 
-DEFAULT_NAME = 'aREST switch'
+DEFAULT_NAME = "aREST switch"
 
 PIN_FUNCTION_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,

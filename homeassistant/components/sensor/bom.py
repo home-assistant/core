@@ -39,37 +39,37 @@ LAST_UPDATE = 0
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'wmo': ['wmo', None],
-    'name': ['Station Name', None],
+    'name': ["Station Name", None],
     'history_product': ['Zone', None],
-    'local_date_time': ['Local Time', None],
+    'local_date_time': ["Local Time", None],
     'local_date_time_full': ["Local Time Full", None],
     'aifstime_utc': ["UTC Time Full", None],
     'lat': ['Lat', None],
     'lon': ['Long', None],
     'apparent_t': ["Feels Like C", TEMP_CELSIUS],
     'cloud': ['Cloud', None],
-    'cloud_base_m': ['Cloud Base', None],
-    'cloud_oktas': ['Cloud Oktas', None],
+    'cloud_base_m': ["Cloud Base", None],
+    'cloud_oktas': ["Cloud Oktas", None],
     'cloud_type_id': ["Cloud Type ID", None],
-    'cloud_type': ['Cloud Type', None],
+    'cloud_type': ["Cloud Type", None],
     'delta_t': ["Delta Temp C", TEMP_CELSIUS],
     'gust_kmh': ["Wind Gust kmh", 'km/h'],
     'gust_kt': ["Wind Gust kt", 'kt'],
     'air_temp': ["Air Temp C", TEMP_CELSIUS],
     'dewpt': ["Dew Point C", TEMP_CELSIUS],
-    'press': ['Pressure mb', 'mbar'],
-    'press_qnh': ['Pressure qnh', 'qnh'],
-    'press_msl': ['Pressure msl', 'msl'],
-    'press_tend': ['Pressure Tend', None],
-    'rain_trace': ['Rain Today', 'mm'],
-    'rel_hum': ['Relative Humidity', '%'],
-    'sea_state': ['Sea State', None],
-    'swell_dir_worded': ['Swell Direction', None],
-    'swell_height': ['Swell Height', 'm'],
-    'swell_period': ['Swell Period', None],
-    'vis_km': ['Visability km', 'km'],
+    'press': ["Pressure mb", 'mbar'],
+    'press_qnh': ["Pressure qnh", 'qnh'],
+    'press_msl': ["Pressure msl", 'msl'],
+    'press_tend': ["Pressure Tend", None],
+    'rain_trace': ["Rain Today", 'mm'],
+    'rel_hum': ["Relative Humidity", '%'],
+    'sea_state': ["Sea State", None],
+    'swell_dir_worded': ["Swell Direction", None],
+    'swell_height': ["Swell Height", 'm'],
+    'swell_period': ["Swell Period", None],
+    'vis_km': ["Visability km", 'km'],
     'weather': ['Weather', None],
-    'wind_dir': ['Wind Direction', None],
+    'wind_dir': ["Wind Direction", None],
     'wind_spd_kmh': ["Wind Speed kmh", 'km/h'],
     'wind_spd_kt': ["Wind Direction kt", 'kt']
 }
@@ -155,11 +155,11 @@ class BOMCurrentSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr['Sensor Id'] = self._condition
-        attr['Zone Id'] = self.rest.data['history_product']
-        attr['Station Id'] = self.rest.data['wmo']
-        attr['Station Name'] = self.rest.data['name']
-        attr['Last Update'] = datetime.datetime.strptime(str(
+        attr["Sensor Id"] = self._condition
+        attr["Zone Id"] = self.rest.data['history_product']
+        attr["Station Id"] = self.rest.data['wmo']
+        attr["Station Name"] = self.rest.data['name']
+        attr["Last Update"] = datetime.datetime.strptime(str(
             self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
@@ -223,7 +223,7 @@ def _get_bom_stations():
         with ftplib.FTP('ftp.bom.gov.au') as ftp:
             ftp.login()
             ftp.cwd('anon2/home/ncc/metadata/sitelists')
-            ftp.retrbinary('RETR stations.zip', file_obj.write)
+            ftp.retrbinary("RETR stations.zip", file_obj.write)
         file_obj.seek(0)
         with zipfile.ZipFile(file_obj) as zipped:
             with zipped.open('stations.txt') as station_txt:
@@ -238,7 +238,7 @@ def _get_bom_stations():
                     if wmo != '..':
                         latlon[wmo] = (float(lat), float(lon))
     zones = {}
-    pattern = (r'<a href="/products/(?P<zone>ID[A-Z]\d\d\d\d\d)/'
+    pattern = (r"<a href="/products/(?P<zone>ID[A-Z]\d\d\d\d\d)/"
                r'(?P=zone)\.(?P<wmo>\d\d\d\d\d).shtml">')
     for state in ('nsw', 'vic', 'qld', 'wa', 'tas', 'nt'):
         url = 'http://www.bom.gov.au/{0}/observations/{0}all.shtml'.format(

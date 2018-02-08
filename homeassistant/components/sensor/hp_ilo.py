@@ -22,14 +22,14 @@ REQUIREMENTS = ['python-hpilo==3.9']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'HP ILO'
+DEFAULT_NAME = "HP ILO"
 DEFAULT_PORT = 443
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 SENSOR_TYPES = {
-    'server_name': ['Server Name', 'get_server_name'],
-    'server_fqdn': ['Server FQDN', 'get_server_fqdn'],
+    'server_name': ["Server Name", 'get_server_name'],
+    'server_fqdn': ["Server FQDN", 'get_server_fqdn'],
     'server_host_data': ["Server Host Data", 'get_host_data'],
     'server_oa_info': ["Server Onboard Administrator Info", 'get_oa_info'],
     'server_power_status': ["Server Power state", 'get_host_power_status'],
@@ -38,8 +38,8 @@ SENSOR_TYPES = {
                              'get_server_power_on_time'],
     'server_asset_tag': ["Server Asset Tag", 'get_asset_tag'],
     'server_uid_status': ["Server UID light", 'get_uid_status'],
-    'server_health': ['Server Health', 'get_embedded_health'],
-    'network_settings': ['Network Settings', 'get_network_settings']
+    'server_health': ["Server Health", 'get_embedded_health'],
+    'network_settings': ["Network Settings", 'get_network_settings']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

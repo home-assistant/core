@@ -283,14 +283,14 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if 'mixer volume' in self._status:
-            return int(float(self._status['mixer volume'])) / 100.0
+        if "mixer volume" in self._status:
+            return int(float(self._status["mixer volume"])) / 100.0
 
     @property
     def is_volume_muted(self):
         """Return true if volume is muted."""
-        if 'mixer volume' in self._status:
-            return str(self._status['mixer volume']).startswith('-')
+        if "mixer volume" in self._status:
+            return str(self._status["mixer volume"]).startswith('-')
 
     @property
     def media_content_id(self):

@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 CONF_ADDRESS = 'address'
 CONF_STATE_ADDRESS = 'state_address'
 
-DEFAULT_NAME = 'KNX Switch'
+DEFAULT_NAME = "KNX Switch"
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

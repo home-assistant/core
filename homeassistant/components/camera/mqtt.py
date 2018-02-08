@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_TOPIC = 'topic'
 
-DEFAULT_NAME = 'MQTT Camera'
+DEFAULT_NAME = "MQTT Camera"
 
 DEPENDENCIES = ['mqtt']
 

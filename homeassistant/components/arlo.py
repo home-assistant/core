@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Data provided by arlo.netgear.com"
 
 DATA_ARLO = 'data_arlo'
-DEFAULT_BRAND = 'Netgear Arlo'
+DEFAULT_BRAND = "Netgear Arlo"
 DOMAIN = 'arlo'
 
 NOTIFICATION_ID = 'arlo_notification'

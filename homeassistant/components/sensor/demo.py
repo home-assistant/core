@@ -12,8 +12,8 @@ from homeassistant.helpers.entity import Entity
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo sensors."""
     add_devices([
-        DemoSensor('Outside Temperature', 15.6, TEMP_CELSIUS, 12),
-        DemoSensor('Outside Humidity', 54, '%', None),
+        DemoSensor("Outside Temperature", 15.6, TEMP_CELSIUS, 12),
+        DemoSensor("Outside Humidity", 54, '%', None),
     ])
 
 

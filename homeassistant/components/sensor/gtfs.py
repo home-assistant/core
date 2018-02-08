@@ -27,7 +27,7 @@ CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
 CONF_OFFSET = 'offset'
 
-DEFAULT_NAME = 'GTFS Sensor'
+DEFAULT_NAME = "GTFS Sensor"
 DEFAULT_PATH = 'gtfs'
 
 ICON = 'mdi:train'
@@ -123,17 +123,17 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     dest_stoptime_depart_time = '{} {}'.format(today, item[12])
 
     origin_stop_time_dict = {
-        'Arrival Time': origin_stoptime_arrival_time,
-        'Departure Time': origin_stoptime_departure_time,
-        "Drop Off Type": item[6], 'Pickup Type': item[7],
+        "Arrival Time": origin_stoptime_arrival_time,
+        "Departure Time": origin_stoptime_departure_time,
+        "Drop Off Type": item[6], "Pickup Type": item[7],
         "Shape Dist Traveled": item[8], 'Headsign': item[9],
         'Sequence': item[10]
     }
 
     destination_stop_time_dict = {
-        'Arrival Time': dest_stoptime_arrival_time,
-        'Departure Time': dest_stoptime_depart_time,
-        "Drop Off Type": item[13], 'Pickup Type': item[14],
+        "Arrival Time": dest_stoptime_arrival_time,
+        "Departure Time": dest_stoptime_depart_time,
+        "Drop Off Type": item[13], "Pickup Type": item[14],
         "Shape Dist Traveled": item[15], 'Headsign': item[16],
         'Sequence': item[17]
     }
@@ -281,8 +281,8 @@ class GTFSDepartureSensor(Entity):
             append_keys(dict_for_table(agency), 'Agency')
             append_keys(dict_for_table(route), 'Route')
             append_keys(dict_for_table(trip), 'Trip')
-            append_keys(dict_for_table(origin_station), 'Origin Station')
+            append_keys(dict_for_table(origin_station), "Origin Station")
             append_keys(dict_for_table(destination_station),
-                        'Destination Station')
-            append_keys(origin_stop_time, 'Origin Stop')
-            append_keys(destination_stop_time, 'Destination Stop')
+                        "Destination Station")
+            append_keys(origin_stop_time, "Origin Stop")
+            append_keys(destination_stop_time, "Destination Stop")

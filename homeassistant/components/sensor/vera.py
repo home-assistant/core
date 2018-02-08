@@ -93,6 +93,6 @@ class VeraSensor(VeraDevice, Entity):
             self.current_value = int(round(power, 0))
         elif self.vera_device.is_trippable:
             tripped = self.vera_device.is_tripped
-            self.current_value = 'Tripped' if tripped else 'Not Tripped'
+            self.current_value = 'Tripped' if tripped else "Not Tripped"
         else:
             self.current_value = 'Unknown'

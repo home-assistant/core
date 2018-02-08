@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_TEMPLATE = 'code_template'
 
-DEFAULT_ALARM_NAME = 'HA Alarm'
+DEFAULT_ALARM_NAME = "HA Alarm"
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
 DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
 DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
@@ -77,8 +77,8 @@ def _state_schema(state):
 PLATFORM_SCHEMA = vol.Schema(vol.All({
     vol.Required(CONF_PLATFORM): 'manual',
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-    vol.Exclusive(CONF_CODE, 'code validation'): cv.string,
-    vol.Exclusive(CONF_CODE_TEMPLATE, 'code validation'): cv.template,
+    vol.Exclusive(CONF_CODE, "code validation"): cv.string,
+    vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
     vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME):
         vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):

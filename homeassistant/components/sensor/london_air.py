@@ -47,7 +47,7 @@ AUTHORITIES = [
     'Richmond',
     'Southwark',
     'Sutton',
-    'Tower Hamlets',
+    "Tower Hamlets",
     'Wandsworth',
     'Westminster']
 
@@ -151,7 +151,7 @@ def parse_species(species_data):
     parsed_species_data = []
     quality_list = []
     for species in species_data:
-        if species['@AirQualityBand'] != 'No data':
+        if species['@AirQualityBand'] != "No data":
             species_dict = {}
             species_dict['description'] = species['@SpeciesDescription']
             species_dict['code'] = species['@SpeciesCode']

@@ -730,7 +730,7 @@ def async_api_discovery(hass, config, request):
             'endpointId': alexa_entity.entity_id(),
             'friendlyName': alexa_entity.friendly_name(),
             'description': alexa_entity.description(),
-            'manufacturerName': 'Home Assistant',
+            'manufacturerName': "Home Assistant",
         }
 
         endpoint['capabilities'] = [

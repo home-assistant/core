@@ -18,15 +18,15 @@ REQUIREMENTS = ['fixerio==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BASE = 'Base currency'
-ATTR_EXCHANGE_RATE = 'Exchange rate'
-ATTR_TARGET = 'Target currency'
+ATTR_BASE = "Base currency"
+ATTR_EXCHANGE_RATE = "Exchange rate"
+ATTR_TARGET = "Target currency"
 
 CONF_ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
 CONF_TARGET = 'target'
 
 DEFAULT_BASE = 'USD'
-DEFAULT_NAME = 'Exchange rate'
+DEFAULT_NAME = "Exchange rate"
 
 ICON = 'mdi:currency-usd'
 

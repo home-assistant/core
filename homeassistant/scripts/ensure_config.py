@@ -25,9 +25,9 @@ def run(args):
 
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
-        print('Creating directory', config_dir)
+        print("Creating directory", config_dir)
         os.makedirs(config_dir)
 
     config_path = config_util.ensure_config_exists(config_dir)
-    print('Configuration file:', config_path)
+    print("Configuration file:", config_path)
     return 0

@@ -235,7 +235,7 @@ class Icloud(DeviceScanner):
                 " the index from this list: " + devicesstring),
             entity_picture="/static/images/config_icloud.png",
             submit_caption='Confirm',
-            fields=[{'id': 'trusted_device', 'name': 'Trusted Device'}]
+            fields=[{'id': 'trusted_device', 'name': "Trusted Device"}]
         )
 
     def icloud_verification_callback(self, callback_data):
@@ -246,7 +246,7 @@ class Icloud(DeviceScanner):
         try:
             if not self.api.validate_verification_code(
                     self._trusted_device, self._verification_code):
-                raise PyiCloudException('Unknown failure')
+                raise PyiCloudException("Unknown failure")
         except PyiCloudException as error:
             # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)
@@ -297,7 +297,7 @@ class Icloud(DeviceScanner):
 
                 self.api.authenticate()
                 if self.api.requires_2fa:
-                    raise Exception('Unknown failure')
+                    raise Exception("Unknown failure")
 
                 self._trusted_device = None
                 self._verification_code = None

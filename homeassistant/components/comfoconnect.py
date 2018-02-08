@@ -34,7 +34,7 @@ CONF_USER_AGENT = 'user_agent'
 DEFAULT_NAME = 'ComfoAirQ'
 DEFAULT_PIN = 0
 DEFAULT_TOKEN = '00000000000000000000000000000001'
-DEFAULT_USER_AGENT = 'Home Assistant'
+DEFAULT_USER_AGENT = "Home Assistant"
 
 DEVICE = None
 
@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN):
-            vol.Length(min=32, max=32, msg='invalid token'),
+            vol.Length(min=32, max=32, msg="invalid token"),
         vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT): cv.string,
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
     }),

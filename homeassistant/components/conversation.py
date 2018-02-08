@@ -31,7 +31,7 @@ DOMAIN = 'conversation'
 INTENT_TURN_OFF = 'HassTurnOff'
 INTENT_TURN_ON = 'HassTurnOn'
 
-REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
+REGEX_TURN_COMMAND = re.compile(r"turn (?P<name>(?: |\w)+) (?P<command>\w+)")
 REGEX_TYPE = type(re.compile(''))
 
 SERVICE_PROCESS = 'process'
@@ -189,7 +189,7 @@ class TurnOnIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(
-            'Turned on {}'.format(entity.name))
+            "Turned on {}".format(entity.name))
         return response
 
 
@@ -220,7 +220,7 @@ class TurnOffIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(
-            'Turned off {}'.format(entity.name))
+            "Turned off {}".format(entity.name))
         return response
 
 

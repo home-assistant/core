@@ -39,8 +39,8 @@ SENSOR_TYPES = {
     'queue_size': ['Queue', 'MB'],
     'queue_remaining': ['Left', 'MB'],
     'disk_size': ['Disk', 'GB'],
-    'disk_free': ['Disk Free', 'GB'],
-    'queue_count': ['Queue Count', None],
+    'disk_free': ["Disk Free", 'GB'],
+    'queue_count': ["Queue Count", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -119,7 +119,7 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
         submit_caption='Confirm',
         fields=[{
             'id': 'api_key',
-            'name': 'API Key',
+            'name': "API Key",
             'type': ''}]
     )
 

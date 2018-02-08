@@ -19,9 +19,9 @@ ATTR_NAME = 'name'
 ATTR_ZONE = 'zone'
 
 CLIMATE_SENSOR_TYPES = ['temperature', 'humidity', 'power',
-                        'link', 'heating', 'tado mode', 'overlay']
+                        'link', 'heating', "tado mode", 'overlay']
 
-HOT_WATER_SENSOR_TYPES = ['power', 'link', 'tado mode', 'overlay']
+HOT_WATER_SENSOR_TYPES = ['power', 'link', "tado mode", 'overlay']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -207,7 +207,7 @@ class TadoSensor(Entity):
             if 'connectionState' in data:
                 self._state = data['connectionState']['value']
 
-        elif self.zone_variable == 'tado mode':
+        elif self.zone_variable == "tado mode":
             if 'tadoMode' in data:
                 self._state = data['tadoMode']
 

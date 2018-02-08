@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-DEFAULT_NAME = 'MQTT HVAC'
+DEFAULT_NAME = "MQTT HVAC"
 
 CONF_POWER_COMMAND_TOPIC = 'power_command_topic'
 CONF_POWER_STATE_TOPIC = 'power_state_topic'

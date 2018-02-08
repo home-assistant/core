@@ -37,17 +37,17 @@ STATES = {
     'st_stopped': 'Stopped',
     'st_clean': 'Cleaning',
     'st_cleanstop': "Stopped with cleaning",
-    'st_clean_spot': 'Spot cleaning',
-    'st_clean_max': 'Max cleaning',
+    'st_clean_spot': "Spot cleaning",
+    'st_clean_max': "Max cleaning",
     'st_delayed': "Delayed cleaning will start soon",
-    'st_dock': 'Searching Homebase',
+    'st_dock': "Searching Homebase",
     'st_pickup': "Roomba picked up",
     'st_remote': "Remote control driving",
     'st_wait': "Waiting for command",
     'st_off': 'Off',
     'st_error': 'Error',
-    'st_locate': 'Find me!',
-    'st_unknown': 'Unknown state',
+    'st_locate': "Find me!",
+    'st_unknown': "Unknown state",
 }
 
 

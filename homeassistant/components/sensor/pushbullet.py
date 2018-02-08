@@ -18,13 +18,13 @@ REQUIREMENTS = ['pushbullet.py==0.11.0']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'application_name': ['Application name'],
+    'application_name': ["Application name"],
     'body': ['Body'],
-    'notification_id': ['Notification ID'],
-    'notification_tag': ['Notification tag'],
-    'package_name': ['Package name'],
-    'receiver_email': ['Receiver email'],
-    'sender_email': ['Sender email'],
+    'notification_id': ["Notification ID"],
+    'notification_tag': ["Notification tag"],
+    'package_name': ["Package name"],
+    'receiver_email': ["Receiver email"],
+    'sender_email': ["Sender email"],
     'source_device_iden': ["Sender device ID"],
     'title': ['Title'],
     'type': ['Type'],
@@ -68,7 +68,7 @@ class PushBulletNotificationSensor(Entity):
     def update(self):
         """Fetch the latest data from the sensor.
 
-        This will fetch the 'sensor reading' into self._state but also all
+        This will fetch the "sensor reading" into self._state but also all
         attributes into self._state_attributes.
         """
         try:

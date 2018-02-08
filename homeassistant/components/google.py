@@ -146,7 +146,7 @@ def do_authentication(hass, config):
         listener()
         hass.components.persistent_notification.create(
             "We are all setup now. Check {} for calendars that have "
-            'been found'.format(YAML_DEVICES),
+            "been found".format(YAML_DEVICES),
             title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID)
 
     listener = track_time_change(hass, step2_exchange,

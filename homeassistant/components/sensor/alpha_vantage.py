@@ -49,7 +49,7 @@ ICONS = {
     'GBP': 'mdi:currency-gbp',
     'INR': 'mdi:currency-inr',
     'RUB': 'mdi:currency-rub',
-    'TRY': 'mdi: currency-try',
+    'TRY': 'mdi:currency-try',
     'USD': 'mdi:currency-usd',
 }
 
@@ -142,7 +142,7 @@ class AlphaVantageSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.values['1. open']
+        return self.values["1. open"]
 
     @property
     def device_state_attributes(self):
@@ -150,10 +150,10 @@ class AlphaVantageSensor(Entity):
         if self.values is not None:
             return {
                 ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                ATTR_CLOSE: self.values['4. close'],
-                ATTR_HIGH: self.values['2. high'],
-                ATTR_LOW: self.values['3. low'],
-                ATTR_VOLUME: self.values['5. volume'],
+                ATTR_CLOSE: self.values["4. close"],
+                ATTR_HIGH: self.values["2. high"],
+                ATTR_LOW: self.values["3. low"],
+                ATTR_VOLUME: self.values["5. volume"],
             }
 
     @property

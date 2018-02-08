@@ -39,7 +39,7 @@ CONF_AQ_HUM_BASELINE = 'aq_humidity_baseline'
 CONF_AQ_HUM_WEIGHTING = 'aq_humidity_bias'
 
 
-DEFAULT_NAME = 'BME680 Sensor'
+DEFAULT_NAME = "BME680 Sensor"
 DEFAULT_I2C_ADDRESS = 0x77
 DEFAULT_I2C_BUS = 1
 DEFAULT_OVERSAMPLING_TEMP = 8  # Temperature oversampling x 8
@@ -61,8 +61,8 @@ SENSOR_TYPES = {
     SENSOR_TEMP: ['Temperature', None],
     SENSOR_HUMID: ['Humidity', '%'],
     SENSOR_PRESS: ['Pressure', 'mb'],
-    SENSOR_GAS: ['Gas Resistance', 'Ohms'],
-    SENSOR_AQ: ['Air Quality', '%']
+    SENSOR_GAS: ["Gas Resistance", 'Ohms'],
+    SENSOR_AQ: ["Air Quality", '%']
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS, SENSOR_AQ]
 OVERSAMPLING_VALUES = set([0, 1, 2, 4, 8, 16])

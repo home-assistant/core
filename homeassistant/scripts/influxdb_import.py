@@ -112,7 +112,7 @@ def run(script_args: List) -> int:
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
             print(("Fatal Error: Specified configuration directory does "
-                   'not exist {} ').format(config_dir))
+                   "not exist {} ").format(config_dir))
             return 1
 
     src_db = '{}/home-assistant_v2.db'.format(config_dir)

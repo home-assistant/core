@@ -108,7 +108,7 @@ class LuciDeviceScanner(DeviceScanner):
                 # Check if the Flags for each device contain
                 # NUD_REACHABLE and if so, add it to last_results
                 if int(device_entry['Flags'], 16) & 0x2:
-                    self.last_results.append(device_entry['HW address'])
+                    self.last_results.append(device_entry["HW address"])
 
             return True
 

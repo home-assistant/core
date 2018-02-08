@@ -42,7 +42,7 @@ class HueUsernameView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         if 'devicetype' not in data:
             return self.json_message("devicetype not specified",
@@ -148,7 +148,7 @@ class HueOneLightChangeView(HomeAssistantView):
             request_json = yield from request.json()
         except ValueError:
             _LOGGER.error("Received invalid json")
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         # Parse the request into requested "on" status and brightness
         parsed = parse_hue_api_put_light_body(request_json, entity)
@@ -350,7 +350,7 @@ def entity_to_json(config, entity, is_on=None, brightness=None):
             HUE_API_STATE_BRI: brightness,
             'reachable': True
         },
-        'type': 'Dimmable light',
+        'type': "Dimmable light",
         'name': config.get_entity_name(entity),
         'modelid': 'HASS123',
         'uniqueid': entity.entity_id,

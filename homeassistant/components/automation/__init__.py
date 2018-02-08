@@ -30,7 +30,7 @@ DOMAIN = 'automation'
 DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
+GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
 CONF_ALIAS = 'alias'
 CONF_HIDE_ENTITY = 'hide_entity'
@@ -419,7 +419,7 @@ def _async_get_action(hass, config, name):
     @asyncio.coroutine
     def action(entity_id, variables):
         """Execute an action."""
-        _LOGGER.info('Executing %s', name)
+        _LOGGER.info("Executing %s", name)
         logbook.async_log_entry(
             hass, name, "has been triggered", DOMAIN, entity_id)
         yield from script_obj.async_run(variables)

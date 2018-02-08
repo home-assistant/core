@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Data provided by Ring.com"
 
 NOTIFICATION_ID = 'ring_notification'
-NOTIFICATION_TITLE = 'Ring Setup'
+NOTIFICATION_TITLE = "Ring Setup"
 
 DATA_RING = 'ring'
 DOMAIN = 'ring'

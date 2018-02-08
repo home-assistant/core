@@ -117,21 +117,21 @@ class LyftSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         params = {
-            'Product ID': self._product['ride_type'],
+            "Product ID": self._product['ride_type'],
             "Product display name": self._product['display_name'],
-            'Vehicle Capacity': self._product['seats']
+            "Vehicle Capacity": self._product['seats']
         }
 
         if self._product.get('pricing_details') is not None:
             pricing_details = self._product['pricing_details']
-            params['Base price'] = pricing_details.get('base_charge')
-            params['Cancellation fee'] = pricing_details.get(
+            params["Base price"] = pricing_details.get('base_charge')
+            params["Cancellation fee"] = pricing_details.get(
                 'cancel_penalty_amount')
-            params['Minimum price'] = pricing_details.get('cost_minimum')
+            params["Minimum price"] = pricing_details.get('cost_minimum')
             params["Cost per mile"] = pricing_details.get('cost_per_mile')
             params["Cost per minute"] = pricing_details.get('cost_per_minute')
             params["Price currency code"] = pricing_details.get('currency')
-            params['Service fee'] = pricing_details.get('trust_and_service')
+            params["Service fee"] = pricing_details.get('trust_and_service')
 
         if self._product.get("estimate") is not None:
             estimate = self._product['estimate']

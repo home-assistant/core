@@ -31,7 +31,7 @@ DEFAULT_DAYS = '1'
 DEFAULT_UNIT = 'GB'
 
 SENSOR_TYPES = {
-    'diskspace': ['Disk Space', 'GB', 'mdi:harddisk'],
+    'diskspace': ["Disk Space", 'GB', 'mdi:harddisk'],
     'queue': ['Queue', 'Episodes', 'mdi:download'],
     'upcoming': ['Upcoming', 'Episodes', 'mdi:television'],
     'wanted': ['Wanted', 'Episodes', 'mdi:television'],
@@ -148,7 +148,7 @@ class SonarrSensor(Entity):
                 attributes[command['name']] = command['state']
         elif self.type == 'diskspace':
             for data in self.data:
-                attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
+                attributes[data['path']] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
                     to_unit(data['freeSpace'], self._unit),
                     to_unit(data['totalSpace'], self._unit),
                     self._unit, (
@@ -158,7 +158,7 @@ class SonarrSensor(Entity):
                 )
         elif self.type == 'series':
             for show in self.data:
-                attributes[show['title']] = '{}/{} Episodes'.format(
+                attributes[show['title']] = "{}/{} Episodes".format(
                     show['episodeFileCount'], show['episodeCount'])
         elif self.type == 'status':
             attributes = self.data

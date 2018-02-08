@@ -36,7 +36,7 @@ class MelissaSensor(Entity):
         """Initialize the sensor."""
         self._api = api
         self._state = None
-        self._name = '{0} {1}'.format(
+        self._name = "{0} {1}".format(
             device['name'],
             self._type
         )

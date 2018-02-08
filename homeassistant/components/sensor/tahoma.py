@@ -44,11 +44,11 @@ class TahomaSensor(TahomaDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self.tahoma_device.type == 'Temperature Sensor':
+        if self.tahoma_device.type == "Temperature Sensor":
             return None
         elif self.tahoma_device.type == 'io:LightIOSystemSensor':
             return 'lux'
-        elif self.tahoma_device.type == 'Humidity Sensor':
+        elif self.tahoma_device.type == "Humidity Sensor":
             return '%'
 
     def update(self):

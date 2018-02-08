@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['directpy==0.2']
 
 DEFAULT_DEVICE = '0'
-DEFAULT_NAME = 'DirecTV Receiver'
+DEFAULT_NAME = "DirecTV Receiver"
 DEFAULT_PORT = 8080
 
 SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \

@@ -120,7 +120,7 @@ class RoundThermostat(ClimateDevice):
         self.client = client
         self._current_temperature = None
         self._target_temperature = None
-        self._name = 'round connected'
+        self._name = "round connected"
         self._id = zone_id
         self._master = master
         self._is_dhw = False
@@ -216,7 +216,7 @@ class RoundThermostat(ClimateDevice):
         self._current_temperature = data['temp']
         self._target_temperature = data['setpoint']
         if data['thermostat'] == 'DOMESTIC_HOT_WATER':
-            self._name = 'Hot Water'
+            self._name = "Hot Water"
             self._is_dhw = True
         else:
             self._name = data['name']

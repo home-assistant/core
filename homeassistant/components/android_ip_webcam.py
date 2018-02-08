@@ -30,14 +30,14 @@ REQUIREMENTS = ['pydroid-ipcam==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AUD_CONNS = 'Audio Connections'
+ATTR_AUD_CONNS = "Audio Connections"
 ATTR_HOST = 'host'
-ATTR_VID_CONNS = 'Video Connections'
+ATTR_VID_CONNS = "Video Connections"
 
 CONF_MOTION_SENSOR = 'motion_sensor'
 
 DATA_IP_WEBCAM = 'android_ip_webcam'
-DEFAULT_NAME = 'IP Webcam'
+DEFAULT_NAME = "IP Webcam"
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 10
 DOMAIN = 'android_ip_webcam'
@@ -46,53 +46,53 @@ SCAN_INTERVAL = timedelta(seconds=10)
 SIGNAL_UPDATE_DATA = 'android_ip_webcam_update'
 
 KEY_MAP = {
-    'audio_connections': 'Audio Connections',
+    'audio_connections': "Audio Connections",
     'adet_limit': "Audio Trigger Limit",
     'antibanding': 'Anti-banding',
-    'audio_only': 'Audio Only',
-    'battery_level': 'Battery Level',
-    'battery_temp': 'Battery Temperature',
-    'battery_voltage': 'Battery Voltage',
-    'coloreffect': 'Color Effect',
-    'exposure': 'Exposure Level',
-    'exposure_lock': 'Exposure Lock',
-    'ffc': 'Front-facing Camera',
-    'flashmode': 'Flash Mode',
+    'audio_only': "Audio Only",
+    'battery_level': "Battery Level",
+    'battery_temp': "Battery Temperature",
+    'battery_voltage': "Battery Voltage",
+    'coloreffect': "Color Effect",
+    'exposure': "Exposure Level",
+    'exposure_lock': "Exposure Lock",
+    'ffc': "Front-facing Camera",
+    'flashmode': "Flash Mode",
     'focus': 'Focus',
-    'focus_homing': 'Focus Homing',
-    'focus_region': 'Focus Region',
-    'focusmode': 'Focus Mode',
-    'gps_active': 'GPS Active',
+    'focus_homing': "Focus Homing",
+    'focus_region': "Focus Region",
+    'focusmode': "Focus Mode",
+    'gps_active': "GPS Active",
     'idle': 'Idle',
-    'ip_address': 'IPv4 Address',
-    'ipv6_address': 'IPv6 Address',
-    'ivideon_streaming': 'Ivideon Streaming',
-    'light': 'Light Level',
-    'mirror_flip': 'Mirror Flip',
+    'ip_address': "IPv4 Address",
+    'ipv6_address': "IPv6 Address",
+    'ivideon_streaming': "Ivideon Streaming",
+    'light': "Light Level",
+    'mirror_flip': "Mirror Flip",
     'motion': 'Motion',
-    'motion_active': 'Motion Active',
-    'motion_detect': 'Motion Detection',
-    'motion_event': 'Motion Event',
-    'motion_limit': 'Motion Limit',
-    'night_vision': 'Night Vision',
+    'motion_active': "Motion Active",
+    'motion_detect': "Motion Detection",
+    'motion_event': "Motion Event",
+    'motion_limit': "Motion Limit",
+    'night_vision': "Night Vision",
     'night_vision_average': "Night Vision Average",
     'night_vision_gain': "Night Vision Gain",
     'orientation': 'Orientation',
     'overlay': 'Overlay',
-    'photo_size': 'Photo Size',
+    'photo_size': "Photo Size",
     'pressure': 'Pressure',
     'proximity': 'Proximity',
     'quality': 'Quality',
-    'scenemode': 'Scene Mode',
+    'scenemode': "Scene Mode",
     'sound': 'Sound',
-    'sound_event': 'Sound Event',
-    'sound_timeout': 'Sound Timeout',
+    'sound_event': "Sound Event",
+    'sound_timeout': "Sound Timeout",
     'torch': 'Torch',
-    'video_connections': 'Video Connections',
+    'video_connections': "Video Connections",
     'video_chunk_len': "Video Chunk Length",
-    'video_recording': 'Video Recording',
-    'video_size': 'Video Size',
-    'whitebalance': 'White Balance',
+    'video_recording': "Video Recording",
+    'video_size': "Video Size",
+    'whitebalance': "White Balance",
     'whitebalance_lock': "White Balance Lock",
     'zoom': 'Zoom'
 }

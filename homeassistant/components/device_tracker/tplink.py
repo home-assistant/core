@@ -298,7 +298,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         response = requests.get(url, headers={COOKIE: cookie})
 
         try:
-            result = re.search(r'window.parent.location.href = '
+            result = re.search(r"window.parent.location.href = "
                                r'"https?:\/\/.*\/(.*)\/userRpm\/Index.htm";',
                                response.text)
             if not result:

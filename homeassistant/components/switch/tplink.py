@@ -23,7 +23,7 @@ ATTR_CURRENT_A = 'current_a'
 
 CONF_LEDS = 'enable_leds'
 
-DEFAULT_NAME = 'TP-Link Switch'
+DEFAULT_NAME = "TP-Link Switch"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

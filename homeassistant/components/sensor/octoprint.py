@@ -25,10 +25,10 @@ NOTIFICATION_TITLE = "OctoPrint sensor setup error"
 
 SENSOR_TYPES = {
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
-    'Current State': ['printer', 'state', 'text', None],
-    'Job Percentage': ['job', 'progress', 'completion', '%'],
-    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds'],
-    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds'],
+    "Current State": ['printer', 'state', 'text', None],
+    "Job Percentage": ['job', 'progress', 'completion', '%'],
+    "Time Remaining": ['job', 'progress', 'printTimeLeft', 'seconds'],
+    "Time Elapsed": ['job', 'progress', 'printTime', 'seconds'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 " at all times, and you would like to monitor <br /> "
                 "temperatures, please add <br />"
                 "bed and/or number&#95of&#95tools to your config <br />"
-                'and restart.',
+                "and restart.",
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 

@@ -158,7 +158,7 @@ class ImapSensor(Entity):
         """Check the number of unread emails."""
         if self._connection:
             yield from self._connection.noop()
-            _, lines = yield from self._connection.search('UnSeen UnDeleted')
+            _, lines = yield from self._connection.search("UnSeen UnDeleted")
             self._unread_count = len(lines[0].split())
 
     def disconnected(self):

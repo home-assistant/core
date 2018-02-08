@@ -72,7 +72,7 @@ def setup(hass, config):
 
         states = dict(state.attributes)
 
-        _LOGGER.debug('Sending %s', state.entity_id)
+        _LOGGER.debug("Sending %s", state.entity_id)
 
         if show_attribute_flag is True:
             if isinstance(_state, (float, int)):

@@ -193,9 +193,9 @@ def _request_app_setup(hass, config):
         DOMAIN, wink_configuration_callback,
         description=description, submit_caption="submit",
         description_image="/static/images/config_wink.png",
-        fields=[{'id': 'client_id', 'name': 'Client ID', 'type': 'string'},
+        fields=[{'id': 'client_id', 'name': "Client ID", 'type': 'string'},
                 {'id': 'client_secret',
-                 'name': 'Client secret',
+                 'name': "Client secret",
                  'type': 'string'}]
     )
 

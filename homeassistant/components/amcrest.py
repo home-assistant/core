@@ -27,7 +27,7 @@ CONF_RESOLUTION = 'resolution'
 CONF_STREAM_SOURCE = 'stream_source'
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
-DEFAULT_NAME = 'Amcrest Camera'
+DEFAULT_NAME = "Amcrest Camera"
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
 DEFAULT_STREAM_SOURCE = 'snapshot'
@@ -58,9 +58,9 @@ STREAM_SOURCE_LIST = {
 
 # Sensor types are defined like: Name, units, icon
 SENSORS = {
-    'motion_detector': ['Motion Detected', None, 'mdi:run'],
-    'sdcard': ['SD Used', '%', 'mdi:sd'],
-    'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
+    'motion_detector': ["Motion Detected", None, 'mdi:run'],
+    'sdcard': ["SD Used", '%', 'mdi:sd'],
+    'ptz_preset': ["PTZ Preset", None, 'mdi:camera-iris'],
 }
 
 CONFIG_SCHEMA = vol.Schema({

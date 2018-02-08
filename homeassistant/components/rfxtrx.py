@@ -50,13 +50,13 @@ DATA_TYPES = OrderedDict([
     ('Temperature2', TEMP_CELSIUS),
     ('Humidity', '%'),
     ('Barometer', ''),
-    ('Wind direction', ''),
-    ('Rain rate', ''),
-    ('Energy usage', 'W'),
-    ('Total usage', 'W'),
+    ("Wind direction", ''),
+    ("Rain rate", ''),
+    ("Energy usage", 'W'),
+    ("Total usage", 'W'),
     ('Sound', ''),
-    ('Sensor Status', ''),
-    ('Counter value', ''),
+    ("Sensor Status", ''),
+    ("Counter value", ''),
     ('UV', 'uv')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
@@ -281,8 +281,8 @@ def apply_received_command(event):
         RFX_DEVICES[device_id].update_state(is_on)
 
     elif hasattr(RFX_DEVICES[device_id], 'brightness')\
-            and event.values['Command'] == 'Set level':
-        _brightness = (event.values['Dim level'] * 255 // 100)
+            and event.values['Command'] == "Set level":
+        _brightness = (event.values["Dim level"] * 255 // 100)
 
         # Update the rfxtrx device state
         is_on = _brightness > 0

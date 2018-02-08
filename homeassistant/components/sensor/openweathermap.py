@@ -32,11 +32,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 SENSOR_TYPES = {
     'weather': ['Condition', None],
     'temperature': ['Temperature', None],
-    'wind_speed': ['Wind speed', 'm/s'],
-    'wind_bearing': ['Wind bearing', '°'],
+    'wind_speed': ["Wind speed", 'm/s'],
+    'wind_bearing': ["Wind bearing", '°'],
     'humidity': ['Humidity', '%'],
     'pressure': ['Pressure', 'mbar'],
-    'clouds': ['Cloud coverage', '%'],
+    'clouds': ["Cloud coverage", '%'],
     'rain': ['Rain', 'mm'],
     'snow': ['Snow', 'mm'],
 }
@@ -164,14 +164,14 @@ class OpenWeatherMapSensor(Entity):
                 self._state = round(data.get_rain()['3h'], 0)
                 self._unit_of_measurement = 'mm'
             else:
-                self._state = 'not raining'
+                self._state = "not raining"
                 self._unit_of_measurement = ''
         elif self.type == 'snow':
             if data.get_snow():
                 self._state = round(data.get_snow(), 0)
                 self._unit_of_measurement = 'mm'
             else:
-                self._state = 'not snowing'
+                self._state = "not snowing"
                 self._unit_of_measurement = ''
         elif self.type == 'forecast':
             if fc_data is None:

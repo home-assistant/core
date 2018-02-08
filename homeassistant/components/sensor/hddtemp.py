@@ -24,7 +24,7 @@ ATTR_MODEL = 'model'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 7634
-DEFAULT_NAME = 'HD Temperature'
+DEFAULT_NAME = "HD Temperature"
 DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=1)

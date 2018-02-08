@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
 
-DEFAULT_NAME = 'MQTT Sensor'
+DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 DEPENDENCIES = ['mqtt']
 

@@ -276,7 +276,7 @@ class HistoryPeriodView(HomeAssistantView):
             datetime = dt_util.parse_datetime(datetime)
 
             if datetime is None:
-                return self.json_message('Invalid datetime', HTTP_BAD_REQUEST)
+                return self.json_message("Invalid datetime", HTTP_BAD_REQUEST)
 
         now = dt_util.utcnow()
 
@@ -295,7 +295,7 @@ class HistoryPeriodView(HomeAssistantView):
             if end_time:
                 end_time = dt_util.as_utc(end_time)
             else:
-                return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
+                return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
         entity_ids = request.query.get('filter_entity_id')

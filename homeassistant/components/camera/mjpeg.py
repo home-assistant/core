@@ -28,7 +28,7 @@ CONF_MJPEG_URL = 'mjpeg_url'
 CONF_STILL_IMAGE_URL = 'still_image_url'
 CONTENT_TYPE_HEADER = 'Content-Type'
 
-DEFAULT_NAME = 'Mjpeg Camera'
+DEFAULT_NAME = "Mjpeg Camera"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MJPEG_URL): cv.url,

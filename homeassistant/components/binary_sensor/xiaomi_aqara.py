@@ -8,7 +8,7 @@ from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
 _LOGGER = logging.getLogger(__name__)
 
 NO_CLOSE = 'no_close'
-ATTR_OPEN_SINCE = 'Open since'
+ATTR_OPEN_SINCE = "Open since"
 
 MOTION = 'motion'
 NO_MOTION = 'no_motion'
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiButton(device, 'Switch', 'status',
                                             hass, gateway))
             elif model == '86sw1':
-                devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
+                devices.append(XiaomiButton(device, "Wall Switch", 'channel_0',
                                             hass, gateway))
             elif model == '86sw2':
                 devices.append(XiaomiButton(device, "Wall Switch (Left)",
@@ -91,7 +91,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._density = None
-        XiaomiBinarySensor.__init__(self, device, 'Natgas Sensor', xiaomi_hub,
+        XiaomiBinarySensor.__init__(self, device, "Natgas Sensor", xiaomi_hub,
                                     'alarm', 'gas')
 
     @property
@@ -129,7 +129,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
-        XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub,
+        XiaomiBinarySensor.__init__(self, device, "Motion Sensor", xiaomi_hub,
                                     'status', 'motion')
 
     @property
@@ -145,7 +145,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             _LOGGER.debug(
                 "Skipping heartbeat of the motion sensor. "
                 "It can introduce an incorrect state because of a firmware "
-                'bug (https://github.com/home-assistant/home-assistant/pull/'
+                "bug (https://github.com/home-assistant/home-assistant/pull/"
                 '11631#issuecomment-357507744).')
             return
 
@@ -254,7 +254,7 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._density = 0
-        XiaomiBinarySensor.__init__(self, device, 'Smoke Sensor', xiaomi_hub,
+        XiaomiBinarySensor.__init__(self, device, "Smoke Sensor", xiaomi_hub,
                                     'alarm', 'smoke')
 
     @property

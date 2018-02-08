@@ -20,7 +20,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.json import load_json, save_json
 import voluptuous as vol
 
-APPLICATION_NAME = 'Home Assistant'
+APPLICATION_NAME = "Home Assistant"
 
 DOMAIN = 'tellduslive'
 
@@ -83,8 +83,8 @@ def setup(hass, config, session=None):
             return
 
         _LOGGER.info("Configuring TelldusLive %s",
-                     'local client: {}'.format(host) if host else
-                     'cloud service')
+                     "local client: {}".format(host) if host else
+                     "cloud service")
 
         session = Session(public_key=PUBLIC_KEY,
                           private_key=NOT_SO_PRIVATE_KEY,
@@ -122,9 +122,9 @@ def setup(hass, config, session=None):
 
         hass.data[KEY_CONFIG][data_key] = \
             configurator.request_config(
-                'TelldusLive ({})'.format(
+                "TelldusLive ({})".format(
                     'LocalAPI' if host
-                    else 'Cloud service'),
+                    else "Cloud service"),
                 configuration_callback,
                 description=CONFIG_INSTRUCTIONS.format(
                     app_name=APPLICATION_NAME,
@@ -190,7 +190,7 @@ def setup(hass, config, session=None):
 
     if not session.is_authorized:
         _LOGGER.error(
-            'Authentication Error')
+            "Authentication Error")
         return False
 
     client = TelldusLiveClient(hass, config, session)
@@ -232,7 +232,7 @@ class TelldusLiveClient(object):
     def _sync(self):
         """Update local list of devices."""
         if not self._client.update():
-            _LOGGER.warning('Failed request')
+            _LOGGER.warning("Failed request")
 
         def identify_device(device):
             """Find out what type of HA component to create."""

@@ -53,7 +53,7 @@ def ensure_config_path(config_dir: str) -> None:
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
             print(("Fatal Error: Specified configuration directory does "
-                   'not exist {} ').format(config_dir))
+                   "not exist {} ").format(config_dir))
             sys.exit(1)
 
         try:
@@ -131,7 +131,7 @@ def get_arguments() -> argparse.Namespace:
         type=str,
         default=None,
         help="Log file to write to.  If not set, CONFIG/home-assistant.log "
-             'is used')
+             "is used")
     parser.add_argument(
         '--runner',
         action='store_true',
@@ -268,7 +268,7 @@ def setup_and_run_hass(config_dir: str,
             log_file=args.log_file)
     else:
         config_file = ensure_config_file(config_dir)
-        print('Config directory:', config_dir)
+        print("Config directory:", config_dir)
         hass = bootstrap.from_config_file(
             config_file, verbose=args.verbose, skip_pip=args.skip_pip,
             log_rotate_days=args.log_rotate_days, log_file=args.log_file)

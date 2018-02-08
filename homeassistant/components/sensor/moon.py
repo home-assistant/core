@@ -51,20 +51,20 @@ class MoonSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self._state == 0:
-            return 'New moon'
+            return "New moon"
         elif self._state < 7:
-            return 'Waxing crescent'
+            return "Waxing crescent"
         elif self._state == 7:
-            return 'First quarter'
+            return "First quarter"
         elif self._state < 14:
-            return 'Waxing gibbous'
+            return "Waxing gibbous"
         elif self._state == 14:
-            return 'Full moon'
+            return "Full moon"
         elif self._state < 21:
-            return 'Waning gibbous'
+            return "Waning gibbous"
         elif self._state == 21:
-            return 'Last quarter'
-        return 'Waning crescent'
+            return "Last quarter"
+        return "Waning crescent"
 
     @property
     def icon(self):

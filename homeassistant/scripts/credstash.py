@@ -40,7 +40,7 @@ def run(args):
         secrets = [i['name'] for i in credstash.listSecrets(table=table)]
         deduped_secrets = sorted(set(secrets))
 
-        print('Saved secrets:')
+        print("Saved secrets:")
         for secret in deduped_secrets:
             print(secret)
         return 0
@@ -66,7 +66,7 @@ def run(args):
         if the_secret is None:
             print("Secret {} not found".format(args.name))
         else:
-            print('Secret {}={}'.format(args.name, the_secret))
+            print("Secret {}={}".format(args.name, the_secret))
     elif args.action == 'del':
         credstash.deleteSecrets(args.name, table=table)
-        print('Deleted secret {}'.format(args.name))
+        print("Deleted secret {}".format(args.name))

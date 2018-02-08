@@ -32,7 +32,7 @@ class StreamHandler(logging.Handler):
 
             if record.msg.endswith('ATTACHED'):
                 self.entity.count += 1
-            elif record.msg.endswith('RESPONSE CLOSED'):
+            elif record.msg.endswith("RESPONSE CLOSED"):
                 self.entity.count -= 1
 
         else:
@@ -42,7 +42,7 @@ class StreamHandler(logging.Handler):
                 return
             elif record.args[1] == 'Connected':
                 self.entity.count += 1
-            elif record.args[1] == 'Closed connection':
+            elif record.args[1] == "Closed connection":
                 self.entity.count -= 1
 
         self.entity.schedule_update_ha_state()

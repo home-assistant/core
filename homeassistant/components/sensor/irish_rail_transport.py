@@ -34,7 +34,7 @@ CONF_DESTINATION = 'destination'
 CONF_DIRECTION = 'direction'
 CONF_STOPS_AT = 'stops_at'
 
-DEFAULT_NAME = 'Next Train'
+DEFAULT_NAME = "Next Train"
 ICON = 'mdi:train'
 
 SCAN_INTERVAL = timedelta(minutes=2)

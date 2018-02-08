@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone', 'group']
 
-GROUP_NAME_ALL_DEVICES = 'all devices'
+GROUP_NAME_ALL_DEVICES = "all devices"
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

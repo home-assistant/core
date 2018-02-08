@@ -49,11 +49,11 @@ DELETE_VACATION_SCHEMA = vol.Schema({
 ECONET_DATA = 'econet'
 
 HA_STATE_TO_ECONET = {
-    STATE_ECO: 'Energy Saver',
+    STATE_ECO: "Energy Saver",
     STATE_ELECTRIC: 'Electric',
-    STATE_HEAT_PUMP: 'Heat Pump',
+    STATE_HEAT_PUMP: "Heat Pump",
     STATE_GAS: 'gas',
-    STATE_HIGH_DEMAND: 'High Demand',
+    STATE_HIGH_DEMAND: "High Demand",
     STATE_OFF: 'Off',
     STATE_PERFORMANCE: 'Performance'
 }

@@ -128,7 +128,7 @@ def deprecated(key):
             return config
         _LOGGER.warning(
             "%s option for %s is deprecated. Please remove %s from your "
-            'configuration file', key, DOMAIN, key)
+            "configuration file", key, DOMAIN, key)
         config.pop(key)
         return config
     return validator

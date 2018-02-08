@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.debug("Email address: %s", email_address)
 
     password = config.get(CONF_PASSWORD)
-    _LOGGER.debug('Password: %s', password)
+    _LOGGER.debug("Password: %s", password)
 
     zone_run_time = config.get(CONF_ZONE_RUN_TIME)
     _LOGGER.debug("Zone run time: %s", zone_run_time)
@@ -71,10 +71,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         if ip_address:
             port = config.get(CONF_PORT)
-            _LOGGER.debug('Port: %s', port)
+            _LOGGER.debug("Port: %s", port)
 
             ssl = config.get(CONF_SSL)
-            _LOGGER.debug('SSL: %s', ssl)
+            _LOGGER.debug("SSL: %s", ssl)
 
             _LOGGER.debug("Configuring local API")
             auth = rm.Authenticator.create_local(
@@ -157,7 +157,7 @@ class RainMachineEntity(SwitchDevice):
         self._entity_json = entity_json
 
         self._attrs = {
-            ATTR_ATTRIBUTION: '© RainMachine',
+            ATTR_ATTRIBUTION: "© RainMachine",
             ATTR_DEVICE_CLASS: self._device_name
         }
 

@@ -113,13 +113,13 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
         real_ip = get_real_ip(request)
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
-            return self.json_message('Access denied', HTTP_UNAUTHORIZED)
+            return self.json_message("Access denied", HTTP_UNAUTHORIZED)
 
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         if not self.process_message(data):
-            return self.json_message('Invalid message', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid message", HTTP_BAD_REQUEST)
         return self.json({})

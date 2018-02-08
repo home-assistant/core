@@ -48,10 +48,10 @@ def run(args):
         if the_secret is None:
             print("Secret {} not found".format(args.name))
         else:
-            print('Secret {}={}'.format(args.name, the_secret))
+            print("Secret {}={}".format(args.name, the_secret))
     elif args.action == 'del':
         try:
             keyring.delete_password(_SECRET_NAMESPACE, args.name)
-            print('Deleted secret {}'.format(args.name))
+            print("Deleted secret {}".format(args.name))
         except keyring.errors.PasswordDeleteError:
             print("Secret {} not found".format(args.name))

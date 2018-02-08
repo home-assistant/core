@@ -65,21 +65,21 @@ class MerakiView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))
         if not data.get('secret', False):
             _LOGGER.error("secret invalid")
-            return self.json_message('No secret', HTTP_UNPROCESSABLE_ENTITY)
+            return self.json_message("No secret", HTTP_UNPROCESSABLE_ENTITY)
         if data['secret'] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
-            return self.json_message('Invalid secret',
+            return self.json_message("Invalid secret",
                                      HTTP_UNPROCESSABLE_ENTITY)
         elif data['version'] != VERSION:
             _LOGGER.error("Invalid API version: %s", data['version'])
-            return self.json_message('Invalid version',
+            return self.json_message("Invalid version",
                                      HTTP_UNPROCESSABLE_ENTITY)
         else:
-            _LOGGER.debug('Valid Secret')
+            _LOGGER.debug("Valid Secret")
             if data['type'] not in ('DevicesSeen', 'BluetoothDevicesSeen'):
                 _LOGGER.error("Unknown Device %s", data['type'])
                 return self.json_message("Invalid device type",

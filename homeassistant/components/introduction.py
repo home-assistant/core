@@ -58,6 +58,6 @@ Here are some resources to get started:
 
 To not see this card popup in the future, edit your config in
 `configuration.yaml` and disable the `introduction` component.
-""", 'Welcome Home!')  # noqa
+""", "Welcome Home!")  # noqa
 
     return True

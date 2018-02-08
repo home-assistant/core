@@ -66,7 +66,7 @@ class ZamgWeather(WeatherEntity):
     def name(self):
         """Return the name of the sensor."""
         return self.stationname or 'ZAMG {}'.format(
-            self.zamg_data.data.get('Name') or '(unknown station)')
+            self.zamg_data.data.get('Name') or "(unknown station)")
 
     @property
     def condition(self):

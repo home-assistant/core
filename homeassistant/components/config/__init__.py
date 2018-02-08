@@ -108,14 +108,14 @@ class BaseEditConfigView(HomeAssistantView):
         try:
             self.key_schema(config_key)
         except vol.Invalid as err:
-            return self.json_message('Key malformed: {}'.format(err), 400)
+            return self.json_message("Key malformed: {}".format(err), 400)
 
         try:
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
             self.data_schema(data)
         except vol.Invalid as err:
-            return self.json_message('Message malformed: {}'.format(err), 400)
+            return self.json_message("Message malformed: {}".format(err), 400)
 
         hass = request.app['hass']
         path = hass.config.path(self.path)

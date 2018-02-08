@@ -24,7 +24,7 @@ DEPENDENCIES = ['vultr']
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_BANDWIDTH_USED: ["Current Bandwidth Used", 'GB',
                                   'mdi:chart-histogram'],
-    ATTR_PENDING_CHARGES: ['Pending Charges', 'US$', 'mdi:currency-usd'],
+    ATTR_PENDING_CHARGES: ["Pending Charges", 'US$', 'mdi:currency-usd'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

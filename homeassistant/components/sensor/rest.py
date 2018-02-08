@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_METHOD = 'GET'
-DEFAULT_NAME = 'REST Sensor'
+DEFAULT_NAME = "REST Sensor"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 

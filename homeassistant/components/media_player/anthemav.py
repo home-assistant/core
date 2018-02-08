@@ -117,7 +117,7 @@ class AnthemAVR(MediaPlayerDevice):
     @property
     def media_title(self):
         """Return current input name (closest we have to media title)."""
-        return self._lookup('input_name', 'No Source')
+        return self._lookup('input_name', "No Source")
 
     @property
     def app_name(self):
@@ -172,4 +172,4 @@ class AnthemAVR(MediaPlayerDevice):
         attrs = vars(self)
         return(
             'dump_avrdata: '
-            + ', '.join('%s: %s' % item for item in attrs.items()))
+            + ', '.join("%s: %s" % item for item in attrs.items()))

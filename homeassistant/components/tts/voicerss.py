@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 VOICERSS_API_URL = "https://api.voicerss.org/"
 
 ERROR_MSG = [
-    b'Error description',
+    b"Error description",
     b"The subscription is expired or requests count limitation is exceeded!",
     b"The request content length is too large!",
     b"The language does not support!",

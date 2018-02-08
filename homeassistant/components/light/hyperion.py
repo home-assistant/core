@@ -29,16 +29,16 @@ DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_EFFECT_LIST = ['HDMI', "Cinema brighten lights", "Cinema dim lights",
-                       'Knight rider', "Blue mood blobs", "Cold mood blobs",
+                       "Knight rider", "Blue mood blobs", "Cold mood blobs",
                        "Full color mood blobs", "Green mood blobs",
                        "Red mood blobs", "Warm mood blobs",
                        "Police Lights Single", "Police Lights Solid",
-                       'Rainbow mood', "Rainbow swirl fast",
-                       'Rainbow swirl', 'Random', 'Running dots',
-                       'System Shutdown', 'Snake', 'Sparks Color', 'Sparks',
-                       'Strobe blue', 'Strobe Raspbmc', 'Strobe white',
-                       'Color traces', "UDP multicast listener",
-                       'UDP listener', 'X-Mas']
+                       "Rainbow mood", "Rainbow swirl fast",
+                       "Rainbow swirl", 'Random', "Running dots",
+                       "System Shutdown", 'Snake', "Sparks Color", 'Sparks',
+                       "Strobe blue", "Strobe Raspbmc", "Strobe white",
+                       "Color traces", "UDP multicast listener",
+                       "UDP listener", 'X-Mas']
 
 SUPPORT_HYPERION = (SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)
 
@@ -233,7 +233,7 @@ class Hyperion(Light):
             else:
                 # Get the RGB color
                 self._rgb_color =\
-                    response['info']['activeLedColor'][0]['RGB Value']
+                    response['info']['activeLedColor'][0]["RGB Value"]
                 self._brightness = max(self._rgb_color)
                 self._rgb_mem = [int(round(float(x)*255/self._brightness))
                                  for x in self._rgb_color]

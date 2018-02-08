@@ -18,7 +18,7 @@ def session_scope(*, hass=None, session=None):
         session = hass.data[DATA_INSTANCE].get_session()
 
     if session is None:
-        raise RuntimeError('Session required')
+        raise RuntimeError("Session required")
 
     try:
         yield session

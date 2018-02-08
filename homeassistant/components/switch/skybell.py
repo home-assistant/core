@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 # Switch types: Name
 SWITCH_TYPES = {
     'do_not_disturb': ["Do Not Disturb"],
-    'motion_sensor': ['Motion Sensor'],
+    'motion_sensor': ["Motion Sensor"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -60,15 +60,15 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=35)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
-    'name': ['Station Name', None],
+    'name': ["Station Name", None],
     'weather': ['Weather', None],
     'temperature': ['Temperature', TEMP_CELSIUS],
     'feels_like_temperature': ["Feels Like Temperature", TEMP_CELSIUS],
-    'wind_speed': ['Wind Speed', 'mph'],
-    'wind_direction': ['Wind Direction', None],
-    'wind_gust': ['Wind Gust', 'mph'],
+    'wind_speed': ["Wind Speed", 'mph'],
+    'wind_direction': ["Wind Direction", None],
+    'wind_gust': ["Wind Gust", 'mph'],
     'visibility': ['Visibility', None],
-    'visibility_distance': ['Visibility Distance', 'km'],
+    'visibility_distance': ["Visibility Distance", 'km'],
     'uv': ['UV', None],
     'precipitation': ["Probability of Precipitation", '%'],
     'humidity': ['Humidity', '%']

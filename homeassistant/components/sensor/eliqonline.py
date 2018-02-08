@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CHANNEL_ID = 'channel_id'
 
-DEFAULT_NAME = 'ELIQ Online'
+DEFAULT_NAME = "ELIQ Online"
 
 ICON = 'mdi:gauge'
 
