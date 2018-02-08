@@ -107,9 +107,9 @@ class InsteonPLMFan(FanEntity):
         """Set the speed of the fan."""
         fanSpeed = self._speed_to_hex(speed)
         if fanSpeed == 0x00:
-            self.state.off()
+            self._state.off()
         else:
-            self.state.set_level(fanSpeed)
+            self._state.set_level(fanSpeed)
 
     @callback
     def async_fan_update(self, deviceid, statename, val):
