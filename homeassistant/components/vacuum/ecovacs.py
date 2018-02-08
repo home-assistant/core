@@ -4,6 +4,7 @@ Support for Ecovacs Ecovacs Vaccums.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/vacuum.neato/
 """
+import asyncio
 import logging
 
 from homeassistant.components.vacuum import (
@@ -56,18 +57,17 @@ class EcovacsVacuum(VacuumDevice):
         self._fan_speed = None
         self._battery_level = None
         self._state = None
-        self._first_update_done = False
         _LOGGER.debug("Vacuum initialized: %s", self.name)
 
-    def update(self):
-        if not self._first_update_done:
-            from sucks import VacBotCommand
-            # Fire off some queries to get initial state
-            self.device.run(VacBotCommand('GetCleanState', {}))
-            self.device.run(VacBotCommand('GetChargeState', {}))
-            self.device.run(VacBotCommand('GetBatteryInfo', {}))
-            self._first_update_done = True
+    @asyncio.coroutine
+    def async_added_to_hass(self) -> None:
+        # Fire off some queries to get initial state
+        from sucks import VacBotCommand
+        self.device.run(VacBotCommand('GetCleanState', {}))
+        self.device.run(VacBotCommand('GetChargeState', {}))
+        self.device.run(VacBotCommand('GetBatteryInfo', {}))
 
+    def update(self):
         self._clean_status = self.device.clean_status
         self._charge_status = self.device.charge_status
         self._fan_speed = 'unknown' # TODO: implement in sucks
