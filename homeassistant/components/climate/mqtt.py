@@ -187,7 +187,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             config.get(CONF_INITIAL_SWING_MODE),
             config.get(CONF_INITIAL_MODE),
             False,
-            False,
+            None,
             False,
             config.get(ATTR_MIN_TEMP),
             config.get(ATTR_MAX_TEMP),
