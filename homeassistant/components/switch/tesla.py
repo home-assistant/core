@@ -57,6 +57,8 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         self.tesla_device.update()
         self._state = STATE_ON if self.tesla_device.is_charging() \
             else STATE_OFF
+
+
 class RangeSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla max range charging switch."""
 

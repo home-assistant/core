@@ -78,7 +78,8 @@ class TeslaSensor(TeslaDevice, Entity):
                 self._unit = TEMP_FAHRENHEIT
             else:
                 self._unit = TEMP_CELSIUS
-        elif self.tesla_device.bin_type == 0xA or self.tesla_device.bin_type == 0xB:
+        elif (self.tesla_device.bin_type == 0xA or
+              self.tesla_device.bin_type == 0xB):
             self.current_value = self.tesla_device.get_value()
             tesla_dist_unit = self.tesla_device.measurement
             if tesla_dist_unit == 'LENGTH_MILES':
