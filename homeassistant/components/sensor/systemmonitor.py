@@ -93,6 +93,11 @@ class SystemMonitorSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for the sensor."""
+        return self.type
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name.rstrip()
