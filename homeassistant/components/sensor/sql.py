@@ -134,7 +134,7 @@ class SQLSensor(Entity):
 
         if data is None:
             _LOGGER.error("%s returned no results", self._query)
-            return False
+            return
 
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
