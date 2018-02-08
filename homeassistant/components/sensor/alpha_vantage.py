@@ -114,7 +114,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
     add_devices(dev, True)
-    _LOGGER.debug('setup completed')
+    _LOGGER.debug('Setup completed')
 
 
 class AlphaVantageSensor(Entity):
@@ -163,10 +163,10 @@ class AlphaVantageSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug('requesting new data for symbol %s', self._symbol)
+        _LOGGER.debug('Requesting new data for symbol %s', self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         self.values = next(iter(all_values.values()))
-        _LOGGER.debug('received new values for symbol %s', self._symbol)
+        _LOGGER.debug('Received new values for symbol %s', self._symbol)
 
 
 class AlphaVantageForeignExchange(Entity):
@@ -217,11 +217,11 @@ class AlphaVantageForeignExchange(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug('requesting new data for forex %s - %s',
+        _LOGGER.debug('Requesting new data for forex %s - %s',
                       self._from_currency,
                       self._to_currency)
         self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency)
-        _LOGGER.debug('received new data for forex %s - %s',
+        _LOGGER.debug('Received new data for forex %s - %s',
                       self._from_currency,
                       self._to_currency)
