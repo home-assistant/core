@@ -147,6 +147,7 @@ class ServiceIntentHandler(IntentHandler):
     }
 
     def __init__(self, intent_type, domain, service, response):
+        """Create Service Intent Handler."""
         self.intent_type = intent_type
         self.domain = domain
         self.service = service
