@@ -105,27 +105,6 @@ def valid_discovery_topic(value):
     return valid_subscribe_topic(value, invalid_chars='#+\0/')
 
 
-def match_topic(subscription, topic):
-    """Test if topic matches subscription."""
-    reg_ex_parts = []
-    suffix = ""
-    if subscription.endswith('#'):
-        subscription = subscription[:-2]
-        suffix = "(.*)"
-    sub_parts = subscription.split('/')
-    for sub_part in sub_parts:
-        if sub_part == "+":
-            reg_ex_parts.append(r"([^\/]+)")
-        else:
-            reg_ex_parts.append(re.escape(sub_part))
-
-    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
-
-    reg = re.compile(reg_ex)
-
-    return reg.match(topic) is not None
-
-
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
@@ -246,7 +225,7 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
     @callback
     def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
         """Match subscribed MQTT topic."""
-        if not match_topic(topic, dp_topic):
+        if not _match_topic(topic, dp_topic):
             return
 
         if encoding is not None:
@@ -661,6 +640,27 @@ def _raise_on_error(result):
 
         raise HomeAssistantError(
             'Error talking to MQTT: {}'.format(mqtt.error_string(result)))
+
+
+def _match_topic(subscription, topic):
+    """Test if topic matches subscription."""
+    reg_ex_parts = []
+    suffix = ""
+    if subscription.endswith('#'):
+        subscription = subscription[:-2]
+        suffix = "(.*)"
+    sub_parts = subscription.split('/')
+    for sub_part in sub_parts:
+        if sub_part == "+":
+            reg_ex_parts.append(r"([^\/]+)")
+        else:
+            reg_ex_parts.append(re.escape(sub_part))
+
+    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
+
+    reg = re.compile(reg_ex)
+
+    return reg.match(topic) is not None
 
 
 class MqttAvailability(Entity):
