@@ -137,7 +137,10 @@ def fuzzymatch(name, entities):
 
 
 class ServiceIntentHandler(IntentHandler):
-    """Service Intent handler registration."""
+    """Service Intent handler registration.
+
+    Service specific intent handler that calls a service by name/entity_id.
+    """
 
     slot_schema = {
         'name': cv.string,
