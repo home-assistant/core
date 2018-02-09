@@ -18,6 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blnet'
 
+MODE = 'mode'
+FRIENDLY_NAME = 'friendly_name'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the BLNET component"""
@@ -30,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     blnet_id = discovery_info['ent_id']
     comm = hass.data[DOMAIN + '_data']
 
-    add_devices([BLNETSwitch(hass, id, blnet_id, comm)])
+    add_devices([BLNETSwitch(hass, id, blnet_id, comm)], True)
 
 
 class BLNETSwitch(SwitchDevice):
@@ -42,6 +45,7 @@ class BLNETSwitch(SwitchDevice):
         self._id = id
         self.communication = comm
         self._name = blnet_id
+        self._friendly_name = blnet_id
         self._state = False
         self._state = STATE_UNKNOWN
         self._icon = None
@@ -54,7 +58,7 @@ class BLNETSwitch(SwitchDevice):
         if sensor_data is None:
             return
         
-        self._name = sensor_data.get('friendly_name')
+        self._friendly_name = sensor_data.get('friendly_name')
         if sensor_data.get('value') == 'EIN':
             self._state = 'on'
         # Nonautomated switch, toggled off => switch off
@@ -80,9 +84,13 @@ class BLNETSwitch(SwitchDevice):
         return self._icon
     
     @property
-    def mode(self):
-        """Return the state of the device."""
-        return self._mode
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attrs = {}
+        
+        attrs[MODE] = self._mode
+        attrs[FRIENDLY_NAME] = self._friendly_name
+        return attrs
 
     @property
     def is_on(self):
