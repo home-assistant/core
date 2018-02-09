@@ -473,7 +473,7 @@ class TestSshConnection(unittest.TestCase):
     def setUp(self):
         """Setup test env."""
         self.connection = SshConnection(
-            'fake', 'fake', 'fake', 'fake', 'fake', 'fake')
+            'fake', 'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True
 
     def test_run_command_exception_eof(self):
@@ -513,7 +513,7 @@ class TestTelnetConnection(unittest.TestCase):
     def setUp(self):
         """Setup test env."""
         self.connection = TelnetConnection(
-            'fake', 'fake', 'fake', 'fake', 'fake')
+            'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True
 
     def test_run_command_exception_eof(self):
