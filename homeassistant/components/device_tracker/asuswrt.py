@@ -118,11 +118,10 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if self.protocol == 'ssh':
             self.connection = SshConnection(
                 self.host, self.port, self.username, self.password,
-                self.ssh_key, self.mode == 'ap')
+                self.ssh_key)
         else:
             self.connection = TelnetConnection(
-                self.host, self.port, self.username, self.password,
-                self.mode == 'ap')
+                self.host, self.port, self.username, self.password)
 
         self.last_results = {}
 
@@ -253,7 +252,7 @@ class _Connection:
 class SshConnection(_Connection):
     """Maintains an SSH connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password, ssh_key, ap):
+    def __init__(self, host, port, username, password, ssh_key):
         """Initialize the SSH connection properties."""
         super().__init__()
 
@@ -263,7 +262,6 @@ class SshConnection(_Connection):
         self._username = username
         self._password = password
         self._ssh_key = ssh_key
-        self._ap = ap
 
     def run_command(self, command):
         """Run commands through an SSH connection.
@@ -323,7 +321,7 @@ class SshConnection(_Connection):
 class TelnetConnection(_Connection):
     """Maintains a Telnet connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password, ap):
+    def __init__(self, host, port, username, password):
         """Initialize the Telnet connection properties."""
         super().__init__()
 
@@ -332,7 +330,6 @@ class TelnetConnection(_Connection):
         self._port = port
         self._username = username
         self._password = password
-        self._ap = ap
         self._prompt_string = None
 
     def run_command(self, command):
