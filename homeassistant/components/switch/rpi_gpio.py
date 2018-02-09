@@ -21,8 +21,10 @@ DEPENDENCIES = ['rpi_gpio']
 CONF_PULL_MODE = 'pull_mode'
 CONF_PORTS = 'ports'
 CONF_INVERT_LOGIC = 'invert_logic'
+CONF_SHARED_GPIO = 'shared_gpio'
 
 DEFAULT_INVERT_LOGIC = False
+DEFAULT_SHARED_GPIO = False
 
 _SWITCHES_SCHEMA = vol.Schema({
     cv.positive_int: cv.string,
@@ -31,6 +33,7 @@ _SWITCHES_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
     vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    vol.Optional(CONF_SHARED_GPIO, default=DEFAULT_SHARED_GPIO): cv.boolean,
 })
 
 
@@ -38,22 +41,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
     invert_logic = config.get(CONF_INVERT_LOGIC)
+    shared_gpio = config.get(CONF_SHARED_GPIO)
 
     switches = []
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
-        switches.append(RPiGPIOSwitch(name, port, invert_logic))
+        switches.append(RPiGPIOSwitch(name, port, invert_logic, shared_gpio))
     add_devices(switches)
 
 
 class RPiGPIOSwitch(ToggleEntity):
     """Representation of a  Raspberry Pi GPIO."""
 
-    def __init__(self, name, port, invert_logic):
+    def __init__(self, name, port, invert_logic, shared_gpio):
         """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._invert_logic = invert_logic
+        self._shared_gpio = shared_gpio
         self._state = False
         rpi_gpio.setup_output(self._port)
         rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
@@ -75,12 +80,16 @@ class RPiGPIOSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        if self._shared_gpio:
+            rpi_gpio.setup_output(self._port)
         rpi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        if self._shared_gpio:
+            rpi_gpio.setup_output(self._port)
         rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
         self._state = False
         self.schedule_update_ha_state()
