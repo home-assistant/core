@@ -89,6 +89,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for symbol in symbols:
         try:
+            _LOGGER.debug("Configuring timeseries for symbols: %s",
+                          symbol[CONF_SYMBOL])
             timeseries.get_intraday(symbol[CONF_SYMBOL])
         except ValueError:
             _LOGGER.error(
@@ -100,6 +102,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         from_cur = conversion.get(CONF_FROM)
         to_cur = conversion.get(CONF_TO)
         try:
+            _LOGGER.debug("Configuring forex %s - %s",
+                          from_cur, to_cur)
             forex.get_currency_exchange_rate(
                 from_currency=from_cur, to_currency=to_cur)
         except ValueError as error:
@@ -110,6 +114,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
     add_devices(dev, True)
+    _LOGGER.debug("Setup completed")
 
 
 class AlphaVantageSensor(Entity):
@@ -158,8 +163,10 @@ class AlphaVantageSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
+        _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         self.values = next(iter(all_values.values()))
+        _LOGGER.debug("Received new values for symbol %s", self._symbol)
 
 
 class AlphaVantageForeignExchange(Entity):
@@ -210,5 +217,11 @@ class AlphaVantageForeignExchange(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
+        _LOGGER.debug("Requesting new data for forex %s - %s",
+                      self._from_currency,
+                      self._to_currency)
         self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency)
+        _LOGGER.debug("Received new data for forex %s - %s",
+                      self._from_currency,
+                      self._to_currency)

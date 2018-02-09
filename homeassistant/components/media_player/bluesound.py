@@ -122,7 +122,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BluesoundPlayer(MediaPlayerDevice):
-    """Represenatation of a Bluesound Player."""
+    """Representation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -150,10 +150,10 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._port = DEFAULT_PORT
 
     @staticmethod
-    def _try_get_index(string, seach_string):
+    def _try_get_index(string, search_string):
         """Get the index."""
         try:
-            return string.index(seach_string)
+            return string.index(search_string)
         except ValueError:
             return -1
 
@@ -165,7 +165,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         try:
             resp = yield from self.send_bluesound_command(
                 'SyncStatus', raise_timeout, raise_timeout)
-        except:
+        except Exception:
             raise
 
         if not resp:
@@ -202,7 +202,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         except CancelledError:
             _LOGGER.debug("Stopping the polling of node %s", self._name)
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected error in %s", self._name)
             raise
 
@@ -229,7 +229,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             _LOGGER.info("Node %s is offline, retrying later", self.host)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION)
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected when initiating error in %s",
                               self.host)
             raise
@@ -338,7 +338,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
     def async_update_captures(self):
-        """Update Capture cources."""
+        """Update Capture sources."""
         resp = yield from self.send_bluesound_command(
             'RadioBrowse?service=Capture')
         if not resp:

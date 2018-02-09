@@ -19,7 +19,7 @@ import sys
 from types import ModuleType
 
 # pylint: disable=unused-import
-from typing import Dict, Optional, Sequence, Set  # NOQA
+from typing import Dict, List, Optional, Sequence, Set  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
@@ -148,7 +148,7 @@ def get_component(comp_name) -> Optional[ModuleType]:
             # a namespace. We do not care about namespaces.
             # This prevents that when only
             # custom_components/switch/some_platform.py exists,
-            # the import custom_components.switch would succeeed.
+            # the import custom_components.switch would succeed.
             if module.__spec__.origin == 'namespace':
                 continue
 

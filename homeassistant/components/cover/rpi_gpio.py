@@ -90,11 +90,6 @@ class RPiGPIOCover(CoverDevice):
         rpi_gpio.write_output(self._relay_pin, not self._invert_relay)
 
     @property
-    def unique_id(self):
-        """Return the ID of this cover."""
-        return '{}.{}'.format(self.__class__, self._name)
-
-    @property
     def name(self):
         """Return the name of the cover if any."""
         return self._name

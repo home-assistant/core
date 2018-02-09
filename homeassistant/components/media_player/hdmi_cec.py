@@ -32,9 +32,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class CecPlayerDevice(CecDevice, MediaPlayerDevice):
-    """Representation of a HDMI device as a Media palyer."""
+    """Representation of a HDMI device as a Media player."""
 
-    def __init__(self, hass: HomeAssistant, device, logical):
+    def __init__(self, hass: HomeAssistant, device, logical) -> None:
         """Initialize the HDMI device."""
         CecDevice.__init__(self, hass, device, logical)
         self.entity_id = "%s.%s_%s" % (

@@ -44,11 +44,6 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
-LIGHT_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    LIGHT_SCHEMA,
-)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
 })

@@ -214,16 +214,6 @@ class MqttCover(MqttAvailability, CoverDevice):
 
             self.async_schedule_update_ha_state()
 
-        @callback
-        def availability_message_received(topic, payload, qos):
-            """Handle new MQTT availability messages."""
-            if payload == self._payload_available:
-                self._available = True
-            elif payload == self._payload_not_available:
-                self._available = False
-
-            self.async_schedule_update_ha_state()
-
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
@@ -231,11 +221,6 @@ class MqttCover(MqttAvailability, CoverDevice):
             yield from mqtt.async_subscribe(
                 self.hass, self._state_topic,
                 state_message_received, self._qos)
-
-        if self._availability_topic is not None:
-            yield from mqtt.async_subscribe(
-                self.hass, self._availability_topic,
-                availability_message_received, self._qos)
 
         if self._tilt_status_topic is None:
             self._tilt_optimistic = True

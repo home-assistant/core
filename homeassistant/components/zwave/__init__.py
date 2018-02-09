@@ -7,7 +7,6 @@ https://home-assistant.io/components/zwave/
 import asyncio
 import copy
 import logging
-import time
 from pprint import pprint
 
 import voluptuous as vol
@@ -22,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
+import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -33,7 +33,7 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import check_node_schema, check_value_schema, node_name
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.35']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +170,7 @@ def _obj_to_dict(obj):
     """Convert an object into a hash for debug."""
     return {key: getattr(obj, key) for key
             in dir(obj)
-            if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
+            if key[0] != '_' and not callable(getattr(obj, key))}
 
 
 def _value_name(value):
@@ -219,7 +219,7 @@ def get_config_value(node, value_index, tries=5):
                     and value.index == value_index):
                 return value.data
     except RuntimeError:
-        # If we get an runtime error the dict has changed while
+        # If we get a runtime error the dict has changed while
         # we was looking for a value, just do it again
         return None if tries <= 0 else get_config_value(
             node, value_index, tries=tries - 1)
@@ -592,25 +592,40 @@ def setup(hass, config):
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
-        # Need to be in STATE_AWAKED before talking to nodes.
-        # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
-        # to be ready.
-        for i in range(const.NETWORK_READY_WAIT_SECS):
+        @asyncio.coroutine
+        def _check_awaked():
+            """Wait for Z-wave awaked state (or timeout) and finalize start."""
             _LOGGER.debug(
                 "network state: %d %s", network.state,
                 network.state_str)
-            if network.state >= network.STATE_AWAKED:
-                _LOGGER.info("Z-Wave ready after %d seconds", i)
-                break
-            time.sleep(1)
-        else:
-            _LOGGER.warning(
-                "zwave not ready after %d seconds, continuing anyway",
-                const.NETWORK_READY_WAIT_SECS)
-            _LOGGER.info(
-                "final network state: %d %s", network.state,
-                network.state_str)
 
+            start_time = dt_util.utcnow()
+            while True:
+                waited = int((dt_util.utcnow()-start_time).total_seconds())
+
+                if network.state >= network.STATE_AWAKED:
+                    # Need to be in STATE_AWAKED before talking to nodes.
+                    _LOGGER.info("Z-Wave ready after %d seconds", waited)
+                    break
+                elif waited >= const.NETWORK_READY_WAIT_SECS:
+                    # Wait up to NETWORK_READY_WAIT_SECS seconds for the Z-Wave
+                    # network to be ready.
+                    _LOGGER.warning(
+                        "Z-Wave not ready after %d seconds, continuing anyway",
+                        waited)
+                    _LOGGER.info(
+                        "final network state: %d %s", network.state,
+                        network.state_str)
+                    break
+                else:
+                    yield from asyncio.sleep(1, loop=hass.loop)
+
+            hass.async_add_job(_finalize_start)
+
+        hass.add_job(_check_awaked)
+
+    def _finalize_start():
+        """Perform final initializations after Z-Wave network is awaked."""
         polling_interval = convert(
             config[DOMAIN].get(CONF_POLLING_INTERVAL), int)
         if polling_interval is not None:
@@ -850,8 +865,8 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
-        self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
-                                               self.values.primary.object_id)
+        self._unique_id = "{}-{}".format(self.node.node_id,
+                                         self.values.primary.object_id)
         self._update_attributes()
 
         dispatcher.connect(

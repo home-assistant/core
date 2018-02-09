@@ -135,7 +135,7 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        for i in range(3):
+        for _ in range(3):
             self.hass.add_job(test_coro())
 
         run_coroutine_threadsafe(
@@ -155,7 +155,7 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_coro())
 
         @asyncio.coroutine
@@ -172,7 +172,7 @@ class TestHomeAssistant(unittest.TestCase):
         assert len(call_count) == 2
 
     def test_async_add_job_pending_tasks_executor(self):
-        """Run a executor in pending tasks."""
+        """Run an executor in pending tasks."""
         call_count = []
 
         def test_executor():
@@ -185,7 +185,7 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0, loop=self.hass.loop)
             yield from asyncio.sleep(0, loop=self.hass.loop)
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_executor)
 
         run_coroutine_threadsafe(
@@ -210,7 +210,7 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0, loop=self.hass.loop)
             yield from asyncio.sleep(0, loop=self.hass.loop)
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_callback)
 
         run_coroutine_threadsafe(

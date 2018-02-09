@@ -31,7 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 @asyncio.coroutine
 def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
-    from bellows.zigbee.zcl.clusters.measurement import TemperatureMeasurement
+    from zigpy.zcl.clusters.measurement import TemperatureMeasurement
     in_clusters = discovery_info['in_clusters']
     if TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)

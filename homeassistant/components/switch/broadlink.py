@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             packet = yield from hass.async_add_job(
                 broadlink_device.check_data)
             if packet:
-                log_msg = "Recieved packet is: {}".\
+                log_msg = "Received packet is: {}".\
                           format(b64encode(packet).decode('utf8'))
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(

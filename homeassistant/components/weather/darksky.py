@@ -1,5 +1,5 @@
 """
-Patform for retrieving meteorological data from Dark Sky.
+Platform for retrieving meteorological data from Dark Sky.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/weather.darksky/

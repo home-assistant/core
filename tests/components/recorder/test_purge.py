@@ -1,7 +1,6 @@
 """Test data purging."""
 import json
 from datetime import datetime, timedelta
-from time import sleep
 import unittest
 
 from homeassistant.components import recorder
@@ -162,7 +161,7 @@ class TestRecorderPurge(unittest.TestCase):
             self.hass.async_block_till_done()
 
             # Small wait for recorder thread
-            sleep(0.1)
+            self.hass.data[DATA_INSTANCE].block_till_done()
 
             # we should still have everything from before
             self.assertEqual(states.count(), 6)
@@ -174,7 +173,7 @@ class TestRecorderPurge(unittest.TestCase):
             self.hass.async_block_till_done()
 
             # Small wait for recorder thread
-            sleep(0.1)
+            self.hass.data[DATA_INSTANCE].block_till_done()
 
             # we should only have 3 states left after purging
             self.assertEqual(states.count(), 3)

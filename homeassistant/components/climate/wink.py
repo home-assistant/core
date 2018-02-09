@@ -30,6 +30,8 @@ ATTR_SCHEDULE_ENABLED = 'schedule_enabled'
 ATTR_SMART_TEMPERATURE = 'smart_temperature'
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_VACATION_MODE = 'vacation_mode'
+ATTR_HEAT_ON = 'heat_on'
+ATTR_COOL_ON = 'cool_on'
 
 DEPENDENCIES = ['wink']
 
@@ -131,6 +133,12 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if self.eco_target:
             data[ATTR_ECO_TARGET] = self.eco_target
 
+        if self.heat_on:
+            data[ATTR_HEAT_ON] = self.heat_on
+
+        if self.cool_on:
+            data[ATTR_COOL_ON] = self.cool_on
+
         current_humidity = self.current_humidity
         if current_humidity is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
@@ -173,6 +181,16 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     def occupied(self):
         """Return status of if the thermostat has detected occupancy."""
         return self.wink.occupied()
+
+    @property
+    def heat_on(self):
+        """Return whether or not the heat is actually heating."""
+        return self.wink.heat_on()
+
+    @property
+    def cool_on(self):
+        """Return whether or not the heat is actually heating."""
+        return self.wink.heat_on()
 
     @property
     def current_operation(self):

@@ -67,7 +67,7 @@ def staticresource_middleware(request, handler):
     """Middleware to strip out fingerprint from fingerprinted assets."""
     path = request.path
     if not path.startswith('/static/') and not path.startswith('/frontend'):
-        return handler(request)
+        return (yield from handler(request))
 
     fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
 
@@ -75,4 +75,4 @@ def staticresource_middleware(request, handler):
         request.match_info['filename'] = \
             '{}.{}'.format(*fingerprinted.groups())
 
-    return handler(request)
+    return (yield from handler(request))

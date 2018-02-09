@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the iGlo lighs."""
+    """Set up the iGlo lights."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
