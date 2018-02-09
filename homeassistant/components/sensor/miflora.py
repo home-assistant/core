@@ -16,8 +16,7 @@ from homeassistant.const import (
 )
 
 
-REQUIREMENTS = ['https://github.com/ChristianKuehnel/miflora/archive/'
-                'exception_handling.zip#miflora==0.2.1']
+REQUIREMENTS = ['miflora==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
