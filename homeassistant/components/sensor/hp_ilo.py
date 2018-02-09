@@ -172,4 +172,4 @@ class HpIloData(object):
                 password=self._password, port=self._port)
         except (hpilo.IloError, hpilo.IloCommunicationError,
                 hpilo.IloLoginFailed) as error:
-            raise ValueError("Unable to init HP ILO, %s", error)
+            raise ValueError("Unable to init HP ILO, {}".format(error))
