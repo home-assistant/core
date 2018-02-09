@@ -267,7 +267,7 @@ class Camera(Entity):
         def write(img_bytes):
             """Write image to stream."""
             response.write(bytes(
-                '--frameboundary\r\n'
+                "--frameboundary\r\n"
                 "Content-Type: {}\r\n"
                 "Content-Length: {}\r\n\r\n".format(
                     self.content_type, len(img_bytes)),

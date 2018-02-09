@@ -90,7 +90,7 @@ def async_from_config_dict(config: Dict[str, Any],
             "Python 3.4 support has been deprecated and will be removed in "
             "the beginning of 2018. Please upgrade Python or your operating "
             "system. More info: https://home-assistant.io/blog/2017/10/06/"
-            'deprecating-python-3.4-support/'
+            "deprecating-python-3.4-support/"
         )
 
     core_config = config.get(core.DOMAIN, {})
