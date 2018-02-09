@@ -301,7 +301,7 @@ class GPMDP(MediaPlayerDevice):
         websocket = self.get_ws()
         if websocket is None:
             return
-        websocket.send("{"namespace": "volume", "method": "increaseVolume"}")
+        websocket.send('{"namespace": "volume", "method": "increaseVolume"}')
         self.schedule_update_ha_state()
 
     def volume_down(self):
@@ -309,7 +309,7 @@ class GPMDP(MediaPlayerDevice):
         websocket = self.get_ws()
         if websocket is None:
             return
-        websocket.send("{"namespace": "volume", "method": "decreaseVolume"}")
+        websocket.send('{"namespace": "volume", "method": "decreaseVolume"}')
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):

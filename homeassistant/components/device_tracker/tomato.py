@@ -106,7 +106,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
                     if param == 'wldev' or param == 'dhcpd_lease':
                         self.last_results[param] = \
-                            json.loads(value.replace('\', '"'))
+                            json.loads(value.replace("'", '"'))
                 return True
 
             elif response.status_code == 401:

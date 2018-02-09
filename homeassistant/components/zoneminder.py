@@ -115,7 +115,7 @@ def _zm_request(method, api_url, data=None):
         return req.json()
     except ValueError:
         _LOGGER.exception("JSON decode exception caught while attempting to "
-                          "decode "%s"", req.text)
+                          "decode '%s'", req.text)
 
 
 # pylint: disable=no-member

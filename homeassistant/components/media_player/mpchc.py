@@ -63,7 +63,7 @@ class MpcHcDevice(MediaPlayerDevice):
                 '{}/variables.html'.format(self._url), data=None, timeout=3)
 
             mpchc_variables = re.findall(
-                r'<p id='(.+?)'>(.+?)</p>', response.text)
+                r'<p id="(.+?)">(.+?)</p>', response.text)
 
             for var in mpchc_variables:
                 self._player_variables[var[0]] = var[1].lower()

@@ -44,10 +44,10 @@ class HuaweiDeviceScanner(DeviceScanner):
     DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
     DEVICE_ATTR_REGEX = re.compile(
         '"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'
-        '"(?P<MacAddr>.*?)",'(?P<Port>.*?)','
+        '"(?P<MacAddr>.*?)","(?P<Port>.*?)",'
         '"(?P<IpType>.*?)","(?P<DevType>.*?)",'
         '"(?P<DevStatus>.*?)","(?P<PortType>.*?)",'
-        ''(?P<Time>.*?)',"(?P<HostName>.*?)",'
+        '"(?P<Time>.*?)","(?P<HostName>.*?)",'
         '"(?P<IPv4Enabled>.*?)","(?P<IPv6Enabled>.*?)",'
         '"(?P<DeviceType>.*?)"')
     LOGIN_COOKIE = dict(Cookie='body:Language:portuguese:id=-1')

@@ -238,7 +238,7 @@ def _get_bom_stations():
                     if wmo != '..':
                         latlon[wmo] = (float(lat), float(lon))
     zones = {}
-    pattern = (r"<a href="/products/(?P<zone>ID[A-Z]\d\d\d\d\d)/"
+    pattern = (r'<a href="/products/(?P<zone>ID[A-Z]\d\d\d\d\d)/'
                r'(?P=zone)\.(?P<wmo>\d\d\d\d\d).shtml">')
     for state in ('nsw', 'vic', 'qld', 'wa', 'tas', 'nt'):
         url = 'http://www.bom.gov.au/{0}/observations/{0}all.shtml'.format(
