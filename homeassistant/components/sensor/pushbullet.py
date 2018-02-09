@@ -68,7 +68,7 @@ class PushBulletNotificationSensor(Entity):
     def update(self):
         """Fetch the latest data from the sensor.
 
-        This will fetch the "sensor reading" into self._state but also all
+        This will fetch the 'sensor reading' into self._state but also all
         attributes into self._state_attributes.
         """
         try:

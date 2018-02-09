@@ -232,7 +232,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                     self._state = LOCK_STATUS.get(str(notification_data))
                     _LOGGER.debug(
                         "Lock state set from Access Control value and is %s, "
-                        'get=%s', str(notification_data), self.state)
+                        "get=%s", str(notification_data), self.state)
 
         if not self.values.alarm_type:
             return

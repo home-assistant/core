@@ -96,7 +96,7 @@ class TelnetSwitch(SwitchDevice):
             return response.decode('ASCII').strip()
         except IOError as error:
             _LOGGER.error(
-                "Command '%s' failed with exception: %s",
+                'Command "%s" failed with exception: %s',
                 command, repr(error))
             return None
 

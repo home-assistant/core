@@ -200,7 +200,7 @@ class MiroboVacuum(VacuumDevice):
                     STATE_ON if self.dnd_state.enabled else STATE_OFF,
                 ATTR_DO_NOT_DISTURB_START: str(self.dnd_state.start),
                 ATTR_DO_NOT_DISTURB_END: str(self.dnd_state.end),
-                # Not working --> "Cleaning mode":
+                # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 ATTR_CLEANING_TIME: int(
                     self.vacuum_state.clean_time.total_seconds()

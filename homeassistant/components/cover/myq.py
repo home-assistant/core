@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.components.persistent_notification.create(
             "Error: {}<br />"
             "You will need to restart hass after fixing."
-            ''.format(ex),
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

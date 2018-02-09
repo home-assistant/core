@@ -267,7 +267,7 @@ class DataBase(object):
 
         try:
             data = getattr(getattr(self._client, module), operation)()
-            _LOGGER.debug("Received '%s_%s' data: %s", module,
+            _LOGGER.debug('Received "%s_%s" data: %s', module,
                           operation, data)
         except HTTPError as exc:
             _LOGGER.error("An error occurred while retrieving data")

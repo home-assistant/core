@@ -80,8 +80,8 @@ class SwisscomDeviceScanner(DeviceScanner):
         url = 'http://{}/ws'.format(self.host)
         headers = {CONTENT_TYPE: 'application/x-sah-ws-4-call+json'}
         data = """
-        {'service':'Devices', 'method':'get',
-        'parameters':{'expression':"lan and not self"}}"""
+        {"service":"Devices", "method":"get",
+        "parameters":{"expression":"lan and not self"}}"""
 
         request = requests.post(url, headers=headers, data=data, timeout=10)
 

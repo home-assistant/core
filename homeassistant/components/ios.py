@@ -276,4 +276,4 @@ class iOSIdentifyDeviceView(HomeAssistantView):
             return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 
-        return self.json({'status': 'registered'})
+        return self.json({"status": "registered"})

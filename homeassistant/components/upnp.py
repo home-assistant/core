@@ -109,7 +109,7 @@ def setup(hass, config):
                 "</b><br />Please disable port_mapping in the <i>upnp</i> "
                 "configuration section.<br />"
                 "You will need to restart hass after fixing."
-                ''.format(external),
+                "".format(external),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 

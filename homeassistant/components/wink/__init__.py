@@ -80,8 +80,8 @@ ATTR_ENABLED = 'enabled'
 ATTR_AUTO_SHUTOFF = 'auto_shutoff'
 
 VOLUMES = ['low', 'medium', 'high']
-TONES = ['doorbell', 'fur_elise', "doorbell_extended", 'alert',
-         'william_tell', "rondo_alla_turca", 'police_siren',
+TONES = ['doorbell', 'fur_elise', 'doorbell_extended', 'alert',
+         'william_tell', 'rondo_alla_turca', 'police_siren',
          'evacuation', 'beep_beep', 'beep']
 CHIME_TONES = TONES + ['inactive']
 AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]

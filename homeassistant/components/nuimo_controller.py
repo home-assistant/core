@@ -159,15 +159,15 @@ class NuimoThread(threading.Thread):
 
 # must be 9x9 matrix
 HOMEASSIST_LOGO = (
-    '    .    ' +
-    '   ...   ' +
-    '  .....  ' +
-    ' ....... ' +
+    "    .    " +
+    "   ...   " +
+    "  .....  " +
+    " ....... " +
     "..... ..." +
-    ' ....... ' +
+    " ....... " +
     " .. .... " +
     " .. .... " +
-    '.........')
+    ".........")
 
 
 class DiscoveryLogger(object):

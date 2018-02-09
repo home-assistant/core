@@ -226,7 +226,7 @@ class RainMachineProgram(RainMachineEntity):
         except exceptions.BrokenAPICall:
             _LOGGER.error("programs.stop currently broken in remote API")
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error("Unable to turn off program '%s'",
+            _LOGGER.error('Unable to turn off program "%s"',
                           self.rainmachine_id)
             _LOGGER.debug(exc_info)
 
@@ -239,7 +239,7 @@ class RainMachineProgram(RainMachineEntity):
         except exceptions.BrokenAPICall:
             _LOGGER.error("programs.start currently broken in remote API")
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error("Unable to turn on program '%s'",
+            _LOGGER.error('Unable to turn on program "%s"',
                           self.rainmachine_id)
             _LOGGER.debug(exc_info)
 
@@ -296,7 +296,7 @@ class RainMachineZone(RainMachineEntity):
         try:
             self._client.zones.start(self.rainmachine_id, self._run_time)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error("Unable to turn on zone '%s'", self.rainmachine_id)
+            _LOGGER.error('Unable to turn on zone "%s"', self.rainmachine_id)
             _LOGGER.debug(exc_info)
 
     def _update(self) -> None:
@@ -306,6 +306,6 @@ class RainMachineZone(RainMachineEntity):
         try:
             self._entity_json = self._client.zones.get(self.rainmachine_id)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error("Unable to update info for zone '%s'",
+            _LOGGER.error('Unable to update info for zone "%s"',
                           self.rainmachine_id)
             _LOGGER.debug(exc_info)

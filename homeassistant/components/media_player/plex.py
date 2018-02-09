@@ -645,7 +645,7 @@ class PlexClient(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute the volume.
 
-        Since we can"t actually mute, we"ll:
+        Since we can't actually mute, we'll:
         - On mute, store volume and set volume to 0
         - On unmute, set volume to previously stored volume
         """

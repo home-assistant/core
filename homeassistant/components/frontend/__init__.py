@@ -299,8 +299,8 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        for subpath in ['src', "build-translations", 'build-temp', 'build',
-                        'hass_frontend', "bower_components", 'panels',
+        for subpath in ['src', 'build-translations', 'build-temp', 'build',
+                        'hass_frontend', 'bower_components', 'panels',
                         'hassio']:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),

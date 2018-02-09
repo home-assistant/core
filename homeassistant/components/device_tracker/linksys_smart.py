@@ -93,10 +93,10 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
     def _make_request(self):
         # Weirdly enough, this doesn't seem to require authentication
         data = [{
-            'request': {
-                'sinceRevision': 0
+            "request": {
+                "sinceRevision": 0
             },
-            'action': "http://linksys.com/jnap/devicelist/GetDevices"
+            "action": "http://linksys.com/jnap/devicelist/GetDevices"
         }]
         headers = {'X-JNAP-Action': "http://linksys.com/jnap/core/Transaction"}
         return requests.post('http://{}/JNAP/'.format(self.host),

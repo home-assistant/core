@@ -298,7 +298,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         response = requests.get(url, headers={COOKIE: cookie})
 
         try:
-            result = re.search(r"window.parent.location.href = "
+            result = re.search(r'window.parent.location.href = '
                                r'"https?:\/\/.*\/(.*)\/userRpm\/Index.htm";',
                                response.text)
             if not result:
@@ -385,7 +385,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         session = requests.session()
         session.get(base_url, headers=header)
 
-        login_data = {'username': self.username, 'password': password_md5}
+        login_data = {"username": self.username, "password": password_md5}
         session.post(base_url, login_data, headers=header)
 
         # A timestamp is required to be sent as get parameter

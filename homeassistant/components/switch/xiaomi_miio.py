@@ -81,7 +81,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         else:
             _LOGGER.error(
                 "Unsupported device found! Please create an issue at "
-                'https://github.com/rytilahti/python-miio/issues '
+                "https://github.com/rytilahti/python-miio/issues "
                 "and provide the following data: %s", device_info.model)
     except DeviceException:
         raise PlatformNotReady

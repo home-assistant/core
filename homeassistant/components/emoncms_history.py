@@ -43,7 +43,7 @@ def setup(hass, config):
         """Send payload data to Emoncms."""
         try:
             fullurl = '{}/input/post.json'.format(url)
-            data = {'apikey': apikey, 'data': payload}
+            data = {"apikey": apikey, "data": payload}
             parameters = {'node': node}
             req = requests.post(
                 fullurl, params=parameters, data=data, allow_redirects=True,

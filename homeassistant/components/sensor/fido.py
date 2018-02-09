@@ -1,7 +1,7 @@
 """
 Support for Fido.
 
-Get data from "Usage Summary" page:
+Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
 
 For more details about this platform, please refer to the documentation at

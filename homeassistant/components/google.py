@@ -110,7 +110,7 @@ def do_authentication(hass, config):
     except OAuth2DeviceCodeError as err:
         hass.components.persistent_notification.create(
             "Error: {}<br />You will need to restart hass after fixing."
-            ''.format(err),
+            "".format(err),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

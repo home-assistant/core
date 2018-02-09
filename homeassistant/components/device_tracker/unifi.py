@@ -64,7 +64,7 @@ def get_scanner(hass, config):
             "Failed to connect to Unifi. "
             "Error: {}<br />"
             "You will need to restart hass after fixing."
-            ''.format(ex),
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

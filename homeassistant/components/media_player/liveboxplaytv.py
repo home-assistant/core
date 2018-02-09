@@ -104,7 +104,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                         self._media_remaining_time = rtime
                         self._media_last_updated = dt_util.utcnow()
                 # Set media image to current program if a thumbnail is
-                # available. Otherwise we"ll use the channel"s image.
+                # available. Otherwise we'll use the channel's image.
                 img_size = 800
                 prg_img_url = yield from \
                     self._client.async_get_current_program_image(img_size)

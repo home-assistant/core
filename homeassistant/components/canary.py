@@ -54,7 +54,7 @@ def setup(hass, config):
         hass.components.persistent_notification.create(
             "Error: {}<br />"
             "You will need to restart hass after fixing."
-            ''.format(ex),
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

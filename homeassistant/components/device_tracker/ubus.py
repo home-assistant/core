@@ -190,10 +190,10 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
 
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     """Perform one JSON RPC operation."""
-    data = json.dumps({'jsonrpc': '2.0',
-                       'id': 1,
-                       'method': rpcmethod,
-                       'params': [session_id,
+    data = json.dumps({"jsonrpc": "2.0",
+                       "id": 1,
+                       "method": rpcmethod,
+                       "params": [session_id,
                                   subsystem,
                                   method,
                                   params]})

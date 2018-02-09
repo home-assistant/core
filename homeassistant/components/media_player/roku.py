@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 "Check its network connection or consider "
                 "using auto discovery.<br />"
                 "You will need to restart hass after fixing."
-                ''.format(config.get(CONF_HOST)),
+                "".format(config.get(CONF_HOST)),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 

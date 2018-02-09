@@ -1,7 +1,7 @@
 """
 Support for HydroQuebec.
 
-Get data from "My Consumption Profile" page:
+Get data from 'My Consumption Profile' page:
 https://www.hydroquebec.com/portail/en/group/clientele/portrait-de-consommation
 
 For more details about this platform, please refer to the documentation at
