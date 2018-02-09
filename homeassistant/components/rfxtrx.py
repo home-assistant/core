@@ -197,7 +197,7 @@ def find_possible_pt2262_device(device_id):
                 size = len(dev_id) - size - 1
                 _LOGGER.info("rfxtrx: found possible device %s for %s "
                              "with the following configuration:\n"
-                             "data_bits=%d\n""
+                             "data_bits=%d\n"
                              "command_on=0x%s\n"
                              "command_off=0x%s\n",
                              device_id,
