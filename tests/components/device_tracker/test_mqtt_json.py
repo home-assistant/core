@@ -165,6 +165,7 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
     def test_single_level_wildcard_topic_not_matching(self):
         """Test not matching single level wildcard topic."""
         dev_id = 'zanzito'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         subscription = 'location/+/zanzito'
         topic = 'location/zanzito'
         location = json.dumps(LOCATION_MESSAGE)
@@ -177,13 +178,12 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        state = self.hass.states.get('device_tracker.zanzito')
-        self.assertNotEqual(state.attributes.get('latitude'), 2.0)
-        self.assertNotEqual(state.attributes.get('longitude'), 1.0)
+        self.assertIsNone(self.hass.states.get(entity_id))
 
     def test_multi_level_wildcard_topic_not_matching(self):
         """Test not matching multi level wildcard topic."""
         dev_id = 'zanzito'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         subscription = 'location/#'
         topic = 'somewhere/zanzito'
         location = json.dumps(LOCATION_MESSAGE)
@@ -196,6 +196,4 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        state = self.hass.states.get('device_tracker.zanzito')
-        self.assertNotEqual(state.attributes.get('latitude'), 2.0)
-        self.assertNotEqual(state.attributes.get('longitude'), 1.0)
+        self.assertIsNone(self.hass.states.get(entity_id))

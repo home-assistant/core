@@ -126,7 +126,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertNotEqual(location, self.hass.states.get(entity_id).state)
+        self.assertIsNone(self.hass.states.get(entity_id))
 
     def test_multi_level_wildcard_topic_not_matching(self):
         """Test not matching multi level wildcard topic."""
@@ -145,4 +145,4 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertNotEqual(location, self.hass.states.get(entity_id).state)
+        self.assertIsNone(self.hass.states.get(entity_id))
