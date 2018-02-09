@@ -41,32 +41,26 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
 
-    dev_id_lookup = {}
-
-    @callback
-    def async_tracker_message_received(topic, payload, qos):
-        """Handle received MQTT message."""
-        dev_id = dev_id_lookup[topic]
-
-        try:
-            data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(payload))
-        except vol.MultipleInvalid:
-            _LOGGER.error("Skipping update for following data "
-                          "because of missing or malformatted data: %s",
-                          payload)
-            return
-        except ValueError:
-            _LOGGER.error("Error parsing JSON payload: %s", payload)
-            return
-
-        kwargs = _parse_see_args(dev_id, data)
-        hass.async_add_job(
-            async_see(**kwargs))
-
     for dev_id, topic in devices.items():
-        dev_id_lookup[topic] = dev_id
+        @callback
+        def async_message_received(topic, payload, qos, dev_id=dev_id):
+            """Handle received MQTT message."""
+            try:
+                data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(payload))
+            except vol.MultipleInvalid:
+                _LOGGER.error("Skipping update for following data "
+                              "because of missing or malformatted data: %s",
+                              payload)
+                return
+            except ValueError:
+                _LOGGER.error("Error parsing JSON payload: %s", payload)
+                return
+
+            kwargs = _parse_see_args(dev_id, data)
+            hass.async_add_job(async_see(**kwargs))
+
         yield from mqtt.async_subscribe(
-            hass, topic, async_tracker_message_received, qos)
+            hass, topic, async_message_received, qos)
 
     return True
 
