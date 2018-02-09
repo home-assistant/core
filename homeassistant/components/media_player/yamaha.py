@@ -30,7 +30,7 @@ CONF_SOURCE_IGNORE = 'source_ignore'
 CONF_ZONE_NAMES = 'zone_names'
 CONF_ZONE_IGNORE = 'zone_ignore'
 
-DEFAULT_NAME = 'Yamaha Receiver'
+DEFAULT_NAME = "Yamaha Receiver"
 DATA_YAMAHA = 'yamaha_known_receivers'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass.data[DATA_YAMAHA][device.unique_id] = device
             devices.append(device)
         else:
-            _LOGGER.debug('Ignoring duplicate receiver %s', name)
+            _LOGGER.debug("Ignoring duplicate receiver %s", name)
 
     def service_handler(service):
         """Handle for services."""
@@ -192,7 +192,7 @@ class YamahaDevice(MediaPlayerDevice):
         zone_name = self._zone_names.get(self._zone, self._zone)
         if zone_name != "Main_Zone":
             # Zone will be one of Main_Zone, Zone_2, Zone_3
-            name += " " + zone_name.replace('_', ' ')
+            name += ' ' + zone_name.replace('_', ' ')
         return name
 
     @property
@@ -257,15 +257,15 @@ class YamahaDevice(MediaPlayerDevice):
 
     def media_play(self):
         """Send play command."""
-        self._call_playback_function(self.receiver.play, "play")
+        self._call_playback_function(self.receiver.play, 'play')
 
     def media_pause(self):
         """Send pause command."""
-        self._call_playback_function(self.receiver.pause, "pause")
+        self._call_playback_function(self.receiver.pause, 'pause')
 
     def media_stop(self):
         """Send stop command."""
-        self._call_playback_function(self.receiver.stop, "stop")
+        self._call_playback_function(self.receiver.stop, 'stop')
 
     def media_previous_track(self):
         """Send previous track command."""

@@ -29,7 +29,7 @@ DEPENDENCIES = ['group']
 
 SCAN_INTERVAL = timedelta(seconds=20)
 
-GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
+GROUP_NAME_ALL_VACUUMS = "all vacuum cleaners"
 ENTITY_ID_ALL_VACUUMS = group.ENTITY_ID_FORMAT.format('all_vacuum_cleaners')
 
 ATTR_BATTERY_ICON = 'battery_icon'
@@ -75,7 +75,7 @@ SERVICE_TO_METHOD = {
                            'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
 }
 
-DEFAULT_NAME = 'Vacuum cleaner robot'
+DEFAULT_NAME = "Vacuum cleaner robot"
 DEFAULT_ICON = 'mdi:roomba'
 
 SUPPORT_TURN_ON = 1

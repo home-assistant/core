@@ -32,7 +32,7 @@ CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
 DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
-STATE_CIRCULATE = "circulate"
+STATE_CIRCULATE = 'circulate'
 
 OPERATION_LIST = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 CT30_FAN_OPERATION_LIST = [STATE_ON, STATE_AUTO]
@@ -242,7 +242,7 @@ class RadioThermostat(ClimateDevice):
 
         current_temp = data['temp']
         if current_temp == -1:
-            _LOGGER.error('%s (%s) was busy (temp == -1)', self._name,
+            _LOGGER.error("%s (%s) was busy (temp == -1)", self._name,
                           self.device.host)
             return
 

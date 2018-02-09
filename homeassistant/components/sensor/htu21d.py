@@ -28,7 +28,7 @@ DEFAULT_I2C_BUS = 1
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-DEFAULT_NAME = 'HTU21D Sensor'
+DEFAULT_NAME = "HTU21D Sensor"
 
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'

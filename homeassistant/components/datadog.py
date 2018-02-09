@@ -57,12 +57,12 @@ def setup(hass, config):
             title="Home Assistant",
             text="%%% \n **{}** {} \n %%%".format(name, message),
             tags=[
-                "entity:{}".format(event.data.get('entity_id')),
-                "domain:{}".format(event.data.get('domain'))
+                'entity:{}'.format(event.data.get('entity_id')),
+                'domain:{}'.format(event.data.get('domain'))
             ]
         )
 
-        _LOGGER.debug('Sent event %s', event.data.get('entity_id'))
+        _LOGGER.debug("Sent event %s", event.data.get('entity_id'))
 
     def state_changed_listener(event):
         """Listen for new messages on the bus and sends them to Datadog."""
@@ -75,12 +75,12 @@ def setup(hass, config):
             return
 
         states = dict(state.attributes)
-        metric = "{}.{}".format(prefix, state.domain)
-        tags = ["entity:{}".format(state.entity_id)]
+        metric = '{}.{}'.format(prefix, state.domain)
+        tags = ['entity:{}'.format(state.entity_id)]
 
         for key, value in states.items():
             if isinstance(value, (float, int)):
-                attribute = "{}.{}".format(metric, key.replace(' ', '_'))
+                attribute = '{}.{}'.format(metric, key.replace(' ', '_'))
                 statsd.gauge(
                     attribute, value, sample_rate=sample_rate, tags=tags)
 
@@ -96,7 +96,7 @@ def setup(hass, config):
 
         statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
 
-        _LOGGER.debug('Sent metric %s: %s (tags: %s)', metric, value, tags)
+        _LOGGER.debug("Sent metric %s: %s (tags: %s)", metric, value, tags)
 
     hass.bus.listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
     hass.bus.listen(EVENT_STATE_CHANGED, state_changed_listener)

@@ -30,7 +30,7 @@ def set_arm_state(state, code=None):
     """Send set arm state command."""
     transaction_id = hub.session.set_arm_state(code, state)[
         'armStateChangeTransactionId']
-    _LOGGER.info('verisure set arm state %s', state)
+    _LOGGER.info("verisure set arm state %s", state)
     transaction = {}
     while 'result' not in transaction:
         sleep(0.5)
@@ -79,7 +79,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         elif status == 'ARMED_AWAY':
             self._state = STATE_ALARM_ARMED_AWAY
         elif status != 'PENDING':
-            _LOGGER.error('Unknown alarm state %s', status)
+            _LOGGER.error("Unknown alarm state %s", status)
         self._changed_by = hub.get_first("$.armState.name")
 
     def alarm_disarm(self, code=None):

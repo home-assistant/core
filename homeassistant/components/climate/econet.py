@@ -49,11 +49,11 @@ DELETE_VACATION_SCHEMA = vol.Schema({
 ECONET_DATA = 'econet'
 
 HA_STATE_TO_ECONET = {
-    STATE_ECO: 'Energy Saver',
+    STATE_ECO: "Energy Saver",
     STATE_ELECTRIC: 'Electric',
-    STATE_HEAT_PUMP: 'Heat Pump',
+    STATE_HEAT_PUMP: "Heat Pump",
     STATE_GAS: 'gas',
-    STATE_HIGH_DEMAND: 'High Demand',
+    STATE_HIGH_DEMAND: "High Demand",
     STATE_OFF: 'Off',
     STATE_PERFORMANCE: 'Performance'
 }
@@ -152,7 +152,7 @@ class EcoNetWaterHeater(ClimateDevice):
         """
         Return current operation as one of the following.
 
-        ["eco", "heat_pump", "high_demand", "electric_only"]
+        ['eco', 'heat_pump', 'high_demand', 'electric_only']
         """
         current_op = ECONET_STATE_TO_HA.get(self.water_heater.mode)
         return current_op

@@ -108,7 +108,7 @@ class LuciDeviceScanner(DeviceScanner):
                 # Check if the Flags for each device contain
                 # NUD_REACHABLE and if so, add it to last_results
                 if int(device_entry['Flags'], 16) & 0x2:
-                    self.last_results.append(device_entry['HW address'])
+                    self.last_results.append(device_entry["HW address"])
 
             return True
 
@@ -146,7 +146,7 @@ def _req_json_rpc(url, method, *args, **kwargs):
         raise InvalidLuciTokenError
 
     else:
-        _LOGGER.error('Invalid response from luci: %s', res)
+        _LOGGER.error("Invalid response from luci: %s", res)
 
 
 def _get_token(host, username, password):

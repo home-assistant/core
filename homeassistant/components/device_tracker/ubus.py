@@ -149,10 +149,10 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
         if self.leasefile is None:
             result = _req_json_rpc(
                 self.url, self.session_id, 'call', 'uci', 'get',
-                config="dhcp", type="dnsmasq")
+                config='dhcp', type='dnsmasq')
             if result:
-                values = result["values"].values()
-                self.leasefile = next(iter(values))["leasefile"]
+                values = result['values'].values()
+                self.leasefile = next(iter(values))['leasefile']
             else:
                 return
 
@@ -161,8 +161,8 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
             path=self.leasefile)
         if result:
             self.mac2name = dict()
-            for line in result["data"].splitlines():
-                hosts = line.split(" ")
+            for line in result['data'].splitlines():
+                hosts = line.split(' ')
                 self.mac2name[hosts[1].upper()] = hosts[3]
         else:
             # Error, handled in the _req_json_rpc
@@ -177,11 +177,11 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
             self.url, self.session_id, 'call', 'dhcp', 'ipv4leases')
         if result:
             self.mac2name = dict()
-            for device in result["device"].values():
+            for device in result['device'].values():
                 for lease in device['leases']:
                     mac = lease['mac']  # mac = aabbccddeeff
                     # Convert it to expected format with colon
-                    mac = ":".join(mac[i:i+2] for i in range(0, len(mac), 2))
+                    mac = ':'.join(mac[i:i+2] for i in range(0, len(mac), 2))
                     self.mac2name[mac.upper()] = lease['hostname']
         else:
             # Error, handled in the _req_json_rpc
@@ -213,13 +213,13 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
             else:
                 raise HomeAssistantError(response['error']['message'])
 
-        if rpcmethod == "call":
+        if rpcmethod == 'call':
             try:
-                return response["result"][1]
+                return response['result'][1]
             except IndexError:
                 return
         else:
-            return response["result"]
+            return response['result']
 
 
 def _get_session_id(url, username, password):

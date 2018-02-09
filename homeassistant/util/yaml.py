@@ -80,7 +80,7 @@ def dump(_dict: dict) -> str:
     """Dump YAML to a string and remove null."""
     return yaml.safe_dump(
         _dict, default_flow_style=False, allow_unicode=True) \
-        .replace(': null\n', ':\n')
+        .replace(": null\n", ':\n')
 
 
 def save_yaml(path, data):
@@ -229,7 +229,7 @@ def _load_secret_yaml(secret_path: str) -> Dict:
     if secret_path in __SECRET_CACHE:
         return __SECRET_CACHE[secret_path]
 
-    _LOGGER.debug('Loading %s', secret_path)
+    _LOGGER.debug("Loading %s", secret_path)
     try:
         secrets = load_yaml(secret_path)
         if 'logger' in secrets:

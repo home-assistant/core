@@ -12,11 +12,11 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_DEVICES
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["nuheat==0.3.0"]
+REQUIREMENTS = ['nuheat==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "nuheat"
+DOMAIN = 'nuheat'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -41,5 +41,5 @@ def setup(hass, config):
     api.authenticate()
     hass.data[DOMAIN] = (api, devices)
 
-    discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+    discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
     return True

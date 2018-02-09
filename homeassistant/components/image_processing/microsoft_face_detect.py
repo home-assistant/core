@@ -98,7 +98,7 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
         try:
             face_data = yield from self._api.call_api(
                 'post', 'detect', image, binary=True,
-                params={'returnFaceAttributes': ",".join(self._attributes)})
+                params={'returnFaceAttributes': ','.join(self._attributes)})
 
         except HomeAssistantError as err:
             _LOGGER.error("Can't process image on microsoft face: %s", err)

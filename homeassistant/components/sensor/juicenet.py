@@ -15,13 +15,13 @@ DEPENDENCIES = ['juicenet']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'status': ['Charging Status', None],
+    'status': ["Charging Status", None],
     'temperature': ['Temperature', TEMP_CELSIUS],
     'voltage': ['Voltage', 'V'],
     'amps': ['Amps', 'A'],
     'watts': ['Watts', 'W'],
-    'charge_time': ['Charge time', 's'],
-    'energy_added': ['Energy added', 'Wh']
+    'charge_time': ["Charge time", 's'],
+    'energy_added': ["Energy added", 'Wh']
 }
 
 

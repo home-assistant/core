@@ -42,12 +42,12 @@ DEFAULT_THEME_COLOR = '#03A9F4'
 
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
-    'description': 'Open-source home automation platform running on Python 3.',
+    'description': "Open-source home automation platform running on Python 3.",
     'dir': 'ltr',
     'display': 'standalone',
     'icons': [],
     'lang': 'en-US',
-    'name': 'Home Assistant',
+    'name': "Home Assistant",
     'short_name': 'Assistant',
     'start_url': '/states',
     'theme_color': DEFAULT_THEME_COLOR
@@ -223,7 +223,7 @@ class ExternalPanel(AbstractPanel):
                 self.md5 = yield from hass.async_add_job(
                     _fingerprint, self.path)
         except OSError:
-            _LOGGER.error('Cannot find or access %s at %s',
+            _LOGGER.error("Cannot find or access %s at %s",
                           self.component_name, self.path)
             hass.data[DATA_PANELS].pop(self.frontend_url_path)
             return
@@ -299,9 +299,9 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels",
-                        "hassio"]:
+        for subpath in ['src', 'build-translations', 'build-temp', 'build',
+                        'hass_frontend', 'bower_components', 'panels',
+                        'hassio']:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),
                 os.path.join(repo_path, subpath),
@@ -334,16 +334,16 @@ def async_setup(hass, config):
     hass.http.register_static_path(
         "/service_worker.js", sw_path_latest, False)
     hass.http.register_static_path(
-        "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
-    hass.http.register_static_path("/static", static_path, not is_dev)
+        '/robots.txt', os.path.join(static_path, 'robots.txt'), not is_dev)
+    hass.http.register_static_path('/static', static_path, not is_dev)
     hass.http.register_static_path(
         "/frontend_latest", frontend_latest_path, not is_dev)
     hass.http.register_static_path(
-        "/frontend_es5", frontend_es5_path, not is_dev)
+        '/frontend_es5', frontend_es5_path, not is_dev)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
-        hass.http.register_static_path("/local", local, not is_dev)
+        hass.http.register_static_path('/local', local, not is_dev)
 
     index_view = IndexView(repo_path, js_version)
     hass.http.register_view(index_view)
@@ -586,9 +586,9 @@ def _is_latest(js_option, request):
 
     family_min_version = {
         'Chrome': 54,          # Object.values
-        'Chrome Mobile': 54,
+        "Chrome Mobile": 54,
         'Firefox': 47,         # Object.values
-        'Firefox Mobile': 47,
+        "Firefox Mobile": 47,
         'Opera': 41,           # Object.values
         'Edge': 14,            # Array.prototype.includes added in 14
         'Safari': 10,          # Many features not supported by 9

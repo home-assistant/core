@@ -26,7 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 CONF_FUNCTIONS = 'functions'
 CONF_PINS = 'pins'
 
-DEFAULT_NAME = 'aREST sensor'
+DEFAULT_NAME = "aREST sensor"
 
 PIN_VARIABLE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,

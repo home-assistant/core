@@ -17,15 +17,15 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-CONF_REGISTER = "register"
-CONF_REGISTERS = "registers"
-CONF_VERIFY_STATE = "verify_state"
-CONF_VERIFY_REGISTER = "verify_register"
-CONF_REGISTER_TYPE = "register_type"
-CONF_STATE_ON = "state_on"
-CONF_STATE_OFF = "state_off"
+CONF_COIL = 'coil'
+CONF_COILS = 'coils'
+CONF_REGISTER = 'register'
+CONF_REGISTERS = 'registers'
+CONF_VERIFY_STATE = 'verify_state'
+CONF_VERIFY_REGISTER = 'verify_register'
+CONF_REGISTER_TYPE = 'register_type'
+CONF_STATE_ON = 'state_on'
+CONF_STATE_OFF = 'state_off'
 
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
@@ -119,7 +119,7 @@ class ModbusCoilSwitch(ToggleEntity):
             self._is_on = bool(result.bits[0])
         except AttributeError:
             _LOGGER.error(
-                'No response from modbus slave %s coil %s',
+                "No response from modbus slave %s coil %s",
                 self._slave,
                 self._coil)
 
@@ -193,7 +193,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             value = int(result.registers[0])
         except AttributeError:
             _LOGGER.error(
-                'No response from modbus slave %s register %s',
+                "No response from modbus slave %s register %s",
                 self._slave,
                 self._verify_register)
 
@@ -203,8 +203,8 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._is_on = False
         else:
             _LOGGER.error(
-                'Unexpected response from modbus slave %s '
-                'register %s, got 0x%2x',
+                "Unexpected response from modbus slave %s "
+                "register %s, got 0x%2x",
                 self._slave,
                 self._verify_register,
                 value)

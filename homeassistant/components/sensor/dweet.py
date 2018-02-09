@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE = 'device'
 
-DEFAULT_NAME = 'Dweet.io Sensor'
+DEFAULT_NAME = "Dweet.io Sensor"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 

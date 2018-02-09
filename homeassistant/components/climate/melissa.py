@@ -186,7 +186,7 @@ class MelissaClimate(ClimateDevice):
             )['controller']['_relation']['command_log']
         except KeyError:
             _LOGGER.warning(
-                'Unable to update entity %s', self.entity_id)
+                "Unable to update entity %s", self.entity_id)
 
     def melissa_state_to_hass(self, state):
         """Translate Melissa states to hass states."""

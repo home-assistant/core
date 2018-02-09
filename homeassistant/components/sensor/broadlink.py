@@ -24,12 +24,12 @@ REQUIREMENTS = ['broadlink==0.5']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_UPDATE_INTERVAL = 'update_interval'
-DEVICE_DEFAULT_NAME = 'Broadlink sensor'
+DEVICE_DEFAULT_NAME = "Broadlink sensor"
 DEFAULT_TIMEOUT = 10
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS],
-    'air_quality': ['Air Quality', ' '],
+    'air_quality': ["Air Quality", ' '],
     'humidity': ['Humidity', '%'],
     'light': ['Light', ' '],
     'noise': ['Noise', ' '],

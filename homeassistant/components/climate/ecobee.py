@@ -273,10 +273,10 @@ class Thermostat(ClimateDevice):
             operation = status
         return {
             "actual_humidity": self.thermostat['runtime']['actualHumidity'],
-            "fan": self.fan,
-            "mode": self.mode,
-            "operation": operation,
-            "climate_list": self.climate_list,
+            'fan': self.fan,
+            'mode': self.mode,
+            'operation': operation,
+            'climate_list': self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
         }
 

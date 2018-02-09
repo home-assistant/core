@@ -69,9 +69,9 @@ class HMCover(HMDevice, CoverDevice):
 
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""
-        self._state = "LEVEL"
+        self._state = 'LEVEL'
         self._data.update({self._state: STATE_UNKNOWN})
-        if "LEVEL_2" in self._hmdevice.WRITENODE:
+        if 'LEVEL_2' in self._hmdevice.WRITENODE:
             self._data.update(
                 {'LEVEL_2': STATE_UNKNOWN})
 
@@ -88,7 +88,7 @@ class HMCover(HMDevice, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if "LEVEL_2" in self._data and ATTR_TILT_POSITION in kwargs:
+        if 'LEVEL_2' in self._data and ATTR_TILT_POSITION in kwargs:
             position = float(kwargs[ATTR_TILT_POSITION])
             position = min(100, max(0, position))
             level = position / 100.0
@@ -96,15 +96,15 @@ class HMCover(HMDevice, CoverDevice):
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        if "LEVEL_2" in self._data:
+        if 'LEVEL_2' in self._data:
             self._hmdevice.open_slats()
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        if "LEVEL_2" in self._data:
+        if 'LEVEL_2' in self._data:
             self._hmdevice.close_slats()
 
     def stop_cover_tilt(self, **kwargs):
         """Stop cover tilt."""
-        if "LEVEL_2" in self._data:
+        if 'LEVEL_2' in self._data:
             self.stop_cover(**kwargs)

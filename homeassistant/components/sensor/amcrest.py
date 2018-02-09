@@ -82,20 +82,20 @@ class AmcrestSensor(Entity):
 
         try:
             version, build_date = self._camera.software_information
-            self._attrs['Build Date'] = build_date.split('=')[-1]
+            self._attrs["Build Date"] = build_date.split('=')[-1]
             self._attrs['Version'] = version.split('=')[-1]
         except ValueError:
-            self._attrs['Build Date'] = 'Not Available'
-            self._attrs['Version'] = 'Not Available'
+            self._attrs["Build Date"] = "Not Available"
+            self._attrs['Version'] = "Not Available"
 
         try:
-            self._attrs['Serial Number'] = self._camera.serial_number
+            self._attrs["Serial Number"] = self._camera.serial_number
         except ValueError:
-            self._attrs['Serial Number'] = 'Not Available'
+            self._attrs["Serial Number"] = "Not Available"
 
         if self._sensor_type == 'motion_detector':
             self._state = self._camera.is_motion_detected
-            self._attrs['Record Mode'] = self._camera.record_mode
+            self._attrs["Record Mode"] = self._camera.record_mode
 
         elif self._sensor_type == 'ptz_preset':
             self._state = self._camera.ptz_presets_count
@@ -103,6 +103,6 @@ class AmcrestSensor(Entity):
         elif self._sensor_type == 'sdcard':
             sd_used = self._camera.storage_used
             sd_total = self._camera.storage_total
-            self._attrs['Total'] = '{0} {1}'.format(*sd_total)
-            self._attrs['Used'] = '{0} {1}'.format(*sd_used)
+            self._attrs['Total'] = "{0} {1}".format(*sd_total)
+            self._attrs['Used'] = "{0} {1}".format(*sd_used)
             self._state = self._camera.storage_used_percent

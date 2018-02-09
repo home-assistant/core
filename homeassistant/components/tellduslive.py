@@ -20,7 +20,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.json import load_json, save_json
 import voluptuous as vol
 
-APPLICATION_NAME = 'Home Assistant'
+APPLICATION_NAME = "Home Assistant"
 
 DOMAIN = 'tellduslive'
 
@@ -82,9 +82,9 @@ def setup(hass, config, session=None):
         if hass.data[KEY_CONFIG].get(data_key):
             return
 
-        _LOGGER.info('Configuring TelldusLive %s',
-                     'local client: {}'.format(host) if host else
-                     'cloud service')
+        _LOGGER.info("Configuring TelldusLive %s",
+                     "local client: {}".format(host) if host else
+                     "cloud service")
 
         session = Session(public_key=PUBLIC_KEY,
                           private_key=NOT_SO_PRIVATE_KEY,
@@ -93,10 +93,10 @@ def setup(hass, config, session=None):
 
         auth_url = session.authorize_url
         if not auth_url:
-            _LOGGER.warning('Failed to retrieve authorization URL')
+            _LOGGER.warning("Failed to retrieve authorization URL")
             return
 
-        _LOGGER.debug('Got authorization URL %s', auth_url)
+        _LOGGER.debug("Got authorization URL %s", auth_url)
 
         def configuration_callback(callback_data):
             """Handle the submitted configuration."""
@@ -105,7 +105,7 @@ def setup(hass, config, session=None):
             if not res:
                 configurator.notify_errors(
                     hass.data[KEY_CONFIG].get(data_key),
-                    'Unable to connect.')
+                    "Unable to connect.")
                 return
 
             conf.update(
@@ -122,9 +122,9 @@ def setup(hass, config, session=None):
 
         hass.data[KEY_CONFIG][data_key] = \
             configurator.request_config(
-                'TelldusLive ({})'.format(
+                "TelldusLive ({})".format(
                     'LocalAPI' if host
-                    else 'Cloud service'),
+                    else "Cloud service"),
                 configuration_callback,
                 description=CONFIG_INSTRUCTIONS.format(
                     app_name=APPLICATION_NAME,
@@ -135,25 +135,25 @@ def setup(hass, config, session=None):
 
     def tellstick_discovered(service, info):
         """Run when a Tellstick is discovered."""
-        _LOGGER.info('Discovered tellstick device')
+        _LOGGER.info("Discovered tellstick device")
 
         if DOMAIN in hass.data:
-            _LOGGER.debug('Tellstick already configured')
+            _LOGGER.debug("Tellstick already configured")
             return
 
         host, device = info[:2]
 
         if not supports_local_api(device):
-            _LOGGER.debug('Tellstick does not support local API')
+            _LOGGER.debug("Tellstick does not support local API")
             # Configure the cloud service
             hass.async_add_job(request_configuration)
             return
 
-        _LOGGER.debug('Tellstick does support local API')
+        _LOGGER.debug("Tellstick does support local API")
 
         # Ignore any known devices
         if conf and host in conf:
-            _LOGGER.debug('Discovered already known device: %s', host)
+            _LOGGER.debug("Discovered already known device: %s", host)
             return
 
         # Offer configuration of both live and local API
@@ -163,34 +163,34 @@ def setup(hass, config, session=None):
     discovery.listen(hass, SERVICE_TELLDUSLIVE, tellstick_discovered)
 
     if session:
-        _LOGGER.debug('Continuing setup configured by configurator')
+        _LOGGER.debug("Continuing setup configured by configurator")
     elif conf and CONF_HOST in next(iter(conf.values())):
         #  For now, only one local device is supported
-        _LOGGER.debug('Using Local API pre-configured by configurator')
+        _LOGGER.debug("Using Local API pre-configured by configurator")
         session = Session(**next(iter(conf.values())))
     elif DOMAIN in conf:
-        _LOGGER.debug('Using TelldusLive cloud service '
-                      'pre-configured by configurator')
+        _LOGGER.debug("Using TelldusLive cloud service "
+                      "pre-configured by configurator")
         session = Session(PUBLIC_KEY, NOT_SO_PRIVATE_KEY,
                           application=APPLICATION_NAME, **conf[DOMAIN])
     elif config.get(DOMAIN):
-        _LOGGER.info('Found entry in configuration.yaml. '
-                     'Requesting TelldusLive cloud service configuration')
+        _LOGGER.info("Found entry in configuration.yaml. "
+                     "Requesting TelldusLive cloud service configuration")
         request_configuration()
 
         if CONF_HOST in config.get(DOMAIN, {}):
-            _LOGGER.info('Found TelldusLive host entry in configuration.yaml. '
-                         'Requesting Telldus Local API configuration')
+            _LOGGER.info("Found TelldusLive host entry in configuration.yaml. "
+                         "Requesting Telldus Local API configuration")
             request_configuration(config.get(DOMAIN).get(CONF_HOST))
 
         return True
     else:
-        _LOGGER.info('Tellstick discovered, awaiting discovery callback')
+        _LOGGER.info("Tellstick discovered, awaiting discovery callback")
         return True
 
     if not session.is_authorized:
         _LOGGER.error(
-            'Authentication Error')
+            "Authentication Error")
         return False
 
     client = TelldusLiveClient(hass, config, session)
@@ -217,7 +217,7 @@ class TelldusLiveClient(object):
 
         self._interval = config.get(DOMAIN, {}).get(
             CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
-        _LOGGER.debug('Update interval %s', self._interval)
+        _LOGGER.debug("Update interval %s", self._interval)
         self._client = session
 
     def update(self, *args):
@@ -232,7 +232,7 @@ class TelldusLiveClient(object):
     def _sync(self):
         """Update local list of devices."""
         if not self._client.update():
-            _LOGGER.warning('Failed request')
+            _LOGGER.warning("Failed request")
 
         def identify_device(device):
             """Find out what type of HA component to create."""
@@ -287,7 +287,7 @@ class TelldusLiveEntity(Entity):
         self._client = hass.data[DOMAIN]
         self._client.entities.append(self)
         self._name = self.device.name
-        _LOGGER.debug('Created device %s', self)
+        _LOGGER.debug("Created device %s", self)
 
     def changed(self):
         """Return the property of the device might have changed."""

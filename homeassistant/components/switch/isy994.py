@@ -45,12 +45,12 @@ class ISYSwitchDevice(ISYDevice, SwitchDevice):
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch."""
         if not self._node.off():
-            _LOGGER.debug('Unable to turn on switch.')
+            _LOGGER.debug("Unable to turn on switch.")
 
     def turn_on(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch."""
         if not self._node.on():
-            _LOGGER.debug('Unable to turn on switch.')
+            _LOGGER.debug("Unable to turn on switch.")
 
 
 class ISYSwitchProgram(ISYSwitchDevice):
@@ -70,9 +70,9 @@ class ISYSwitchProgram(ISYSwitchDevice):
     def turn_on(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch program."""
         if not self._actions.runThen():
-            _LOGGER.error('Unable to turn on switch')
+            _LOGGER.error("Unable to turn on switch")
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch program."""
         if not self._actions.runElse():
-            _LOGGER.error('Unable to turn off switch')
+            _LOGGER.error("Unable to turn off switch")

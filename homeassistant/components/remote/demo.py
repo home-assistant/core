@@ -12,8 +12,8 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the demo remotes."""
     add_devices_callback([
-        DemoRemote('Remote One', False, None),
-        DemoRemote('Remote Two', True, 'mdi:remote'),
+        DemoRemote("Remote One", False, None),
+        DemoRemote("Remote Two", True, 'mdi:remote'),
     ])
 
 

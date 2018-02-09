@@ -19,7 +19,7 @@ REQUIREMENTS = ['transmissionrpc==0.11']
 
 _LOGGING = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Transmission Turtle Mode'
+DEFAULT_NAME = "Transmission Turtle Mode"
 DEFAULT_PORT = 9091
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

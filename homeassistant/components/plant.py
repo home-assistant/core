@@ -81,7 +81,7 @@ PLANT_SCHEMA = vol.Schema({
 DOMAIN = 'plant'
 DEPENDENCIES = ['zone', 'group']
 
-GROUP_NAME_ALL_PLANTS = 'all plants'
+GROUP_NAME_ALL_PLANTS = "all plants"
 ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
 
 CONFIG_SCHEMA = vol.Schema({
@@ -351,7 +351,7 @@ class DailyHistory(object):
             elif day > current_day:
                 self._add_day(day, value)
             else:
-                _LOGGER.warning('received old measurement, not storing it!')
+                _LOGGER.warning("received old measurement, not storing it!")
 
         self.max = max(self._max_dict.values())
 

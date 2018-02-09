@@ -170,12 +170,12 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
     try:
         if url is not None:
             # Load photo from URL
-            params = {"timeout": 15}
+            params = {'timeout': 15}
             if username is not None and password is not None:
                 if authentication == HTTP_DIGEST_AUTHENTICATION:
-                    params["auth"] = HTTPDigestAuth(username, password)
+                    params['auth'] = HTTPDigestAuth(username, password)
                 else:
-                    params["auth"] = HTTPBasicAuth(username, password)
+                    params['auth'] = HTTPBasicAuth(username, password)
             retry_num = 0
             while retry_num < num_retries:
                 req = requests.get(url, **params)
@@ -195,7 +195,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                             url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
-                return open(filepath, "rb")
+                return open(filepath, 'rb')
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
@@ -373,7 +373,7 @@ class TelegramNotificationService:
             from telegram import InlineKeyboardButton
             buttons = []
             if isinstance(row_keyboard, str):
-                for key in row_keyboard.split(","):
+                for key in row_keyboard.split(','):
                     if ':/' in key:
                         # commands like: 'Label:/cmd' become ('Label', '/cmd')
                         label = key.split(':/')[0]
@@ -421,7 +421,7 @@ class TelegramNotificationService:
                 keys = data.get(ATTR_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
                 params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
-                    [[key.strip() for key in row.split(",")] for row in keys])
+                    [[key.strip() for key in row.split(',')] for row in keys])
             elif ATTR_KEYBOARD_INLINE in data:
                 from telegram import InlineKeyboardMarkup
                 keys = data.get(ATTR_KEYBOARD_INLINE)

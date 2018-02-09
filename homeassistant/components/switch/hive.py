@@ -24,9 +24,9 @@ class HiveDevicePlug(SwitchDevice):
 
     def __init__(self, hivesession, hivedevice):
         """Initialize the Switch device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
+        self.node_id = hivedevice['Hive_NodeID']
+        self.node_name = hivedevice['Hive_NodeName']
+        self.device_type = hivedevice['HA_DeviceType']
         self.session = hivesession
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)

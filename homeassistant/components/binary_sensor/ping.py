@@ -26,7 +26,7 @@ ATTR_ROUND_TRIP_TIME_MIN = 'round_trip_time_min'
 
 CONF_PING_COUNT = 'count'
 
-DEFAULT_NAME = 'Ping Binary sensor'
+DEFAULT_NAME = "Ping Binary sensor"
 DEFAULT_PING_COUNT = 5
 DEFAULT_DEVICE_CLASS = 'connectivity'
 

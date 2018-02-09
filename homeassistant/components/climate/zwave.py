@@ -18,7 +18,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NAME = 'name'
-DEFAULT_NAME = 'Z-Wave Climate'
+DEFAULT_NAME = "Z-Wave Climate"
 
 REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377

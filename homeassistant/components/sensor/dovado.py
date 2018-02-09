@@ -32,15 +32,15 @@ SENSOR_NETWORK = 'network'
 SENSOR_SMS_UNREAD = 'sms'
 
 SENSORS = {
-    SENSOR_NETWORK: ('signal strength', 'Network', None,
+    SENSOR_NETWORK: ("signal strength", 'Network', None,
                      'mdi:access-point-network'),
-    SENSOR_SIGNAL: ('signal strength', 'Signal Strength', '%',
+    SENSOR_SIGNAL: ("signal strength", "Signal Strength", '%',
                     'mdi:signal'),
-    SENSOR_SMS_UNREAD: ('sms unread', 'SMS unread', '',
+    SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", '',
                         'mdi:message-text-outline'),
-    SENSOR_UPLOAD: ('traffic modem tx', 'Sent', 'GB',
+    SENSOR_UPLOAD: ("traffic modem tx", 'Sent', 'GB',
                     'mdi:cloud-upload'),
-    SENSOR_DOWNLOAD: ('traffic modem rx', 'Received', 'GB',
+    SENSOR_DOWNLOAD: ("traffic modem rx", 'Received', 'GB',
                       'mdi:cloud-download'),
 }
 
@@ -102,13 +102,13 @@ class Dovado:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-        _LOGGER.info("Updating")
+        _LOGGER.info('Updating')
         try:
             self.state = self._dovado.state or {}
             if not self.state:
                 return False
             self.state.update(
-                connected=self.state.get("modem status") == "CONNECTED")
+                connected=self.state.get("modem status") == 'CONNECTED')
             _LOGGER.debug("Received: %s", self.state)
             return True
         except OSError as error:
@@ -127,7 +127,7 @@ class DovadoSensor(Entity):
     def _compute_state(self):
         state = self._dovado.state.get(SENSORS[self._sensor][0])
         if self._sensor == SENSOR_NETWORK:
-            match = re.search(r"\((.+)\)", state)
+            match = re.search(r'\((.+)\)', state)
             return match.group(1) if match else None
         elif self._sensor == SENSOR_SIGNAL:
             try:

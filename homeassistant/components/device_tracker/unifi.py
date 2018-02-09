@@ -28,7 +28,7 @@ DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
 NOTIFICATION_ID = 'unifi_notification'
-NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
+NOTIFICATION_TITLE = "Unifi Device Tracker Setup"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -61,10 +61,10 @@ def get_scanner(hass, config):
     except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
         hass.components.persistent_notification.create(
-            'Failed to connect to Unifi. '
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Failed to connect to Unifi. "
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

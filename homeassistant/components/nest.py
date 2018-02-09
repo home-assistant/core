@@ -67,14 +67,14 @@ def request_configuration(nest, hass, config):
         setup_nest(hass, nest, config, pin=pin)
 
     _CONFIGURING['nest'] = configurator.request_config(
-        "Nest", nest_configuration_callback,
-        description=('To configure Nest, click Request Authorization below, '
-                     'log into your Nest account, '
-                     'and then enter the resulting PIN'),
-        link_name='Request Authorization',
+        'Nest', nest_configuration_callback,
+        description=("To configure Nest, click Request Authorization below, "
+                     "log into your Nest account, "
+                     "and then enter the resulting PIN"),
+        link_name="Request Authorization",
         link_url=nest.authorize_url,
-        submit_caption="Confirm",
-        fields=[{'id': 'pin', 'name': 'Enter the PIN', 'type': ''}]
+        submit_caption='Confirm',
+        fields=[{'id': 'pin', 'name': "Enter the PIN", 'type': ''}]
     )
 
 

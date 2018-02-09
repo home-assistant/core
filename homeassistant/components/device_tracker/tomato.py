@@ -55,14 +55,14 @@ class TomatoDeviceScanner(DeviceScanner):
 
         self.req = requests.Request(
             'POST', 'http{}://{}:{}/update.cgi'.format(
-                "s" if self.ssl else "", host, port
+                's' if self.ssl else "", host, port
             ),
             data={'_http_id': http_id, 'exec': 'devlist'},
             auth=requests.auth.HTTPBasicAuth(username, password)).prepare()
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
-        self.last_results = {"wldev": [], "dhcpd_lease": []}
+        self.last_results = {'wldev': [], 'dhcpd_lease': []}
 
         self.success_init = self._update_tomato_info()
 
@@ -87,7 +87,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
 
         try:
             if self.ssl:

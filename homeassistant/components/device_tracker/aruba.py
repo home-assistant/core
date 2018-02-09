@@ -85,15 +85,15 @@ class ArubaDeviceScanner(DeviceScanner):
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
         import pexpect
-        connect = 'ssh {}@{}'
+        connect = "ssh {}@{}"
         ssh = pexpect.spawn(connect.format(self.username, self.host))
         query = ssh.expect(['password:', pexpect.TIMEOUT, pexpect.EOF,
-                            'continue connecting (yes/no)?',
-                            'Host key verification failed.',
-                            'Connection refused',
-                            'Connection timed out'], timeout=120)
+                            "continue connecting (yes/no)?",
+                            "Host key verification failed.",
+                            "Connection refused",
+                            "Connection timed out"], timeout=120)
         if query == 1:
-            _LOGGER.error("Timeout")
+            _LOGGER.error('Timeout')
             return
         elif query == 2:
             _LOGGER.error("Unexpected response from router")
@@ -112,7 +112,7 @@ class ArubaDeviceScanner(DeviceScanner):
             return
         ssh.sendline(self.password)
         ssh.expect('#')
-        ssh.sendline('show clients')
+        ssh.sendline("show clients")
         ssh.expect('#')
         devices_result = ssh.before.split(b'\r\n')
         ssh.sendline('exit')

@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
-DEFAULT_NAME = 'ADS Light'
+DEFAULT_NAME = "ADS Light"
 CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
@@ -55,13 +55,13 @@ class AdsLight(Light):
         """Register device notification."""
         def update_on_state(name, value):
             """Handle device notifications for state."""
-            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._on_state = value
             self.schedule_update_ha_state()
 
         def update_brightness(name, value):
             """Handle device notification for brightness."""
-            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._brightness = value
             self.schedule_update_ha_state()
 

@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             cmddata = cmd[CONF_DATA].strip()
             if not cmddata:
                 cmddata = '""'
-            cmddatas += "{}\n{}\n".format(cmdname, cmddata)
+            cmddatas += '{}\n{}\n'.format(cmdname, cmddata)
         itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_devices(devices, True)
@@ -98,13 +98,13 @@ class ITachIP2IRRemote(remote.RemoteDevice):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._power = True
-        self.itachip2ir.send(self._name, "ON", 1)
+        self.itachip2ir.send(self._name, 'ON', 1)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._power = False
-        self.itachip2ir.send(self._name, "OFF", 1)
+        self.itachip2ir.send(self._name, 'OFF', 1)
         self.schedule_update_ha_state()
 
     def send_command(self, command, **kwargs):

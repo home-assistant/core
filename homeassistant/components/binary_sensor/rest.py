@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_METHOD = 'GET'
-DEFAULT_NAME = 'REST Binary Sensor'
+DEFAULT_NAME = "REST Binary Sensor"
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

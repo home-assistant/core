@@ -28,7 +28,7 @@ DOMAIN = 'light'
 DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
-GROUP_NAME_ALL_LIGHTS = 'all lights'
+GROUP_NAME_ALL_LIGHTS = "all lights"
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -44,38 +44,38 @@ SUPPORT_XY_COLOR = 64
 SUPPORT_WHITE_VALUE = 128
 
 # Integer that represents transition time in seconds to make change.
-ATTR_TRANSITION = "transition"
+ATTR_TRANSITION = 'transition'
 
 # Lists holding color values
-ATTR_RGB_COLOR = "rgb_color"
-ATTR_XY_COLOR = "xy_color"
-ATTR_COLOR_TEMP = "color_temp"
-ATTR_KELVIN = "kelvin"
-ATTR_MIN_MIREDS = "min_mireds"
-ATTR_MAX_MIREDS = "max_mireds"
-ATTR_COLOR_NAME = "color_name"
-ATTR_WHITE_VALUE = "white_value"
+ATTR_RGB_COLOR = 'rgb_color'
+ATTR_XY_COLOR = 'xy_color'
+ATTR_COLOR_TEMP = 'color_temp'
+ATTR_KELVIN = 'kelvin'
+ATTR_MIN_MIREDS = 'min_mireds'
+ATTR_MAX_MIREDS = 'max_mireds'
+ATTR_COLOR_NAME = 'color_name'
+ATTR_WHITE_VALUE = 'white_value'
 
 # Brightness of the light, 0..255 or percentage
-ATTR_BRIGHTNESS = "brightness"
-ATTR_BRIGHTNESS_PCT = "brightness_pct"
+ATTR_BRIGHTNESS = 'brightness'
+ATTR_BRIGHTNESS_PCT = 'brightness_pct'
 
 # String representing a profile (built-in ones or external defined).
-ATTR_PROFILE = "profile"
+ATTR_PROFILE = 'profile'
 
 # If the light should flash, can be FLASH_SHORT or FLASH_LONG.
-ATTR_FLASH = "flash"
-FLASH_SHORT = "short"
-FLASH_LONG = "long"
+ATTR_FLASH = 'flash'
+FLASH_SHORT = 'short'
+FLASH_LONG = 'long'
 
 # List of possible effects
-ATTR_EFFECT_LIST = "effect_list"
+ATTR_EFFECT_LIST = 'effect_list'
 
 # Apply an effect to the light, can be EFFECT_COLORLOOP.
-ATTR_EFFECT = "effect"
-EFFECT_COLORLOOP = "colorloop"
-EFFECT_RANDOM = "random"
-EFFECT_WHITE = "white"
+ATTR_EFFECT = 'effect'
+EFFECT_COLORLOOP = 'colorloop'
+EFFECT_RANDOM = 'random'
+EFFECT_WHITE = 'white'
 
 COLOR_GROUP = "Color descriptors"
 

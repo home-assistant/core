@@ -30,7 +30,7 @@ DEFAULT_ADAPTER = 'hci0'
 DEFAULT_UPDATE_INTERVAL = 1200
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
-DEFAULT_NAME = 'Mi Flora'
+DEFAULT_NAME = "Mi Flora"
 DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
 
@@ -38,7 +38,7 @@ DEFAULT_TIMEOUT = 10
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
-    'light': ['Light intensity', 'lux'],
+    'light': ["Light intensity", 'lux'],
     'moisture': ['Moisture', '%'],
     'conductivity': ['Conductivity', 'µS/cm'],
     'battery': ['Battery', '%'],
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except ImportError:
         from miflora.backends.gatttool import GatttoolBackend
         backend = GatttoolBackend
-    _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
+    _LOGGER.debug("Miflora is using %s backend.", backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(

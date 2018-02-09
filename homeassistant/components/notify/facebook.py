@@ -43,7 +43,7 @@ class FacebookNotificationService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA)
 
-        body_message = {"text": message}
+        body_message = {'text': message}
 
         if data is not None:
             body_message.update(data)
@@ -59,13 +59,13 @@ class FacebookNotificationService(BaseNotificationService):
             # If the target starts with a "+", we suppose it's a phone number,
             # otherwise it's a user id.
             if target.startswith('+'):
-                recipient = {"phone_number": target}
+                recipient = {'phone_number': target}
             else:
-                recipient = {"id": target}
+                recipient = {'id': target}
 
             body = {
-                "recipient": recipient,
-                "message": body_message
+                'recipient': recipient,
+                'message': body_message
             }
             import json
             resp = requests.post(BASE_URL, data=json.dumps(body),

@@ -64,7 +64,7 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
     def icon(self):
         """Icon for device by its type."""
         if self._zone_type == 'smoke':
-            return "mdi:fire"
+            return 'mdi:fire'
 
     @property
     def should_poll(self):

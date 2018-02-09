@@ -94,7 +94,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tilt_optimistic = device_config.get(CONF_TILT_OPTIMISTIC)
 
         if position_action is None and open_action is None:
-            _LOGGER.error('Must specify at least one of %s' or '%s',
+            _LOGGER.error("Must specify at least one of %s" or '%s',
                           OPEN_ACTION, POSITION_ACTION)
             continue
         template_entity_ids = set()
@@ -281,7 +281,7 @@ class CoverTemplate(CoverDevice):
         if self._open_script:
             yield from self._open_script.async_run()
         elif self._position_script:
-            yield from self._position_script.async_run({"position": 100})
+            yield from self._position_script.async_run({'position': 100})
         if self._optimistic:
             self._position = 100
             self.async_schedule_update_ha_state()
@@ -292,7 +292,7 @@ class CoverTemplate(CoverDevice):
         if self._close_script:
             yield from self._close_script.async_run()
         elif self._position_script:
-            yield from self._position_script.async_run({"position": 0})
+            yield from self._position_script.async_run({'position': 0})
         if self._optimistic:
             self._position = 0
             self.async_schedule_update_ha_state()
@@ -308,7 +308,7 @@ class CoverTemplate(CoverDevice):
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
         yield from self._position_script.async_run(
-            {"position": self._position})
+            {'position': self._position})
         if self._optimistic:
             self.async_schedule_update_ha_state()
 
@@ -316,7 +316,7 @@ class CoverTemplate(CoverDevice):
     def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         self._tilt_value = 100
-        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        yield from self._tilt_script.async_run({'tilt': self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
@@ -325,7 +325,7 @@ class CoverTemplate(CoverDevice):
         """Tilt the cover closed."""
         self._tilt_value = 0
         yield from self._tilt_script.async_run(
-            {"tilt": self._tilt_value})
+            {'tilt': self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
@@ -333,7 +333,7 @@ class CoverTemplate(CoverDevice):
     def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        yield from self._tilt_script.async_run({'tilt': self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
@@ -350,7 +350,7 @@ class CoverTemplate(CoverDevice):
                         self._position = 0
                 else:
                     _LOGGER.error(
-                        'Received invalid cover is_on state: %s. Expected: %s',
+                        "Received invalid cover is_on state: %s. Expected: %s",
                         state, ', '.join(_VALID_STATES))
                     self._position = None
             except TemplateError as ex:
@@ -401,8 +401,8 @@ class CoverTemplate(CoverDevice):
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.',
+                    _LOGGER.warning("Could not render %s template %s,"
+                                    " the state is unknown.",
                                     friendly_property_name, self._name)
                     return
 
@@ -410,5 +410,5 @@ class CoverTemplate(CoverDevice):
                     setattr(self, property_name,
                             getattr(super(), property_name))
                 except AttributeError:
-                    _LOGGER.error('Could not render %s template %s: %s',
+                    _LOGGER.error("Could not render %s template %s: %s",
                                   friendly_property_name, self._name, ex)

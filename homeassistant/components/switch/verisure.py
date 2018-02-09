@@ -50,7 +50,7 @@ class VerisureSmartplug(SwitchDevice):
             return self._state
         self._state = hub.get_first(
             "$.smartPlugs[?(@.deviceLabel == '%s')].currentState",
-            self._device_label) == "ON"
+            self._device_label) == 'ON'
         return self._state
 
     @property

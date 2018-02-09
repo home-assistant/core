@@ -113,7 +113,7 @@ class UkTransportSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return 'min'
 
     @property
     def icon(self):
@@ -129,12 +129,12 @@ class UkTransportSensor(Entity):
 
         response = requests.get(self._url, params=request_params)
         if response.status_code != 200:
-            _LOGGER.warning('Invalid response from API')
+            _LOGGER.warning("Invalid response from API")
         elif 'error' in response.json():
             if 'exceeded' in response.json()['error']:
-                self._state = 'Usage limits exceeded'
+                self._state = "Usage limits exceeded"
             if 'invalid' in response.json()['error']:
-                self._state = 'Credentials invalid'
+                self._state = "Credentials invalid"
         else:
             self._data = response.json()
 
@@ -154,7 +154,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
             '{}'.format(bus_direction), re.IGNORECASE
         )
 
-        sensor_name = 'Next bus to {}'.format(bus_direction)
+        sensor_name = "Next bus to {}".format(bus_direction)
         stop_url = 'bus/stop/{}/live.json'.format(stop_atcocode)
 
         UkTransportSensor.__init__(
@@ -214,7 +214,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._calling_at = calling_at
         self._next_trains = []
 
-        sensor_name = 'Next train to {}'.format(calling_at)
+        sensor_name = "Next train to {}".format(calling_at)
         query_url = 'train/station/{}/live.json'.format(station_code)
 
         UkTransportSensor.__init__(
@@ -233,7 +233,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
 
         if self._data != {}:
             if self._data['departures']['all'] == []:
-                self._state = 'No departures'
+                self._state = "No departures"
             else:
                 for departure in self._data['departures']['all']:
                     self._next_trains.append({

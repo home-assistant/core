@@ -56,10 +56,10 @@ def request_configuration(network, hass, config):
         setup_ecobee(hass, network, config)
 
     _CONFIGURING['ecobee'] = configurator.request_config(
-        "Ecobee", ecobee_configuration_callback,
+        'Ecobee', ecobee_configuration_callback,
         description=(
-            'Please authorize this app at https://www.ecobee.com/consumer'
-            'portal/index.html with pin code: ' + network.pin),
+            "Please authorize this app at https://www.ecobee.com/consumer"
+            "portal/index.html with pin code: " + network.pin),
         description_image="/static/images/config_ecobee_thermostat.png",
         submit_caption="I have authorized the app."
     )
@@ -114,7 +114,7 @@ def setup(hass, config):
 
     # Create ecobee.conf if it doesn't exist
     if not os.path.isfile(hass.config.path(ECOBEE_CONFIG_FILE)):
-        jsonconfig = {"API_KEY": config[DOMAIN].get(CONF_API_KEY)}
+        jsonconfig = {'API_KEY': config[DOMAIN].get(CONF_API_KEY)}
         save_json(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
 
     NETWORK = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))

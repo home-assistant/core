@@ -27,7 +27,7 @@ CONF_CHANGES = 'changes'
 CONF_REPEAT = 'repeat'
 CONF_REPEAT_TIME = 'repeat_time'
 
-DEFAULT_NAME = 'FFmpeg Motion'
+DEFAULT_NAME = "FFmpeg Motion"
 DEFAULT_INIT_STATE = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

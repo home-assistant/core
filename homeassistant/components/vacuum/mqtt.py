@@ -89,7 +89,7 @@ CONF_SET_FAN_SPEED_TOPIC = 'set_fan_speed_topic'
 CONF_FAN_SPEED_LIST = 'fan_speed_list'
 CONF_SEND_COMMAND_TOPIC = 'send_command_topic'
 
-DEFAULT_NAME = 'MQTT Vacuum'
+DEFAULT_NAME = "MQTT Vacuum"
 DEFAULT_RETAIN = False
 DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES)
 DEFAULT_PAYLOAD_TURN_ON = 'turn_on'
@@ -310,11 +310,11 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                 if self._charging:
                     self._status = "Docked & Charging"
                 else:
-                    self._status = "Docked"
+                    self._status = 'Docked'
             elif self._cleaning:
-                self._status = "Cleaning"
+                self._status = 'Cleaning'
             else:
-                self._status = "Stopped"
+                self._status = 'Stopped'
 
             if topic == self._fan_speed_topic and self._fan_speed_template:
                 fan_speed = self._fan_speed_template\
@@ -419,7 +419,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payload_turn_off, self._qos, self._retain)
-        self._status = 'Turning Off'
+        self._status = "Turning Off"
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -430,7 +430,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic, self._payload_stop,
                            self._qos, self._retain)
-        self._status = 'Stopping the current task'
+        self._status = "Stopping the current task"
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -463,7 +463,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payload_start_pause, self._qos, self._retain)
-        self._status = 'Pausing/Resuming cleaning...'
+        self._status = "Pausing/Resuming cleaning..."
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -475,7 +475,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payload_return_to_base, self._qos,
                            self._retain)
-        self._status = 'Returning home...'
+        self._status = "Returning home..."
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine

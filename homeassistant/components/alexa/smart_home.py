@@ -56,47 +56,47 @@ class _DisplayCategory(object):
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
 
     # Indicates media devices with video or photo capabilities.
-    CAMERA = "CAMERA"
+    CAMERA = 'CAMERA'
 
     # Indicates a door.
-    DOOR = "DOOR"
+    DOOR = 'DOOR'
 
     # Indicates light sources or fixtures.
-    LIGHT = "LIGHT"
+    LIGHT = 'LIGHT'
 
     # An endpoint that cannot be described in on of the other categories.
-    OTHER = "OTHER"
+    OTHER = 'OTHER'
 
     # Describes a combination of devices set to a specific state, when the
     # order of the state change is not important. For example a bedtime scene
     # might include turning off lights and lowering the thermostat, but the
     # order is unimportant.    Applies to Scenes
-    SCENE_TRIGGER = "SCENE_TRIGGER"
+    SCENE_TRIGGER = 'SCENE_TRIGGER'
 
     # Indicates an endpoint that locks.
-    SMARTLOCK = "SMARTLOCK"
+    SMARTLOCK = 'SMARTLOCK'
 
     # Indicates modules that are plugged into an existing electrical outlet.
     # Can control a variety of devices.
-    SMARTPLUG = "SMARTPLUG"
+    SMARTPLUG = 'SMARTPLUG'
 
     # Indicates the endpoint is a speaker or speaker system.
-    SPEAKER = "SPEAKER"
+    SPEAKER = 'SPEAKER'
 
     # Indicates in-wall switches wired to the electrical system.  Can control a
     # variety of devices.
-    SWITCH = "SWITCH"
+    SWITCH = 'SWITCH'
 
     # Indicates endpoints that report the temperature only.
     TEMPERATURE_SENSOR = "TEMPERATURE_SENSOR"
 
     # Indicates endpoints that control temperature, stand-alone air
     # conditioners, or heaters with direct temperature control.
-    THERMOSTAT = "THERMOSTAT"
+    THERMOSTAT = 'THERMOSTAT'
 
     # Indicates the endpoint is a television.
     # pylint: disable=invalid-name
-    TV = "TV"
+    TV = 'TV'
 
 
 def _capability(interface,
@@ -498,7 +498,7 @@ class _MediaPlayerCapabilities(_AlexaEntity):
 class _SceneCapabilities(_AlexaEntity):
     def description(self):
         # Required description as per Amazon Scene docs
-        scene_fmt = '{} (Scene connected via Home Assistant)'
+        scene_fmt = "{} (Scene connected via Home Assistant)"
         return scene_fmt.format(_AlexaEntity.description(self))
 
     def default_display_categories(self):
@@ -730,7 +730,7 @@ def async_api_discovery(hass, config, request):
             'endpointId': alexa_entity.entity_id(),
             'friendlyName': alexa_entity.friendly_name(),
             'description': alexa_entity.description(),
-            'manufacturerName': 'Home Assistant',
+            'manufacturerName': "Home Assistant",
         }
 
         endpoint['capabilities'] = [
@@ -987,14 +987,14 @@ def async_api_set_percentage(hass, config, request, entity):
 
     if entity.domain == fan.DOMAIN:
         service = fan.SERVICE_SET_SPEED
-        speed = "off"
+        speed = 'off'
 
         if percentage <= 33:
-            speed = "low"
+            speed = 'low'
         elif percentage <= 66:
-            speed = "medium"
+            speed = 'medium'
         elif percentage <= 100:
-            speed = "high"
+            speed = 'high'
         data[fan.ATTR_SPEED] = speed
 
     elif entity.domain == cover.DOMAIN:
@@ -1020,25 +1020,25 @@ def async_api_adjust_percentage(hass, config, request, entity):
         service = fan.SERVICE_SET_SPEED
         speed = entity.attributes.get(fan.ATTR_SPEED)
 
-        if speed == "off":
+        if speed == 'off':
             current = 0
-        elif speed == "low":
+        elif speed == 'low':
             current = 33
-        elif speed == "medium":
+        elif speed == 'medium':
             current = 66
-        elif speed == "high":
+        elif speed == 'high':
             current = 100
 
         # set percentage
         percentage = max(0, percentage_delta + current)
-        speed = "off"
+        speed = 'off'
 
         if percentage <= 33:
-            speed = "low"
+            speed = 'low'
         elif percentage <= 66:
-            speed = "medium"
+            speed = 'medium'
         elif percentage <= 100:
-            speed = "high"
+            speed = 'high'
 
         data[fan.ATTR_SPEED] = speed
 
@@ -1116,7 +1116,7 @@ def async_api_select_input(hass, config, request, entity):
             media_input = source
             break
     else:
-        msg = 'failed to map input {} to a media source on {}'.format(
+        msg = "failed to map input {} to a media source on {}".format(
             media_input, entity.entity_id)
         _LOGGER.error(msg)
         return api_error(

@@ -206,7 +206,7 @@ def setup(hass, config):
             elif key != 'unit_of_measurement' or include_uom:
                 # If the key is already in fields
                 if key in json_body[0]['fields']:
-                    key = key + "_"
+                    key = key + '_'
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
@@ -214,7 +214,7 @@ def setup(hass, config):
                 try:
                     json_body[0]['fields'][key] = float(value)
                 except (ValueError, TypeError):
-                    new_key = "{}_str".format(key)
+                    new_key = '{}_str'.format(key)
                     new_value = str(value)
                     json_body[0]['fields'][new_key] = new_value
 

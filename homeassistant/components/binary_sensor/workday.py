@@ -25,11 +25,11 @@ ALL_COUNTRIES = ['Australia', 'AU', 'Austria', 'AT', 'Belgium', 'BE', 'Canada',
                  'CA', 'Colombia', 'CO', 'Czech', 'CZ', 'Denmark', 'DK',
                  'England', 'EuropeanCentralBank', 'ECB', 'TAR', 'Finland',
                  'FI', 'France', 'FRA', 'Germany', 'DE', 'Ireland',
-                 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP', 'Mexico', 'MX',
-                 'Netherlands', 'NL', 'NewZealand', 'NZ', 'Northern Ireland',
+                 "Isle of Man", 'Italy', 'IT', 'Japan', 'JP', 'Mexico', 'MX',
+                 'Netherlands', 'NL', 'NewZealand', 'NZ', "Northern Ireland",
                  'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
                  'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI',
-                 'Slovakia', 'SK', 'South Africa', 'ZA', 'Spain', 'ES',
+                 'Slovakia', 'SK', "South Africa", 'ZA', 'Spain', 'ES',
                  'Sweden', 'SE', 'UnitedKingdom', 'UK', 'UnitedStates', 'US',
                  'Wales']
 CONF_COUNTRY = 'country'
@@ -40,7 +40,7 @@ DEFAULT_WORKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
 CONF_EXCLUDES = 'excludes'
 # By default, public holidays, Saturdays and Sundays are excluded from workdays
 DEFAULT_EXCLUDES = ['sat', 'sun', 'holiday']
-DEFAULT_NAME = 'Workday Sensor'
+DEFAULT_NAME = "Workday Sensor"
 ALLOWED_DAYS = WEEKDAYS + ['holiday']
 CONF_OFFSET = 'days_offset'
 DEFAULT_OFFSET = 0
@@ -74,11 +74,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if province:
         # 'state' and 'prov' are not interchangeable, so need to make
         # sure we use the right one
-        if (hasattr(obj_holidays, "PROVINCES") and
+        if (hasattr(obj_holidays, 'PROVINCES') and
                 province in obj_holidays.PROVINCES):
             obj_holidays = getattr(holidays, country)(prov=province,
                                                       years=year)
-        elif (hasattr(obj_holidays, "STATES") and
+        elif (hasattr(obj_holidays, 'STATES') and
               province in obj_holidays.STATES):
             obj_holidays = getattr(holidays, country)(state=province,
                                                       years=year)

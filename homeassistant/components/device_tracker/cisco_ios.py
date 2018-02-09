@@ -48,7 +48,7 @@ class CiscoDeviceScanner(DeviceScanner):
         self.last_results = {}
 
         self.success_init = self._update_info()
-        _LOGGER.info('cisco_ios scanner initialized')
+        _LOGGER.info("cisco_ios scanner initialized")
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
@@ -91,7 +91,7 @@ class CiscoDeviceScanner(DeviceScanner):
                 age = parts[2]
                 hw_addr = parts[3]
 
-                if age != "-":
+                if age != '-':
                     mac = _parse_cisco_mac_address(hw_addr)
                     age = int(age)
                     if age < 1:
@@ -115,7 +115,7 @@ class CiscoDeviceScanner(DeviceScanner):
             # Find the hostname
             initial_line = cisco_ssh.before.decode('utf-8').splitlines()
             router_hostname = initial_line[len(initial_line) - 1]
-            router_hostname += "#"
+            router_hostname += '#'
             # Set the discovered hostname as prompt
             regex_expression = ('(?i)^%s' % router_hostname).encode()
             cisco_ssh.PROMPT = re.compile(regex_expression, re.MULTILINE)

@@ -36,7 +36,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 ENTITY_ID_ALL_REMOTES = group.ENTITY_ID_FORMAT.format('all_remotes')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_REMOTES = 'all remotes'
+GROUP_NAME_ALL_REMOTES = "all remotes"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 

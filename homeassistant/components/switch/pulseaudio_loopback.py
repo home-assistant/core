@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     buffer_size = config.get(CONF_BUFFER_SIZE)
     tcp_timeout = config.get(CONF_TCP_TIMEOUT)
 
-    server_id = str.format("{0}:{1}", host, port)
+    server_id = str.format('{0}:{1}', host, port)
 
     if server_id in _PULSEAUDIO_SERVERS:
         server = _PULSEAUDIO_SERVERS[server_id]
@@ -95,7 +95,7 @@ class PAServer():
         try:
             sock.connect((self._pa_host, self._pa_port))
             _LOGGER.info("Calling pulseaudio: %s", cmd)
-            sock.send((cmd + "\n").encode("utf-8"))
+            sock.send((cmd + '\n').encode('utf-8'))
             if response_expected:
                 return_data = self._get_full_response(sock)
                 _LOGGER.debug("Data received from pulseaudio: %s", return_data)
@@ -120,7 +120,7 @@ class PAServer():
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_module_state(self):
         """Refresh state in case an alternate process modified this data."""
-        self._current_module_state = self._send_command("list-modules", True)
+        self._current_module_state = self._send_command('list-modules', True)
 
     def turn_on(self, sink_name, source_name):
         """Send a command to pulseaudio to turn on the loopback."""

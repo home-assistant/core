@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-DEFAULT_NAME = 'Broadlink switch'
+DEFAULT_NAME = "Broadlink switch"
 DEFAULT_TIMEOUT = 10
 DEFAULT_RETRY = 3
 SERVICE_LEARN = 'broadlink_learn_command'
@@ -104,12 +104,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                           format(b64encode(packet).decode('utf8'))
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(
-                    log_msg, title='Broadlink switch')
+                    log_msg, title="Broadlink switch")
                 return
             yield from asyncio.sleep(1, loop=hass.loop)
         _LOGGER.error("Did not received any signal")
         hass.components.persistent_notification.async_create(
-            "Did not received any signal", title='Broadlink switch')
+            "Did not received any signal", title="Broadlink switch")
 
     @asyncio.coroutine
     def _send_packet(call):

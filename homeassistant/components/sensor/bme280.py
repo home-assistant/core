@@ -34,7 +34,7 @@ CONF_T_STANDBY = 'time_standby'
 CONF_FILTER_MODE = 'filter_mode'
 CONF_DELTA_TEMP = 'delta_temperature'
 
-DEFAULT_NAME = 'BME280 Sensor'
+DEFAULT_NAME = "BME280 Sensor"
 DEFAULT_I2C_ADDRESS = '0x76'
 DEFAULT_I2C_BUS = 1
 DEFAULT_OVERSAMPLING_TEMP = 1  # Temperature oversampling x 1

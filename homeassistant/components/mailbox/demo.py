@@ -15,7 +15,7 @@ from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG,
                                               StreamError)
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "DemoMailbox"
+DOMAIN = 'DemoMailbox'
 
 
 @asyncio.coroutine
@@ -38,11 +38,11 @@ class DemoMailbox(Mailbox):
             msgtxt = "Message {}. {}".format(
                 idx + 1, txt * (1 + idx * (idx % 2)))
             msgsha = sha1(msgtxt.encode('utf-8')).hexdigest()
-            msg = {"info": {"origtime": msgtime,
-                            "callerid": "John Doe <212-555-1212>",
-                            "duration": "10"},
-                   "text": msgtxt,
-                   "sha":  msgsha}
+            msg = {'info': {'origtime': msgtime,
+                            'callerid': "John Doe <212-555-1212>",
+                            'duration': '10'},
+                   'text': msgtxt,
+                   'sha':  msgsha}
             self._messages[msgsha] = msg
 
     @property

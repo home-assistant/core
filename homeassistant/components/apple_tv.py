@@ -33,7 +33,7 @@ CONF_LOGIN_ID = 'login_id'
 CONF_START_OFF = 'start_off'
 CONF_CREDENTIALS = 'credentials'
 
-DEFAULT_NAME = 'Apple TV'
+DEFAULT_NAME = "Apple TV"
 
 DATA_APPLE_TV = 'data_apple_tv'
 DATA_ENTITIES = 'data_apple_tv_entities'
@@ -41,9 +41,9 @@ DATA_ENTITIES = 'data_apple_tv_entities'
 KEY_CONFIG = 'apple_tv_configuring'
 
 NOTIFICATION_AUTH_ID = 'apple_tv_auth_notification'
-NOTIFICATION_AUTH_TITLE = 'Apple TV Authentication'
+NOTIFICATION_AUTH_TITLE = "Apple TV Authentication"
 NOTIFICATION_SCAN_ID = 'apple_tv_scan_notification'
-NOTIFICATION_SCAN_TITLE = 'Apple TV Scan'
+NOTIFICATION_SCAN_TITLE = "Apple TV Scan"
 
 T = TypeVar('T')
 
@@ -87,25 +87,25 @@ def request_configuration(hass, config, atv, credentials):
         try:
             yield from atv.airplay.finish_authentication(pin)
             hass.components.persistent_notification.async_create(
-                'Authentication succeeded!<br /><br />Add the following '
-                'to credentials: in your apple_tv configuration:<br /><br />'
+                "Authentication succeeded!<br /><br />Add the following "
+                "to credentials: in your apple_tv configuration:<br /><br />"
                 '{0}'.format(credentials),
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID)
         except exceptions.DeviceAuthenticationError as ex:
             hass.components.persistent_notification.async_create(
-                'Authentication failed! Did you enter correct PIN?<br /><br />'
-                'Details: {0}'.format(ex),
+                "Authentication failed! Did you enter correct PIN?<br /><br />"
+                "Details: {0}".format(ex),
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID)
 
         hass.async_add_job(configurator.request_done, instance)
 
     instance = configurator.request_config(
-        'Apple TV Authentication', configuration_callback,
-        description='Please enter PIN code shown on screen.',
+        "Apple TV Authentication", configuration_callback,
+        description="Please enter PIN code shown on screen.",
         submit_caption='Confirm',
-        fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]
+        fields=[{'id': 'pin', 'name': "PIN Code", 'type': 'password'}]
     )
 
 
@@ -119,16 +119,16 @@ def scan_for_apple_tvs(hass):
     for atv in atvs:
         login_id = atv.login_id
         if login_id is None:
-            login_id = 'Home Sharing disabled'
-        devices.append('Name: {0}<br />Host: {1}<br />Login ID: {2}'.format(
+            login_id = "Home Sharing disabled"
+        devices.append("Name: {0}<br />Host: {1}<br />Login ID: {2}".format(
             atv.name, atv.address, login_id))
 
     if not devices:
-        devices = ['No device(s) found']
+        devices = ["No device(s) found"]
 
     hass.components.persistent_notification.async_create(
-        'The following devices were found:<br /><br />' +
-        '<br /><br />'.join(devices),
+        "The following devices were found:<br /><br />" +
+        "<br /><br />".join(devices),
         title=NOTIFICATION_SCAN_TITLE,
         notification_id=NOTIFICATION_SCAN_ID)
 
@@ -161,7 +161,7 @@ def async_setup(hass, config):
             atv = device.atv
             credentials = yield from atv.airplay.generate_credentials()
             yield from atv.airplay.load_credentials(credentials)
-            _LOGGER.debug('Generated new credentials: %s', credentials)
+            _LOGGER.debug("Generated new credentials: %s", credentials)
             yield from atv.airplay.start_authentication()
             hass.async_add_job(request_configuration,
                                hass, config, atv, credentials)

@@ -89,7 +89,7 @@ class TplinkDeviceScanner(DeviceScanner):
         result = self.parse_macs.findall(page.text)
 
         if result:
-            self.last_results = [mac.replace("-", ":") for mac in result]
+            self.last_results = [mac.replace('-', ':') for mac in result]
             return True
 
         return False
@@ -337,7 +337,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         if not mac_results:
             return False
 
-        self.last_results = [mac.replace("-", ":") for mac in mac_results]
+        self.last_results = [mac.replace('-', ':') for mac in mac_results]
         return True
 
 
@@ -371,7 +371,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
             ACCEPT_LANGUAGE: "Accept-Language: en-US,en;q=0.5",
             ACCEPT_ENCODING: "gzip, deflate",
             CONTENT_TYPE: "application/x-www-form-urlencoded; charset=UTF-8",
-            HTTP_HEADER_X_REQUESTED_WITH: "XMLHttpRequest",
+            HTTP_HEADER_X_REQUESTED_WITH: 'XMLHttpRequest',
             REFERER: "http://{}/".format(self.host),
             CONNECTION: KEEP_ALIVE,
             PRAGMA: HTTP_HEADER_NO_CACHE,

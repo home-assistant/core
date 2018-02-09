@@ -22,7 +22,7 @@ ATTRIBUTION = "Data provided by Shodan"
 
 CONF_QUERY = 'query'
 
-DEFAULT_NAME = 'Shodan Sensor'
+DEFAULT_NAME = "Shodan Sensor"
 
 ICON = 'mdi:tooltip-text'
 

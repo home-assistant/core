@@ -93,10 +93,10 @@ def request_configuration(hass, config, host):
 
     instance = configurator.request_config(
         "IKEA Trådfri", configuration_callback,
-        description='Please enter the security code written at the bottom of '
-                    'your IKEA Trådfri Gateway.',
-        submit_caption="Confirm",
-        fields=[{'id': 'security_code', 'name': 'Security Code',
+        description="Please enter the security code written at the bottom of "
+                    "your IKEA Trådfri Gateway.",
+        submit_caption='Confirm',
+        fields=[{'id': 'security_code', 'name': "Security Code",
                  'type': 'password'}]
     )
 

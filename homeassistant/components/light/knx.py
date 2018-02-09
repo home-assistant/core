@@ -20,7 +20,7 @@ CONF_STATE_ADDRESS = 'state_address'
 CONF_BRIGHTNESS_ADDRESS = 'brightness_address'
 CONF_BRIGHTNESS_STATE_ADDRESS = 'brightness_state_address'
 
-DEFAULT_NAME = 'KNX Light'
+DEFAULT_NAME = "KNX Light"
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

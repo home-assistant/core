@@ -45,7 +45,7 @@ class FileNotificationService(BaseNotificationService):
         """Send a message to a file."""
         with open(self.filepath, 'a') as file:
             if os.stat(self.filepath).st_size == 0:
-                title = '{} notifications (Log started: {})\n{}\n'.format(
+                title = "{} notifications (Log started: {})\n{}\n".format(
                     kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
                     dt_util.utcnow().isoformat(),
                     '-' * 80)

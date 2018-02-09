@@ -18,10 +18,10 @@ REQUIREMENTS = ['py-cpuinfo==3.3.0']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRAND = 'Brand'
-ATTR_HZ = 'GHz Advertised'
+ATTR_HZ = "GHz Advertised"
 ATTR_ARCH = 'arch'
 
-DEFAULT_NAME = 'CPU speed'
+DEFAULT_NAME = "CPU speed"
 
 ICON = 'mdi:pulse'
 

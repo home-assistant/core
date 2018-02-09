@@ -42,8 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the GNTP notification service."""
     if config.get(CONF_APP_ICON) is None:
-        icon_file = os.path.join(os.path.dirname(__file__), "..", "frontend",
-                                 "www_static", "icons", "favicon-192x192.png")
+        icon_file = os.path.join(os.path.dirname(__file__), '..', 'frontend',
+                                 'www_static', 'icons', 'favicon-192x192.png')
         with open(icon_file, 'rb') as file:
             app_icon = file.read()
     else:
@@ -65,7 +65,7 @@ class GNTPNotificationService(BaseNotificationService):
         import gntp.errors
         self.gntp = gntp.notifier.GrowlNotifier(
             applicationName=app_name,
-            notifications=["Notification"],
+            notifications=['Notification'],
             applicationIcon=app_icon,
             hostname=hostname,
             password=password,
@@ -79,6 +79,6 @@ class GNTPNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        self.gntp.notify(noteType="Notification",
+        self.gntp.notify(noteType='Notification',
                          title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
                          description=message)

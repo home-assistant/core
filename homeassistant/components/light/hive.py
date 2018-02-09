@@ -29,9 +29,9 @@ class HiveDeviceLight(Light):
 
     def __init__(self, hivesession, hivedevice):
         """Initialize the Light device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
+        self.node_id = hivedevice['Hive_NodeID']
+        self.node_name = hivedevice['Hive_NodeName']
+        self.device_type = hivedevice['HA_DeviceType']
         self.light_device_type = hivedevice["Hive_Light_DeviceType"]
         self.session = hivesession
         self.data_updatesource = '{}.{}'.format(self.device_type,
@@ -56,21 +56,21 @@ class HiveDeviceLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self.light_device_type == "tuneablelight" \
+        if self.light_device_type == 'tuneablelight' \
                 or self.light_device_type == "colourtuneablelight":
             return self.session.light.get_min_color_temp(self.node_id)
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self.light_device_type == "tuneablelight" \
+        if self.light_device_type == 'tuneablelight' \
                 or self.light_device_type == "colourtuneablelight":
             return self.session.light.get_max_color_temp(self.node_id)
 
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if self.light_device_type == "tuneablelight" \
+        if self.light_device_type == 'tuneablelight' \
                 or self.light_device_type == "colourtuneablelight":
             return self.session.light.get_color_temp(self.node_id)
 
@@ -126,9 +126,9 @@ class HiveDeviceLight(Light):
     def supported_features(self):
         """Flag supported features."""
         supported_features = None
-        if self.light_device_type == "warmwhitelight":
+        if self.light_device_type == 'warmwhitelight':
             supported_features = SUPPORT_BRIGHTNESS
-        elif self.light_device_type == "tuneablelight":
+        elif self.light_device_type == 'tuneablelight':
             supported_features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
         elif self.light_device_type == "colourtuneablelight":
             supported_features = (

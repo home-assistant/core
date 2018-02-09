@@ -50,7 +50,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     def __init__(self, hass, name, code, username, password):
         """Initialize the Alarm.com status."""
         from pyalarmdotcom import Alarmdotcom
-        _LOGGER.debug('Setting up Alarm.com...')
+        _LOGGER.debug("Setting up Alarm.com...")
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
@@ -87,9 +87,9 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         """Return the state of the device."""
         if self._alarm.state.lower() == 'disarmed':
             return STATE_ALARM_DISARMED
-        elif self._alarm.state.lower() == 'armed stay':
+        elif self._alarm.state.lower() == "armed stay":
             return STATE_ALARM_ARMED_HOME
-        elif self._alarm.state.lower() == 'armed away':
+        elif self._alarm.state.lower() == "armed away":
             return STATE_ALARM_ARMED_AWAY
         return STATE_UNKNOWN
 

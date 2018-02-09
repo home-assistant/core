@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 NOTIFICATION_ID = 'tesla_integration_notification'
-NOTIFICATION_TITLE = 'Tesla integration setup'
+NOTIFICATION_TITLE = "Tesla integration setup"
 
 TESLA_COMPONENTS = [
     'sensor', 'lock', 'climate', 'binary_sensor', 'device_tracker', 'switch'

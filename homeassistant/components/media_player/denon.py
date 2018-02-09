@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Music station'
+DEFAULT_NAME = "Music station"
 
 SUPPORT_DENON = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE \
@@ -33,19 +33,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-NORMAL_INPUTS = {'Cd': 'CD', 'Dvd': 'DVD', 'Blue ray': 'BD', 'TV': 'TV',
-                 'Satelite / Cable': 'SAT/CBL', 'Game': 'GAME',
-                 'Game2': 'GAME2', 'Video Aux': 'V.AUX', 'Dock': 'DOCK'}
+NORMAL_INPUTS = {'Cd': 'CD', 'Dvd': 'DVD', "Blue ray": 'BD', 'TV': 'TV',
+                 "Satelite / Cable": 'SAT/CBL', 'Game': 'GAME',
+                 'Game2': 'GAME2', "Video Aux": 'V.AUX', 'Dock': 'DOCK'}
 
-MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
-               'Ipod dock': 'IPOD', 'Net/USB': 'NET/USB',
+MEDIA_MODES = {'Tuner': 'TUNER', "Media server": 'SERVER',
+               "Ipod dock": 'IPOD', 'Net/USB': 'NET/USB',
                'Rapsody': 'RHAPSODY', 'Napster': 'NAPSTER',
                'Pandora': 'PANDORA', 'LastFM': 'LASTFM',
                'Flickr': 'FLICKR', 'Favorites': 'FAVORITES',
-               'Internet Radio': 'IRADIO', 'USB/IPOD': 'USB/IPOD'}
+               "Internet Radio": 'IRADIO', 'USB/IPOD': 'USB/IPOD'}
 
 # Sub-modes of 'NET/USB'
-# {'USB': 'USB', 'iPod Direct': 'IPD', 'Internet Radio': 'IRP',
+# {'USB': 'USB', "iPod Direct": 'IPD', "Internet Radio": 'IRP',
 #  'Favorites': 'FVP'}
 
 
@@ -78,19 +78,19 @@ class DenonDevice(MediaPlayerDevice):
 
     def _setup_sources(self, telnet):
         # NSFRN - Network name
-        nsfrn = self.telnet_request(telnet, 'NSFRN ?')[len('NSFRN '):]
+        nsfrn = self.telnet_request(telnet, "NSFRN ?")[len('NSFRN '):]
         if nsfrn:
             self._name = nsfrn
 
         # SSFUN - Configured sources with names
         self._source_list = {}
-        for line in self.telnet_request(telnet, 'SSFUN ?', all_lines=True):
-            source, configured_name = line[len('SSFUN'):].split(" ", 1)
+        for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
+            source, configured_name = line[len('SSFUN'):].split(' ', 1)
             self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources
-        for line in self.telnet_request(telnet, 'SSSOD ?', all_lines=True):
-            source, status = line[len('SSSOD'):].split(" ", 1)
+        for line in self.telnet_request(telnet, "SSSOD ?", all_lines=True):
+            source, status = line[len('SSSOD'):].split(' ', 1)
             if status == 'DEL':
                 for pretty_name, name in self._source_list.items():
                     if source == name:
@@ -137,7 +137,7 @@ class DenonDevice(MediaPlayerDevice):
         for line in self.telnet_request(telnet, 'MV?', all_lines=True):
             if line.startswith('MVMAX '):
                 # only grab two digit max, don't care about any half digit
-                self._volume_max = int(line[len('MVMAX '):len('MVMAX XX')])
+                self._volume_max = int(line[len('MVMAX '):len("MVMAX XX")])
                 continue
             if line.startswith('MV'):
                 self._volume = int(line[len('MV'):])
@@ -146,8 +146,8 @@ class DenonDevice(MediaPlayerDevice):
 
         if self._mediasource in MEDIA_MODES.values():
             self._mediainfo = ""
-            answer_codes = ["NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5",
-                            "NSE6", "NSE7", "NSE8"]
+            answer_codes = ['NSE0', 'NSE1X', 'NSE2X', 'NSE3X', 'NSE4', 'NSE5',
+                            'NSE6', 'NSE7', 'NSE8']
             for line in self.telnet_request(telnet, 'NSE', all_lines=True):
                 self._mediainfo += line[len(answer_codes.pop(0)):] + '\n'
         else:

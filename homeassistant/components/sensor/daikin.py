@@ -65,7 +65,7 @@ class DaikinClimateSensor(Entity):
         if name is None:
             name = "{} {}".format(self._sensor[CONF_NAME], api.name)
 
-        self._name = "{} {}".format(name, monitored_state.replace("_", " "))
+        self._name = "{} {}".format(name, monitored_state.replace('_', ' '))
         self._device_attribute = monitored_state
 
         if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
@@ -85,7 +85,7 @@ class DaikinClimateSensor(Entity):
         if value is None:
             _LOGGER.warning("Invalid value requested for key %s", key)
         else:
-            if value == "-" or value == "--":
+            if value == '-' or value == '--':
                 value = None
             elif cast_to_float:
                 try:

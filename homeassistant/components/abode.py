@@ -29,7 +29,7 @@ CONF_POLLING = 'polling'
 DOMAIN = 'abode'
 
 NOTIFICATION_ID = 'abode_notification'
-NOTIFICATION_TITLE = 'Abode Security Setup'
+NOTIFICATION_TITLE = "Abode Security Setup"
 
 EVENT_ABODE_ALARM = 'abode_alarm'
 EVENT_ABODE_ALARM_END = 'abode_alarm_end'
@@ -135,8 +135,8 @@ def setup(hass, config):
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
 
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)

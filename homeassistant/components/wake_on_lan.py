@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['wakeonlan==1.0.0']
 
-DOMAIN = "wake_on_lan"
+DOMAIN = 'wake_on_lan'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BROADCAST_ADDRESS = 'broadcast_address'

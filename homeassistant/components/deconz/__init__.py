@@ -115,8 +115,8 @@ def async_setup_deconz(hass, config, deconz_config):
         Data is a json object with what data you want to alter
         e.g. data={'on': true}.
         {
-            "field": "/lights/1/state",
-            "data": {"on": true}
+            'field': "/lights/1/state",
+            'data': {'on': true}
         }
         See Dresden Elektroniks REST API documentation for details:
         http://dresden-elektronik.github.io/deconz-rest-doc/rest/
@@ -162,7 +162,7 @@ def async_request_configuration(hass, config, deconz_config):
         deconz_config[CONF_HOST], deconz_config[CONF_PORT])
 
     request_id = configurator.async_request_config(
-        "deCONZ", async_configuration_callback,
+        'deCONZ', async_configuration_callback,
         description=instructions,
         entity_picture="/static/images/logo_deconz.jpeg",
         submit_caption="I have unlocked the gateway",

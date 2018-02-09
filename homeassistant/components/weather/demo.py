@@ -18,7 +18,7 @@ CONDITION_CLASSES = {
     'lightning-rainy': [],
     'partlycloudy': [],
     'pouring': [],
-    'rainy': ['shower rain'],
+    'rainy': ["shower rain"],
     'snowy': [],
     'snowy-rainy': [],
     'sunny': ['sunshine'],
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([
         DemoWeather('South', 'Sunshine', 21.6414, 92, 1099, 0.5, TEMP_CELSIUS,
                     [22, 19, 15, 12, 14, 18, 21]),
-        DemoWeather('North', 'Shower rain', -12, 54, 987, 4.8, TEMP_FAHRENHEIT,
+        DemoWeather('North', "Shower rain", -12, 54, 987, 4.8, TEMP_FAHRENHEIT,
                     [-10, -13, -18, -23, -19, -14, -9])
     ])
 
@@ -56,7 +56,7 @@ class DemoWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format('Demo Weather', self._name)
+        return '{} {}'.format("Demo Weather", self._name)
 
     @property
     def should_poll(self):
@@ -97,7 +97,7 @@ class DemoWeather(WeatherEntity):
     @property
     def attribution(self):
         """Return the attribution."""
-        return 'Powered by Home Assistant'
+        return "Powered by Home Assistant"
 
     @property
     def forecast(self):

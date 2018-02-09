@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-DEFAULT_NAME = 'MQTT Switch'
+DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False

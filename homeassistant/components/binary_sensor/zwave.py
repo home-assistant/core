@@ -23,7 +23,7 @@ def get_device(values, **kwargs):
     """Create Z-Wave entity device."""
     device_mapping = workaround.get_device_mapping(values.primary)
     if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
-        return ZWaveTriggerSensor(values, "motion")
+        return ZWaveTriggerSensor(values, 'motion')
 
     if workaround.get_device_component_mapping(values.primary) == DOMAIN:
         return ZWaveBinarySensor(values, None)

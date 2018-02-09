@@ -41,9 +41,9 @@ class HMSwitch(HMDevice, SwitchDevice):
     @property
     def today_energy_kwh(self):
         """Return the current power usage in kWh."""
-        if "ENERGY_COUNTER" in self._data:
+        if 'ENERGY_COUNTER' in self._data:
             try:
-                return self._data["ENERGY_COUNTER"] / 1000
+                return self._data['ENERGY_COUNTER'] / 1000
             except ZeroDivisionError:
                 return 0
 
@@ -59,7 +59,7 @@ class HMSwitch(HMDevice, SwitchDevice):
 
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
-        self._state = "STATE"
+        self._state = 'STATE'
         self._data.update({self._state: STATE_UNKNOWN})
 
         # Need sensor values for SwitchPowermeter

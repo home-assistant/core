@@ -34,11 +34,11 @@ DEFAULT_PERIOD = 'year'
 DEFAULT_UTC_OFFSET = '0'
 
 SENSOR_TYPES = {
-    CONF_INSTANT: ['Energy Usage', 'W'],
-    CONF_AMOUNT: ['Energy Consumed', 'kWh'],
-    CONF_BUDGET: ['Energy Budget', None],
-    CONF_COST: ['Energy Cost', None],
-    CONF_CURRENT_VALUES: ['Per-Device Usage', 'W']
+    CONF_INSTANT: ["Energy Usage", 'W'],
+    CONF_AMOUNT: ["Energy Consumed", 'kWh'],
+    CONF_BUDGET: ["Energy Budget", None],
+    CONF_COST: ["Energy Cost", None],
+    CONF_CURRENT_VALUES: ["Per-Device Usage", 'W']
 }
 
 TYPES_SCHEMA = vol.In(SENSOR_TYPES)

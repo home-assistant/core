@@ -25,7 +25,7 @@ DOMAIN = 'switch'
 DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
-GROUP_NAME_ALL_SWITCHES = 'all switches'
+GROUP_NAME_ALL_SWITCHES = "all switches"
 ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

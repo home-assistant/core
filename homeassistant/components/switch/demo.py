@@ -12,7 +12,7 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the demo switches."""
     add_devices_callback([
-        DemoSwitch('Decorative Lights', True, None, True),
+        DemoSwitch("Decorative Lights", True, None, True),
         DemoSwitch('AC', False, 'mdi:air-conditioner', False)
     ])
 

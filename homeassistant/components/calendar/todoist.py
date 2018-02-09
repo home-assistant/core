@@ -367,7 +367,7 @@ class TodoistProjectData(object):
             # Due dates are represented in RFC3339 format, in UTC.
             # Home Assistant exclusively uses UTC, so it'll
             # handle the conversion.
-            time_format = '%a %d %b %Y %H:%M:%S %z'
+            time_format = "%a %d %b %Y %H:%M:%S %z"
             # HASS' built-in parse time function doesn't like
             # Todoist's time format; strptime has to be used.
             task[END] = datetime.strptime(due_date, time_format)

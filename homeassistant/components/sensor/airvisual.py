@@ -42,26 +42,26 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 POLLUTANT_LEVEL_MAPPING = [
     {'label': 'Good', 'minimum': 0, 'maximum': 50},
     {'label': 'Moderate', 'minimum': 51, 'maximum': 100},
-    {'label': 'Unhealthy for sensitive group', 'minimum': 101, 'maximum': 150},
+    {'label': "Unhealthy for sensitive group", 'minimum': 101, 'maximum': 150},
     {'label': 'Unhealthy', 'minimum': 151, 'maximum': 200},
-    {'label': 'Very Unhealthy', 'minimum': 201, 'maximum': 300},
+    {'label': "Very Unhealthy", 'minimum': 201, 'maximum': 300},
     {'label': 'Hazardous', 'minimum': 301, 'maximum': 10000}
 ]
 
 POLLUTANT_MAPPING = {
-    'co': {'label': 'Carbon Monoxide', 'unit': MASS_PARTS_PER_MILLION},
-    'n2': {'label': 'Nitrogen Dioxide', 'unit': MASS_PARTS_PER_BILLION},
+    'co': {'label': "Carbon Monoxide", 'unit': MASS_PARTS_PER_MILLION},
+    'n2': {'label': "Nitrogen Dioxide", 'unit': MASS_PARTS_PER_BILLION},
     'o3': {'label': 'Ozone', 'unit': MASS_PARTS_PER_BILLION},
     'p1': {'label': 'PM10', 'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER},
     'p2': {'label': 'PM2.5', 'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER},
-    's2': {'label': 'Sulfur Dioxide', 'unit': MASS_PARTS_PER_BILLION},
+    's2': {'label': "Sulfur Dioxide", 'unit': MASS_PARTS_PER_BILLION},
 }
 
 SENSOR_LOCALES = {'cn': 'Chinese', 'us': 'U.S.'}
 SENSOR_TYPES = [
-    ('AirPollutionLevelSensor', 'Air Pollution Level', 'mdi:scale'),
-    ('AirQualityIndexSensor', 'Air Quality Index', 'mdi:format-list-numbers'),
-    ('MainPollutantSensor', 'Main Pollutant', 'mdi:chemical-weapon'),
+    ('AirPollutionLevelSensor', "Air Pollution Level", 'mdi:scale'),
+    ('AirQualityIndexSensor', "Air Quality Index", 'mdi:format-list-numbers'),
+    ('MainPollutantSensor', "Main Pollutant", 'mdi:chemical-weapon'),
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -158,7 +158,7 @@ class AirVisualBaseSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return '{0} {1}'.format(SENSOR_LOCALES[self._locale], self._name)
+        return "{0} {1}".format(SENSOR_LOCALES[self._locale], self._name)
 
     @property
     def state(self):

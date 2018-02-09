@@ -29,21 +29,21 @@ CONF_ATTRIBUTION = "Data provided by Melnor Aquatimer.com"
 CONF_WATERING_TIME = 'watering_minutes'
 
 NOTIFICATION_ID = 'raincloud_notification'
-NOTIFICATION_TITLE = 'Rain Cloud Setup'
+NOTIFICATION_TITLE = "Rain Cloud Setup"
 
 DATA_RAINCLOUD = 'raincloud'
 DOMAIN = 'raincloud'
 DEFAULT_WATERING_TIME = 15
 
 KEY_MAP = {
-    'auto_watering': 'Automatic Watering',
+    'auto_watering': "Automatic Watering",
     'battery': 'Battery',
     'is_watering': 'Watering',
-    'manual_watering': 'Manual Watering',
-    'next_cycle': 'Next Cycle',
-    'rain_delay': 'Rain Delay',
+    'manual_watering': "Manual Watering",
+    'next_cycle': "Next Cycle",
+    'rain_delay': "Rain Delay",
     'status': 'Status',
-    'watering_time': 'Remaining Watering Time',
+    'watering_time': "Remaining Watering Time",
 }
 
 ICON_MAP = {
@@ -105,9 +105,9 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

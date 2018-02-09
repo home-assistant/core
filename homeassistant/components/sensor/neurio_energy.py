@@ -24,8 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_API_SECRET = 'api_secret'
 CONF_SENSOR_ID = 'sensor_id'
 
-ACTIVE_NAME = 'Energy Usage'
-DAILY_NAME = 'Daily Energy Usage'
+ACTIVE_NAME = "Energy Usage"
+DAILY_NAME = "Daily Energy Usage"
 
 ACTIVE_TYPE = 'active'
 DAILY_TYPE = 'daily'
@@ -91,9 +91,9 @@ class NeurioData(object):
         if not self.sensor_id:
             user_info = self.neurio_client.get_user_information()
             _LOGGER.warning("Sensor ID auto-detected: %s", user_info[
-                "locations"][0]["sensors"][0]["sensorId"])
+                'locations'][0]['sensors'][0]['sensorId'])
             self.sensor_id = user_info[
-                "locations"][0]["sensors"][0]["sensorId"]
+                'locations'][0]['sensors'][0]['sensorId']
 
     @property
     def daily_usage(self):
@@ -121,7 +121,7 @@ class NeurioData(object):
             .astimezone(dt_util.UTC).isoformat()
         end_time = dt_util.utcnow().isoformat()
 
-        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+        _LOGGER.debug("Start: %s, End: %s", start_time, end_time)
 
         try:
             history = self.neurio_client.get_samples_stats(

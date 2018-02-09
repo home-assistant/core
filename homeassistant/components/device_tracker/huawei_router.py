@@ -40,7 +40,7 @@ Device = namedtuple('Device', ['name', 'ip', 'mac', 'state'])
 class HuaweiDeviceScanner(DeviceScanner):
     """This class queries a router running HUAWEI firmware."""
 
-    ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*),null\);')
+    ARRAY_REGEX = re.compile(r"var UserDevinfo = new Array\((.*),null\);")
     DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
     DEVICE_ATTR_REGEX = re.compile(
         '"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'
@@ -86,8 +86,8 @@ class HuaweiDeviceScanner(DeviceScanner):
         active_clients = [client for client in data if client.state]
         self.last_results = active_clients
 
-        _LOGGER.debug("Active clients: " + "\n"
-                      .join((client.mac + " " + client.name)
+        _LOGGER.debug("Active clients: " + '\n'
+                      .join((client.mac + ' ' + client.name)
                             for client in active_clients))
         return True
 
@@ -110,7 +110,7 @@ class HuaweiDeviceScanner(DeviceScanner):
                                       device_attrs_regex_res.group('IpAddr'),
                                       device_attrs_regex_res.group('MacAddr'),
                                       device_attrs_regex_res.group(
-                                          'DevStatus') == "Online"))
+                                          'DevStatus') == 'Online'))
 
         return devices
 

@@ -17,7 +17,7 @@ from homeassistant.components.notify import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["boto3==1.4.7"]
+REQUIREMENTS = ['boto3==1.4.7']
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -49,7 +49,7 @@ def get_service(hass, config, discovery_info=None):
         boto3.setup_default_session(profile_name=profile)
         del aws_config[CONF_PROFILE_NAME]
 
-    sns_client = boto3.client("sns", **aws_config)
+    sns_client = boto3.client('sns', **aws_config)
 
     return AWSSNS(sns_client)
 
@@ -69,8 +69,8 @@ class AWSSNS(BaseNotificationService):
             _LOGGER.info("At least 1 target is required")
             return
 
-        message_attributes = {k: {"StringValue": json.dumps(v),
-                                  "DataType": "String"}
+        message_attributes = {k: {'StringValue': json.dumps(v),
+                                  'DataType': 'String'}
                               for k, v in kwargs.items() if v}
         for target in targets:
             self.client.publish(TargetArn=target, Message=message,

@@ -12,8 +12,8 @@ from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo lock platform."""
     add_devices([
-        DemoLock('Front Door', STATE_LOCKED),
-        DemoLock('Kitchen Door', STATE_UNLOCKED)
+        DemoLock("Front Door", STATE_LOCKED),
+        DemoLock("Kitchen Door", STATE_UNLOCKED)
     ])
 
 

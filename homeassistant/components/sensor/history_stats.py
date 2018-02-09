@@ -36,7 +36,7 @@ CONF_TYPE_RATIO = 'ratio'
 CONF_TYPE_COUNT = 'count'
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
-DEFAULT_NAME = 'unnamed statistics'
+DEFAULT_NAME = "unnamed statistics"
 UNITS = {
     CONF_TYPE_TIME: 'h',
     CONF_TYPE_RATIO: '%',
@@ -56,8 +56,8 @@ def exactly_two_period_keys(conf):
             provided += 1
 
     if provided != 2:
-        raise vol.Invalid('You must provide exactly 2 of the following:'
-                          ' start, end, duration')
+        raise vol.Invalid("You must provide exactly 2 of the following:"
+                          " start, end, duration")
     return conf
 
 
@@ -293,9 +293,9 @@ class HistoryStatsHelper:
         hours, seconds = divmod(seconds, 3600)
         minutes, seconds = divmod(seconds, 60)
         if days > 0:
-            return '%dd %dh %dm' % (days, hours, minutes)
+            return "%dd %dh %dm" % (days, hours, minutes)
         elif hours > 0:
-            return '%dh %dm' % (hours, minutes)
+            return "%dh %dm" % (hours, minutes)
         return '%dm' % minutes
 
     @staticmethod

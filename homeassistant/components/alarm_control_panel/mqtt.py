@@ -31,7 +31,7 @@ CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
 DEFAULT_ARM_AWAY = 'ARM_AWAY'
 DEFAULT_ARM_HOME = 'ARM_HOME'
 DEFAULT_DISARM = 'DISARM'
-DEFAULT_NAME = 'MQTT Alarm'
+DEFAULT_NAME = "MQTT Alarm"
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
@@ -137,7 +137,7 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
 
         This method is a coroutine.
         """
-        if not self._validate_code(code, 'arming home'):
+        if not self._validate_code(code, "arming home"):
             return
         mqtt.async_publish(
             self.hass, self._command_topic, self._payload_arm_home, self._qos)
@@ -148,7 +148,7 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
 
         This method is a coroutine.
         """
-        if not self._validate_code(code, 'arming away'):
+        if not self._validate_code(code, "arming away"):
             return
         mqtt.async_publish(
             self.hass, self._command_topic, self._payload_arm_away, self._qos)
@@ -157,5 +157,5 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
         """Validate given code."""
         check = self._code is None or code == self._code
         if not check:
-            _LOGGER.warning('Wrong code entered for %s', state)
+            _LOGGER.warning("Wrong code entered for %s", state)
         return check

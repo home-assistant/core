@@ -86,10 +86,10 @@ class SQLSensor(Entity):
     def __init__(self, name, sessmaker, query, column, unit, value_template):
         """Initialize SQL sensor."""
         self._name = name
-        if "LIMIT" in query:
+        if 'LIMIT' in query:
             self._query = query
         else:
-            self._query = query.replace(";", " LIMIT 1;")
+            self._query = query.replace(';', " LIMIT 1;")
         self._unit_of_measurement = unit
         self._template = value_template
         self._column_name = column

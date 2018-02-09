@@ -18,10 +18,10 @@ REQUIREMENTS = ['pyirishrail==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATION = "Station"
-ATTR_ORIGIN = "Origin"
-ATTR_DESTINATION = "Destination"
-ATTR_DIRECTION = "Direction"
+ATTR_STATION = 'Station'
+ATTR_ORIGIN = 'Origin'
+ATTR_DESTINATION = 'Destination'
+ATTR_DIRECTION = 'Direction'
 ATTR_STOPS_AT = "Stops at"
 ATTR_DUE_IN = "Due in"
 ATTR_DUE_AT = "Due at"
@@ -34,7 +34,7 @@ CONF_DESTINATION = 'destination'
 CONF_DIRECTION = 'direction'
 CONF_STOPS_AT = 'stops_at'
 
-DEFAULT_NAME = 'Next Train'
+DEFAULT_NAME = "Next Train"
 ICON = 'mdi:train'
 
 SCAN_INTERVAL = timedelta(minutes=2)
@@ -93,10 +93,10 @@ class IrishRailTransportSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if len(self._times) > 0:
-            next_up = "None"
+            next_up = 'None'
             if len(self._times) > 1:
-                next_up = self._times[1][ATTR_ORIGIN] + " to "
-                next_up += self._times[1][ATTR_DESTINATION] + " in "
+                next_up = self._times[1][ATTR_ORIGIN] + ' to '
+                next_up += self._times[1][ATTR_DESTINATION] + ' in '
                 next_up += self._times[1][ATTR_DUE_IN]
 
             return {

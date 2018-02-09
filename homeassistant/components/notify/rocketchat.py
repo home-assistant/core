@@ -65,7 +65,7 @@ class RocketChatNotificationService(BaseNotificationService):
         resp = self._server.chat_post_message(
             message, channel=self._room, **data)
         if resp.status_code == 200:
-            success = resp.json()["success"]
+            success = resp.json()['success']
             if not success:
                 _LOGGER.error("Unable to post Rocket.Chat message")
         else:

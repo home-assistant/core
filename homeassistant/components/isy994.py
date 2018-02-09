@@ -29,12 +29,12 @@ CONF_SENSOR_STRING = 'sensor_string'
 CONF_ENABLE_CLIMATE = 'enable_climate'
 CONF_TLS_VER = 'tls'
 
-DEFAULT_IGNORE_STRING = '{IGNORE ME}'
+DEFAULT_IGNORE_STRING = "{IGNORE ME}"
 DEFAULT_SENSOR_STRING = 'sensor'
 
 KEY_ACTIONS = 'actions'
 KEY_FOLDER = 'folder'
-KEY_MY_PROGRAMS = 'My Programs'
+KEY_MY_PROGRAMS = "My Programs"
 KEY_STATUS = 'status'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -127,8 +127,8 @@ SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
 # (they can turn off, and report their state)
 SCENE_DOMAIN = 'switch'
 
-ISY994_NODES = "isy994_nodes"
-ISY994_WEATHER = "isy994_weather"
+ISY994_NODES = 'isy994_nodes'
+ISY994_WEATHER = 'isy994_weather'
 ISY994_PROGRAMS = "isy994_programs"
 
 WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
@@ -306,10 +306,10 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
                     entity_folder = folder[node_id]
                     try:
                         status = entity_folder[KEY_STATUS]
-                        assert status.dtype == 'program', 'Not a program'
+                        assert status.dtype == 'program', "Not a program"
                         if domain != 'binary_sensor':
                             actions = entity_folder[KEY_ACTIONS]
-                            assert actions.dtype == 'program', 'Not a program'
+                            assert actions.dtype == 'program', "Not a program"
                         else:
                             actions = None
                     except (AttributeError, KeyError, AssertionError):
@@ -375,7 +375,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _categorize_nodes(hass, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass, isy.programs)
 
-    if enable_climate and isy.configuration.get('Weather Information'):
+    if enable_climate and isy.configuration.get("Weather Information"):
         _categorize_weather(hass, isy.climate)
 
     def stop(event: object) -> None:

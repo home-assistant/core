@@ -45,7 +45,7 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
         """Return the state of the sensor."""
         return hub.get_first(
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state",
-            self._device_label) == "OPEN"
+            self._device_label) == 'OPEN'
 
     @property
     def available(self):

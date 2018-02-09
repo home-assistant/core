@@ -21,7 +21,7 @@ def threaded_listener_factory(async_factory):
         hass = args[0]
 
         if not isinstance(hass, HomeAssistant):
-            raise TypeError('First parameter needs to be a hass instance')
+            raise TypeError("First parameter needs to be a hass instance")
 
         async_remove = run_callback_threadsafe(
             hass.loop, ft.partial(async_factory, *args, **kwargs)).result()

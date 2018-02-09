@@ -81,7 +81,7 @@ def _update_google_domains(hass, session, domain, user, password, timeout):
             if body.startswith('good') or body.startswith('nochg'):
                 return True
 
-            _LOGGER.warning('Updating Google Domains failed: %s => %s',
+            _LOGGER.warning("Updating Google Domains failed: %s => %s",
                             domain, body)
 
     except aiohttp.ClientError:

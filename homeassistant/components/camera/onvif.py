@@ -27,7 +27,7 @@ REQUIREMENTS = ['onvif-py3==0.1.3',
                 '/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip'
                 '#suds-passworddigest-py3==0.1.2a']
 DEPENDENCIES = ['ffmpeg']
-DEFAULT_NAME = 'ONVIF Camera'
+DEFAULT_NAME = "ONVIF Camera"
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'

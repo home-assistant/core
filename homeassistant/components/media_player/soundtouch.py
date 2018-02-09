@@ -29,13 +29,13 @@ SERVICE_ADD_ZONE_SLAVE = 'soundtouch_add_zone_slave'
 SERVICE_REMOVE_ZONE_SLAVE = 'soundtouch_remove_zone_slave'
 
 MAP_STATUS = {
-    "PLAY_STATE": STATE_PLAYING,
+    'PLAY_STATE': STATE_PLAYING,
     "BUFFERING_STATE": STATE_PLAYING,
-    "PAUSE_STATE": STATE_PAUSED,
-    "STOP_STATE": STATE_OFF
+    'PAUSE_STATE': STATE_PAUSED,
+    'STOP_STATE': STATE_OFF
 }
 
-DATA_SOUNDTOUCH = "soundtouch"
+DATA_SOUNDTOUCH = 'soundtouch'
 
 SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({
     vol.Required('master'): cv.entity_id
@@ -56,7 +56,7 @@ SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema({
     vol.Required('slaves'): cv.entity_ids
 })
 
-DEFAULT_NAME = 'Bose Soundtouch'
+DEFAULT_NAME = "Bose Soundtouch"
 DEFAULT_PORT = 8090
 
 SUPPORT_SOUNDTOUCH = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
@@ -270,7 +270,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         if self._status.station_name is not None:
             return self._status.station_name
         elif self._status.artist is not None:
-            return self._status.artist + " - " + self._status.track
+            return self._status.artist + ' - ' + self._status.track
 
         return None
 

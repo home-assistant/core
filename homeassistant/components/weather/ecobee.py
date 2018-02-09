@@ -124,8 +124,8 @@ class EcobeeWeather(WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         if self.weather:
-            station = self.weather.get('weatherStation', "UNKNOWN")
-            time = self.weather.get('timestamp', "UNKNOWN")
+            station = self.weather.get('weatherStation', 'UNKNOWN')
+            time = self.weather.get('timestamp', 'UNKNOWN')
             return "Ecobee weather provided by {} at {}".format(station, time)
         return None
 

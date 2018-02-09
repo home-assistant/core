@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SERIAL_DEVICE = 'serial_device'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-DEFAULT_NAME = 'CO2 Sensor'
+DEFAULT_NAME = "CO2 Sensor"
 
 ATTR_CO2_CONCENTRATION = 'co2_concentration'
 

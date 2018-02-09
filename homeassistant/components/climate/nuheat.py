@@ -27,7 +27,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-DEPENDENCIES = ["nuheat"]
+DEPENDENCIES = ['nuheat']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Hold modes
 MODE_AUTO = STATE_AUTO  # Run device schedule
-MODE_HOLD_TEMPERATURE = "temperature"
+MODE_HOLD_TEMPERATURE = 'temperature'
 MODE_TEMPORARY_HOLD = "temporary_temperature"
 
 OPERATION_LIST = [STATE_HEAT, STATE_IDLE]
@@ -115,7 +115,7 @@ class NuHeatThermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self._temperature_unit == "C":
+        if self._temperature_unit == 'C':
             return TEMP_CELSIUS
 
         return TEMP_FAHRENHEIT
@@ -123,7 +123,7 @@ class NuHeatThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._temperature_unit == "C":
+        if self._temperature_unit == 'C':
             return self._thermostat.celsius
 
         return self._thermostat.fahrenheit
@@ -139,7 +139,7 @@ class NuHeatThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum supported temperature for the thermostat."""
-        if self._temperature_unit == "C":
+        if self._temperature_unit == 'C':
             return self._thermostat.min_celsius
 
         return self._thermostat.min_fahrenheit
@@ -147,7 +147,7 @@ class NuHeatThermostat(ClimateDevice):
     @property
     def max_temp(self):
         """Return the maximum supported temperature for the thermostat."""
-        if self._temperature_unit == "C":
+        if self._temperature_unit == 'C':
             return self._thermostat.max_celsius
 
         return self._thermostat.max_fahrenheit
@@ -155,7 +155,7 @@ class NuHeatThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the currently programmed temperature."""
-        if self._temperature_unit == "C":
+        if self._temperature_unit == 'C':
             return self._thermostat.target_celsius
 
         return self._thermostat.target_fahrenheit
@@ -202,7 +202,7 @@ class NuHeatThermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set a new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if self._temperature_unit == "C":
+        if self._temperature_unit == 'C':
             self._thermostat.target_celsius = temperature
         else:
             self._thermostat.target_fahrenheit = temperature

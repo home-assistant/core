@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'EnOcean Switch'
+DEFAULT_NAME = "EnOcean Switch"
 DEPENDENCIES = ['enocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -44,7 +44,7 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
         self._light = None
         self._on_state = False
         self._on_state2 = False
-        self.stype = "switch"
+        self.stype = 'switch'
 
     @property
     def is_on(self):

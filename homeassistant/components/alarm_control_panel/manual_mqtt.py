@@ -35,7 +35,7 @@ CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
 CONF_PAYLOAD_ARM_NIGHT = 'payload_arm_night'
 
-DEFAULT_ALARM_NAME = 'HA Alarm'
+DEFAULT_ALARM_NAME = "HA Alarm"
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
 DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
 DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
@@ -93,8 +93,8 @@ DEPENDENCIES = ['mqtt']
 PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): 'manual_mqtt',
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-    vol.Exclusive(CONF_CODE, 'code validation'): cv.string,
-    vol.Exclusive(CONF_CODE_TEMPLATE, 'code validation'): cv.template,
+    vol.Exclusive(CONF_CODE, "code validation"): cv.string,
+    vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
     vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME):
         vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):

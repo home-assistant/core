@@ -99,7 +99,7 @@ class NestSensor(Entity):
         # device specific
         self._location = self.device.where
         self._name = "{} {}".format(self.device.name_long,
-                                    self.variable.replace("_", " "))
+                                    self.variable.replace('_', ' '))
         self._state = None
         self._unit = None
 
@@ -127,7 +127,7 @@ class NestBasicSensor(NestSensor):
         self._unit = SENSOR_UNITS.get(self.variable, None)
 
         if self.variable == 'operation_mode':
-            self._state = getattr(self.device, "mode")
+            self._state = getattr(self.device, 'mode')
         else:
             self._state = getattr(self.device, self.variable)
 
@@ -153,7 +153,7 @@ class NestTempSensor(NestSensor):
 
         if isinstance(temp, tuple):
             low, high = temp
-            self._state = "%s-%s" % (int(low), int(high))
+            self._state = '%s-%s' % (int(low), int(high))
         else:
             self._state = round(temp, 1)
 

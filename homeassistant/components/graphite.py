@@ -114,7 +114,7 @@ class GraphiteFeeder(threading.Thread):
             things['state'] = state.state_as_number(new_state)
         except ValueError:
             pass
-        lines = ['%s.%s.%s %f %i' % (self._prefix,
+        lines = ["%s.%s.%s %f %i" % (self._prefix,
                                      entity_id, key.replace(' ', '_'),
                                      value, now)
                  for key, value in things.items()

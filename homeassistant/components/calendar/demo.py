@@ -15,12 +15,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     calendar_data_current = DemoGoogleCalendarDataCurrent()
     add_devices([
         DemoGoogleCalendar(hass, calendar_data_future, {
-            CONF_NAME: 'Future Event',
+            CONF_NAME: "Future Event",
             CONF_DEVICE_ID: 'future_event',
         }),
 
         DemoGoogleCalendar(hass, calendar_data_current, {
-            CONF_NAME: 'Current Event',
+            CONF_NAME: "Current Event",
             CONF_DEVICE_ID: 'current_event',
         }),
     ])
@@ -50,7 +50,7 @@ class DemoGoogleCalendarDataFuture(DemoGoogleCalendarData):
                 'dateTime': (one_hour_from_now + dt_util.dt.
                              timedelta(minutes=60)).isoformat()
             },
-            'summary': 'Future Event',
+            'summary': "Future Event",
         }
 
 
@@ -69,7 +69,7 @@ class DemoGoogleCalendarDataCurrent(DemoGoogleCalendarData):
                 'dateTime': (middle_of_event + dt_util.dt.
                              timedelta(minutes=60)).isoformat()
             },
-            'summary': 'Current Event',
+            'summary': "Current Event",
         }
 
 

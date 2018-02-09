@@ -70,7 +70,7 @@ MAPPING_COMPONENT = {
 
 
 """Error code used for SmartHomeError class."""
-ERROR_NOT_SUPPORTED = "notSupported"
+ERROR_NOT_SUPPORTED = 'notSupported'
 
 
 class SmartHomeError(Exception):
@@ -160,7 +160,7 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
             'thermostatTemperatureUnit':
             'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
         }
-        _LOGGER.debug('Thermostat attributes %s', device['attributes'])
+        _LOGGER.debug("Thermostat attributes %s", device['attributes'])
 
     if entity.domain == sensor.DOMAIN:
         if google_domain == climate.DOMAIN:
@@ -173,7 +173,7 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
                 'thermostatTemperatureUnit':
                 'F' if unit_of_measurement == TEMP_FAHRENHEIT else 'C',
             }
-            _LOGGER.debug('Sensor attributes %s', device['attributes'])
+            _LOGGER.debug("Sensor attributes %s", device['attributes'])
 
     return device
 
@@ -410,7 +410,7 @@ def async_handle_message(hass, config, message):
     inputs = message.get('inputs')  # type: list
 
     if len(inputs) > 1:
-        _LOGGER.warning('Got unexpected more than 1 input. %s', message)
+        _LOGGER.warning("Got unexpected more than 1 input. %s", message)
 
     # Only use first input
     intent = inputs[0].get('intent')
@@ -457,7 +457,7 @@ def async_devices_query(hass, config, payload):
         devid = device.get('id')
         # In theory this should never happen
         if not devid:
-            _LOGGER.error('Device missing ID: %s', device)
+            _LOGGER.error("Device missing ID: %s", device)
             continue
 
         state = hass.states.get(devid)
@@ -487,11 +487,11 @@ def handle_devices_execute(hass, config, payload):
                 (service, service_data) = determine_service(
                     eid, execution.get('command'), execution.get('params'),
                     hass.config.units)
-                if domain == "group":
-                    domain = "homeassistant"
+                if domain == 'group':
+                    domain = 'homeassistant'
                 success = yield from hass.services.async_call(
                     domain, service, service_data, blocking=True)
-                result = {"ids": [eid], "states": {}}
+                result = {'ids': [eid], 'states': {}}
                 if success:
                     result['status'] = 'SUCCESS'
                 else:

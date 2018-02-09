@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_MAXIMUM = 'maximum'
 ATTR_MINIMUM = 'minimum'
 
-DEFAULT_NAME = 'Random Sensor'
+DEFAULT_NAME = "Random Sensor"
 DEFAULT_MIN = 0
 DEFAULT_MAX = 20
 

@@ -6,7 +6,7 @@ https://home-assistant.io/components/demo/
 """
 from homeassistant.components.notify import BaseNotificationService
 
-EVENT_NOTIFY = "notify"
+EVENT_NOTIFY = 'notify'
 
 
 def get_service(hass, config, discovery_info=None):

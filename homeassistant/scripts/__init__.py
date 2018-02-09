@@ -26,13 +26,13 @@ def run(args: List) -> int:
             scripts.append(fil[:-3])
 
     if not args:
-        print('Please specify a script to run.')
-        print('Available scripts:', ', '.join(scripts))
+        print("Please specify a script to run.")
+        print("Available scripts:", ', '.join(scripts))
         return 1
 
     if args[0] not in scripts:
-        print('Invalid script specified.')
-        print('Available scripts:', ', '.join(scripts))
+        print("Invalid script specified.")
+        print("Available scripts:", ', '.join(scripts))
         return 1
 
     script = importlib.import_module('homeassistant.scripts.' + args[0])
@@ -47,7 +47,7 @@ def run(args: List) -> int:
         returncode = install_package(req, **pip_kwargs)
 
         if not returncode:
-            print('Aborting script, could not install dependency', req)
+            print("Aborting script, could not install dependency", req)
             return 1
 
     return script.run(args[1:])  # type: ignore

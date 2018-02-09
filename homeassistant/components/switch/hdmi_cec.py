@@ -33,7 +33,7 @@ class CecSwitchDevice(CecDevice, SwitchDevice):
     def __init__(self, hass: HomeAssistant, device, logical) -> None:
         """Initialize the HDMI device."""
         CecDevice.__init__(self, hass, device, logical)
-        self.entity_id = "%s.%s_%s" % (
+        self.entity_id = '%s.%s_%s' % (
             DOMAIN, 'hdmi', hex(self._logical_address)[2:])
         self.update()
 

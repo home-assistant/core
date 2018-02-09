@@ -44,7 +44,7 @@ def setup(hass, config):
         try:
             fullurl = '{}/input/post.json'.format(url)
             data = {"apikey": apikey, "data": payload}
-            parameters = {"node": node}
+            parameters = {'node': node}
             req = requests.post(
                 fullurl, params=parameters, data=data, allow_redirects=True,
                 timeout=5)
@@ -75,7 +75,7 @@ def setup(hass, config):
                 continue
 
         if payload_dict:
-            payload = "{%s}" % ",".join("{}:{}".format(key, val)
+            payload = '{%s}' % ','.join('{}:{}'.format(key, val)
                                         for key, val in
                                         payload_dict.items())
 

@@ -24,7 +24,7 @@ CONF_ADDRESS = 'address'
 CONF_NETWORK = 'network'
 CONF_ATTRIBUTION = "Data provided by chain.so"
 
-DEFAULT_NAME = 'Crypto Balance'
+DEFAULT_NAME = "Crypto Balance"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

@@ -73,7 +73,7 @@ class MpcHcDevice(MediaPlayerDevice):
     def _send_command(self, command_id):
         """Send a command to MPC-HC via its window message ID."""
         try:
-            params = {"wm_command": command_id}
+            params = {'wm_command': command_id}
             requests.get("{}/command.html".format(self._url),
                          params=params, timeout=3)
         except requests.exceptions.RequestException:
@@ -118,7 +118,7 @@ class MpcHcDevice(MediaPlayerDevice):
     def media_duration(self):
         """Return the duration of the current playing media in seconds."""
         duration = self._player_variables.get(
-            'durationstring', "00:00:00").split(':')
+            'durationstring', '00:00:00').split(':')
         return \
             int(duration[0]) * 3600 + \
             int(duration[1]) * 60 + \

@@ -24,25 +24,25 @@ REQUIREMENTS = ['mercedesmejsonpy==0.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSORS = {
-    'doorsClosed': ['Doors closed'],
-    'windowsClosed': ['Windows closed'],
-    'locked': ['Doors locked'],
-    'tireWarningLight': ['Tire Warning']
+    'doorsClosed': ["Doors closed"],
+    'windowsClosed': ["Windows closed"],
+    'locked': ["Doors locked"],
+    'tireWarningLight': ["Tire Warning"]
 }
 
 SENSORS = {
-    'fuelLevelPercent': ['Fuel Level', '%'],
-    'fuelRangeKm': ['Fuel Range', LENGTH_KILOMETERS],
-    'latestTrip': ['Latest Trip', None],
+    'fuelLevelPercent': ["Fuel Level", '%'],
+    'fuelRangeKm': ["Fuel Range", LENGTH_KILOMETERS],
+    'latestTrip': ["Latest Trip", None],
     'odometerKm': ['Odometer', LENGTH_KILOMETERS],
-    'serviceIntervalDays': ['Next Service', 'days']
+    'serviceIntervalDays': ["Next Service", 'days']
 }
 
 DATA_MME = 'mercedesme'
 DOMAIN = 'mercedesme'
 
 NOTIFICATION_ID = 'mercedesme_integration_notification'
-NOTIFICATION_TITLE = 'Mercedes me integration setup'
+NOTIFICATION_TITLE = "Mercedes me integration setup"
 
 SIGNAL_UPDATE_MERCEDESME = "mercedesme_update"
 

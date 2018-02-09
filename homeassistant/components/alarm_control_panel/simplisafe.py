@@ -24,7 +24,7 @@ DEFAULT_NAME = 'SimpliSafe'
 DOMAIN = 'simplisafe'
 
 NOTIFICATION_ID = 'simplisafe_notification'
-NOTIFICATION_TITLE = 'SimpliSafe Setup'
+NOTIFICATION_TITLE = "SimpliSafe Setup"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for location in locations:
             add_devices([SimpliSafeAlarm(location, name, code)])
     else:
-        message = 'Failed to log into SimpliSafe. Check credentials.'
+        message = "Failed to log into SimpliSafe. Check credentials."
         _LOGGER.error(message)
         hass.components.persistent_notification.create(
             message,
@@ -125,14 +125,14 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if not self._validate_code(code, 'arming home'):
+        if not self._validate_code(code, "arming home"):
             return
         self.simplisafe.set_state('home')
         _LOGGER.info("SimpliSafe alarm arming home")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if not self._validate_code(code, 'arming away'):
+        if not self._validate_code(code, "arming away"):
             return
         self.simplisafe.set_state('away')
         _LOGGER.info("SimpliSafe alarm arming away")

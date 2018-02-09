@@ -111,7 +111,7 @@ class MVGLiveSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return 'min'
 
     def update(self):
         """Get the latest data and update the state."""

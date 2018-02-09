@@ -11,8 +11,8 @@ from homeassistant.helpers.icon import icon_for_battery_level
 DEPENDENCIES = ['ios']
 
 SENSOR_TYPES = {
-    'level': ['Battery Level', '%'],
-    'state': ['Battery State', None]
+    'level': ["Battery Level", '%'],
+    'state': ["Battery State", None]
 }
 
 DEFAULT_ICON_LEVEL = 'mdi:battery'
@@ -58,7 +58,7 @@ class IOSSensor(Entity):
     def unique_id(self):
         """Return the unique ID of this sensor."""
         device_id = self._device[ios.ATTR_DEVICE_ID]
-        return "{}_{}".format(self.type, device_id)
+        return '{}_{}'.format(self.type, device_id)
 
     @property
     def unit_of_measurement(self):
@@ -89,13 +89,13 @@ class IOSSensor(Entity):
         if (battery_state == ios.ATTR_BATTERY_STATE_FULL or
                 battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED):
             charging = False
-            icon_state = "{}-off".format(DEFAULT_ICON_STATE)
+            icon_state = '{}-off'.format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
             battery_level = None
             charging = False
-            icon_state = "{}-unknown".format(DEFAULT_ICON_LEVEL)
+            icon_state = '{}-unknown'.format(DEFAULT_ICON_LEVEL)
 
-        if self.type == "state":
+        if self.type == 'state':
             return icon_state
         return icon_for_battery_level(battery_level=battery_level,
                                       charging=charging)

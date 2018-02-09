@@ -99,7 +99,7 @@ def async_get_image(hass, entity_id, timeout=10):
         raise HomeAssistantError(
             "No entity '{0}' for grab an image".format(entity_id))
 
-    url = "{0}{1}".format(
+    url = '{0}{1}'.format(
         hass.config.api.base_url,
         state.attributes.get(ATTR_ENTITY_PICTURE)
     )
@@ -267,9 +267,9 @@ class Camera(Entity):
         def write(img_bytes):
             """Write image to stream."""
             response.write(bytes(
-                '--frameboundary\r\n'
-                'Content-Type: {}\r\n'
-                'Content-Length: {}\r\n\r\n'.format(
+                "--frameboundary\r\n"
+                "Content-Type: {}\r\n"
+                "Content-Length: {}\r\n\r\n".format(
                     self.content_type, len(img_bytes)),
                 'utf-8') + img_bytes + b'\r\n')
 

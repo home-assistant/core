@@ -26,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         name = device.get('address')
         address = device.get('address_hex')
 
-        _LOGGER.info('Registered %s with binary_sensor platform.', name)
+        _LOGGER.info("Registered %s with binary_sensor platform.", name)
 
         device_list.append(
             InsteonPLMBinarySensorDevice(hass, plm, address, name)

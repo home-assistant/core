@@ -130,7 +130,7 @@ def _response_to_json(response):
         for ssid in ssid_table:
             client_table = ssid.get(UNIFI_CLIENT_TABLE)
             for client in client_table:
-                active_clients[client.get("mac")] = client
+                active_clients[client.get('mac')] = client
 
         return active_clients
     except ValueError:

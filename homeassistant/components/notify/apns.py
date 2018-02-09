@@ -132,15 +132,15 @@ def _write_device(out, device):
         attributes.append(
             'tracking_device_id: {}'.format(device.tracking_device_id))
     if device.disabled:
-        attributes.append('disabled: True')
+        attributes.append("disabled: True")
 
     out.write(device.push_id)
     out.write(": {")
     if attributes:
-        separator = ", "
+        separator = ', '
         out.write(separator.join(attributes))
 
-    out.write("}\n")
+    out.write('}\n')
 
 
 class ApnsNotificationService(BaseNotificationService):

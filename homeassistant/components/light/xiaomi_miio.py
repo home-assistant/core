@@ -21,7 +21,7 @@ from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Xiaomi Philips Light'
+DEFAULT_NAME = "Xiaomi Philips Light"
 PLATFORM = 'xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -94,9 +94,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             device = XiaomiPhilipsLightBall(name, light, device_info)
         else:
             _LOGGER.error(
-                'Unsupported device found! Please create an issue at '
-                'https://github.com/rytilahti/python-miio/issues '
-                'and provide the following data: %s', device_info.model)
+                "Unsupported device found! Please create an issue at "
+                "https://github.com/rytilahti/python-miio/issues "
+                "and provide the following data: %s", device_info.model)
             return False
 
     except DeviceException:

@@ -39,7 +39,7 @@ DATA_VULTR = 'data_vultr'
 DOMAIN = 'vultr'
 
 NOTIFICATION_ID = 'vultr_notification'
-NOTIFICATION_TITLE = 'Vultr Setup'
+NOTIFICATION_TITLE = "Vultr Setup"
 
 VULTR_PLATFORMS = ['binary_sensor', 'sensor', 'switch']
 

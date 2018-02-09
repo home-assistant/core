@@ -35,16 +35,16 @@ class HiveClimateEntity(ClimateDevice):
 
     def __init__(self, hivesession, hivedevice):
         """Initialize the Climate device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
+        self.node_id = hivedevice['Hive_NodeID']
+        self.node_name = hivedevice['Hive_NodeName']
+        self.device_type = hivedevice['HA_DeviceType']
         self.session = hivesession
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
 
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             self.modes = [STATE_AUTO, STATE_HEAT, STATE_OFF]
-        elif self.device_type == "HotWater":
+        elif self.device_type == 'HotWater':
             self.modes = [STATE_AUTO, STATE_ON, STATE_OFF]
 
         self.session.entities.append(self)
@@ -63,11 +63,11 @@ class HiveClimateEntity(ClimateDevice):
     def name(self):
         """Return the name of the Climate device."""
         friendly_name = "Climate Device"
-        if self.device_type == "Heating":
-            friendly_name = "Heating"
+        if self.device_type == 'Heating':
+            friendly_name = 'Heating'
             if self.node_name is not None:
                 friendly_name = '{} {}'.format(self.node_name, friendly_name)
-        elif self.device_type == "HotWater":
+        elif self.device_type == 'HotWater':
             friendly_name = "Hot Water"
         return friendly_name
 
@@ -79,25 +79,25 @@ class HiveClimateEntity(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             return self.session.heating.current_temperature(self.node_id)
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             return self.session.heating.get_target_temperature(self.node_id)
 
     @property
     def min_temp(self):
         """Return minimum temperature."""
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             return self.session.heating.min_temperature(self.node_id)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             return self.session.heating.max_temperature(self.node_id)
 
     @property
@@ -108,18 +108,18 @@ class HiveClimateEntity(ClimateDevice):
     @property
     def current_operation(self):
         """Return current mode."""
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             currentmode = self.session.heating.get_mode(self.node_id)
-        elif self.device_type == "HotWater":
+        elif self.device_type == 'HotWater':
             currentmode = self.session.hotwater.get_mode(self.node_id)
         return HIVE_TO_HASS_STATE.get(currentmode)
 
     def set_operation_mode(self, operation_mode):
         """Set new Heating mode."""
         new_mode = HASS_TO_HIVE_STATE.get(operation_mode)
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             self.session.heating.set_mode(self.node_id, new_mode)
-        elif self.device_type == "HotWater":
+        elif self.device_type == 'HotWater':
             self.session.hotwater.set_mode(self.node_id, new_mode)
 
         for entity in self.session.entities:
@@ -129,7 +129,7 @@ class HiveClimateEntity(ClimateDevice):
         """Set new target temperature."""
         new_temperature = kwargs.get(ATTR_TEMPERATURE)
         if new_temperature is not None:
-            if self.device_type == "Heating":
+            if self.device_type == 'Heating':
                 self.session.heating.set_target_temperature(self.node_id,
                                                             new_temperature)
 
@@ -140,23 +140,23 @@ class HiveClimateEntity(ClimateDevice):
     def is_aux_heat_on(self):
         """Return true if auxiliary heater is on."""
         boost_status = None
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             boost_status = self.session.heating.get_boost(self.node_id)
-        elif self.device_type == "HotWater":
+        elif self.device_type == 'HotWater':
             boost_status = self.session.hotwater.get_boost(self.node_id)
-        return boost_status == "ON"
+        return boost_status == 'ON'
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
         target_boost_time = 30
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             curtemp = self.session.heating.current_temperature(self.node_id)
             curtemp = round(curtemp * 2) / 2
             target_boost_temperature = curtemp + 0.5
             self.session.heating.turn_boost_on(self.node_id,
                                                target_boost_time,
                                                target_boost_temperature)
-        elif self.device_type == "HotWater":
+        elif self.device_type == 'HotWater':
             self.session.hotwater.turn_boost_on(self.node_id,
                                                 target_boost_time)
 
@@ -165,9 +165,9 @@ class HiveClimateEntity(ClimateDevice):
 
     def turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
-        if self.device_type == "Heating":
+        if self.device_type == 'Heating':
             self.session.heating.turn_boost_off(self.node_id)
-        elif self.device_type == "HotWater":
+        elif self.device_type == 'HotWater':
             self.session.hotwater.turn_boost_off(self.node_id)
 
         for entity in self.session.entities:

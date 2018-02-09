@@ -80,7 +80,7 @@ class DecoraLight(Light):
 
         self._name = device['name']
         self._address = device['address']
-        self._key = device["key"]
+        self._key = device['key']
         self._switch = decora.decora(self._address, self._key)
         self._brightness = 0
         self._state = False

@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Pioneer AVR'
+DEFAULT_NAME = "Pioneer AVR"
 DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
 
@@ -69,7 +69,7 @@ class PioneerDevice(MediaPlayerDevice):
     def telnet_request(cls, telnet, command, expected_prefix):
         """Execute `command` and return the response."""
         try:
-            telnet.write(command.encode("ASCII") + b"\r")
+            telnet.write(command.encode('ASCII') + b'\r')
         except telnetlib.socket.timeout:
             _LOGGER.debug("Pioneer command %s timed out", command)
             return None
@@ -77,7 +77,7 @@ class PioneerDevice(MediaPlayerDevice):
         # The receiver will randomly send state change updates, make sure
         # we get the response we are looking for
         for _ in range(3):
-            result = telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII") \
+            result = telnet.read_until(b'\r\n', timeout=0.2).decode('ASCII') \
                 .strip()
             if result.startswith(expected_prefix):
                 return result
@@ -93,7 +93,7 @@ class PioneerDevice(MediaPlayerDevice):
             except (ConnectionRefusedError, OSError):
                 _LOGGER.warning("Pioneer %s refused connection", self._name)
                 return
-            telnet.write(command.encode("ASCII") + b"\r")
+            telnet.write(command.encode('ASCII') + b'\r')
             telnet.read_very_eager()  # skip response
             telnet.close()
         except telnetlib.socket.timeout:
@@ -108,21 +108,21 @@ class PioneerDevice(MediaPlayerDevice):
             _LOGGER.warning("Pioneer %s refused connection", self._name)
             return False
 
-        pwstate = self.telnet_request(telnet, "?P", "PWR")
+        pwstate = self.telnet_request(telnet, '?P', 'PWR')
         if pwstate:
             self._pwstate = pwstate
 
-        volume_str = self.telnet_request(telnet, "?V", "VOL")
+        volume_str = self.telnet_request(telnet, '?V', 'VOL')
         self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
 
-        muted_value = self.telnet_request(telnet, "?M", "MUT")
-        self._muted = (muted_value == "MUT0") if muted_value else None
+        muted_value = self.telnet_request(telnet, '?M', 'MUT')
+        self._muted = (muted_value == 'MUT0') if muted_value else None
 
         # Build the source name dictionaries if necessary
         if not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
                 result = self.telnet_request(
-                    telnet, "?RGB" + str(i).zfill(2), "RGB")
+                    telnet, '?RGB' + str(i).zfill(2), 'RGB')
 
                 if not result:
                     continue
@@ -133,7 +133,7 @@ class PioneerDevice(MediaPlayerDevice):
                 self._source_name_to_number[source_name] = source_number
                 self._source_number_to_name[source_number] = source_name
 
-        source_number = self.telnet_request(telnet, "?F", "FN")
+        source_number = self.telnet_request(telnet, '?F', 'FN')
 
         if source_number:
             self._selected_source = self._source_number_to_name \
@@ -152,9 +152,9 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._pwstate == "PWR1":
+        if self._pwstate == 'PWR1':
             return STATE_OFF
-        if self._pwstate == "PWR0":
+        if self._pwstate == 'PWR0':
             return STATE_ON
 
         return STATE_UNKNOWN
@@ -191,29 +191,29 @@ class PioneerDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.telnet_command("PF")
+        self.telnet_command('PF')
 
     def volume_up(self):
         """Volume up media player."""
-        self.telnet_command("VU")
+        self.telnet_command('VU')
 
     def volume_down(self):
         """Volume down media player."""
-        self.telnet_command("VD")
+        self.telnet_command('VD')
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # 60dB max
-        self.telnet_command(str(round(volume * MAX_VOLUME)).zfill(3) + "VL")
+        self.telnet_command(str(round(volume * MAX_VOLUME)).zfill(3) + 'VL')
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        self.telnet_command("MO" if mute else "MF")
+        self.telnet_command('MO' if mute else 'MF')
 
     def turn_on(self):
         """Turn the media player on."""
-        self.telnet_command("PO")
+        self.telnet_command('PO')
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command(self._source_name_to_number.get(source) + "FN")
+        self.telnet_command(self._source_name_to_number.get(source) + 'FN')

@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['basicmodem==0.7']
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = 'Modem CallerID'
+DEFAULT_NAME = "Modem CallerID"
 ICON = 'mdi:phone-classic'
 DEFAULT_DEVICE = '/dev/ttyACM0'
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     modem = bm(port)
     if modem.state == modem.STATE_FAILED:
-        _LOGGER.error('Unable to initialize modem.')
+        _LOGGER.error("Unable to initialize modem.")
         return
 
     add_devices([ModemCalleridSensor(hass, name, port, modem)])
@@ -49,7 +49,7 @@ class ModemCalleridSensor(Entity):
 
     def __init__(self, hass, name, port, modem):
         """Initialize the sensor."""
-        self._attributes = {"cid_time": 0, "cid_number": '', "cid_name": ''}
+        self._attributes = {'cid_time': 0, 'cid_number': '', 'cid_name': ''}
         self._name = name
         self.port = port
         self.modem = modem
@@ -101,16 +101,16 @@ class ModemCalleridSensor(Entity):
         """Handle new states."""
         if newstate == self.modem.STATE_RING:
             if self.state == self.modem.STATE_IDLE:
-                att = {"cid_time": self.modem.get_cidtime,
-                       "cid_number": '',
-                       "cid_name": ''}
+                att = {'cid_time': self.modem.get_cidtime,
+                       'cid_number': '',
+                       'cid_name': ''}
                 self.set_attributes(att)
             self._state = STATE_RING
             self.schedule_update_ha_state()
         elif newstate == self.modem.STATE_CALLERID:
-            att = {"cid_time": self.modem.get_cidtime,
-                   "cid_number": self.modem.get_cidnumber,
-                   "cid_name": self.modem.get_cidname}
+            att = {'cid_time': self.modem.get_cidtime,
+                   'cid_number': self.modem.get_cidnumber,
+                   'cid_name': self.modem.get_cidname}
             self.set_attributes(att)
             self._state = STATE_CALLERID
             self.schedule_update_ha_state()

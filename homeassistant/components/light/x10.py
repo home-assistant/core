@@ -35,7 +35,7 @@ def x10_command(command):
 
 def get_unit_status(code):
     """Get on/off status for given unit."""
-    output = check_output('heyu onstate ' + code, shell=True)
+    output = check_output("heyu onstate " + code, shell=True)
     return int(output.decode('utf-8')[0])
 
 

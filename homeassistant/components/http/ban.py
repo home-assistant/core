@@ -26,7 +26,7 @@ NOTIFICATION_ID_BAN = 'ip-ban'
 NOTIFICATION_ID_LOGIN = 'http-login'
 
 IP_BANS_FILE = 'ip_bans.yaml'
-ATTR_BANNED_AT = "banned_at"
+ATTR_BANNED_AT = 'banned_at'
 
 SCHEMA_IP_BAN_ENTRY = vol.Schema({
     vol.Optional('banned_at'): vol.Any(None, cv.datetime)
@@ -66,11 +66,11 @@ def process_wrong_login(request):
     """Process a wrong login attempt."""
     remote_addr = get_real_ip(request)
 
-    msg = ('Login attempt or request with invalid authentication '
+    msg = ("Login attempt or request with invalid authentication "
            'from {}'.format(remote_addr))
     _LOGGER.warning(msg)
     persistent_notification.async_create(
-        request.app['hass'], msg, 'Login attempt failed',
+        request.app['hass'], msg, "Login attempt failed",
         NOTIFICATION_ID_LOGIN)
 
     if (not request.app[KEY_BANS_ENABLED] or
@@ -96,8 +96,8 @@ def process_wrong_login(request):
 
         persistent_notification.async_create(
             hass,
-            'Too many login attempts from {}'.format(remote_addr),
-            'Banning IP address', NOTIFICATION_ID_BAN)
+            "Too many login attempts from {}".format(remote_addr),
+            "Banning IP address", NOTIFICATION_ID_BAN)
 
 
 class IpBan(object):
@@ -119,7 +119,7 @@ def load_ip_bans_config(path: str):
     try:
         list_ = load_yaml_config_file(path)
     except HomeAssistantError as err:
-        _LOGGER.error('Unable to load %s: %s', path, str(err))
+        _LOGGER.error("Unable to load %s: %s", path, str(err))
         return ip_list
 
     for ip_ban, ip_info in list_.items():

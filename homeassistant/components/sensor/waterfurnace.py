@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 class WFSensorConfig(object):
     """Water Furnace Sensor configuration."""
 
-    def __init__(self, friendly_name, field, icon="mdi:gauge",
+    def __init__(self, friendly_name, field, icon='mdi:gauge',
                  unit_of_measurement=None):
         """Initialize configuration."""
         self.friendly_name = friendly_name
@@ -29,20 +29,20 @@ class WFSensorConfig(object):
 
 
 SENSORS = [
-    WFSensorConfig("Furnace Mode", "mode"),
-    WFSensorConfig("Total Power", "totalunitpower", "mdi:flash", "W"),
+    WFSensorConfig("Furnace Mode", 'mode'),
+    WFSensorConfig("Total Power", 'totalunitpower', 'mdi:flash', 'W'),
     WFSensorConfig("Active Setpoint", "tstatactivesetpoint",
                    "mdi:thermometer", TEMP_FAHRENHEIT),
-    WFSensorConfig("Leaving Air", "leavingairtemp",
+    WFSensorConfig("Leaving Air", 'leavingairtemp',
                    "mdi:thermometer", TEMP_FAHRENHEIT),
-    WFSensorConfig("Room Temp", "tstatroomtemp",
+    WFSensorConfig("Room Temp", 'tstatroomtemp',
                    "mdi:thermometer", TEMP_FAHRENHEIT),
     WFSensorConfig("Loop Temp", "enteringwatertemp",
                    "mdi:thermometer", TEMP_FAHRENHEIT),
     WFSensorConfig("Humidity Set Point", "tstathumidsetpoint",
-                   "mdi:water-percent", "%"),
-    WFSensorConfig("Humidity", "tstatrelativehumidity",
-                   "mdi:water-percent", "%"),
+                   "mdi:water-percent", '%'),
+    WFSensorConfig('Humidity', "tstatrelativehumidity",
+                   "mdi:water-percent", '%'),
 ]
 
 

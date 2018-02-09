@@ -33,9 +33,9 @@ SENSOR_TYPES = {
     'weather_current': ['Current', None],
     'weather': ['Condition', None],
     'temperature': ['Temperature', 'temperature'],
-    'temp_min': ['Temperature min', 'temperature'],
-    'temp_max': ['Temperature max', 'temperature'],
-    'wind_speed': ['Wind speed', 'speed'],
+    'temp_min': ["Temperature min", 'temperature'],
+    'temp_max': ["Temperature max", 'temperature'],
+    'wind_speed': ["Wind speed", 'speed'],
     'humidity': ['Humidity', '%'],
     'pressure': ['Pressure', 'pressure'],
     'visibility': ['Visibility', 'distance'],
@@ -123,7 +123,7 @@ class YahooWeatherSensor(Entity):
     @property
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
-        if self._code is None or "weather" not in self._type:
+        if self._code is None or 'weather' not in self._type:
             return None
 
         return self._data.yahoo.getWeatherImage(self._code)

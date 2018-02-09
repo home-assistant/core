@@ -29,13 +29,13 @@ def setup_scanner(hass, config, see, discovery_info=None):
     def observe(call=None):
         """Observe three entities."""
         random_see('demo_paulus', 'Paulus')
-        random_see('demo_anne_therese', 'Anne Therese')
+        random_see('demo_anne_therese', "Anne Therese")
 
     observe()
 
     see(
         dev_id='demo_home_boy',
-        host_name='Home Boy',
+        host_name="Home Boy",
         gps=[hass.config.latitude - 0.00002, hass.config.longitude + 0.00002],
         gps_accuracy=20,
         battery=53

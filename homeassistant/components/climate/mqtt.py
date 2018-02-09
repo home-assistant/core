@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-DEFAULT_NAME = 'MQTT HVAC'
+DEFAULT_NAME = "MQTT HVAC"
 
 CONF_POWER_COMMAND_TOPIC = 'power_command_topic'
 CONF_POWER_STATE_TOPIC = 'power_state_topic'
@@ -114,8 +114,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
     vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
-    vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default='ON'): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default='OFF'): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -326,9 +326,9 @@ class MqttClimate(MqttAvailability, ClimateDevice):
                 payload = \
                   self._value_templates[CONF_AWAY_MODE_STATE_TEMPLATE].\
                   async_render_with_possible_json_value(payload)
-                if payload == "True":
+                if payload == 'True':
                     payload = self._payload_on
-                elif payload == "False":
+                elif payload == 'False':
                     payload = self._payload_off
 
             if payload == self._payload_on:
@@ -351,9 +351,9 @@ class MqttClimate(MqttAvailability, ClimateDevice):
             if CONF_AUX_STATE_TEMPLATE in self._value_templates:
                 payload = self._value_templates[CONF_AUX_STATE_TEMPLATE].\
                   async_render_with_possible_json_value(payload)
-                if payload == "True":
+                if payload == 'True':
                     payload = self._payload_on
-                elif payload == "False":
+                elif payload == 'False':
                     payload = self._payload_off
 
             if payload == self._payload_on:

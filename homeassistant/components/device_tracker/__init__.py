@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone', 'group']
 
-GROUP_NAME_ALL_DEVICES = 'all devices'
+GROUP_NAME_ALL_DEVICES = "all devices"
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -234,9 +234,9 @@ class DeviceTracker(object):
 
         for dev in devices:
             if self.devices[dev.dev_id] is not dev:
-                _LOGGER.warning('Duplicate device IDs detected %s', dev.dev_id)
+                _LOGGER.warning("Duplicate device IDs detected %s", dev.dev_id)
             if dev.mac and self.mac_to_dev[dev.mac] is not dev:
-                _LOGGER.warning('Duplicate device MAC addresses detected %s',
+                _LOGGER.warning("Duplicate device MAC addresses detected %s",
                                 dev.mac)
 
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
@@ -262,7 +262,7 @@ class DeviceTracker(object):
         This method is a coroutine.
         """
         if mac is None and dev_id is None:
-            raise HomeAssistantError('Neither mac or device id passed in')
+            raise HomeAssistantError("Neither mac or device id passed in")
         elif mac is not None:
             mac = str(mac).upper()
             device = self.mac_to_dev.get(mac)

@@ -106,7 +106,7 @@ def setup(hass, config):
 
 # Tuple to hold data needed for notification
 NotificationItem = namedtuple(
-    'NotificationItem', 'hnotify huser name plc_datatype callback'
+    'NotificationItem', "hnotify huser name plc_datatype callback"
 )
 
 

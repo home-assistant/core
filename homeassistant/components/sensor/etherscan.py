@@ -57,7 +57,7 @@ class EtherscanSensor(Entity):
         self._token_address = token_address
         self._token = token
         self._state = None
-        self._unit_of_measurement = self._token or "ETH"
+        self._unit_of_measurement = self._token or 'ETH'
 
     @property
     def name(self):

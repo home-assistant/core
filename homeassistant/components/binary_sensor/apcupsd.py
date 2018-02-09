@@ -12,7 +12,7 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import apcupsd
 
-DEFAULT_NAME = 'UPS Online Status'
+DEFAULT_NAME = "UPS Online Status"
 DEPENDENCIES = [apcupsd.DOMAIN]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

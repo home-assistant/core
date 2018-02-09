@@ -52,7 +52,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
         data = self.get_ddwrt_data(url)
         if not data:
-            raise ConnectionError('Cannot connect to DD-Wrt router')
+            raise ConnectionError("Cannot connect to DD-Wrt router")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

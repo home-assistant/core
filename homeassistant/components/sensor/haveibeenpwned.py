@@ -62,7 +62,7 @@ class HaveIBeenPwnedSensor(Entity):
         self._data = data
         self._hass = hass
         self._email = email
-        self._unit_of_measurement = "Breaches"
+        self._unit_of_measurement = 'Breaches'
 
     @property
     def name(self):
@@ -89,9 +89,9 @@ class HaveIBeenPwnedSensor(Entity):
         for idx, value in enumerate(self._data.data[self._email]):
             tmpname = "breach {}".format(idx+1)
             tmpvalue = "{} {}".format(
-                value["Title"],
+                value['Title'],
                 dt_util.as_local(dt_util.parse_datetime(
-                    value["AddedDate"])).strftime(DATE_STR_FORMAT))
+                    value['AddedDate'])).strftime(DATE_STR_FORMAT))
             val[tmpname] = tmpvalue
 
         return val
@@ -147,7 +147,7 @@ class HaveIBeenPwnedData(object):
     def update(self, **kwargs):
         """Get the latest data for current email from REST service."""
         try:
-            url = "{}{}".format(URL, self._email)
+            url = '{}{}'.format(URL, self._email)
 
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
 
@@ -161,7 +161,7 @@ class HaveIBeenPwnedData(object):
 
         if req.status_code == 200:
             self.data[self._email] = sorted(req.json(),
-                                            key=lambda k: k["AddedDate"],
+                                            key=lambda k: k['AddedDate'],
                                             reverse=True)
 
             # Only goto next email if we had data so that

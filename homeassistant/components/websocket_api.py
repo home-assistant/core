@@ -201,7 +201,7 @@ def async_setup(hass, config):
 class WebsocketAPIView(HomeAssistantView):
     """View to serve a websockets endpoint."""
 
-    name = "websocketapi"
+    name = 'websocketapi'
     url = URL
     requires_auth = False
 
@@ -242,7 +242,7 @@ class ActiveConnection:
                 message = yield from self.to_write.get()
                 if message is None:
                     break
-                self.debug("Sending", message)
+                self.debug('Sending', message)
                 yield from self.wsock.send_json(message, dumps=JSON_DUMP)
 
     @callback
@@ -272,7 +272,7 @@ class ActiveConnection:
         request = self.request
         wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
         yield from wsock.prepare(request)
-        self.debug("Connected")
+        self.debug('Connected')
 
         # Get a reference to current task so we can cancel our connection
         self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
@@ -304,7 +304,7 @@ class ActiveConnection:
                 else:
                     self.debug("Invalid password")
                     yield from self.wsock.send_json(
-                        auth_invalid_message('Invalid password'))
+                        auth_invalid_message("Invalid password"))
 
             if not authenticated:
                 yield from process_wrong_login(request)
@@ -318,14 +318,14 @@ class ActiveConnection:
             last_id = 0
 
             while msg:
-                self.debug("Received", msg)
+                self.debug('Received', msg)
                 msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
                 cur_id = msg['id']
 
                 if cur_id <= last_id:
                     self.to_write.put_nowait(error_message(
                         cur_id, ERR_ID_REUSE,
-                        'Identifier values have to increase.'))
+                        "Identifier values have to increase."))
 
                 else:
                     handler_name = 'handle_{}'.format(msg['type'])
@@ -438,7 +438,7 @@ class ActiveConnection:
         else:
             self.to_write.put_nowait(error_message(
                 msg['id'], ERR_NOT_FOUND,
-                'Subscription not found.'))
+                "Subscription not found."))
 
     def handle_call_service(self, msg):
         """Handle call service command.

@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Feedreader component."""
     urls = config.get(DOMAIN)[CONF_URLS]
-    data_file = hass.config.path("{}.pickle".format(DOMAIN))
+    data_file = hass.config.path('{}.pickle'.format(DOMAIN))
     storage = StoredData(data_file)
     feeds = [FeedManager(url, hass, storage) for url in urls]
     return len(feeds) > 0

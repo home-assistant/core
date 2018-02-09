@@ -93,7 +93,7 @@ class BaseEditConfigView(HomeAssistantView):
         value = self._get_value(hass, current, config_key)
 
         if value is None:
-            return self.json_message('Resource not found', 404)
+            return self.json_message("Resource not found", 404)
 
         return self.json(value)
 
@@ -103,19 +103,19 @@ class BaseEditConfigView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON specified', 400)
+            return self.json_message("Invalid JSON specified", 400)
 
         try:
             self.key_schema(config_key)
         except vol.Invalid as err:
-            return self.json_message('Key malformed: {}'.format(err), 400)
+            return self.json_message("Key malformed: {}".format(err), 400)
 
         try:
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
             self.data_schema(data)
         except vol.Invalid as err:
-            return self.json_message('Message malformed: {}'.format(err), 400)
+            return self.json_message("Message malformed: {}".format(err), 400)
 
         hass = request.app['hass']
         path = hass.config.path(self.path)

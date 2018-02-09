@@ -56,8 +56,8 @@ class RainBirdSwitch(SwitchDevice):
         self._state = None
         self._duration = dev.get(CONF_TRIGGER_TIME)
         self._attributes = {
-            "duration": self._duration,
-            "zone": self._zone
+            'duration': self._duration,
+            'zone': self._zone
         }
 
     @property

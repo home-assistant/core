@@ -30,7 +30,7 @@ ATTR_CURRENT_POWER_W = 'current_power_w'
 ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
 ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
-DEFAULT_NAME = 'TP-Link Light'
+DEFAULT_NAME = "TP-Link Light"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -178,11 +178,11 @@ class TPLinkSmartBulb(Light):
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
                     self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            daily_statistics[int(time.strftime("%d"))])
+                        = '{:.3f}'.format(
+                            daily_statistics[int(time.strftime('%d'))])
                     self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            monthly_statistics[int(time.strftime("%m"))])
+                        = '{:.3f}'.format(
+                            monthly_statistics[int(time.strftime('%m'))])
                 except KeyError:
                     # device returned no daily/monthly history
                     pass

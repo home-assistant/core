@@ -157,11 +157,11 @@ class SensorTemplate(Entity):
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
-                _LOGGER.warning('Could not render template %s,'
-                                ' the state is unknown.', self._name)
+                _LOGGER.warning("Could not render template %s,"
+                                " the state is unknown.", self._name)
                 return
             self._state = None
-            _LOGGER.error('Could not render template %s: %s', self._name, ex)
+            _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
         for property_name, template in (
                 ('_icon', self._icon_template),
@@ -176,8 +176,8 @@ class SensorTemplate(Entity):
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.',
+                    _LOGGER.warning("Could not render %s template %s,"
+                                    " the state is unknown.",
                                     friendly_property_name, self._name)
                     return
 
@@ -185,5 +185,5 @@ class SensorTemplate(Entity):
                     setattr(self, property_name,
                             getattr(super(), property_name))
                 except AttributeError:
-                    _LOGGER.error('Could not render %s template %s: %s',
+                    _LOGGER.error("Could not render %s template %s: %s",
                                   friendly_property_name, self._name, ex)

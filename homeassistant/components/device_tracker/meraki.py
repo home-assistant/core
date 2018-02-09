@@ -65,47 +65,47 @@ class MerakiView(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))
         if not data.get('secret', False):
             _LOGGER.error("secret invalid")
-            return self.json_message('No secret', HTTP_UNPROCESSABLE_ENTITY)
+            return self.json_message("No secret", HTTP_UNPROCESSABLE_ENTITY)
         if data['secret'] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
-            return self.json_message('Invalid secret',
+            return self.json_message("Invalid secret",
                                      HTTP_UNPROCESSABLE_ENTITY)
         elif data['version'] != VERSION:
             _LOGGER.error("Invalid API version: %s", data['version'])
-            return self.json_message('Invalid version',
+            return self.json_message("Invalid version",
                                      HTTP_UNPROCESSABLE_ENTITY)
         else:
-            _LOGGER.debug('Valid Secret')
+            _LOGGER.debug("Valid Secret")
             if data['type'] not in ('DevicesSeen', 'BluetoothDevicesSeen'):
                 _LOGGER.error("Unknown Device %s", data['type'])
-                return self.json_message('Invalid device type',
+                return self.json_message("Invalid device type",
                                          HTTP_UNPROCESSABLE_ENTITY)
             _LOGGER.debug("Processing %s", data['type'])
-        if len(data["data"]["observations"]) == 0:
+        if len(data['data']['observations']) == 0:
             _LOGGER.debug("No observations found")
             return
         self._handle(request.app['hass'], data)
 
     @callback
     def _handle(self, hass, data):
-        for i in data["data"]["observations"]:
-            data["data"]["secret"] = "hidden"
+        for i in data['data']['observations']:
+            data['data']['secret'] = 'hidden'
 
-            lat = i["location"]["lat"]
-            lng = i["location"]["lng"]
+            lat = i['location']['lat']
+            lng = i['location']['lng']
             try:
-                accuracy = int(float(i["location"]["unc"]))
+                accuracy = int(float(i['location']['unc']))
             except ValueError:
                 accuracy = 0
 
-            mac = i["clientMac"]
+            mac = i['clientMac']
             _LOGGER.debug("clientMac: %s", mac)
 
-            if lat == "NaN" or lng == "NaN":
+            if lat == 'NaN' or lng == 'NaN':
                 _LOGGER.debug(
                     "No coordinates received, skipping location for: " + mac
                 )

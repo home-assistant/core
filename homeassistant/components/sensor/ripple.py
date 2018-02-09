@@ -18,7 +18,7 @@ REQUIREMENTS = ['python-ripple-api==0.0.3']
 CONF_ADDRESS = 'address'
 CONF_ATTRIBUTION = "Data provided by ripple.com"
 
-DEFAULT_NAME = 'Ripple Balance'
+DEFAULT_NAME = "Ripple Balance"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

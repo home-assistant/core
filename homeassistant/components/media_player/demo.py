@@ -19,9 +19,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the media player demo platform."""
     add_devices([
         DemoYoutubePlayer(
-            'Living Room', 'eyU3bRy2x44',
-            '♥♥ The Best Fireplace Video (3 hours)', 300),
-        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours',
+            "Living Room", 'eyU3bRy2x44',
+            "♥♥ The Best Fireplace Video (3 hours)", 300),
+        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', "Epic sax guy 10 hours",
                           360000),
         DemoMusicPlayer(), DemoTVShowPlayer(),
     ])
@@ -165,7 +165,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     @property
     def app_name(self):
         """Return the current running application."""
-        return "YouTube"
+        return 'YouTube'
 
     @property
     def supported_features(self):
@@ -213,25 +213,25 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     # We only implement the methods that we support
 
     tracks = [
-        ('Technohead', 'I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)'),
-        ('Paul Elstak', 'Luv U More'),
-        ('Dune', 'Hardcore Vibes'),
-        ('Nakatomi', 'Children Of The Night'),
-        ('Party Animals',
-         'Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)'),
-        ('Rob G.*', 'Ecstasy, You Got What I Need'),
+        ('Technohead', "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
+        ("Paul Elstak", "Luv U More"),
+        ('Dune', "Hardcore Vibes"),
+        ('Nakatomi', "Children Of The Night"),
+        ("Party Animals",
+         "Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)"),
+        ("Rob G.*", "Ecstasy, You Got What I Need"),
         ('Lipstick', "I'm A Raver"),
-        ('4 Tune Fairytales', 'My Little Fantasy (Radio Edit)'),
+        ("4 Tune Fairytales", "My Little Fantasy (Radio Edit)"),
         ('Prophet', "The Big Boys Don't Cry"),
-        ('Lovechild', 'All Out Of Love (DJ Weirdo & Sim Remix)'),
-        ('Stingray & Sonic Driver', 'Cold As Ice (El Bruto Remix)'),
-        ('Highlander', 'Hold Me Now (Bass-D & King Matthew Remix)'),
-        ('Juggernaut', 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
-        ('Diss Reaction', 'Jiiieehaaaa '),
-        ('Flamman And Abraxas', 'Good To Go (Radio Mix)'),
-        ('Critical Mass', 'Dancing Together'),
-        ('Charly Lownoise & Mental Theo',
-         'Ultimate Sex Track (Bass-D & King Matthew Remix)'),
+        ('Lovechild', "All Out Of Love (DJ Weirdo & Sim Remix)"),
+        ("Stingray & Sonic Driver", "Cold As Ice (El Bruto Remix)"),
+        ('Highlander', "Hold Me Now (Bass-D & King Matthew Remix)"),
+        ('Juggernaut', "Ruffneck Rules Da Artcore Scene (12\" Edit)"),
+        ("Diss Reaction", 'Jiiieehaaaa '),
+        ("Flamman And Abraxas", "Good To Go (Radio Mix)"),
+        ("Critical Mass", "Dancing Together"),
+        ("Charly Lownoise & Mental Theo",
+         "Ultimate Sex Track (Bass-D & King Matthew Remix)"),
     ]
 
     def __init__(self):
@@ -274,7 +274,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
         # pylint: disable=no-self-use
-        return "Bounzz"
+        return 'Bounzz'
 
     @property
     def media_track(self):
@@ -321,7 +321,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
     def __init__(self):
         """Initialize the demo device."""
-        super().__init__('Lounge room')
+        super().__init__("Lounge room")
         self._cur_episode = 1
         self._episode_count = 13
         self._source = 'dvd'
@@ -354,7 +354,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def media_series_title(self):
         """Return the series title of current playing media (TV Show only)."""
-        return 'House of Cards'
+        return "House of Cards"
 
     @property
     def media_season(self):
@@ -369,7 +369,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def app_name(self):
         """Return the current running application."""
-        return "Netflix"
+        return 'Netflix'
 
     @property
     def source(self):

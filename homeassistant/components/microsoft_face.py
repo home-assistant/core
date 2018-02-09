@@ -49,7 +49,7 @@ DEFAULT_TIMEOUT = 10
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_AZURE_REGION, default="westus"): cv.string,
+        vol.Optional(CONF_AZURE_REGION, default='westus'): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -271,7 +271,7 @@ class MicrosoftFaceGroupEntity(Entity):
     @property
     def entity_id(self):
         """Return entity id."""
-        return "{0}.{1}".format(DOMAIN, self._id)
+        return '{0}.{1}'.format(DOMAIN, self._id)
 
     @property
     def state(self):

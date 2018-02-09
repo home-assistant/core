@@ -118,7 +118,7 @@ class PyLoadSensor(Entity):
             _LOGGER.warning("Unable to locate value for %s", self.type)
             return
 
-        if "speed" in self.type and value > 0:
+        if 'speed' in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
             self._state = round(value / 2**20, 2)
         else:

@@ -31,7 +31,7 @@ DEFAULT_IMAGE_HEIGHT = 480
 DEFAULT_IMAGE_QUALITY = 7
 DEFAULT_IMAGE_ROTATION = 0
 DEFAULT_IMAGE_WIDTH = 640
-DEFAULT_NAME = 'Raspberry Pi Camera'
+DEFAULT_NAME = "Raspberry Pi Camera"
 DEFAULT_TIMELAPSE = 1000
 DEFAULT_VERTICAL_FLIP = 0
 
@@ -63,7 +63,7 @@ def kill_raspistill(*args):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Raspberry Camera."""
-    if shutil.which("raspistill") is None:
+    if shutil.which('raspistill') is None:
         _LOGGER.error("'raspistill' was not found")
         return False
 
@@ -121,10 +121,10 @@ class RaspberryCamera(Camera):
             '-rot', str(device_info[CONF_IMAGE_ROTATION])
         ]
         if device_info[CONF_HORIZONTAL_FLIP]:
-            cmd_args.append("-hf")
+            cmd_args.append('-hf')
 
         if device_info[CONF_VERTICAL_FLIP]:
-            cmd_args.append("-vf")
+            cmd_args.append('-vf')
 
         subprocess.Popen(cmd_args,
                          stdout=subprocess.DEVNULL,

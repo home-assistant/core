@@ -35,8 +35,8 @@ OPTION_MEAN_VELOCITY = 'mean_velocity'
 OPTION_CONGESTION = 'congestion'
 
 SENSOR_TYPES = {
-    OPTION_TRAFFIC_JAM: ['Traffic Jam', LENGTH_KILOMETERS],
-    OPTION_MEAN_VELOCITY: ['Mean Velocity', LENGTH_KILOMETERS+'/h'],
+    OPTION_TRAFFIC_JAM: ["Traffic Jam", LENGTH_KILOMETERS],
+    OPTION_MEAN_VELOCITY: ["Mean Velocity", LENGTH_KILOMETERS+'/h'],
     OPTION_CONGESTION: ['Congestion', ''],
 }
 

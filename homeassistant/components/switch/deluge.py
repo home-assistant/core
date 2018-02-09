@@ -19,7 +19,7 @@ REQUIREMENTS = ['deluge-client==1.0.5']
 
 _LOGGING = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Deluge Switch'
+DEFAULT_NAME = "Deluge Switch"
 DEFAULT_PORT = 58846
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

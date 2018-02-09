@@ -27,7 +27,7 @@ CONF_INDOOR_HUMIDITY = 'indoor_humidity_sensor'
 CONF_INDOOR_TEMP = 'indoor_temp_sensor'
 CONF_OUTDOOR_TEMP = 'outdoor_temp_sensor'
 
-DEFAULT_NAME = 'Mold Indicator'
+DEFAULT_NAME = "Mold Indicator"
 
 MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
@@ -101,7 +101,7 @@ class MoldIndicator(Entity):
         temp = util.convert(state.state, float)
 
         if temp is None:
-            _LOGGER.error('Unable to parse sensor temperature: %s',
+            _LOGGER.error("Unable to parse sensor temperature: %s",
                           state.state)
             return None
 
@@ -123,7 +123,7 @@ class MoldIndicator(Entity):
         hum = util.convert(state.state, float)
 
         if hum is None:
-            _LOGGER.error('Unable to parse sensor humidity: %s',
+            _LOGGER.error("Unable to parse sensor humidity: %s",
                           state.state)
             return None
 

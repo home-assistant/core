@@ -39,8 +39,8 @@ SENSOR_TYPES = {
     'queue_size': ['Queue', 'MB'],
     'queue_remaining': ['Left', 'MB'],
     'disk_size': ['Disk', 'GB'],
-    'disk_free': ['Disk Free', 'GB'],
-    'queue_count': ['Queue Count', None],
+    'disk_free': ["Disk Free", 'GB'],
+    'queue_count': ["Queue Count", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -91,7 +91,7 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
-                                   'Failed to register, please try again.')
+                                   "Failed to register, please try again.")
 
         return
 
@@ -115,11 +115,11 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
     _CONFIGURING[host] = configurator.request_config(
         DEFAULT_NAME,
         sabnzbd_configuration_callback,
-        description=('Enter the API Key'),
+        description=("Enter the API Key"),
         submit_caption='Confirm',
         fields=[{
             'id': 'api_key',
-            'name': 'API Key',
+            'name': "API Key",
             'type': ''}]
     )
 
@@ -140,7 +140,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         use_ssl = config.get(CONF_SSL)
 
     uri_scheme = 'https://' if use_ssl else 'http://'
-    base_url = "{}{}:{}/".format(uri_scheme, host, port)
+    base_url = '{}{}:{}/'.format(uri_scheme, host, port)
     api_key = config.get(CONF_API_KEY)
 
     if not api_key:

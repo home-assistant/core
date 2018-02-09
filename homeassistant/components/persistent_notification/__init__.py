@@ -101,7 +101,7 @@ def async_setup(hass, config):
                 title.hass = hass
                 title = title.async_render()
             except TemplateError as ex:
-                _LOGGER.error('Error rendering title %s: %s', title, ex)
+                _LOGGER.error("Error rendering title %s: %s", title, ex)
                 title = title.template
 
             attr[ATTR_TITLE] = title
@@ -110,7 +110,7 @@ def async_setup(hass, config):
             message.hass = hass
             message = message.async_render()
         except TemplateError as ex:
-            _LOGGER.error('Error rendering message %s: %s', message, ex)
+            _LOGGER.error("Error rendering message %s: %s", message, ex)
             message = message.template
 
         attr[ATTR_MESSAGE] = message

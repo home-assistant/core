@@ -23,7 +23,7 @@ CONF_MAC_ADDRESS = 'mac_address'
 CONF_OFF_ACTION = 'turn_off'
 CONF_BROADCAST_ADDRESS = 'broadcast_address'
 
-DEFAULT_NAME = 'Wake on LAN'
+DEFAULT_NAME = "Wake on LAN"
 DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

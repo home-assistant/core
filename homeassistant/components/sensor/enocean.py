@@ -16,7 +16,7 @@ from homeassistant.components import enocean
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'EnOcean sensor'
+DEFAULT_NAME = "EnOcean sensor"
 DEPENDENCIES = ['enocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -39,7 +39,7 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     def __init__(self, dev_id, devname):
         """Initialize the EnOcean sensor device."""
         enocean.EnOceanDevice.__init__(self)
-        self.stype = "powersensor"
+        self.stype = 'powersensor'
         self.power = None
         self.dev_id = dev_id
         self.which = -1
@@ -49,7 +49,7 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return 'Power %s' % self.devname
+        return "Power %s" % self.devname
 
     def value_changed(self, value):
         """Update the internal state of the device."""

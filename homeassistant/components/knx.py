@@ -16,20 +16,20 @@ from homeassistant.helpers.script import Script
 
 REQUIREMENTS = ['xknx==0.7.18']
 
-DOMAIN = "knx"
-DATA_KNX = "data_knx"
-CONF_KNX_CONFIG = "config_file"
+DOMAIN = 'knx'
+DATA_KNX = 'data_knx'
+CONF_KNX_CONFIG = 'config_file'
 
-CONF_KNX_ROUTING = "routing"
-CONF_KNX_TUNNELING = "tunneling"
-CONF_KNX_LOCAL_IP = "local_ip"
-CONF_KNX_FIRE_EVENT = "fire_event"
+CONF_KNX_ROUTING = 'routing'
+CONF_KNX_TUNNELING = 'tunneling'
+CONF_KNX_LOCAL_IP = 'local_ip'
+CONF_KNX_FIRE_EVENT = 'fire_event'
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
-CONF_KNX_STATE_UPDATER = "state_updater"
+CONF_KNX_STATE_UPDATER = 'state_updater'
 
-SERVICE_KNX_SEND = "send"
-SERVICE_KNX_ATTR_ADDRESS = "address"
-SERVICE_KNX_ATTR_PAYLOAD = "payload"
+SERVICE_KNX_SEND = 'send'
+SERVICE_KNX_ATTR_ADDRESS = 'address'
+SERVICE_KNX_ATTR_PAYLOAD = 'payload'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 
@@ -79,7 +79,7 @@ def async_setup(hass, config):
         hass.components.persistent_notification.async_create(
             "Can't connect to KNX interface: <br>"
             "<b>{0}</b>".format(ex),
-            title="KNX")
+            title='KNX')
 
     for component, discovery_type in (
             ('switch', 'Switch'),
@@ -149,7 +149,7 @@ class KNXModule(object):
         config_file = self.config[DOMAIN].get(CONF_KNX_CONFIG)
         if not config_file:
             return None
-        if not config_file.startswith("/"):
+        if not config_file.startswith('/'):
             return self.hass.config.path(config_file)
         return config_file
 

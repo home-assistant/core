@@ -21,11 +21,11 @@ REQUIREMENTS = ['phue==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "hue"
+DOMAIN = 'hue'
 SERVICE_HUE_SCENE = "hue_activate_scene"
 API_NUPNP = 'https://www.meethue.com/api/nupnp'
 
-CONF_BRIDGES = "bridges"
+CONF_BRIDGES = 'bridges'
 
 CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 DEFAULT_ALLOW_UNREACHABLE = False
@@ -55,8 +55,8 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-ATTR_GROUP_NAME = "group_name"
-ATTR_SCENE_NAME = "scene_name"
+ATTR_GROUP_NAME = 'group_name'
+ATTR_SCENE_NAME = 'scene_name'
 SCENE_SCHEMA = vol.Schema({
     vol.Required(ATTR_GROUP_NAME): cv.string,
     vol.Required(ATTR_SCENE_NAME): cv.string,

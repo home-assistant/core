@@ -88,11 +88,11 @@ def run(script_args: List) -> int:
         default="",
         help="Comma separated list of excluded domains")
     parser.add_argument(
-        "-S", "--simulate",
+        '-S', '--simulate',
         default=False,
-        action="store_true",
+        action='store_true',
         help=("Do not write points but simulate preprocessing and print "
-              "statistics"))
+              'statistics'))
     parser.add_argument(
         '--script',
         choices=['influxdb_import'])
@@ -111,8 +111,8 @@ def run(script_args: List) -> int:
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
-            print(('Fatal Error: Specified configuration directory does '
-                   'not exist {} ').format(config_dir))
+            print(("Fatal Error: Specified configuration directory does "
+                   "not exist {} ").format(config_dir))
             return 1
 
     src_db = '{}/home-assistant_v2.db'.format(config_dir)
@@ -247,8 +247,8 @@ def run(script_args: List) -> int:
         points = []
         step_start += step
 
-    print("\nStatistics:")
-    print("\n".join(["{:6}: {}".format(v, k) for k, v
+    print('\nStatistics:')
+    print('\n'.join(["{:6}: {}".format(v, k) for k, v
                      in sorted(entities.items(), key=lambda x: x[1])]))
     print("\nInvalid Points: {}".format(len(invalid_points)))
     print("\nImport finished: {} points written".format(count))
@@ -273,7 +273,7 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
     filled_length = int(round(bar_length * iteration / float(total)))
     percents = round(100.00 * (iteration / float(total)), decimals)
     line = '#' * filled_length + '-' * (bar_length - filled_length)
-    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, line,
+    sys.stdout.write("%s [%s] %s%s %s\r" % (prefix, line,
                                             percents, '%', suffix))
     sys.stdout.flush()
     if iteration == total:

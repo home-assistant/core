@@ -130,7 +130,7 @@ class LoopEnergyElec(LoopEnergyDevice):
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyElec, self).__init__(controller)
-        self._name = 'Power Usage'
+        self._name = "Power Usage"
         self._controller.subscribe_elecricity(self._callback)
 
     def update(self):
@@ -144,7 +144,7 @@ class LoopEnergyGas(LoopEnergyDevice):
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyGas, self).__init__(controller)
-        self._name = 'Gas Usage'
+        self._name = "Gas Usage"
         self._controller.subscribe_gas(self._callback)
 
     def update(self):

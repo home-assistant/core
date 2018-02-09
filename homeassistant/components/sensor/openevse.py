@@ -20,13 +20,13 @@ REQUIREMENTS = ['openevsewifi==0.4']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'status': ['Charging Status', None],
-    'charge_time': ['Charge Time Elapsed', 'minutes'],
-    'ambient_temp': ['Ambient Temperature', TEMP_CELSIUS],
-    'ir_temp': ['IR Temperature', TEMP_CELSIUS],
-    'rtc_temp': ['RTC Temperature', TEMP_CELSIUS],
-    'usage_session': ['Usage this Session', 'kWh'],
-    'usage_total': ['Total Usage', 'kWh']
+    'status': ["Charging Status", None],
+    'charge_time': ["Charge Time Elapsed", 'minutes'],
+    'ambient_temp': ["Ambient Temperature", TEMP_CELSIUS],
+    'ir_temp': ["IR Temperature", TEMP_CELSIUS],
+    'rtc_temp': ["RTC Temperature", TEMP_CELSIUS],
+    'usage_session': ["Usage this Session", 'kWh'],
+    'usage_total': ["Total Usage", 'kWh']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

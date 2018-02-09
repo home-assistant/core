@@ -43,7 +43,7 @@ KEY_TO_ATTR = {
     'so2': ATTR_SULFUR_DIOXIDE,
 }
 
-ATTRIBUTION = 'Data provided by the World Air Quality Index project'
+ATTRIBUTION = "Data provided by the World Air Quality Index project"
 
 CONF_LOCATIONS = 'locations'
 CONF_STATIONS = 'stations'
@@ -84,7 +84,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     dev.append(waqi_sensor)
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
-        _LOGGER.exception('Failed to connect to WAQI servers.')
+        _LOGGER.exception("Failed to connect to WAQI servers.")
         raise PlatformNotReady
     async_add_devices(dev, True)
 

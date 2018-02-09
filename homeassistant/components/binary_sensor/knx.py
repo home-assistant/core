@@ -29,7 +29,7 @@ CONF_ACTION = 'action'
 
 CONF__ACTION = 'turn_off_action'
 
-DEFAULT_NAME = 'KNX Binary Sensor'
+DEFAULT_NAME = "KNX Binary Sensor"
 DEPENDENCIES = ['knx']
 
 AUTOMATION_SCHEMA = vol.Schema({

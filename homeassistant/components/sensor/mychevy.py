@@ -17,14 +17,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
-BATTERY_SENSOR = "percent"
+BATTERY_SENSOR = 'percent'
 
 SENSORS = [
-    EVSensorConfig("Mileage", "mileage", "miles", "mdi:speedometer"),
-    EVSensorConfig("Range", "range", "miles", "mdi:speedometer"),
-    EVSensorConfig("Charging", "charging"),
-    EVSensorConfig("Charge Mode", "charge_mode"),
-    EVSensorConfig("EVCharge", BATTERY_SENSOR, "%", "mdi:battery")
+    EVSensorConfig('Mileage', 'mileage', 'miles', "mdi:speedometer"),
+    EVSensorConfig('Range', 'range', 'miles', "mdi:speedometer"),
+    EVSensorConfig('Charging', 'charging'),
+    EVSensorConfig("Charge Mode", 'charge_mode'),
+    EVSensorConfig('EVCharge', BATTERY_SENSOR, '%', 'mdi:battery')
 ]
 
 _LOGGER = logging.getLogger(__name__)

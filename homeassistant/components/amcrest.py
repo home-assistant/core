@@ -27,7 +27,7 @@ CONF_RESOLUTION = 'resolution'
 CONF_STREAM_SOURCE = 'stream_source'
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
-DEFAULT_NAME = 'Amcrest Camera'
+DEFAULT_NAME = "Amcrest Camera"
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
 DEFAULT_STREAM_SOURCE = 'snapshot'
@@ -37,7 +37,7 @@ DATA_AMCREST = 'amcrest'
 DOMAIN = 'amcrest'
 
 NOTIFICATION_ID = 'amcrest_notification'
-NOTIFICATION_TITLE = 'Amcrest Camera Setup'
+NOTIFICATION_TITLE = "Amcrest Camera Setup"
 
 RESOLUTION_LIST = {
     'high': 0,
@@ -58,9 +58,9 @@ STREAM_SOURCE_LIST = {
 
 # Sensor types are defined like: Name, units, icon
 SENSORS = {
-    'motion_detector': ['Motion Detected', None, 'mdi:run'],
-    'sdcard': ['SD Used', '%', 'mdi:sd'],
-    'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
+    'motion_detector': ["Motion Detected", None, 'mdi:run'],
+    'sdcard': ["SD Used", '%', 'mdi:sd'],
+    'ptz_preset': ["PTZ Preset", None, 'mdi:camera-iris'],
 }
 
 CONFIG_SCHEMA = vol.Schema({
@@ -103,8 +103,8 @@ def setup(hass, config):
         except (ConnectTimeout, HTTPError) as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
             hass.components.persistent_notification.create(
-                'Error: {}<br />'
-                'You will need to restart hass after fixing.'
+                "Error: {}<br />"
+                "You will need to restart hass after fixing."
                 ''.format(ex),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)

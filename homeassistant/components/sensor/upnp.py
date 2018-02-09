@@ -13,10 +13,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # sensor_type: [friendly_name, convert_unit, icon]
 SENSOR_TYPES = {
-    'byte_received': ['received bytes', True, 'mdi:server-network'],
-    'byte_sent': ['sent bytes', True, 'mdi:server-network'],
-    'packets_in': ['packets received', False, 'mdi:server-network'],
-    'packets_out': ['packets sent', False, 'mdi:server-network'],
+    'byte_received': ["received bytes", True, 'mdi:server-network'],
+    'byte_sent': ["sent bytes", True, 'mdi:server-network'],
+    'packets_in': ["packets received", False, 'mdi:server-network'],
+    'packets_out': ["packets sent", False, 'mdi:server-network'],
 }
 
 
@@ -65,11 +65,11 @@ class IGDSensor(Entity):
 
     def update(self):
         """Get the latest information from the IGD."""
-        if self.type == "byte_received":
+        if self.type == 'byte_received':
             self._state = self._upnp.totalbytereceived()
-        elif self.type == "byte_sent":
+        elif self.type == 'byte_sent':
             self._state = self._upnp.totalbytesent()
-        elif self.type == "packets_in":
+        elif self.type == 'packets_in':
             self._state = self._upnp.totalpacketreceived()
-        elif self.type == "packets_out":
+        elif self.type == 'packets_out':
             self._state = self._upnp.totalpacketsent()

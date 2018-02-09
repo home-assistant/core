@@ -26,7 +26,7 @@ REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Livebox Play TV'
+DEFAULT_NAME = "Livebox Play TV"
 DEFAULT_PORT = 8080
 
 SUPPORT_LIVEBOXPLAYTV = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \

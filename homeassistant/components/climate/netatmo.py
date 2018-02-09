@@ -110,14 +110,14 @@ class NetatmoThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        mode = "away"
+        mode = 'away'
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = True
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        mode = "program"
+        mode = 'program'
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
@@ -127,7 +127,7 @@ class NetatmoThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        mode = "manual"
+        mode = 'manual'
         self._data.thermostatdata.setthermpoint(
             mode, temperature, DEFAULT_TIME_OFFSET)
         self._target_temperature = temperature

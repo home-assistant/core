@@ -83,15 +83,15 @@ class OpenhomeDevice(MediaPlayerDevice):
         source_names = list()
 
         for source in self._device.Sources():
-            source_names.append(source["name"])
-            source_index[source["name"]] = source["index"]
+            source_names.append(source['name'])
+            source_index[source['name']] = source['index']
 
         self._source_index = source_index
         self._source_names = source_names
 
-        if self._source["type"] == "Radio":
+        if self._source['type'] == 'Radio':
             self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
-        if self._source["type"] in ("Playlist", "Cloud"):
+        if self._source['type'] in ('Playlist', 'Cloud'):
             self._supported_features |= SUPPORT_PREVIOUS_TRACK | \
                 SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY
 

@@ -15,7 +15,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
-DEFAULT_NAME = 'KNX Notify'
+DEFAULT_NAME = "KNX Notify"
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -80,8 +80,8 @@ class KNXNotificationService(BaseNotificationService):
     @asyncio.coroutine
     def async_send_message(self, message="", **kwargs):
         """Send a notification to knx bus."""
-        if "target" in kwargs:
-            yield from self._async_send_to_device(message, kwargs["target"])
+        if 'target' in kwargs:
+            yield from self._async_send_to_device(message, kwargs['target'])
         else:
             yield from self._async_send_to_all_devices(message)
 

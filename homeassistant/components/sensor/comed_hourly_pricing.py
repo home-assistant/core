@@ -32,8 +32,8 @@ CONF_OFFSET = 'offset'
 CONF_SENSOR_TYPE = 'type'
 
 SENSOR_TYPES = {
-    CONF_FIVE_MINUTE: ['ComEd 5 Minute Price', 'c'],
-    CONF_CURRENT_HOUR_AVERAGE: ['ComEd Current Hour Average Price', 'c'],
+    CONF_FIVE_MINUTE: ["ComEd 5 Minute Price", 'c'],
+    CONF_CURRENT_HOUR_AVERAGE: ["ComEd Current Hour Average Price", 'c'],
 }
 
 TYPES_SCHEMA = vol.In(SENSOR_TYPES)

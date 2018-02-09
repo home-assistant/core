@@ -30,17 +30,17 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
-    'last_build_id': ['Last Build ID', '', 'mdi:account-card-details'],
-    'last_build_duration': ['Last Build Duration', 'sec', 'mdi:timelapse'],
-    'last_build_finished_at': ['Last Build Finished At', '', 'mdi:timetable'],
-    'last_build_started_at': ['Last Build Started At', '', 'mdi:timetable'],
-    'last_build_state': ['Last Build State', '', 'mdi:github-circle'],
+    'last_build_id': ["Last Build ID", '', 'mdi:account-card-details'],
+    'last_build_duration': ["Last Build Duration", 'sec', 'mdi:timelapse'],
+    'last_build_finished_at': ["Last Build Finished At", '', 'mdi:timetable'],
+    'last_build_started_at': ["Last Build Started At", '', 'mdi:timetable'],
+    'last_build_state': ["Last Build State", '', 'mdi:github-circle'],
     'state': ['State', '', 'mdi:github-circle'],
 
 }
 
 NOTIFICATION_ID = 'travisci'
-NOTIFICATION_TITLE = 'Travis CI Sensor Setup'
+NOTIFICATION_TITLE = "Travis CI Sensor Setup"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -70,9 +70,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except TravisError as ex:
         _LOGGER.error("Unable to connect to Travis CI service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
@@ -134,14 +134,14 @@ class TravisCISensor(Entity):
 
         if self._build and self._state is not STATE_UNKNOWN:
             if self._user and self._sensor_type == 'state':
-                attrs['Owner Name'] = self._user.name
-                attrs['Owner Email'] = self._user.email
+                attrs["Owner Name"] = self._user.name
+                attrs["Owner Email"] = self._user.email
             else:
-                attrs['Committer Name'] = self._build.commit.committer_name
-                attrs['Committer Email'] = self._build.commit.committer_email
-                attrs['Commit Branch'] = self._build.commit.branch
-                attrs['Committed Date'] = self._build.commit.committed_at
-                attrs['Commit SHA'] = self._build.commit.sha
+                attrs["Committer Name"] = self._build.commit.committer_name
+                attrs["Committer Email"] = self._build.commit.committer_email
+                attrs["Commit Branch"] = self._build.commit.branch
+                attrs["Committed Date"] = self._build.commit.committed_at
+                attrs["Commit SHA"] = self._build.commit.sha
 
         return attrs
 

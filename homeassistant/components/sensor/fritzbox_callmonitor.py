@@ -174,7 +174,7 @@ class FritzBoxCallMonitor(object):
             except socket.timeout:
                 # if no response after 10 seconds, just recv again
                 continue
-            response = str(response, "utf-8")
+            response = str(response, 'utf-8')
 
             if not response:
                 # if the response is empty, the connection has been lost.
@@ -184,43 +184,43 @@ class FritzBoxCallMonitor(object):
                     self.connect()
                     time.sleep(INTERVAL_RECONNECT)
             else:
-                line = response.split("\n", 1)[0]
+                line = response.split('\n', 1)[0]
                 self._parse(line)
                 time.sleep(1)
         return
 
     def _parse(self, line):
         """Parse the call information and set the sensor states."""
-        line = line.split(";")
+        line = line.split(';')
         df_in = "%d.%m.%y %H:%M:%S"
         df_out = "%Y-%m-%dT%H:%M:%S"
         isotime = datetime.datetime.strptime(line[0], df_in).strftime(df_out)
-        if line[1] == "RING":
+        if line[1] == 'RING':
             self._sensor.set_state(VALUE_RING)
-            att = {"type": "incoming",
-                   "from": line[3],
-                   "to": line[4],
-                   "device": line[5],
-                   "initiated": isotime}
-            att["from_name"] = self._sensor.number_to_name(att["from"])
+            att = {'type': 'incoming',
+                   'from': line[3],
+                   'to': line[4],
+                   'device': line[5],
+                   'initiated': isotime}
+            att['from_name'] = self._sensor.number_to_name(att['from'])
             self._sensor.set_attributes(att)
-        elif line[1] == "CALL":
+        elif line[1] == 'CALL':
             self._sensor.set_state(VALUE_CALL)
-            att = {"type": "outgoing",
-                   "from": line[4],
-                   "to": line[5],
-                   "device": line[6],
-                   "initiated": isotime}
-            att["to_name"] = self._sensor.number_to_name(att["to"])
+            att = {'type': 'outgoing',
+                   'from': line[4],
+                   'to': line[5],
+                   'device': line[6],
+                   'initiated': isotime}
+            att['to_name'] = self._sensor.number_to_name(att['to'])
             self._sensor.set_attributes(att)
-        elif line[1] == "CONNECT":
+        elif line[1] == 'CONNECT':
             self._sensor.set_state(VALUE_CONNECT)
-            att = {"with": line[4], "device": line[3], "accepted": isotime}
-            att["with_name"] = self._sensor.number_to_name(att["with"])
+            att = {'with': line[4], 'device': line[3], 'accepted': isotime}
+            att['with_name'] = self._sensor.number_to_name(att['with'])
             self._sensor.set_attributes(att)
-        elif line[1] == "DISCONNECT":
+        elif line[1] == 'DISCONNECT':
             self._sensor.set_state(VALUE_DISCONNECT)
-            att = {"duration": line[3], "closed": isotime}
+            att = {'duration': line[3], 'closed': isotime}
             self._sensor.set_attributes(att)
         self._sensor.schedule_update_ha_state()
 

@@ -117,12 +117,12 @@ def _drop_index(engine, table_name, index_name):
 def _apply_update(engine, new_version, old_version):
     """Perform operations to bring schema up to date."""
     if new_version == 1:
-        _create_index(engine, "events", "ix_events_time_fired")
+        _create_index(engine, 'events', "ix_events_time_fired")
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
-        _create_index(engine, "recorder_runs", "ix_recorder_runs_start_end")
+        _create_index(engine, 'recorder_runs', "ix_recorder_runs_start_end")
         # Create indexes for states
-        _create_index(engine, "states", "ix_states_last_updated")
+        _create_index(engine, 'states', "ix_states_last_updated")
     elif new_version == 3:
         # There used to be a new index here, but it was removed in version 4.
         pass
@@ -132,17 +132,17 @@ def _apply_update(engine, new_version, old_version):
 
         if old_version == 3:
             # Remove index that was added in version 3
-            _drop_index(engine, "states", "ix_states_created_domain")
+            _drop_index(engine, 'states', "ix_states_created_domain")
         if old_version == 2:
             # Remove index that was added in version 2
-            _drop_index(engine, "states", "ix_states_entity_id_created")
+            _drop_index(engine, 'states', "ix_states_entity_id_created")
 
         # Remove indexes that were added in version 0
-        _drop_index(engine, "states", "states__state_changes")
-        _drop_index(engine, "states", "states__significant_changes")
-        _drop_index(engine, "states", "ix_states_entity_id_created")
+        _drop_index(engine, 'states', "states__state_changes")
+        _drop_index(engine, 'states', "states__significant_changes")
+        _drop_index(engine, 'states', "ix_states_entity_id_created")
 
-        _create_index(engine, "states", "ix_states_entity_id_last_updated")
+        _create_index(engine, 'states', "ix_states_entity_id_last_updated")
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))
@@ -161,10 +161,10 @@ def _inspect_schema_version(engine, session):
     from .models import SchemaChanges, SCHEMA_VERSION
 
     inspector = reflection.Inspector.from_engine(engine)
-    indexes = inspector.get_indexes("events")
+    indexes = inspector.get_indexes('events')
 
     for index in indexes:
-        if index['column_names'] == ["time_fired"]:
+        if index['column_names'] == ['time_fired']:
             # Schema addition from version 1 detected. New DB.
             session.add(SchemaChanges(
                 schema_version=SCHEMA_VERSION))

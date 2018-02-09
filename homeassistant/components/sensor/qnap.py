@@ -22,21 +22,21 @@ REQUIREMENTS = ['qnapstats==0.2.4']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DRIVE = 'Drive'
-ATTR_DRIVE_SIZE = 'Drive Size'
-ATTR_IP = 'IP Address'
-ATTR_MAC = 'MAC Address'
+ATTR_DRIVE_SIZE = "Drive Size"
+ATTR_IP = "IP Address"
+ATTR_MAC = "MAC Address"
 ATTR_MASK = 'Mask'
-ATTR_MAX_SPEED = 'Max Speed'
-ATTR_MEMORY_SIZE = 'Memory Size'
+ATTR_MAX_SPEED = "Max Speed"
+ATTR_MEMORY_SIZE = "Memory Size"
 ATTR_MODEL = 'Model'
 ATTR_NAME = 'Name'
-ATTR_PACKETS_TX = 'Packets (TX)'
-ATTR_PACKETS_RX = 'Packets (RX)'
-ATTR_PACKETS_ERR = 'Packets (Err)'
-ATTR_SERIAL = 'Serial #'
+ATTR_PACKETS_TX = "Packets (TX)"
+ATTR_PACKETS_RX = "Packets (RX)"
+ATTR_PACKETS_ERR = "Packets (Err)"
+ATTR_SERIAL = "Serial #"
 ATTR_TYPE = 'Type'
 ATTR_UPTIME = 'Uptime'
-ATTR_VOLUME_SIZE = 'Volume Size'
+ATTR_VOLUME_SIZE = "Volume Size"
 
 CONF_DRIVES = 'drives'
 CONF_NICS = 'nics'
@@ -48,36 +48,36 @@ DEFAULT_TIMEOUT = 5
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 NOTIFICATION_ID = 'qnap_notification'
-NOTIFICATION_TITLE = 'QNAP Sensor Setup'
+NOTIFICATION_TITLE = "QNAP Sensor Setup"
 
 _SYSTEM_MON_COND = {
     'status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
-    'system_temp': ['System Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'system_temp': ["System Temperature", TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _CPU_MON_COND = {
-    'cpu_temp': ['CPU Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'cpu_usage': ['CPU Usage', '%', 'mdi:chip'],
+    'cpu_temp': ["CPU Temperature", TEMP_CELSIUS, 'mdi:thermometer'],
+    'cpu_usage': ["CPU Usage", '%', 'mdi:chip'],
 }
 _MEMORY_MON_COND = {
-    'memory_free': ['Memory Available', 'GB', 'mdi:memory'],
-    'memory_used': ['Memory Used', 'GB', 'mdi:memory'],
-    'memory_percent_used': ['Memory Usage', '%', 'mdi:memory'],
+    'memory_free': ["Memory Available", 'GB', 'mdi:memory'],
+    'memory_used': ["Memory Used", 'GB', 'mdi:memory'],
+    'memory_percent_used': ["Memory Usage", '%', 'mdi:memory'],
 }
 _NETWORK_MON_COND = {
-    'network_link_status': ['Network Link', None,
+    'network_link_status': ["Network Link", None,
                             'mdi:checkbox-marked-circle-outline'],
-    'network_tx': ['Network Up', 'MB/s', 'mdi:upload'],
-    'network_rx': ['Network Down', 'MB/s', 'mdi:download'],
+    'network_tx': ["Network Up", 'MB/s', 'mdi:upload'],
+    'network_rx': ["Network Down", 'MB/s', 'mdi:download'],
 }
 _DRIVE_MON_COND = {
-    'drive_smart_status': ['SMART Status', None,
+    'drive_smart_status': ["SMART Status", None,
                            'mdi:checkbox-marked-circle-outline'],
     'drive_temp': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _VOLUME_MON_COND = {
-    'volume_size_used': ['Used Space', 'GB', 'mdi:chart-pie'],
-    'volume_size_free': ['Free Space', 'GB', 'mdi:chart-pie'],
-    'volume_percentage_used': ['Volume Used', '%', 'mdi:chart-pie'],
+    'volume_size_used': ["Used Space", 'GB', 'mdi:chart-pie'],
+    'volume_size_free': ["Free Space", 'GB', 'mdi:chart-pie'],
+    'volume_percentage_used': ["Volume Used", '%', 'mdi:chart-pie'],
 }
 
 _MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \
@@ -111,9 +111,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if not api.data:
         hass.components.persistent_notification.create(
-            'Error: Failed to set up QNAP sensor.<br />'
-            'Check the logs for additional information. '
-            'You will need to restart hass after fixing.',
+            "Error: Failed to set up QNAP sensor.<br />"
+            "Check the logs for additional information. "
+            "You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
@@ -135,7 +135,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Network sensors
     nics = config[CONF_NICS]
     if nics is None:
-        nics = api.data["system_stats"]["nics"].keys()
+        nics = api.data['system_stats']['nics'].keys()
 
     for nic in nics:
         sensors += [QNAPNetworkSensor(api, variable,
@@ -157,7 +157,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Volume sensors
     volumes = config[CONF_VOLUMES]
     if volumes is None:
-        volumes = api.data["volumes"].keys()
+        volumes = api.data['volumes'].keys()
 
     for volume in volumes:
         sensors += [QNAPVolumeSensor(api, variable,
@@ -185,9 +185,9 @@ class QNAPStatsAPI(object):
         """Initialize the API wrapper."""
         from qnapstats import QNAPStats
 
-        protocol = "https" if config.get(CONF_SSL) else "http"
+        protocol = 'https' if config.get(CONF_SSL) else 'http'
         self._api = QNAPStats(
-            protocol + "://" + config.get(CONF_HOST),
+            protocol + '://' + config.get(CONF_HOST),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
@@ -201,11 +201,11 @@ class QNAPStatsAPI(object):
     def update(self):
         """Update API information and store locally."""
         try:
-            self.data["system_stats"] = self._api.get_system_stats()
-            self.data["system_health"] = self._api.get_system_health()
-            self.data["smart_drive_health"] = self._api.get_smart_disk_health()
-            self.data["volumes"] = self._api.get_volumes()
-            self.data["bandwidth"] = self._api.get_bandwidth()
+            self.data['system_stats'] = self._api.get_system_stats()
+            self.data['system_health'] = self._api.get_system_health()
+            self.data['smart_drive_health'] = self._api.get_smart_disk_health()
+            self.data['volumes'] = self._api.get_volumes()
+            self.data['bandwidth'] = self._api.get_bandwidth()
         except:  # noqa: E722  # pylint: disable=bare-except
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
@@ -347,7 +347,7 @@ class QNAPSystemSensor(QNAPSensor):
                 ATTR_NAME: data['system']['name'],
                 ATTR_MODEL: data['system']['model'],
                 ATTR_SERIAL: data['system']['serial_number'],
-                ATTR_UPTIME: '{:0>2d}d {:0>2d}h {:0>2d}m'.format(
+                ATTR_UPTIME: "{:0>2d}d {:0>2d}h {:0>2d}m".format(
                     days, hours, minutes)
             }
 

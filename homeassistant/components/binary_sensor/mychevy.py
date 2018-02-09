@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = [
-    EVBinarySensorConfig("Plugged In", "plugged_in", "plug")
+    EVBinarySensorConfig("Plugged In", 'plugged_in', 'plug')
 ]
 
 

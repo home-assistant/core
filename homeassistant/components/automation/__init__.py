@@ -30,7 +30,7 @@ DOMAIN = 'automation'
 DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
+GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
 CONF_ALIAS = 'alias'
 CONF_HIDE_ENTITY = 'hide_entity'
@@ -276,7 +276,7 @@ class AutomationEntity(ToggleEntity):
         if self._initial_state is not None:
             enable_automation = self._initial_state
             _LOGGER.debug("Automation %s initial state %s from config "
-                          "initial_state", self.entity_id, enable_automation)
+                          'initial_state', self.entity_id, enable_automation)
         else:
             state = yield from async_get_last_state(self.hass, self.entity_id)
             if state:
@@ -419,9 +419,9 @@ def _async_get_action(hass, config, name):
     @asyncio.coroutine
     def action(entity_id, variables):
         """Execute an action."""
-        _LOGGER.info('Executing %s', name)
+        _LOGGER.info("Executing %s", name)
         logbook.async_log_entry(
-            hass, name, 'has been triggered', DOMAIN, entity_id)
+            hass, name, "has been triggered", DOMAIN, entity_id)
         yield from script_obj.async_run(variables)
 
     return action
@@ -436,7 +436,7 @@ def _async_process_if(hass, config, p_config):
         try:
             checks.append(condition.async_from_config(if_config, False))
         except HomeAssistantError as ex:
-            _LOGGER.warning('Invalid condition: %s', ex)
+            _LOGGER.warning("Invalid condition: %s", ex)
             return None
 
     def if_action(variables=None):

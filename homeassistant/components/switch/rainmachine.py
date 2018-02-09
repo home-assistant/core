@@ -57,35 +57,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import regenmaschine as rm
 
     ip_address = config.get(CONF_IP_ADDRESS)
-    _LOGGER.debug('IP address: %s', ip_address)
+    _LOGGER.debug("IP address: %s", ip_address)
 
     email_address = config.get(CONF_EMAIL)
-    _LOGGER.debug('Email address: %s', email_address)
+    _LOGGER.debug("Email address: %s", email_address)
 
     password = config.get(CONF_PASSWORD)
-    _LOGGER.debug('Password: %s', password)
+    _LOGGER.debug("Password: %s", password)
 
     zone_run_time = config.get(CONF_ZONE_RUN_TIME)
-    _LOGGER.debug('Zone run time: %s', zone_run_time)
+    _LOGGER.debug("Zone run time: %s", zone_run_time)
 
     try:
         if ip_address:
             port = config.get(CONF_PORT)
-            _LOGGER.debug('Port: %s', port)
+            _LOGGER.debug("Port: %s", port)
 
             ssl = config.get(CONF_SSL)
-            _LOGGER.debug('SSL: %s', ssl)
+            _LOGGER.debug("SSL: %s", ssl)
 
-            _LOGGER.debug('Configuring local API')
+            _LOGGER.debug("Configuring local API")
             auth = rm.Authenticator.create_local(
                 ip_address, password, port=port, https=ssl)
         elif email_address:
-            _LOGGER.debug('Configuring remote API')
+            _LOGGER.debug("Configuring remote API")
             auth = rm.Authenticator.create_remote(email_address, password)
 
-        _LOGGER.debug('Querying against: %s', auth.url)
+        _LOGGER.debug("Querying against: %s", auth.url)
 
-        _LOGGER.debug('Instantiating RainMachine client')
+        _LOGGER.debug("Instantiating RainMachine client")
         client = rm.Client(auth)
 
         rainmachine_device_name = client.provision.device_name().get('name')
@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if not program.get('active'):
                 continue
 
-            _LOGGER.debug('Adding program: %s', program)
+            _LOGGER.debug("Adding program: %s", program)
             entities.append(
                 RainMachineProgram(
                     client, program, device_name=rainmachine_device_name))
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if not zone.get('active'):
                 continue
 
-            _LOGGER.debug('Adding zone: %s', zone)
+            _LOGGER.debug("Adding zone: %s", zone)
             entities.append(
                 RainMachineZone(
                     client,
@@ -114,11 +114,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         add_devices(entities)
     except rm.exceptions.HTTPError as exc_info:
-        _LOGGER.error('An HTTP error occurred while talking with RainMachine')
+        _LOGGER.error("An HTTP error occurred while talking with RainMachine")
         _LOGGER.debug(exc_info)
         return False
     except UnboundLocalError as exc_info:
-        _LOGGER.error('Could not authenticate against RainMachine')
+        _LOGGER.error("Could not authenticate against RainMachine")
         _LOGGER.debug(exc_info)
         return False
 
@@ -157,7 +157,7 @@ class RainMachineEntity(SwitchDevice):
         self._entity_json = entity_json
 
         self._attrs = {
-            ATTR_ATTRIBUTION: '© RainMachine',
+            ATTR_ATTRIBUTION: "© RainMachine",
             ATTR_DEVICE_CLASS: self._device_name
         }
 
@@ -224,7 +224,7 @@ class RainMachineProgram(RainMachineEntity):
         try:
             self._client.programs.stop(self.rainmachine_id)
         except exceptions.BrokenAPICall:
-            _LOGGER.error('programs.stop currently broken in remote API')
+            _LOGGER.error("programs.stop currently broken in remote API")
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to turn off program "%s"',
                           self.rainmachine_id)
@@ -237,7 +237,7 @@ class RainMachineProgram(RainMachineEntity):
         try:
             self._client.programs.start(self.rainmachine_id)
         except exceptions.BrokenAPICall:
-            _LOGGER.error('programs.start currently broken in remote API')
+            _LOGGER.error("programs.start currently broken in remote API")
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to turn on program "%s"',
                           self.rainmachine_id)
@@ -250,7 +250,7 @@ class RainMachineProgram(RainMachineEntity):
         try:
             self._entity_json = self._client.programs.get(self.rainmachine_id)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to update info for program "%s"',
+            _LOGGER.error("Unable to update info for program '%s'",
                           self.rainmachine_id)
             _LOGGER.debug(exc_info)
 
@@ -286,7 +286,7 @@ class RainMachineZone(RainMachineEntity):
         try:
             self._client.zones.stop(self.rainmachine_id)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to turn off zone "%s"', self.rainmachine_id)
+            _LOGGER.error("Unable to turn off zone '%s'", self.rainmachine_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:

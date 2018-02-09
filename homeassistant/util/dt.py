@@ -7,7 +7,7 @@ from typing import Any, Dict, Union, Optional, Tuple  # NOQA
 
 import pytz
 
-DATE_STR_FORMAT = "%Y-%m-%d"
+DATE_STR_FORMAT = '%Y-%m-%d'
 UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 
 
@@ -15,10 +15,10 @@ UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
 DATETIME_RE = re.compile(
-    r'(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})'
-    r'[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})'
-    r'(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?'
-    r'(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$'
+    r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
+    r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
+    r"(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?"
+    r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
 )
 
 
@@ -71,7 +71,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
 
 def as_timestamp(dt_value):
     """Convert a date/time into a unix time (seconds since 1970)."""
-    if hasattr(dt_value, "timestamp"):
+    if hasattr(dt_value, 'timestamp'):
         parsed_dt = dt_value
     else:
         parsed_dt = parse_datetime(str(dt_value))

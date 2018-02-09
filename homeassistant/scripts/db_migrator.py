@@ -39,11 +39,11 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
     filled_length = int(round(bar_length * iteration / float(total)))
     percents = round(100.00 * (iteration / float(total)), decimals)
     line = '#' * filled_length + '-' * (bar_length - filled_length)
-    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, line,
+    sys.stdout.write("%s [%s] %s%s %s\r" % (prefix, line,
                                             percents, '%', suffix))
     sys.stdout.flush()
     if iteration == total:
-        print("\n")
+        print('\n')
 
 
 def run(script_args: List) -> int:
@@ -81,8 +81,8 @@ def run(script_args: List) -> int:
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
-            print(('Fatal Error: Specified configuration directory does '
-                   'not exist {} ').format(config_dir))
+            print(("Fatal Error: Specified configuration directory does "
+                   "not exist {} ").format(config_dir))
             return 1
 
     src_db = '{}/home-assistant.db'.format(config_dir)

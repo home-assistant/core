@@ -92,12 +92,12 @@ class ThomsonDeviceScanner(DeviceScanner):
         """Retrieve data from THOMSON and return parsed result."""
         try:
             telnet = telnetlib.Telnet(self.host)
-            telnet.read_until(b'Username : ')
+            telnet.read_until(b"Username : ")
             telnet.write((self.username + '\r\n').encode('ascii'))
-            telnet.read_until(b'Password : ')
+            telnet.read_until(b"Password : ")
             telnet.write((self.password + '\r\n').encode('ascii'))
             telnet.read_until(b'=>')
-            telnet.write(('hostmgr list\r\n').encode('ascii'))
+            telnet.write(("hostmgr list\r\n").encode('ascii'))
             devices_result = telnet.read_until(b'=>').split(b'\r\n')
             telnet.write('exit\r\n'.encode('ascii'))
         except EOFError:

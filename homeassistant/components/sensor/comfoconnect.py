@@ -33,37 +33,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     global SENSOR_TYPES
     SENSOR_TYPES = {
         ATTR_CURRENT_TEMPERATURE: [
-            'Inside Temperature',
+            "Inside Temperature",
             TEMP_CELSIUS,
             'mdi:thermometer',
             SENSOR_TEMPERATURE_EXTRACT
         ],
         ATTR_CURRENT_HUMIDITY: [
-            'Inside Humidity',
+            "Inside Humidity",
             '%',
             'mdi:water-percent',
             SENSOR_HUMIDITY_EXTRACT
         ],
         ATTR_OUTSIDE_TEMPERATURE: [
-            'Outside Temperature',
+            "Outside Temperature",
             TEMP_CELSIUS,
             'mdi:thermometer',
             SENSOR_TEMPERATURE_OUTDOOR
         ],
         ATTR_OUTSIDE_HUMIDITY: [
-            'Outside Humidity',
+            "Outside Humidity",
             '%',
             'mdi:water-percent',
             SENSOR_HUMIDITY_OUTDOOR
         ],
         ATTR_AIR_FLOW_SUPPLY: [
-            'Supply airflow',
+            "Supply airflow",
             'm³/h',
             'mdi:air-conditioner',
             SENSOR_FAN_SUPPLY_FLOW
         ],
         ATTR_AIR_FLOW_EXHAUST: [
-            'Exhaust airflow',
+            "Exhaust airflow",
             'm³/h',
             'mdi:air-conditioner',
             SENSOR_FAN_EXHAUST_FLOW
@@ -109,7 +109,7 @@ class ComfoConnectSensor(Entity):
 
         def _handle_update(var):
             if var == self._sensor_id:
-                _LOGGER.debug('Dispatcher update for %s.', var)
+                _LOGGER.debug("Dispatcher update for %s.", var)
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates

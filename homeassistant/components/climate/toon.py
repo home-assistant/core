@@ -26,7 +26,7 @@ class ThermostatDevice(ClimateDevice):
 
     def __init__(self, hass):
         """Initialize the Toon climate device."""
-        self._name = 'Toon van Eneco'
+        self._name = "Toon van Eneco"
         self.hass = hass
         self.thermos = hass.data[toon_main.TOON_HANDLE]
 

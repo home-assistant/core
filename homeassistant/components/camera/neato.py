@@ -34,7 +34,7 @@ class NeatoCleaningMap(Camera):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
-        self._robot_name = '{} {}'.format(self.robot.name, 'Cleaning Map')
+        self._robot_name = '{} {}'.format(self.robot.name, "Cleaning Map")
         self._robot_serial = self.robot.serial
         self.neato = hass.data[NEATO_LOGIN]
         self._image_url = None

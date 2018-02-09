@@ -18,7 +18,7 @@ REQUIREMENTS = ['pyW215==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'D-link Smart Plug W215'
+DEFAULT_NAME = "D-link Smart Plug W215"
 DEFAULT_PASSWORD = ''
 DEFAULT_USERNAME = 'admin'
 CONF_USE_LEGACY_PROTOCOL = 'use_legacy_protocol'

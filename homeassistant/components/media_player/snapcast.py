@@ -32,9 +32,9 @@ SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
     SUPPORT_SELECT_SOURCE
 
 GROUP_PREFIX = 'snapcast_group_'
-GROUP_SUFFIX = 'Snapcast Group'
+GROUP_SUFFIX = "Snapcast Group"
 CLIENT_PREFIX = 'snapcast_client_'
-CLIENT_SUFFIX = 'Snapcast Client'
+CLIENT_SUFFIX = "Snapcast Client"
 
 SERVICE_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,

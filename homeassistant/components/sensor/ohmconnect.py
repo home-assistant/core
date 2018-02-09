@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ID = 'id'
 
-DEFAULT_NAME = 'OhmConnect Status'
+DEFAULT_NAME = "OhmConnect Status"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -57,14 +57,14 @@ class OhmconnectSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._data.get("active") == "True":
-            return "Active"
-        return "Inactive"
+        if self._data.get('active') == 'True':
+            return 'Active'
+        return 'Inactive'
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {"Address": self._data.get("address"), "ID": self._ohmid}
+        return {'Address': self._data.get('address'), 'ID': self._ohmid}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

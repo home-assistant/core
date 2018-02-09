@@ -32,10 +32,10 @@ class APIStatus(enum.Enum):
     """Representation of an API status."""
 
     # pylint: disable=no-init, invalid-name
-    OK = "ok"
+    OK = 'ok'
     INVALID_PASSWORD = "invalid_password"
-    CANNOT_CONNECT = "cannot_connect"
-    UNKNOWN = "unknown"
+    CANNOT_CONNECT = 'cannot_connect'
+    UNKNOWN = 'unknown'
 
     def __str__(self) -> str:
         """Return the state."""
@@ -52,7 +52,7 @@ class API(object):
         self.port = port
         self.api_password = api_password
 
-        if host.startswith(("http://", "https://")):
+        if host.startswith(('http://', 'https://')):
             self.base_url = host
         elif use_ssl:
             self.base_url = "https://{}".format(host)

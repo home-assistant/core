@@ -21,7 +21,7 @@ REQUIREMENTS = ['pynut2==2.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'NUT UPS'
+DEFAULT_NAME = "NUT UPS"
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 3493
 
@@ -30,96 +30,96 @@ KEY_STATUS = 'ups.status'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    'ups.status': ['Status Data', '', 'mdi:information-outline'],
+    'ups.status': ["Status Data", '', 'mdi:information-outline'],
     'ups.alarm': ['Alarms', '', 'mdi:alarm'],
-    'ups.time': ['Internal Time', '', 'mdi:calendar-clock'],
-    'ups.date': ['Internal Date', '', 'mdi:calendar'],
+    'ups.time': ["Internal Time", '', 'mdi:calendar-clock'],
+    'ups.date': ["Internal Date", '', 'mdi:calendar'],
     'ups.model': ['Model', '', 'mdi:information-outline'],
     'ups.mfr': ['Manufacturer', '', 'mdi:information-outline'],
-    'ups.mfr.date': ['Manufacture Date', '', 'mdi:calendar'],
-    'ups.serial': ['Serial Number', '', 'mdi:information-outline'],
-    'ups.vendorid': ['Vendor ID', '', 'mdi:information-outline'],
-    'ups.productid': ['Product ID', '', 'mdi:information-outline'],
-    'ups.firmware': ['Firmware Version', '', 'mdi:information-outline'],
-    'ups.firmware.aux': ['Firmware Version 2', '', 'mdi:information-outline'],
-    'ups.temperature': ['UPS Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'ups.mfr.date': ["Manufacture Date", '', 'mdi:calendar'],
+    'ups.serial': ["Serial Number", '', 'mdi:information-outline'],
+    'ups.vendorid': ["Vendor ID", '', 'mdi:information-outline'],
+    'ups.productid': ["Product ID", '', 'mdi:information-outline'],
+    'ups.firmware': ["Firmware Version", '', 'mdi:information-outline'],
+    'ups.firmware.aux': ["Firmware Version 2", '', 'mdi:information-outline'],
+    'ups.temperature': ["UPS Temperature", TEMP_CELSIUS, 'mdi:thermometer'],
     'ups.load': ['Load', '%', 'mdi:gauge'],
-    'ups.load.high': ['Overload Setting', '%', 'mdi:gauge'],
-    'ups.id': ['System identifier', '', 'mdi:information-outline'],
-    'ups.delay.start': ['Load Restart Delay', 's', 'mdi:timer'],
-    'ups.delay.reboot': ['UPS Reboot Delay', 's', 'mdi:timer'],
-    'ups.delay.shutdown': ['UPS Shutdown Delay', 's', 'mdi:timer'],
-    'ups.timer.start': ['Load Start Timer', 's', 'mdi:timer'],
-    'ups.timer.reboot': ['Load Reboot Timer', 's', 'mdi:timer'],
-    'ups.timer.shutdown': ['Load Shutdown Timer', 's', 'mdi:timer'],
-    'ups.test.interval': ['Self-Test Interval', 's', 'mdi:timer'],
-    'ups.test.result': ['Self-Test Result', '', 'mdi:information-outline'],
-    'ups.test.date': ['Self-Test Date', '', 'mdi:calendar'],
+    'ups.load.high': ["Overload Setting", '%', 'mdi:gauge'],
+    'ups.id': ["System identifier", '', 'mdi:information-outline'],
+    'ups.delay.start': ["Load Restart Delay", 's', 'mdi:timer'],
+    'ups.delay.reboot': ["UPS Reboot Delay", 's', 'mdi:timer'],
+    'ups.delay.shutdown': ["UPS Shutdown Delay", 's', 'mdi:timer'],
+    'ups.timer.start': ["Load Start Timer", 's', 'mdi:timer'],
+    'ups.timer.reboot': ["Load Reboot Timer", 's', 'mdi:timer'],
+    'ups.timer.shutdown': ["Load Shutdown Timer", 's', 'mdi:timer'],
+    'ups.test.interval': ["Self-Test Interval", 's', 'mdi:timer'],
+    'ups.test.result': ["Self-Test Result", '', 'mdi:information-outline'],
+    'ups.test.date': ["Self-Test Date", '', 'mdi:calendar'],
     'ups.display.language': ['Language', '', 'mdi:information-outline'],
-    'ups.contacts': ['External Contacts', '', 'mdi:information-outline'],
+    'ups.contacts': ["External Contacts", '', 'mdi:information-outline'],
     'ups.efficiency': ['Efficiency', '%', 'mdi:gauge'],
-    'ups.power': ['Current Apparent Power', 'VA', 'mdi:flash'],
-    'ups.power.nominal': ['Nominal Power', 'VA', 'mdi:flash'],
-    'ups.realpower': ['Current Real Power', 'W', 'mdi:flash'],
-    'ups.realpower.nominal': ['Nominal Real Power', 'W', 'mdi:flash'],
-    'ups.beeper.status': ['Beeper Status', '', 'mdi:information-outline'],
-    'ups.type': ['UPS Type', '', 'mdi:information-outline'],
-    'ups.watchdog.status': ['Watchdog Status', '', 'mdi:information-outline'],
-    'ups.start.auto': ['Start on AC', '', 'mdi:information-outline'],
-    'ups.start.battery': ['Start on Battery', '', 'mdi:information-outline'],
-    'ups.start.reboot': ['Reboot on Battery', '', 'mdi:information-outline'],
-    'ups.shutdown': ['Shutdown Ability', '', 'mdi:information-outline'],
-    'battery.charge': ['Battery Charge', '%', 'mdi:gauge'],
-    'battery.charge.low': ['Low Battery Setpoint', '%', 'mdi:gauge'],
-    'battery.charge.restart': ['Minimum Battery to Start', '%', 'mdi:gauge'],
-    'battery.charge.warning': ['Warning Battery Setpoint', '%', 'mdi:gauge'],
+    'ups.power': ["Current Apparent Power", 'VA', 'mdi:flash'],
+    'ups.power.nominal': ["Nominal Power", 'VA', 'mdi:flash'],
+    'ups.realpower': ["Current Real Power", 'W', 'mdi:flash'],
+    'ups.realpower.nominal': ["Nominal Real Power", 'W', 'mdi:flash'],
+    'ups.beeper.status': ["Beeper Status", '', 'mdi:information-outline'],
+    'ups.type': ["UPS Type", '', 'mdi:information-outline'],
+    'ups.watchdog.status': ["Watchdog Status", '', 'mdi:information-outline'],
+    'ups.start.auto': ["Start on AC", '', 'mdi:information-outline'],
+    'ups.start.battery': ["Start on Battery", '', 'mdi:information-outline'],
+    'ups.start.reboot': ["Reboot on Battery", '', 'mdi:information-outline'],
+    'ups.shutdown': ["Shutdown Ability", '', 'mdi:information-outline'],
+    'battery.charge': ["Battery Charge", '%', 'mdi:gauge'],
+    'battery.charge.low': ["Low Battery Setpoint", '%', 'mdi:gauge'],
+    'battery.charge.restart': ["Minimum Battery to Start", '%', 'mdi:gauge'],
+    'battery.charge.warning': ["Warning Battery Setpoint", '%', 'mdi:gauge'],
     'battery.charger.status':
-        ['Charging Status', '', 'mdi:information-outline'],
-    'battery.voltage': ['Battery Voltage', 'V', 'mdi:flash'],
-    'battery.voltage.nominal': ['Nominal Battery Voltage', 'V', 'mdi:flash'],
-    'battery.voltage.low': ['Low Battery Voltage', 'V', 'mdi:flash'],
-    'battery.voltage.high': ['High Battery Voltage', 'V', 'mdi:flash'],
-    'battery.capacity': ['Battery Capacity', 'Ah', 'mdi:flash'],
-    'battery.current': ['Battery Current', 'A', 'mdi:flash'],
-    'battery.current.total': ['Total Battery Current', 'A', 'mdi:flash'],
+        ["Charging Status", '', 'mdi:information-outline'],
+    'battery.voltage': ["Battery Voltage", 'V', 'mdi:flash'],
+    'battery.voltage.nominal': ["Nominal Battery Voltage", 'V', 'mdi:flash'],
+    'battery.voltage.low': ["Low Battery Voltage", 'V', 'mdi:flash'],
+    'battery.voltage.high': ["High Battery Voltage", 'V', 'mdi:flash'],
+    'battery.capacity': ["Battery Capacity", 'Ah', 'mdi:flash'],
+    'battery.current': ["Battery Current", 'A', 'mdi:flash'],
+    'battery.current.total': ["Total Battery Current", 'A', 'mdi:flash'],
     'battery.temperature':
-        ['Battery Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'battery.runtime': ['Battery Runtime', 's', 'mdi:timer'],
-    'battery.runtime.low': ['Low Battery Runtime', 's', 'mdi:timer'],
+        ["Battery Temperature", TEMP_CELSIUS, 'mdi:thermometer'],
+    'battery.runtime': ["Battery Runtime", 's', 'mdi:timer'],
+    'battery.runtime.low': ["Low Battery Runtime", 's', 'mdi:timer'],
     'battery.runtime.restart':
-        ['Minimum Battery Runtime to Start', 's', 'mdi:timer'],
+        ["Minimum Battery Runtime to Start", 's', 'mdi:timer'],
     'battery.alarm.threshold':
-        ['Battery Alarm Threshold', '', 'mdi:information-outline'],
-    'battery.date': ['Battery Date', '', 'mdi:calendar'],
-    'battery.mfr.date': ['Battery Manuf. Date', '', 'mdi:calendar'],
-    'battery.packs': ['Number of Batteries', '', 'mdi:information-outline'],
+        ["Battery Alarm Threshold", '', 'mdi:information-outline'],
+    'battery.date': ["Battery Date", '', 'mdi:calendar'],
+    'battery.mfr.date': ["Battery Manuf. Date", '', 'mdi:calendar'],
+    'battery.packs': ["Number of Batteries", '', 'mdi:information-outline'],
     'battery.packs.bad':
-        ['Number of Bad Batteries', '', 'mdi:information-outline'],
-    'battery.type': ['Battery Chemistry', '', 'mdi:information-outline'],
+        ["Number of Bad Batteries", '', 'mdi:information-outline'],
+    'battery.type': ["Battery Chemistry", '', 'mdi:information-outline'],
     'input.sensitivity':
-        ['Input Power Sensitivity', '', 'mdi:information-outline'],
-    'input.transfer.low': ['Low Voltage Transfer', 'V', 'mdi:flash'],
-    'input.transfer.high': ['High Voltage Transfer', 'V', 'mdi:flash'],
+        ["Input Power Sensitivity", '', 'mdi:information-outline'],
+    'input.transfer.low': ["Low Voltage Transfer", 'V', 'mdi:flash'],
+    'input.transfer.high': ["High Voltage Transfer", 'V', 'mdi:flash'],
     'input.transfer.reason':
-        ['Voltage Transfer Reason', '', 'mdi:information-outline'],
-    'input.voltage': ['Input Voltage', 'V', 'mdi:flash'],
-    'input.voltage.nominal': ['Nominal Input Voltage', 'V', 'mdi:flash'],
+        ["Voltage Transfer Reason", '', 'mdi:information-outline'],
+    'input.voltage': ["Input Voltage", 'V', 'mdi:flash'],
+    'input.voltage.nominal': ["Nominal Input Voltage", 'V', 'mdi:flash'],
 }
 
 STATE_TYPES = {
     'OL': 'Online',
-    'OB': 'On Battery',
-    'LB': 'Low Battery',
-    'HB': 'High Battery',
-    'RB': 'Battery Needs Replaced',
-    'CHRG': 'Battery Charging',
-    'BYPASS': 'Bypass Active',
-    'CAL': 'Runtime Calibration',
+    'OB': "On Battery",
+    'LB': "Low Battery",
+    'HB': "High Battery",
+    'RB': "Battery Needs Replaced",
+    'CHRG': "Battery Charging",
+    'BYPASS': "Bypass Active",
+    'CAL': "Runtime Calibration",
     'OFF': 'Offline',
     'OVER': 'Overloaded',
-    'TRIM': 'Trimming Voltage',
-    'BOOST': 'Boosting Voltage',
-    'FSD': 'Forced Shutdown',
+    'TRIM': "Trimming Voltage",
+    'BOOST': "Boosting Voltage",
+    'FSD': "Forced Shutdown",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -149,7 +149,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("NUT Sensor has no data, unable to setup")
         return False
 
-    _LOGGER.debug('NUT Sensors Available: %s', data.status)
+    _LOGGER.debug("NUT Sensors Available: %s", data.status)
 
     entities = []
 
@@ -217,7 +217,7 @@ class NUTSensor(Entity):
             return STATE_TYPES['OFF']
         else:
             try:
-                return " ".join(
+                return ' '.join(
                     STATE_TYPES[state]
                     for state in self._data.status[KEY_STATUS].split())
             except KeyError:

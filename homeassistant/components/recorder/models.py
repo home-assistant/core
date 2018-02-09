@@ -138,7 +138,7 @@ class RecorderRuns(Base):   # type: ignore
 
         session = Session.object_session(self)
 
-        assert session is not None, 'RecorderRuns need to be persisted'
+        assert session is not None, "RecorderRuns need to be persisted"
 
         query = session.query(distinct(States.entity_id)).filter(
             States.last_updated >= self.start)

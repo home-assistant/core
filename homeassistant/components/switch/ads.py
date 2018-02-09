@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ads']
 
-DEFAULT_NAME = 'ADS Switch'
+DEFAULT_NAME = "ADS Switch"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
@@ -52,7 +52,7 @@ class AdsSwitch(ToggleEntity):
         """Register device notification."""
         def update(name, value):
             """Handle device notification."""
-            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._on_state = value
             self.schedule_update_ha_state()
 

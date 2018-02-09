@@ -25,9 +25,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_STATION_ID): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
+                  "Latitude and longitude must exist together"): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+                  "Latitude and longitude must exist together"): cv.longitude,
 })
 
 
@@ -66,7 +66,7 @@ class ZamgWeather(WeatherEntity):
     def name(self):
         """Return the name of the sensor."""
         return self.stationname or 'ZAMG {}'.format(
-            self.zamg_data.data.get('Name') or '(unknown station)')
+            self.zamg_data.data.get('Name') or "(unknown station)")
 
     @property
     def condition(self):

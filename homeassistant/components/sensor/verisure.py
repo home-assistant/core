@@ -53,7 +53,7 @@ class VerisureThermometer(Entity):
         """Return the name of the device."""
         return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
-            self._device_label) + " temperature"
+            self._device_label) + ' temperature'
 
     @property
     def state(self):
@@ -91,7 +91,7 @@ class VerisureHygrometer(Entity):
         """Return the name of the device."""
         return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
-            self._device_label) + " humidity"
+            self._device_label) + ' humidity'
 
     @property
     def state(self):
@@ -129,7 +129,7 @@ class VerisureMouseDetection(Entity):
         """Return the name of the device."""
         return hub.get_first(
             "$.eventCounts[?(@.deviceLabel=='%s')].area",
-            self._device_label) + " mouse"
+            self._device_label) + ' mouse'
 
     @property
     def state(self):

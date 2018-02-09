@@ -54,14 +54,14 @@ class BlinkSystemSensor(BinarySensorDevice):
 
     def __init__(self, data):
         """Initialize the sensor."""
-        self._name = 'blink armed status'
+        self._name = "blink armed status"
         self.data = data
         self._state = self.data.arm
 
     @property
     def name(self):
         """Return the name of the blink sensor."""
-        return self._name.replace(" ", "_")
+        return self._name.replace(' ', '_')
 
     @property
     def is_on(self):

@@ -53,7 +53,7 @@ def async_setup(hass, config):
             panel_path = hass.config.path(PANEL_DIR, '{}.html'.format(name))
 
         if not os.path.isfile(panel_path):
-            _LOGGER.error('Unable to find webcomponent for %s: %s',
+            _LOGGER.error("Unable to find webcomponent for %s: %s",
                           name, panel_path)
             continue
 

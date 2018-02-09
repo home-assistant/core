@@ -64,7 +64,7 @@ def async_setup_platform(hass, config):
     else:
         _LOGGER.debug("telegram webhook Status: %s", current_status)
 
-    handler_url = "{0}{1}".format(base_url, TELEGRAM_HANDLER_URL)
+    handler_url = '{0}{1}'.format(base_url, TELEGRAM_HANDLER_URL)
     if not handler_url.startswith('https'):
         _LOGGER.error("Invalid telegram webhook %s must be https", handler_url)
         return False
@@ -113,13 +113,13 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
         real_ip = get_real_ip(request)
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
-            return self.json_message('Access denied', HTTP_UNAUTHORIZED)
+            return self.json_message("Access denied", HTTP_UNAUTHORIZED)
 
         try:
             data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         if not self.process_message(data):
-            return self.json_message('Invalid message', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid message", HTTP_BAD_REQUEST)
         return self.json({})

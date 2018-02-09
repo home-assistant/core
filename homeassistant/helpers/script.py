@@ -76,7 +76,7 @@ class Script():
         """
         self.last_triggered = date_util.utcnow()
         if self._cur == -1:
-            self._log('Running script')
+            self._log("Running script")
             self._cur = 0
 
         # Unregister callback if we were in a delay or wait but turn on is
@@ -178,7 +178,7 @@ class Script():
 
         This method is a coroutine.
         """
-        self.last_action = action.get(CONF_ALIAS, 'call service')
+        self.last_action = action.get(CONF_ALIAS, "call service")
         self._log("Executing step %s" % self.last_action)
         yield from service.async_call_from_config(
             self.hass, action, True, variables, validate_config=False)
@@ -193,7 +193,7 @@ class Script():
                 event_data.update(template.render_complex(
                     action[CONF_EVENT_DATA_TEMPLATE], variables))
             except TemplateError as ex:
-                _LOGGER.error('Error rendering event data template: %s', ex)
+                _LOGGER.error("Error rendering event data template: %s", ex)
 
         self.hass.bus.async_fire(action[CONF_EVENT],
                                  event_data)

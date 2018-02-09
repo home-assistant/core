@@ -30,7 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_LOCKS = 'all locks'
+GROUP_NAME_ALL_LOCKS = "all locks"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 

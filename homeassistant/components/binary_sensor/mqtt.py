@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'MQTT Binary sensor'
+DEFAULT_NAME = "MQTT Binary sensor"
 
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -100,8 +100,8 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
             elif payload == self._payload_off:
                 self._state = False
             else:  # Payload is not for this entity
-                _LOGGER.warning('No matching payload found'
-                                ' for entity: %s with state_topic: %s',
+                _LOGGER.warning("No matching payload found"
+                                " for entity: %s with state_topic: %s",
                                 self._name, self._state_topic)
                 return
 

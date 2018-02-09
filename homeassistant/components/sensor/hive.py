@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     session = hass.data.get(DATA_HIVE)
 
-    if discovery_info["HA_DeviceType"] == "Hub_OnlineStatus":
+    if discovery_info['HA_DeviceType'] == "Hub_OnlineStatus":
         add_devices([HiveSensorEntity(session, discovery_info)])
 
 
@@ -25,8 +25,8 @@ class HiveSensorEntity(Entity):
 
     def __init__(self, hivesession, hivedevice):
         """Initialize the sensor."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.device_type = hivedevice["HA_DeviceType"]
+        self.node_id = hivedevice['Hive_NodeID']
+        self.device_type = hivedevice['HA_DeviceType']
         self.session = hivesession
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)

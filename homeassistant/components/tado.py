@@ -98,7 +98,7 @@ class TadoDataStore:
 
     def get_data(self, data_id):
         """Get the cached data."""
-        data = {'error': 'no data'}
+        data = {'error': "no data"}
 
         if data_id in self.data:
             data = self.data[data_id]

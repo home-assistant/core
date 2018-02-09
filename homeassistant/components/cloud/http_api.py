@@ -30,12 +30,12 @@ def async_setup(hass):
 
 _CLOUD_ERRORS = {
     auth_api.UserNotFound: (400, "User does not exist."),
-    auth_api.UserNotConfirmed: (400, 'Email not confirmed.'),
-    auth_api.Unauthenticated: (401, 'Authentication failed.'),
-    auth_api.PasswordChangeRequired: (400, 'Password change required.'),
-    auth_api.ExpiredCode: (400, 'Confirmation code has expired.'),
-    auth_api.InvalidCode: (400, 'Invalid confirmation code.'),
-    asyncio.TimeoutError: (502, 'Unable to reach the Home Assistant cloud.')
+    auth_api.UserNotConfirmed: (400, "Email not confirmed."),
+    auth_api.Unauthenticated: (401, "Authentication failed."),
+    auth_api.PasswordChangeRequired: (400, "Password change required."),
+    auth_api.ExpiredCode: (400, "Confirmation code has expired."),
+    auth_api.InvalidCode: (400, "Invalid confirmation code."),
+    asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud.")
 }
 
 
@@ -52,7 +52,7 @@ def _handle_cloud_errors(handler):
         except (auth_api.CloudError, asyncio.TimeoutError) as err:
             err_info = _CLOUD_ERRORS.get(err.__class__)
             if err_info is None:
-                err_info = (502, 'Unexpected error: {}'.format(err))
+                err_info = (502, "Unexpected error: {}".format(err))
             status, msg = err_info
             return view.json_message(msg, status_code=status,
                                      message_code=err.__class__.__name__)
@@ -119,7 +119,7 @@ class CloudAccountView(HomeAssistantView):
         cloud = hass.data[DOMAIN]
 
         if not cloud.is_logged_in:
-            return self.json_message('Not logged in', 400)
+            return self.json_message("Not logged in", 400)
 
         return self.json(_account_data(cloud))
 

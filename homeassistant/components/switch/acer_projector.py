@@ -21,30 +21,30 @@ _LOGGER = logging.getLogger(__name__)
 CONF_TIMEOUT = 'timeout'
 CONF_WRITE_TIMEOUT = 'write_timeout'
 
-DEFAULT_NAME = 'Acer Projector'
+DEFAULT_NAME = "Acer Projector"
 DEFAULT_TIMEOUT = 1
 DEFAULT_WRITE_TIMEOUT = 1
 
-ECO_MODE = 'ECO Mode'
+ECO_MODE = "ECO Mode"
 
 ICON = 'mdi:projector'
 
-INPUT_SOURCE = 'Input Source'
+INPUT_SOURCE = "Input Source"
 
 LAMP = 'Lamp'
-LAMP_HOURS = 'Lamp Hours'
+LAMP_HOURS = "Lamp Hours"
 
 MODEL = 'Model'
 
 # Commands known to the projector
 CMD_DICT = {
-    LAMP: '* 0 Lamp ?\r',
-    LAMP_HOURS: '* 0 Lamp\r',
-    INPUT_SOURCE: '* 0 Src ?\r',
-    ECO_MODE: '* 0 IR 052\r',
-    MODEL: '* 0 IR 035\r',
-    STATE_ON: '* 0 IR 001\r',
-    STATE_OFF: '* 0 IR 002\r',
+    LAMP: "* 0 Lamp ?\r",
+    LAMP_HOURS: "* 0 Lamp\r",
+    INPUT_SOURCE: "* 0 Src ?\r",
+    ECO_MODE: "* 0 IR 052\r",
+    MODEL: "* 0 IR 035\r",
+    STATE_ON: "* 0 IR 001\r",
+    STATE_OFF: "* 0 IR 002\r",
 }
 
 
@@ -103,7 +103,7 @@ class AcerSwitch(SwitchDevice):
             # need to wait for timeout
             ret = self.ser.read_until(size=20).decode('utf-8')
         except serial.SerialException:
-            _LOGGER.error('Problem communicating with %s', self._serial_port)
+            _LOGGER.error("Problem communicating with %s", self._serial_port)
         self.ser.close()
         return ret
 
@@ -140,10 +140,10 @@ class AcerSwitch(SwitchDevice):
         """Get the latest state from the projector."""
         msg = CMD_DICT[LAMP]
         awns = self._write_read_format(msg)
-        if awns == 'Lamp 1':
+        if awns == "Lamp 1":
             self._state = True
             self._available = True
-        elif awns == 'Lamp 0':
+        elif awns == "Lamp 0":
             self._state = False
             self._available = True
         else:

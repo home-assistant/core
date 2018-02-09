@@ -78,7 +78,7 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Get ARP from keenetic router."""
-        _LOGGER.info("Fetching...")
+        _LOGGER.info('Fetching...')
 
         last_results = []
 

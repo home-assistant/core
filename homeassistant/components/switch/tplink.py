@@ -23,7 +23,7 @@ ATTR_CURRENT_A = 'current_a'
 
 CONF_LEDS = 'enable_leds'
 
-DEFAULT_NAME = 'TP-Link Switch'
+DEFAULT_NAME = "TP-Link Switch"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -105,19 +105,19 @@ class SmartPlugSwitch(SwitchDevice):
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
                 self._emeter_params[ATTR_CURRENT_POWER_W] \
-                    = "{:.2f}".format(emeter_readings["power"])
+                    = '{:.2f}'.format(emeter_readings['power'])
                 self._emeter_params[ATTR_TOTAL_ENERGY_KWH] \
-                    = "{:.3f}".format(emeter_readings["total"])
+                    = '{:.3f}'.format(emeter_readings['total'])
                 self._emeter_params[ATTR_VOLTAGE] \
-                    = "{:.1f}".format(emeter_readings["voltage"])
+                    = '{:.1f}'.format(emeter_readings['voltage'])
                 self._emeter_params[ATTR_CURRENT_A] \
-                    = "{:.2f}".format(emeter_readings["current"])
+                    = '{:.2f}'.format(emeter_readings['current'])
 
                 emeter_statics = self.smartplug.get_emeter_daily()
                 try:
                     self._emeter_params[ATTR_TODAY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            emeter_statics[int(time.strftime("%e"))])
+                        = '{:.3f}'.format(
+                            emeter_statics[int(time.strftime('%e'))])
                 except KeyError:
                     # Device returned no daily history
                     pass

@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 CONF_ADDRESS = 'address'
 CONF_TYPE = 'type'
 
-DEFAULT_NAME = 'KNX Sensor'
+DEFAULT_NAME = "KNX Sensor"
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

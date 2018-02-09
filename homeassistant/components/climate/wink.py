@@ -432,8 +432,8 @@ class WinkAC(WinkDevice, ClimateDevice):
             current_op = STATE_OFF
         else:
             wink_mode = self.wink.current_mode()
-            if wink_mode == "auto_eco":
-                wink_mode = "eco"
+            if wink_mode == 'auto_eco':
+                wink_mode = 'eco'
             current_op = WINK_STATE_TO_HA.get(wink_mode)
             if current_op is None:
                 current_op = STATE_UNKNOWN
@@ -445,8 +445,8 @@ class WinkAC(WinkDevice, ClimateDevice):
         op_list = ['off']
         modes = self.wink.modes()
         for mode in modes:
-            if mode == "auto_eco":
-                mode = "eco"
+            if mode == 'auto_eco':
+                mode = 'eco'
             ha_mode = WINK_STATE_TO_HA.get(mode)
             if ha_mode is not None:
                 op_list.append(ha_mode)
@@ -538,8 +538,8 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
         """
         Return current operation one of the following.
 
-        ["eco", "performance", "heat_pump",
-        "high_demand", "electric_only", "gas]
+        ['eco', 'performance', 'heat_pump',
+        'high_demand', 'electric_only', "gas]
         """
         if not self.wink.is_on():
             current_op = STATE_OFF

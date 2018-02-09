@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
 RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
-RE_ASCII = re.compile(r"\033\[[^m]*m")
+RE_ASCII = re.compile(r'\033\[[^m]*m')
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
@@ -47,19 +47,19 @@ FILE_MIGRATION = [
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
-    (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
+    (CONF_NAME, 'Home', None, "Name of the location where Home Assistant is "
      'running'),
-    (CONF_LATITUDE, 0, 'latitude', 'Location required to calculate the time'
-     ' the sun rises and sets'),
+    (CONF_LATITUDE, 0, 'latitude', "Location required to calculate the time"
+     " the sun rises and sets"),
     (CONF_LONGITUDE, 0, 'longitude', None),
-    (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'
-                              ' (altitude above sea level in meters)'),
+    (CONF_ELEVATION, 0, None, "Impacts weather/sunrise data"
+                              " (altitude above sea level in meters)"),
     (CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, None,
-     '{} for Metric, {} for Imperial'.format(CONF_UNIT_SYSTEM_METRIC,
+     "{} for Metric, {} for Imperial".format(CONF_UNIT_SYSTEM_METRIC,
                                              CONF_UNIT_SYSTEM_IMPERIAL)),
-    (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
+    (CONF_TIME_ZONE, 'UTC', 'time_zone', "Pick yours from here: http://en.wiki"
      'pedia.org/wiki/List_of_tz_database_time_zones'),
-    (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
+    (CONF_CUSTOMIZE, "!include customize.yaml", None, "Customization file"),
 )  # type: Tuple[Tuple[str, Any, Any, str], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
@@ -161,7 +161,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on the OS."""
-    data_dir = os.getenv('APPDATA') if os.name == "nt" \
+    data_dir = os.getenv('APPDATA') if os.name == 'nt' \
         else os.path.expanduser('~')
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
@@ -358,8 +358,8 @@ def async_log_exception(ex, domain, config, hass):
     if hass is not None:
         async_notify_setup_error(hass, domain, True)
 
-    if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
+    if "extra keys not allowed" in ex.error_message:
+        message += "[{}] is an invalid option for [{}]. Check: {}->{}."\
                    .format(ex.path[-1], domain, domain,
                            '->'.join(str(m) for m in ex.path))
     else:
@@ -371,7 +371,7 @@ def async_log_exception(ex, domain, config, hass):
         getattr(domain_config, '__line__', '?'))
 
     if domain != 'homeassistant':
-        message += ('Please check the docs at '
+        message += ("Please check the docs at "
                     'https://home-assistant.io/components/{}/'.format(domain))
 
     _LOGGER.error(message)
@@ -499,7 +499,7 @@ def async_process_ha_core_config(hass, config):
     if discovered:
         _LOGGER.warning(
             "Incomplete core configuration. Auto detected %s",
-            ", ".join('{}: {}'.format(key, val) for key, val in discovered))
+            ', '.join('{}: {}'.format(key, val) for key, val in discovered))
 
 
 def _log_pkg_error(package, component, config, message):
@@ -524,7 +524,7 @@ def _identify_config_schema(module):
     t_schema = str(schema)
     if t_schema.startswith('{'):
         return ('dict', schema)
-    if t_schema.startswith(('[', 'All(<function ensure_list')):
+    if t_schema.startswith(('[', "All(<function ensure_list")):
         return ('list', schema)
     return '', schema
 
@@ -691,7 +691,7 @@ def async_notify_setup_error(hass, component, link=False):
 
     errors[component] = errors.get(component) or link
 
-    message = 'The following components and platforms could not be set up:\n\n'
+    message = "The following components and platforms could not be set up:\n\n"
 
     for name, link in errors.items():
         if link:
@@ -701,7 +701,7 @@ def async_notify_setup_error(hass, component, link=False):
 
         message += ' - {}\n'.format(part)
 
-    message += '\nPlease check your config.'
+    message += "\nPlease check your config."
 
     persistent_notification.async_create(
-        hass, message, 'Invalid config', 'invalid_config')
+        hass, message, "Invalid config", 'invalid_config')

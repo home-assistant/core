@@ -28,7 +28,7 @@ def async_register(hass, handler):
         intents = hass.data[DATA_KEY] = {}
 
     if handler.intent_type in intents:
-        _LOGGER.warning('Intent %s is being overwritten by %s.',
+        _LOGGER.warning("Intent %s is being overwritten by %s.",
                         handler.intent_type, handler)
 
     intents[handler.intent_type] = handler
@@ -41,7 +41,7 @@ def async_handle(hass, platform, intent_type, slots=None, text_input=None):
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
     if handler is None:
-        raise UnknownIntent('Unknown intent {}'.format(intent_type))
+        raise UnknownIntent("Unknown intent {}".format(intent_type))
 
     intent = Intent(hass, platform, intent_type, slots or {}, text_input)
 
@@ -51,10 +51,10 @@ def async_handle(hass, platform, intent_type, slots=None, text_input=None):
         return result
     except vol.Invalid as err:
         raise InvalidSlotInfo(
-            'Received invalid slot info for {}'.format(intent_type)) from err
+            "Received invalid slot info for {}".format(intent_type)) from err
     except Exception as err:
         raise IntentHandleError(
-            'Error handling {}'.format(intent_type)) from err
+            "Error handling {}".format(intent_type)) from err
 
 
 class IntentError(HomeAssistantError):
@@ -114,7 +114,7 @@ class IntentHandler:
 
     def __repr__(self):
         """Represent a string of an intent handler."""
-        return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
+        return "<{} - {}>".format(self.__class__.__name__, self.intent_type)
 
 
 class Intent:

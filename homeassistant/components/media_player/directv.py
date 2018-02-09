@@ -19,14 +19,14 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['directpy==0.2']
 
 DEFAULT_DEVICE = '0'
-DEFAULT_NAME = 'DirecTV Receiver'
+DEFAULT_NAME = "DirecTV Receiver"
 DEFAULT_PORT = 8080
 
 SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
-DATA_DIRECTV = "data_directv"
+DATA_DIRECTV = 'data_directv'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -57,12 +57,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             resp = requests.get(
                 'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
-            if "locations" in resp:
-                for loc in resp["locations"]:
-                    if("locationName" in loc and "clientAddr" in loc
-                       and loc["clientAddr"] not in known_devices):
-                        hosts.append([str.title(loc["locationName"]), host,
-                                      DEFAULT_PORT, loc["clientAddr"]])
+            if 'locations' in resp:
+                for loc in resp['locations']:
+                    if('locationName' in loc and 'clientAddr' in loc
+                       and loc['clientAddr'] not in known_devices):
+                        hosts.append([str.title(loc['locationName']), host,
+                                      DEFAULT_PORT, loc['clientAddr']])
 
         except requests.exceptions.RequestException:
             # bail out and just go forward with uPnP data

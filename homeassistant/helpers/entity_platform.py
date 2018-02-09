@@ -97,7 +97,7 @@ class EntityPlatform(object):
             tries += 1
             wait_time = min(tries, 6) * 30
             logger.warning(
-                'Platform %s not ready yet. Retrying in %d seconds.',
+                "Platform %s not ready yet. Retrying in %d seconds.",
                 self.platform_name, wait_time)
             async_track_point_in_time(
                 hass, self.async_setup(
@@ -185,7 +185,7 @@ class EntityPlatform(object):
                           registry):
         """Helper method to add an entity to the platform."""
         if entity is None:
-            raise ValueError('Entity cannot be None')
+            raise ValueError("Entity cannot be None")
 
         entity.hass = self.hass
         entity.platform = self
@@ -237,10 +237,10 @@ class EntityPlatform(object):
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
             raise HomeAssistantError(
-                'Invalid entity id: {}'.format(entity.entity_id))
+                "Invalid entity id: {}".format(entity.entity_id))
         elif entity.entity_id in component_entities:
             raise HomeAssistantError(
-                'Entity id already exists: {}'.format(entity.entity_id))
+                "Entity id already exists: {}".format(entity.entity_id))
 
         self.entities[entity.entity_id] = entity
         component_entities.add(entity.entity_id)

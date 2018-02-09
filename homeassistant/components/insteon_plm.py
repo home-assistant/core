@@ -99,13 +99,13 @@ def common_attributes(entity):
     """Return the device state attributes."""
     attributes = {}
     attributekeys = {
-        'address': 'INSTEON Address',
+        'address': "INSTEON Address",
         'description': 'Description',
         'model': 'Model',
         'cat': 'Category',
         'subcat': 'Subcategory',
         'firmware': 'Firmware',
-        'product_key': 'Product Key'
+        'product_key': "Product Key"
     }
 
     hexkeys = ['cat', 'subcat', 'firmware']

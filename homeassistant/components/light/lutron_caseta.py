@@ -44,7 +44,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return to_hass_level(self._state["current_state"])
+        return to_hass_level(self._state['current_state'])
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -64,7 +64,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state["current_state"] > 0
+        return self._state['current_state'] > 0
 
     @asyncio.coroutine
     def async_update(self):

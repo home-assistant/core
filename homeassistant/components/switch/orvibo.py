@@ -17,7 +17,7 @@ REQUIREMENTS = ['orvibo==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Orvibo S20 Switch'
+DEFAULT_NAME = "Orvibo S20 Switch"
 DEFAULT_DISCOVERY = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

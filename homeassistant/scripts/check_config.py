@@ -43,7 +43,7 @@ SILENCE = (
 PATCHES = {}
 
 C_HEAD = 'bold'
-ERROR_STR = 'General Errors'
+ERROR_STR = "General Errors"
 
 
 def color(the_color, *args, reset=None):
@@ -87,7 +87,7 @@ def run(script_args: List) -> int:
     config_dir = os.path.join(os.getcwd(), args.config)
     config_path = os.path.join(config_dir, 'configuration.yaml')
     if not os.path.isfile(config_path):
-        print('Config does not exist:', config_path)
+        print("Config does not exist:", config_path)
         return 1
 
     print(color('bold', "Testing configuration at", config_dir))
@@ -98,8 +98,8 @@ def run(script_args: List) -> int:
 
     res = check(config_path)
     if args.files:
-        print(color(C_HEAD, 'yaml files'), '(used /',
-              color('red', 'not used') + ')')
+        print(color(C_HEAD, "yaml files"), "(used /",
+              color('red', "not used") + ')')
         # Python 3.5 gets a recursive, but not in 3.4
         for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
                           glob(os.path.join(config_dir, '*/*.yaml'))):
@@ -107,7 +107,7 @@ def run(script_args: List) -> int:
             print(color(the_color, '-', yfn))
 
     if res['except']:
-        print(color('bold_white', 'Failed config'))
+        print(color('bold_white', "Failed config"))
         for domain, config in res['except'].items():
             domain_info.append(domain)
             print(' ', color('bold_red', domain + ':'),
@@ -117,12 +117,12 @@ def run(script_args: List) -> int:
 
     if domain_info:
         if 'all' in domain_info:
-            print(color('bold_white', 'Successful config (all)'))
+            print(color('bold_white', "Successful config (all)"))
             for domain, config in res['components'].items():
                 print(' ', color(C_HEAD, domain + ':'))
                 dump_dict(config)
         else:
-            print(color('bold_white', 'Successful config (partial)'))
+            print(color('bold_white', "Successful config (partial)"))
             for domain in domain_info:
                 if domain == ERROR_STR:
                     continue
@@ -136,14 +136,14 @@ def run(script_args: List) -> int:
             sss = []
             for skey in sdict:
                 if skey in flatsecret:
-                    _LOGGER.error('Duplicated secrets in files %s and %s',
+                    _LOGGER.error("Duplicated secrets in files %s and %s",
                                   flatsecret[skey], sfn)
                 flatsecret[skey] = sfn
                 sss.append(color('green', skey) if skey in res['secrets']
                            else skey)
-            print(color(C_HEAD, 'Secrets from', sfn + ':'), ', '.join(sss))
+            print(color(C_HEAD, "Secrets from", sfn + ':'), ', '.join(sss))
 
-        print(color(C_HEAD, 'Used Secrets:'))
+        print(color(C_HEAD, "Used Secrets:"))
         for skey, sval in res['secrets'].items():
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
@@ -180,7 +180,7 @@ def check(config_path):
 
         if module is None:
             # Ensure list
-            msg = '{} not found: {}'.format(
+            msg = "{} not found: {}".format(
                 'Platform' if '.' in comp_name else 'Component', comp_name)
             res['except'].setdefault(ERROR_STR, []).append(msg)
             return None
@@ -251,7 +251,7 @@ def check(config_path):
             bootstrap.from_config_file(config_path, skip_pip=True)
         res['secret_cache'] = dict(yaml.__SECRET_CACHE)
     except Exception as err:  # pylint: disable=broad-except
-        print(color('red', 'Fatal error while loading config:'), str(err))
+        print(color('red', "Fatal error while loading config:"), str(err))
         res['except'].setdefault(ERROR_STR, []).append(err)
     finally:
         # Stop all patches

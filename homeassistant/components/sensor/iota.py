@@ -65,7 +65,7 @@ class IotaNodeSensor(IotaDevice):
 
     def __init__(self, iota_config):
         """Initialize the sensor."""
-        super().__init__(name='Node Info', seed=None, iri=iota_config['iri'],
+        super().__init__(name="Node Info", seed=None, iri=iota_config['iri'],
                          is_testnet=iota_config['testnet'])
         self._state = None
         self._attr = {'url': self.iri, 'testnet': self.is_testnet}
@@ -73,7 +73,7 @@ class IotaNodeSensor(IotaDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'IOTA Node'
+        return "IOTA Node"
 
     @property
     def state(self):

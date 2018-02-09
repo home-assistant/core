@@ -31,11 +31,11 @@ DIGITS = {
 }
 
 SENSOR_MODELS = [
-    'Ubiquiti mFi-THS',
-    'Ubiquiti mFi-CS',
+    "Ubiquiti mFi-THS",
+    "Ubiquiti mFi-CS",
     'Outlet',
-    'Input Analog',
-    'Input Digital',
+    "Input Analog",
+    "Input Digital",
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -96,7 +96,7 @@ class MfiSensor(Entity):
             tag = None
         if tag is None:
             return STATE_OFF
-        elif self._port.model == 'Input Digital':
+        elif self._port.model == "Input Digital":
             return STATE_ON if self._port.value > 0 else STATE_OFF
         digits = DIGITS.get(self._port.tag, 0)
         return round(self._port.value, digits)
@@ -113,7 +113,7 @@ class MfiSensor(Entity):
             return TEMP_CELSIUS
         elif tag == 'active_pwr':
             return 'Watts'
-        elif self._port.model == 'Input Digital':
+        elif self._port.model == "Input Digital":
             return 'State'
         return tag
 

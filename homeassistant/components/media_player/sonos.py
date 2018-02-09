@@ -586,7 +586,7 @@ class SonosDevice(MediaPlayerDevice):
                 # that do display as artist.
                 # "Information" field in the sonos pc app
 
-                media_artist = '{artist} - {title}'.format(
+                media_artist = "{artist} - {title}".format(
                     artist=media_artist,
                     title=media_title
                 )
@@ -641,7 +641,7 @@ class SonosDevice(MediaPlayerDevice):
                  ('Channel', 'Master')]
             )
             rel_time = _parse_timespan(
-                position_info.get("RelTime")
+                position_info.get('RelTime')
             )
 
             # player no longer reports position?
@@ -960,9 +960,9 @@ class SonosDevice(MediaPlayerDevice):
                                                        namespaces).text
 
         res = [soco.data_structures.DidlResource(uri=src['uri'],
-                                                 protocol_info="DUMMY")]
-        didl = soco.data_structures.DidlItem(title="DUMMY",
-                                             parent_id="DUMMY",
+                                                 protocol_info='DUMMY')]
+        didl = soco.data_structures.DidlItem(title='DUMMY',
+                                             parent_id='DUMMY',
                                              item_id=src['uri'],
                                              desc=desc,
                                              resources=res)
@@ -1065,9 +1065,9 @@ class SonosDevice(MediaPlayerDevice):
             try:
                 self._player.add_uri_to_queue(media_id)
             except SoCoUPnPException:
-                _LOGGER.error('Error parsing media uri "%s", '
+                _LOGGER.error("Error parsing media uri %s, "
                               "please check it's a valid media resource "
-                              'supported by Sonos', media_id)
+                              "supported by Sonos", media_id)
         else:
             self._player.play_uri(media_id)
 

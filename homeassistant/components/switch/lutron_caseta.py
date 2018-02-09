@@ -48,7 +48,7 @@ class LutronCasetaLight(LutronCasetaDevice, SwitchDevice):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state["current_state"] > 0
+        return self._state['current_state'] > 0
 
     @asyncio.coroutine
     def async_update(self):

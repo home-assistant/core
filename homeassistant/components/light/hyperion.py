@@ -28,17 +28,17 @@ DEFAULT_NAME = 'Hyperion'
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST = ['HDMI', 'Cinema brighten lights', 'Cinema dim lights',
-                       'Knight rider', 'Blue mood blobs', 'Cold mood blobs',
-                       'Full color mood blobs', 'Green mood blobs',
-                       'Red mood blobs', 'Warm mood blobs',
-                       'Police Lights Single', 'Police Lights Solid',
-                       'Rainbow mood', 'Rainbow swirl fast',
-                       'Rainbow swirl', 'Random', 'Running dots',
-                       'System Shutdown', 'Snake', 'Sparks Color', 'Sparks',
-                       'Strobe blue', 'Strobe Raspbmc', 'Strobe white',
-                       'Color traces', 'UDP multicast listener',
-                       'UDP listener', 'X-Mas']
+DEFAULT_EFFECT_LIST = ['HDMI', "Cinema brighten lights", "Cinema dim lights",
+                       "Knight rider", "Blue mood blobs", "Cold mood blobs",
+                       "Full color mood blobs", "Green mood blobs",
+                       "Red mood blobs", "Warm mood blobs",
+                       "Police Lights Single", "Police Lights Solid",
+                       "Rainbow mood", "Rainbow swirl fast",
+                       "Rainbow swirl", 'Random', "Running dots",
+                       "System Shutdown", 'Snake', "Sparks Color", 'Sparks',
+                       "Strobe blue", "Strobe Raspbmc", "Strobe white",
+                       "Color traces", "UDP multicast listener",
+                       "UDP listener", 'X-Mas']
 
 SUPPORT_HYPERION = (SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)
 
@@ -219,8 +219,8 @@ class Hyperion(Light):
                     self._rgb_color = [175, 0, 255]
                     self._icon = 'mdi:lava-lamp'
                     try:
-                        s_name = response['info']['activeEffects'][0]["script"]
-                        s_name = s_name.split('/')[-1][:-3].split("-")[0]
+                        s_name = response['info']['activeEffects'][0]['script']
+                        s_name = s_name.split('/')[-1][:-3].split('-')[0]
                         self._effect = [x for x in self._effect_list
                                         if s_name.lower() in x.lower()][0]
                     except (KeyError, IndexError):
@@ -233,7 +233,7 @@ class Hyperion(Light):
             else:
                 # Get the RGB color
                 self._rgb_color =\
-                    response['info']['activeLedColor'][0]['RGB Value']
+                    response['info']['activeLedColor'][0]["RGB Value"]
                 self._brightness = max(self._rgb_color)
                 self._rgb_mem = [int(round(float(x)*255/self._brightness))
                                  for x in self._rgb_color]

@@ -19,18 +19,18 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DISTANCE_SENSOR = "distance_sensor"
-ATTR_DOOR_STATE = "door_state"
-ATTR_SIGNAL_STRENGTH = "wifi_signal"
+ATTR_DOOR_STATE = 'door_state'
+ATTR_SIGNAL_STRENGTH = 'wifi_signal'
 
-CONF_DEVICEKEY = "device_key"
+CONF_DEVICEKEY = 'device_key'
 
 DEFAULT_NAME = 'OpenGarage'
 DEFAULT_PORT = 80
 
-STATE_CLOSING = "closing"
-STATE_OFFLINE = "offline"
-STATE_OPENING = "opening"
-STATE_STOPPED = "stopped"
+STATE_CLOSING = 'closing'
+STATE_OFFLINE = 'offline'
+STATE_OPENING = 'opening'
+STATE_STOPPED = 'stopped'
 
 STATES_MAP = {
     0: STATE_CLOSED,
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
             CONF_PORT: device_config.get(CONF_PORT),
-            "device_id": device_config.get(CONF_DEVICE, device_id),
+            'device_id': device_config.get(CONF_DEVICE, device_id),
             CONF_DEVICEKEY: device_config.get(CONF_DEVICEKEY)
         }
 
@@ -138,8 +138,8 @@ class OpenGarageCover(CoverDevice):
         try:
             status = self._get_status()
             if self._name is None:
-                if status["name"] is not None:
-                    self._name = status["name"]
+                if status['name'] is not None:
+                    self._name = status['name']
             state = STATES_MAP.get(status.get('door'), STATE_UNKNOWN)
             if self._state_before_move is not None:
                 if self._state_before_move != state:
@@ -169,7 +169,7 @@ class OpenGarageCover(CoverDevice):
             self.opengarage_url, self._devicekey)
         try:
             response = requests.get(url, timeout=10).json()
-            if response["result"] == 2:
+            if response['result'] == 2:
                 _LOGGER.error("Unable to control %s: device_key is incorrect.",
                               self._name)
                 self._state = self._state_before_move

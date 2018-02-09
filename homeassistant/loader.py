@@ -133,7 +133,7 @@ def get_component(comp_name) -> Optional[ModuleType]:
         # Validate here that root component exists
         # If path contains a '.' we are specifying a sub-component
         # Using rsplit we get the parent component from sub-component
-        root_comp = path.rsplit(".", 1)[0] if '.' in comp_name else path
+        root_comp = path.rsplit('.', 1)[0] if '.' in comp_name else path
 
         if root_comp not in AVAILABLE_COMPONENTS:
             continue
@@ -182,7 +182,7 @@ class Components:
         """Fetch a component."""
         component = get_component(comp_name)
         if component is None:
-            raise ImportError('Unable to load {}'.format(comp_name))
+            raise ImportError("Unable to load {}".format(comp_name))
         wrapped = ModuleWrapper(self._hass, component)
         setattr(self, comp_name, wrapped)
         return wrapped

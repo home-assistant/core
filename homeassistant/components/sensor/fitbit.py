@@ -34,7 +34,7 @@ ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
 CONF_CLOCK_FORMAT = 'clock_format'
-CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
+CONF_ATTRIBUTION = "Data provided by Fitbit.com"
 
 DEPENDENCIES = ['http']
 
@@ -51,50 +51,50 @@ DEFAULT_CONFIG = {
 }
 
 FITBIT_RESOURCES_LIST = {
-    'activities/activityCalories': ['Activity Calories', 'cal', 'fire'],
+    'activities/activityCalories': ["Activity Calories", 'cal', 'fire'],
     'activities/calories': ['Calories', 'cal', 'fire'],
-    'activities/caloriesBMR': ['Calories BMR', 'cal', 'fire'],
+    'activities/caloriesBMR': ["Calories BMR", 'cal', 'fire'],
     'activities/distance': ['Distance', '', 'map-marker'],
     'activities/elevation': ['Elevation', '', 'walk'],
     'activities/floors': ['Floors', 'floors', 'walk'],
-    'activities/heart': ['Resting Heart Rate', 'bpm', 'heart-pulse'],
+    'activities/heart': ["Resting Heart Rate", 'bpm', 'heart-pulse'],
     'activities/minutesFairlyActive':
-        ['Minutes Fairly Active', 'minutes', 'walk'],
+        ["Minutes Fairly Active", 'minutes', 'walk'],
     'activities/minutesLightlyActive':
-        ['Minutes Lightly Active', 'minutes', 'walk'],
+        ["Minutes Lightly Active", 'minutes', 'walk'],
     'activities/minutesSedentary':
-        ['Minutes Sedentary', 'minutes', 'seat-recline-normal'],
-    'activities/minutesVeryActive': ['Minutes Very Active', 'minutes', 'run'],
+        ["Minutes Sedentary", 'minutes', 'seat-recline-normal'],
+    'activities/minutesVeryActive': ["Minutes Very Active", 'minutes', 'run'],
     'activities/steps': ['Steps', 'steps', 'walk'],
     'activities/tracker/activityCalories':
-        ['Tracker Activity Calories', 'cal', 'fire'],
-    'activities/tracker/calories': ['Tracker Calories', 'cal', 'fire'],
-    'activities/tracker/distance': ['Tracker Distance', '', 'map-marker'],
-    'activities/tracker/elevation': ['Tracker Elevation', '', 'walk'],
-    'activities/tracker/floors': ['Tracker Floors', 'floors', 'walk'],
+        ["Tracker Activity Calories", 'cal', 'fire'],
+    'activities/tracker/calories': ["Tracker Calories", 'cal', 'fire'],
+    'activities/tracker/distance': ["Tracker Distance", '', 'map-marker'],
+    'activities/tracker/elevation': ["Tracker Elevation", '', 'walk'],
+    'activities/tracker/floors': ["Tracker Floors", 'floors', 'walk'],
     'activities/tracker/minutesFairlyActive':
-        ['Tracker Minutes Fairly Active', 'minutes', 'walk'],
+        ["Tracker Minutes Fairly Active", 'minutes', 'walk'],
     'activities/tracker/minutesLightlyActive':
-        ['Tracker Minutes Lightly Active', 'minutes', 'walk'],
+        ["Tracker Minutes Lightly Active", 'minutes', 'walk'],
     'activities/tracker/minutesSedentary':
-        ['Tracker Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+        ["Tracker Minutes Sedentary", 'minutes', 'seat-recline-normal'],
     'activities/tracker/minutesVeryActive':
-        ['Tracker Minutes Very Active', 'minutes', 'run'],
-    'activities/tracker/steps': ['Tracker Steps', 'steps', 'walk'],
+        ["Tracker Minutes Very Active", 'minutes', 'run'],
+    'activities/tracker/steps': ["Tracker Steps", 'steps', 'walk'],
     'body/bmi': ['BMI', 'BMI', 'human'],
-    'body/fat': ['Body Fat', '%', 'human'],
+    'body/fat': ["Body Fat", '%', 'human'],
     'body/weight': ['Weight', '', 'human'],
     'devices/battery': ['Battery', None, None],
     'sleep/awakeningsCount':
-        ['Awakenings Count', 'times awaken', 'sleep'],
-    'sleep/efficiency': ['Sleep Efficiency', '%', 'sleep'],
-    'sleep/minutesAfterWakeup': ['Minutes After Wakeup', 'minutes', 'sleep'],
-    'sleep/minutesAsleep': ['Sleep Minutes Asleep', 'minutes', 'sleep'],
-    'sleep/minutesAwake': ['Sleep Minutes Awake', 'minutes', 'sleep'],
+        ["Awakenings Count", "times awaken", 'sleep'],
+    'sleep/efficiency': ["Sleep Efficiency", '%', 'sleep'],
+    'sleep/minutesAfterWakeup': ["Minutes After Wakeup", 'minutes', 'sleep'],
+    'sleep/minutesAsleep': ["Sleep Minutes Asleep", 'minutes', 'sleep'],
+    'sleep/minutesAwake': ["Sleep Minutes Awake", 'minutes', 'sleep'],
     'sleep/minutesToFallAsleep':
-        ['Sleep Minutes to Fall Asleep', 'minutes', 'sleep'],
-    'sleep/startTime': ['Sleep Start Time', None, 'clock'],
-    'sleep/timeInBed': ['Sleep Time in Bed', 'minutes', 'hotel']
+        ["Sleep Minutes to Fall Asleep", 'minutes', 'sleep'],
+    'sleep/startTime': ["Sleep Start Time", None, 'clock'],
+    'sleep/timeInBed': ["Sleep Time in Bed", 'minutes', 'hotel']
 }
 
 FITBIT_MEASUREMENTS = {
@@ -105,8 +105,8 @@ FITBIT_MEASUREMENTS = {
         'height': 'in',
         'weight': 'lbs',
         'body': 'in',
-        'liquids': 'fl. oz.',
-        'blood glucose': 'mg/dL',
+        'liquids': "fl. oz.",
+        "blood glucose": 'mg/dL',
         'battery': '',
     },
     'en_GB': {
@@ -117,7 +117,7 @@ FITBIT_MEASUREMENTS = {
         'weight': 'stone',
         'body': 'centimeters',
         'liquids': 'milliliters',
-        'blood glucose': 'mmol/L',
+        "blood glucose": 'mmol/L',
         'battery': '',
     },
     'metric': {
@@ -128,7 +128,7 @@ FITBIT_MEASUREMENTS = {
         'weight': 'kilograms',
         'body': 'centimeters',
         'liquids': 'milliliters',
-        'blood glucose': 'mmol/L',
+        "blood glucose": 'mmol/L',
         'battery': '',
     }
 }
@@ -169,7 +169,7 @@ def request_app_setup(hass, config, add_devices, config_path,
         else:
             setup_platform(hass, config, add_devices, discovery_info)
 
-    start_url = "{}{}".format(hass.config.api.base_url,
+    start_url = '{}{}'.format(hass.config.api.base_url,
                               FITBIT_AUTH_CALLBACK_PATH)
 
     description = """Please create a Fitbit developer app at
@@ -193,7 +193,7 @@ def request_app_setup(hass, config, add_devices, config_path,
 def request_oauth_completion(hass):
     """Request user complete Fitbit OAuth2 flow."""
     configurator = hass.components.configurator
-    if "fitbit" in _CONFIGURING:
+    if 'fitbit' in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['fitbit'], "Failed to register, please try again.")
 
@@ -229,8 +229,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass, config, add_devices, config_path, discovery_info=None)
         return False
 
-    if "fitbit" in _CONFIGURING:
-        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
+    if 'fitbit' in _CONFIGURING:
+        hass.components.configurator.request_done(_CONFIGURING.pop('fitbit'))
 
     import fitbit
 
@@ -248,7 +248,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
-        authd_client.system = authd_client.user_profile_get()["user"]["locale"]
+        authd_client.system = authd_client.user_profile_get()['user']['locale']
         if authd_client.system != 'en_GB':
             if hass.config.units.is_metric:
                 authd_client.system = 'metric'
@@ -381,7 +381,7 @@ class FitbitSensor(Entity):
         self.extra = extra
         self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
         if self.extra:
-            self._name = '{0} Battery'.format(self.extra.get('deviceVersion'))
+            self._name = "{0} Battery".format(self.extra.get('deviceVersion'))
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
         if unit_type == "":
             split_resource = self.resource_type.split('/')
@@ -438,7 +438,7 @@ class FitbitSensor(Entity):
         if self.resource_type == 'devices/battery' and self.extra:
             self._state = self.extra.get('battery')
         else:
-            container = self.resource_type.replace("/", "-")
+            container = self.resource_type.replace('/', '-')
             response = self.client.time_series(self.resource_type, period='7d')
             raw_state = response[container][-1].get('value')
             if self.resource_type == 'activities/distance':

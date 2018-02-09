@@ -21,15 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 VOICERSS_API_URL = "https://api.voicerss.org/"
 
 ERROR_MSG = [
-    b'Error description',
-    b'The subscription is expired or requests count limitation is exceeded!',
-    b'The request content length is too large!',
-    b'The language does not support!',
-    b'The language is not specified!',
-    b'The text is not specified!',
-    b'The API key is not available!',
-    b'The API key is not specified!',
-    b'The subscription does not support SSML!',
+    b"Error description",
+    b"The subscription is expired or requests count limitation is exceeded!",
+    b"The request content length is too large!",
+    b"The language does not support!",
+    b"The language is not specified!",
+    b"The text is not specified!",
+    b"The API key is not available!",
+    b"The API key is not specified!",
+    b"The subscription does not support SSML!",
 ]
 
 SUPPORT_LANGUAGES = [

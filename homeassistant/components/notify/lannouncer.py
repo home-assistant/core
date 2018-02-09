@@ -69,11 +69,11 @@ class LannouncerNotificationService(BaseNotificationService):
             # Send message
             _LOGGER.debug("Sending message: %s", cmd)
             sock.sendall(cmd.encode())
-            sock.sendall("&@DONE@\n".encode())
+            sock.sendall('&@DONE@\n'.encode())
 
             # Check response
             buffer = sock.recv(1024)
-            if buffer != b'LANnouncer: OK':
+            if buffer != b"LANnouncer: OK":
                 _LOGGER.error("Error sending data to Lannnouncer: %s",
                               buffer.decode())
 

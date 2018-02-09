@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_LOCATION = 'location'
 
-DEFAULT_NAME = 'Taps Aff'
+DEFAULT_NAME = "Taps Aff"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 

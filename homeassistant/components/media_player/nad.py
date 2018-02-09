@@ -21,7 +21,7 @@ REQUIREMENTS = ['nad_receiver==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'NAD Receiver'
+DEFAULT_NAME = "NAD Receiver"
 DEFAULT_MIN_VOLUME = -92
 DEFAULT_MAX_VOLUME = -20
 

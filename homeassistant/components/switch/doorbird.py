@@ -14,21 +14,21 @@ DEPENDENCIES = ['doorbird']
 _LOGGER = logging.getLogger(__name__)
 
 SWITCHES = {
-    "open_door": {
-        "name": "Open Door",
-        "icon": {
-            True: "lock-open",
-            False: "lock"
+    'open_door': {
+        'name': "Open Door",
+        'icon': {
+            True: 'lock-open',
+            False: 'lock'
         },
-        "time": datetime.timedelta(seconds=3)
+        'time': datetime.timedelta(seconds=3)
     },
-    "light_on": {
-        "name": "Light On",
-        "icon": {
-            True: "lightbulb-on",
-            False: "lightbulb"
+    'light_on': {
+        'name': "Light On",
+        'icon': {
+            True: 'lightbulb-on',
+            False: 'lightbulb'
         },
-        "time": datetime.timedelta(minutes=5)
+        'time': datetime.timedelta(minutes=5)
     }
 }
 
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     switches = []
     for switch in SWITCHES:
-        _LOGGER.debug("Adding DoorBird switch %s", SWITCHES[switch]["name"])
+        _LOGGER.debug("Adding DoorBird switch %s", SWITCHES[switch]['name'])
         switches.append(DoorBirdSwitch(device, switch))
 
     add_devices(switches)
@@ -64,12 +64,12 @@ class DoorBirdSwitch(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return SWITCHES[self._switch]["name"]
+        return SWITCHES[self._switch]['name']
 
     @property
     def icon(self):
         """Return the icon to display."""
-        return "mdi:{}".format(SWITCHES[self._switch]["icon"][self._state])
+        return 'mdi:{}'.format(SWITCHES[self._switch]['icon'][self._state])
 
     @property
     def is_on(self):
@@ -78,13 +78,13 @@ class DoorBirdSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Power the relay."""
-        if self._switch == "open_door":
+        if self._switch == 'open_door':
             self._state = self._device.open_door()
-        elif self._switch == "light_on":
+        elif self._switch == 'light_on':
             self._state = self._device.turn_light_on()
 
         now = datetime.datetime.now()
-        self._assume_off = now + SWITCHES[self._switch]["time"]
+        self._assume_off = now + SWITCHES[self._switch]['time']
 
     def turn_off(self, **kwargs):
         """Turn off the relays is not needed. They are time-based."""

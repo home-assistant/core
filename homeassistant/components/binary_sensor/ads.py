@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'ADS binary sensor'
+DEFAULT_NAME = "ADS binary sensor"
 DEPENDENCIES = ['ads']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -55,7 +55,7 @@ class AdsBinarySensor(BinarySensorDevice):
         """Register device notification."""
         def update(name, value):
             """Handle device notifications."""
-            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._state = value
             self.schedule_update_ha_state()
 

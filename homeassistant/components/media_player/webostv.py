@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SOURCES = 'sources'
 CONF_ON_ACTION = 'turn_on_action'
 
-DEFAULT_NAME = 'LG webOS Smart TV'
+DEFAULT_NAME = "LG webOS Smart TV"
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
@@ -135,7 +135,7 @@ def request_configuration(
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING[host], 'Failed to pair, please try again.')
+            _CONFIGURING[host], "Failed to pair, please try again.")
         return
 
     # pylint: disable=unused-argument
@@ -146,9 +146,9 @@ def request_configuration(
 
     _CONFIGURING[host] = configurator.request_config(
         name, lgtv_configuration_callback,
-        description='Click start and accept the pairing request on your TV.',
+        description="Click start and accept the pairing request on your TV.",
         description_image='/static/images/config_webos.png',
-        submit_caption='Start pairing request'
+        submit_caption="Start pairing request"
     )
 
 

@@ -128,7 +128,7 @@ def setup_plexserver(
             'verify': verify_ssl,
         }})
 
-    _LOGGER.info('Connected to: %s://%s', http_prefix, host)
+    _LOGGER.info("Connected to: %s://%s", http_prefix, host)
 
     plex_clients = {}
     plex_sessions = {}
@@ -211,7 +211,7 @@ def request_configuration(host, hass, config, add_devices_callback):
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
-                                   'Failed to register, please try again.')
+                                   "Failed to register, please try again.")
 
         return
 
@@ -225,9 +225,9 @@ def request_configuration(host, hass, config, add_devices_callback):
         )
 
     _CONFIGURING[host] = configurator.request_config(
-        'Plex Media Server',
+        "Plex Media Server",
         plex_configuration_callback,
-        description='Enter the X-Plex-Token',
+        description="Enter the X-Plex-Token",
         entity_picture='/static/images/logo_plex_mediaserver.png',
         submit_caption='Confirm',
         fields=[{
@@ -236,11 +236,11 @@ def request_configuration(host, hass, config, add_devices_callback):
             'type': ''
         }, {
             'id': 'has_ssl',
-            'name': 'Use SSL',
+            'name': "Use SSL",
             'type': ''
         }, {
             'id': 'do_not_verify_ssl',
-            'name': 'Do not verify SSL',
+            'name': "Do not verify SSL",
             'type': ''
         }])
 
@@ -301,12 +301,12 @@ class PlexClient(MediaPlayerDevice):
 
             # rename the entity id
             if self.machine_identifier:
-                self.entity_id = "%s.%s%s" % (
+                self.entity_id = '%s.%s%s' % (
                     'media_player', prefix,
                     self.machine_identifier.lower().replace('-', '_'))
             else:
                 if self.name:
-                    self.entity_id = "%s.%s%s" % (
+                    self.entity_id = '%s.%s%s' % (
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
@@ -342,7 +342,7 @@ class PlexClient(MediaPlayerDevice):
             self._session = session
         if device:
             self._device = device
-            if "127.0.0.1" in self._device.url("/"):
+            if '127.0.0.1' in self._device.url('/'):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
@@ -606,7 +606,7 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF)
         # Only supports play,pause,stop (and off which really is stop)
-        elif self.make.lower().startswith("tivo"):
+        elif self.make.lower().startswith('tivo'):
             _LOGGER.debug(
                 "Tivo client detected, only enabling pause, play, "
                 "stop, and off controls: %s", self.entity_id)

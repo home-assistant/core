@@ -155,7 +155,7 @@ class SlackNotificationService(BaseNotificationService):
             elif local_path is not None:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
-                    return open(local_path, "rb")
+                    return open(local_path, 'rb')
                 _LOGGER.warning("'%s' is not secure to load data from!",
                                 local_path)
             else:

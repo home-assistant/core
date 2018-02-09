@@ -20,11 +20,11 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric" \
-                   "Administration"
+                   'Administration'
 CONF_THRESHOLD = 'forecast_threshold'
 
 DEFAULT_DEVICE_CLASS = 'visible'
-DEFAULT_NAME = 'Aurora Visibility'
+DEFAULT_NAME = "Aurora Visibility"
 DEFAULT_THRESHOLD = 75
 
 HA_USER_AGENT = "Home Assistant Aurora Tracker v.0.1.0"
@@ -121,7 +121,7 @@ class AuroraData(object):
             self.visibility_level = self.get_aurora_forecast()
             if int(self.visibility_level) > self.threshold:
                 self.is_visible = True
-                self.is_visible_text = "visible!"
+                self.is_visible_text = 'visible!'
             else:
                 self.is_visible = False
                 self.is_visible_text = "nothing's out"
@@ -135,9 +135,9 @@ class AuroraData(object):
         """Get forecast data and parse for given long/lat."""
         raw_data = requests.get(URL, headers=self.headers, timeout=5).text
         forecast_table = [
-            row.strip(" ").split("   ")
-            for row in raw_data.split("\n")
-            if not row.startswith("#")
+            row.strip(' ').split('   ')
+            for row in raw_data.split('\n')
+            if not row.startswith('#')
         ]
 
         # Convert lat and long for data points in table

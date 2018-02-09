@@ -22,17 +22,17 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation'
 
-ATTR_STOP_ID = 'Stop ID'
+ATTR_STOP_ID = "Stop ID"
 ATTR_ROUTE = 'Route'
-ATTR_DUE_IN = 'Due in'
-ATTR_DUE_AT = 'Due at'
-ATTR_NEXT_UP = 'Later Bus'
+ATTR_DUE_IN = "Due in"
+ATTR_DUE_AT = "Due at"
+ATTR_NEXT_UP = "Later Bus"
 
 CONF_ATTRIBUTION = "Data provided by data.dublinked.ie"
 CONF_STOP_ID = 'stopid'
 CONF_ROUTE = 'route'
 
-DEFAULT_NAME = 'Next Bus'
+DEFAULT_NAME = "Next Bus"
 ICON = 'mdi:bus'
 
 SCAN_INTERVAL = timedelta(minutes=1)
@@ -91,9 +91,9 @@ class DublinPublicTransportSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._times is not None:
-            next_up = "None"
+            next_up = 'None'
             if self._times:
-                next_up = self._times[1][ATTR_ROUTE] + " in "
+                next_up = self._times[1][ATTR_ROUTE] + ' in '
                 next_up += self._times[1][ATTR_DUE_IN]
 
             return {

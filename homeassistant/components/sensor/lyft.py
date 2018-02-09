@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     auth_flow = ClientCredentialGrant(client_id=config.get(CONF_CLIENT_ID),
                                       client_secret=config.get(
                                           CONF_CLIENT_SECRET),
-                                      scopes="public",
+                                      scopes='public',
                                       is_sandbox_mode=False)
     try:
         session = auth_flow.get_session()
@@ -117,39 +117,39 @@ class LyftSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         params = {
-            'Product ID': self._product['ride_type'],
-            'Product display name': self._product['display_name'],
-            'Vehicle Capacity': self._product['seats']
+            "Product ID": self._product['ride_type'],
+            "Product display name": self._product['display_name'],
+            "Vehicle Capacity": self._product['seats']
         }
 
         if self._product.get('pricing_details') is not None:
             pricing_details = self._product['pricing_details']
-            params['Base price'] = pricing_details.get('base_charge')
-            params['Cancellation fee'] = pricing_details.get(
+            params["Base price"] = pricing_details.get('base_charge')
+            params["Cancellation fee"] = pricing_details.get(
                 'cancel_penalty_amount')
-            params['Minimum price'] = pricing_details.get('cost_minimum')
-            params['Cost per mile'] = pricing_details.get('cost_per_mile')
-            params['Cost per minute'] = pricing_details.get('cost_per_minute')
-            params['Price currency code'] = pricing_details.get('currency')
-            params['Service fee'] = pricing_details.get('trust_and_service')
+            params["Minimum price"] = pricing_details.get('cost_minimum')
+            params["Cost per mile"] = pricing_details.get('cost_per_mile')
+            params["Cost per minute"] = pricing_details.get('cost_per_minute')
+            params["Price currency code"] = pricing_details.get('currency')
+            params["Service fee"] = pricing_details.get('trust_and_service')
 
-        if self._product.get("estimate") is not None:
+        if self._product.get('estimate') is not None:
             estimate = self._product['estimate']
-            params['Trip distance (in miles)'] = estimate.get(
+            params["Trip distance (in miles)"] = estimate.get(
                 'estimated_distance_miles')
-            params['High price estimate (in cents)'] = estimate.get(
+            params["High price estimate (in cents)"] = estimate.get(
                 'estimated_cost_cents_max')
-            params['Low price estimate (in cents)'] = estimate.get(
+            params["Low price estimate (in cents)"] = estimate.get(
                 'estimated_cost_cents_min')
-            params['Trip duration (in seconds)'] = estimate.get(
+            params["Trip duration (in seconds)"] = estimate.get(
                 'estimated_duration_seconds')
 
-            params['Prime Time percentage'] = estimate.get(
+            params["Prime Time percentage"] = estimate.get(
                 'primetime_percentage')
 
-        if self._product.get("eta") is not None:
+        if self._product.get('eta') is not None:
             eta = self._product['eta']
-            params['Pickup time estimate (in seconds)'] = eta.get(
+            params["Pickup time estimate (in seconds)"] = eta.get(
                 'eta_seconds')
 
         return {k: v for k, v in params.items() if v is not None}

@@ -60,7 +60,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning...")
+        _LOGGER.info('Scanning...')
 
         import pybbox
 

@@ -49,7 +49,7 @@ class CiscoSparkNotificationService(BaseNotificationService):
         try:
             title = ""
             if kwargs.get(ATTR_TITLE) is not None:
-                title = kwargs.get(ATTR_TITLE) + ": "
+                title = kwargs.get(ATTR_TITLE) + ': '
             self._spark.messages.create(roomId=self._default_room,
                                         text=title + message)
         except SparkApiError as api_error:

@@ -147,7 +147,7 @@ class DemoVacuum(VacuumDevice):
             return
 
         self._state = False
-        self._status = 'Stopping the current task'
+        self._status = "Stopping the current task"
         self.schedule_update_ha_state()
 
     def clean_spot(self, **kwargs):
@@ -176,11 +176,11 @@ class DemoVacuum(VacuumDevice):
 
         self._state = not self._state
         if self._state:
-            self._status = 'Resuming the current task'
+            self._status = "Resuming the current task"
             self._cleaned_area += 1.32
             self._battery_level -= 1
         else:
-            self._status = 'Pausing the current task'
+            self._status = "Pausing the current task"
         self.schedule_update_ha_state()
 
     def set_fan_speed(self, fan_speed, **kwargs):
@@ -198,7 +198,7 @@ class DemoVacuum(VacuumDevice):
             return
 
         self._state = False
-        self._status = 'Returning home...'
+        self._status = "Returning home..."
         self._battery_level += 5
         self.schedule_update_ha_state()
 
@@ -207,6 +207,6 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
-        self._status = 'Executing {}({})'.format(command, params)
+        self._status = "Executing {}({})".format(command, params)
         self._state = True
         self.schedule_update_ha_state()

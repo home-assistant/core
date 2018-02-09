@@ -26,10 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SUPPRESS_WARNING = 'suppress_warning'
 CONF_VOLUME_STEP = 'volume_step'
 
-DEFAULT_NAME = 'Vizio SmartCast'
+DEFAULT_NAME = "Vizio SmartCast"
 DEFAULT_VOLUME_STEP = 1
 DEVICE_ID = 'pyvizio'
-DEVICE_NAME = 'Python Vizio'
+DEVICE_NAME = "Python Vizio"
 
 ICON = 'mdi:television'
 

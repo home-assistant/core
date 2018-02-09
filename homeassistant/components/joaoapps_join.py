@@ -92,7 +92,7 @@ def setup(hass, config):
         device_ids = device.get(CONF_DEVICE_IDS)
         device_names = device.get(CONF_DEVICE_NAMES)
         name = device.get(CONF_NAME)
-        name = name.lower().replace(" ", "_") + "_" if name else ""
+        name = name.lower().replace(' ', '_') + '_' if name else ""
         if api_key:
             if not get_devices(api_key):
                 _LOGGER.error("Error connecting to Join, check API key")

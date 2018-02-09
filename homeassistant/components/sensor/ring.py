@@ -31,13 +31,13 @@ SENSOR_TYPES = {
         'Battery', ['doorbell', 'stickup_cams'], '%', 'battery-50', None],
 
     'last_activity': [
-        'Last Activity', ['doorbell', 'stickup_cams'], None, 'history', None],
+        "Last Activity", ['doorbell', 'stickup_cams'], None, 'history', None],
 
     'last_ding': [
-        'Last Ding', ['doorbell'], None, 'history', 'ding'],
+        "Last Ding", ['doorbell'], None, 'history', 'ding'],
 
     'last_motion': [
-        'Last Motion', ['doorbell', 'stickup_cams'], None,
+        "Last Motion", ['doorbell', 'stickup_cams'], None,
         'history', 'motion'],
 
     'volume': [
@@ -45,11 +45,11 @@ SENSOR_TYPES = {
         'bell-ring', None],
 
     'wifi_signal_category': [
-        'WiFi Signal Category', ['chime', 'doorbell', 'stickup_cams'], None,
+        "WiFi Signal Category", ['chime', 'doorbell', 'stickup_cams'], None,
         'wifi', None],
 
     'wifi_signal_strength': [
-        'WiFi Signal Strength', ['chime', 'doorbell', 'stickup_cams'], 'dBm',
+        "WiFi Signal Strength", ['chime', 'doorbell', 'stickup_cams'], 'dBm',
         'wifi', None],
 }
 

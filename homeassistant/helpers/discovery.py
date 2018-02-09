@@ -65,7 +65,7 @@ def async_discover(hass, service, discovered=None, component=None,
     """Fire discovery event. Can ensure a component is loaded."""
     if component in DEPENDENCY_BLACKLIST:
         raise HomeAssistantError(
-            'Cannot discover the {} component.'.format(component))
+            "Cannot discover the {} component.".format(component))
 
     if component is not None and component not in hass.config.components:
         yield from setup.async_setup_component(
@@ -155,7 +155,7 @@ def async_load_platform(hass, component, platform, discovered=None,
     """
     if component in DEPENDENCY_BLACKLIST:
         raise HomeAssistantError(
-            'Cannot discover the {} component.'.format(component))
+            "Cannot discover the {} component.".format(component))
 
     setup_success = True
 

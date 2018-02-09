@@ -43,10 +43,10 @@ def async_setup(hass, config):
     hass.http.register_view(ClearCompletedItemsView)
 
     hass.components.conversation.async_register(INTENT_ADD_ITEM, [
-        'Add {item} to my shopping list',
+        "Add {item} to my shopping list",
     ])
     hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
-        'What is on my shopping list'
+        "What is on my shopping list"
     ])
 
     yield from hass.components.frontend.async_register_built_in_panel(
@@ -188,9 +188,9 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
             request.app['hass'].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
-            return self.json_message('Item not found', HTTP_NOT_FOUND)
+            return self.json_message("Item not found", HTTP_NOT_FOUND)
         except vol.Invalid:
-            return self.json_message('Item not found', HTTP_BAD_REQUEST)
+            return self.json_message("Item not found", HTTP_BAD_REQUEST)
 
 
 class CreateShoppingListItemView(http.HomeAssistantView):
@@ -222,4 +222,4 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         hass = request.app['hass']
         hass.data[DOMAIN].async_clear_completed()
         hass.bus.async_fire(EVENT)
-        return self.json_message('Cleared completed items.')
+        return self.json_message("Cleared completed items.")

@@ -19,9 +19,9 @@ ATTR_NAME = 'name'
 ATTR_ZONE = 'zone'
 
 CLIMATE_SENSOR_TYPES = ['temperature', 'humidity', 'power',
-                        'link', 'heating', 'tado mode', 'overlay']
+                        'link', 'heating', "tado mode", 'overlay']
 
-HOT_WATER_SENSOR_TYPES = ['power', 'link', 'tado mode', 'overlay']
+HOT_WATER_SENSOR_TYPES = ['power', 'link', "tado mode", 'overlay']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -125,19 +125,19 @@ class TadoSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self.zone_variable == "temperature":
+        if self.zone_variable == 'temperature':
             return self.hass.config.units.temperature_unit
-        elif self.zone_variable == "humidity":
+        elif self.zone_variable == 'humidity':
             return '%'
-        elif self.zone_variable == "heating":
+        elif self.zone_variable == 'heating':
             return '%'
 
     @property
     def icon(self):
         """Icon for the sensor."""
-        if self.zone_variable == "temperature":
+        if self.zone_variable == 'temperature':
             return 'mdi:thermometer'
-        elif self.zone_variable == "humidity":
+        elif self.zone_variable == 'humidity':
             return 'mdi:water-percent'
 
     def update(self):
@@ -162,9 +162,9 @@ class TadoSensor(Entity):
                 self._state = self.hass.config.units.temperature(
                     temperature, unit)
                 self._state_attributes = {
-                    "time":
+                    'time':
                         sensor_data['insideTemperature']['timestamp'],
-                    "setting": 0  # setting is used in climate device
+                    'setting': 0  # setting is used in climate device
                 }
 
                 # temperature setting will not exist when device is off
@@ -173,7 +173,7 @@ class TadoSensor(Entity):
                     temperature = float(
                         data['setting']['temperature']['celsius'])
 
-                    self._state_attributes["setting"] = \
+                    self._state_attributes['setting'] = \
                         self.hass.config.units.temperature(
                             temperature, unit)
 
@@ -183,7 +183,7 @@ class TadoSensor(Entity):
                 self._state = float(
                     sensor_data['humidity']['percentage'])
                 self._state_attributes = {
-                    "time": sensor_data['humidity']['timestamp'],
+                    'time': sensor_data['humidity']['timestamp'],
                 }
 
         elif self.zone_variable == 'power':
@@ -200,14 +200,14 @@ class TadoSensor(Entity):
                 self._state = float(
                     activity_data['heatingPower']['percentage'])
                 self._state_attributes = {
-                    "time": activity_data['heatingPower']['timestamp'],
+                    'time': activity_data['heatingPower']['timestamp'],
                 }
 
-        elif self.zone_variable == 'tado bridge status':
+        elif self.zone_variable == "tado bridge status":
             if 'connectionState' in data:
                 self._state = data['connectionState']['value']
 
-        elif self.zone_variable == 'tado mode':
+        elif self.zone_variable == "tado mode":
             if 'tadoMode' in data:
                 self._state = data['tadoMode']
 
@@ -215,7 +215,7 @@ class TadoSensor(Entity):
             if 'overlay' in data and data['overlay'] is not None:
                 self._state = True
                 self._state_attributes = {
-                    "termination": data['overlay']['termination']['type'],
+                    'termination': data['overlay']['termination']['type'],
                 }
             else:
                 self._state = False

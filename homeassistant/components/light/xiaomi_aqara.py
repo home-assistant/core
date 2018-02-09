@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['light']:
             model = device['model']
             if model == 'gateway':
-                devices.append(XiaomiGatewayLight(device, 'Gateway Light',
+                devices.append(XiaomiGatewayLight(device, "Gateway Light",
                                                   gateway))
     add_devices(devices)
 
@@ -50,7 +50,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
                 self._state = False
             return True
 
-        rgbhexstr = "%x" % value
+        rgbhexstr = '%x' % value
         if len(rgbhexstr) > 8:
             _LOGGER.error("Light RGB data error."
                           " Can't be more than 8 characters. Received: %s",
@@ -92,7 +92,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
             self._brightness = int(100 * kwargs[ATTR_BRIGHTNESS] / 255)
 
         rgba = (self._brightness,) + self._rgb
-        rgbhex = binascii.hexlify(struct.pack('BBBB', *rgba)).decode("ASCII")
+        rgbhex = binascii.hexlify(struct.pack('BBBB', *rgba)).decode('ASCII')
         rgbhex = int(rgbhex, 16)
 
         if self._write_to_hub(self._sid, **{self._data_key: rgbhex}):

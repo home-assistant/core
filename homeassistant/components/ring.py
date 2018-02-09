@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Data provided by Ring.com"
 
 NOTIFICATION_ID = 'ring_notification'
-NOTIFICATION_TITLE = 'Ring Setup'
+NOTIFICATION_TITLE = "Ring Setup"
 
 DATA_RING = 'ring'
 DOMAIN = 'ring'
@@ -51,9 +51,9 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

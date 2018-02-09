@@ -28,9 +28,9 @@ ATTR_NEAREST = 'nearest'
 CONF_IGNORED_ZONES = 'ignored_zones'
 CONF_TOLERANCE = 'tolerance'
 
-DEFAULT_DIR_OF_TRAVEL = 'not set'
-DEFAULT_DIST_TO_ZONE = 'not set'
-DEFAULT_NEAREST = 'not set'
+DEFAULT_DIR_OF_TRAVEL = "not set"
+DEFAULT_DIST_TO_ZONE = "not set"
+DEFAULT_NEAREST = "not set"
 DEFAULT_PROXIMITY_ZONE = 'home'
 DEFAULT_TOLERANCE = 1
 DEPENDENCIES = ['zone', 'device_tracker']
@@ -158,9 +158,9 @@ class Proximity(Entity):
 
         # No-one to track so reset the entity.
         if not devices_to_calculate:
-            self.dist_to = 'not set'
-            self.dir_of_travel = 'not set'
-            self.nearest = 'not set'
+            self.dist_to = "not set"
+            self.dir_of_travel = "not set"
+            self.nearest = "not set"
             self.schedule_update_ha_state()
             return
 
@@ -251,8 +251,8 @@ class Proximity(Entity):
         self.dir_of_travel = direction_of_travel
         self.nearest = entity_name
         self.schedule_update_ha_state()
-        _LOGGER.debug('proximity.%s update entity: distance=%s: direction=%s: '
+        _LOGGER.debug("proximity.%s update entity: distance=%s: direction=%s: "
                       'device=%s', self.friendly_name, round(dist_to_zone),
                       direction_of_travel, entity_name)
 
-        _LOGGER.info('%s: proximity calculation complete', entity_name)
+        _LOGGER.info("%s: proximity calculation complete", entity_name)

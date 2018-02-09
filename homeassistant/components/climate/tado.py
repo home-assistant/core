@@ -39,8 +39,8 @@ FAN_MODES_LIST = {
 OPERATION_LIST = {
     CONST_OVERLAY_MANUAL: 'Manual',
     CONST_OVERLAY_TIMER: 'Timer',
-    CONST_OVERLAY_TADO_MODE: 'Tado mode',
-    CONST_MODE_SMART_SCHEDULE: 'Smart schedule',
+    CONST_OVERLAY_TADO_MODE: "Tado mode",
+    CONST_MODE_SMART_SCHEDULE: "Smart schedule",
     CONST_MODE_OFF: 'Off',
 }
 
@@ -160,7 +160,7 @@ class TadoClimate(ClimateDevice):
     def current_operation(self):
         """Return current readable operation mode."""
         if self._cooling:
-            return "Cooling"
+            return 'Cooling'
         return OPERATION_LIST.get(self._current_operation)
 
     @property

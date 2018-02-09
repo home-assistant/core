@@ -27,8 +27,8 @@ DHT_DOWNLOAD = 1000
 
 SENSOR_TYPES = {
     'current_status': ['Status', None],
-    'download_speed': ['Down Speed', 'kB/s'],
-    'upload_speed': ['Up Speed', 'kB/s'],
+    'download_speed': ["Down Speed", 'kB/s'],
+    'upload_speed': ["Up Speed", 'kB/s'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

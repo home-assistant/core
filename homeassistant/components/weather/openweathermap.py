@@ -22,7 +22,7 @@ REQUIREMENTS = ['pyowm==2.8.0']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FORECAST_CONDITION = 'condition'
-ATTRIBUTION = 'Data provided by OpenWeatherMap'
+ATTRIBUTION = "Data provided by OpenWeatherMap"
 
 DEFAULT_NAME = 'OpenWeatherMap'
 

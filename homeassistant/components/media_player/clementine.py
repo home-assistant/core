@@ -27,7 +27,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Clementine Remote'
+DEFAULT_NAME = "Clementine Remote"
 DEFAULT_PORT = 5500
 
 SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
@@ -119,7 +119,7 @@ class ClementineDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return  current source name."""
-        source_name = "Unknown"
+        source_name = 'Unknown'
         client = self._client
         if client.active_playlist_id in client.playlists:
             source_name = client.playlists[client.active_playlist_id]['name']
@@ -128,7 +128,7 @@ class ClementineDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        source_names = [s["name"] for s in self._client.playlists.values()]
+        source_names = [s['name'] for s in self._client.playlists.values()]
         return source_names
 
     def select_source(self, source):

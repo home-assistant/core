@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([RussoundRNETDevice(
                 hass, russ, sources, zone_id, extra)], True)
     else:
-        _LOGGER.error('Not connected to %s:%s', host, port)
+        _LOGGER.error("Not connected to %s:%s", host, port)
 
 
 class RussoundRNETDevice(MediaPlayerDevice):

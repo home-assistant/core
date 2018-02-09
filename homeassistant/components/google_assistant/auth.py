@@ -50,32 +50,32 @@ class GoogleAssistantAuthView(HomeAssistantView):
         query = request.query
         redirect_uri = query.get('redirect_uri')
         if not redirect_uri:
-            msg = 'missing redirect_uri field'
+            msg = "missing redirect_uri field"
             _LOGGER.warning(msg)
             return self.json_message(msg, status_code=HTTP_BAD_REQUEST)
 
         if self.project_id not in redirect_uri:
-            msg = 'missing project_id in redirect_uri'
+            msg = "missing project_id in redirect_uri"
             _LOGGER.warning(msg)
             return self.json_message(msg, status_code=HTTP_BAD_REQUEST)
 
         state = query.get('state')
         if not state:
-            msg = 'oauth request missing state'
+            msg = "oauth request missing state"
             _LOGGER.warning(msg)
             return self.json_message(msg, status_code=HTTP_BAD_REQUEST)
 
         client_id = query.get('client_id')
         if self.client_id != client_id:
-            msg = 'invalid client id'
+            msg = "invalid client id"
             _LOGGER.warning(msg)
             return self.json_message(msg, status_code=HTTP_UNAUTHORIZED)
 
         generated_url = redirect_url(self.project_id, self.access_token, state)
 
-        _LOGGER.info('user login in from Google Assistant')
+        _LOGGER.info("user login in from Google Assistant")
         return self.json_message(
-            'redirect success',
+            "redirect success",
             status_code=HTTP_MOVED_PERMANENTLY,
             headers={'Location': generated_url})
 

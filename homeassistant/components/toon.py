@@ -137,7 +137,7 @@ class ToonDataStore(object):
 
     def get_data(self, data_id, plug_name=None):
         """Get the cached data."""
-        data = {'error': 'no data'}
+        data = {'error': "no data"}
         if plug_name:
             if data_id in self.data[plug_name]:
                 data = self.data[plug_name][data_id]

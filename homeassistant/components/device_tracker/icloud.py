@@ -194,7 +194,7 @@ class Icloud(DeviceScanner):
                     self._intervals[devicename] = 1
                     self._overridestates[devicename] = None
         except PyiCloudNoDevicesException:
-            _LOGGER.error('No iCloud Devices found!')
+            _LOGGER.error("No iCloud Devices found!")
 
     def icloud_trusted_device_callback(self, callback_data):
         """Handle chosen trusted devices."""
@@ -224,18 +224,18 @@ class Icloud(DeviceScanner):
         devices = self.api.trusted_devices
         for i, device in enumerate(devices):
             devicename = device.get(
-                'deviceName', 'SMS to %s' % device.get('phoneNumber'))
+                'deviceName', "SMS to %s" % device.get('phoneNumber'))
             devicesstring += "{}: {};".format(i, devicename)
 
         _CONFIGURING[self.accountname] = configurator.request_config(
             'iCloud {}'.format(self.accountname),
             self.icloud_trusted_device_callback,
             description=(
-                'Please choose your trusted device by entering'
-                ' the index from this list: ' + devicesstring),
+                "Please choose your trusted device by entering"
+                " the index from this list: " + devicesstring),
             entity_picture="/static/images/config_icloud.png",
             submit_caption='Confirm',
-            fields=[{'id': 'trusted_device', 'name': 'Trusted Device'}]
+            fields=[{'id': 'trusted_device', 'name': "Trusted Device"}]
         )
 
     def icloud_verification_callback(self, callback_data):
@@ -246,7 +246,7 @@ class Icloud(DeviceScanner):
         try:
             if not self.api.validate_verification_code(
                     self._trusted_device, self._verification_code):
-                raise PyiCloudException('Unknown failure')
+                raise PyiCloudException("Unknown failure")
         except PyiCloudException as error:
             # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)
@@ -270,7 +270,7 @@ class Icloud(DeviceScanner):
         _CONFIGURING[self.accountname] = configurator.request_config(
             'iCloud {}'.format(self.accountname),
             self.icloud_verification_callback,
-            description=('Please enter the validation code:'),
+            description=("Please enter the validation code:"),
             entity_picture="/static/images/config_icloud.png",
             submit_caption='Confirm',
             fields=[{'id': 'code', 'name': 'code'}]
@@ -297,7 +297,7 @@ class Icloud(DeviceScanner):
 
                 self.api.authenticate()
                 if self.api.requires_2fa:
-                    raise Exception('Unknown failure')
+                    raise Exception("Unknown failure")
 
                 self._trusted_device = None
                 self._verification_code = None

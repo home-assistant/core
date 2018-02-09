@@ -18,14 +18,14 @@ REQUIREMENTS = ['pushbullet.py==0.11.0']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'application_name': ['Application name'],
+    'application_name': ["Application name"],
     'body': ['Body'],
-    'notification_id': ['Notification ID'],
-    'notification_tag': ['Notification tag'],
-    'package_name': ['Package name'],
-    'receiver_email': ['Receiver email'],
-    'sender_email': ['Sender email'],
-    'source_device_iden': ['Sender device ID'],
+    'notification_id': ["Notification ID"],
+    'notification_tag': ["Notification tag"],
+    'package_name': ["Package name"],
+    'receiver_email': ["Receiver email"],
+    'sender_email': ["Sender email"],
+    'source_device_iden': ["Sender device ID"],
     'title': ['Title'],
     'type': ['Type'],
 }

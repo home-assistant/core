@@ -55,7 +55,7 @@ def log_message(source, *parts):
     """Build log message."""
     message = source.__class__.__name__
     for part in parts:
-        message += ": " + str(part)
+        message += ': ' + str(part)
     return message
 
 
@@ -66,9 +66,9 @@ class I2CHatsException(Exception):
 class I2CHatsDIScanner(object):
     """Scan Digital Inputs and fire callbacks."""
 
-    _DIGITAL_INPUTS = "di"
-    _OLD_VALUE = "old_value"
-    _CALLBACKS = "callbacks"
+    _DIGITAL_INPUTS = 'di'
+    _OLD_VALUE = 'old_value'
+    _CALLBACKS = 'callbacks'
 
     def setup(self, i2c_hat):
         """Set up the I2C-HAT instance for digital inputs scanner."""
@@ -109,8 +109,8 @@ class I2CHatsDIScanner(object):
 class I2CHatsManager(threading.Thread):
     """Manages all I2C-HATs instances."""
 
-    _EXCEPTION = "exception"
-    _CALLBACKS = "callbacks"
+    _EXCEPTION = 'exception'
+    _CALLBACKS = 'callbacks'
 
     def __init__(self):
         """Init I2C-HATs Manager."""
@@ -139,14 +139,14 @@ class I2CHatsManager(threading.Thread):
                 self._i2c_hats[address] = i2c_hat
                 status_word = i2c_hat.status  # read status_word to reset bits
                 _LOGGER.info(
-                    log_message(self, i2c_hat, "registered", status_word))
+                    log_message(self, i2c_hat, 'registered', status_word))
 
     def run(self):
         """Keep alive for I2C-HATs."""
         # pylint: disable=import-error
         from raspihats.i2c_hats import ResponseException
 
-        _LOGGER.info(log_message(self, "starting"))
+        _LOGGER.info(log_message(self, 'starting'))
 
         while self._run:
             with self._lock:
@@ -172,7 +172,7 @@ class I2CHatsManager(threading.Thread):
                             )
                         setattr(i2c_hat, self._EXCEPTION, ex)
             time.sleep(0.05)
-        _LOGGER.info(log_message(self, "exiting"))
+        _LOGGER.info(log_message(self, 'exiting'))
 
     def _read_status(self, i2c_hat):
         """Read I2C-HATs status."""

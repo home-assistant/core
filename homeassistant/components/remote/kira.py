@@ -15,7 +15,7 @@ DOMAIN = 'kira'
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_REMOTE = "remote"
+CONF_REMOTE = 'remote'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

@@ -24,7 +24,7 @@ DEFAULT_NAME = 'vehicle'
 DEPENDENCIES = ['http']
 DOMAIN = 'torque'
 
-ENTITY_NAME_FORMAT = '{0} {1}'
+ENTITY_NAME_FORMAT = "{0} {1}"
 
 SENSOR_EMAIL_FIELD = 'eml'
 SENSOR_NAME_KEY = r'userFullName(\w+)'
@@ -105,7 +105,7 @@ class TorqueReceiveDataView(HomeAssistantView):
                     units.get(pid, None))
                 hass.async_add_job(self.add_devices, [self.sensors[pid]])
 
-        return "OK!"
+        return 'OK!'
 
 
 class TorqueSensor(Entity):

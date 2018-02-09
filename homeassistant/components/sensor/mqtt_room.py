@@ -33,7 +33,7 @@ CONF_DEVICE_ID = 'device_id'
 CONF_AWAY_TIMEOUT = 'away_timeout'
 
 DEFAULT_AWAY_TIMEOUT = 0
-DEFAULT_NAME = 'Room Sensor'
+DEFAULT_NAME = "Room Sensor"
 DEFAULT_TIMEOUT = 5
 DEFAULT_TOPIC = 'room_presence'
 

@@ -59,7 +59,7 @@ def get_service(hass, config, discovery_info=None):
         boto3.setup_default_session(profile_name=profile)
         del aws_config[CONF_PROFILE_NAME]
 
-    lambda_client = boto3.client("lambda", **aws_config)
+    lambda_client = boto3.client('lambda', **aws_config)
 
     return AWSLambda(lambda_client, context)
 
@@ -82,7 +82,7 @@ class AWSLambda(BaseNotificationService):
 
         for target in targets:
             cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
-            payload = {"message": message}
+            payload = {'message': message}
             payload.update(cleaned_kwargs)
 
             self.client.invoke(FunctionName=target,

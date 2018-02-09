@@ -126,7 +126,7 @@ class TelnetSwitch(SwitchDevice):
         if response:
             rendered = self._value_template \
                 .render_with_possible_json_value(response)
-            self._state = rendered == "True"
+            self._state = rendered == 'True'
         else:
             _LOGGER.warning(
                 "Empty response for command: %s", self._command_state)

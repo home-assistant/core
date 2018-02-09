@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
 DEFAULT_SSH_PORT = 22
-SECRET_GROUP = 'Password or SSH Key'
+SECRET_GROUP = "Password or SSH Key"
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_PASSWORD, CONF_PUB_KEY, CONF_SSH_KEY),
@@ -50,7 +50,7 @@ _LEASES_REGEX = re.compile(
     r'(?P<host>([^\s]+))')
 
 # Command to get both 5GHz and 2.4GHz clients
-_WL_CMD = 'for dev in `nvram get wl_ifnames`; do wl -i $dev assoclist; done'
+_WL_CMD = "for dev in `nvram get wl_ifnames`; do wl -i $dev assoclist; done"
 _WL_REGEX = re.compile(
     r'\w+\s' +
     r'(?P<mac>(([0-9A-F]{2}[:-]){5}([0-9A-F]{2})))')
@@ -149,7 +149,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info('Checking Devices')
+        _LOGGER.info("Checking Devices")
         data = self.get_asuswrt_data()
         if not data:
             return False

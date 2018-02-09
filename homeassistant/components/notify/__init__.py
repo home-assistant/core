@@ -106,7 +106,7 @@ def async_setup(hass, config):
                 return
 
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error setting up platform %s', p_type)
+            _LOGGER.exception("Error setting up platform %s", p_type)
             return
 
         notify_service.hass = hass

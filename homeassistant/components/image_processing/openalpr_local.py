@@ -21,7 +21,7 @@ from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_ALPR_PLATE = re.compile(r"^plate\d*:")
+RE_ALPR_PLATE = re.compile(r'^plate\d*:')
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")
 
 EVENT_FOUND_PLATE = 'image_processing.found_plate'

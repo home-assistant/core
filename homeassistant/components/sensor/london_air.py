@@ -23,11 +23,11 @@ CONF_LOCATIONS = 'locations'
 SCAN_INTERVAL = timedelta(minutes=30)
 
 AUTHORITIES = [
-    'Barking and Dagenham',
+    "Barking and Dagenham",
     'Bexley',
     'Brent',
     'Camden',
-    'City of London',
+    "City of London",
     'Croydon',
     'Ealing',
     'Enfield',
@@ -38,7 +38,7 @@ AUTHORITIES = [
     'Havering',
     'Hillingdon',
     'Islington',
-    'Kensington and Chelsea',
+    "Kensington and Chelsea",
     'Kingston',
     'Lambeth',
     'Lewisham',
@@ -47,7 +47,7 @@ AUTHORITIES = [
     'Richmond',
     'Southwark',
     'Sutton',
-    'Tower Hamlets',
+    "Tower Hamlets",
     'Wandsworth',
     'Westminster']
 
@@ -151,7 +151,7 @@ def parse_species(species_data):
     parsed_species_data = []
     quality_list = []
     for species in species_data:
-        if species['@AirQualityBand'] != 'No data':
+        if species['@AirQualityBand'] != "No data":
             species_dict = {}
             species_dict['description'] = species['@SpeciesDescription']
             species_dict['code'] = species['@SpeciesCode']
@@ -175,7 +175,7 @@ def parse_site(entry_sites_data):
         site_data['latitude'] = site['@Latitude']
         site_data['longitude'] = site['@Longitude']
         site_data['site_code'] = site['@SiteCode']
-        site_data['site_name'] = site['@SiteName'].split("-")[-1].lstrip()
+        site_data['site_name'] = site['@SiteName'].split('-')[-1].lstrip()
         site_data['site_type'] = site['@SiteType']
 
         if isinstance(site['Species'], dict):

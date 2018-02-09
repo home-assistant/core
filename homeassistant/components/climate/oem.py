@@ -28,7 +28,7 @@ CONF_AWAY_TEMP = 'away_temp'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
+    vol.Optional(CONF_NAME, default='Thermostat'): cv.string,
     vol.Optional(CONF_PORT, default=80): cv.port,
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,

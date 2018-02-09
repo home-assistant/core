@@ -51,25 +51,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DatatypeDescription('humidity', '%'),
 
         tellcore_constants.TELLSTICK_RAINRATE:
-        DatatypeDescription('rain rate', ''),
+        DatatypeDescription("rain rate", ''),
 
         tellcore_constants.TELLSTICK_RAINTOTAL:
-        DatatypeDescription('rain total', ''),
+        DatatypeDescription("rain total", ''),
 
         tellcore_constants.TELLSTICK_WINDDIRECTION:
-        DatatypeDescription('wind direction', ''),
+        DatatypeDescription("wind direction", ''),
 
         tellcore_constants.TELLSTICK_WINDAVERAGE:
-        DatatypeDescription('wind average', ''),
+        DatatypeDescription("wind average", ''),
 
         tellcore_constants.TELLSTICK_WINDGUST:
-        DatatypeDescription('wind gust', '')
+        DatatypeDescription("wind gust", '')
     }
 
     try:
         tellcore_lib = telldus.TelldusCore()
     except OSError:
-        _LOGGER.exception('Could not initialize Tellstick')
+        _LOGGER.exception("Could not initialize Tellstick")
         return
 
     sensors = []

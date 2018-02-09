@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Xiaomi Air Purifier'
+DEFAULT_NAME = "Xiaomi Air Purifier"
 PLATFORM = 'xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

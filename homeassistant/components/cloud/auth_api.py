@@ -31,7 +31,7 @@ class InvalidCode(CloudError):
 class PasswordChangeRequired(CloudError):
     """Raised when a password change is required."""
 
-    def __init__(self, message='Password change required.'):
+    def __init__(self, message="Password change required."):
         """Initialize a password change required error."""
         super().__init__(message)
 
@@ -152,7 +152,7 @@ def _authenticate(cloud, email, password):
     from botocore.exceptions import ClientError
     from warrant.exceptions import ForceChangePasswordException
 
-    assert not cloud.is_logged_in, 'Cannot login if already logged in.'
+    assert not cloud.is_logged_in, "Cannot login if already logged in."
 
     cognito = _cognito(cloud, username=email)
 

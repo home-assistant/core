@@ -133,7 +133,7 @@ def async_setup(hass, config):
 
         code = service.data.get(ATTR_CODE)
 
-        method = "async_{}".format(SERVICE_TO_METHOD[service.service])
+        method = 'async_{}'.format(SERVICE_TO_METHOD[service.service])
 
         update_tasks = []
         for alarm in target_alarms:

@@ -73,7 +73,7 @@ class ActiontecDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
         if not self.success_init:
             return False
 
@@ -96,8 +96,8 @@ class ActiontecDeviceScanner(DeviceScanner):
             telnet.read_until(b'Password: ')
             telnet.write((self.password + '\n').encode('ascii'))
             prompt = telnet.read_until(
-                b'Wireless Broadband Router> ').split(b'\n')[-1]
-            telnet.write('firewall mac_cache_dump\n'.encode('ascii'))
+                b"Wireless Broadband Router> ").split(b'\n')[-1]
+            telnet.write("firewall mac_cache_dump\n".encode('ascii'))
             telnet.write('\n'.encode('ascii'))
             telnet.read_until(prompt)
             leases_result = telnet.read_until(prompt).split(b'\n')[1:-1]

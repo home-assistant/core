@@ -37,7 +37,7 @@ class HMLight(HMDevice, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         # Is dimmer?
-        if self._state == "LEVEL":
+        if self._state == 'LEVEL':
             return int(self._hm_get_state() * 255)
         return None
 
@@ -56,7 +56,7 @@ class HMLight(HMDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
+        if ATTR_BRIGHTNESS in kwargs and self._state == 'LEVEL':
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
         else:
@@ -69,5 +69,5 @@ class HMLight(HMDevice, Light):
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
         # Use LEVEL
-        self._state = "LEVEL"
+        self._state = 'LEVEL'
         self._data.update({self._state: STATE_UNKNOWN})

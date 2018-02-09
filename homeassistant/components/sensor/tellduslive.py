@@ -27,16 +27,16 @@ SENSOR_TYPE_BAROMETRIC_PRESSURE = 'barpress'
 SENSOR_TYPES = {
     SENSOR_TYPE_TEMPERATURE: ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     SENSOR_TYPE_HUMIDITY: ['Humidity', '%', 'mdi:water'],
-    SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm/h', 'mdi:water'],
-    SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', 'mdi:water'],
-    SENSOR_TYPE_WINDDIRECTION: ['Wind direction', '', ''],
-    SENSOR_TYPE_WINDAVERAGE: ['Wind average', 'm/s', ''],
-    SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', ''],
+    SENSOR_TYPE_RAINRATE: ["Rain rate", 'mm/h', 'mdi:water'],
+    SENSOR_TYPE_RAINTOTAL: ["Rain total", 'mm', 'mdi:water'],
+    SENSOR_TYPE_WINDDIRECTION: ["Wind direction", '', ''],
+    SENSOR_TYPE_WINDAVERAGE: ["Wind average", 'm/s', ''],
+    SENSOR_TYPE_WINDGUST: ["Wind gust", 'm/s', ''],
     SENSOR_TYPE_UV: ['UV', 'UV', ''],
     SENSOR_TYPE_WATT: ['Power', 'W', ''],
     SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', ''],
-    SENSOR_TYPE_DEW_POINT: ['Dew Point', TEMP_CELSIUS, 'mdi:thermometer'],
-    SENSOR_TYPE_BAROMETRIC_PRESSURE: ['Barometric Pressure', 'kPa', ''],
+    SENSOR_TYPE_DEW_POINT: ["Dew Point", TEMP_CELSIUS, 'mdi:thermometer'],
+    SENSOR_TYPE_BAROMETRIC_PRESSURE: ["Barometric Pressure", 'kPa', ''],
 }
 
 

@@ -106,7 +106,7 @@ class BrWeather(WeatherEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._stationname or 'BR {}'.format(self._data.stationname
-                                                   or '(unknown station)')
+                                                   or "(unknown station)")
 
     @property
     def condition(self):

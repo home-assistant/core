@@ -24,9 +24,9 @@ DEFAULT_VERIFY_SSL = True
 
 SWITCH_MODELS = [
     'Outlet',
-    'Output 5v',
-    'Output 12v',
-    'Output 24v',
+    "Output 5v",
+    "Output 12v",
+    "Output 24v",
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -68,9 +68,9 @@ def _chain_future(source, destination):
     Compatible with both asyncio.Future and concurrent.futures.Future.
     """
     if not isinstance(source, (Future, concurrent.futures.Future)):
-        raise TypeError('A future is required for source argument')
+        raise TypeError("A future is required for source argument")
     if not isinstance(destination, (Future, concurrent.futures.Future)):
-        raise TypeError('A future is required for destination argument')
+        raise TypeError("A future is required for destination argument")
     # pylint: disable=protected-access
     source_loop = source._loop if isinstance(source, Future) else None
     dest_loop = destination._loop if isinstance(destination, Future) else None
@@ -103,12 +103,12 @@ def run_coroutine_threadsafe(coro, loop):
 
     Return a concurrent.futures.Future to access the result.
     """
-    ident = loop.__dict__.get("_thread_ident")
+    ident = loop.__dict__.get('_thread_ident')
     if ident is not None and ident == threading.get_ident():
-        raise RuntimeError('Cannot be called from within the event loop')
+        raise RuntimeError("Cannot be called from within the event loop")
 
     if not coroutines.iscoroutine(coro):
-        raise TypeError('A coroutine object is required')
+        raise TypeError("A coroutine object is required")
     future = concurrent.futures.Future()
 
     def callback():
@@ -134,12 +134,12 @@ def fire_coroutine_threadsafe(coro, loop):
     is intended for fire-and-forget use. This reduces the
     work involved to fire the function on the loop.
     """
-    ident = loop.__dict__.get("_thread_ident")
+    ident = loop.__dict__.get('_thread_ident')
     if ident is not None and ident == threading.get_ident():
-        raise RuntimeError('Cannot be called from within the event loop')
+        raise RuntimeError("Cannot be called from within the event loop")
 
     if not coroutines.iscoroutine(coro):
-        raise TypeError('A coroutine object is required: %s' % coro)
+        raise TypeError("A coroutine object is required: %s" % coro)
 
     def callback():
         """Handle the firing of a coroutine."""
@@ -155,9 +155,9 @@ def run_callback_threadsafe(loop, callback, *args):
 
     Return a concurrent.futures.Future to access the result.
     """
-    ident = loop.__dict__.get("_thread_ident")
+    ident = loop.__dict__.get('_thread_ident')
     if ident is not None and ident == threading.get_ident():
-        raise RuntimeError('Cannot be called from within the event loop')
+        raise RuntimeError("Cannot be called from within the event loop")
 
     future = concurrent.futures.Future()
 

@@ -60,13 +60,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Define list of name,obis mappings to generate entities
     obis_mapping = [
-        ['Power Consumption', obis_ref.CURRENT_ELECTRICITY_USAGE],
-        ['Power Production', obis_ref.CURRENT_ELECTRICITY_DELIVERY],
-        ['Power Tariff', obis_ref.ELECTRICITY_ACTIVE_TARIFF],
-        ['Power Consumption (low)', obis_ref.ELECTRICITY_USED_TARIFF_1],
-        ['Power Consumption (normal)', obis_ref.ELECTRICITY_USED_TARIFF_2],
-        ['Power Production (low)', obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
-        ['Power Production (normal)', obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
+        ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
+        ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
+        ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
+        ["Power Consumption (low)", obis_ref.ELECTRICITY_USED_TARIFF_1],
+        ["Power Consumption (normal)", obis_ref.ELECTRICITY_USED_TARIFF_2],
+        ["Power Production (low)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
+        ["Power Production (normal)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
     ]
 
     # Generate device entities
@@ -80,8 +80,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Add gas meter reading and derivative for usage
     devices += [
-        DSMREntity('Gas Consumption', gas_obis),
-        DerivativeDSMREntity('Hourly Gas Consumption', gas_obis),
+        DSMREntity("Gas Consumption", gas_obis),
+        DerivativeDSMREntity("Hourly Gas Consumption", gas_obis),
     ]
 
     async_add_devices(devices)

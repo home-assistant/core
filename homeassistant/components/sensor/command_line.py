@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Command Sensor'
+DEFAULT_NAME = "Command Sensor"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -118,7 +118,7 @@ class CommandSensorData(object):
 
         if args_compiled:
             try:
-                args_to_render = {"arguments": args}
+                args_to_render = {'arguments': args}
                 rendered_args = args_compiled.render(args_to_render)
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)

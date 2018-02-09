@@ -47,7 +47,7 @@ DOMAIN = 'homeassistant'
 SERVICE_CALL_LIMIT = 10  # seconds
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+ENTITY_ID_PATTERN = re.compile(r'^(\w+)\.(\w+)$')
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def split_entity_id(entity_id: str) -> List[str]:
     """Split a state entity_id into domain, object_id."""
-    return entity_id.split(".", 1)
+    return entity_id.split('.', 1)
 
 
 def valid_entity_id(entity_id: str) -> bool:
@@ -184,9 +184,9 @@ class HomeAssistant(object):
                 yield from self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                'Something is blocking Home Assistant from wrapping up the '
-                'start up phase. We\'re going to continue anyway. Please '
-                'report the following info at http://bit.ly/2ogP58T : %s',
+                "Something is blocking Home Assistant from wrapping up the "
+                "start up phase. We\'re going to continue anyway. Please "
+                "report the following info at http://bit.ly/2ogP58T : %s",
                 ', '.join(self.config.components))
 
         # Allow automations to set up the start triggers before changing state
@@ -1017,7 +1017,7 @@ class ServiceRegistry(object):
 
                 yield from self._hass.async_add_job(execute_service)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error executing service %s', service_call)
+            _LOGGER.exception("Error executing service %s", service_call)
 
 
 class Config(object):
@@ -1119,7 +1119,7 @@ def _async_create_timer(hass):
         slp_seconds = nxt - monotonic()
 
         if slp_seconds < 0:
-            _LOGGER.error('Timer got out of sync. Resetting')
+            _LOGGER.error("Timer got out of sync. Resetting")
             nxt = monotonic() + 1
             slp_seconds = 1
 
@@ -1133,5 +1133,5 @@ def _async_create_timer(hass):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
 
-    _LOGGER.info("Timer:starting")
+    _LOGGER.info('Timer:starting')
     fire_time_event(monotonic())

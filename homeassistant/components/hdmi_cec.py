@@ -29,7 +29,7 @@ DOMAIN = 'hdmi_cec'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DISPLAY_NAME = "HA"
+DEFAULT_DISPLAY_NAME = 'HA'
 CONF_TYPES = 'types'
 
 ICON_UNKNOWN = 'mdi:help'
@@ -52,7 +52,7 @@ CMD_UP = 'up'
 CMD_DOWN = 'down'
 CMD_MUTE = 'mute'
 CMD_UNMUTE = 'unmute'
-CMD_MUTE_TOGGLE = 'toggle mute'
+CMD_MUTE_TOGGLE = "toggle mute"
 CMD_PRESS = 'press'
 CMD_RELEASE = 'release'
 
@@ -240,7 +240,7 @@ def setup(hass: HomeAssistant, base_config):
                 if isinstance(data[ATTR_ATT], (list,)):
                     att = data[ATTR_ATT]
                 else:
-                    att = reduce(lambda x, y: "%s:%x" % (x, y), data[ATTR_ATT])
+                    att = reduce(lambda x, y: '%s:%x' % (x, y), data[ATTR_ATT])
             else:
                 att = ""
             command = CecCommand(cmd, dst, src, att)
@@ -327,7 +327,7 @@ class CecDevice(Entity):
         self._icon = None
         self._state = STATE_UNKNOWN
         self._logical_address = logical
-        self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
+        self.entity_id = '%s.%d' % (DOMAIN, self._logical_address)
         device.set_update_callback(self._update)
 
     def update(self):

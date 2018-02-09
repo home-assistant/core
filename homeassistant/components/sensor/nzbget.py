@@ -27,14 +27,14 @@ DEFAULT_PORT = 6789
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 SENSOR_TYPES = {
-    'article_cache': ['ArticleCacheMB', 'Article Cache', 'MB'],
-    'average_download_rate': ['AverageDownloadRate', 'Average Speed', 'MB/s'],
-    'download_paused': ['DownloadPaused', 'Download Paused', None],
+    'article_cache': ['ArticleCacheMB', "Article Cache", 'MB'],
+    'average_download_rate': ['AverageDownloadRate', "Average Speed", 'MB/s'],
+    'download_paused': ['DownloadPaused', "Download Paused", None],
     'download_rate': ['DownloadRate', 'Speed', 'MB/s'],
     'download_size': ['DownloadedSizeMB', 'Size', 'MB'],
-    'free_disk_space': ['FreeDiskSpaceMB', 'Disk Free', 'MB'],
-    'post_paused': ['PostPaused', 'Post Processing Paused', None],
-    'remaining_size': ['RemainingSizeMB', 'Queue Size', 'MB'],
+    'free_disk_space': ['FreeDiskSpaceMB', "Disk Free", 'MB'],
+    'post_paused': ['PostPaused', "Post Processing Paused", None],
+    'remaining_size': ['RemainingSizeMB', "Queue Size", 'MB'],
     'uptime': ['UpTimeSec', 'Uptime', 'min'],
 }
 
@@ -129,10 +129,10 @@ class NZBGetSensor(Entity):
             _LOGGER.warning("Unable to locate value for %s", self.type)
             return
 
-        if "DownloadRate" in self.type and value > 0:
+        if 'DownloadRate' in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
             self._state = round(value / 2**20, 2)
-        elif "UpTimeSec" in self.type and value > 0:
+        elif 'UpTimeSec' in self.type and value > 0:
             # Convert uptime from seconds to minutes
             self._state = round(value / 60, 2)
         else:

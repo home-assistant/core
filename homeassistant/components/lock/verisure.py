@@ -82,7 +82,7 @@ class VerisureDoorlock(LockDevice):
         elif status == 'LOCKED':
             self._state = STATE_LOCKED
         elif status != 'PENDING':
-            _LOGGER.error('Unknown lock state %s', status)
+            _LOGGER.error("Unknown lock state %s", status)
         self._changed_by = hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].userString",
             self._device_label)

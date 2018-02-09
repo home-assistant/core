@@ -168,5 +168,5 @@ def _get_token(host, username, password):
             _LOGGER.exception(error_message, url, data, result)
             return
     else:
-        _LOGGER.error('Invalid response: [%s] at url: [%s] with data [%s]',
+        _LOGGER.error("Invalid response: [%s] at url: [%s] with data [%s]",
                       res, url, data)

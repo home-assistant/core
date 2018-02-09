@@ -190,7 +190,7 @@ def object_id(value):
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    _object_id = "{}_{}_{}".format(slugify(_value_name(value)),
+    _object_id = '{}_{}_{}'.format(slugify(_value_name(value)),
                                    value.node.node_id, value.index)
 
     # Add the instance id if there is more than one instance for the value
@@ -205,10 +205,10 @@ def nice_print_node(node):
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
 
-    print("\n\n\n")
+    print('\n\n\n')
     print("FOUND NODE", node.product_name)
     pprint(node_dict)
-    print("\n\n\n")
+    print('\n\n\n')
 
 
 def get_config_value(node, value_index, tries=5):
@@ -277,7 +277,7 @@ def setup(hass, config):
     options.set_console_output(use_debug)
 
     if CONF_NETWORK_KEY in config[DOMAIN]:
-        options.addOption("NetworkKey", config[DOMAIN][CONF_NETWORK_KEY])
+        options.addOption('NetworkKey', config[DOMAIN][CONF_NETWORK_KEY])
 
     options.lock()
 
@@ -798,7 +798,7 @@ class ZWaveDeviceEntityValues():
             generated_id = generate_entity_id(
                 component + '.{}', value_name, [])
         else:
-            generated_id = "{}.{}".format(component, object_id(self.primary))
+            generated_id = '{}.{}'.format(component, object_id(self.primary))
         node_config = self._device_config.get(generated_id)
 
         # Configure node
@@ -831,9 +831,9 @@ class ZWaveDeviceEntityValues():
             self._workaround_ignore = True
             return
 
-        device.old_entity_id = "{}.{}".format(
+        device.old_entity_id = '{}.{}'.format(
             component, object_id(self.primary))
-        device.new_entity_id = "{}.{}".format(component, slugify(device.name))
+        device.new_entity_id = '{}.{}'.format(component, slugify(device.name))
         if not self._zwave_config[DOMAIN][CONF_NEW_ENTITY_IDS]:
             device.entity_id = device.old_entity_id
 
@@ -865,7 +865,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
-        self._unique_id = "{}-{}".format(self.node.node_id,
+        self._unique_id = '{}-{}'.format(self.node.node_id,
                                          self.values.primary.object_id)
         self._update_attributes()
 

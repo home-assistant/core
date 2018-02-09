@@ -54,7 +54,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     confidence = config[CONF_CONFIDENCE]
     params = {
         'secret_key': config[CONF_API_KEY],
-        'tasks': "plate",
+        'tasks': 'plate',
         'return_image': 0,
         'country': config[CONF_REGION],
     }

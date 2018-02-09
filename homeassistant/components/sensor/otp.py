@@ -20,7 +20,7 @@ REQUIREMENTS = ['pyotp==2.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'OTP Sensor'
+DEFAULT_NAME = "OTP Sensor"
 
 TIME_STEP = 30  # Default time step assumed by Google Authenticator
 

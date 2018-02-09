@@ -27,10 +27,10 @@ SCAN_INTERVAL = timedelta(seconds=90)
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
     'last_capture': ['Last', None, 'run-fast'],
-    'total_cameras': ['Arlo Cameras', None, 'video'],
-    'captured_today': ['Captured Today', None, 'file-video'],
-    'battery_level': ['Battery Level', '%', 'battery-50'],
-    'signal_strength': ['Signal Strength', None, 'signal']
+    'total_cameras': ["Arlo Cameras", None, 'video'],
+    'captured_today': ["Captured Today", None, 'file-video'],
+    'battery_level': ["Battery Level", '%', 'battery-50'],
+    'signal_strength': ["Signal Strength", None, 'signal']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -53,7 +53,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 hass, SENSOR_TYPES[sensor_type][0], arlo, sensor_type))
         else:
             for camera in arlo.cameras:
-                name = '{0} {1}'.format(
+                name = "{0} {1}".format(
                     SENSOR_TYPES[sensor_type][0], camera.name)
                 sensors.append(ArloSensor(hass, name, camera, sensor_type))
 

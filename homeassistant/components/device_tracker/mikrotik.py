@@ -103,8 +103,8 @@ class MikrotikScanner(DeviceScanner):
 
                 if not self.capsman_exist:
                     _LOGGER.info(
-                        'Mikrotik %s: Not a CAPSman controller. Trying '
-                        'local interfaces ',
+                        "Mikrotik %s: Not a CAPSman controller. Trying "
+                        "local interfaces ",
                         self.host
                     )
 
@@ -119,9 +119,9 @@ class MikrotikScanner(DeviceScanner):
 
                 if not self.wireless_exist:
                     _LOGGER.info(
-                        'Mikrotik %s: Wireless adapters not found. Try to '
-                        'use DHCP lease table as presence tracker source. '
-                        'Please decrease lease time as much as possible.',
+                        "Mikrotik %s: Wireless adapters not found. Try to "
+                        "use DHCP lease table as presence tracker source. "
+                        "Please decrease lease time as much as possible.",
                         self.host
                     )
 

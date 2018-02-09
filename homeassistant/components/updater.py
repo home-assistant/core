@@ -109,7 +109,7 @@ def async_setup(hass, config):
         if StrictVersion(newest) > StrictVersion(current_version):
             _LOGGER.info("The latest available version is %s", newest)
             hass.states.async_set(
-                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
+                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: "Update Available",
                                     ATTR_RELEASE_NOTES: releasenotes}
             )
         elif StrictVersion(newest) == StrictVersion(current_version):

@@ -88,16 +88,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for elem in data.data:
 
         if exclude_feeds is not None:
-            if int(elem["id"]) in exclude_feeds:
+            if int(elem['id']) in exclude_feeds:
                 continue
 
         if include_only_feeds is not None:
-            if int(elem["id"]) not in include_only_feeds:
+            if int(elem['id']) not in include_only_feeds:
                 continue
 
         name = None
         if sensor_names is not None:
-            name = sensor_names.get(int(elem["id"]), None)
+            name = sensor_names.get(int(elem['id']), None)
 
         sensors.append(EmonCmsSensor(hass, data, name, value_template,
                                      unit_of_measurement, str(sensorid),
@@ -122,7 +122,7 @@ class EmonCmsSensor(Entity):
         else:
             self._name = name
         self._identifier = get_id(
-            sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"])
+            sensorid, elem['tag'], elem['name'], elem['id'], elem['userid'])
         self._hass = hass
         self._data = data
         self._value_template = value_template
@@ -132,9 +132,9 @@ class EmonCmsSensor(Entity):
 
         if self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(
-                elem["value"], STATE_UNKNOWN)
+                elem['value'], STATE_UNKNOWN)
         else:
-            self._state = round(float(elem["value"]), DECIMALS)
+            self._state = round(float(elem['value']), DECIMALS)
 
     @property
     def name(self):
@@ -155,14 +155,14 @@ class EmonCmsSensor(Entity):
     def device_state_attributes(self):
         """Return the attributes of the sensor."""
         return {
-            ATTR_FEEDID: self._elem["id"],
-            ATTR_TAG: self._elem["tag"],
-            ATTR_FEEDNAME: self._elem["name"],
-            ATTR_SIZE: self._elem["size"],
-            ATTR_USERID: self._elem["userid"],
-            ATTR_LASTUPDATETIME: self._elem["time"],
+            ATTR_FEEDID: self._elem['id'],
+            ATTR_TAG: self._elem['tag'],
+            ATTR_FEEDNAME: self._elem['name'],
+            ATTR_SIZE: self._elem['size'],
+            ATTR_USERID: self._elem['userid'],
+            ATTR_LASTUPDATETIME: self._elem['time'],
             ATTR_LASTUPDATETIMESTR: template.timestamp_local(
-                float(self._elem["time"])),
+                float(self._elem['time'])),
         }
 
     def update(self):
@@ -173,9 +173,9 @@ class EmonCmsSensor(Entity):
             return
 
         elem = next((elem for elem in self._data.data
-                     if get_id(self._sensorid, elem["tag"],
-                               elem["name"], elem["id"],
-                               elem["userid"]) == self._identifier),
+                     if get_id(self._sensorid, elem['tag'],
+                               elem['name'], elem['id'],
+                               elem['userid']) == self._identifier),
                     None)
 
         if elem is None:
@@ -185,9 +185,9 @@ class EmonCmsSensor(Entity):
 
         if self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(
-                elem["value"], STATE_UNKNOWN)
+                elem['value'], STATE_UNKNOWN)
         else:
-            self._state = round(float(elem["value"]), DECIMALS)
+            self._state = round(float(elem['value']), DECIMALS)
 
 
 class EmonCmsData(object):
@@ -205,7 +205,7 @@ class EmonCmsData(object):
     def update(self):
         """Get the latest data from Emoncms."""
         try:
-            parameters = {"apikey": self._apikey}
+            parameters = {'apikey': self._apikey}
             req = requests.get(
                 self._url, params=parameters, allow_redirects=True, timeout=5)
         except requests.exceptions.RequestException as exception:

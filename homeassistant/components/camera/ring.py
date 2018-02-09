@@ -28,7 +28,7 @@ FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
 _LOGGER = logging.getLogger(__name__)
 
-NOTIFICATION_TITLE = 'Ring Camera Setup'
+NOTIFICATION_TITLE = "Ring Camera Setup"
 
 SCAN_INTERVAL = timedelta(seconds=90)
 
@@ -62,13 +62,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if cams_no_plan:
         cameras = str(', '.join([camera.name for camera in cams_no_plan]))
 
-        err_msg = '''A Ring Protect Plan is required for the''' \
-                  ''' following cameras: {}.'''.format(cameras)
+        err_msg = "A Ring Protect Plan is required for the" \
+                  " following cameras: {}.".format(cameras)
 
         _LOGGER.error(err_msg)
         hass.components.persistent_notification.async_create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
             ''.format(err_msg),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)

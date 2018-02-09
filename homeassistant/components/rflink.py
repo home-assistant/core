@@ -124,11 +124,11 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_send_command(call):
         """Send Rflink command."""
-        _LOGGER.debug('Rflink command for %s', str(call.data))
+        _LOGGER.debug("Rflink command for %s", str(call.data))
         if not (yield from RflinkCommand.send_command(
                 call.data.get(CONF_DEVICE_ID),
                 call.data.get(CONF_COMMAND))):
-            _LOGGER.error('Failed Rflink command for %s', str(call.data))
+            _LOGGER.error("Failed Rflink command for %s", str(call.data))
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_send_command,
@@ -143,11 +143,11 @@ def async_setup(hass, config):
         accordingly.
         """
         event_type = identify_event_type(event)
-        _LOGGER.debug('event of type %s: %s', event_type, event)
+        _LOGGER.debug("event of type %s: %s", event_type, event)
 
         # Don't propagate non entity events (eg: version string, ack response)
         if event_type not in hass.data[DATA_ENTITY_LOOKUP]:
-            _LOGGER.debug('unhandled event of type: %s', event_type)
+            _LOGGER.debug("unhandled event of type: %s", event_type)
             return
 
         # Lookup entities who registered this device id as device id or alias
@@ -164,10 +164,10 @@ def async_setup(hass, config):
         if entities:
             # Propagate event to every entity matching the device id
             for entity in entities:
-                _LOGGER.debug('passing event to %s', entities)
+                _LOGGER.debug("passing event to %s", entities)
                 entity.handle_event(event)
         else:
-            _LOGGER.debug('device_id not known, adding new device')
+            _LOGGER.debug("device_id not known, adding new device")
 
             # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
@@ -187,13 +187,13 @@ def async_setup(hass, config):
 
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
-            _LOGGER.warning('disconnected from Rflink, reconnecting')
+            _LOGGER.warning("disconnected from Rflink, reconnecting")
             hass.async_add_job(connect)
 
     @asyncio.coroutine
     def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
-        _LOGGER.info('Initiating Rflink connection')
+        _LOGGER.info("Initiating Rflink connection")
 
         # Rflink create_rflink_connection decides based on the value of host
         # (string or None) if serial or tcp mode should be used
@@ -230,7 +230,7 @@ def async_setup(hass, config):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    lambda x: transport.close())
 
-        _LOGGER.info('Connected to Rflink')
+        _LOGGER.info("Connected to Rflink")
 
     hass.async_add_job(connect)
     return True
@@ -404,7 +404,7 @@ class RflinkCommand(RflinkDevice):
             "Sending command: %s to Rflink device: %s", cmd, self._device_id)
 
         if not self.is_connected():
-            raise HomeAssistantError('Cannot send command, not connected!')
+            raise HomeAssistantError("Cannot send command, not connected!")
 
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
@@ -438,11 +438,11 @@ class SwitchableRflinkDevice(RflinkCommand):
 
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        return self._async_handle_command("turn_on")
+        return self._async_handle_command('turn_on')
 
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        return self._async_handle_command("turn_off")
+        return self._async_handle_command('turn_off')
 
 
 DEPRECATED_CONFIG_OPTIONS = [

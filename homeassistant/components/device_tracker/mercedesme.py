@@ -49,12 +49,12 @@ class MercedesMEDeviceTracker(object):
     def update_info(self, now=None):
         """Update the device info."""
         for device in self.data.cars:
-            _LOGGER.debug("Updating %s", device["vin"])
-            location = self.data.get_location(device["vin"])
+            _LOGGER.debug("Updating %s", device['vin'])
+            location = self.data.get_location(device['vin'])
             if location is None:
                 return False
-            dev_id = device["vin"]
-            name = device["license"]
+            dev_id = device['vin']
+            name = device['license']
 
             lat = location['positionLat']['value']
             lon = location['positionLong']['value']

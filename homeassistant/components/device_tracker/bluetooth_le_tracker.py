@@ -54,7 +54,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 new_devices[address] = 1
                 return
 
-        see(mac=BLE_PREFIX + address, host_name=name.strip("\x00"),
+        see(mac=BLE_PREFIX + address, host_name=name.strip('\x00'),
             source_type=SOURCE_TYPE_BLUETOOTH_LE)
 
     def discover_ble_devices():
@@ -102,7 +102,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Lookup Bluetooth LE devices and update status."""
         devs = discover_ble_devices()
         for mac in devs_to_track:
-            _LOGGER.debug("Checking " + mac)
+            _LOGGER.debug('Checking ' + mac)
             result = mac in devs
             if not result:
                 # Could not lookup device name

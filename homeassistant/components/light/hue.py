@@ -41,11 +41,11 @@ SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT |
 SUPPORT_HUE_EXTENDED = (SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR)
 
 SUPPORT_HUE = {
-    'Extended color light': SUPPORT_HUE_EXTENDED,
-    'Color light': SUPPORT_HUE_COLOR,
-    'Dimmable light': SUPPORT_HUE_DIMMABLE,
-    'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
-    'Color temperature light': SUPPORT_HUE_COLOR_TEMP
+    "Extended color light": SUPPORT_HUE_EXTENDED,
+    "Color light": SUPPORT_HUE_COLOR,
+    "Dimmable light": SUPPORT_HUE_DIMMABLE,
+    "On/Off plug-in unit": SUPPORT_HUE_ON_OFF,
+    "Color temperature light": SUPPORT_HUE_COLOR_TEMP
     }
 
 ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 MIGRATION_ID = 'light_hue_config_migration'
-MIGRATION_TITLE = 'Philips Hue Configuration Migration'
+MIGRATION_TITLE = "Philips Hue Configuration Migration"
 MIGRATION_INSTRUCTIONS = """
 Configuration for the Philips Hue component has changed; action required.
 
@@ -178,7 +178,7 @@ def process_groups(hass, api, bridge, update_lights_cb):
     api_groups = api.get('groups')
 
     if not isinstance(api_groups, dict):
-        _LOGGER.error('Got unexpected result from Hue API')
+        _LOGGER.error("Got unexpected result from Hue API")
         return []
 
     new_lights = []

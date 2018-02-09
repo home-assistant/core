@@ -71,19 +71,19 @@ def async_setup(hass, config):
         hass, 'input_select',
         {'input_select':
          {'living_room_preset': {'options': ['Visitors',
-                                             'Visitors with kids',
-                                             'Home Alone']},
+                                             "Visitors with kids",
+                                             "Home Alone"]},
           'who_cooks': {'icon': 'mdi:panda',
-                        'initial': 'Anne Therese',
-                        'name': 'Cook today',
-                        'options': ['Paulus', 'Anne Therese']}}}))
+                        'initial': "Anne Therese",
+                        'name': "Cook today",
+                        'options': ['Paulus', "Anne Therese"]}}}))
     # Set up input boolean
     tasks.append(bootstrap.async_setup_component(
         hass, 'input_boolean',
         {'input_boolean': {'notify': {
             'icon': 'mdi:car',
             'initial': False,
-            'name': 'Notify Anne Therese is home'}}}))
+            'name': "Notify Anne Therese is home"}}}))
 
     # Set up input boolean
     tasks.append(bootstrap.async_setup_component(
@@ -92,7 +92,7 @@ def async_setup(hass, config):
             'noise_allowance': {'icon': 'mdi:bell-ring',
                                 'min': 0,
                                 'max': 10,
-                                'name': 'Allowed Noise',
+                                'name': "Allowed Noise",
                                 'unit_of_measurement': 'dB'}}}))
 
     # Set up weblink
@@ -108,8 +108,8 @@ def async_setup(hass, config):
 
     # Set up example persistent notification
     persistent_notification.async_create(
-        'This is an example of a persistent notification.',
-        title='Example Notification')
+        "This is an example of a persistent notification.",
+        title="Example Notification")
 
     # Set up room groups
     lights = sorted(hass.states.async_entity_ids('light'))
@@ -144,20 +144,20 @@ def async_setup(hass, config):
     tasks2.append(bootstrap.async_setup_component(
         hass, 'scene',
         {'scene': [
-            {'name': 'Romantic lights',
+            {'name': "Romantic lights",
              'entities': {
                  lights[0]: True,
                  lights[1]: {'state': 'on', 'xy_color': [0.33, 0.66],
                              'brightness': 200},
              }},
-            {'name': 'Switch on and off',
+            {'name': "Switch on and off",
              'entities': {
                  switches[0]: True,
                  switches[1]: False,
              }},
             ]}))
 
-    tasks2.append(group.Group.async_create_group(hass, 'Living Room', [
+    tasks2.append(group.Group.async_create_group(hass, "Living Room", [
         lights[1], switches[0], 'input_select.living_room_preset',
         'cover.living_room_window', media_players[1],
         'scene.romantic_lights']))

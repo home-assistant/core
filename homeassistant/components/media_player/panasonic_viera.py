@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MAC = 'mac'
 
-DEFAULT_NAME = 'Panasonic Viera TV'
+DEFAULT_NAME = "Panasonic Viera TV"
 DEFAULT_PORT = 55000
 
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \

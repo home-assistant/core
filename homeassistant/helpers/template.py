@@ -87,7 +87,7 @@ class Template(object):
     def __init__(self, template, hass=None):
         """Instantiate a template."""
         if not isinstance(template, str):
-            raise TypeError('Expected template to be a string')
+            raise TypeError("Expected template to be a string")
 
         self.template = template
         self._compiled_code = None
@@ -172,7 +172,7 @@ class Template(object):
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
-        assert self.hass is not None, 'hass variable not set on template'
+        assert self.hass is not None, "hass variable not set on template"
 
         template_methods = TemplateMethods(self.hass)
 

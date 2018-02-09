@@ -18,7 +18,7 @@ def session_scope(*, hass=None, session=None):
         session = hass.data[DATA_INSTANCE].get_session()
 
     if session is None:
-        raise RuntimeError('Session required')
+        raise RuntimeError("Session required")
 
     try:
         yield session
@@ -66,7 +66,7 @@ def execute(qry):
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 elapsed = time.perf_counter() - timer_start
-                _LOGGER.debug('converting %d rows to native objects took %fs',
+                _LOGGER.debug("converting %d rows to native objects took %fs",
                               len(result),
                               elapsed)
 

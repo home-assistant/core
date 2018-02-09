@@ -60,7 +60,7 @@ def purge_old_data(instance, purge_days):
 
         _LOGGER.info("Vacuuming SQLite to free space")
         try:
-            instance.engine.execute("VACUUM")
+            instance.engine.execute('VACUUM')
             instance.did_vacuum = True
         except exc.OperationalError as err:
             _LOGGER.error("Error vacuuming SQLite: %s.", err)

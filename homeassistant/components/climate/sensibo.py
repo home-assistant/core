@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 devices.append(SensiboClimate(client, dev))
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
-        _LOGGER.exception('Failed to connect to Sensibo servers.')
+        _LOGGER.exception("Failed to connect to Sensibo servers.")
         raise PlatformNotReady
 
     if devices:
@@ -336,4 +336,4 @@ class SensiboClimate(ClimateDevice):
                     self._id, _FETCH_FIELDS)
                 self._do_update(data)
         except aiohttp.client_exceptions.ClientError:
-            _LOGGER.warning('Failed to connect to Sensibo servers.')
+            _LOGGER.warning("Failed to connect to Sensibo servers.")

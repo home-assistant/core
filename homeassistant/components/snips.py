@@ -78,13 +78,13 @@ def async_setup(hass, config):
         try:
             request = json.loads(payload)
         except TypeError:
-            _LOGGER.error('Received invalid JSON: %s', payload)
+            _LOGGER.error("Received invalid JSON: %s", payload)
             return
 
         try:
             request = INTENT_SCHEMA(request)
         except vol.Invalid as err:
-            _LOGGER.error('Intent has invalid schema: %s. %s', err, request)
+            _LOGGER.error("Intent has invalid schema: %s. %s", err, request)
             return
 
         if request['intent']['intentName'].startswith('user_'):

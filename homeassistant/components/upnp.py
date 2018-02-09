@@ -31,19 +31,19 @@ CONF_UNITS = 'unit'
 CONF_HASS = 'hass'
 
 NOTIFICATION_ID = 'upnp_notification'
-NOTIFICATION_TITLE = 'UPnP Setup'
+NOTIFICATION_TITLE = "UPnP Setup"
 
 UNITS = {
-    "Bytes": 1,
-    "KBytes": 1024,
-    "MBytes": 1024**2,
-    "GBytes": 1024**3,
+    'Bytes': 1,
+    'KBytes': 1024,
+    'MBytes': 1024**2,
+    'GBytes': 1024**3,
 }
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
-        vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
+        vol.Optional(CONF_UNITS, default='MBytes'): vol.In(UNITS),
         vol.Optional(CONF_LOCAL_IP): ip_address,
         vol.Optional(CONF_PORTS):
             vol.Schema({vol.Any(CONF_HASS, cv.positive_int): cv.positive_int})
@@ -64,7 +64,7 @@ def setup(hass, config):
 
     if host == '127.0.0.1':
         _LOGGER.error(
-            'Unable to determine local IP. Add it to your configuration.')
+            "Unable to determine local IP. Add it to your configuration.")
         return False
 
     import miniupnpc
@@ -99,17 +99,17 @@ def setup(hass, config):
             internal = internal_port
         try:
             upnp.addportmapping(
-                external, 'TCP', host, internal, 'Home Assistant', '')
+                external, 'TCP', host, internal, "Home Assistant", '')
             registered.append(external)
         except Exception:
             _LOGGER.exception("UPnP failed to configure port mapping for %s",
                               external)
             hass.components.persistent_notification.create(
-                '<b>ERROR: tcp port {} is already mapped in your router.'
-                '</b><br />Please disable port_mapping in the <i>upnp</i> '
-                'configuration section.<br />'
-                'You will need to restart hass after fixing.'
-                ''.format(external),
+                "<b>ERROR: tcp port {} is already mapped in your router."
+                "</b><br />Please disable port_mapping in the <i>upnp</i> "
+                "configuration section.<br />"
+                "You will need to restart hass after fixing."
+                "".format(external),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 

@@ -20,7 +20,7 @@ REQUIREMENTS = ['py-canary==0.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_ID = 'canary_notification'
-NOTIFICATION_TITLE = 'Canary Setup'
+NOTIFICATION_TITLE = "Canary Setup"
 
 DOMAIN = 'canary'
 DATA_CANARY = 'canary'
@@ -52,9 +52,9 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
@@ -87,7 +87,7 @@ class CanaryData(object):
 
             self._locations_by_id[location_id] = location
             self._entries_by_location_id[location_id] = self._api.get_entries(
-                location_id, entry_type="motion", limit=1)
+                location_id, entry_type='motion', limit=1)
 
             for device in location.devices:
                 if device.is_online:
