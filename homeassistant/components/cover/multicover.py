@@ -76,7 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         temp_sensor = winter_config.get(CONF_TEMPERATURE_SENSOR)
         covers.append(
             MultiCover(hass, device, friendly_name, entity_ids, tilt,
-                close_position, open_position, temp, temp_sensor)
+                       close_position, open_position, temp, temp_sensor)
         )
 
     if not covers:
@@ -89,8 +89,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class MultiCover(CoverDevice):
     """Representation of a MultiCover."""
+
     def __init__(self, hass, device_id, friendly_name, entity_ids, tilt,
                  close_position, open_position, temp, temp_sensor):
+        """Initialize a multicover entity."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass)
@@ -105,24 +107,22 @@ class MultiCover(CoverDevice):
         self.covers = {'open_close': set(), 'stop': set(), 'position': set()}
         self.tilts = {'open_close': set(), 'stop': set(), 'position': set()}
         self.winter_protection = False
-        _LOGGER.debug("{}: [tilt: {}, temp: {}, temp_sensor: {}, "
-                      "close_position: {}, open_position: {}]".
-                      format(self._device_id, tilt, temp, temp_sensor,
-                             close_position, open_position))
+        _LOGGER.debug("%s: {tilt: %s, temp: %s, temp_sensor: %s, "
+                      "close_position: %s, open_position: %s}",
+                      self._device_id, tilt, temp, temp_sensor,
+                      close_position, open_position)
 
-
-    def checkSupportedFeatures(self):
+    def check_supported_features(self):
         """Iterate through entity list and check supported features."""
         all_entities = set()
         for entity in self._entities.copy():
             if entity == self.entity_id:
-                _LOGGER.warn("{}: The entity_id of this component \"{}\" "
-                             "is not allowed."
-                             .format(self._device_id, entity))
+                _LOGGER.warning("%s: The entity_id of this component \"%s\" "
+                                "is not allowed.", self._device_id, entity)
                 self._entities.remove(entity)
                 continue
             state = self.hass.states.get(entity)
-            if state == None:
+            if state is None:
                 continue
             all_entities.add(entity)
             self._entities.remove(entity)
@@ -142,39 +142,36 @@ class MultiCover(CoverDevice):
             if features & 128:
                 self.tilts['position'].add(entity)
         if len(self._entities) > 0:
-            _LOGGER.debug("{}: Entities not found: {}"
-                          .format(self._device_id, self._entities))
+            _LOGGER.debug("%s: Entities not found: %s",
+                          self._device_id, self._entities)
         return all_entities
 
     def temp_state_change(self, state):
-        """Updates winter_protection based on state change."""
-        if state != None and state.state != 'unknown' \
-                and float(state.state) < self._temp:
-            self.winter_protection = True
-        else:
-            self.winter_protection = False
-        _LOGGER.debug("{}: Winter protection enabled: {}"
-                      .format(self._device_id, self.winter_protection))
+        """Update winter_protection based on state change."""
+        self.winter_protection = bool(
+            state is not None and state.state != 'unknown' and
+            float(state.state) < self._temp)
+        _LOGGER.debug("%s: Winter protection enabled: %s",
+                      self._device_id, self.winter_protection)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-
         @callback
         def multicover_state_listener(entity, old_state, new_state):
-            """Handles cover state changes and updates state."""
+            """Handle cover state changes and update state."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def multicover_temp_state_listener(entity, old_state, new_state):
-            """Handles temperature sensore changes."""
+            """Handle temperature sensore changes."""
             self.temp_state_change(new_state)
 
         @callback
         def multicover_startup(event):
             """Update MultiCover after startup."""
             # Check entity features and add state change listeners.
-            entities = self.checkSupportedFeatures()
+            entities = self.check_supported_features()
             async_track_state_change(
                 self.hass, entities, multicover_state_listener)
             # Check if winter protection feature is used.
@@ -184,18 +181,18 @@ class MultiCover(CoverDevice):
                 self.temp_state_change(self.hass.states.get(self._temp_sensor))
 
             self.async_schedule_update_ha_state(True)
-            _LOGGER.debug("{}: Finished taskes after HomeAssistant startup."
-                          .format(self._device_id))
+            _LOGGER.debug("%s: Finished taskes after HomeAssistant startup.",
+                          self._device_id)
 
         @callback
         def multicover_zwave_startup(event):
             """Update MultiCover after ZWave Network startup."""
-            entities = self.checkSupportedFeatures()
+            entities = self.check_supported_features()
             async_track_state_change(
                 self.hass, entities, multicover_state_listener)
             self.async_schedule_update_ha_state(True)
-            _LOGGER.debug("{}: Finished taskes after ZWave Network war ready."
-                          .format(self._device_id))
+            _LOGGER.debug("%s: Finished taskes after ZWave Network war ready.",
+                          self._device_id)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, multicover_startup)
@@ -209,12 +206,12 @@ class MultiCover(CoverDevice):
 
     @property
     def assumed_state(self):
-        """Enables buttons even if at end position."""
-        return True;
+        """Enable buttons even if at end position."""
+        return True
 
     @property
     def should_poll(self):
-        """Disables polling for the MultiCover."""
+        """Disable polling for the MultiCover."""
         return False
 
     @property
@@ -235,8 +232,9 @@ class MultiCover(CoverDevice):
         """Return current position for all covers.
 
         None is unknown. pos if all have the same position.
-        Else 0 if closed or 100 is fully open."""
-        position = -1;
+        Else 0 if closed or 100 is fully open.
+        """
+        position = -1
         for entity_id in self.covers['position']:
             state = self.hass.states.get(entity_id)
             if state is None:
@@ -258,11 +256,12 @@ class MultiCover(CoverDevice):
         """Return current tilt position for all covers.
 
         None is unknown. pos if all have the same tilt position.
-        Else 100 for tilt open."""
+        Else 100 for tilt open.
+        """
         if self._tilt is False:
             return None
 
-        position = -1;
+        position = -1
         for entity_id in self.tilts['position']:
             state = self.hass.states.get(entity_id)
             if state is None:
@@ -294,7 +293,9 @@ class MultiCover(CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features for a cover.
-        Currently doesn't support tilt features."""
+
+        Currently doesn't support tilt features.
+        """
         supported_features = COVER_FEATURES
 
         if self._tilt:
@@ -304,23 +305,25 @@ class MultiCover(CoverDevice):
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
-        """Move the covers up"""
+        """Move the covers up."""
         _LOGGER.debug("Open covers called")
         if self.winter_protection and self._open_position:
             self.hass.bus.async_fire(
-                'call_service', {'domain': 'cover', 'service': 'open_cover',
-                'service_data': {'entity_id': self.covers['open_close'] -
-                                              self.covers['position']}})
+                'call_service', {
+                    'domain': 'cover', 'service': 'open_cover',
+                    'service_data': {'entity_id': self.covers['open_close'] -
+                                                  self.covers['position']}})
             self.hass.bus.async_fire(
-                'call_service', {'domain': 'cover',
-                'service': 'set_cover_position',
-                'service_data': {'position': self._open_position,
-                                 'entity_id': self.covers['position']}})
+                'call_service', {
+                    'domain': 'cover', 'service': 'set_cover_position',
+                    'service_data': {'position': self._open_position,
+                                     'entity_id': self.covers['position']}})
         else:
             covers = self.covers['open_close'].union(self.covers['position'])
             self.hass.bus.async_fire(
-                'call_service', {'domain': 'cover', 'service': 'open_cover',
-                'service_data': {'entity_id': covers}})
+                'call_service', {
+                    'domain': 'cover', 'service': 'open_cover',
+                    'service_data': {'entity_id': covers}})
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
@@ -328,70 +331,76 @@ class MultiCover(CoverDevice):
         _LOGGER.debug("Close covers called")
         if self.winter_protection and self._close_position:
             self.hass.bus.async_fire(
-                'call_service', {'domain': 'cover', 'service': 'close_cover',
-                'service_data': {'entity_id': self.covers['open_close'] -
-                                              self.covers['position']}})
+                'call_service', {
+                    'domain': 'cover', 'service': 'close_cover',
+                    'service_data': {'entity_id': self.covers['open_close'] -
+                                                  self.covers['position']}})
             self.hass.bus.async_fire(
-                'call_service', {'domain': 'cover',
-                'service': 'set_cover_position',
-                'service_data': {'position': self._close_position,
-                                 'entity_id': self.covers['position']}})
+                'call_service', {
+                    'domain': 'cover', 'service': 'set_cover_position',
+                    'service_data': {'position': self._close_position,
+                                     'entity_id': self.covers['position']}})
         else:
             covers = self.covers['open_close'].union(self.covers['position'])
             self.hass.bus.async_fire(
-                'call_service', {'domain': 'cover', 'service': 'close_cover',
-                'service_data': {'entity_id': covers}})
+                'call_service', {
+                    'domain': 'cover', 'service': 'close_cover',
+                    'service_data': {'entity_id': covers}})
 
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         _LOGGER.debug("Stop covers called")
         self.hass.bus.async_fire(
-            'call_service', {'domain': 'cover', 'service': 'stop_cover',
-            'service_data': {'entity_id': self.covers['stop']}})
+            'call_service', {
+                'domain': 'cover', 'service': 'stop_cover',
+                'service_data': {'entity_id': self.covers['stop']}})
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Set covers position."""
         position = kwargs[ATTR_POSITION]
-        _LOGGER.debug("Set cover position called: {}".format(position))
+        _LOGGER.debug("Set cover position called: %s", position)
         self.hass.bus.async_fire(
-            'call_service', {'domain': 'cover',
-            'service': 'set_cover_position',
-            'service_data': {'position': position,
-                             'entity_id': self.covers['position']}})
+            'call_service', {
+                'domain': 'cover', 'service': 'set_cover_position',
+                'service_data': {'position': position,
+                                 'entity_id': self.covers['position']}})
 
     @asyncio.coroutine
     def async_open_cover_tilt(self, **kwargs):
         """Tilt covers open."""
         _LOGGER.debug("Open tilts called")
         self.hass.bus.async_fire(
-            'call_service', {'domain': 'cover', 'service': 'open_cover_tilt',
-            'service_data': {'entity_id': self.tilts['open_close']}})
+            'call_service', {
+                'domain': 'cover', 'service': 'open_cover_tilt',
+                'service_data': {'entity_id': self.tilts['open_close']}})
 
     @asyncio.coroutine
     def async_close_cover_tilt(self, **kwargs):
         """Tilt covers closed."""
         _LOGGER.debug("Close tilts called")
         self.hass.bus.async_fire(
-            'call_service', {'domain': 'cover', 'service': 'close_cover_tilt',
-            'service_data': {'entity_id': self.tilts['open_close']}})
+            'call_service', {
+                'domain': 'cover', 'service': 'close_cover_tilt',
+                'service_data': {'entity_id': self.tilts['open_close']}})
 
     @asyncio.coroutine
     def async_stop_cover_tilt(self, **kwargs):
         """Stop cover tilt."""
         _LOGGER.debug("Stop tilts called")
         self.hass.bus.async_fire(
-            'call_service', {'domain': 'cover', 'service': 'stop_cover_tilt',
-            'service_data': {'entity_id': self.tilts['stop']}})
+            'call_service', {
+                'domain': 'cover', 'service': 'stop_cover_tilt',
+                'service_data': {'entity_id': self.tilts['stop']}})
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Set tilt position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
-        _LOGGER.debug("Set tilt position called: {}".format(tilt_position))
+        _LOGGER.debug("Set tilt position called: %s", tilt_position)
         self.hass.bus.async_fire(
-            'call_service', {'domain': 'cover',
-            'service': 'set_cover_tilt_position',
-            'service_data': {'tilt_position': tilt_position,
-                             'entity_id': self.tilts['position']}})
+            'call_service', {
+                'domain': 'cover', 'service': 'set_cover_tilt_position',
+                'service_data': {'tilt_position': tilt_position,
+                                 'entity_id': self.tilts['position']}})
