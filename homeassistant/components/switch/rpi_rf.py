@@ -117,13 +117,13 @@ class RPiRFSwitch(SwitchDevice):
                 self._rfdevice.tx_code(code, protocol, pulselength)
         return True
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._send_code(self._code_on, self._protocol, self._pulselength):
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self._send_code(self._code_off, self._protocol, self._pulselength):
             self._state = False

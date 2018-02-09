@@ -164,6 +164,7 @@ class OrderedSet(MutableSet):
         """Check if key is in set."""
         return key in self.map
 
+    # pylint: disable=arguments-differ
     def add(self, key):
         """Add an element to the end of the set."""
         if key not in self.map:
@@ -180,6 +181,7 @@ class OrderedSet(MutableSet):
         curr = begin[1]
         curr[2] = begin[1] = self.map[key] = [key, curr, begin]
 
+    # pylint: disable=arguments-differ
     def discard(self, key):
         """Discard an element from the set."""
         if key in self.map:

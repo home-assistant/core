@@ -95,7 +95,7 @@ class ISYFanProgram(ISYFanDevice):
         if not self._actions.runThen():
             _LOGGER.error("Unable to turn off the fan")
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.runElse():
             _LOGGER.error("Unable to turn on the fan")

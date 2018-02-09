@@ -273,11 +273,11 @@ class SensiboClimate(ClimateDevice):
                 self._id, 'targetTemperature', temperature, self._ac_states)
 
     @asyncio.coroutine
-    def async_set_fan_mode(self, fan):
+    def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
-                self._id, 'fanLevel', fan, self._ac_states)
+                self._id, 'fanLevel', fan_mode, self._ac_states)
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):

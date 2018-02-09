@@ -44,7 +44,7 @@ class VeraCover(VeraDevice, CoverDevice):
             return 100
         return position
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, position: int, **kwargs):
         """Move the cover to a specific position."""
         self.vera_device.set_level(position)
         self.schedule_update_ha_state()

@@ -44,6 +44,7 @@ class ISYLightDevice(ISYDevice, Light):
         if not self._node.off():
             _LOGGER.debug("Unable to turn off light")
 
+    # pylint: disable=arguments-differ
     def turn_on(self, brightness=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):

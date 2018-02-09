@@ -207,9 +207,9 @@ class NestThermostat(ClimateDevice):
         """List of available fan modes."""
         return self._fan_list
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        self.device.fan = fan.lower()
+        self.device.fan = fan_mode.lower()
 
     @property
     def min_temp(self):

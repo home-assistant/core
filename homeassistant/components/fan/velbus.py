@@ -134,7 +134,7 @@ class VelbusFan(FanEntity):
             speed = SPEED_MEDIUM
         self.set_speed(speed)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn off the entity."""
         self.set_speed(STATE_OFF)
 

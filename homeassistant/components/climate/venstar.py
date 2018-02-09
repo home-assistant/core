@@ -239,9 +239,9 @@ class VenstarThermostat(ClimateDevice):
             if not success:
                 _LOGGER.error("Failed to change the temperature")
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        if fan == STATE_ON:
+        if fan_mode == STATE_ON:
             success = self._client.set_fan(self._client.FAN_ON)
         else:
             success = self._client.set_fan(self._client.FAN_AUTO)

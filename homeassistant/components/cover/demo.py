@@ -137,7 +137,7 @@ class DemoCover(CoverDevice):
         self._listen_cover_tilt()
         self._requested_closing_tilt = False
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, position: int, **kwargs):
         """Move the cover to a specific position."""
         self._set_position = round(position, -1)
         if self._position == position:
@@ -146,7 +146,7 @@ class DemoCover(CoverDevice):
         self._listen_cover()
         self._requested_closing = position < self._position
 
-    def set_cover_tilt_position(self, tilt_position, **kwargs):
+    def set_cover_tilt_position(self, tilt_position: int, **kwargs):
         """Move the cover til to a specific position."""
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:

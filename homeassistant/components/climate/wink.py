@@ -324,9 +324,9 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             return self.wink.fan_modes()
         return None
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        self.wink.set_fan_mode(fan.lower())
+        self.wink.set_fan_mode(fan_mode.lower())
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
@@ -493,18 +493,18 @@ class WinkAC(WinkDevice, ClimateDevice):
         """Return a list of available fan modes."""
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """
         Set fan speed.
 
         The official Wink app only supports 3 modes [low, medium, high]
         which are equal to [0.33, 0.66, 1.0] respectively.
         """
-        if fan == SPEED_LOW:
+        if fan_mode == SPEED_LOW:
             speed = 0.33
-        elif fan == SPEED_MEDIUM:
+        elif fan_mode == SPEED_MEDIUM:
             speed = 0.66
-        elif fan == SPEED_HIGH:
+        elif fan_mode == SPEED_HIGH:
             speed = 1.0
         self.wink.set_ac_fan_speed(speed)
 

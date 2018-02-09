@@ -97,7 +97,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """Move the roller shutter down."""
         self._network.manager.pressButton(self._close_id)
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, position: int, **kwargs):
         """Move the roller shutter to a specific position."""
         self.node.set_dimmer(self.values.primary.value_id, position)
 
@@ -139,11 +139,11 @@ class ZwaveGarageDoorSwitch(ZwaveGarageDoorBase):
         """Return the current position of Zwave garage door."""
         return not self._state
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the garage door."""
         self.values.primary.data = False
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the garage door."""
         self.values.primary.data = True
 
@@ -166,10 +166,10 @@ class ZwaveGarageDoorBarrier(ZwaveGarageDoorBase):
         """Return the current position of Zwave garage door."""
         return self._state == "Closed"
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the garage door."""
         self.values.primary.data = "Closed"
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the garage door."""
         self.values.primary.data = "Opened"
