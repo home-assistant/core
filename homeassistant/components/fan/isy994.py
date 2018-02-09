@@ -48,10 +48,6 @@ def setup_platform(hass, config: ConfigType,
 class ISYFanDevice(ISYDevice, FanEntity):
     """Representation of an ISY994 fan device."""
 
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 fan device."""
-        super().__init__(node)
-
     @property
     def speed(self) -> str:
         """Return the current speed."""
