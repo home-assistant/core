@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
-import inspect
 from unittest.mock import patch, Mock
 
 import yaml
@@ -12,7 +11,6 @@ from homeassistant import config
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
-import homeassistant.components.group as group
 import homeassistant.helpers.intent as intent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
@@ -199,6 +197,7 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_check.called
         assert not mock_stop.called
 
+
 @asyncio.coroutine
 def test_turn_on_intent(hass):
     """Test HassTurnOn intent."""
@@ -219,6 +218,7 @@ def test_turn_on_intent(hass):
     assert call.domain == 'light'
     assert call.service == 'turn_on'
     assert call.data == {'entity_id': ['light.test_light']}
+
 
 @asyncio.coroutine
 def test_turn_off_intent(hass):
@@ -241,6 +241,7 @@ def test_turn_off_intent(hass):
     assert call.service == 'turn_off'
     assert call.data == {'entity_id': ['light.test_light']}
 
+
 @asyncio.coroutine
 def test_toggle_intent(hass):
     """Test HassToggle intent."""
@@ -262,11 +263,13 @@ def test_toggle_intent(hass):
     assert call.service == 'toggle'
     assert call.data == {'entity_id': ['light.test_light']}
 
+
 @asyncio.coroutine
 def test_turn_on_multiple_intent(hass):
     """Test HassTurnOn intent with multiple similar entities.
 
-    This tests that matching finds the proper entity among similar names."""
+    This tests that matching finds the proper entity among similar names.
+    """
     result = yield from comps.async_setup(hass, {})
     assert result
 
