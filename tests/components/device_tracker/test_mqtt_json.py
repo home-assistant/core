@@ -123,3 +123,41 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
                 "Skipping update for following data because of missing "
                 "or malformatted data: {\"longitude\": 2.0}",
                 test_handle.output[0])
+
+    def test_single_level_wildcard_topic(self):
+        """Test single level wildcard topic."""
+        dev_id = 'zanzito'
+        subscription = 'location/+/zanzito'
+        topic = 'location/room/zanzito'
+        location = json.dumps(LOCATION_MESSAGE)
+
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt_json',
+                'devices': {dev_id: subscription}
+            }
+        })
+        fire_mqtt_message(self.hass, topic, location)
+        self.hass.block_till_done()
+        state = self.hass.states.get('device_tracker.zanzito')
+        self.assertEqual(state.attributes.get('latitude'), 2.0)
+        self.assertEqual(state.attributes.get('longitude'), 1.0)
+
+    def test_multi_level_wildcard_topic(self):
+        """Test multi level wildcard topic."""
+        dev_id = 'zanzito'
+        subscription = 'location/#'
+        topic = 'location/zanzito'
+        location = json.dumps(LOCATION_MESSAGE)
+
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt_json',
+                'devices': {dev_id: subscription}
+            }
+        })
+        fire_mqtt_message(self.hass, topic, location)
+        self.hass.block_till_done()
+        state = self.hass.states.get('device_tracker.zanzito')
+        self.assertEqual(state.attributes.get('latitude'), 2.0)
+        self.assertEqual(state.attributes.get('longitude'), 1.0)
