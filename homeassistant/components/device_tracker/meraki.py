@@ -85,7 +85,7 @@ class MerakiView(HomeAssistantView):
                 return self.json_message('Invalid device type',
                                          HTTP_UNPROCESSABLE_ENTITY)
             _LOGGER.debug("Processing %s", data['type'])
-        if len(data["data"]["observations"]) == 0:
+        if not data["data"]["observations"]:
             _LOGGER.debug("No observations found")
             return
         self._handle(request.app['hass'], data)
