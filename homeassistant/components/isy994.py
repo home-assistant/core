@@ -461,8 +461,7 @@ class ISYDevice(Entity):
         """Return the state of the ISY device."""
         if self.is_unknown():
             return None
-        else:
-            return super().state
+        return super().state
 
     @property
     def device_state_attributes(self) -> Dict:

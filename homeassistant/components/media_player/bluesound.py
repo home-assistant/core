@@ -440,8 +440,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return STATE_PAUSED
         elif status == 'stream' or status == 'play':
             return STATE_PLAYING
-        else:
-            return STATE_IDLE
+        return STATE_IDLE
 
     @property
     def media_title(self):

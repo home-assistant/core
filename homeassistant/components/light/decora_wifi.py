@@ -93,8 +93,7 @@ class DecoraWifiLight(Light):
         """Return supported features."""
         if self._switch.canSetLevel:
             return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
-        else:
-            return 0
+        return 0
 
     @property
     def name(self):

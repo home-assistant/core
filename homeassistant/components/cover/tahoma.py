@@ -64,8 +64,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
         """Return the class of the device."""
         if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
             return 'window'
-        else:
-            return None
+        return None
 
     def open_cover(self, **kwargs):
         """Open the cover."""

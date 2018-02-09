@@ -352,8 +352,7 @@ class TelldusLiveEntity(Entity):
             return None
         elif self.device.battery == BATTERY_OK:
             return 100
-        else:
-            return self.device.battery  # Percentage
+        return self.device.battery  # Percentage
 
     @property
     def _last_updated(self):

@@ -142,18 +142,17 @@ class TekSavvyData(object):
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
-        else:
-            data = yield from req.json()
-            for (api, ha_name) in API_HA_MAP:
-                self.data[ha_name] = float(data["value"][0][api])
-            on_peak_download = self.data["onpeak_download"]
-            on_peak_upload = self.data["onpeak_upload"]
-            off_peak_download = self.data["offpeak_download"]
-            off_peak_upload = self.data["offpeak_upload"]
-            limit = self.data["limit"]
-            self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
-            self.data["usage_gb"] = on_peak_download
-            self.data["onpeak_total"] = on_peak_download + on_peak_upload
-            self.data["offpeak_total"] = off_peak_download + off_peak_upload
-            self.data["onpeak_remaining"] = limit - on_peak_download
-            return True
+        data = yield from req.json()
+        for (api, ha_name) in API_HA_MAP:
+            self.data[ha_name] = float(data["value"][0][api])
+        on_peak_download = self.data["onpeak_download"]
+        on_peak_upload = self.data["onpeak_upload"]
+        off_peak_download = self.data["offpeak_download"]
+        off_peak_upload = self.data["offpeak_upload"]
+        limit = self.data["limit"]
+        self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+        self.data["usage_gb"] = on_peak_download
+        self.data["onpeak_total"] = on_peak_download + on_peak_upload
+        self.data["offpeak_total"] = off_peak_download + off_peak_upload
+        self.data["onpeak_remaining"] = limit - on_peak_download
+        return True

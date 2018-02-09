@@ -143,8 +143,7 @@ class VolvoData:
             return vehicle.registration_number
         elif vehicle.vin:
             return vehicle.vin
-        else:
-            return ''
+        return ''
 
 
 class VolvoEntity(Entity):

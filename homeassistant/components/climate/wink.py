@@ -486,8 +486,7 @@ class WinkAC(WinkDevice, ClimateDevice):
             return SPEED_LOW
         elif speed <= 0.66:
             return SPEED_MEDIUM
-        else:
-            return SPEED_HIGH
+        return SPEED_HIGH
 
     @property
     def fan_list(self):

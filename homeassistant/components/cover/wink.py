@@ -51,8 +51,7 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
         """Return the current position of cover shutter."""
         if self.wink.state() is not None:
             return int(self.wink.state()*100)
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def is_closed(self):
