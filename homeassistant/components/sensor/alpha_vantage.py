@@ -37,7 +37,7 @@ ICONS = {
     'GBP': 'mdi:currency-gbp',
     'INR': 'mdi:currency-inr',
     'RUB': 'mdi:currency-rub',
-    'TRY': 'mdi: currency-try',
+    'TRY': 'mdi:currency-try',
     'USD': 'mdi:currency-usd',
 }
 
