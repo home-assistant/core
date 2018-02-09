@@ -12,19 +12,15 @@ import voluptuous as vol
 
 from homeassistant.core import State
 from homeassistant.components import light
-from homeassistant.const import (STATE_OFF, STATE_ON, SERVICE_TURN_ON,
-                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID, CONF_NAME,
-                                 CONF_ENTITIES, STATE_UNAVAILABLE,
-                                 STATE_UNKNOWN)
+from homeassistant.const import (
+    STATE_OFF, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID,
+    CONF_NAME, CONF_ENTITIES, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.components.light import (SUPPORT_BRIGHTNESS,
-                                            SUPPORT_RGB_COLOR,
-                                            SUPPORT_COLOR_TEMP,
-                                            SUPPORT_TRANSITION, SUPPORT_EFFECT,
-                                            SUPPORT_FLASH, SUPPORT_XY_COLOR,
-                                            SUPPORT_WHITE_VALUE,
-                                            PLATFORM_SCHEMA)
+from homeassistant.components.light import (
+    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_XY_COLOR,
+    SUPPORT_WHITE_VALUE, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,15 +34,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                       SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_RGB_COLOR |
-                       SUPPORT_TRANSITION | SUPPORT_XY_COLOR |
-                       SUPPORT_WHITE_VALUE)
+SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
+                       | SUPPORT_FLASH | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION
+                       | SUPPORT_XY_COLOR | SUPPORT_WHITE_VALUE)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                         async_add_devices, discovery_info=None) -> None:
+def async_setup_platform(hass: HomeAssistantType,
+                         config: ConfigType,
+                         async_add_devices,
+                         discovery_info=None) -> None:
     """Initialize grouped_light platform."""
     async_add_devices([GroupedLight(
         hass,
@@ -160,16 +157,16 @@ class GroupedLight(light.Light):
         """Forward the turn_on command to all lights in the group."""
         for entity_id in self._entity_ids:
             kwargs[ATTR_ENTITY_ID] = entity_id
-            yield from self.hass.services.async_call('light', SERVICE_TURN_ON,
-                                                     kwargs, blocking=True)
+            yield from self.hass.services.async_call(
+                'light', SERVICE_TURN_ON, kwargs, blocking=True)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the group."""
         for entity_id in self._entity_ids:
             kwargs[ATTR_ENTITY_ID] = entity_id
-            yield from self.hass.services.async_call('light', SERVICE_TURN_OFF,
-                                                     kwargs, blocking=True)
+            yield from self.hass.services.async_call(
+                'light', SERVICE_TURN_OFF, kwargs, blocking=True)
 
     @asyncio.coroutine
     def async_update(self):
@@ -181,14 +178,14 @@ class GroupedLight(light.Light):
         self._xy_color = _reduce_attribute(states, 'xy_color')
         self._rgb_color = _reduce_attribute(states, 'rgb_color')
         self._color_temp = _reduce_attribute(states, 'color_temp')
-        self._min_mireds = _reduce_attribute(states, 'min_mireds', default=154,
-                                             force_on=False)
-        self._max_mireds = _reduce_attribute(states, 'max_mireds', default=500,
-                                             force_on=False)
+        self._min_mireds = _reduce_attribute(
+            states, 'min_mireds', default=154, force_on=False)
+        self._max_mireds = _reduce_attribute(
+            states, 'max_mireds', default=500, force_on=False)
         self._white_value = _reduce_attribute(states, 'white_value')
 
-        all_effect_lists = list(_find_state_attributes(states, 'effect_list',
-                                                       force_on=False))
+        all_effect_lists = list(
+            _find_state_attributes(states, 'effect_list', force_on=False))
         self._effect_list = None
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
@@ -202,8 +199,8 @@ class GroupedLight(light.Light):
             self._effect = max(set(flat_effects), key=flat_effects.count)
 
         self._supported_features = 0
-        for support in _find_state_attributes(states, 'supported_features',
-                                              force_on=False):
+        for support in _find_state_attributes(
+                states, 'supported_features', force_on=False):
             # Merge supported features by emulating support for every feature
             # we find.
             self._supported_features |= support
@@ -231,7 +228,8 @@ class GroupedLight(light.Light):
 
 # https://github.com/PyCQA/pylint/issues/1543
 # pylint: disable=bad-whitespace
-def _find_state_attributes(states: List[State], key: str,
+def _find_state_attributes(states: List[State],
+                           key: str,
                            force_on: bool = True) -> Iterator[T]:
     """Find attributes with matching key from states.
 
@@ -245,8 +243,10 @@ def _find_state_attributes(states: List[State], key: str,
 
 # https://github.com/PyCQA/pylint/issues/1543
 # pylint: disable=bad-whitespace
-def _reduce_attribute(states: List[State], key: str,
-                      default: Optional[T] = None, force_on: bool = True) -> T:
+def _reduce_attribute(states: List[State],
+                      key: str,
+                      default: Optional[T] = None,
+                      force_on: bool = True) -> T:
     """Find the first attribute matching key from states.
 
     If none are found, returns default.
