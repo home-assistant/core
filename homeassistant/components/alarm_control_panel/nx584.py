@@ -107,14 +107,14 @@ class NX584Alarm(alarm.AlarmControlPanel):
         else:
             self._state = STATE_ALARM_ARMED_AWAY
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         self._alarm.disarm(code)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         self._alarm.arm('stay')
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         self._alarm.arm('exit')

@@ -57,15 +57,15 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
             state = None
         return state
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         self._device.set_standby()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, params=None):
         """Send arm home command."""
         self._device.set_home()
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, params=None):
         """Send arm away command."""
         self._device.set_away()
 

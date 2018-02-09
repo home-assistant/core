@@ -88,17 +88,17 @@ class ArloBaseStation(AlarmControlPanel):
         self._state = None
 
     @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    def async_alarm_disarm(self, code=None, params=None):
         """Send disarm command."""
         self._base_station.mode = DISARMED
 
     @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    def async_alarm_arm_away(self, code=None, params=None):
         """Send arm away command. Uses custom mode."""
         self._base_station.mode = self._away_mode_name
 
     @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    def async_alarm_arm_home(self, code=None, params=None):
         """Send arm home command. Uses custom mode."""
         self._base_station.mode = self._home_mode_name
 
