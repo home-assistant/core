@@ -677,7 +677,7 @@ def async_check_ha_config_file(hass):
 
 
 @callback
-def async_notify_setup_error(hass, component, link=False):
+def async_notify_setup_error(hass, component, display_link=False):
     """Print a persistent notification.
 
     This method must be run in the event loop.
@@ -689,7 +689,7 @@ def async_notify_setup_error(hass, component, link=False):
     if errors is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
-    errors[component] = errors.get(component) or link
+    errors[component] = errors.get(component) or display_link
 
     message = 'The following components and platforms could not be set up:\n\n'
 
