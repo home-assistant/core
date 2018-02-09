@@ -144,7 +144,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
                                ip_addr.replace('.', '_'), _learn_command)
         hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               ip_addr.replace('.', '_'), _send_packet)
+                               ip_addr.replace('.', '_'), _send_packet,
+                               vol.Schema({'packet': cv.ensure_list}))
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
