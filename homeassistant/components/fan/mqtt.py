@@ -252,7 +252,7 @@ class MqttFan(MqttAvailability, FanEntity):
         return self._oscillation
 
     @asyncio.coroutine
-    def async_turn_on(self, speed: str=None) -> None:
+    def async_turn_on(self, speed: str = None) -> None:
         """Turn on the entity.
 
         This method is a coroutine.

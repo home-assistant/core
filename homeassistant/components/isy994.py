@@ -135,7 +135,7 @@ WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
 
 
 def _check_for_node_def(hass: HomeAssistant, node,
-                        single_domain: str=None) -> bool:
+                        single_domain: str = None) -> bool:
     """Check if the node matches the node_def_id for any domains.
 
     This is only present on the 5.0 ISY firmware, and is the most reliable
@@ -157,7 +157,7 @@ def _check_for_node_def(hass: HomeAssistant, node,
 
 
 def _check_for_insteon_type(hass: HomeAssistant, node,
-                            single_domain: str=None) -> bool:
+                            single_domain: str = None) -> bool:
     """Check if the node matches the Insteon type for any domains.
 
     This is for (presumably) every version of the ISY firmware, but only
@@ -180,7 +180,7 @@ def _check_for_insteon_type(hass: HomeAssistant, node,
 
 
 def _check_for_uom_id(hass: HomeAssistant, node,
-                      single_domain: str=None, uom_list: list=None) -> bool:
+                      single_domain: str = None, uom_list: list = None) -> bool:
     """Check if a node's uom matches any of the domains uom filter.
 
     This is used for versions of the ISY firmware that report uoms as a single
@@ -207,8 +207,8 @@ def _check_for_uom_id(hass: HomeAssistant, node,
 
 
 def _check_for_states_in_uom(hass: HomeAssistant, node,
-                             single_domain: str=None,
-                             states_list: list=None) -> bool:
+                             single_domain: str = None,
+                             states_list: list = None) -> bool:
     """Check if a list of uoms matches two possible filters.
 
     This is for versions of the ISY firmware that report uoms as a list of all

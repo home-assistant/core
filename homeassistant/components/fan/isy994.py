@@ -66,7 +66,7 @@ class ISYFanDevice(ISYDevice, FanEntity):
         """Send the set speed command to the ISY994 fan device."""
         self._node.on(val=STATE_TO_VALUE.get(speed, 255))
 
-    def turn_on(self, speed: str=None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn on command to the ISY994 fan device."""
         self.set_speed(speed)
 

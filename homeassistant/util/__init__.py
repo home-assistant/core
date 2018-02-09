@@ -61,7 +61,7 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(value: T, to_type: Callable[[T], U],
-            default: Optional[U]=None) -> Optional[U]:
+            default: Optional[U] = None) -> Optional[U]:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)

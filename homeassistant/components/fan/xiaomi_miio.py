@@ -214,7 +214,7 @@ class XiaomiAirPurifier(FanEntity):
             return False
 
     @asyncio.coroutine
-    def async_turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn the fan on."""
         if speed:
             # If operation mode was set the device must not be turned on.
@@ -333,7 +333,7 @@ class XiaomiAirPurifier(FanEntity):
             self._air_purifier.set_child_lock, False)
 
     @asyncio.coroutine
-    def async_set_led_brightness(self, brightness: int=2):
+    def async_set_led_brightness(self, brightness: int = 2):
         """Set the led brightness."""
         from miio.airpurifier import LedBrightness
 
@@ -342,7 +342,7 @@ class XiaomiAirPurifier(FanEntity):
             self._air_purifier.set_led_brightness, LedBrightness(brightness))
 
     @asyncio.coroutine
-    def async_set_favorite_level(self, level: int=1):
+    def async_set_favorite_level(self, level: int = 1):
         """Set the favorite level."""
         yield from self._try_command(
             "Setting the favorite level of the air purifier failed.",

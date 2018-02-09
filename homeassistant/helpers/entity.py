@@ -22,8 +22,8 @@ SLOW_UPDATE_WARNING = 10
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
-                       current_ids: Optional[List[str]]=None,
-                       hass: Optional[HomeAssistant]=None) -> str:
+                       current_ids: Optional[List[str]] = None,
+                       hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -42,8 +42,8 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
 
 @callback
 def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[List[str]]=None,
-                             hass: Optional[HomeAssistant]=None) -> str:
+                             current_ids: Optional[List[str]] = None,
+                             hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
