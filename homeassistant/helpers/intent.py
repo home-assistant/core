@@ -146,12 +146,12 @@ class ServiceIntentHandler(IntentHandler):
         'name': cv.string,
     }
 
-    def __init__(self, intent_type, domain, service, response):
+    def __init__(self, intent_type, domain, service, speech):
         """Create Service Intent Handler."""
         self.intent_type = intent_type
         self.domain = domain
         self.service = service
-        self.response = response
+        self.speech = speech
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
@@ -186,7 +186,7 @@ class ServiceIntentHandler(IntentHandler):
             }, blocking=True)
 
         response.async_set_speech(
-            self.response.format(name))
+            self.speech.format(name))
         return response
 
 
