@@ -221,9 +221,7 @@ class MultiCover(CoverDevice):
             return False
         for entity_id in self.covers['open_close']:
             state = self.hass.states.get(entity_id)
-            if state is None:
-                return None
-            elif state.attributes.get(ATTR_CURRENT_POSITION) != 0:
+            if state is None or state.state != 'closed':
                 return False
         return True
 
