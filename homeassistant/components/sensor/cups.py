@@ -138,6 +138,7 @@ class CupsData(object):
         self._port = port
         self.printers = None
 
+    # pylint: disable=no-name-in-module
     def update(self):
         """Get the latest data from CUPS."""
         from cups import Connection
