@@ -360,9 +360,6 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
-# homeassistant.components.sensor.miflora
-https://github.com/ChristianKuehnel/miflora/archive/exception_handling.zip#miflora==0.2.1
-
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
 
@@ -489,6 +486,9 @@ messagebird==1.2.0
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
+
+# homeassistant.components.sensor.miflora
+miflora==0.3.0
 
 # homeassistant.components.upnp
 miniupnpc==2.0.2
