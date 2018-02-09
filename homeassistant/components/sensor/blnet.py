@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blnet'
-
+FRIENDLY_NAME = 'friendly_name'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     blnet_id = discovery_info['ent_id']
     comm = hass.data[DOMAIN + '_data']
 
-    add_devices([BLNETComponent(hass, id, blnet_id, comm)])
+    add_devices([BLNETComponent(hass, id, blnet_id, comm)], True)
 
 
 class BLNETComponent(Entity):
@@ -42,6 +42,7 @@ class BLNETComponent(Entity):
         self._blnet_id = blnet_id
         self.communication = communication
         self._name = blnet_id
+        self._friendly_name = blnet_id
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = None
         self._icon = None
@@ -66,6 +67,14 @@ class BLNETComponent(Entity):
         """Return the state of the device."""
         return self._unit_of_measurement
     
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attrs = {}
+
+        attrs[FRIENDLY_NAME] = self._friendly_name
+        return attrs
+    
     def update(self):
         """Get the latest data from communication device """
         sensor_data = self.communication.data.get(self._blnet_id)
@@ -73,7 +82,7 @@ class BLNETComponent(Entity):
         if sensor_data is None:
             return
         
-        self._name = sensor_data.get('friendly_name')
+        self._friendly_name = sensor_data.get('friendly_name')
         self._state = sensor_data.get('value')
         self._unit_of_measurement = sensor_data.get('unit_of_measurement')
         self._icon = sensor_data.get('icon')
