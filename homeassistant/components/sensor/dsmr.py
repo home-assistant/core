@@ -9,13 +9,14 @@ from datetime import timedelta
 from functools import partial
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 

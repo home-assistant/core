@@ -6,9 +6,11 @@ https://home-assistant.io/components/sensor.teksavvy/
 """
 from datetime import timedelta
 import logging
-
 import asyncio
 import async_timeout
+
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
@@ -16,7 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 

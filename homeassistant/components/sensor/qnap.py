@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.qnap/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
@@ -14,8 +16,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-import voluptuous as vol
 
 REQUIREMENTS = ['qnapstats==0.2.4']
 

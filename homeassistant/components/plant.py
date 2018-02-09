@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from collections import deque
 import voluptuous as vol
 
-from exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import (
     STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
     CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT)
