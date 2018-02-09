@@ -110,7 +110,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if not contracts:
         return
     _LOGGER.info("Contract list: %s",
-                 ", ".join(contracts))
+                 ', '.join(contracts))
 
     name = config.get(CONF_NAME)
 

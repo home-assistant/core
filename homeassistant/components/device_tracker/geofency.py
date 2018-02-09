@@ -119,7 +119,7 @@ class GeofencyView(HomeAssistantView):
     def _device_name(data):
         """Return name of device tracker."""
         if 'beaconUUID' in data:
-            return "{}_{}".format(BEACON_DEV_PREFIX, data['name'])
+            return '{}_{}'.format(BEACON_DEV_PREFIX, data['name'])
         else:
             return data['device']
 

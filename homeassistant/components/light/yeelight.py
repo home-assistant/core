@@ -62,22 +62,22 @@ YEELIGHT_MIN_KELVIN = YEELIGHT_MAX_KELVIN = 2700
 YEELIGHT_RGB_MIN_KELVIN = 1700
 YEELIGHT_RGB_MAX_KELVIN = 6500
 
-EFFECT_DISCO = "Disco"
+EFFECT_DISCO = 'Disco'
 EFFECT_TEMP = "Slow Temp"
 EFFECT_STROBE = "Strobe epilepsy!"
 EFFECT_STROBE_COLOR = "Strobe color"
-EFFECT_ALARM = "Alarm"
-EFFECT_POLICE = "Police"
-EFFECT_POLICE2 = "Police2"
-EFFECT_CHRISTMAS = "Christmas"
-EFFECT_RGB = "RGB"
+EFFECT_ALARM = 'Alarm'
+EFFECT_POLICE = 'Police'
+EFFECT_POLICE2 = 'Police2'
+EFFECT_CHRISTMAS = 'Christmas'
+EFFECT_RGB = 'RGB'
 EFFECT_RANDOM_LOOP = "Random Loop"
 EFFECT_FAST_RANDOM_LOOP = "Fast Random Loop"
-EFFECT_SLOWDOWN = "Slowdown"
-EFFECT_WHATSAPP = "WhatsApp"
-EFFECT_FACEBOOK = "Facebook"
-EFFECT_TWITTER = "Twitter"
-EFFECT_STOP = "Stop"
+EFFECT_SLOWDOWN = 'Slowdown'
+EFFECT_WHATSAPP = 'WhatsApp'
+EFFECT_FACEBOOK = 'Facebook'
+EFFECT_TWITTER = 'Twitter'
+EFFECT_STOP = 'Stop'
 
 YEELIGHT_EFFECT_LIST = [
     EFFECT_DISCO,
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
         # Not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (discovery_info['device_type'],
+        name = 'yeelight_%s_%s' % (discovery_info['device_type'],
                                    discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
@@ -337,7 +337,7 @@ class YeelightLight(Light):
         if flash:
             from yeelight import (RGBTransition, SleepTransition, Flow,
                                   BulbException)
-            if self._bulb.last_properties["color_mode"] != 1:
+            if self._bulb.last_properties['color_mode'] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
 

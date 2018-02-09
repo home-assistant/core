@@ -102,13 +102,13 @@ class Dovado:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-        _LOGGER.info("Updating")
+        _LOGGER.info('Updating')
         try:
             self.state = self._dovado.state or {}
             if not self.state:
                 return False
             self.state.update(
-                connected=self.state.get("modem status") == "CONNECTED")
+                connected=self.state.get("modem status") == 'CONNECTED')
             _LOGGER.debug("Received: %s", self.state)
             return True
         except OSError as error:
@@ -127,7 +127,7 @@ class DovadoSensor(Entity):
     def _compute_state(self):
         state = self._dovado.state.get(SENSORS[self._sensor][0])
         if self._sensor == SENSOR_NETWORK:
-            match = re.search(r"\((.+)\)", state)
+            match = re.search(r'\((.+)\)', state)
             return match.group(1) if match else None
         elif self._sensor == SENSOR_SIGNAL:
             try:

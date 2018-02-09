@@ -208,7 +208,7 @@ def _build_multipart_msg(message, images):
 
     for atch_num, atch_name in enumerate(images):
         cid = 'image{}'.format(atch_num)
-        body_text.append("<img src="cid:{}"><br>".format(cid))
+        body_text.append('<img src="cid:{}"><br>'.format(cid))
         try:
             with open(atch_name, 'rb') as attachment_file:
                 file_bytes = attachment_file.read()

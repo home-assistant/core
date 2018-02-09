@@ -63,7 +63,7 @@ class PushsaferNotificationService(BaseNotificationService):
     def send_message(self, message='', **kwargs):
         """Send a message to specified target."""
         if kwargs.get(ATTR_TARGET) is None:
-            targets = ["a"]
+            targets = ['a']
             _LOGGER.debug("No target specified. Sending push to all")
         else:
             targets = kwargs.get(ATTR_TARGET)
@@ -154,7 +154,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 if self.is_allowed_path(local_path):
                     file_mimetype = mimetypes.guess_type(local_path)
                     _LOGGER.debug("Detected mimetype %s", file_mimetype)
-                    with open(local_path, "rb") as binary_file:
+                    with open(local_path, 'rb') as binary_file:
                         data = binary_file.read()
                     return self.get_base64(data, file_mimetype[0])
             else:

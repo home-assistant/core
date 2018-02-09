@@ -310,11 +310,11 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                 if self._charging:
                     self._status = "Docked & Charging"
                 else:
-                    self._status = "Docked"
+                    self._status = 'Docked'
             elif self._cleaning:
-                self._status = "Cleaning"
+                self._status = 'Cleaning'
             else:
-                self._status = "Stopped"
+                self._status = 'Stopped'
 
             if topic == self._fan_speed_topic and self._fan_speed_template:
                 fan_speed = self._fan_speed_template\

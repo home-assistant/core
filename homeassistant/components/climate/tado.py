@@ -160,7 +160,7 @@ class TadoClimate(ClimateDevice):
     def current_operation(self):
         """Return current readable operation mode."""
         if self._cooling:
-            return "Cooling"
+            return 'Cooling'
         return OPERATION_LIST.get(self._current_operation)
 
     @property

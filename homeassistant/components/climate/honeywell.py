@@ -283,8 +283,8 @@ class HoneywellUSThermostat(ClimateDevice):
     def current_operation(self: ClimateDevice) -> str:
         """Return current operation ie. heat, cool, idle."""
         oper = getattr(self._device, ATTR_CURRENT_OPERATION, None)
-        if oper == "off":
-            oper = "idle"
+        if oper == 'off':
+            oper = 'idle'
         return oper
 
     def set_temperature(self, **kwargs):
@@ -297,7 +297,7 @@ class HoneywellUSThermostat(ClimateDevice):
             # Get current mode
             mode = self._device.system_mode
             # Set hold if this is not the case
-            if getattr(self._device, "hold_{}".format(mode)) is False:
+            if getattr(self._device, 'hold_{}'.format(mode)) is False:
                 # Get next period key
                 next_period_key = '{}NextPeriod'.format(mode.capitalize())
                 # Get next period raw value
@@ -306,11 +306,11 @@ class HoneywellUSThermostat(ClimateDevice):
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
                 setattr(self._device,
-                        "hold_{}".format(mode),
+                        'hold_{}'.format(mode),
                         datetime.time(hour, minute))
             # Set temperature
             setattr(self._device,
-                    "setpoint_{}".format(mode),
+                    'setpoint_{}'.format(mode),
                     temperature)
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
@@ -352,15 +352,15 @@ class HoneywellUSThermostat(ClimateDevice):
 
             # Set permanent hold
             setattr(self._device,
-                    "hold_{}".format(mode),
+                    'hold_{}'.format(mode),
                     True)
             # Set temperature
             setattr(self._device,
-                    "setpoint_{}".format(mode),
-                    getattr(self, "_{}_away_temp".format(mode)))
+                    'setpoint_{}'.format(mode),
+                    getattr(self, '_{}_away_temp'.format(mode)))
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range",
-                          getattr(self, "_{}_away_temp".format(mode)))
+                          getattr(self, '_{}_away_temp'.format(mode)))
 
     def turn_away_mode_off(self):
         """Turn away off."""

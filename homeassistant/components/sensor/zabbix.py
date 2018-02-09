@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ZabbixTriggerCountSensor(Entity):
     """Get the active trigger count for all Zabbix monitored hosts."""
 
-    def __init__(self, zApi, name="Zabbix"):
+    def __init__(self, zApi, name='Zabbix'):
         """Initialize Zabbix sensor."""
         self._name = name
         self._zapi = zApi
@@ -113,7 +113,7 @@ class ZabbixTriggerCountSensor(Entity):
 
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
-            output="extend", only_true=1, monitored=1, filter={"value": 1})
+            output='extend', only_true=1, monitored=1, filter={'value': 1})
 
     def update(self):
         """Update the sensor."""
@@ -136,14 +136,14 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
         self._hostid = hostid
         if not name:
             self._name = self._zapi.host.get(
-                hostids=self._hostid, output="extend")[0]["name"]
+                hostids=self._hostid, output='extend')[0]['name']
 
         self._attributes["Host ID"] = self._hostid
 
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
-            hostids=self._hostid, output="extend", only_true=1, monitored=1,
-            filter={"value": 1})
+            hostids=self._hostid, output='extend', only_true=1, monitored=1,
+            filter={'value': 1})
 
 
 class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
@@ -155,11 +155,11 @@ class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
         self._hostids = hostids
         if not name:
             host_names = self._zapi.host.get(
-                hostids=self._hostids, output="extend")
-            self._name = " ".join(name["name"] for name in host_names)
+                hostids=self._hostids, output='extend')
+            self._name = ' '.join(name['name'] for name in host_names)
         self._attributes["Host IDs"] = self._hostids
 
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
-            hostids=self._hostids, output="extend", only_true=1,
-            monitored=1, filter={"value": 1})
+            hostids=self._hostids, output='extend', only_true=1,
+            monitored=1, filter={'value': 1})

@@ -16,7 +16,7 @@ REQUIREMENTS = ["py-melissa-climate==1.0.1"]
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "melissa"
+DOMAIN = 'melissa'
 DATA_MELISSA = 'MELISSA'
 
 

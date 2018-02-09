@@ -199,7 +199,7 @@ class GeoRssServiceData(object):
 
     def calculate_distance_to_geometry(self, geometry):
         """Calculate the distance between HA and provided geometry."""
-        distance = float("inf")
+        distance = float('inf')
         if geometry.type == 'Point':
             distance = self.calculate_distance_to_point(geometry)
         elif geometry.type == 'Polygon':
@@ -226,7 +226,7 @@ class GeoRssServiceData(object):
 
     def calculate_distance_to_polygon(self, polygon):
         """Calculate the distance between HA and the provided polygon."""
-        distance = float("inf")
+        distance = float('inf')
         # Calculate distance from polygon by calculating the distance
         # to each point of the polygon but not to each edge of the
         # polygon; should be good enough

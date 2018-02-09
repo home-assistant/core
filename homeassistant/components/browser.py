@@ -6,8 +6,8 @@ https://home-assistant.io/components/browser/
 """
 import voluptuous as vol
 
-DOMAIN = "browser"
-SERVICE_BROWSE_URL = "browse_url"
+DOMAIN = 'browser'
+SERVICE_BROWSE_URL = 'browse_url'
 
 ATTR_URL = 'url'
 ATTR_URL_DEFAULT = 'https://www.google.com'

@@ -150,7 +150,7 @@ def async_setup(hass, config):
                 DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)
 
         hass.services.async_register(
-            DOMAIN, "{}_{}".format(p_type, SERVICE_SAY), async_say_handle,
+            DOMAIN, '{}_{}'.format(p_type, SERVICE_SAY), async_say_handle,
             schema=SCHEMA_SERVICE_SAY)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
@@ -323,7 +323,7 @@ class SpeechManager(object):
                 "No TTS from {} for '{}'".format(engine, message))
 
         # Create file infos
-        filename = ("{}.{}".format(key, extension)).lower()
+        filename = ('{}.{}'.format(key, extension)).lower()
 
         data = self.write_tags(
             filename, data, provider, message, language, options)

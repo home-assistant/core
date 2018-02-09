@@ -123,7 +123,7 @@ class YahooWeatherSensor(Entity):
     @property
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
-        if self._code is None or "weather" not in self._type:
+        if self._code is None or 'weather' not in self._type:
             return None
 
         return self._data.yahoo.getWeatherImage(self._code)

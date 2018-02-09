@@ -33,7 +33,7 @@ def attempt_use_uvloop():
 
 def validate_python() -> None:
     """Validate that the right Python version is running."""
-    if sys.platform == "win32" and \
+    if sys.platform == 'win32' and \
        sys.version_info[:3] < REQUIRED_PYTHON_VER_WIN:
         print("Home Assistant requires at least Python {}.{}.{}".format(
             *REQUIRED_PYTHON_VER_WIN))
@@ -140,14 +140,14 @@ def get_arguments() -> argparse.Namespace:
         '--script',
         nargs=argparse.REMAINDER,
         help="Run one of the embedded scripts")
-    if os.name == "posix":
+    if os.name == 'posix':
         parser.add_argument(
             '--daemon',
             action='store_true',
             help="Run Home Assistant as daemon")
 
     arguments = parser.parse_args()
-    if os.name != "posix" or arguments.debug or arguments.runner:
+    if os.name != 'posix' or arguments.debug or arguments.runner:
         setattr(arguments, 'daemon', False)
 
     return arguments
@@ -319,7 +319,7 @@ def try_to_restart() -> None:
 
     # Try to not leave behind open filedescriptors with the emphasis on try.
     try:
-        max_fd = os.sysconf("SC_OPEN_MAX")
+        max_fd = os.sysconf('SC_OPEN_MAX')
     except ValueError:
         max_fd = 256
 
@@ -372,5 +372,5 @@ def main() -> int:
     return exit_code
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

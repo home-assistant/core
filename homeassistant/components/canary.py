@@ -87,7 +87,7 @@ class CanaryData(object):
 
             self._locations_by_id[location_id] = location
             self._entries_by_location_id[location_id] = self._api.get_entries(
-                location_id, entry_type="motion", limit=1)
+                location_id, entry_type='motion', limit=1)
 
             for device in location.devices:
                 if device.is_online:

@@ -63,7 +63,7 @@ class AsyncHandler(object):
 
     def emit(self, record):
         """Process a record."""
-        ident = self.loop.__dict__.get("_thread_ident")
+        ident = self.loop.__dict__.get('_thread_ident')
 
         # inside eventloop
         if ident is not None and ident == threading.get_ident():

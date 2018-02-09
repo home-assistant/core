@@ -180,7 +180,7 @@ class AllErrorsView(HomeAssistantView):
     """Get all logged errors and warnings."""
 
     url = "/api/error/all"
-    name = "api:error:all"
+    name = 'api:error:all'
 
     def __init__(self, handler):
         """Initialize a new AllErrorsView."""

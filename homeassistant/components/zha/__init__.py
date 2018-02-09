@@ -257,7 +257,7 @@ class Entity(entity.Entity):
                 model,
             )
         else:
-            self.entity_id = "%s.zha_%s_%s" % (
+            self.entity_id = '%s.zha_%s_%s' % (
                 self._domain,
                 ieeetail,
                 endpoint.endpoint_id,

@@ -84,9 +84,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._name = node_name(self.node)
         self._product_name = node.product_name
         self._manufacturer_name = node.manufacturer_name
-        self.old_entity_id = "{}.{}_{}".format(
+        self.old_entity_id = '{}.{}_{}'.format(
             DOMAIN, slugify(self._name), self.node_id)
-        self.new_entity_id = "{}.{}".format(DOMAIN, slugify(self._name))
+        self.new_entity_id = '{}.{}'.format(DOMAIN, slugify(self._name))
         if not new_entity_ids:
             self.entity_id = self.old_entity_id
         self._attributes = {}

@@ -80,8 +80,8 @@ class KNXNotificationService(BaseNotificationService):
     @asyncio.coroutine
     def async_send_message(self, message="", **kwargs):
         """Send a notification to knx bus."""
-        if "target" in kwargs:
-            yield from self._async_send_to_device(message, kwargs["target"])
+        if 'target' in kwargs:
+            yield from self._async_send_to_device(message, kwargs['target'])
         else:
             yield from self._async_send_to_all_devices(message)
 

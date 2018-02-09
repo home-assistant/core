@@ -17,13 +17,13 @@ REQUIREMENTS = ['libpurecoollink==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LANGUAGE = "language"
-CONF_RETRY = "retry"
+CONF_LANGUAGE = 'language'
+CONF_RETRY = 'retry'
 
 DEFAULT_TIMEOUT = 5
 DEFAULT_RETRY = 10
 
-DOMAIN = "dyson"
+DOMAIN = 'dyson'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-DYSON_DEVICES = "dyson_devices"
+DYSON_DEVICES = 'dyson_devices'
 
 
 def setup(hass, config):
@@ -67,10 +67,10 @@ def setup(hass, config):
         configured_devices = config[DOMAIN].get(CONF_DEVICES)
         for device in configured_devices:
             dyson_device = next((d for d in dyson_devices if
-                                 d.serial == device["device_id"]), None)
+                                 d.serial == device['device_id']), None)
             if dyson_device:
                 try:
-                    connected = dyson_device.connect(device["device_ip"])
+                    connected = dyson_device.connect(device['device_ip'])
                     if connected:
                         _LOGGER.info("Connected to device %s", dyson_device)
                         hass.data[DYSON_DEVICES].append(dyson_device)
@@ -83,7 +83,7 @@ def setup(hass, config):
             else:
                 _LOGGER.warning(
                     "Unable to find device %s in Dyson account",
-                    device["device_id"])
+                    device['device_id'])
     else:
         # Not yet reliable
         for device in dyson_devices:
@@ -99,8 +99,8 @@ def setup(hass, config):
     # Start fan/sensors components
     if hass.data[DYSON_DEVICES]:
         _LOGGER.debug("Starting sensor/fan components")
-        discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
-        discovery.load_platform(hass, "fan", DOMAIN, {}, config)
-        discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
+        discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+        discovery.load_platform(hass, 'fan', DOMAIN, {}, config)
+        discovery.load_platform(hass, 'vacuum', DOMAIN, {}, config)
 
     return True

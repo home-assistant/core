@@ -183,11 +183,11 @@ class Metrics(object):
     def _handle_sensor(self, state):
 
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        metric = state.entity_id.split(".")[1]
+        metric = state.entity_id.split('.')[1]
 
         try:
-            int(metric.split("_")[-1])
-            metric = "_".join(metric.split("_")[:-1])
+            int(metric.split('_')[-1])
+            metric = '_'.join(metric.split('_')[:-1])
         except ValueError:
             pass
 

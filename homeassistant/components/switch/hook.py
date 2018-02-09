@@ -64,7 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             response = yield from websession.get(
                 '{}{}'.format(HOOK_ENDPOINT, 'device'),
-                params={"token": token})
+                params={'token': token})
         data = yield from response.json(content_type=None)
     except (asyncio.TimeoutError, aiohttp.ClientError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
@@ -111,7 +111,7 @@ class HookSmartHome(SwitchDevice):
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 response = yield from websession.get(
-                    url, params={"token": self._token})
+                    url, params={'token': self._token})
             data = yield from response.json(content_type=None)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:

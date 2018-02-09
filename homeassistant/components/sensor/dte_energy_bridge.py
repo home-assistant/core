@@ -55,7 +55,7 @@ class DteEnergyBridgeSensor(Entity):
         self._url = url_template.format(ip_address)
 
         self._name = name
-        self._unit_of_measurement = "kW"
+        self._unit_of_measurement = 'kW'
         self._state = None
 
     @property

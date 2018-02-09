@@ -174,13 +174,13 @@ class HueOneLightChangeView(HomeAssistantView):
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if entity.domain == "light":
+        if entity.domain == 'light':
             if entity_features & SUPPORT_BRIGHTNESS:
                 if brightness is not None:
                     data[ATTR_BRIGHTNESS] = brightness
 
         # If the requested entity is a script add some variables
-        elif entity.domain == "script":
+        elif entity.domain == 'script':
             data['variables'] = {
                 'requested_state': STATE_ON if result else STATE_OFF
             }
@@ -189,7 +189,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 data['variables']['requested_level'] = brightness
 
         # If the requested entity is a media player, convert to volume
-        elif entity.domain == "media_player":
+        elif entity.domain == 'media_player':
             if entity_features & SUPPORT_VOLUME_SET:
                 if brightness is not None:
                     turn_on_needed = True
@@ -199,7 +199,7 @@ class HueOneLightChangeView(HomeAssistantView):
                     data[ATTR_MEDIA_VOLUME_LEVEL] = brightness / 100.0
 
         # If the requested entity is a cover, convert to open_cover/close_cover
-        elif entity.domain == "cover":
+        elif entity.domain == 'cover':
             domain = entity.domain
             if service == SERVICE_TURN_ON:
                 service = SERVICE_OPEN_COVER
@@ -207,7 +207,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 service = SERVICE_CLOSE_COVER
 
         # If the requested entity is a fan, convert to speed
-        elif entity.domain == "fan":
+        elif entity.domain == 'fan':
             if entity_features & SUPPORT_SET_SPEED:
                 if brightness is not None:
                     domain = entity.domain
@@ -279,19 +279,19 @@ def parse_hue_api_put_light_body(request_json, entity):
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if entity.domain == "light":
+        if entity.domain == 'light':
             if entity_features & SUPPORT_BRIGHTNESS:
                 report_brightness = True
                 result = (brightness > 0)
 
-        elif entity.domain == "scene":
+        elif entity.domain == 'scene':
             brightness = None
             report_brightness = False
             result = True
 
-        elif (entity.domain == "script" or
-              entity.domain == "media_player" or
-              entity.domain == "fan"):
+        elif (entity.domain == 'script' or
+              entity.domain == 'media_player' or
+              entity.domain == 'fan'):
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
@@ -313,16 +313,16 @@ def get_entity_state(config, entity):
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if entity.domain == "light":
+        if entity.domain == 'light':
             if entity_features & SUPPORT_BRIGHTNESS:
                 pass
 
-        elif entity.domain == "media_player":
+        elif entity.domain == 'media_player':
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if final_state else 0.0)
             # Convert 0.0-1.0 to 0-255
             final_brightness = round(min(1.0, level) * 255)
-        elif entity.domain == "fan":
+        elif entity.domain == 'fan':
             speed = entity.attributes.get(ATTR_SPEED, 0)
             # Convert 0.0-1.0 to 0-255
             final_brightness = 0

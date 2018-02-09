@@ -47,7 +47,7 @@ DOMAIN = 'homeassistant'
 SERVICE_CALL_LIMIT = 10  # seconds
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+ENTITY_ID_PATTERN = re.compile(r'^(\w+)\.(\w+)$')
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def split_entity_id(entity_id: str) -> List[str]:
     """Split a state entity_id into domain, object_id."""
-    return entity_id.split(".", 1)
+    return entity_id.split('.', 1)
 
 
 def valid_entity_id(entity_id: str) -> bool:
@@ -1133,5 +1133,5 @@ def _async_create_timer(hass):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
 
-    _LOGGER.info("Timer:starting")
+    _LOGGER.info('Timer:starting')
     fire_time_event(monotonic())

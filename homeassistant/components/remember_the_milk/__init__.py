@@ -101,7 +101,7 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
 
     request_id = None
     configurator = hass.components.configurator
-    api = Rtm(api_key, shared_secret, "write", None)
+    api = Rtm(api_key, shared_secret, 'write', None)
     url, frob = api.authenticate_desktop()
     _LOGGER.debug("Sent authentication request to server")
 
@@ -236,7 +236,7 @@ class RememberTheMilk(Entity):
         self._shared_secret = shared_secret
         self._token = token
         self._rtm_config = rtm_config
-        self._rtm_api = rtmapi.Rtm(api_key, shared_secret, "delete", token)
+        self._rtm_api = rtmapi.Rtm(api_key, shared_secret, 'delete', token)
         self._token_valid = None
         self._check_token()
         _LOGGER.debug("Instance created for account %s", self._name)

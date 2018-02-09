@@ -44,7 +44,7 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
         self._light = None
         self._on_state = False
         self._on_state2 = False
-        self.stype = "switch"
+        self.stype = 'switch'
 
     @property
     def is_on(self):

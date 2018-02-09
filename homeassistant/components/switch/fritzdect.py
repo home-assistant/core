@@ -87,20 +87,20 @@ class FritzDectSwitch(SwitchDevice):
         if self.data.has_powermeter and \
            self.data.current_consumption is not None and \
            self.data.total_consumption is not None:
-            attrs[ATTR_CURRENT_CONSUMPTION] = "{:.1f}".format(
+            attrs[ATTR_CURRENT_CONSUMPTION] = '{:.1f}'.format(
                 self.data.current_consumption)
-            attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "{}".format(
+            attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = '{}'.format(
                 ATTR_CURRENT_CONSUMPTION_UNIT_VALUE)
-            attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(
+            attrs[ATTR_TOTAL_CONSUMPTION] = '{:.3f}'.format(
                 self.data.total_consumption)
-            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
+            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = '{}'.format(
                 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE)
 
         if self.data.has_temperature and \
            self.data.temperature is not None:
-            attrs[ATTR_TEMPERATURE] = "{}".format(
+            attrs[ATTR_TEMPERATURE] = '{}'.format(
                 self.units.temperature(self.data.temperature, TEMP_CELSIUS))
-            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
+            attrs[ATTR_TEMPERATURE_UNIT] = '{}'.format(
                 self.units.temperature_unit)
         return attrs
 

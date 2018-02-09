@@ -164,11 +164,11 @@ class WebDavCalendarData(object):
 
         # Populate the entity attributes with the event values
         self.event = {
-            "summary": vevent.summary.value,
-            "start": self.get_hass_date(vevent.dtstart.value),
-            "end": self.get_hass_date(vevent.dtend.value),
-            "location": self.get_attr_value(vevent, "location"),
-            "description": self.get_attr_value(vevent, "description")
+            'summary': vevent.summary.value,
+            'start': self.get_hass_date(vevent.dtstart.value),
+            'end': self.get_hass_date(vevent.dtend.value),
+            'location': self.get_attr_value(vevent, 'location'),
+            'description': self.get_attr_value(vevent, 'description')
         }
         return True
 
@@ -179,11 +179,11 @@ class WebDavCalendarData(object):
             return True
 
         pattern = re.compile(search)
-        return (hasattr(vevent, "summary")
+        return (hasattr(vevent, 'summary')
                 and pattern.match(vevent.summary.value)
-                or hasattr(vevent, "location")
+                or hasattr(vevent, 'location')
                 and pattern.match(vevent.location.value)
-                or hasattr(vevent, "description")
+                or hasattr(vevent, 'description')
                 and pattern.match(vevent.description.value))
 
     @staticmethod
@@ -200,9 +200,9 @@ class WebDavCalendarData(object):
     def get_hass_date(obj):
         """Return if the event matches."""
         if isinstance(obj, datetime):
-            return {"dateTime": obj.isoformat()}
+            return {'dateTime': obj.isoformat()}
 
-        return {"date": obj.isoformat()}
+        return {'date': obj.isoformat()}
 
     @staticmethod
     def to_datetime(obj):

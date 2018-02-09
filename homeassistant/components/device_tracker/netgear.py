@@ -86,7 +86,7 @@ class NetgearDeviceScanner(DeviceScanner):
         if not self.success_init:
             return
 
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
 
         results = self._api.get_attached_devices()
 

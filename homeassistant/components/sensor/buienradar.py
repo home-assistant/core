@@ -346,7 +346,7 @@ class BrSensor(Entity):
         if self._measured is not None:
             # convert datetime (Europe/Amsterdam) into local datetime
             local_dt = dt_util.as_local(self._measured)
-            result[MEASURED_LABEL] = local_dt.strftime("%c")
+            result[MEASURED_LABEL] = local_dt.strftime('%c')
 
         return result
 
@@ -416,7 +416,7 @@ class BrData(object):
 
                 return result
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            result[MESSAGE] = "%s" % err
+            result[MESSAGE] = '%s' % err
             return result
         finally:
             if resp is not None:

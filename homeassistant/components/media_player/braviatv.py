@@ -51,7 +51,7 @@ def _get_mac_address(ip_address):
     """Get the MAC address of the device."""
     from subprocess import Popen, PIPE
 
-    pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
+    pid = Popen(['arp', '-n', ip_address], stdout=PIPE)
     pid_component = pid.communicate()[0]
     match = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
                       pid_component)
@@ -140,7 +140,7 @@ def request_configuration(config, hass, add_devices):
         description="Enter the Pin shown on your Sony Bravia TV." +
         "If no Pin is shown, enter 0000 to let TV show you a Pin.",
         description_image="/static/images/smart-tv.png",
-        submit_caption="Confirm",
+        submit_caption='Confirm',
         fields=[{'id': 'pin', 'name': "Enter the pin", 'type': ''}]
     )
 

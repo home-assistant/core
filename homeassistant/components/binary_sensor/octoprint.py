@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
-DOMAIN = "octoprint"
+DOMAIN = 'octoprint'
 DEFAULT_NAME = 'OctoPrint'
 
 SENSOR_TYPES = {
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
-    octoprint_api = hass.data[DOMAIN]["api"]
+    octoprint_api = hass.data[DOMAIN]['api']
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(
         CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())

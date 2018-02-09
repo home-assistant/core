@@ -396,7 +396,7 @@ class HTML5NotificationService(BaseNotificationService):
             info = self.registrations.get(target)
             if info is None:
                 _LOGGER.error("%s is not a valid HTML5 push notification"
-                              " target", target)
+                              ' target', target)
                 continue
 
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +

@@ -174,7 +174,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     split_file_name = os.path.splitext(data)
 
-    sqlite_file = "{}.sqlite".format(split_file_name[0])
+    sqlite_file = '{}.sqlite'.format(split_file_name[0])
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 

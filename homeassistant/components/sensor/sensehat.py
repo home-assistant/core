@@ -42,13 +42,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_cpu_temp():
     """Get CPU temperature."""
     res = os.popen("vcgencmd measure_temp").readline()
-    t_cpu = float(res.replace("temp=", "").replace("'C\n", ""))
+    t_cpu = float(res.replace('temp=', "").replace('\C\n', ""))
     return t_cpu
 
 
 def get_average(temp_base):
     """Use moving average to get better readings."""
-    if not hasattr(get_average, "temp"):
+    if not hasattr(get_average, 'temp'):
         get_average.temp = [temp_base, temp_base, temp_base]
     get_average.temp[2] = get_average.temp[1]
     get_average.temp[1] = get_average.temp[0]

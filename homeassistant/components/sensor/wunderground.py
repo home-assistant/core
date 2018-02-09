@@ -46,7 +46,7 @@ class WUSensorConfig(object):
 
     def __init__(self, friendly_name, feature, value,
                  unit_of_measurement=None, entity_picture=None,
-                 icon="mdi:gauge", device_state_attributes=None):
+                 icon='mdi:gauge', device_state_attributes=None):
         """Constructor.
 
         Args:
@@ -74,7 +74,7 @@ class WUSensorConfig(object):
 class WUCurrentConditionsSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for current conditions."""
 
-    def __init__(self, friendly_name, field, icon="mdi:gauge",
+    def __init__(self, friendly_name, field, icon='mdi:gauge',
                  unit_of_measurement=None):
         """Constructor.
 
@@ -88,7 +88,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
         """
         super().__init__(
             friendly_name,
-            "conditions",
+            'conditions',
             value=lambda wu: wu.data['current_observation'][field],
             icon=icon,
             unit_of_measurement=unit_of_measurement,
@@ -137,7 +137,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
         Args:
             period (int): forecast period number
             field (string): field name to use as value
-            wu_unit (string): "fahrenheit", "celsius", "degrees" etc.
+            wu_unit (string): 'fahrenheit', 'celsius', 'degrees' etc.
                  see the example json at:
         https://www.wunderground.com/weather/api/d/docs?d=data/forecast&MR=1
             ha_unit (string): corresponding unit in home assistant
@@ -182,7 +182,7 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
             value=lambda wu: wu.data['hourly_forecast'][period][
                 field],
             entity_picture=lambda wu: wu.data['hourly_forecast'][
-                period]["icon_url"],
+                period]['icon_url'],
             device_state_attributes={
                 'temp_c': lambda wu: wu.data['hourly_forecast'][
                     period]['temp']['metric'],
@@ -227,14 +227,14 @@ class WUAlmanacSensorConfig(WUSensorConfig):
             friendly_name (string|func): Friendly name
             field (string): value name returned in 'almanac' dict
                             as returned by the WU API
-            value_type (string):  "record" or "normal"
+            value_type (string):  'record' or 'normal'
             wu_unit (string): unit name in WU API
             icon (string): icon name or URL
             unit_of_measurement (string): unit of measurement
         """
         super().__init__(
             friendly_name=friendly_name,
-            feature="almanac",
+            feature='almanac',
             value=lambda wu: wu.data['almanac'][field][value_type][wu_unit],
             unit_of_measurement=unit_of_measurement,
             icon=icon
@@ -252,7 +252,7 @@ class WUAlertsSensorConfig(WUSensorConfig):
         """
         super().__init__(
             friendly_name=friendly_name,
-            feature="alerts",
+            feature='alerts',
             value=lambda wu: len(wu.data['alerts']),
             icon=lambda wu: "mdi:alert-circle-outline"
             if wu.data['alerts'] else "mdi:check-circle-outline",
@@ -315,28 +315,28 @@ SENSOR_TYPES = {
         'conditions',
         value=lambda wu: wu.data['current_observation'][
             'display_location']['full'],
-        icon="mdi:map-marker"),
+        icon='mdi:map-marker'),
     'observation_time': WUCurrentConditionsSensorConfig(
-        "Observation Time", 'observation_time', "mdi:clock"),
+        "Observation Time", 'observation_time', 'mdi:clock'),
     'precip_1hr_in': WUCurrentConditionsSensorConfig(
-        "Precipitation 1hr", 'precip_1hr_in', "mdi:umbrella", LENGTH_INCHES),
+        "Precipitation 1hr", 'precip_1hr_in', 'mdi:umbrella', LENGTH_INCHES),
     'precip_1hr_metric': WUCurrentConditionsSensorConfig(
-        "Precipitation 1hr", 'precip_1hr_metric', "mdi:umbrella", 'mm'),
+        "Precipitation 1hr", 'precip_1hr_metric', 'mdi:umbrella', 'mm'),
     'precip_1hr_string': WUCurrentConditionsSensorConfig(
-        "Precipitation 1hr", 'precip_1hr_string', "mdi:umbrella"),
+        "Precipitation 1hr", 'precip_1hr_string', 'mdi:umbrella'),
     'precip_today_in': WUCurrentConditionsSensorConfig(
-        "Precipitation Today", 'precip_today_in', "mdi:umbrella",
+        "Precipitation Today", 'precip_today_in', 'mdi:umbrella',
         LENGTH_INCHES),
     'precip_today_metric': WUCurrentConditionsSensorConfig(
-        "Precipitation Today", 'precip_today_metric', "mdi:umbrella", 'mm'),
+        "Precipitation Today", 'precip_today_metric', 'mdi:umbrella', 'mm'),
     'precip_today_string': WUCurrentConditionsSensorConfig(
-        "Precipitation Today", 'precip_today_string', "mdi:umbrella"),
+        "Precipitation Today", 'precip_today_string', 'mdi:umbrella'),
     'pressure_in': WUCurrentConditionsSensorConfig(
-        'Pressure', 'pressure_in', "mdi:gauge", 'inHg'),
+        'Pressure', 'pressure_in', 'mdi:gauge', 'inHg'),
     'pressure_mb': WUCurrentConditionsSensorConfig(
-        'Pressure', 'pressure_mb', "mdi:gauge", 'mb'),
+        'Pressure', 'pressure_mb', 'mdi:gauge', 'mb'),
     'pressure_trend': WUCurrentConditionsSensorConfig(
-        "Pressure Trend", 'pressure_trend', "mdi:gauge"),
+        "Pressure Trend", 'pressure_trend', 'mdi:gauge'),
     'relative_humidity': WUSensorConfig(
         "Relative Humidity",
         'conditions',
@@ -345,7 +345,7 @@ SENSOR_TYPES = {
         unit_of_measurement='%',
         icon="mdi:water-percent"),
     'station_id': WUCurrentConditionsSensorConfig(
-        "Station ID", 'station_id', "mdi:home"),
+        "Station ID", 'station_id', 'mdi:home'),
     'solarradiation': WUCurrentConditionsSensorConfig(
         "Solar Radiation", 'solarradiation', "mdi:weather-sunny", "w/m2"),
     'temperature_string': WUCurrentConditionsSensorConfig(
@@ -355,15 +355,15 @@ SENSOR_TYPES = {
     'temp_f': WUCurrentConditionsSensorConfig(
         'Temperature', 'temp_f', "mdi:thermometer", TEMP_FAHRENHEIT),
     'UV': WUCurrentConditionsSensorConfig(
-        'UV', 'UV', "mdi:sunglasses"),
+        'UV', 'UV', 'mdi:sunglasses'),
     'visibility_km': WUCurrentConditionsSensorConfig(
-        "Visibility (km)", 'visibility_km', "mdi:eye", LENGTH_KILOMETERS),
+        "Visibility (km)", 'visibility_km', 'mdi:eye', LENGTH_KILOMETERS),
     'visibility_mi': WUCurrentConditionsSensorConfig(
-        "Visibility (miles)", 'visibility_mi', "mdi:eye", LENGTH_MILES),
+        "Visibility (miles)", 'visibility_mi', 'mdi:eye', LENGTH_MILES),
     'weather': WUCurrentConditionsSensorConfig(
         "Weather Summary", 'weather', None),
     'wind_degrees': WUCurrentConditionsSensorConfig(
-        "Wind Degrees", 'wind_degrees', "mdi:weather-windy", "°"),
+        "Wind Degrees", 'wind_degrees', "mdi:weather-windy", '°'),
     'wind_dir': WUCurrentConditionsSensorConfig(
         "Wind Direction", 'wind_dir', "mdi:weather-windy"),
     'wind_gust_kph': WUCurrentConditionsSensorConfig(
@@ -404,188 +404,188 @@ SENSOR_TYPES = {
     'temp_high_avg_f': WUAlmanacSensorConfig(
         "Historic Average of High Temperatures for Today",
         'temp_high', 'normal', 'F', TEMP_FAHRENHEIT, "mdi:thermometer"),
-    'weather_1d': WUDailyTextForecastSensorConfig(0, "fcttext"),
-    'weather_1d_metric': WUDailyTextForecastSensorConfig(0, "fcttext_metric"),
-    'weather_1n': WUDailyTextForecastSensorConfig(1, "fcttext"),
-    'weather_1n_metric': WUDailyTextForecastSensorConfig(1, "fcttext_metric"),
-    'weather_2d': WUDailyTextForecastSensorConfig(2, "fcttext"),
-    'weather_2d_metric': WUDailyTextForecastSensorConfig(2, "fcttext_metric"),
-    'weather_2n': WUDailyTextForecastSensorConfig(3, "fcttext"),
-    'weather_2n_metric': WUDailyTextForecastSensorConfig(3, "fcttext_metric"),
-    'weather_3d': WUDailyTextForecastSensorConfig(4, "fcttext"),
-    'weather_3d_metric': WUDailyTextForecastSensorConfig(4, "fcttext_metric"),
-    'weather_3n': WUDailyTextForecastSensorConfig(5, "fcttext"),
-    'weather_3n_metric': WUDailyTextForecastSensorConfig(5, "fcttext_metric"),
-    'weather_4d': WUDailyTextForecastSensorConfig(6, "fcttext"),
-    'weather_4d_metric': WUDailyTextForecastSensorConfig(6, "fcttext_metric"),
-    'weather_4n': WUDailyTextForecastSensorConfig(7, "fcttext"),
-    'weather_4n_metric': WUDailyTextForecastSensorConfig(7, "fcttext_metric"),
-    'weather_1h': WUHourlyForecastSensorConfig(0, "condition"),
-    'weather_2h': WUHourlyForecastSensorConfig(1, "condition"),
-    'weather_3h': WUHourlyForecastSensorConfig(2, "condition"),
-    'weather_4h': WUHourlyForecastSensorConfig(3, "condition"),
-    'weather_5h': WUHourlyForecastSensorConfig(4, "condition"),
-    'weather_6h': WUHourlyForecastSensorConfig(5, "condition"),
-    'weather_7h': WUHourlyForecastSensorConfig(6, "condition"),
-    'weather_8h': WUHourlyForecastSensorConfig(7, "condition"),
-    'weather_9h': WUHourlyForecastSensorConfig(8, "condition"),
-    'weather_10h': WUHourlyForecastSensorConfig(9, "condition"),
-    'weather_11h': WUHourlyForecastSensorConfig(10, "condition"),
-    'weather_12h': WUHourlyForecastSensorConfig(11, "condition"),
-    'weather_13h': WUHourlyForecastSensorConfig(12, "condition"),
-    'weather_14h': WUHourlyForecastSensorConfig(13, "condition"),
-    'weather_15h': WUHourlyForecastSensorConfig(14, "condition"),
-    'weather_16h': WUHourlyForecastSensorConfig(15, "condition"),
-    'weather_17h': WUHourlyForecastSensorConfig(16, "condition"),
-    'weather_18h': WUHourlyForecastSensorConfig(17, "condition"),
-    'weather_19h': WUHourlyForecastSensorConfig(18, "condition"),
-    'weather_20h': WUHourlyForecastSensorConfig(19, "condition"),
-    'weather_21h': WUHourlyForecastSensorConfig(20, "condition"),
-    'weather_22h': WUHourlyForecastSensorConfig(21, "condition"),
-    'weather_23h': WUHourlyForecastSensorConfig(22, "condition"),
-    'weather_24h': WUHourlyForecastSensorConfig(23, "condition"),
-    'weather_25h': WUHourlyForecastSensorConfig(24, "condition"),
-    'weather_26h': WUHourlyForecastSensorConfig(25, "condition"),
-    'weather_27h': WUHourlyForecastSensorConfig(26, "condition"),
-    'weather_28h': WUHourlyForecastSensorConfig(27, "condition"),
-    'weather_29h': WUHourlyForecastSensorConfig(28, "condition"),
-    'weather_30h': WUHourlyForecastSensorConfig(29, "condition"),
-    'weather_31h': WUHourlyForecastSensorConfig(30, "condition"),
-    'weather_32h': WUHourlyForecastSensorConfig(31, "condition"),
-    'weather_33h': WUHourlyForecastSensorConfig(32, "condition"),
-    'weather_34h': WUHourlyForecastSensorConfig(33, "condition"),
-    'weather_35h': WUHourlyForecastSensorConfig(34, "condition"),
-    'weather_36h': WUHourlyForecastSensorConfig(35, "condition"),
+    'weather_1d': WUDailyTextForecastSensorConfig(0, 'fcttext'),
+    'weather_1d_metric': WUDailyTextForecastSensorConfig(0, 'fcttext_metric'),
+    'weather_1n': WUDailyTextForecastSensorConfig(1, 'fcttext'),
+    'weather_1n_metric': WUDailyTextForecastSensorConfig(1, 'fcttext_metric'),
+    'weather_2d': WUDailyTextForecastSensorConfig(2, 'fcttext'),
+    'weather_2d_metric': WUDailyTextForecastSensorConfig(2, 'fcttext_metric'),
+    'weather_2n': WUDailyTextForecastSensorConfig(3, 'fcttext'),
+    'weather_2n_metric': WUDailyTextForecastSensorConfig(3, 'fcttext_metric'),
+    'weather_3d': WUDailyTextForecastSensorConfig(4, 'fcttext'),
+    'weather_3d_metric': WUDailyTextForecastSensorConfig(4, 'fcttext_metric'),
+    'weather_3n': WUDailyTextForecastSensorConfig(5, 'fcttext'),
+    'weather_3n_metric': WUDailyTextForecastSensorConfig(5, 'fcttext_metric'),
+    'weather_4d': WUDailyTextForecastSensorConfig(6, 'fcttext'),
+    'weather_4d_metric': WUDailyTextForecastSensorConfig(6, 'fcttext_metric'),
+    'weather_4n': WUDailyTextForecastSensorConfig(7, 'fcttext'),
+    'weather_4n_metric': WUDailyTextForecastSensorConfig(7, 'fcttext_metric'),
+    'weather_1h': WUHourlyForecastSensorConfig(0, 'condition'),
+    'weather_2h': WUHourlyForecastSensorConfig(1, 'condition'),
+    'weather_3h': WUHourlyForecastSensorConfig(2, 'condition'),
+    'weather_4h': WUHourlyForecastSensorConfig(3, 'condition'),
+    'weather_5h': WUHourlyForecastSensorConfig(4, 'condition'),
+    'weather_6h': WUHourlyForecastSensorConfig(5, 'condition'),
+    'weather_7h': WUHourlyForecastSensorConfig(6, 'condition'),
+    'weather_8h': WUHourlyForecastSensorConfig(7, 'condition'),
+    'weather_9h': WUHourlyForecastSensorConfig(8, 'condition'),
+    'weather_10h': WUHourlyForecastSensorConfig(9, 'condition'),
+    'weather_11h': WUHourlyForecastSensorConfig(10, 'condition'),
+    'weather_12h': WUHourlyForecastSensorConfig(11, 'condition'),
+    'weather_13h': WUHourlyForecastSensorConfig(12, 'condition'),
+    'weather_14h': WUHourlyForecastSensorConfig(13, 'condition'),
+    'weather_15h': WUHourlyForecastSensorConfig(14, 'condition'),
+    'weather_16h': WUHourlyForecastSensorConfig(15, 'condition'),
+    'weather_17h': WUHourlyForecastSensorConfig(16, 'condition'),
+    'weather_18h': WUHourlyForecastSensorConfig(17, 'condition'),
+    'weather_19h': WUHourlyForecastSensorConfig(18, 'condition'),
+    'weather_20h': WUHourlyForecastSensorConfig(19, 'condition'),
+    'weather_21h': WUHourlyForecastSensorConfig(20, 'condition'),
+    'weather_22h': WUHourlyForecastSensorConfig(21, 'condition'),
+    'weather_23h': WUHourlyForecastSensorConfig(22, 'condition'),
+    'weather_24h': WUHourlyForecastSensorConfig(23, 'condition'),
+    'weather_25h': WUHourlyForecastSensorConfig(24, 'condition'),
+    'weather_26h': WUHourlyForecastSensorConfig(25, 'condition'),
+    'weather_27h': WUHourlyForecastSensorConfig(26, 'condition'),
+    'weather_28h': WUHourlyForecastSensorConfig(27, 'condition'),
+    'weather_29h': WUHourlyForecastSensorConfig(28, 'condition'),
+    'weather_30h': WUHourlyForecastSensorConfig(29, 'condition'),
+    'weather_31h': WUHourlyForecastSensorConfig(30, 'condition'),
+    'weather_32h': WUHourlyForecastSensorConfig(31, 'condition'),
+    'weather_33h': WUHourlyForecastSensorConfig(32, 'condition'),
+    'weather_34h': WUHourlyForecastSensorConfig(33, 'condition'),
+    'weather_35h': WUHourlyForecastSensorConfig(34, 'condition'),
+    'weather_36h': WUHourlyForecastSensorConfig(35, 'condition'),
     'temp_high_1d_c': WUDailySimpleForecastSensorConfig(
-        "High Temperature Today", 0, "high", "celsius", TEMP_CELSIUS,
+        "High Temperature Today", 0, 'high', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_high_2d_c': WUDailySimpleForecastSensorConfig(
-        "High Temperature Tomorrow", 1, "high", "celsius", TEMP_CELSIUS,
+        "High Temperature Tomorrow", 1, 'high', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_high_3d_c': WUDailySimpleForecastSensorConfig(
-        "High Temperature in 3 Days", 2, "high", "celsius", TEMP_CELSIUS,
+        "High Temperature in 3 Days", 2, 'high', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_high_4d_c': WUDailySimpleForecastSensorConfig(
-        "High Temperature in 4 Days", 3, "high", "celsius", TEMP_CELSIUS,
+        "High Temperature in 4 Days", 3, 'high', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_high_1d_f': WUDailySimpleForecastSensorConfig(
-        "High Temperature Today", 0, "high", "fahrenheit", TEMP_FAHRENHEIT,
+        "High Temperature Today", 0, 'high', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'temp_high_2d_f': WUDailySimpleForecastSensorConfig(
-        "High Temperature Tomorrow", 1, "high", "fahrenheit", TEMP_FAHRENHEIT,
+        "High Temperature Tomorrow", 1, 'high', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'temp_high_3d_f': WUDailySimpleForecastSensorConfig(
-        "High Temperature in 3 Days", 2, "high", "fahrenheit", TEMP_FAHRENHEIT,
+        "High Temperature in 3 Days", 2, 'high', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'temp_high_4d_f': WUDailySimpleForecastSensorConfig(
-        "High Temperature in 4 Days", 3, "high", "fahrenheit", TEMP_FAHRENHEIT,
+        "High Temperature in 4 Days", 3, 'high', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'temp_low_1d_c': WUDailySimpleForecastSensorConfig(
-        "Low Temperature Today", 0, "low", "celsius", TEMP_CELSIUS,
+        "Low Temperature Today", 0, 'low', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_low_2d_c': WUDailySimpleForecastSensorConfig(
-        "Low Temperature Tomorrow", 1, "low", "celsius", TEMP_CELSIUS,
+        "Low Temperature Tomorrow", 1, 'low', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_low_3d_c': WUDailySimpleForecastSensorConfig(
-        "Low Temperature in 3 Days", 2, "low", "celsius", TEMP_CELSIUS,
+        "Low Temperature in 3 Days", 2, 'low', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_low_4d_c': WUDailySimpleForecastSensorConfig(
-        "Low Temperature in 4 Days", 3, "low", "celsius", TEMP_CELSIUS,
+        "Low Temperature in 4 Days", 3, 'low', 'celsius', TEMP_CELSIUS,
         "mdi:thermometer"),
     'temp_low_1d_f': WUDailySimpleForecastSensorConfig(
-        "Low Temperature Today", 0, "low", "fahrenheit", TEMP_FAHRENHEIT,
+        "Low Temperature Today", 0, 'low', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'temp_low_2d_f': WUDailySimpleForecastSensorConfig(
-        "Low Temperature Tomorrow", 1, "low", "fahrenheit", TEMP_FAHRENHEIT,
+        "Low Temperature Tomorrow", 1, 'low', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'temp_low_3d_f': WUDailySimpleForecastSensorConfig(
-        "Low Temperature in 3 Days", 2, "low", "fahrenheit", TEMP_FAHRENHEIT,
+        "Low Temperature in 3 Days", 2, 'low', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'temp_low_4d_f': WUDailySimpleForecastSensorConfig(
-        "Low Temperature in 4 Days", 3, "low", "fahrenheit", TEMP_FAHRENHEIT,
+        "Low Temperature in 4 Days", 3, 'low', 'fahrenheit', TEMP_FAHRENHEIT,
         "mdi:thermometer"),
     'wind_gust_1d_kph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind Today", 0, "maxwind", "kph", "kph", "mdi:weather-windy"),
+        "Max. Wind Today", 0, 'maxwind', 'kph', 'kph', "mdi:weather-windy"),
     'wind_gust_2d_kph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind Tomorrow", 1, "maxwind", "kph", "kph", "mdi:weather-windy"),
+        "Max. Wind Tomorrow", 1, 'maxwind', 'kph', 'kph', "mdi:weather-windy"),
     'wind_gust_3d_kph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 3 Days", 2, "maxwind", "kph", "kph",
+        "Max. Wind in 3 Days", 2, 'maxwind', 'kph', 'kph',
         "mdi:weather-windy"),
     'wind_gust_4d_kph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 4 Days", 3, "maxwind", "kph", "kph",
+        "Max. Wind in 4 Days", 3, 'maxwind', 'kph', 'kph',
         "mdi:weather-windy"),
     'wind_gust_1d_mph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind Today", 0, "maxwind", "mph", "mph",
+        "Max. Wind Today", 0, 'maxwind', 'mph', 'mph',
         "mdi:weather-windy"),
     'wind_gust_2d_mph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind Tomorrow", 1, "maxwind", "mph", "mph",
+        "Max. Wind Tomorrow", 1, 'maxwind', 'mph', 'mph',
         "mdi:weather-windy"),
     'wind_gust_3d_mph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 3 Days", 2, "maxwind", "mph", "mph",
+        "Max. Wind in 3 Days", 2, 'maxwind', 'mph', 'mph',
         "mdi:weather-windy"),
     'wind_gust_4d_mph': WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 4 Days", 3, "maxwind", "mph", "mph",
+        "Max. Wind in 4 Days", 3, 'maxwind', 'mph', 'mph',
         "mdi:weather-windy"),
     'wind_1d_kph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Today", 0, "avewind", "kph", "kph",
+        "Avg. Wind Today", 0, 'avewind', 'kph', 'kph',
         "mdi:weather-windy"),
     'wind_2d_kph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Tomorrow", 1, "avewind", "kph", "kph",
+        "Avg. Wind Tomorrow", 1, 'avewind', 'kph', 'kph',
         "mdi:weather-windy"),
     'wind_3d_kph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 3 Days", 2, "avewind", "kph", "kph",
+        "Avg. Wind in 3 Days", 2, 'avewind', 'kph', 'kph',
         "mdi:weather-windy"),
     'wind_4d_kph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 4 Days", 3, "avewind", "kph", "kph",
+        "Avg. Wind in 4 Days", 3, 'avewind', 'kph', 'kph',
         "mdi:weather-windy"),
     'wind_1d_mph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Today", 0, "avewind", "mph", "mph",
+        "Avg. Wind Today", 0, 'avewind', 'mph', 'mph',
         "mdi:weather-windy"),
     'wind_2d_mph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Tomorrow", 1, "avewind", "mph", "mph",
+        "Avg. Wind Tomorrow", 1, 'avewind', 'mph', 'mph',
         "mdi:weather-windy"),
     'wind_3d_mph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 3 Days", 2, "avewind", "mph", "mph",
+        "Avg. Wind in 3 Days", 2, 'avewind', 'mph', 'mph',
         "mdi:weather-windy"),
     'wind_4d_mph': WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 4 Days", 3, "avewind", "mph", "mph",
+        "Avg. Wind in 4 Days", 3, 'avewind', 'mph', 'mph',
         "mdi:weather-windy"),
     'precip_1d_mm': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity Today", 0, 'qpf_allday', 'mm', 'mm',
-        "mdi:umbrella"),
+        'mdi:umbrella'),
     'precip_2d_mm': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity Tomorrow", 1, 'qpf_allday', 'mm', 'mm',
-        "mdi:umbrella"),
+        'mdi:umbrella'),
     'precip_3d_mm': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity in 3 Days", 2, 'qpf_allday', 'mm', 'mm',
-        "mdi:umbrella"),
+        'mdi:umbrella'),
     'precip_4d_mm': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity in 4 Days", 3, 'qpf_allday', 'mm', 'mm',
-        "mdi:umbrella"),
+        'mdi:umbrella'),
     'precip_1d_in': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity Today", 0, 'qpf_allday', 'in',
-        LENGTH_INCHES, "mdi:umbrella"),
+        LENGTH_INCHES, 'mdi:umbrella'),
     'precip_2d_in': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity Tomorrow", 1, 'qpf_allday', 'in',
-        LENGTH_INCHES, "mdi:umbrella"),
+        LENGTH_INCHES, 'mdi:umbrella'),
     'precip_3d_in': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity in 3 Days", 2, 'qpf_allday', 'in',
-        LENGTH_INCHES, "mdi:umbrella"),
+        LENGTH_INCHES, 'mdi:umbrella'),
     'precip_4d_in': WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity in 4 Days", 3, 'qpf_allday', 'in',
-        LENGTH_INCHES, "mdi:umbrella"),
+        LENGTH_INCHES, 'mdi:umbrella'),
     'precip_1d': WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability Today", 0, "pop", None, "%",
-        "mdi:umbrella"),
+        "Precipitation Probability Today", 0, 'pop', None, '%',
+        'mdi:umbrella'),
     'precip_2d': WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability Tomorrow", 1, "pop", None, "%",
-        "mdi:umbrella"),
+        "Precipitation Probability Tomorrow", 1, 'pop', None, '%',
+        'mdi:umbrella'),
     'precip_3d': WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability in 3 Days", 2, "pop", None, "%",
-        "mdi:umbrella"),
+        "Precipitation Probability in 3 Days", 2, 'pop', None, '%',
+        'mdi:umbrella'),
     'precip_4d': WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability in 4 Days", 3, "pop", None, "%",
-        "mdi:umbrella"),
+        "Precipitation Probability in 4 Days", 3, 'pop', None, '%',
+        'mdi:umbrella'),
 }
 
 # Alert Attributes
@@ -685,7 +685,7 @@ class WUndergroundSensor(Entity):
         attrs = self._cfg_expand("device_state_attributes", {})
 
         self._attributes[ATTR_FRIENDLY_NAME] = self._cfg_expand(
-            "friendly_name")
+            'friendly_name')
 
         for (attr, callback) in attrs.items():
             if callable(callback):
@@ -701,7 +701,7 @@ class WUndergroundSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "PWS_" + self._condition
+        return 'PWS_' + self._condition
 
     @property
     def state(self):
@@ -736,10 +736,10 @@ class WUndergroundSensor(Entity):
             # no data, return
             return
 
-        self._state = self._cfg_expand("value", STATE_UNKNOWN)
+        self._state = self._cfg_expand('value', STATE_UNKNOWN)
         self._update_attrs()
-        self._icon = self._cfg_expand("icon", super().icon)
-        url = self._cfg_expand("entity_picture")
+        self._icon = self._cfg_expand('icon', super().icon)
+        url = self._cfg_expand('entity_picture')
         if isinstance(url, str):
             self._entity_picture = re.sub(r'^http://', 'https://',
                                           url, flags=re.IGNORECASE)
@@ -765,7 +765,7 @@ class WUndergroundData(object):
 
     def _build_url(self, baseurl=_RESOURCE):
         url = baseurl.format(
-            self._api_key, "/".join(self._features), self._lang)
+            self._api_key, '/'.join(self._features), self._lang)
         if self._pws_id:
             url = url + 'pws:{}'.format(self._pws_id)
         else:
@@ -778,9 +778,9 @@ class WUndergroundData(object):
         """Get the latest data from WUnderground."""
         try:
             result = requests.get(self._build_url(), timeout=10).json()
-            if "error" in result['response']:
-                raise ValueError(result['response']["error"]
-                                 ["description"])
+            if 'error' in result['response']:
+                raise ValueError(result['response']['error']
+                                 ['description'])
             else:
                 self.data = result
                 return True

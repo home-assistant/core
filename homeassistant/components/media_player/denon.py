@@ -85,12 +85,12 @@ class DenonDevice(MediaPlayerDevice):
         # SSFUN - Configured sources with names
         self._source_list = {}
         for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
-            source, configured_name = line[len('SSFUN'):].split(" ", 1)
+            source, configured_name = line[len('SSFUN'):].split(' ', 1)
             self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources
         for line in self.telnet_request(telnet, "SSSOD ?", all_lines=True):
-            source, status = line[len('SSSOD'):].split(" ", 1)
+            source, status = line[len('SSSOD'):].split(' ', 1)
             if status == 'DEL':
                 for pretty_name, name in self._source_list.items():
                     if source == name:
@@ -146,8 +146,8 @@ class DenonDevice(MediaPlayerDevice):
 
         if self._mediasource in MEDIA_MODES.values():
             self._mediainfo = ""
-            answer_codes = ["NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5",
-                            "NSE6", "NSE7", "NSE8"]
+            answer_codes = ['NSE0', 'NSE1X', 'NSE2X', 'NSE3X', 'NSE4', 'NSE5',
+                            'NSE6', 'NSE7', 'NSE8']
             for line in self.telnet_request(telnet, 'NSE', all_lines=True):
                 self._mediainfo += line[len(answer_codes.pop(0)):] + '\n'
         else:

@@ -140,7 +140,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         use_ssl = config.get(CONF_SSL)
 
     uri_scheme = 'https://' if use_ssl else 'http://'
-    base_url = "{}{}:{}/".format(uri_scheme, host, port)
+    base_url = '{}{}:{}/'.format(uri_scheme, host, port)
     api_key = config.get(CONF_API_KEY)
 
     if not api_key:

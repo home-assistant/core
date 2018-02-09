@@ -66,12 +66,12 @@ class WorldTidesInfoSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of this device."""
         attr = {}
-        if "High" in str(self.data['extremes'][0]['type']):
+        if 'High' in str(self.data['extremes'][0]['type']):
             attr['high_tide_time_utc'] = self.data['extremes'][0]['date']
             attr['high_tide_height'] = self.data['extremes'][0]['height']
             attr['low_tide_time_utc'] = self.data['extremes'][1]['date']
             attr['low_tide_height'] = self.data['extremes'][1]['height']
-        elif "Low" in str(self.data['extremes'][0]['type']):
+        elif 'Low' in str(self.data['extremes'][0]['type']):
             attr['high_tide_time_utc'] = self.data['extremes'][1]['date']
             attr['high_tide_height'] = self.data['extremes'][1]['height']
             attr['low_tide_time_utc'] = self.data['extremes'][0]['date']
@@ -82,11 +82,11 @@ class WorldTidesInfoSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self.data:
-            if "High" in str(self.data['extremes'][0]['type']):
+            if 'High' in str(self.data['extremes'][0]['type']):
                 tidetime = time.strftime("%I:%M %p", time.localtime(
                     self.data['extremes'][0]['dt']))
                 return "High tide at %s" % (tidetime)
-            elif "Low" in str(self.data['extremes'][0]['type']):
+            elif 'Low' in str(self.data['extremes'][0]['type']):
                 tidetime = time.strftime("%I:%M %p", time.localtime(
                     self.data['extremes'][0]['dt']))
                 return "Low tide at %s" % (tidetime)

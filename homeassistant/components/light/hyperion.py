@@ -219,8 +219,8 @@ class Hyperion(Light):
                     self._rgb_color = [175, 0, 255]
                     self._icon = 'mdi:lava-lamp'
                     try:
-                        s_name = response['info']['activeEffects'][0]["script"]
-                        s_name = s_name.split('/')[-1][:-3].split("-")[0]
+                        s_name = response['info']['activeEffects'][0]['script']
+                        s_name = s_name.split('/')[-1][:-3].split('-')[0]
                         self._effect = [x for x in self._effect_list
                                         if s_name.lower() in x.lower()][0]
                     except (KeyError, IndexError):

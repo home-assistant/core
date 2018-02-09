@@ -26,7 +26,7 @@ NOTIFICATION_ID_BAN = 'ip-ban'
 NOTIFICATION_ID_LOGIN = 'http-login'
 
 IP_BANS_FILE = 'ip_bans.yaml'
-ATTR_BANNED_AT = "banned_at"
+ATTR_BANNED_AT = 'banned_at'
 
 SCHEMA_IP_BAN_ENTRY = vol.Schema({
     vol.Optional('banned_at'): vol.Any(None, cv.datetime)

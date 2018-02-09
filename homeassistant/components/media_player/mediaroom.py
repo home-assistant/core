@@ -164,7 +164,7 @@ class MediaroomDevice(MediaPlayerDevice):
 
     def media_play(self):
         """Send play command."""
-        _LOGGER.debug("media_play()")
+        _LOGGER.debug('media_play()')
         self.stb.send_cmd('PlayPause')
         self._state = STATE_PLAYING
 

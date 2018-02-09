@@ -21,16 +21,16 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:radio"
+ICON = 'mdi:radio'
 URL = "http://decibel.logitechmusic.com/jsonrpc.js"
 
 SUPPORT_UE_SMART_RADIO = SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_TURN_ON | \
     SUPPORT_TURN_OFF | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
 
-PLAYBACK_DICT = {"play": STATE_PLAYING,
-                 "pause": STATE_PAUSED,
-                 "stop": STATE_IDLE}
+PLAYBACK_DICT = {'play': STATE_PLAYING,
+                 'pause': STATE_PAUSED,
+                 'stop': STATE_IDLE}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -59,13 +59,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     session_request = requests.post("https://www.uesmartradio.com/user/login",
-                                    data={"email": email, "password":
+                                    data={'email': email, 'password':
                                           password})
     session = session_request.cookies["sdi_squeezenetwork_session"]
 
-    player_request = send_request({"params": ["", ["serverstatus"]]}, session)
-    player_id = player_request["result"]["players_loop"][0]["playerid"]
-    player_name = player_request["result"]["players_loop"][0]["name"]
+    player_request = send_request({'params': ["", ['serverstatus']]}, session)
+    player_id = player_request['result']['players_loop'][0]['playerid']
+    player_name = player_request['result']['players_loop'][0]['name']
 
     add_devices([UERadioDevice(session, player_id, player_name)])
 
@@ -87,34 +87,34 @@ class UERadioDevice(MediaPlayerDevice):
 
     def send_command(self, command):
         """Send command to radio."""
-        send_request({"method": "slim.request", "params":
+        send_request({'method': 'slim.request', 'params':
                       [self._player_id, command]}, self._session)
 
     def update(self):
         """Get the latest details from the device."""
         request = send_request({
-            "method": "slim.request", "params":
-            [self._player_id, ["status", "-", 1,
+            'method': 'slim.request', 'params':
+            [self._player_id, ['status', '-', 1,
                                "tags:cgABbehldiqtyrSuoKLN"]]}, self._session)
 
-        if request["error"] is not None:
+        if request['error'] is not None:
             self._state = None
             return
 
-        if request["result"]["power"] == 0:
+        if request['result']['power'] == 0:
             self._state = STATE_OFF
         else:
-            self._state = PLAYBACK_DICT[request["result"]["mode"]]
+            self._state = PLAYBACK_DICT[request['result']['mode']]
 
-        media_info = request["result"]["playlist_loop"][0]
+        media_info = request['result']['playlist_loop'][0]
 
-        self._volume = request["result"]["mixer volume"] / 100
-        self._media_artwork_url = media_info["artwork_url"]
-        self._media_title = media_info["title"]
-        if "artist" in media_info:
-            self._media_artist = media_info["artist"]
+        self._volume = request['result']["mixer volume"] / 100
+        self._media_artwork_url = media_info['artwork_url']
+        self._media_title = media_info['title']
+        if 'artist' in media_info:
+            self._media_artist = media_info['artist']
         else:
-            self._media_artist = media_info.get("remote_title")
+            self._media_artist = media_info.get('remote_title')
 
     @property
     def name(self):
@@ -168,40 +168,40 @@ class UERadioDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on specified media player or all."""
-        self.send_command(["power", 1])
+        self.send_command(['power', 1])
 
     def turn_off(self):
         """Turn off specified media player or all."""
-        self.send_command(["power", 0])
+        self.send_command(['power', 0])
 
     def media_play(self):
         """Send the media player the command for play/pause."""
-        self.send_command(["play"])
+        self.send_command(['play'])
 
     def media_pause(self):
         """Send the media player the command for pause."""
-        self.send_command(["pause"])
+        self.send_command(['pause'])
 
     def media_stop(self):
         """Send the media player the stop command."""
-        self.send_command(["stop"])
+        self.send_command(['stop'])
 
     def media_previous_track(self):
         """Send the media player the command for prev track."""
-        self.send_command(["button", "rew"])
+        self.send_command(['button', 'rew'])
 
     def media_next_track(self):
         """Send the media player the command for next track."""
-        self.send_command(["button", "fwd"])
+        self.send_command(['button', 'fwd'])
 
     def mute_volume(self, mute):
         """Send mute command."""
         if mute:
             self._last_volume = self._volume
-            self.send_command(["mixer", "volume", 0])
+            self.send_command(['mixer', 'volume', 0])
         else:
-            self.send_command(["mixer", "volume", self._last_volume * 100])
+            self.send_command(['mixer', 'volume', self._last_volume * 100])
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.send_command(["mixer", "volume", volume * 100])
+        self.send_command(['mixer', 'volume', volume * 100])

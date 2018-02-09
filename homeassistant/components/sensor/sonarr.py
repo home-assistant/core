@@ -85,7 +85,7 @@ class SonarrSensor(Entity):
         self.port = conf.get(CONF_PORT)
         self.urlbase = conf.get(CONF_URLBASE)
         if self.urlbase:
-            self.urlbase = "{}/".format(self.urlbase.strip('/'))
+            self.urlbase = '{}/'.format(self.urlbase.strip('/'))
         self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))

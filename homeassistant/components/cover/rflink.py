@@ -110,12 +110,12 @@ class RflinkCover(RflinkCommand, CoverDevice):
 
     def async_close_cover(self, **kwargs):
         """Turn the device close."""
-        return self._async_handle_command("close_cover")
+        return self._async_handle_command('close_cover')
 
     def async_open_cover(self, **kwargs):
         """Turn the device open."""
-        return self._async_handle_command("open_cover")
+        return self._async_handle_command('open_cover')
 
     def async_stop_cover(self, **kwargs):
         """Turn the device stop."""
-        return self._async_handle_command("stop_cover")
+        return self._async_handle_command('stop_cover')

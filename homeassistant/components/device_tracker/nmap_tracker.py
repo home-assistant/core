@@ -99,7 +99,7 @@ class NmapDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning...")
+        _LOGGER.info('Scanning...')
 
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()

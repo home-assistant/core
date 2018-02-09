@@ -14,10 +14,10 @@ from homeassistant.components.notify import (
     ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ["twilio"]
+DEPENDENCIES = ['twilio']
 
 
-CONF_FROM_NUMBER = "from_number"
+CONF_FROM_NUMBER = 'from_number'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FROM_NUMBER):

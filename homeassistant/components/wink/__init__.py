@@ -65,25 +65,25 @@ SERVICE_REFRESH_STATES = 'refresh_state_from_wink'
 SERVICE_RENAME_DEVICE = 'rename_wink_device'
 SERVICE_DELETE_DEVICE = 'delete_wink_device'
 SERVICE_SET_PAIRING_MODE = 'pair_new_device'
-SERVICE_SET_CHIME_VOLUME = "set_chime_volume"
-SERVICE_SET_SIREN_VOLUME = "set_siren_volume"
-SERVICE_ENABLE_CHIME = "enable_chime"
-SERVICE_SET_SIREN_TONE = "set_siren_tone"
-SERVICE_SET_AUTO_SHUTOFF = "siren_set_auto_shutoff"
-SERVICE_SIREN_STROBE_ENABLED = "set_siren_strobe_enabled"
-SERVICE_CHIME_STROBE_ENABLED = "set_chime_strobe_enabled"
-SERVICE_ENABLE_SIREN = "enable_siren"
+SERVICE_SET_CHIME_VOLUME = 'set_chime_volume'
+SERVICE_SET_SIREN_VOLUME = 'set_siren_volume'
+SERVICE_ENABLE_CHIME = 'enable_chime'
+SERVICE_SET_SIREN_TONE = 'set_siren_tone'
+SERVICE_SET_AUTO_SHUTOFF = 'siren_set_auto_shutoff'
+SERVICE_SIREN_STROBE_ENABLED = 'set_siren_strobe_enabled'
+SERVICE_CHIME_STROBE_ENABLED = 'set_chime_strobe_enabled'
+SERVICE_ENABLE_SIREN = 'enable_siren'
 
-ATTR_VOLUME = "volume"
-ATTR_TONE = "tone"
-ATTR_ENABLED = "enabled"
-ATTR_AUTO_SHUTOFF = "auto_shutoff"
+ATTR_VOLUME = 'volume'
+ATTR_TONE = 'tone'
+ATTR_ENABLED = 'enabled'
+ATTR_AUTO_SHUTOFF = 'auto_shutoff'
 
-VOLUMES = ["low", "medium", "high"]
-TONES = ["doorbell", "fur_elise", "doorbell_extended", "alert",
-         "william_tell", "rondo_alla_turca", "police_siren",
-         "evacuation", "beep_beep", "beep"]
-CHIME_TONES = TONES + ["inactive"]
+VOLUMES = ['low', 'medium', 'high']
+TONES = ['doorbell', 'fur_elise', "doorbell_extended", 'alert',
+         'william_tell', "rondo_alla_turca", 'police_siren',
+         'evacuation', 'beep_beep', 'beep']
+CHIME_TONES = TONES + ['inactive']
 AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]
 
 CONFIG_SCHEMA = vol.Schema({
@@ -178,7 +178,7 @@ def _request_app_setup(hass, config):
             _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
             configurator.notify_errors(_configurator, error_msg)
 
-    start_url = "{}{}".format(hass.config.api.base_url,
+    start_url = '{}{}'.format(hass.config.api.base_url,
                               WINK_AUTH_CALLBACK_PATH)
 
     description = """Please create a Wink developer app at
@@ -191,7 +191,7 @@ def _request_app_setup(hass, config):
 
     hass.data[DOMAIN]['configuring'][DOMAIN] = configurator.request_config(
         DOMAIN, wink_configuration_callback,
-        description=description, submit_caption="submit",
+        description=description, submit_caption='submit',
         description_image="/static/images/config_wink.png",
         fields=[{'id': 'client_id', 'name': "Client ID", 'type': 'string'},
                 {'id': 'client_secret',
@@ -255,10 +255,10 @@ def setup(hass, config):
         _LOGGER.info("Using legacy OAuth authentication")
         if not local_control:
             pywink.disable_local_control()
-        hass.data[DOMAIN]["oauth"]["client_id"] = client_id
-        hass.data[DOMAIN]["oauth"]["client_secret"] = client_secret
-        hass.data[DOMAIN]["oauth"]["email"] = email
-        hass.data[DOMAIN]["oauth"]["password"] = password
+        hass.data[DOMAIN]['oauth']['client_id'] = client_id
+        hass.data[DOMAIN]['oauth']['client_secret'] = client_secret
+        hass.data[DOMAIN]['oauth']['email'] = email
+        hass.data[DOMAIN]['oauth']['password'] = password
         pywink.legacy_set_wink_credentials(email, password,
                                            client_id, client_secret)
     else:
@@ -350,7 +350,7 @@ def setup(hass, config):
 
     def save_credentials(event):
         """Save currently set OAuth credentials."""
-        if hass.data[DOMAIN]["oauth"].get("email") is None:
+        if hass.data[DOMAIN]['oauth'].get('email') is None:
             config_path = hass.config.path(WINK_CONFIG_FILE)
             _config = pywink.get_current_oauth_credentials()
             save_json(config_path, _config)
@@ -488,7 +488,7 @@ def setup(hass, config):
     has_dome_or_wink_siren = False
     for siren in pywink.get_sirens():
         _man = siren.device_manufacturer()
-        if _man == "dome" or _man == "wink":
+        if _man == 'dome' or _man == 'wink':
             has_dome_or_wink_siren = True
         _id = siren.object_id() + siren.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
@@ -648,7 +648,7 @@ class WinkDevice(Entity):
             attributes["device_manufacturer"] = dev_man
         model_name = self._model_name
         if model_name:
-            attributes["model_name"] = model_name
+            attributes['model_name'] = model_name
         tamper = self._tamper
         if tamper is not None:
             attributes["tamper_detected"] = tamper
@@ -706,7 +706,7 @@ class WinkSirenDevice(WinkDevice):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return "mdi:bell-ring"
+        return 'mdi:bell-ring'
 
     @property
     def device_state_attributes(self):
@@ -715,15 +715,15 @@ class WinkSirenDevice(WinkDevice):
 
         auto_shutoff = self.wink.auto_shutoff()
         if auto_shutoff is not None:
-            attributes["auto_shutoff"] = auto_shutoff
+            attributes['auto_shutoff'] = auto_shutoff
 
         siren_volume = self.wink.siren_volume()
         if siren_volume is not None:
-            attributes["siren_volume"] = siren_volume
+            attributes['siren_volume'] = siren_volume
 
         chime_volume = self.wink.chime_volume()
         if chime_volume is not None:
-            attributes["chime_volume"] = chime_volume
+            attributes['chime_volume'] = chime_volume
 
         strobe_enabled = self.wink.strobe_enabled()
         if strobe_enabled is not None:
@@ -735,10 +735,10 @@ class WinkSirenDevice(WinkDevice):
 
         siren_sound = self.wink.siren_sound()
         if siren_sound is not None:
-            attributes["siren_sound"] = siren_sound
+            attributes['siren_sound'] = siren_sound
 
         chime_mode = self.wink.chime_mode()
         if chime_mode is not None:
-            attributes["chime_mode"] = chime_mode
+            attributes['chime_mode'] = chime_mode
 
         return attributes

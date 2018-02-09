@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
-DOMAIN = "octoprint"
+DOMAIN = 'octoprint'
 DEFAULT_NAME = 'OctoPrint'
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = "OctoPrint sensor setup error"
@@ -41,12 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available OctoPrint sensors."""
-    octoprint_api = hass.data[DOMAIN]["api"]
+    octoprint_api = hass.data[DOMAIN]['api']
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
     tools = octoprint_api.get_tools()
 
-    if "Temperatures" in monitored_conditions:
+    if 'Temperatures' in monitored_conditions:
         if not tools:
             hass.components.persistent_notification.create(
                 "Your printer appears to be offline.<br />"
@@ -59,9 +59,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 notification_id=NOTIFICATION_ID)
 
     devices = []
-    types = ["actual", "target"]
+    types = ['actual', 'target']
     for octo_type in monitored_conditions:
-        if octo_type == "Temperatures":
+        if octo_type == 'Temperatures':
             for tool in tools:
                 for temp_type in types:
                     new_sensor = OctoPrintSensor(
@@ -108,7 +108,7 @@ class OctoPrintSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         sensor_unit = self.unit_of_measurement
-        if sensor_unit == TEMP_CELSIUS or sensor_unit == "%":
+        if sensor_unit == TEMP_CELSIUS or sensor_unit == '%':
             # API sometimes returns null and not 0
             if self._state is None:
                 self._state = 0

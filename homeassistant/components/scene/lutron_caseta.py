@@ -33,8 +33,8 @@ class LutronCasetaScene(Scene):
 
     def __init__(self, scene, bridge):
         """Initialize the Lutron Caseta scene."""
-        self._scene_name = scene["name"]
-        self._scene_id = scene["scene_id"]
+        self._scene_name = scene['name']
+        self._scene_id = scene['scene_id']
         self._bridge = bridge
 
     @property

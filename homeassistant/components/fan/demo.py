@@ -37,7 +37,7 @@ class DemoFan(FanEntity):
         if supported_features & SUPPORT_OSCILLATE:
             self.oscillating = False
         if supported_features & SUPPORT_DIRECTION:
-            self.direction = "forward"
+            self.direction = 'forward'
 
     @property
     def name(self) -> str:

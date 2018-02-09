@@ -99,7 +99,7 @@ def async_get_image(hass, entity_id, timeout=10):
         raise HomeAssistantError(
             "No entity '{0}' for grab an image".format(entity_id))
 
-    url = "{0}{1}".format(
+    url = '{0}{1}'.format(
         hass.config.api.base_url,
         state.attributes.get(ATTR_ENTITY_PICTURE)
     )

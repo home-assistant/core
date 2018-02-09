@@ -239,15 +239,15 @@ class AlexaResponse(object):
         assert self.card is None
 
         card = {
-            "type": card_type.value
+            'type': card_type.value
         }
 
         if card_type == CardType.link_account:
             self.card = card
             return
 
-        card["title"] = title
-        card["content"] = content
+        card['title'] = title
+        card['content'] = content
         self.card = card
 
     def add_speech(self, speech_type, text):

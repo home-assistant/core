@@ -42,14 +42,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
-    bt_device_id = config.get("bt_device_id")
+    bt_device_id = config.get('bt_device_id')
 
-    beacons = config.get("beacons")
+    beacons = config.get('beacons')
     devices = []
 
     for dev_name, properties in beacons.items():
-        namespace = get_from_conf(properties, "namespace", 20)
-        instance = get_from_conf(properties, "instance", 12)
+        namespace = get_from_conf(properties, 'namespace', 20)
+        instance = get_from_conf(properties, 'instance', 12)
         name = properties.get(CONF_NAME, dev_name)
 
         if instance is None or namespace is None:
@@ -172,9 +172,9 @@ class Monitor(object):
     def stop(self):
         """Signal runner to stop and join thread."""
         if self.scanning:
-            _LOGGER.debug("Stopping...")
+            _LOGGER.debug('Stopping...')
             self.scanner.stop()
-            _LOGGER.debug("Stopped")
+            _LOGGER.debug('Stopped')
             self.scanning = False
         else:
             _LOGGER.debug(

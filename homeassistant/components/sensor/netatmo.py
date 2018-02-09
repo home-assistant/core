@@ -170,46 +170,46 @@ class NetAtmoSensor(Entity):
             self._state = data['battery_vp']
         elif self.type == 'battery_vp' and self.module_id == '6':
             if data['battery_vp'] >= 5590:
-                self._state = "Full"
+                self._state = 'Full'
             elif data['battery_vp'] >= 5180:
-                self._state = "High"
+                self._state = 'High'
             elif data['battery_vp'] >= 4770:
-                self._state = "Medium"
+                self._state = 'Medium'
             elif data['battery_vp'] >= 4360:
-                self._state = "Low"
+                self._state = 'Low'
             elif data['battery_vp'] < 4360:
                 self._state = "Very Low"
         elif self.type == 'battery_vp' and self.module_id == '5':
             if data['battery_vp'] >= 5500:
-                self._state = "Full"
+                self._state = 'Full'
             elif data['battery_vp'] >= 5000:
-                self._state = "High"
+                self._state = 'High'
             elif data['battery_vp'] >= 4500:
-                self._state = "Medium"
+                self._state = 'Medium'
             elif data['battery_vp'] >= 4000:
-                self._state = "Low"
+                self._state = 'Low'
             elif data['battery_vp'] < 4000:
                 self._state = "Very Low"
         elif self.type == 'battery_vp' and self.module_id == '3':
             if data['battery_vp'] >= 5640:
-                self._state = "Full"
+                self._state = 'Full'
             elif data['battery_vp'] >= 5280:
-                self._state = "High"
+                self._state = 'High'
             elif data['battery_vp'] >= 4920:
-                self._state = "Medium"
+                self._state = 'Medium'
             elif data['battery_vp'] >= 4560:
-                self._state = "Low"
+                self._state = 'Low'
             elif data['battery_vp'] < 4560:
                 self._state = "Very Low"
         elif self.type == 'battery_vp' and self.module_id == '2':
             if data['battery_vp'] >= 5500:
-                self._state = "Full"
+                self._state = 'Full'
             elif data['battery_vp'] >= 5000:
-                self._state = "High"
+                self._state = 'High'
             elif data['battery_vp'] >= 4500:
-                self._state = "Medium"
+                self._state = 'Medium'
             elif data['battery_vp'] >= 4000:
-                self._state = "Low"
+                self._state = 'Low'
             elif data['battery_vp'] < 4000:
                 self._state = "Very Low"
         elif self.type == 'min_temp':
@@ -266,24 +266,24 @@ class NetAtmoSensor(Entity):
             self._state = data['rf_status']
         elif self.type == 'rf_status':
             if data['rf_status'] >= 90:
-                self._state = "Low"
+                self._state = 'Low'
             elif data['rf_status'] >= 76:
-                self._state = "Medium"
+                self._state = 'Medium'
             elif data['rf_status'] >= 60:
-                self._state = "High"
+                self._state = 'High'
             elif data['rf_status'] <= 59:
-                self._state = "Full"
+                self._state = 'Full'
         elif self.type == 'wifi_status_lvl':
             self._state = data['wifi_status']
         elif self.type == 'wifi_status':
             if data['wifi_status'] >= 86:
-                self._state = "Low"
+                self._state = 'Low'
             elif data['wifi_status'] >= 71:
-                self._state = "Medium"
+                self._state = 'Medium'
             elif data['wifi_status'] >= 56:
-                self._state = "High"
+                self._state = 'High'
             elif data['wifi_status'] <= 55:
-                self._state = "Full"
+                self._state = 'Full'
 
 
 class NetAtmoData(object):

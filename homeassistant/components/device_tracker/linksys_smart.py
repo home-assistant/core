@@ -62,8 +62,8 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             return False
         try:
             data = response.json()
-            result = data["responses"][0]
-            devices = result["output"]["devices"]
+            result = data['responses'][0]
+            devices = result['output']['devices']
             for device in devices:
                 macs = device["knownMACAddresses"]
                 if not macs:
@@ -71,17 +71,17 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
                         "Skipping device without known MAC address")
                     continue
                 mac = macs[-1]
-                connections = device["connections"]
+                connections = device['connections']
                 if not connections:
                     _LOGGER.debug("Device %s is not connected", mac)
                     continue
 
                 name = None
-                for prop in device["properties"]:
-                    if prop["name"] == "userDeviceName":
-                        name = prop["value"]
+                for prop in device['properties']:
+                    if prop['name'] == 'userDeviceName':
+                        name = prop['value']
                 if not name:
-                    name = device.get("friendlyName", device["deviceID"])
+                    name = device.get('friendlyName', device['deviceID'])
 
                 _LOGGER.debug("Device %s is connected", mac)
                 self.last_results[mac] = name
@@ -93,12 +93,12 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
     def _make_request(self):
         # Weirdly enough, this doesn't seem to require authentication
         data = [{
-            "request": {
-                "sinceRevision": 0
+            'request': {
+                'sinceRevision': 0
             },
-            "action": "http://linksys.com/jnap/devicelist/GetDevices"
+            'action': "http://linksys.com/jnap/devicelist/GetDevices"
         }]
-        headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
+        headers = {'X-JNAP-Action': "http://linksys.com/jnap/core/Transaction"}
         return requests.post('http://{}/JNAP/'.format(self.host),
                              timeout=DEFAULT_TIMEOUT,
                              headers=headers,

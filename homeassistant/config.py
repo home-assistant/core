@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
 RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
-RE_ASCII = re.compile(r"\033\[[^m]*m")
+RE_ASCII = re.compile(r'\033\[[^m]*m')
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
@@ -161,7 +161,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on the OS."""
-    data_dir = os.getenv('APPDATA') if os.name == "nt" \
+    data_dir = os.getenv('APPDATA') if os.name == 'nt' \
         else os.path.expanduser('~')
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
@@ -499,7 +499,7 @@ def async_process_ha_core_config(hass, config):
     if discovered:
         _LOGGER.warning(
             "Incomplete core configuration. Auto detected %s",
-            ", ".join('{}: {}'.format(key, val) for key, val in discovered))
+            ', '.join('{}: {}'.format(key, val) for key, val in discovered))
 
 
 def _log_pkg_error(package, component, config, message):

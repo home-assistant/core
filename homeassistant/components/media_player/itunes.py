@@ -126,7 +126,7 @@ class Itunes(object):
 
         found_playlists = \
             [playlist for playlist in playlists if
-             (playlist_id_or_name in [playlist["name"], playlist["id"]])]
+             (playlist_id_or_name in [playlist['name'], playlist['id']])]
 
         if found_playlists:
             playlist = found_playlists[0]
@@ -363,7 +363,7 @@ class AirPlayDevice(MediaPlayerDevice):
         """Initialize the AirPlay device."""
         self._id = device_id
         self.client = client
-        self.device_name = "AirPlay"
+        self.device_name = 'AirPlay'
         self.kind = None
         self.active = False
         self.selected = False
@@ -446,14 +446,14 @@ class AirPlayDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Select AirPlay."""
-        self.update_state({"selected": True})
+        self.update_state({'selected': True})
         self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, True)
         self.update_state(response)
 
     def turn_off(self):
         """Deselect AirPlay."""
-        self.update_state({"selected": False})
+        self.update_state({'selected': False})
         self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, False)
         self.update_state(response)

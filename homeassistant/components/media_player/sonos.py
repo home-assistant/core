@@ -641,7 +641,7 @@ class SonosDevice(MediaPlayerDevice):
                  ('Channel', 'Master')]
             )
             rel_time = _parse_timespan(
-                position_info.get("RelTime")
+                position_info.get('RelTime')
             )
 
             # player no longer reports position?
@@ -960,9 +960,9 @@ class SonosDevice(MediaPlayerDevice):
                                                        namespaces).text
 
         res = [soco.data_structures.DidlResource(uri=src['uri'],
-                                                 protocol_info="DUMMY")]
-        didl = soco.data_structures.DidlItem(title="DUMMY",
-                                             parent_id="DUMMY",
+                                                 protocol_info='DUMMY')]
+        didl = soco.data_structures.DidlItem(title='DUMMY',
+                                             parent_id='DUMMY',
                                              item_id=src['uri'],
                                              desc=desc,
                                              resources=res)

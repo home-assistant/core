@@ -91,9 +91,9 @@ class DublinPublicTransportSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._times is not None:
-            next_up = "None"
+            next_up = 'None'
             if self._times:
-                next_up = self._times[1][ATTR_ROUTE] + " in "
+                next_up = self._times[1][ATTR_ROUTE] + ' in '
                 next_up += self._times[1][ATTR_DUE_IN]
 
             return {

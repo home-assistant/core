@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                           device_file, 'temperature'))
     else:
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
-            with open(family_file_path, "r") as family_file:
+            with open(family_file_path, 'r') as family_file:
                 family = family_file.read()
             if family in DEVICE_SENSORS:
                 for sensor_key, sensor_value in DEVICE_SENSORS[family].items():

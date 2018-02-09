@@ -78,10 +78,10 @@ class LutronCasetaDevice(Entity):
         [:param]device the device metadata
         [:param]bridge the smartbridge object
         """
-        self._device_id = device["device_id"]
-        self._device_type = device["type"]
-        self._device_name = device["name"]
-        self._device_zone = device["zone"]
+        self._device_id = device['device_id']
+        self._device_type = device['type']
+        self._device_name = device['name']
+        self._device_zone = device['zone']
         self._state = None
         self._smartbridge = bridge
 

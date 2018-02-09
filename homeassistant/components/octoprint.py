@@ -37,11 +37,11 @@ def setup(hass, config):
     number_of_tools = config[DOMAIN][CONF_NUMBER_OF_TOOLS]
     bed = config[DOMAIN][CONF_BED]
 
-    hass.data[DOMAIN] = {"api": None}
+    hass.data[DOMAIN] = {'api': None}
 
     try:
         octoprint_api = OctoPrintAPI(base_url, api_key, bed, number_of_tools)
-        hass.data[DOMAIN]["api"] = octoprint_api
+        hass.data[DOMAIN]['api'] = octoprint_api
         octoprint_api.get('printer')
         octoprint_api.get('job')
     except requests.exceptions.RequestException as conn_err:
@@ -75,7 +75,7 @@ class OctoPrintAPI(object):
         tools = []
         if self.number_of_tools > 0:
             for tool_number in range(0, self.number_of_tools):
-                tools.append("tool" + str(tool_number))
+                tools.append('tool' + str(tool_number))
         if self.bed:
             tools.append('bed')
         if not self.bed and self.number_of_tools == 0:
@@ -88,12 +88,12 @@ class OctoPrintAPI(object):
         """Send a get request, and return the response as a dict."""
         # Only query the API at most every 30 seconds
         now = time.time()
-        if endpoint == "job":
+        if endpoint == 'job':
             last_time = self.job_last_reading[1]
             if last_time is not None:
                 if now - last_time < 30.0:
                     return self.job_last_reading[0]
-        elif endpoint == "printer":
+        elif endpoint == 'printer':
             last_time = self.printer_last_reading[1]
             if last_time is not None:
                 if now - last_time < 30.0:
@@ -104,11 +104,11 @@ class OctoPrintAPI(object):
             response = requests.get(
                 url, headers=self.headers, timeout=9)
             response.raise_for_status()
-            if endpoint == "job":
+            if endpoint == 'job':
                 self.job_last_reading[0] = response.json()
                 self.job_last_reading[1] = time.time()
                 self.job_available = True
-            elif endpoint == "printer":
+            elif endpoint == 'printer':
                 self.printer_last_reading[0] = response.json()
                 self.printer_last_reading[1] = time.time()
                 self.printer_available = True
@@ -121,13 +121,13 @@ class OctoPrintAPI(object):
             log_string = "Failed to update OctoPrint status. " + \
                                "  Error: %s" % (conn_exc)
             # Only log the first failure
-            if endpoint == "job":
+            if endpoint == 'job':
                 log_string = "Endpoint: job " + log_string
                 if not self.job_error_logged:
                     _LOGGER.error(log_string)
                     self.job_error_logged = True
                     self.job_available = False
-            elif endpoint == "printer":
+            elif endpoint == 'printer':
                 log_string = "Endpoint: printer " + log_string
                 if not self.printer_error_logged:
                     _LOGGER.error(log_string)
@@ -151,7 +151,7 @@ def get_value_from_json(json_dict, sensor_type, group, tool):
         return None
 
     if sensor_type in json_dict[group]:
-        if sensor_type == "target" and json_dict[sensor_type] is None:
+        if sensor_type == 'target' and json_dict[sensor_type] is None:
             return 0
         return json_dict[group][sensor_type]
 

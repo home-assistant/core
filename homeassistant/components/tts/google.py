@@ -112,7 +112,7 @@ class GoogleProvider(Provider):
                 _LOGGER.error("Timeout for google speech.")
                 return (None, None)
 
-        return ("mp3", data)
+        return ('mp3', data)
 
     @staticmethod
     def _split_message_to_parts(message):
@@ -120,7 +120,7 @@ class GoogleProvider(Provider):
         if len(message) <= MESSAGE_SIZE:
             return [message]
 
-        punc = "!()[]?.,;:"
+        punc = '!()[]?.,;:'
         punc_list = [re.escape(c) for c in punc]
         pattern = '|'.join(punc_list)
         parts = re.split(pattern, message)

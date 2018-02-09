@@ -648,15 +648,15 @@ def _match_topic(subscription, topic):
     suffix = ""
     if subscription.endswith('#'):
         subscription = subscription[:-2]
-        suffix = "(.*)"
+        suffix = '(.*)'
     sub_parts = subscription.split('/')
     for sub_part in sub_parts:
-        if sub_part == "+":
+        if sub_part == '+':
             reg_ex_parts.append(r"([^\/]+)")
         else:
             reg_ex_parts.append(re.escape(sub_part))
 
-    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
+    reg_ex = '^' + (r'\/'.join(reg_ex_parts)) + suffix + '$'
 
     reg = re.compile(reg_ex)
 

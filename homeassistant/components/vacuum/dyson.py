@@ -94,14 +94,14 @@ class Dyson360EyeDevice(VacuumDevice):
         dyson_labels = {
             Dyson360EyeMode.INACTIVE_CHARGING: "Stopped - Charging",
             Dyson360EyeMode.INACTIVE_CHARGED: "Stopped - Charged",
-            Dyson360EyeMode.FULL_CLEAN_PAUSED: "Paused",
-            Dyson360EyeMode.FULL_CLEAN_RUNNING: "Cleaning",
+            Dyson360EyeMode.FULL_CLEAN_PAUSED: 'Paused',
+            Dyson360EyeMode.FULL_CLEAN_RUNNING: 'Cleaning',
             Dyson360EyeMode.FULL_CLEAN_ABORTED: "Returning home",
             Dyson360EyeMode.FULL_CLEAN_INITIATED: "Start cleaning",
             Dyson360EyeMode.FAULT_USER_RECOVERABLE: "Error - device blocked",
             Dyson360EyeMode.FAULT_REPLACE_ON_DOCK:
                 "Error - Replace device on dock",
-            Dyson360EyeMode.FULL_CLEAN_FINISHED: "Finished",
+            Dyson360EyeMode.FULL_CLEAN_FINISHED: 'Finished',
             Dyson360EyeMode.FULL_CLEAN_NEEDS_CHARGE: "Need charging"
         }
         return dyson_labels.get(
@@ -117,15 +117,15 @@ class Dyson360EyeDevice(VacuumDevice):
         """Return the fan speed of the vacuum cleaner."""
         from libpurecoollink.const import PowerMode
         speed_labels = {
-            PowerMode.MAX: "Max",
-            PowerMode.QUIET: "Quiet"
+            PowerMode.MAX: 'Max',
+            PowerMode.QUIET: 'Quiet'
         }
         return speed_labels[self._device.state.power_mode]
 
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return ["Quiet", "Max"]
+        return ['Quiet', 'Max']
 
     @property
     def device_state_attributes(self):
@@ -191,8 +191,8 @@ class Dyson360EyeDevice(VacuumDevice):
 
         _LOGGER.debug("Set fan speed %s on device %s", fan_speed, self.name)
         power_modes = {
-            "Quiet": PowerMode.QUIET,
-            "Max": PowerMode.MAX
+            'Quiet': PowerMode.QUIET,
+            'Max': PowerMode.MAX
         }
         self._device.set_power_mode(power_modes[fan_speed])
 

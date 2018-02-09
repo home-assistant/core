@@ -122,7 +122,7 @@ class NetdataSensor(Entity):
         if value is not None:
             netdata_id = SENSOR_TYPES[self.type][3]
             if netdata_id in value:
-                return "{0:.{1}f}".format(value[netdata_id], self._precision)
+                return '{0:.{1}f}'.format(value[netdata_id], self._precision)
         return None
 
     @property

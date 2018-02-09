@@ -34,16 +34,16 @@ NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = "UPnP Setup"
 
 UNITS = {
-    "Bytes": 1,
-    "KBytes": 1024,
-    "MBytes": 1024**2,
-    "GBytes": 1024**3,
+    'Bytes': 1,
+    'KBytes': 1024,
+    'MBytes': 1024**2,
+    'GBytes': 1024**3,
 }
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
-        vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
+        vol.Optional(CONF_UNITS, default='MBytes'): vol.In(UNITS),
         vol.Optional(CONF_LOCAL_IP): ip_address,
         vol.Optional(CONF_PORTS):
             vol.Schema({vol.Any(CONF_HASS, cv.positive_int): cv.positive_int})

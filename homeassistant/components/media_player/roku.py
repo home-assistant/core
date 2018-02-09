@@ -40,13 +40,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hosts = []
 
     if discovery_info:
-        host = discovery_info.get("host")
+        host = discovery_info.get('host')
 
         if host in KNOWN_HOSTS:
             return
 
         _LOGGER.debug("Discovered Roku: %s", host)
-        hosts.append(discovery_info.get("host"))
+        hosts.append(discovery_info.get('host'))
 
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
@@ -111,7 +111,7 @@ class RokuDevice(MediaPlayerDevice):
 
     def get_source_list(self):
         """Get the list of applications to be used as sources."""
-        return ["Home"] + sorted(channel.name for channel in self.roku.apps)
+        return ['Home'] + sorted(channel.name for channel in self.roku.apps)
 
     @property
     def should_poll(self):
@@ -134,7 +134,7 @@ class RokuDevice(MediaPlayerDevice):
         if (self.current_app.name == "Power Saver" or
                 self.current_app.is_screensaver):
             return STATE_IDLE
-        elif self.current_app.name == "Roku":
+        elif self.current_app.name == 'Roku':
             return STATE_HOME
         elif self.current_app.name is not None:
             return STATE_PLAYING
@@ -153,7 +153,7 @@ class RokuDevice(MediaPlayerDevice):
             return None
         elif self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.name == "Roku":
+        elif self.current_app.name == 'Roku':
             return None
         return MEDIA_TYPE_VIDEO
 
@@ -162,7 +162,7 @@ class RokuDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Roku":
+        elif self.current_app.name == 'Roku':
             return None
         elif self.current_app.name == "Power Saver":
             return None
@@ -228,7 +228,7 @@ class RokuDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         if self.current_app is not None:
-            if source == "Home":
+            if source == 'Home':
                 self.roku.home()
             else:
                 channel = self.roku[source]

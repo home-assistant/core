@@ -226,7 +226,7 @@ class Configurator(object):
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""
         self._cur_id += 1
-        return "{}-{}".format(id(self), self._cur_id)
+        return '{}-{}'.format(id(self), self._cur_id)
 
     def _validate_request_id(self, request_id):
         """Validate that the request belongs to this instance."""

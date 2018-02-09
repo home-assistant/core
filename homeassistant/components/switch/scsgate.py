@@ -141,9 +141,9 @@ class SCSGateSwitch(SwitchDevice):
         self._toggled = message.toggled
         self.schedule_update_ha_state()
 
-        command = "off"
+        command = 'off'
         if self._toggled:
-            command = "on"
+            command = 'on'
 
         self.hass.bus.fire(
             'button_pressed', {

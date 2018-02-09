@@ -32,18 +32,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, vol.Length(min=1))
 })
 
-SENSOR_TYPE = "tank"
+SENSOR_TYPE = 'tank'
 SENSOR_ROUNDING_PRECISION = 1
-SENSOR_UNIT_OF_MEASUREMENT = "%"
+SENSOR_UNIT_OF_MEASUREMENT = '%'
 SENSOR_ATTRS = [
-    "name",
-    "address",
-    "capacity",
-    "fuelType",
-    "orientation",
-    "status",
-    "time",
-    "time_iso"
+    'name',
+    'address',
+    'capacity',
+    'fuelType',
+    'orientation',
+    'status',
+    'time',
+    'time_iso'
 ]
 
 
@@ -127,8 +127,8 @@ class TankUtilitySensor(Entity):
                 data = device.get_device_data(self._token, self.device)
             else:
                 raise http_error
-        data.update(data.pop("device", {}))
-        data.update(data.pop("lastReading", {}))
+        data.update(data.pop('device', {}))
+        data.update(data.pop('lastReading', {}))
         return data
 
     def update(self):

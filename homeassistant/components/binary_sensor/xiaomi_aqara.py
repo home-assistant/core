@@ -364,7 +364,7 @@ class XiaomiCube(XiaomiBinarySensor):
             self._hass.bus.fire('cube_action', {
                 'entity_id': self.entity_id,
                 'action_type': 'rotate',
-                'action_value': float(data['rotate'].replace(",", "."))
+                'action_value': float(data['rotate'].replace(',', '.'))
             })
             self._last_action = 'rotate'
 

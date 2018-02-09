@@ -91,9 +91,9 @@ class NeurioData(object):
         if not self.sensor_id:
             user_info = self.neurio_client.get_user_information()
             _LOGGER.warning("Sensor ID auto-detected: %s", user_info[
-                "locations"][0]["sensors"][0]["sensorId"])
+                'locations'][0]['sensors'][0]['sensorId'])
             self.sensor_id = user_info[
-                "locations"][0]["sensors"][0]["sensorId"]
+                'locations'][0]['sensors'][0]['sensorId']
 
     @property
     def daily_usage(self):

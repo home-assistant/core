@@ -20,7 +20,7 @@ DEPENDENCIES = ['zoneminder']
 DOMAIN = 'zoneminder'
 
 # From ZoneMinder's web/includes/config.php.in
-ZM_STATE_ALARM = "2"
+ZM_STATE_ALARM = '2'
 
 
 def _get_image_url(hass, monitor, mode):

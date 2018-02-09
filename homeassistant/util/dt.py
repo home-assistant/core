@@ -7,7 +7,7 @@ from typing import Any, Dict, Union, Optional, Tuple  # NOQA
 
 import pytz
 
-DATE_STR_FORMAT = "%Y-%m-%d"
+DATE_STR_FORMAT = '%Y-%m-%d'
 UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 
 
@@ -71,7 +71,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
 
 def as_timestamp(dt_value):
     """Convert a date/time into a unix time (seconds since 1970)."""
-    if hasattr(dt_value, "timestamp"):
+    if hasattr(dt_value, 'timestamp'):
         parsed_dt = dt_value
     else:
         parsed_dt = parse_datetime(str(dt_value))

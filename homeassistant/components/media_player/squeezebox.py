@@ -80,8 +80,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     if discovery_info is not None:
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
+        host = discovery_info.get('host')
+        port = discovery_info.get('port')
     else:
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
@@ -176,9 +176,9 @@ class LogitechMediaServer(object):
         url = "http://{}:{}/jsonrpc.js".format(
             self.host, self.port)
         data = json.dumps({
-            "id": "1",
-            "method": "slim.request",
-            "params": [player, command]
+            'id': '1',
+            'method': 'slim.request',
+            'params': [player, command]
             })
 
         _LOGGER.debug("URL: %s Data: %s", url, data)
@@ -260,7 +260,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Retrieve the current state of the player."""
         tags = 'adKl'
         response = yield from self.async_query(
-            "status", "-", "1", "tags:{tags}"
+            'status', '-', '1', 'tags:{tags}'
             .format(tags=tags))
 
         if response is False:
@@ -269,11 +269,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         self._status = {}
 
         try:
-            self._status.update(response["playlist_loop"][0])
+            self._status.update(response['playlist_loop'][0])
         except KeyError:
             pass
         try:
-            self._status.update(response["remoteMeta"])
+            self._status.update(response['remoteMeta'])
         except KeyError:
             pass
 

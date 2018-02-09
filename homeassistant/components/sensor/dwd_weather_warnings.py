@@ -169,7 +169,7 @@ class DwdWeatherWarningsAPI(object):
 
     def __init__(self, region_name):
         """Initialize the data object."""
-        resource = "{}{}{}?{}".format(
+        resource = '{}{}{}?{}'.format(
             'https://',
             'www.dwd.de',
             '/DWD/warnungen/warnapp_landkreise/json/warnings.json',

@@ -79,7 +79,7 @@ class FoursquarePushReceiver(HomeAssistantView):
 
     requires_auth = False
     url = "/api/foursquare"
-    name = "foursquare"
+    name = 'foursquare'
 
     def __init__(self, push_secret):
         """Initialize the OAuth callback view."""

@@ -41,7 +41,7 @@ def slugify(text: str) -> str:
     """Slugify a given text."""
     text = normalize('NFKD', text)
     text = text.lower()
-    text = text.replace(" ", "_")
+    text = text.replace(' ', '_')
     text = text.translate(TBL_SLUGIFY)
     text = RE_SLUGIFY.sub("", text)
 
@@ -51,8 +51,8 @@ def slugify(text: str) -> str:
 def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
-        return ", ".join(
-            repr_helper(key)+"="+repr_helper(item) for key, item
+        return ', '.join(
+            repr_helper(key)+'='+repr_helper(item) for key, item
             in inp.items())
     elif isinstance(inp, datetime):
         return as_local(inp).isoformat()
@@ -83,7 +83,7 @@ def ensure_unique_string(preferred_string: str, current_strings:
 
     while test_string in current_strings_set:
         tries += 1
-        test_string = "{}_{}".format(preferred_string, tries)
+        test_string = '{}_{}'.format(preferred_string, tries)
 
     return test_string
 

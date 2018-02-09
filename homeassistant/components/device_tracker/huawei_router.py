@@ -44,10 +44,10 @@ class HuaweiDeviceScanner(DeviceScanner):
     DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
     DEVICE_ATTR_REGEX = re.compile(
         '"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'
-        '"(?P<MacAddr>.*?)","(?P<Port>.*?)",'
+        '"(?P<MacAddr>.*?)",'(?P<Port>.*?)','
         '"(?P<IpType>.*?)","(?P<DevType>.*?)",'
         '"(?P<DevStatus>.*?)","(?P<PortType>.*?)",'
-        '"(?P<Time>.*?)","(?P<HostName>.*?)",'
+        ''(?P<Time>.*?)',"(?P<HostName>.*?)",'
         '"(?P<IPv4Enabled>.*?)","(?P<IPv6Enabled>.*?)",'
         '"(?P<DeviceType>.*?)"')
     LOGIN_COOKIE = dict(Cookie='body:Language:portuguese:id=-1')
@@ -86,8 +86,8 @@ class HuaweiDeviceScanner(DeviceScanner):
         active_clients = [client for client in data if client.state]
         self.last_results = active_clients
 
-        _LOGGER.debug("Active clients: " + "\n"
-                      .join((client.mac + " " + client.name)
+        _LOGGER.debug("Active clients: " + '\n'
+                      .join((client.mac + ' ' + client.name)
                             for client in active_clients))
         return True
 
@@ -110,7 +110,7 @@ class HuaweiDeviceScanner(DeviceScanner):
                                       device_attrs_regex_res.group('IpAddr'),
                                       device_attrs_regex_res.group('MacAddr'),
                                       device_attrs_regex_res.group(
-                                          'DevStatus') == "Online"))
+                                          'DevStatus') == 'Online'))
 
         return devices
 

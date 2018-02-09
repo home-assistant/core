@@ -88,4 +88,4 @@ class HassbianSuiteInstallView(HomeAssistantView):
     def post(self, request, suite):
         """Request suite status."""
         # do real install if not in test mode
-        return self.json({"status": "ok"})
+        return self.json({'status': 'ok'})

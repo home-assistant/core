@@ -135,7 +135,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Network sensors
     nics = config[CONF_NICS]
     if nics is None:
-        nics = api.data["system_stats"]["nics"].keys()
+        nics = api.data['system_stats']['nics'].keys()
 
     for nic in nics:
         sensors += [QNAPNetworkSensor(api, variable,
@@ -157,7 +157,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Volume sensors
     volumes = config[CONF_VOLUMES]
     if volumes is None:
-        volumes = api.data["volumes"].keys()
+        volumes = api.data['volumes'].keys()
 
     for volume in volumes:
         sensors += [QNAPVolumeSensor(api, variable,
@@ -185,9 +185,9 @@ class QNAPStatsAPI(object):
         """Initialize the API wrapper."""
         from qnapstats import QNAPStats
 
-        protocol = "https" if config.get(CONF_SSL) else "http"
+        protocol = 'https' if config.get(CONF_SSL) else 'http'
         self._api = QNAPStats(
-            protocol + "://" + config.get(CONF_HOST),
+            protocol + '://' + config.get(CONF_HOST),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
@@ -201,11 +201,11 @@ class QNAPStatsAPI(object):
     def update(self):
         """Update API information and store locally."""
         try:
-            self.data["system_stats"] = self._api.get_system_stats()
-            self.data["system_health"] = self._api.get_system_health()
-            self.data["smart_drive_health"] = self._api.get_smart_disk_health()
-            self.data["volumes"] = self._api.get_volumes()
-            self.data["bandwidth"] = self._api.get_bandwidth()
+            self.data['system_stats'] = self._api.get_system_stats()
+            self.data['system_health'] = self._api.get_system_health()
+            self.data['smart_drive_health'] = self._api.get_smart_disk_health()
+            self.data['volumes'] = self._api.get_volumes()
+            self.data['bandwidth'] = self._api.get_bandwidth()
         except:  # noqa: E722  # pylint: disable=bare-except
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 

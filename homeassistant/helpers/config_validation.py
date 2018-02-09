@@ -565,14 +565,14 @@ CONDITION_SCHEMA = vol.Any(
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
-    vol.Required("delay"): vol.Any(
+    vol.Required('delay'): vol.Any(
         vol.All(time_period, positive_timedelta),
         template)
 })
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
-    vol.Required("wait_template"): template,
+    vol.Required('wait_template'): template,
     vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
 })
 

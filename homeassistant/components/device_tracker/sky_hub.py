@@ -70,7 +70,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
 
         data = _get_skyhub_data(self.url)
 

@@ -186,14 +186,14 @@ def _decrypt_payload(secret, topic, ciphertext):
             "for topic %s", topic)
         return None
 
-    key = key.encode("utf-8")
+    key = key.encode('utf-8')
     key = key[:keylen]
     key = key.ljust(keylen, b'\0')
 
     try:
         ciphertext = base64.b64decode(ciphertext)
         message = decrypt(ciphertext, key)
-        message = message.decode("utf-8")
+        message = message.decode('utf-8')
         _LOGGER.debug("Decrypted payload: %s", message)
         return message
     except ValueError:
@@ -276,9 +276,9 @@ class OwnTracksContext:
             "device_tracker.{}".format(dev_id))
 
         if device_tracker_state is not None:
-            acc = device_tracker_state.attributes.get("gps_accuracy")
-            lat = device_tracker_state.attributes.get("latitude")
-            lon = device_tracker_state.attributes.get("longitude")
+            acc = device_tracker_state.attributes.get('gps_accuracy')
+            lat = device_tracker_state.attributes.get('latitude')
+            lon = device_tracker_state.attributes.get('longitude')
             kwargs['gps_accuracy'] = acc
             kwargs['gps'] = (lat, lon)
 
@@ -286,7 +286,7 @@ class OwnTracksContext:
         # kwargs location is the beacon's configured lat/lon
         kwargs.pop('battery', None)
         for beacon in self.mobile_beacons_active[dev_id]:
-            kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
+            kwargs['dev_id'] = '{}_{}'.format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
             yield from self.async_see(**kwargs)
 
@@ -317,7 +317,7 @@ def async_handle_location_message(hass, context, message):
 @asyncio.coroutine
 def _async_transition_message_enter(hass, context, message, location):
     """Execute enter event."""
-    zone = hass.states.get("zone.{}".format(slugify(location)))
+    zone = hass.states.get('zone.{}'.format(slugify(location)))
     dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
 
     if zone is None and message.get('t') == 'b':
@@ -360,7 +360,7 @@ def _async_transition_message_leave(hass, context, message, location):
         if new_region:
             # Exit to previous region
             zone = hass.states.get(
-                "zone.{}".format(slugify(new_region)))
+                'zone.{}'.format(slugify(new_region)))
             _set_gps_from_zone(kwargs, new_region, zone)
             _LOGGER.info("Exit to %s", new_region)
             yield from context.async_see(**kwargs)
@@ -386,7 +386,7 @@ def async_handle_transition_message(hass, context, message):
         return
     # OwnTracks uses - at the start of a beacon zone
     # to switch on 'hold mode' - ignore this
-    location = message['desc'].lstrip("-")
+    location = message['desc'].lstrip('-')
 
     # Create a layer of indirection for Owntracks instances that may name
     # regions differently than their HA names
@@ -482,7 +482,7 @@ def async_handle_encrypted_message(hass, context, message):
 @asyncio.coroutine
 def async_handle_not_impl_msg(hass, context, message):
     """Handle valid but not implemented message types."""
-    _LOGGER.debug("Not handling %s message: %s", message.get("_type"), message)
+    _LOGGER.debug("Not handling %s message: %s", message.get('_type'), message)
 
 
 @asyncio.coroutine

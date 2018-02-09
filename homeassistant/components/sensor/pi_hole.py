@@ -145,7 +145,7 @@ class PiHoleAPI(object):
         from homeassistant.components.sensor.rest import RestData
 
         uri_scheme = 'https://' if use_ssl else 'http://'
-        resource = "{}{}{}".format(uri_scheme, host, _ENDPOINT)
+        resource = '{}{}{}'.format(uri_scheme, host, _ENDPOINT)
 
         self._rest = RestData('GET', resource, None, None, None, verify_ssl)
         self.data = None

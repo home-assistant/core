@@ -75,7 +75,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
                                     config[CONF_PING_COUNT])
                           + DEFAULT_SCAN_INTERVAL)
     _LOGGER.debug("Started ping tracker with interval=%s on hosts: %s",
-                  interval, ",".join([host.ip_address for host in hosts]))
+                  interval, ','.join([host.ip_address for host in hosts]))
 
     def update_interval(now):
         """Update all the hosts on every interval time."""

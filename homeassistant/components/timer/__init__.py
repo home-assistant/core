@@ -285,7 +285,7 @@ class Timer(Entity):
         self._end = None
         self._remaining = timedelta()
         self._hass.bus.async_fire(EVENT_TIMER_CANCELLED,
-                                  {"entity_id": self.entity_id})
+                                  {'entity_id': self.entity_id})
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
@@ -298,7 +298,7 @@ class Timer(Entity):
         self._state = STATUS_IDLE
         self._remaining = timedelta()
         self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
-                                  {"entity_id": self.entity_id})
+                                  {'entity_id': self.entity_id})
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
@@ -311,5 +311,5 @@ class Timer(Entity):
         self._state = STATUS_IDLE
         self._remaining = timedelta()
         self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
-                                  {"entity_id": self.entity_id})
+                                  {'entity_id': self.entity_id})
         yield from self.async_update_ha_state()

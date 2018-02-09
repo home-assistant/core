@@ -31,7 +31,7 @@ from homeassistant.components.http import HomeAssistantView
 DOMAIN = 'api'
 DEPENDENCIES = ['http']
 
-STREAM_PING_PAYLOAD = "ping"
+STREAM_PING_PAYLOAD = 'ping'
 STREAM_PING_INTERVAL = 50  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class APIStatusView(HomeAssistantView):
     """View to handle Status requests."""
 
     url = URL_API
-    name = "api:status"
+    name = 'api:status'
 
     @ha.callback
     def get(self, request):
@@ -75,7 +75,7 @@ class APIEventStream(HomeAssistantView):
     """View to handle EventStream requests."""
 
     url = URL_API_STREAM
-    name = "api:stream"
+    name = 'api:stream'
 
     @asyncio.coroutine
     def get(self, request):
@@ -131,7 +131,7 @@ class APIEventStream(HomeAssistantView):
                     msg = "data: {}\n\n".format(payload)
                     _LOGGER.debug("STREAM %s WRITING %s", id(stop_obj),
                                   msg.strip())
-                    response.write(msg.encode("UTF-8"))
+                    response.write(msg.encode('UTF-8'))
                     yield from response.drain()
                 except asyncio.TimeoutError:
                     yield from to_write.put(STREAM_PING_PAYLOAD)
@@ -148,7 +148,7 @@ class APIConfigView(HomeAssistantView):
     """View to handle Config requests."""
 
     url = URL_API_CONFIG
-    name = "api:config"
+    name = 'api:config'
 
     @ha.callback
     def get(self, request):
@@ -161,7 +161,7 @@ class APIDiscoveryView(HomeAssistantView):
 
     requires_auth = False
     url = URL_API_DISCOVERY_INFO
-    name = "api:discovery"
+    name = 'api:discovery'
 
     @ha.callback
     def get(self, request):
@@ -180,7 +180,7 @@ class APIStatesView(HomeAssistantView):
     """View to handle States requests."""
 
     url = URL_API_STATES
-    name = "api:states"
+    name = 'api:states'
 
     @ha.callback
     def get(self, request):
@@ -257,7 +257,7 @@ class APIEventView(HomeAssistantView):
     """View to handle Event requests."""
 
     url = '/api/events/{event_type}'
-    name = "api:event"
+    name = 'api:event'
 
     @asyncio.coroutine
     def post(self, request, event_type):
@@ -292,7 +292,7 @@ class APIServicesView(HomeAssistantView):
     """View to handle Services requests."""
 
     url = URL_API_SERVICES
-    name = "api:services"
+    name = 'api:services'
 
     @asyncio.coroutine
     def get(self, request):
@@ -331,7 +331,7 @@ class APIComponentsView(HomeAssistantView):
     """View to handle Components requests."""
 
     url = URL_API_COMPONENTS
-    name = "api:components"
+    name = 'api:components'
 
     @ha.callback
     def get(self, request):
@@ -343,7 +343,7 @@ class APITemplateView(HomeAssistantView):
     """View to handle requests."""
 
     url = URL_API_TEMPLATE
-    name = "api:template"
+    name = 'api:template'
 
     @asyncio.coroutine
     def post(self, request):
@@ -361,11 +361,11 @@ class APITemplateView(HomeAssistantView):
 def async_services_json(hass):
     """Generate services data to JSONify."""
     descriptions = yield from async_get_all_descriptions(hass)
-    return [{"domain": key, "services": value}
+    return [{'domain': key, 'services': value}
             for key, value in descriptions.items()]
 
 
 def async_events_json(hass):
     """Generate event data to JSONify."""
-    return [{"event": key, "listener_count": value}
+    return [{'event': key, 'listener_count': value}
             for key, value in hass.bus.async_listeners().items()]

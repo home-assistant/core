@@ -22,9 +22,9 @@ REQUIREMENTS = ["waterfurnace==0.4.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "waterfurnace"
-UPDATE_TOPIC = DOMAIN + "_update"
-CONF_UNIT = "unit"
+DOMAIN = 'waterfurnace'
+UPDATE_TOPIC = DOMAIN + '_update'
+CONF_UNIT = 'unit'
 SCAN_INTERVAL = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema({

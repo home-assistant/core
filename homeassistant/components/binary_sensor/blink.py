@@ -61,7 +61,7 @@ class BlinkSystemSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the blink sensor."""
-        return self._name.replace(" ", "_")
+        return self._name.replace(' ', '_')
 
     @property
     def is_on(self):

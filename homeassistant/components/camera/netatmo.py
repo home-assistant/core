@@ -102,15 +102,15 @@ class NetatmoCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return "Netatmo"
+        return 'Netatmo'
 
     @property
     def model(self):
         """Return the camera model."""
-        if self._cameratype == "NOC":
-            return "Presence"
-        elif self._cameratype == "NACamera":
-            return "Welcome"
+        if self._cameratype == 'NOC':
+            return 'Presence'
+        elif self._cameratype == 'NACamera':
+            return 'Welcome'
         return None
 
     @property

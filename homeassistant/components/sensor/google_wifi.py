@@ -143,7 +143,7 @@ class GoogleWifiAPI(object):
     def __init__(self, host, conditions):
         """Initialize the data object."""
         uri = 'http://'
-        resource = "{}{}{}".format(uri, host, ENDPOINT)
+        resource = '{}{}{}'.format(uri, host, ENDPOINT)
         self._request = requests.Request('GET', resource).prepare()
         self.raw_data = None
         self.conditions = conditions

@@ -276,7 +276,7 @@ class AutomationEntity(ToggleEntity):
         if self._initial_state is not None:
             enable_automation = self._initial_state
             _LOGGER.debug("Automation %s initial state %s from config "
-                          "initial_state", self.entity_id, enable_automation)
+                          'initial_state', self.entity_id, enable_automation)
         else:
             state = yield from async_get_last_state(self.hass, self.entity_id)
             if state:

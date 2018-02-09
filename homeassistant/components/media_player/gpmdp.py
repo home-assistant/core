@@ -70,7 +70,7 @@ def request_configuration(hass, config, url, add_devices_callback):
                 continue
             if msg['channel'] != 'connect':
                 continue
-            if msg['payload'] != "CODE_REQUIRED":
+            if msg['payload'] != 'CODE_REQUIRED':
                 continue
             pin = callback_data.get('pin')
             websocket.send(json.dumps({'namespace': 'connect',
@@ -86,7 +86,7 @@ def request_configuration(hass, config, url, add_devices_callback):
                 continue
             setup_gpmdp(hass, config, code,
                         add_devices_callback)
-            save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
+            save_json(hass.config.path(GPMDP_CONFIG_FILE), {'CODE': code})
             websocket.send(json.dumps({'namespace': 'connect',
                                        'method': 'connect',
                                        'arguments': ["Home Assistant", code]}))
@@ -98,7 +98,7 @@ def request_configuration(hass, config, url, add_devices_callback):
         description=(
             "Enter the pin that is displayed in the "
             "Google Play Music Desktop Player."),
-        submit_caption="Submit",
+        submit_caption='Submit',
         fields=[{'id': 'pin', 'name': "Pin Code", 'type': 'number'}]
     )
 

@@ -128,12 +128,12 @@ class AnthemAVR(MediaPlayerDevice):
     @property
     def source(self):
         """Return currently selected input."""
-        return self._lookup('input_name', "Unknown")
+        return self._lookup('input_name', 'Unknown')
 
     @property
     def source_list(self):
         """Return all active, configured inputs."""
-        return self._lookup('input_list', ["Unknown"])
+        return self._lookup('input_list', ['Unknown'])
 
     @asyncio.coroutine
     def async_select_source(self, source):

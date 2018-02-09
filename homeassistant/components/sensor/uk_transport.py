@@ -113,7 +113,7 @@ class UkTransportSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return 'min'
 
     @property
     def icon(self):

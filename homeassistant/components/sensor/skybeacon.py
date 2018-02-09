@@ -81,13 +81,13 @@ class SkybeaconHumid(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "%"
+        return '%'
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_DEVICE: "SKYBEACON",
+            ATTR_DEVICE: 'SKYBEACON',
             ATTR_MODEL: 1,
         }
 
@@ -119,7 +119,7 @@ class SkybeaconTemp(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_DEVICE: "SKYBEACON",
+            ATTR_DEVICE: 'SKYBEACON',
             ATTR_MODEL: 1,
         }
 
@@ -180,7 +180,7 @@ class Monitor(threading.Thread):
         """Notification callback from pygatt."""
         _LOGGER.debug("%s: %15s temperature = %-2d.%-2d, humidity = %3d",
                       handle, self.name, value[0], value[2], value[1])
-        self.data['temp'] = float(("%d.%d" % (value[0], value[2])))
+        self.data['temp'] = float(('%d.%d' % (value[0], value[2])))
         self.data['humid'] = value[1]
 
     def terminate(self):

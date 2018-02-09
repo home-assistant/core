@@ -109,7 +109,7 @@ class Season(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "Season"
+        return 'Season'
 
     @property
     def state(self):

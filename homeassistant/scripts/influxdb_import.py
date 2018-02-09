@@ -88,11 +88,11 @@ def run(script_args: List) -> int:
         default="",
         help="Comma separated list of excluded domains")
     parser.add_argument(
-        "-S", "--simulate",
+        '-S', '--simulate',
         default=False,
-        action="store_true",
+        action='store_true',
         help=("Do not write points but simulate preprocessing and print "
-              "statistics"))
+              'statistics'))
     parser.add_argument(
         '--script',
         choices=['influxdb_import'])
@@ -247,8 +247,8 @@ def run(script_args: List) -> int:
         points = []
         step_start += step
 
-    print("\nStatistics:")
-    print("\n".join(["{:6}: {}".format(v, k) for k, v
+    print('\nStatistics:')
+    print('\n'.join(["{:6}: {}".format(v, k) for k, v
                      in sorted(entities.items(), key=lambda x: x[1])]))
     print("\nInvalid Points: {}".format(len(invalid_points)))
     print("\nImport finished: {} points written".format(count))

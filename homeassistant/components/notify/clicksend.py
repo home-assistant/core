@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 def get_service(hass, config, discovery_info=None):
     """Get the ClickSend notification service."""
-    print("#### ", config)
+    print('#### ', config)
     if _authenticate(config) is False:
         _LOGGER.exception("You are not authorized to access ClickSend")
         return None

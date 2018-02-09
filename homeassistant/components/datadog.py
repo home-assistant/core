@@ -57,8 +57,8 @@ def setup(hass, config):
             title="Home Assistant",
             text="%%% \n **{}** {} \n %%%".format(name, message),
             tags=[
-                "entity:{}".format(event.data.get('entity_id')),
-                "domain:{}".format(event.data.get('domain'))
+                'entity:{}'.format(event.data.get('entity_id')),
+                'domain:{}'.format(event.data.get('domain'))
             ]
         )
 
@@ -75,12 +75,12 @@ def setup(hass, config):
             return
 
         states = dict(state.attributes)
-        metric = "{}.{}".format(prefix, state.domain)
-        tags = ["entity:{}".format(state.entity_id)]
+        metric = '{}.{}'.format(prefix, state.domain)
+        tags = ['entity:{}'.format(state.entity_id)]
 
         for key, value in states.items():
             if isinstance(value, (float, int)):
-                attribute = "{}.{}".format(metric, key.replace(' ', '_'))
+                attribute = '{}.{}'.format(metric, key.replace(' ', '_'))
                 statsd.gauge(
                     attribute, value, sample_rate=sample_rate, tags=tags)
 

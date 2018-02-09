@@ -86,7 +86,7 @@ class KankunSwitch(SwitchDevice):
         try:
             req = requests.get('{}?get=state'.format(self._url),
                                auth=self._auth, timeout=5)
-            return req.json()['state'] == "on"
+            return req.json()['state'] == 'on'
         except requests.RequestException:
             _LOGGER.error("State query failed")
 

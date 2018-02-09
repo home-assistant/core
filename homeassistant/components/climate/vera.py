@@ -72,13 +72,13 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     def current_fan_mode(self):
         """Return the fan setting."""
         mode = self.vera_device.get_fan_mode()
-        if mode == "ContinuousOn":
+        if mode == 'ContinuousOn':
             return FAN_OPERATION_LIST[0]  # on
-        elif mode == "Auto":
+        elif mode == 'Auto':
             return FAN_OPERATION_LIST[1]  # auto
-        elif mode == "PeriodicOn":
+        elif mode == 'PeriodicOn':
             return FAN_OPERATION_LIST[2]  # cycle
-        return "Auto"
+        return 'Auto'
 
     @property
     def fan_list(self):

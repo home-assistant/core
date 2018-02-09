@@ -161,7 +161,7 @@ class DominosProductListView(http.HomeAssistantView):
     """View to retrieve product list content."""
 
     url = '/api/dominos'
-    name = "api:dominos"
+    name = 'api:dominos'
 
     def __init__(self, dominos):
         """Initialize suite view."""

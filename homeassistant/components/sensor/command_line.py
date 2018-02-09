@@ -118,7 +118,7 @@ class CommandSensorData(object):
 
         if args_compiled:
             try:
-                args_to_render = {"arguments": args}
+                args_to_render = {'arguments': args}
                 rendered_args = args_compiled.render(args_to_render)
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)

@@ -129,10 +129,10 @@ class NZBGetSensor(Entity):
             _LOGGER.warning("Unable to locate value for %s", self.type)
             return
 
-        if "DownloadRate" in self.type and value > 0:
+        if 'DownloadRate' in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
             self._state = round(value / 2**20, 2)
-        elif "UpTimeSec" in self.type and value > 0:
+        elif 'UpTimeSec' in self.type and value > 0:
             # Convert uptime from seconds to minutes
             self._state = round(value / 60, 2)
         else:

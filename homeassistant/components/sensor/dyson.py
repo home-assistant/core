@@ -158,8 +158,8 @@ class DysonTemperatureSensor(DysonSensor):
             if temperature_kelvin == 0:
                 return STATE_OFF
             if self._unit == TEMP_CELSIUS:
-                return float("{0:.1f}".format(temperature_kelvin - 273.15))
-            return float("{0:.1f}".format(temperature_kelvin * 9 / 5 - 459.67))
+                return float('{0:.1f}'.format(temperature_kelvin - 273.15))
+            return float('{0:.1f}'.format(temperature_kelvin * 9 / 5 - 459.67))
         return None
 
     @property

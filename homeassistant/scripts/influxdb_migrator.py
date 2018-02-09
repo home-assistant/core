@@ -28,7 +28,7 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
                                             percents, '%', suffix))
     sys.stdout.flush()
     if iteration == total:
-        print("\n")
+        print('\n')
 
 
 def run(script_args: List) -> int:
@@ -95,7 +95,7 @@ def run(script_args: List) -> int:
     nb_measurements = len(measurements)
     # Move data
     # Get old DB name
-    old_dbname = "{}__old".format(args.dbname)
+    old_dbname = '{}__old'.format(args.dbname)
     # Create old DB if needed
     if old_dbname not in db_list:
         client.create_database(old_dbname)
@@ -138,15 +138,15 @@ def run(script_args: List) -> int:
             res = client.query('SELECT * FROM "{}" LIMIT {} OFFSET '
                                '{}'.format(measurement, args.step, offset))
             for point in res.get_points():
-                new_point = {"tags": {},
-                             "fields": {},
-                             "time": None}
+                new_point = {'tags': {},
+                             'fields': {},
+                             'time': None}
                 if args.override_measurement:
-                    new_point["measurement"] = args.override_measurement
+                    new_point['measurement'] = args.override_measurement
                 else:
-                    new_point["measurement"] = measurement
+                    new_point['measurement'] = measurement
                 # Check time
-                if point["time"] is None:
+                if point['time'] is None:
                     # Point without time
                     point_wt_time += 1
                     print("Can not convert point without time")
@@ -154,18 +154,18 @@ def run(script_args: List) -> int:
                 # Convert all fields
                 for field in fields:
                     try:
-                        new_point["fields"][field] = float(point[field])
+                        new_point['fields'][field] = float(point[field])
                     except (ValueError, TypeError):
-                        if field == "value":
-                            new_key = "state"
+                        if field == 'value':
+                            new_key = 'state'
                         else:
-                            new_key = "{}_str".format(field)
-                        new_point["fields"][new_key] = str(point[field])
+                            new_key = '{}_str'.format(field)
+                        new_point['fields'][new_key] = str(point[field])
                 # Add tags
                 for tag in tags:
-                    new_point["tags"][tag] = point[tag]
+                    new_point['tags'][tag] = point[tag]
                 # Set time
-                new_point["time"] = point["time"]
+                new_point['time'] = point['time']
                 # Add new point to the new list
                 new_points.append(new_point)
                 # Count nb points

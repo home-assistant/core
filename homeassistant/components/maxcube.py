@@ -70,7 +70,7 @@ class MaxCubeHandle(object):
         with self.mutex:
             # Only update every 60s
             if (time.time() - self._updatets) >= 60:
-                _LOGGER.debug("Updating")
+                _LOGGER.debug('Updating')
 
                 try:
                     self.cube.update()

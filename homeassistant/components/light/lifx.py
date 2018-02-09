@@ -322,9 +322,9 @@ class LIFXManager(object):
                 device.retry_count = MESSAGE_RETRIES
                 device.unregister_timeout = UNAVAILABLE_GRACE
 
-                if lifx_features(device)["multizone"]:
+                if lifx_features(device)['multizone']:
                     entity = LIFXStrip(device, self.effects_conductor)
-                elif lifx_features(device)["color"]:
+                elif lifx_features(device)['color']:
                     entity = LIFXColor(device, self.effects_conductor)
                 else:
                     entity = LIFXWhite(device, self.effects_conductor)

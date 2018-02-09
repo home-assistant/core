@@ -16,8 +16,8 @@ def install_osx():
     with open(template_path, 'r', encoding='utf-8') as inp:
         plist = inp.read()
 
-    plist = plist.replace("$HASS_PATH$", hass_path)
-    plist = plist.replace("$USER$", user)
+    plist = plist.replace('$HASS_PATH$', hass_path)
+    plist = plist.replace('$USER$', user)
 
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
 

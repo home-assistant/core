@@ -61,9 +61,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
-        "DHT11": Adafruit_DHT.DHT11,
-        "DHT22": Adafruit_DHT.DHT22,
-        "AM2302": Adafruit_DHT.AM2302
+        'DHT11': Adafruit_DHT.DHT11,
+        'DHT22': Adafruit_DHT.DHT22,
+        'AM2302': Adafruit_DHT.AM2302
     }
     sensor = available_sensors.get(config.get(CONF_SENSOR))
     pin = config.get(CONF_PIN)

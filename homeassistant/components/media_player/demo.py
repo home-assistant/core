@@ -165,7 +165,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     @property
     def app_name(self):
         """Return the current running application."""
-        return "YouTube"
+        return 'YouTube'
 
     @property
     def supported_features(self):
@@ -274,7 +274,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
         # pylint: disable=no-self-use
-        return "Bounzz"
+        return 'Bounzz'
 
     @property
     def media_track(self):
@@ -369,7 +369,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def app_name(self):
         """Return the current running application."""
-        return "Netflix"
+        return 'Netflix'
 
     @property
     def source(self):

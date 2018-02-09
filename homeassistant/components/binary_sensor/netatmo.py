@@ -23,19 +23,19 @@ DEPENDENCIES = ['netatmo']
 
 # These are the available sensors mapped to binary_sensor class
 WELCOME_SENSOR_TYPES = {
-    "Someone known": "motion",
-    "Someone unknown": "motion",
-    "Motion": "motion",
+    "Someone known": 'motion',
+    "Someone unknown": 'motion',
+    'Motion': 'motion',
 }
 PRESENCE_SENSOR_TYPES = {
-    "Outdoor motion": "motion",
-    "Outdoor human": "motion",
-    "Outdoor animal": "motion",
-    "Outdoor vehicle": "motion"
+    "Outdoor motion": 'motion',
+    "Outdoor human": 'motion',
+    "Outdoor animal": 'motion',
+    "Outdoor vehicle": 'motion'
 }
 TAG_SENSOR_TYPES = {
-    "Tag Vibration": "vibration",
-    "Tag Open": "opening"
+    "Tag Vibration": 'vibration',
+    "Tag Open": 'opening'
 }
 
 CONF_HOME = 'home'
@@ -174,7 +174,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
                 self._state =\
                     self._data.camera_data.someoneUnknownSeen(
                         self._home, self._camera_name, self._timeout)
-            elif self._sensor_name == "Motion":
+            elif self._sensor_name == 'Motion':
                 self._state =\
                     self._data.camera_data.motionDetected(
                         self._home, self._camera_name, self._timeout)

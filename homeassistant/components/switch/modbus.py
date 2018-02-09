@@ -17,15 +17,15 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-CONF_REGISTER = "register"
-CONF_REGISTERS = "registers"
-CONF_VERIFY_STATE = "verify_state"
-CONF_VERIFY_REGISTER = "verify_register"
-CONF_REGISTER_TYPE = "register_type"
-CONF_STATE_ON = "state_on"
-CONF_STATE_OFF = "state_off"
+CONF_COIL = 'coil'
+CONF_COILS = 'coils'
+CONF_REGISTER = 'register'
+CONF_REGISTERS = 'registers'
+CONF_VERIFY_STATE = 'verify_state'
+CONF_VERIFY_REGISTER = 'verify_register'
+CONF_REGISTER_TYPE = 'register_type'
+CONF_STATE_ON = 'state_on'
+CONF_STATE_OFF = 'state_off'
 
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'

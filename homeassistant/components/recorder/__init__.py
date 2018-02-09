@@ -224,7 +224,7 @@ class Recorder(threading.Thread):
                 persistent_notification.async_create(
                     self.hass,
                     "The recorder could not start, please check the log",
-                    "Recorder")
+                    'Recorder')
 
             self.hass.add_job(connection_failed)
             return
@@ -360,7 +360,7 @@ class Recorder(threading.Thread):
         kwargs = {}
 
         # pylint: disable=unused-variable
-        @event.listens_for(Engine, "connect")
+        @event.listens_for(Engine, 'connect')
         def set_sqlite_pragma(dbapi_connection, connection_record):
             """Set sqlite's WAL mode."""
             if isinstance(dbapi_connection, Connection):

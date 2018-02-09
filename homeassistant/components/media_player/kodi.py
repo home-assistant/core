@@ -254,7 +254,7 @@ class KodiDevice(MediaPlayerDevice):
 
         if username is not None:
             kwargs['auth'] = aiohttp.BasicAuth(username, password)
-            image_auth_string = "{}:{}@".format(username, password)
+            image_auth_string = '{}:{}@'.format(username, password)
         else:
             image_auth_string = ""
 
@@ -576,7 +576,7 @@ class KodiDevice(MediaPlayerDevice):
         """Execute turn_on_action to turn on media player."""
         if self._turn_on_action is not None:
             yield from self._turn_on_action.async_run(
-                variables={"entity_id": self.entity_id})
+                variables={'entity_id': self.entity_id})
         else:
             _LOGGER.warning("turn_on requested but turn_on_action is none")
 
@@ -586,7 +586,7 @@ class KodiDevice(MediaPlayerDevice):
         """Execute turn_off_action to turn off media player."""
         if self._turn_off_action is not None:
             yield from self._turn_off_action.async_run(
-                variables={"entity_id": self.entity_id})
+                variables={'entity_id': self.entity_id})
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 
@@ -720,15 +720,15 @@ class KodiDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if media_type == "CHANNEL":
+        if media_type == 'CHANNEL':
             return self.server.Player.Open(
-                {"item": {"channelid": int(media_id)}})
-        elif media_type == "PLAYLIST":
+                {'item': {'channelid': int(media_id)}})
+        elif media_type == 'PLAYLIST':
             return self.server.Player.Open(
-                {"item": {"playlistid": int(media_id)}})
+                {'item': {'playlistid': int(media_id)}})
 
         return self.server.Player.Open(
-            {"item": {"file": str(media_id)}})
+            {'item': {'file': str(media_id)}})
 
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle):
@@ -736,7 +736,7 @@ class KodiDevice(MediaPlayerDevice):
         if len(self._players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
-            {"playerid": self._players[0]['playerid'], "shuffle": shuffle})
+            {'playerid': self._players[0]['playerid'], 'shuffle': shuffle})
 
     @asyncio.coroutine
     def async_call_method(self, method, **kwargs):
@@ -754,7 +754,7 @@ class KodiDevice(MediaPlayerDevice):
         except jsonrpc_base.jsonrpc.TransportError:
             result = None
             _LOGGER.warning("TransportError trying to run API method "
-                            "%s.%s(%s)", self.entity_id, method, kwargs)
+                            '%s.%s(%s)', self.entity_id, method, kwargs)
 
         if isinstance(result, dict):
             event_data = {'entity_id': self.entity_id,
@@ -775,27 +775,27 @@ class KodiDevice(MediaPlayerDevice):
         the media can be specified in terms of id or
         name and optionally artist name.
         All the albums of an artist can be added with
-        media_name="ALL"
+        media_name='ALL'
         """
         import jsonrpc_base
-        params = {"playlistid": 0}
-        if media_type == "SONG":
+        params = {'playlistid': 0}
+        if media_type == 'SONG':
             if media_id is None:
                 media_id = yield from self.async_find_song(
                     media_name, artist_name)
             if media_id:
-                params["item"] = {"songid": int(media_id)}
+                params['item'] = {'songid': int(media_id)}
 
-        elif media_type == "ALBUM":
+        elif media_type == 'ALBUM':
             if media_id is None:
-                if media_name == "ALL":
+                if media_name == 'ALL':
                     yield from self.async_add_all_albums(artist_name)
                     return
 
                 media_id = yield from self.async_find_album(
                     media_name, artist_name)
             if media_id:
-                params["item"] = {"albumid": int(media_id)}
+                params['item'] = {'albumid': int(media_id)}
 
         else:
             raise RuntimeError("Unrecognized media type.")
@@ -825,12 +825,12 @@ class KodiDevice(MediaPlayerDevice):
 
         for alb in albums['albums']:
             yield from self.server.Playlist.Add(
-                {"playlistid": 0, "item": {"albumid": int(alb['albumid'])}})
+                {'playlistid': 0, 'item': {'albumid': int(alb['albumid'])}})
 
     @asyncio.coroutine
     def async_clear_playlist(self):
         """Clear default playlist (i.e. playlistid=0)."""
-        return self.server.Playlist.Clear({"playlistid": 0})
+        return self.server.Playlist.Clear({'playlistid': 0})
 
     @asyncio.coroutine
     def async_get_artists(self):
@@ -844,7 +844,7 @@ class KodiDevice(MediaPlayerDevice):
             return (yield from self.server.AudioLibrary.GetAlbums())
 
         return (yield from self.server.AudioLibrary.GetAlbums(
-            {"filter": {"artistid": int(artist_id)}}))
+            {'filter': {'artistid': int(artist_id)}}))
 
     @asyncio.coroutine
     def async_find_artist(self, artist_name):
@@ -865,7 +865,7 @@ class KodiDevice(MediaPlayerDevice):
             return (yield from self.server.AudioLibrary.GetSongs())
 
         return (yield from self.server.AudioLibrary.GetSongs(
-            {"filter": {"artistid": int(artist_id)}}))
+            {'filter': {'artistid': int(artist_id)}}))
 
     @asyncio.coroutine
     def async_find_song(self, song_name, artist_name=''):

@@ -130,12 +130,12 @@ class ZigBeeConfig(object):
     def __init__(self, config):
         """Initialize the configuration."""
         self._config = config
-        self._should_poll = config.get("poll", True)
+        self._should_poll = config.get('poll', True)
 
     @property
     def name(self):
         """Return the name given to the entity."""
-        return self._config["name"]
+        return self._config['name']
 
     @property
     def address(self):
@@ -144,7 +144,7 @@ class ZigBeeConfig(object):
         If an address has been provided, unhexlify it, otherwise return None
         as we're talking to our local ZigBee device.
         """
-        address = self._config.get("address")
+        address = self._config.get('address')
         if address is not None:
             address = unhexlify(address)
         return address
@@ -161,7 +161,7 @@ class ZigBeePinConfig(ZigBeeConfig):
     @property
     def pin(self):
         """Return the GPIO pin number."""
-        return self._config["pin"]
+        return self._config['pin']
 
 
 class ZigBeeDigitalInConfig(ZigBeePinConfig):
@@ -180,7 +180,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
         values depending on the on_state config value which should be set to
         "low" or "high".
         """
-        if self._config.get("on_state", "").lower() == "low":
+        if self._config.get('on_state', '').lower() == 'low':
             bool2state = {
                 True: False,
                 False: True
@@ -221,7 +221,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
         """Initialize the ZigBee Digital out."""
         super(ZigBeeDigitalOutConfig, self).__init__(config)
         self._bool2state, self._state2bool = self.boolean_maps
-        self._should_poll = config.get("poll", False)
+        self._should_poll = config.get('poll', False)
 
     @property
     def boolean_maps(self):
@@ -230,7 +230,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
         Depends on the config item "on_state" which should be set to "low"
         or "high".
         """
-        if self._config.get("on_state", "").lower() == "low":
+        if self._config.get('on_state', '').lower() == 'low':
             bool2state = {
                 True: GPIO_DIGITAL_OUTPUT_LOW,
                 False: GPIO_DIGITAL_OUTPUT_HIGH
@@ -266,7 +266,7 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
     @property
     def max_voltage(self):
         """Return the voltage for ADC to report its highest value."""
-        return float(self._config.get("max_volts", DEFAULT_ADC_MAX_VOLTS))
+        return float(self._config.get('max_volts', DEFAULT_ADC_MAX_VOLTS))
 
 
 class ZigBeeDigitalIn(Entity):
@@ -452,7 +452,7 @@ class ZigBeeAnalogIn(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "%"
+        return '%'
 
     def update(self):
         """Get the latest reading from the ADC."""

@@ -121,7 +121,7 @@ class DeconzBattery(Entity):
         self._device = device
         self._name = '{} {}'.format(self._device.name, "Battery Level")
         self._device_class = 'battery'
-        self._unit_of_measurement = "%"
+        self._unit_of_measurement = '%'
 
     @asyncio.coroutine
     def async_added_to_hass(self):

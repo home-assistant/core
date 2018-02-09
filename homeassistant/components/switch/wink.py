@@ -65,7 +65,7 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
         try:
             event = self.wink.last_event()
             if event is not None:
-                attributes["last_event"] = event
+                attributes['last_event'] = event
         except AttributeError:
             pass
         return attributes

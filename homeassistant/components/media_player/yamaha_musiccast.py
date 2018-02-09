@@ -244,28 +244,28 @@ class YamahaDevice(MediaPlayerDevice):
 
     def media_play(self):
         """Send the media player the command for play/pause."""
-        _LOGGER.debug("Play")
-        self._recv.set_playback("play")
+        _LOGGER.debug('Play')
+        self._recv.set_playback('play')
 
     def media_pause(self):
         """Send the media player the command for pause."""
-        _LOGGER.debug("Pause")
-        self._recv.set_playback("pause")
+        _LOGGER.debug('Pause')
+        self._recv.set_playback('pause')
 
     def media_stop(self):
         """Send the media player the stop command."""
-        _LOGGER.debug("Stop")
-        self._recv.set_playback("stop")
+        _LOGGER.debug('Stop')
+        self._recv.set_playback('stop')
 
     def media_previous_track(self):
         """Send the media player the command for prev track."""
-        _LOGGER.debug("Previous")
-        self._recv.set_playback("previous")
+        _LOGGER.debug('Previous')
+        self._recv.set_playback('previous')
 
     def media_next_track(self):
         """Send the media player the command for next track."""
-        _LOGGER.debug("Next")
-        self._recv.set_playback("next")
+        _LOGGER.debug('Next')
+        self._recv.set_playback('next')
 
     def mute_volume(self, mute):
         """Send mute command."""

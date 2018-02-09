@@ -181,7 +181,7 @@ class MpdDevice(MediaPlayerDevice):
 
         if name is None and title is None:
             if file_name is None:
-                return "None"
+                return 'None'
             else:
                 return os.path.basename(file_name)
         elif name is None:

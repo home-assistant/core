@@ -115,7 +115,7 @@ class MochadLight(Light):
                 self.device.send_cmd('xdim {}'.format(out_brightness))
                 self._controller.read_data()
             else:
-                self.device.send_cmd("on")
+                self.device.send_cmd('on')
                 self._controller.read_data()
                 # There is no persistence for X10 modules so a fresh on command
                 # will be full brightness

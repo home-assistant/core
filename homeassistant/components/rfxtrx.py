@@ -86,7 +86,7 @@ def setup(hass, config):
                       slugify(event.device.id_string.lower()),
                       event.device.__class__.__name__,
                       event.device.subtype,
-                      "".join("{0:02x}".format(x) for x in event.data))
+                      "".join('{0:02x}'.format(x) for x in event.data))
 
         # Callback to HA registered components.
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
@@ -197,7 +197,7 @@ def find_possible_pt2262_device(device_id):
                 size = len(dev_id) - size - 1
                 _LOGGER.info("rfxtrx: found possible device %s for %s "
                              "with the following configuration:\n"
-                             "data_bits=%d\n"
+                             'data_bits=%d\n'
                              "command_on=0x%s\n"
                              "command_off=0x%s\n",
                              device_id,
@@ -244,7 +244,7 @@ def get_new_device(event, config, device):
     if not config[ATTR_AUTOMATIC_ADD]:
         return
 
-    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+    pkt_id = "".join('{0:02x}'.format(x) for x in event.data)
     _LOGGER.debug(
         "Automatic add %s rfxtrx device (Class: %s Sub: %s Packet_id: %s)",
         device_id,
@@ -355,7 +355,7 @@ class RfxtrxDevice(Entity):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self._send_command("turn_off")
+        self._send_command('turn_off')
 
     def update_state(self, state, brightness=0):
         """Update det state of the device."""
@@ -369,12 +369,12 @@ class RfxtrxDevice(Entity):
             return
         rfx_object = self.hass.data[DATA_RFXOBJECT]
 
-        if command == "turn_on":
+        if command == 'turn_on':
             for _ in range(self.signal_repetitions):
                 self._event.device.send_on(rfx_object.transport)
             self._state = True
 
-        elif command == "dim":
+        elif command == 'dim':
             for _ in range(self.signal_repetitions):
                 self._event.device.send_dim(rfx_object.transport, brightness)
             self._state = True
@@ -385,15 +385,15 @@ class RfxtrxDevice(Entity):
             self._state = False
             self._brightness = 0
 
-        elif command == "roll_up":
+        elif command == 'roll_up':
             for _ in range(self.signal_repetitions):
                 self._event.device.send_open(rfx_object.transport)
 
-        elif command == "roll_down":
+        elif command == 'roll_down':
             for _ in range(self.signal_repetitions):
                 self._event.device.send_close(rfx_object.transport)
 
-        elif command == "stop_roll":
+        elif command == 'stop_roll':
             for _ in range(self.signal_repetitions):
                 self._event.device.send_stop(rfx_object.transport)
 

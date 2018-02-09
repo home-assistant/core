@@ -116,7 +116,7 @@ def request_configuration(hass, config, name, host, serialnumber):
         entity_picture="/static/images/logo_axis.png",
         link_name="Axis platform documentation",
         link_url='https://home-assistant.io/components/axis/',
-        submit_caption="Confirm",
+        submit_caption='Confirm',
         fields=[
             {'id': CONF_NAME,
              'name': "Device name",

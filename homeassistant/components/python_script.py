@@ -113,12 +113,12 @@ def execute(hass, filename, source, data=None):
 
     if compiled.errors:
         _LOGGER.error("Error loading script %s: %s", filename,
-                      ", ".join(compiled.errors))
+                      ', '.join(compiled.errors))
         return
 
     if compiled.warnings:
         _LOGGER.warning("Warning loading script %s: %s", filename,
-                        ", ".join(compiled.warnings))
+                        ', '.join(compiled.warnings))
 
     def protected_getattr(obj, name, default=None):
         """Restricted method to get attributes."""

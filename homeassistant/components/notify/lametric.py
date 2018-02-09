@@ -20,11 +20,11 @@ DEPENDENCIES = ['lametric']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LIFETIME = "lifetime"
-CONF_CYCLES = "cycles"
+CONF_LIFETIME = 'lifetime'
+CONF_CYCLES = 'cycles'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ICON, default="i555"): cv.string,
+    vol.Optional(CONF_ICON, default='i555'): cv.string,
     vol.Optional(CONF_LIFETIME, default=10): cv.positive_int,
     vol.Optional(CONF_CYCLES, default=1): cv.positive_int,
 })
@@ -65,17 +65,17 @@ class LaMetricNotificationService(BaseNotificationService):
 
         # Additional data?
         if data is not None:
-            if "icon" in data:
-                icon = data["icon"]
-            if "sound" in data:
+            if 'icon' in data:
+                icon = data['icon']
+            if 'sound' in data:
                 try:
-                    sound = Sound(category="notifications",
-                                  sound_id=data["sound"])
+                    sound = Sound(category='notifications',
+                                  sound_id=data['sound'])
                     _LOGGER.debug("Adding notification sound %s",
-                                  data["sound"])
+                                  data['sound'])
                 except AssertionError:
                     _LOGGER.error("Sound ID %s unknown, ignoring",
-                                  data["sound"])
+                                  data['sound'])
 
         text_frame = SimpleFrame(icon, message)
         _LOGGER.debug("Icon/Message/Cycles/Lifetime: %s, %s, %d, %d",
@@ -92,7 +92,7 @@ class LaMetricNotificationService(BaseNotificationService):
             lmn.get_token()
             devices = lmn.get_devices()
         for dev in devices:
-            if targets is None or dev["name"] in targets:
+            if targets is None or dev['name'] in targets:
                 lmn.set_device(dev)
                 lmn.send_notification(model, lifetime=self._lifetime)
-                _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
+                _LOGGER.debug("Sent notification to LaMetric %s", dev['name'])

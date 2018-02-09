@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             except PermissionError:
                 _LOGGER.error("The Gateway Is Not In Sync Mode")
                 raise
-            with open(tokenfile, "w+") as tokenfile:
+            with open(tokenfile, 'w+') as tokenfile:
                 tokenfile.write(token)
     else:
         token = None

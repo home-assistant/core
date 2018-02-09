@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     auth_flow = ClientCredentialGrant(client_id=config.get(CONF_CLIENT_ID),
                                       client_secret=config.get(
                                           CONF_CLIENT_SECRET),
-                                      scopes="public",
+                                      scopes='public',
                                       is_sandbox_mode=False)
     try:
         session = auth_flow.get_session()
@@ -133,7 +133,7 @@ class LyftSensor(Entity):
             params["Price currency code"] = pricing_details.get('currency')
             params["Service fee"] = pricing_details.get('trust_and_service')
 
-        if self._product.get("estimate") is not None:
+        if self._product.get('estimate') is not None:
             estimate = self._product['estimate']
             params["Trip distance (in miles)"] = estimate.get(
                 'estimated_distance_miles')
@@ -147,7 +147,7 @@ class LyftSensor(Entity):
             params["Prime Time percentage"] = estimate.get(
                 'primetime_percentage')
 
-        if self._product.get("eta") is not None:
+        if self._product.get('eta') is not None:
             eta = self._product['eta']
             params["Pickup time estimate (in seconds)"] = eta.get(
                 'eta_seconds')

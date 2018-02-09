@@ -178,11 +178,11 @@ class TPLinkSmartBulb(Light):
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
                     self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            daily_statistics[int(time.strftime("%d"))])
+                        = '{:.3f}'.format(
+                            daily_statistics[int(time.strftime('%d'))])
                     self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            monthly_statistics[int(time.strftime("%m"))])
+                        = '{:.3f}'.format(
+                            monthly_statistics[int(time.strftime('%m'))])
                 except KeyError:
                     # device returned no daily/monthly history
                     pass

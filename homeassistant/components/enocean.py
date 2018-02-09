@@ -76,38 +76,38 @@ class EnOceanDongle:
             rxtype = None
             value = None
             if temp.data[6] == 0x30:
-                rxtype = "wallswitch"
+                rxtype = 'wallswitch'
                 value = 1
             elif temp.data[6] == 0x20:
-                rxtype = "wallswitch"
+                rxtype = 'wallswitch'
                 value = 0
             elif temp.data[4] == 0x0c:
-                rxtype = "power"
+                rxtype = 'power'
                 value = temp.data[3] + (temp.data[2] << 8)
             elif temp.data[2] == 0x60:
-                rxtype = "switch_status"
+                rxtype = 'switch_status'
                 if temp.data[3] == 0xe4:
                     value = 1
                 elif temp.data[3] == 0x80:
                     value = 0
             elif temp.data[0] == 0xa5 and temp.data[1] == 0x02:
-                rxtype = "dimmerstatus"
+                rxtype = 'dimmerstatus'
                 value = temp.data[2]
             for device in self.__devices:
-                if rxtype == "wallswitch" and device.stype == "listener":
+                if rxtype == 'wallswitch' and device.stype == 'listener':
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value, temp.data[1])
-                if rxtype == "power" and device.stype == "powersensor":
+                if rxtype == 'power' and device.stype == 'powersensor':
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
-                if rxtype == "power" and device.stype == "switch":
+                if rxtype == 'power' and device.stype == 'switch':
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         if value > 10:
                             device.value_changed(1)
-                if rxtype == "switch_status" and device.stype == "switch":
+                if rxtype == 'switch_status' and device.stype == 'switch':
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
-                if rxtype == "dimmerstatus" and device.stype == "dimmer":
+                if rxtype == 'dimmerstatus' and device.stype == 'dimmer':
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
 

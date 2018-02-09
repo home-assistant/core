@@ -44,7 +44,7 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return "occupancy"
+        return 'occupancy'
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""

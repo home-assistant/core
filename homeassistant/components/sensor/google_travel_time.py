@@ -241,7 +241,7 @@ class GoogleTravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self._hass.states.get("zone.%s" % entity.state)
+        zone_entity = self._hass.states.get('zone.%s' % entity.state)
         if location.has_location(zone_entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location",
@@ -250,7 +250,7 @@ class GoogleTravelTimeSensor(Entity):
             return self._get_location_from_attributes(zone_entity)
 
         # If zone was not found in state then use the state as the location
-        if entity_id.startswith("sensor."):
+        if entity_id.startswith('sensor.'):
             return entity.state
 
         # When everything fails just return nothing
@@ -260,7 +260,7 @@ class GoogleTravelTimeSensor(Entity):
     def _get_location_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        return '%s,%s' % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
     def _resolve_zone(self, friendly_name):
         entities = self._hass.states.all()

@@ -192,7 +192,7 @@ class YamahaDevice(MediaPlayerDevice):
         zone_name = self._zone_names.get(self._zone, self._zone)
         if zone_name != "Main_Zone":
             # Zone will be one of Main_Zone, Zone_2, Zone_3
-            name += " " + zone_name.replace('_', ' ')
+            name += ' ' + zone_name.replace('_', ' ')
         return name
 
     @property
@@ -257,15 +257,15 @@ class YamahaDevice(MediaPlayerDevice):
 
     def media_play(self):
         """Send play command."""
-        self._call_playback_function(self.receiver.play, "play")
+        self._call_playback_function(self.receiver.play, 'play')
 
     def media_pause(self):
         """Send pause command."""
-        self._call_playback_function(self.receiver.pause, "pause")
+        self._call_playback_function(self.receiver.pause, 'pause')
 
     def media_stop(self):
         """Send stop command."""
-        self._call_playback_function(self.receiver.stop, "stop")
+        self._call_playback_function(self.receiver.stop, 'stop')
 
     def media_previous_track(self):
         """Send previous track command."""

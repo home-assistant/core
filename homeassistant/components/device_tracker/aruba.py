@@ -93,7 +93,7 @@ class ArubaDeviceScanner(DeviceScanner):
                             "Connection refused",
                             "Connection timed out"], timeout=120)
         if query == 1:
-            _LOGGER.error("Timeout")
+            _LOGGER.error('Timeout')
             return
         elif query == 2:
             _LOGGER.error("Unexpected response from router")

@@ -154,7 +154,7 @@ def async_check_config(hass):
 
     if not result:
         return "Hass.io config check API error"
-    elif result['result'] == "error":
+    elif result['result'] == 'error':
         return result['message']
     return None
 
@@ -208,7 +208,7 @@ def async_setup(hass, config):
             payload=payload, timeout=MAP_SERVICE_API[service.service][2]
         )
 
-        if not ret or ret['result'] != "ok":
+        if not ret or ret['result'] != 'ok':
             _LOGGER.error("Error on Hass.io API: %s", ret['message'])
 
     for service, settings in MAP_SERVICE_API.items():
@@ -262,7 +262,7 @@ def _api_bool(funct):
     def _wrapper(*argv, **kwargs):
         """Wrap function."""
         data = yield from funct(*argv, **kwargs)
-        return data and data['result'] == "ok"
+        return data and data['result'] == 'ok'
 
     return _wrapper
 
@@ -282,14 +282,14 @@ class HassIO(object):
 
         This method return a coroutine.
         """
-        return self.send_command("/supervisor/ping", method="get")
+        return self.send_command("/supervisor/ping", method='get')
 
     def get_homeassistant_info(self):
         """Return data for Home Assistant.
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/info", method="get")
+        return self.send_command("/homeassistant/info", method='get')
 
     @_api_bool
     def update_hass_api(self, http_config):
@@ -322,7 +322,7 @@ class HassIO(object):
         })
 
     @asyncio.coroutine
-    def send_command(self, command, method="post", payload=None, timeout=10):
+    def send_command(self, command, method='post', payload=None, timeout=10):
         """Send API command to Hass.io.
 
         This method is a coroutine.
@@ -389,7 +389,7 @@ class HassIO(object):
 class HassIOView(HomeAssistantView):
     """Hass.io view to handle base part."""
 
-    name = "api:hassio"
+    name = 'api:hassio'
     url = "/api/hassio/{path:.+}"
     requires_auth = False
 

@@ -124,7 +124,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                                  'application/octet-stream',
                                  {'Expires': '0'}), type='0',
                        title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-                       msg=message, duration="%i" % self._default_duration,
+                       msg=message, duration='%i' % self._default_duration,
                        position='%i' % POSITIONS.get(self._default_position),
                        bkgcolor='%s' % COLORS.get(self._default_color),
                        transparency='%i' % TRANSPARENCIES.get(

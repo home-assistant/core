@@ -281,7 +281,7 @@ class CoverTemplate(CoverDevice):
         if self._open_script:
             yield from self._open_script.async_run()
         elif self._position_script:
-            yield from self._position_script.async_run({"position": 100})
+            yield from self._position_script.async_run({'position': 100})
         if self._optimistic:
             self._position = 100
             self.async_schedule_update_ha_state()
@@ -292,7 +292,7 @@ class CoverTemplate(CoverDevice):
         if self._close_script:
             yield from self._close_script.async_run()
         elif self._position_script:
-            yield from self._position_script.async_run({"position": 0})
+            yield from self._position_script.async_run({'position': 0})
         if self._optimistic:
             self._position = 0
             self.async_schedule_update_ha_state()
@@ -308,7 +308,7 @@ class CoverTemplate(CoverDevice):
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
         yield from self._position_script.async_run(
-            {"position": self._position})
+            {'position': self._position})
         if self._optimistic:
             self.async_schedule_update_ha_state()
 
@@ -316,7 +316,7 @@ class CoverTemplate(CoverDevice):
     def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         self._tilt_value = 100
-        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        yield from self._tilt_script.async_run({'tilt': self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
@@ -325,7 +325,7 @@ class CoverTemplate(CoverDevice):
         """Tilt the cover closed."""
         self._tilt_value = 0
         yield from self._tilt_script.async_run(
-            {"tilt": self._tilt_value})
+            {'tilt': self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
@@ -333,7 +333,7 @@ class CoverTemplate(CoverDevice):
     def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        yield from self._tilt_script.async_run({'tilt': self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 

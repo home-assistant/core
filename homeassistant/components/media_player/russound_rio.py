@@ -97,7 +97,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         if current:
             value = self._russ.get_cached_source_variable(
                 current, name, None)
-            if value in (None, "", "------"):
+            if value in (None, "", '------'):
                 return None
             return value
         else:
@@ -131,7 +131,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        status = self._zone_var('status', "OFF")
+        status = self._zone_var('status', 'OFF')
         if status == 'ON':
             return STATE_ON
         elif status == 'OFF':
@@ -189,19 +189,19 @@ class RussoundZoneDevice(MediaPlayerDevice):
     def async_turn_off(self):
         """Turn off the zone."""
         return self._russ.send_zone_event(self._zone_id,
-                                          "ZoneOff")
+                                          'ZoneOff')
 
     def async_turn_on(self):
         """Turn on the zone."""
         return self._russ.send_zone_event(self._zone_id,
-                                          "ZoneOn")
+                                          'ZoneOn')
 
     def async_set_volume_level(self, volume):
         """Set the volume level."""
         rvol = int(volume * 50.0)
         return self._russ.send_zone_event(self._zone_id,
-                                          "KeyPress",
-                                          "Volume",
+                                          'KeyPress',
+                                          'Volume',
                                           rvol)
 
     def async_select_source(self, source):
@@ -210,4 +210,4 @@ class RussoundZoneDevice(MediaPlayerDevice):
             if name.lower() != source.lower():
                 continue
             return self._russ.send_zone_event(
-                self._zone_id, "SelectSource", source_id)
+                self._zone_id, 'SelectSource', source_id)

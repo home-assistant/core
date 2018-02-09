@@ -70,7 +70,7 @@ MAPPING_COMPONENT = {
 
 
 """Error code used for SmartHomeError class."""
-ERROR_NOT_SUPPORTED = "notSupported"
+ERROR_NOT_SUPPORTED = 'notSupported'
 
 
 class SmartHomeError(Exception):
@@ -487,11 +487,11 @@ def handle_devices_execute(hass, config, payload):
                 (service, service_data) = determine_service(
                     eid, execution.get('command'), execution.get('params'),
                     hass.config.units)
-                if domain == "group":
-                    domain = "homeassistant"
+                if domain == 'group':
+                    domain = 'homeassistant'
                 success = yield from hass.services.async_call(
                     domain, service, service_data, blocking=True)
-                result = {"ids": [eid], "states": {}}
+                result = {'ids': [eid], 'states': {}}
                 if success:
                     result['status'] = 'SUCCESS'
                 else:

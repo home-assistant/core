@@ -43,7 +43,7 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
                                             percents, '%', suffix))
     sys.stdout.flush()
     if iteration == total:
-        print("\n")
+        print('\n')
 
 
 def run(script_args: List) -> int:

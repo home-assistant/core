@@ -44,8 +44,8 @@ class YesssSMSNotificationService(BaseNotificationService):
         try:
             self.yesss.send(self._recipient, message)
         except ValueError as ex:
-            if str(ex).startswith("YesssSMS:"):
+            if str(ex).startswith('YesssSMS:'):
                 _LOGGER.error(str(ex))
         except RuntimeError as ex:
-            if str(ex).startswith("YesssSMS:"):
+            if str(ex).startswith('YesssSMS:'):
                 _LOGGER.error(str(ex))

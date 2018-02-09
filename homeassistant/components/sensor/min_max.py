@@ -172,7 +172,7 @@ class MinMaxSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if self._unit_of_measurement_mismatch:
-            return "ERR"
+            return 'ERR'
         return self._unit_of_measurement
 
     @property

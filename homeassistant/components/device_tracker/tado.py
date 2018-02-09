@@ -39,7 +39,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name"])
+Device = namedtuple('Device', ['mac', 'name'])
 
 
 class TadoDeviceScanner(DeviceScanner):

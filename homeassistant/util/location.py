@@ -27,7 +27,7 @@ MAX_ITERATIONS = 200
 CONVERGENCE_THRESHOLD = 1e-12
 
 LocationInfo = collections.namedtuple(
-    "LocationInfo",
+    'LocationInfo',
     ['ip', 'country_code', 'country_name', 'region_code', 'region_name',
      'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
      'use_metric'])

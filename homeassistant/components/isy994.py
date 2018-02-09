@@ -127,8 +127,8 @@ SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
 # (they can turn off, and report their state)
 SCENE_DOMAIN = 'switch'
 
-ISY994_NODES = "isy994_nodes"
-ISY994_WEATHER = "isy994_weather"
+ISY994_NODES = 'isy994_nodes'
+ISY994_WEATHER = 'isy994_weather'
 ISY994_PROGRAMS = "isy994_programs"
 
 WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))

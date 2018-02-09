@@ -153,13 +153,13 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def oscillating(self):
         """Return the oscillation state."""
-        return self._device.state and self._device.state.oscillation == "ON"
+        return self._device.state and self._device.state.oscillation == 'ON'
 
     @property
     def is_on(self):
         """Return true if the entity is on."""
         if self._device.state:
-            return self._device.state.fan_state == "FAN"
+            return self._device.state.fan_state == 'FAN'
         return False
 
     @property
@@ -181,7 +181,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def is_night_mode(self):
         """Return Night mode."""
-        return self._device.state.night_mode == "ON"
+        return self._device.state.night_mode == 'ON'
 
     def night_mode(self: ToggleEntity, night_mode: bool) -> None:
         """Turn fan in night mode."""
@@ -196,7 +196,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def is_auto_mode(self):
         """Return auto mode."""
-        return self._device.state.fan_mode == "AUTO"
+        return self._device.state.fan_mode == 'AUTO'
 
     def auto_mode(self: ToggleEntity, auto_mode: bool) -> None:
         """Turn fan in auto mode."""

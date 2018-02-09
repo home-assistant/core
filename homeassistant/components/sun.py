@@ -69,7 +69,7 @@ class Sun(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "Sun"
+        return 'Sun'
 
     @property
     def state(self):

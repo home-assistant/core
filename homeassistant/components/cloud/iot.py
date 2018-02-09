@@ -84,7 +84,7 @@ class CloudIoT:
                 })
             self.tries = 0
 
-            _LOGGER.info("Connected")
+            _LOGGER.info('Connected')
             self.state = STATE_CONNECTED
 
             while not client.closed:

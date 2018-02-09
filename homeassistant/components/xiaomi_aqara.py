@@ -38,7 +38,7 @@ CONF_KEY = 'key'
 
 DOMAIN = 'xiaomi_aqara'
 
-PY_XIAOMI_GATEWAY = "xiaomi_gw"
+PY_XIAOMI_GATEWAY = 'xiaomi_gw'
 
 TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 

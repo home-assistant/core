@@ -129,7 +129,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return 'min'
 
 
 def _parse_wsdot_timestamp(timestamp):

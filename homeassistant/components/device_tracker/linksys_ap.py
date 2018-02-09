@@ -82,7 +82,7 @@ class LinksysAPDeviceScanner(DeviceScanner):
             request = self._make_request(interface)
             self.last_results.extend(
                 [x.find_all('td')[1].text
-                 for x in BS(request.content, "html.parser")
+                 for x in BS(request.content, 'html.parser')
                  .find_all(class_='section-row')]
             )
 

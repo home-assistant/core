@@ -301,12 +301,12 @@ class PlexClient(MediaPlayerDevice):
 
             # rename the entity id
             if self.machine_identifier:
-                self.entity_id = "%s.%s%s" % (
+                self.entity_id = '%s.%s%s' % (
                     'media_player', prefix,
                     self.machine_identifier.lower().replace('-', '_'))
             else:
                 if self.name:
-                    self.entity_id = "%s.%s%s" % (
+                    self.entity_id = '%s.%s%s' % (
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
@@ -342,7 +342,7 @@ class PlexClient(MediaPlayerDevice):
             self._session = session
         if device:
             self._device = device
-            if "127.0.0.1" in self._device.url("/"):
+            if '127.0.0.1' in self._device.url('/'):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
@@ -606,7 +606,7 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF)
         # Only supports play,pause,stop (and off which really is stop)
-        elif self.make.lower().startswith("tivo"):
+        elif self.make.lower().startswith('tivo'):
             _LOGGER.debug(
                 "Tivo client detected, only enabling pause, play, "
                 "stop, and off controls: %s", self.entity_id)

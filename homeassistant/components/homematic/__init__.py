@@ -517,7 +517,7 @@ def _get_devices(hass, discovery_type, keys, interface):
                     count=len(channels)
                 )
                 device_dict = {
-                    CONF_PLATFORM: "homematic",
+                    CONF_PLATFORM: 'homematic',
                     ATTR_ADDRESS: key,
                     ATTR_INTERFACE: interface,
                     ATTR_NAME: name,
@@ -558,8 +558,8 @@ def _create_ha_name(name, channel, param, count):
 def _hm_event_handler(hass, interface, device, caller, attribute, value):
     """Handle all pyhomematic device events."""
     try:
-        channel = int(device.split(":")[1])
-        address = device.split(":")[0]
+        channel = int(device.split(':')[1])
+        address = device.split(':')[0]
         hmdevice = hass.data[DATA_HOMEMATIC].devices[interface].get(address)
     except (TypeError, ValueError):
         _LOGGER.error("Event handling channel convert error!")
@@ -613,7 +613,7 @@ class HMHub(Entity):
     def __init__(self, hass, homematic, name):
         """Initialize HomeMatic hub."""
         self.hass = hass
-        self.entity_id = "{}.{}".format(DOMAIN, name.lower())
+        self.entity_id = '{}.{}'.format(DOMAIN, name.lower())
         self._homematic = homematic
         self._variables = {}
         self._name = name
@@ -652,7 +652,7 @@ class HMHub(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return "mdi:gradient"
+        return 'mdi:gradient'
 
     def _update_hub(self, now):
         """Retrieve latest state."""

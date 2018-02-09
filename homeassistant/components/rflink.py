@@ -438,11 +438,11 @@ class SwitchableRflinkDevice(RflinkCommand):
 
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        return self._async_handle_command("turn_on")
+        return self._async_handle_command('turn_on')
 
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        return self._async_handle_command("turn_off")
+        return self._async_handle_command('turn_off')
 
 
 DEPRECATED_CONFIG_OPTIONS = [

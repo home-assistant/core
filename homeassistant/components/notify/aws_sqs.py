@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["boto3==1.4.7"]
+REQUIREMENTS = ['boto3==1.4.7']
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -48,7 +48,7 @@ def get_service(hass, config, discovery_info=None):
         boto3.setup_default_session(profile_name=profile)
         del aws_config[CONF_PROFILE_NAME]
 
-    sqs_client = boto3.client("sqs", **aws_config)
+    sqs_client = boto3.client('sqs', **aws_config)
 
     return AWSSQS(sqs_client)
 
@@ -70,12 +70,12 @@ class AWSSQS(BaseNotificationService):
 
         for target in targets:
             cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
-            message_body = {"message": message}
+            message_body = {'message': message}
             message_body.update(cleaned_kwargs)
             message_attributes = {}
             for key, val in cleaned_kwargs.items():
-                message_attributes[key] = {"StringValue": json.dumps(val),
-                                           "DataType": "String"}
+                message_attributes[key] = {'StringValue': json.dumps(val),
+                                           'DataType': 'String'}
             self.client.send_message(QueueUrl=target,
                                      MessageBody=json.dumps(message_body),
                                      MessageAttributes=message_attributes)

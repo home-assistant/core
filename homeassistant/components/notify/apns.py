@@ -137,10 +137,10 @@ def _write_device(out, device):
     out.write(device.push_id)
     out.write(": {")
     if attributes:
-        separator = ", "
+        separator = ', '
         out.write(separator.join(attributes))
 
-    out.write("}\n")
+    out.write('}\n')
 
 
 class ApnsNotificationService(BaseNotificationService):

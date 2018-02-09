@@ -77,7 +77,7 @@ def setup(hass, config):
         if show_attribute_flag is True:
             if isinstance(_state, (float, int)):
                 statsd_client.gauge(
-                    "%s.state" % state.entity_id,
+                    '%s.state' % state.entity_id,
                     _state,
                     sample_rate
                 )
@@ -85,7 +85,7 @@ def setup(hass, config):
             # Send attribute values
             for key, value in states.items():
                 if isinstance(value, (float, int)):
-                    stat = "%s.%s" % (state.entity_id, key.replace(' ', '_'))
+                    stat = '%s.%s' % (state.entity_id, key.replace(' ', '_'))
                     statsd_client.gauge(stat, value, sample_rate)
 
         else:

@@ -85,27 +85,27 @@ class MerakiView(HomeAssistantView):
                 return self.json_message("Invalid device type",
                                          HTTP_UNPROCESSABLE_ENTITY)
             _LOGGER.debug("Processing %s", data['type'])
-        if len(data["data"]["observations"]) == 0:
+        if len(data['data']['observations']) == 0:
             _LOGGER.debug("No observations found")
             return
         self._handle(request.app['hass'], data)
 
     @callback
     def _handle(self, hass, data):
-        for i in data["data"]["observations"]:
-            data["data"]["secret"] = "hidden"
+        for i in data['data']['observations']:
+            data['data']['secret'] = 'hidden'
 
-            lat = i["location"]["lat"]
-            lng = i["location"]["lng"]
+            lat = i['location']['lat']
+            lng = i['location']['lng']
             try:
-                accuracy = int(float(i["location"]["unc"]))
+                accuracy = int(float(i['location']['unc']))
             except ValueError:
                 accuracy = 0
 
-            mac = i["clientMac"]
+            mac = i['clientMac']
             _LOGGER.debug("clientMac: %s", mac)
 
-            if lat == "NaN" or lng == "NaN":
+            if lat == 'NaN' or lng == 'NaN':
                 _LOGGER.debug(
                     "No coordinates received, skipping location for: " + mac
                 )

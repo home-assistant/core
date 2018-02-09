@@ -175,7 +175,7 @@ def parse_site(entry_sites_data):
         site_data['latitude'] = site['@Latitude']
         site_data['longitude'] = site['@Longitude']
         site_data['site_code'] = site['@SiteCode']
-        site_data['site_name'] = site['@SiteName'].split("-")[-1].lstrip()
+        site_data['site_name'] = site['@SiteName'].split('-')[-1].lstrip()
         site_data['site_type'] = site['@SiteType']
 
         if isinstance(site['Species'], dict):

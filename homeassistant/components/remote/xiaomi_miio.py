@@ -82,7 +82,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
-    friendly_name = config.get(CONF_NAME, "xiaomi_miio_" +
+    friendly_name = config.get(CONF_NAME, 'xiaomi_miio_' +
                                host.replace('.', '_'))
     slot = config.get(CONF_SLOT)
     timeout = config.get(CONF_TIMEOUT)

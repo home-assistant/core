@@ -48,10 +48,10 @@ class AutomateNotificationService(BaseNotificationService):
         """Send a message to a user."""
         _LOGGER.debug("Sending to: %s, %s", self._recipient, str(self._device))
         data = {
-            "secret": self._secret,
-            "to": self._recipient,
-            "device": self._device,
-            "payload": message,
+            'secret': self._secret,
+            'to': self._recipient,
+            'device': self._device,
+            'payload': message,
         }
 
         response = requests.post(_RESOURCE, json=data)

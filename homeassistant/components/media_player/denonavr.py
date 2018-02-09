@@ -103,8 +103,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         d_receivers = denonavr.discover()
         # More than one receiver could be discovered by that method
         for d_receiver in d_receivers:
-            host = d_receiver["host"]
-            name = d_receiver["friendlyName"]
+            host = d_receiver['host']
+            name = d_receiver['friendlyName']
             new_hosts.append(
                 NewHost(host=host, name=name))
 

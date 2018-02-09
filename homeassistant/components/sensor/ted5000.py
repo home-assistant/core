@@ -107,13 +107,13 @@ class Ted5000Gateway(object):
             _LOGGER.error("No connection to endpoint: %s", err)
         else:
             doc = xmltodict.parse(request.text)
-            mtus = int(doc["LiveData"]["System"]["NumberMTU"])
+            mtus = int(doc['LiveData']['System']['NumberMTU'])
 
             for mtu in range(1, mtus + 1):
-                power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]
-                            ["PowerNow"])
-                voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]
-                              ["VoltageNow"])
+                power = int(doc['LiveData']['Power']['MTU%d' % mtu]
+                            ['PowerNow'])
+                voltage = int(doc['LiveData']['Voltage']['MTU%d' % mtu]
+                              ['VoltageNow'])
 
                 if power == 0 or voltage == 0:
                     continue

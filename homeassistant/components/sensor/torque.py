@@ -105,7 +105,7 @@ class TorqueReceiveDataView(HomeAssistantView):
                     units.get(pid, None))
                 hass.async_add_job(self.add_devices, [self.sensors[pid]])
 
-        return "OK!"
+        return 'OK!'
 
 
 class TorqueSensor(Entity):

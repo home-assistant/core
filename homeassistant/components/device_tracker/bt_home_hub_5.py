@@ -73,7 +73,7 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
 
         data = _get_homehub_data(self.url)
 

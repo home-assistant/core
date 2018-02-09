@@ -201,7 +201,7 @@ def async_setup(hass, config):
 class WebsocketAPIView(HomeAssistantView):
     """View to serve a websockets endpoint."""
 
-    name = "websocketapi"
+    name = 'websocketapi'
     url = URL
     requires_auth = False
 
@@ -242,7 +242,7 @@ class ActiveConnection:
                 message = yield from self.to_write.get()
                 if message is None:
                     break
-                self.debug("Sending", message)
+                self.debug('Sending', message)
                 yield from self.wsock.send_json(message, dumps=JSON_DUMP)
 
     @callback
@@ -272,7 +272,7 @@ class ActiveConnection:
         request = self.request
         wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
         yield from wsock.prepare(request)
-        self.debug("Connected")
+        self.debug('Connected')
 
         # Get a reference to current task so we can cancel our connection
         self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
@@ -318,7 +318,7 @@ class ActiveConnection:
             last_id = 0
 
             while msg:
-                self.debug("Received", msg)
+                self.debug('Received', msg)
                 msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
                 cur_id = msg['id']
 

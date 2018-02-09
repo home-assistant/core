@@ -23,14 +23,14 @@ DOMAIN = 'kira'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = "0.0.0.0"
+DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 65432
 
-CONF_CODE = "code"
-CONF_REPEAT = "repeat"
-CONF_REMOTES = "remotes"
-CONF_SENSOR = "sensor"
-CONF_REMOTE = "remote"
+CONF_CODE = 'code'
+CONF_REPEAT = 'repeat'
+CONF_REMOTES = 'remotes'
+CONF_SENSOR = 'sensor'
+CONF_REMOTE = 'remote'
 
 CODES_YAML = '{}_codes.yaml'.format(DOMAIN)
 
@@ -44,14 +44,14 @@ CODE_SCHEMA = vol.Schema({
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DOMAIN):
-        vol.Exclusive(cv.string, "sensors"),
+        vol.Exclusive(cv.string, 'sensors'),
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 REMOTE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DOMAIN):
-        vol.Exclusive(cv.string, "remotes"),
+        vol.Exclusive(cv.string, 'remotes'),
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
@@ -102,7 +102,7 @@ def setup(hass, config):
         """Set up the KIRA module and load platform."""
         # note: module_name is not the HA device name. it's just a unique name
         # to ensure the component and platform can share information
-        module_name = ("%s_%d" % (DOMAIN, idx)) if idx else DOMAIN
+        module_name = ('%s_%d' % (DOMAIN, idx)) if idx else DOMAIN
         device_name = module_conf.get(CONF_NAME, DOMAIN)
         port = module_conf.get(CONF_PORT, DEFAULT_PORT)
         host = module_conf.get(CONF_HOST, DEFAULT_HOST)

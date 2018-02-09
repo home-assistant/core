@@ -169,7 +169,7 @@ def request_app_setup(hass, config, add_devices, config_path,
         else:
             setup_platform(hass, config, add_devices, discovery_info)
 
-    start_url = "{}{}".format(hass.config.api.base_url,
+    start_url = '{}{}'.format(hass.config.api.base_url,
                               FITBIT_AUTH_CALLBACK_PATH)
 
     description = """Please create a Fitbit developer app at
@@ -193,7 +193,7 @@ def request_app_setup(hass, config, add_devices, config_path,
 def request_oauth_completion(hass):
     """Request user complete Fitbit OAuth2 flow."""
     configurator = hass.components.configurator
-    if "fitbit" in _CONFIGURING:
+    if 'fitbit' in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['fitbit'], "Failed to register, please try again.")
 
@@ -229,8 +229,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass, config, add_devices, config_path, discovery_info=None)
         return False
 
-    if "fitbit" in _CONFIGURING:
-        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
+    if 'fitbit' in _CONFIGURING:
+        hass.components.configurator.request_done(_CONFIGURING.pop('fitbit'))
 
     import fitbit
 
@@ -248,7 +248,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
-        authd_client.system = authd_client.user_profile_get()["user"]["locale"]
+        authd_client.system = authd_client.user_profile_get()['user']['locale']
         if authd_client.system != 'en_GB':
             if hass.config.units.is_metric:
                 authd_client.system = 'metric'
@@ -438,7 +438,7 @@ class FitbitSensor(Entity):
         if self.resource_type == 'devices/battery' and self.extra:
             self._state = self.extra.get('battery')
         else:
-            container = self.resource_type.replace("/", "-")
+            container = self.resource_type.replace('/', '-')
             response = self.client.time_series(self.resource_type, period='7d')
             raw_state = response[container][-1].get('value')
             if self.resource_type == 'activities/distance':

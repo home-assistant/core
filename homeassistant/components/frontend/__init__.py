@@ -299,9 +299,9 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels",
-                        "hassio"]:
+        for subpath in ['src', "build-translations", 'build-temp', 'build',
+                        'hass_frontend', "bower_components", 'panels',
+                        'hassio']:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),
                 os.path.join(repo_path, subpath),
@@ -334,16 +334,16 @@ def async_setup(hass, config):
     hass.http.register_static_path(
         "/service_worker.js", sw_path_latest, False)
     hass.http.register_static_path(
-        "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
-    hass.http.register_static_path("/static", static_path, not is_dev)
+        '/robots.txt', os.path.join(static_path, 'robots.txt'), not is_dev)
+    hass.http.register_static_path('/static', static_path, not is_dev)
     hass.http.register_static_path(
         "/frontend_latest", frontend_latest_path, not is_dev)
     hass.http.register_static_path(
-        "/frontend_es5", frontend_es5_path, not is_dev)
+        '/frontend_es5', frontend_es5_path, not is_dev)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
-        hass.http.register_static_path("/local", local, not is_dev)
+        hass.http.register_static_path('/local', local, not is_dev)
 
     index_view = IndexView(repo_path, js_version)
     hass.http.register_view(index_view)

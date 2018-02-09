@@ -13,8 +13,8 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
-DOMAIN = "velux"
-DATA_VELUX = "data_velux"
+DOMAIN = 'velux'
+DATA_VELUX = 'data_velux'
 SUPPORTED_DOMAINS = ['scene']
 _LOGGER = logging.getLogger(__name__)
 

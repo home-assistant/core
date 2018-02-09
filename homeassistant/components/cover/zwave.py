@@ -118,7 +118,7 @@ class ZwaveGarageDoorBase(zwave.ZWaveDeviceEntity, CoverDevice):
     def update_properties(self):
         """Handle data changes for node values."""
         self._state = self.values.primary.data
-        _LOGGER.debug("self._state=%s", self._state)
+        _LOGGER.debug('self._state=%s', self._state)
 
     @property
     def device_class(self):
@@ -154,22 +154,22 @@ class ZwaveGarageDoorBarrier(ZwaveGarageDoorBase):
     @property
     def is_opening(self):
         """Return true if cover is in an opening state."""
-        return self._state == "Opening"
+        return self._state == 'Opening'
 
     @property
     def is_closing(self):
         """Return true if cover is in a closing state."""
-        return self._state == "Closing"
+        return self._state == 'Closing'
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return self._state == "Closed"
+        return self._state == 'Closed'
 
     def close_cover(self):
         """Close the garage door."""
-        self.values.primary.data = "Closed"
+        self.values.primary.data = 'Closed'
 
     def open_cover(self):
         """Open the garage door."""
-        self.values.primary.data = "Opened"
+        self.values.primary.data = 'Opened'

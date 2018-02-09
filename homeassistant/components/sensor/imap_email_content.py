@@ -102,7 +102,7 @@ class EmailReader(object):
                 if self._last_id is not None:
                     search = "UID {}:*".format(self._last_id)
 
-                _, data = self.connection.uid("search", None, search)
+                _, data = self.connection.uid('search', None, search)
                 self._unread_ids = deque(data[0].split())
 
             while self._unread_ids:

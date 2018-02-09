@@ -80,8 +80,8 @@ def setup(hass, config):
 
         try:
             payload = {
-                "host": event_collector,
-                "event": json_body,
+                'host': event_collector,
+                'event': json_body,
             }
             requests.post(event_collector,
                           data=json.dumps(payload, cls=JSONEncoder),

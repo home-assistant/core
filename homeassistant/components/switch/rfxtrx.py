@@ -64,4 +64,4 @@ class RfxtrxSwitch(rfxtrx.RfxtrxDevice, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self._send_command("turn_on")
+        self._send_command('turn_on')

@@ -73,7 +73,7 @@ class ActiontecDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
         if not self.success_init:
             return False
 

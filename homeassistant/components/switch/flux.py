@@ -46,7 +46,7 @@ DEPENDENCIES = ['light']
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'flux',
     vol.Required(CONF_LIGHTS): cv.entity_ids,
-    vol.Optional(CONF_NAME, default="Flux"): cv.string,
+    vol.Optional(CONF_NAME, default='Flux'): cv.string,
     vol.Optional(CONF_START_TIME): cv.time,
     vol.Optional(CONF_STOP_TIME): cv.time,
     vol.Optional(CONF_START_CT, default=4000):
