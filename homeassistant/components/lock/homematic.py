@@ -34,10 +34,7 @@ class HMLock(HMDevice, LockDevice):
     @property
     def is_locked(self):
         """Return true if the lock is locked."""
-        try:
-            return not self._hm_get_state()
-        except TypeError:
-            return False
+        return not bool(self._hm_get_state())
 
     def lock(self, **kwargs):
         """Lock the lock."""
