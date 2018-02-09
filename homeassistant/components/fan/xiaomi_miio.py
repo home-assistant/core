@@ -283,7 +283,7 @@ class XiaomiAirPurifier(FanEntity):
     @asyncio.coroutine
     def async_set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
-        _LOGGER.debug("Setting the operation mode to: " + speed)
+        _LOGGER.debug("Setting the operation mode to: %s", speed)
         from miio.airpurifier import OperationMode
 
         yield from self._try_command(

@@ -107,8 +107,7 @@ class MerakiView(HomeAssistantView):
 
             if lat == "NaN" or lng == "NaN":
                 _LOGGER.debug(
-                    "No coordinates received, skipping location for: " + mac
-                )
+                    "No coordinates received, skipping location for: %s", mac)
                 gps_location = None
                 accuracy = None
             else:
