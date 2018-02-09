@@ -225,7 +225,7 @@ class NestThermostat(ClimateDevice):
         """Cache value from Python-nest."""
         self._location = self.device.where
         self._name = self.device.name
-        self._humidity = self.device.humidity,
+        self._humidity = self.device.humidity
         self._temperature = self.device.temperature
         self._mode = self.device.mode
         self._target_temperature = self.device.target
