@@ -1,3 +1,7 @@
 # Ensure Docker script files uses LF to support Docker for Windows.
-setup_docker_prereqs    eol=lf
-/virtualization/Docker/scripts/*    eol=lf
+# Ensure "git config --global core.autocrlf input" before you clone
+setup_docker_prereqs                text eol=lf
+/virtualization/Docker/scripts/*    text eol=lf
+/script/*                           text eol=lf
+*.sh                                text eol=lf
+*.py                                text eol=lf whitespace=error
