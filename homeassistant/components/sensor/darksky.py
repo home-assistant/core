@@ -30,10 +30,11 @@ CONF_FORECAST = 'forecast'
 
 DEFAULT_NAME = 'Dark Sky'
 
-DEPRECATED_SENSOR_TYPES = {'apparent_temperature_max',
-                           'apparent_temperature_min',
-                           'temperature_max',
-                           'temperature_min'}
+DEPRECATED_SENSOR_TYPES = {
+    'apparent_temperature_max': 'apparent_tempearture_high',
+    'apparent_temperature_min': 'apparent_temperature_low',
+    'temperature_max': 'temperature_high',
+    'temperature_min': 'temperature_low'}
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -183,8 +184,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
-            _LOGGER.warning("Monitored condition %s is deprecated.",
-                            variable)
+            _LOGGER.warning("Monitored condition %s is deprecated. " +
+                            "Replace with %s", variable,
+                            DEPRECATED_SENSOR_TYPES[variable])
         sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
