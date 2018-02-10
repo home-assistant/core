@@ -17,7 +17,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON,
-    __version__)
+    __version__, CONF_DOMAINS, CONF_EXCLUDE)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -40,6 +40,7 @@ CONF_USER_AGENT = 'user_agent'
 CONF_OAUTH = 'oauth'
 CONF_LOCAL_CONTROL = 'local_control'
 CONF_MISSING_OAUTH_MSG = 'Missing oauth2 credentials.'
+CONF_EXCLUDE_IDS = 'excluded_ids'
 
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
@@ -96,7 +97,12 @@ CONFIG_SCHEMA = vol.Schema({
                       msg=CONF_MISSING_OAUTH_MSG): cv.string,
         vol.Inclusive(CONF_CLIENT_SECRET, CONF_OAUTH,
                       msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean
+        vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean,
+        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+            vol.Optional(CONF_EXCLUDE_IDS, default=[]): cv.string,
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+        }),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -235,8 +241,12 @@ def setup(hass, config):
             'oauth': {},
             'configuring': {},
             'pubnub': None,
-            'configurator': False
+            'configurator': False,
+            'ignored_ids': []
         }
+
+    wink_exclude = config[DOMAIN].get(CONF_EXCLUDE, {})
+    hass.data[DOMAIN]['ignored_ids'] = wink_exclude.get(CONF_EXCLUDE_IDS, [])
 
     if config.get(DOMAIN) is not None:
         client_id = config[DOMAIN].get(ATTR_CLIENT_ID)
@@ -479,8 +489,13 @@ def setup(hass, config):
 
     # Load components for the devices in Wink that we support
     for wink_component in WINK_COMPONENTS:
+        exclude_domains = wink_exclude.get(CONF_DOMAINS, [])
         hass.data[DOMAIN]['entities'][wink_component] = []
-        discovery.load_platform(hass, wink_component, DOMAIN, {}, config)
+        if wink_component not in exclude_domains:
+            discovery.load_platform(hass, wink_component, DOMAIN, {}, config)
+        else:
+            _LOGGER.info("Ignoring all Wink devices in the " +
+                         wink_component + " domain.")
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -594,8 +609,7 @@ class WinkDevice(Entity):
         self.wink = wink
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
-        hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() +
-                                               self.wink.name())
+        hass.data[DOMAIN]['unique_ids'].append(self.unique_id)
 
     def _pubnub_update(self, message):
         try:
@@ -610,6 +624,17 @@ class WinkDevice(Entity):
             _LOGGER.error("Error in pubnub JSON for %s "
                           "polling API for current state", self.name)
             self.schedule_update_ha_state(True)
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        try:
+            if self.wink.capability() is not None:
+                return self.wink.object_id() + "_" + self.wink.capability()
+            else:
+                return self.wink.object_id()
+        except AttributeError:
+            return self.wink.object_id()
 
     @property
     def name(self):
@@ -652,6 +677,7 @@ class WinkDevice(Entity):
         tamper = self._tamper
         if tamper is not None:
             attributes["tamper_detected"] = tamper
+        attributes["unique_id"] = self.unique_id
         return attributes
 
     @property

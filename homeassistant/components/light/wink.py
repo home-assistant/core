@@ -25,13 +25,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for light in pywink.get_light_bulbs():
-        _id = light.object_id() + light.name()
+        _id = light.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkLight(light, hass)])
     for light in pywink.get_light_groups():
-        _id = light.object_id() + light.name()
+        _id = light.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkLight(light, hass)])
 
 
 class WinkLight(WinkDevice, Light):

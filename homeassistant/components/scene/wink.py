@@ -20,9 +20,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for scene in pywink.get_scenes():
-        _id = scene.object_id() + scene.name()
+        _id = scene.object_id()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkScene(scene, hass)])
+            if _id not in hass.data[DOMAIN]['ignored_ids']:
+                add_devices([WinkScene(scene, hass)])
 
 
 class WinkScene(WinkDevice, Scene):
