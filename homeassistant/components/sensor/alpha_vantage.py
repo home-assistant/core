@@ -73,8 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     symbols = config.get(CONF_SYMBOLS)
     conversions = config.get(CONF_FOREIGN_EXCHANGE)
 
-    if (symbols is None or len(symbols) == 0) and \
-            (conversions is None or len(conversions) == 0):
+    if not symbols and not conversions:
         msg = 'Warning: No symbols or currencies configured.'
         hass.components.persistent_notification.create(
             msg, 'Sensor alpha_vantage')
