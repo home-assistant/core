@@ -251,7 +251,7 @@ class AndroidIPCamEntity(Entity):
     """The Android device running IP Webcam."""
 
     def __init__(self, host, ipcam):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         self._host = host
         self._ipcam = ipcam
 

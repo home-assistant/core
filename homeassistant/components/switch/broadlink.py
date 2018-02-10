@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             packet = yield from hass.async_add_job(
                 broadlink_device.check_data)
             if packet:
-                log_msg = "Recieved packet is: {}".\
+                log_msg = "Received packet is: {}".\
                           format(b64encode(packet).decode('utf8'))
                 _LOGGER.info(log_msg)
                 hass.components.persistent_notification.async_create(
@@ -144,7 +144,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
                                ip_addr.replace('.', '_'), _learn_command)
         hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               ip_addr.replace('.', '_'), _send_packet)
+                               ip_addr.replace('.', '_'), _send_packet,
+                               vol.Schema({'packet': cv.ensure_list}))
         switches = []
         for object_id, device_config in devices.items():
             switches.append(

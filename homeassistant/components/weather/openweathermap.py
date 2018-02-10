@@ -21,12 +21,14 @@ REQUIREMENTS = ['pyowm==2.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
 DEFAULT_NAME = 'OpenWeatherMap'
 
 MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+MIN_OFFSET_BETWEEN_FORECAST_CONDITIONS = 3
 
 CONDITION_CLASSES = {
     'cloudy': [804],
@@ -137,10 +139,18 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return [{
-            ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
-            ATTR_FORECAST_TEMP: entry.get_temperature('celsius').get('temp')}
-                for entry in self.forecast_data.get_weathers()]
+        data = []
+        for entry in self.forecast_data.get_weathers():
+            data.append({
+                ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
+                ATTR_FORECAST_TEMP:
+                    entry.get_temperature('celsius').get('temp')
+            })
+            if (len(data) - 1) % MIN_OFFSET_BETWEEN_FORECAST_CONDITIONS == 0:
+                data[len(data) - 1][ATTR_FORECAST_CONDITION] = \
+                    [k for k, v in CONDITION_CLASSES.items()
+                     if entry.get_weather_code() in v][0]
+        return data
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
@@ -180,7 +190,7 @@ class WeatherData(object):
 
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
-        """Get the lastest forecast from OpenWeatherMap."""
+        """Get the latest forecast from OpenWeatherMap."""
         from pyowm.exceptions.api_call_error import APICallError
 
         try:

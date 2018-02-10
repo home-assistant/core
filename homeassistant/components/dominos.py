@@ -1,7 +1,7 @@
 """
 Support for Dominos Pizza ordering.
 
-The Dominos Pizza component ceates a service which can be invoked to order
+The Dominos Pizza component creates a service which can be invoked to order
 from their menu
 
 For more details about this platform, please refer to the documentation at

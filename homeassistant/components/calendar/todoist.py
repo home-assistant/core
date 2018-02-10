@@ -411,7 +411,7 @@ class TodoistProjectData(object):
 
         The "best" event is determined by the following criteria:
           * A proposed event must not be completed
-          * A proposed event must have a end date (otherwise we go with
+          * A proposed event must have an end date (otherwise we go with
             the event at index 0, selected above)
           * A proposed event must be on the same day or earlier as our
             current event

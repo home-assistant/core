@@ -101,7 +101,7 @@ class InsteonPLMDimmerDevice(Light):
     @callback
     def async_light_update(self, message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info("Received update calback from PLM for %s", self._address)
+        _LOGGER.info("Received update callback from PLM for %s", self._address)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine

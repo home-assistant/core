@@ -66,6 +66,11 @@ class DeconzBinarySensor(BinarySensorDevice):
         return self._sensor.name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this sensor."""
+        return self._sensor.uniqueid
+
+    @property
     def device_class(self):
         """Return the class of the sensor."""
         return self._sensor.sensor_class

@@ -2,7 +2,7 @@
 # linters such as flake8 and pylint should be pinned, as new releases
 # make new things fail. Manually update these pins when pulling in a
 # new version
-flake8==3.3
+flake8==3.5
 pylint==1.6.5
 mypy==0.560
 pydocstyle==1.1.1
@@ -14,7 +14,7 @@ pytest-timeout>=1.2.1
 pytest-sugar==0.9.0
 requests_mock==1.4
 mock-open==1.3.1
-flake8-docstrings==1.0.2
+flake8-docstrings==1.0.3
 asynctest>=0.11.1
 
 
@@ -38,7 +38,7 @@ apns2==0.3.0
 caldav==0.5.0
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.1.2
+coinmarketcap==4.2.1
 
 # homeassistant.components.device_tracker.upc_connect
 defusedxml==0.5.0
@@ -75,11 +75,11 @@ hbmqtt==0.9.1
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180130.0
+home-assistant-frontend==20180209.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==4.1.1
+influxdb==5.0.0
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
@@ -121,7 +121,7 @@ prometheus_client==0.1.0
 pushbullet.py==0.11.0
 
 # homeassistant.components.canary
-py-canary==0.2.3
+py-canary==0.4.0
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -169,7 +169,8 @@ somecomfort==0.5.0
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.2.1
+# homeassistant.components.sensor.sql
+sqlalchemy==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -183,9 +184,8 @@ vultr==0.1.2
 # homeassistant.components.wake_on_lan
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
-# homeassistant.components.media_player.webostv
 # homeassistant.components.switch.wake_on_lan
-wakeonlan==0.2.2
+wakeonlan==1.0.0
 
 # homeassistant.components.cloud
 warrant==0.6.1

@@ -23,7 +23,7 @@ from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180130.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180209.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -408,7 +408,7 @@ def async_setup_themes(hass, themes):
 
     @callback
     def set_theme(call):
-        """Set backend-prefered theme."""
+        """Set backend-preferred theme."""
         data = call.data
         name = data[CONF_NAME]
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
@@ -585,11 +585,13 @@ def _is_latest(js_option, request):
         return useragent.os.version[0] >= 12
 
     family_min_version = {
-        'Chrome': 50,   # Probably can reduce this
-        'Firefox': 43,  # Array.protopype.includes added in 43
-        'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Array.protopype.includes added in 14
-        'Safari': 10,   # many features not supported by 9
+        'Chrome': 54,          # Object.values
+        'Chrome Mobile': 54,
+        'Firefox': 47,         # Object.values
+        'Firefox Mobile': 47,
+        'Opera': 41,           # Object.values
+        'Edge': 14,            # Array.prototype.includes added in 14
+        'Safari': 10,          # Many features not supported by 9
     }
     version = family_min_version.get(useragent.browser.family)
     return version and useragent.browser.version[0] >= version

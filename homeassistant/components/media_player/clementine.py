@@ -97,7 +97,7 @@ class ClementineDevice(MediaPlayerDevice):
                 self._track_artist = client.current_track['track_artist']
                 self._track_album_name = client.current_track['track_album']
 
-        except:
+        except Exception:
             self._state = STATE_OFF
             raise
 

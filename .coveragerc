@@ -145,6 +145,9 @@ omit =
     homeassistant/components/maxcube.py
     homeassistant/components/*/maxcube.py
 
+    homeassistant/components/mercedesme.py
+    homeassistant/components/*/mercedesme.py
+
     homeassistant/components/mochad.py
     homeassistant/components/*/mochad.py
 
@@ -377,6 +380,7 @@ omit =
     homeassistant/components/fan/xiaomi_miio.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
+    homeassistant/components/goalfeed.py
     homeassistant/components/ifttt.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
@@ -435,6 +439,7 @@ omit =
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
     homeassistant/components/media_player/liveboxplaytv.py
+    homeassistant/components/media_player/mediaroom.py
     homeassistant/components/media_player/mpchc.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/nad.py
@@ -449,7 +454,6 @@ omit =
     homeassistant/components/media_player/roku.py
     homeassistant/components/media_player/russound_rio.py
     homeassistant/components/media_player/russound_rnet.py
-    homeassistant/components/media_player/samsungtv.py
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/spotify.py
@@ -506,6 +510,7 @@ omit =
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
+    homeassistant/components/remote/xiaomi_miio.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/scene/lifx_cloud.py
     homeassistant/components/sensor/airvisual.py
@@ -592,6 +597,7 @@ omit =
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
+    homeassistant/components/sensor/pollen.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py

@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DINRelay(SwitchDevice):
-    """Representation of a individual DIN III relay port."""
+    """Representation of an individual DIN III relay port."""
 
     def __init__(self, controller_name, parent_device, outlet):
         """Initialize the DIN III Relay switch."""

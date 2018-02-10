@@ -16,7 +16,7 @@ import queue
 import threading
 import time
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional  # noqa: F401
 
 import voluptuous as vol
 
@@ -34,7 +34,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.1']
+REQUIREMENTS = ['sqlalchemy==1.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,10 +76,10 @@ FILTER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
-        vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
+        vol.Optional(CONF_PURGE_KEEP_DAYS):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_PURGE_INTERVAL, default=1):
+            vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -122,6 +122,12 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
+    if keep_days is None and purge_interval != 0:
+        _LOGGER.warning(
+            "From version 0.64.0 the 'recorder' component will by default "
+            "purge data older than 10 days. To keep data longer you must "
+            "configure 'purge_keep_days' or 'purge_interval'.")
+
     db_url = conf.get(CONF_DB_URL, None)
     if not db_url:
         db_url = DEFAULT_URL.format(
@@ -162,6 +168,7 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.keep_days = keep_days
         self.purge_interval = purge_interval
+        self.did_vacuum = False
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri

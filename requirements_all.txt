@@ -3,14 +3,14 @@ requests==2.18.4
 pyyaml>=3.11,<4
 pytz>=2017.02
 pip>=8.0.3
-jinja2>=2.9.6
+jinja2>=2.10
 voluptuous==0.10.5
 typing>=3,<4
-aiohttp==2.3.7
-yarl==0.18.0
+aiohttp==2.3.10
+yarl==1.1.0
 async_timeout==2.0.0
 chardet==3.0.4
-astral==1.4
+astral==1.5
 certifi>=2017.4.17
 
 # homeassistant.components.nuimo_controller
@@ -50,7 +50,7 @@ SoCo==0.13
 TravisPy==0.3.5
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.6
+TwitterAPI==2.4.8
 
 # homeassistant.components.notify.yessssms
 YesssSMS==0.1.1b3
@@ -126,7 +126,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.4.0
+bellows==0.5.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -170,13 +170,13 @@ caldav==0.5.0
 ciscosparkapi==0.4.2
 
 # homeassistant.components.coinbase
-coinbase==2.0.6
+coinbase==2.0.7
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.1.2
+coinmarketcap==4.2.1
 
 # homeassistant.scripts.check_config
-colorlog==3.0.1
+colorlog==3.1.2
 
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
@@ -352,7 +352,7 @@ hipnotify==1.0.8
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180130.0
+home-assistant-frontend==20180209.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -406,7 +406,7 @@ ihcsdk==2.1.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==4.1.1
+influxdb==5.0.0
 
 # homeassistant.components.insteon_local
 insteonlocal==0.53
@@ -425,7 +425,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
-keyring==10.6.0
+keyring==11.0.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==2.3
@@ -441,7 +441,7 @@ libpurecoollink==0.4.2
 libpyfoscam==1.0
 
 # homeassistant.components.device_tracker.mikrotik
-librouteros==1.0.4
+librouteros==1.0.5
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
@@ -453,7 +453,7 @@ liffylights==0.9.4
 lightify==1.0.6.1
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.0.8
+limitlessled==1.0.9
 
 # homeassistant.components.linode
 linode-api==4.1.4b2
@@ -477,6 +477,9 @@ matrix-client==0.0.6
 # homeassistant.components.maxcube
 maxcube-api==0.1.0
 
+# homeassistant.components.mercedesme
+mercedesmejsonpy==0.1.2
+
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
@@ -485,7 +488,7 @@ messagebird==1.2.0
 mficlient==0.3.0
 
 # homeassistant.components.sensor.miflora
-miflora==0.2.0
+miflora==0.3.0
 
 # homeassistant.components.upnp
 miniupnpc==2.0.2
@@ -494,7 +497,7 @@ miniupnpc==2.0.2
 motorparts==1.0.2
 
 # homeassistant.components.tts
-mutagen==1.39
+mutagen==1.40.0
 
 # homeassistant.components.mychevy
 mychevy==0.1.1
@@ -551,7 +554,7 @@ orvibo==1.1.1
 paho-mqtt==1.3.1
 
 # homeassistant.components.media_player.panasonic_viera
-panasonic_viera==0.2
+panasonic_viera==0.3
 
 # homeassistant.components.media_player.dunehd
 pdunehd==1.3
@@ -615,10 +618,13 @@ pushetta==1.0.15
 pwmled==1.2.1
 
 # homeassistant.components.canary
-py-canary==0.2.3
+py-canary==0.4.0
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==3.3.0
+
+# homeassistant.components.melissa
+py-melissa-climate==1.0.1
 
 # homeassistant.components.camera.synology
 py-synology==0.1.5
@@ -687,7 +693,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==25
+pydeconz==27
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -699,7 +705,7 @@ pydroid-ipcam==0.8
 pyebox==0.1.0
 
 # homeassistant.components.climate.econet
-pyeconet==0.0.4
+pyeconet==0.0.5
 
 # homeassistant.components.eight_sleep
 pyeight==0.0.7
@@ -732,7 +738,7 @@ pyhik==0.1.4
 pyhiveapi==0.2.11
 
 # homeassistant.components.homematic
-pyhomematic==0.1.38
+pyhomematic==0.1.39
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.1.0
@@ -783,8 +789,11 @@ pylutron==0.1.0
 # homeassistant.components.notify.mailgun
 pymailgunner==1.4
 
+# homeassistant.components.media_player.mediaroom
+pymediaroom==0.5
+
 # homeassistant.components.mochad
-pymochad==0.1.1
+pymochad==0.2.0
 
 # homeassistant.components.modbus
 pymodbus==1.3.1
@@ -821,7 +830,7 @@ pynut2==2.1.2
 pynx584==0.4
 
 # homeassistant.components.iota
-pyota==2.0.3
+pyota==2.0.4
 
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
@@ -829,6 +838,9 @@ pyotp==2.2.6
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
 pyowm==2.8.0
+
+# homeassistant.components.sensor.pollen
+pypollencom==1.1.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4
@@ -847,6 +859,9 @@ pyserial==3.1.1
 
 # homeassistant.components.lock.sesame
 pysesame==0.1.0
+
+# homeassistant.components.goalfeed
+pysher==0.2.0
 
 # homeassistant.components.sensor.sma
 pysma==0.1.3
@@ -903,9 +918,10 @@ python-juicenet==0.0.5
 
 # homeassistant.components.fan.xiaomi_miio
 # homeassistant.components.light.xiaomi_miio
+# homeassistant.components.remote.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-miio==0.3.4
+python-miio==0.3.5
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -957,7 +973,7 @@ python-wink==1.7.3
 python_opendata_transport==0.0.3
 
 # homeassistant.components.zwave
-python_openzwave==0.4.0.35
+python_openzwave==0.4.3
 
 # homeassistant.components.alarm_control_panel.egardia
 pythonegardia==1.0.26
@@ -969,7 +985,7 @@ pythonwhois==2.4.3
 pytile==1.1.0
 
 # homeassistant.components.climate.touchline
-pytouchline==0.6
+pytouchline==0.7
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -999,7 +1015,7 @@ pywebpush==1.5.0
 pywemo==0.4.25
 
 # homeassistant.components.camera.xeoma
-pyxeoma==1.2
+pyxeoma==1.3
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
@@ -1056,7 +1072,7 @@ samsungctl==0.6.0
 satel_integra==0.1.0
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.20
+schiene==0.21
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -1111,7 +1127,8 @@ speedtest-cli==1.0.7
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.2.1
+# homeassistant.components.sensor.sql
+sqlalchemy==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1123,7 +1140,7 @@ steamodd==4.21
 suds-py3==1.3.3.0
 
 # homeassistant.components.tahoma
-tahoma-api==0.0.10
+tahoma-api==0.0.11
 
 # homeassistant.components.sensor.tank_utility
 tank_utility==1.4.0
@@ -1144,7 +1161,7 @@ tellduslive==0.10.4
 temperusb==1.5.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.0.19
+teslajsonpy==0.0.23
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1
@@ -1181,7 +1198,7 @@ user-agents==1.1.0
 uvcclient==0.10.1
 
 # homeassistant.components.climate.venstar
-venstarcolortouch==0.5
+venstarcolortouch==0.6
 
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
@@ -1198,9 +1215,8 @@ vultr==0.1.2
 # homeassistant.components.wake_on_lan
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
-# homeassistant.components.media_player.webostv
 # homeassistant.components.switch.wake_on_lan
-wakeonlan==0.2.2
+wakeonlan==1.0.0
 
 # homeassistant.components.sensor.waqi
 waqiasync==1.0.0
@@ -1209,7 +1225,7 @@ waqiasync==1.0.0
 warrant==0.6.1
 
 # homeassistant.components.waterfurnace
-waterfurnace==0.3.0
+waterfurnace==0.4.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
@@ -1247,7 +1263,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.01.14
+youtube_dl==2018.01.21
 
 # homeassistant.components.light.zengge
 zengge==0.2
@@ -1257,3 +1273,9 @@ zeroconf==0.19.1
 
 # homeassistant.components.media_player.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.0.0
+
+# homeassistant.components.zha
+zigpy-xbee==0.0.1
+
+# homeassistant.components.zha
+zigpy==0.0.1

@@ -2,7 +2,7 @@
 Support for HUAWEI routers.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.huawei/
+https://home-assistant.io/components/device_tracker.huawei_router/
 """
 import base64
 import logging
@@ -119,7 +119,7 @@ class HuaweiDeviceScanner(DeviceScanner):
         cnt = requests.post('http://{}/asp/GetRandCount.asp'.format(self.host))
         cnt_str = str(cnt.content, cnt.apparent_encoding, errors='replace')
 
-        _LOGGER.debug("Loggin in")
+        _LOGGER.debug("Logging in")
         cookie = requests.post('http://{}/login.cgi'.format(self.host),
                                data=[('UserName', self.username),
                                      ('PassWord', self.password),

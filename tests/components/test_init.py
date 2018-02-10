@@ -1,4 +1,4 @@
-"""The testd for Core components."""
+"""The tests for Core components."""
 # pylint: disable=protected-access
 import asyncio
 import unittest

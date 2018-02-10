@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.xiaomi_miio/
 import asyncio
 from functools import partial
 import logging
+from math import ceil
 
 import voluptuous as vol
 
@@ -29,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.4']
+REQUIREMENTS = ['python-miio==0.3.5']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -204,11 +205,11 @@ class XiaomiPhilipsGenericLight(Light):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            percent_brightness = int(100 * brightness / 255)
+            percent_brightness = ceil(100 * brightness / 255.0)
 
             _LOGGER.debug(
                 "Setting brightness: %s %s%%",
-                self.brightness, percent_brightness)
+                brightness, percent_brightness)
 
             result = yield from self._try_command(
                 "Setting brightness failed: %s",
@@ -235,7 +236,7 @@ class XiaomiPhilipsGenericLight(Light):
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
-            self._brightness = int(255 * 0.01 * state.brightness)
+            self._brightness = ceil((255/100.0) * state.brightness)
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
@@ -306,11 +307,11 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            percent_brightness = int(100 * brightness / 255)
+            percent_brightness = ceil(100 * brightness / 255.0)
 
             _LOGGER.debug(
                 "Setting brightness: %s %s%%",
-                self.brightness, percent_brightness)
+                brightness, percent_brightness)
 
             result = yield from self._try_command(
                 "Setting brightness failed: %s",
@@ -331,7 +332,7 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
-            self._brightness = int(255 * 0.01 * state.brightness)
+            self._brightness = ceil((255/100.0) * state.brightness)
             self._color_temp = self.translate(
                 state.color_temperature,
                 CCT_MIN, CCT_MAX,

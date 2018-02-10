@@ -4,10 +4,11 @@ A component which allows you to send data to an Influx database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
-from datetime import timedelta
-from functools import partial, wraps
 import logging
 import re
+import queue
+import threading
+import time
 
 import requests.exceptions
 import voluptuous as vol
@@ -15,13 +16,13 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE,
     CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
-    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN)
+    EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.util import utcnow
 
-REQUIREMENTS = ['influxdb==4.1.1']
+REQUIREMENTS = ['influxdb==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +40,17 @@ CONF_RETRY_QUEUE = 'retry_queue_limit'
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
+
 TIMEOUT = 5
+RETRY_DELAY = 20
+QUEUE_BACKLOG_SECONDS = 10
 
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.deprecated(CONF_RETRY_QUEUE), vol.Schema({
         vol.Optional(CONF_HOST): cv.string,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
@@ -78,7 +82,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
-    }),
+    })),
 }, extra=vol.ALLOW_EXTRA)
 
 RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
@@ -127,7 +131,6 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
         conf[CONF_COMPONENT_CONFIG_GLOB])
     max_tries = conf.get(CONF_RETRY_COUNT)
-    queue_limit = conf.get(CONF_RETRY_QUEUE)
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -137,22 +140,21 @@ def setup(hass, config):
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file (host, "
                       "port, etc.) and verify that the database exists and is "
-                      "READ/WRITE.", exc)
+                      "READ/WRITE", exc)
         return False
 
-    def influx_event_listener(event):
-        """Listen for new messages on the bus and sends them to Influx."""
+    def influx_handle_event(event):
+        """Send an event to Influx."""
         state = event.data.get('new_state')
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist_e or \
-                state.domain in blacklist_d:
-            return
+                state.entity_id in blacklist_e or state.domain in blacklist_d:
+            return True
 
         try:
             if (whitelist_e and state.entity_id not in whitelist_e) or \
                     (whitelist_d and state.domain not in whitelist_d):
-                return
+                return True
 
             _include_state = _include_value = False
 
@@ -222,93 +224,78 @@ def setup(hass, config):
 
         json_body[0]['tags'].update(tags)
 
-        _write_data(json_body)
-
-    @RetryOnError(hass, retry_limit=max_tries, retry_delay=20,
-                  queue_limit=queue_limit)
-    def _write_data(json_body):
-        """Write the data."""
         try:
             influx.write_points(json_body)
-        except exceptions.InfluxDBClientError:
-            _LOGGER.exception("Error saving event %s to InfluxDB", json_body)
+            return True
+        except (exceptions.InfluxDBClientError, IOError):
+            return False
 
-    hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
+    instance = hass.data[DOMAIN] = InfluxThread(
+        hass, influx_handle_event, max_tries)
+    instance.start()
+
+    def shutdown(event):
+        """Shut down the thread."""
+        instance.queue.put(None)
+        instance.join()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     return True
 
 
-class RetryOnError(object):
-    """A class for retrying a failed task a certain amount of tries.
+class InfluxThread(threading.Thread):
+    """A threaded event handler class."""
 
-    This method decorator makes a method retrying on errors. If there was an
-    uncaught exception, it schedules another try to execute the task after a
-    retry delay. It does this up to the maximum number of retries.
+    def __init__(self, hass, event_handler, max_tries):
+        """Initialize the listener."""
+        threading.Thread.__init__(self, name='InfluxDB')
+        self.queue = queue.Queue()
+        self.event_handler = event_handler
+        self.max_tries = max_tries
+        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
-    It can be used for all probable "self-healing" problems like network
-    outages. The task will be rescheduled using HAs scheduling mechanism.
+    def _event_listener(self, event):
+        """Listen for new messages on the bus and queue them for Influx."""
+        item = (time.monotonic(), event)
+        self.queue.put(item)
 
-    It takes a Hass instance, a maximum number of retries and a retry delay
-    in seconds as arguments.
+    def run(self):
+        """Process incoming events."""
+        queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries*RETRY_DELAY
 
-    The queue limit defines the maximum number of calls that are allowed to
-    be queued at a time. If this number is reached, every new call discards
-    an old one.
-    """
+        write_error = False
+        dropped = False
 
-    def __init__(self, hass, retry_limit=0, retry_delay=20, queue_limit=100):
-        """Initialize the decorator."""
-        self.hass = hass
-        self.retry_limit = retry_limit
-        self.retry_delay = timedelta(seconds=retry_delay)
-        self.queue_limit = queue_limit
+        while True:
+            item = self.queue.get()
 
-    def __call__(self, method):
-        """Decorate the target method."""
-        from homeassistant.helpers.event import track_point_in_utc_time
+            if item is None:
+                self.queue.task_done()
+                return
 
-        @wraps(method)
-        def wrapper(*args, **kwargs):
-            """Wrap method."""
-            # pylint: disable=protected-access
-            if not hasattr(wrapper, "_retry_queue"):
-                wrapper._retry_queue = []
+            timestamp, event = item
+            age = time.monotonic() - timestamp
 
-            def scheduled(retry=0, untrack=None, event=None):
-                """Call the target method.
+            if age < queue_seconds:
+                for retry in range(self.max_tries+1):
+                    if self.event_handler(event):
+                        if write_error:
+                            _LOGGER.error("Resumed writing to InfluxDB")
+                            write_error = False
+                        dropped = False
+                        break
+                    elif retry < self.max_tries:
+                        time.sleep(RETRY_DELAY)
+                    elif not write_error:
+                        _LOGGER.error("Error writing to InfluxDB")
+                        write_error = True
+            elif not dropped:
+                _LOGGER.warning("Dropping old events to catch up")
+                dropped = True
 
-                It is called directly at the first time and then called
-                scheduled within the Hass mainloop.
-                """
-                if untrack is not None:
-                    wrapper._retry_queue.remove(untrack)
+            self.queue.task_done()
 
-                # pylint: disable=broad-except
-                try:
-                    method(*args, **kwargs)
-                except Exception as ex:
-                    if retry == self.retry_limit:
-                        raise
-                    if len(wrapper._retry_queue) >= self.queue_limit:
-                        last = wrapper._retry_queue.pop(0)
-                        if 'remove' in last:
-                            func = last['remove']
-                            func()
-                        if 'exc' in last:
-                            _LOGGER.error(
-                                "Retry queue overflow, drop oldest entry: %s",
-                                str(last['exc']))
-
-                    target = utcnow() + self.retry_delay
-                    tracking = {'target': target}
-                    remove = track_point_in_utc_time(self.hass,
-                                                     partial(scheduled,
-                                                             retry + 1,
-                                                             tracking),
-                                                     target)
-                    tracking['remove'] = remove
-                    tracking["exc"] = ex
-                    wrapper._retry_queue.append(tracking)
-
-            scheduled()
-        return wrapper
+    def block_till_done(self):
+        """Block till all events processed."""
+        self.queue.join()

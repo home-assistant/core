@@ -11,14 +11,15 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MEDIA_TYPE_URL,
+    SUPPORT_PLAY_MEDIA, SUPPORT_STOP,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.2',
-                'wakeonlan==0.2.2']
+REQUIREMENTS = ['panasonic_viera==0.3',
+                'wakeonlan==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,8 @@ DEFAULT_PORT = 55000
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_TURN_OFF | SUPPORT_PLAY
+    SUPPORT_TURN_OFF | SUPPORT_PLAY | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -51,6 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
+        name = discovery_info.get('name')
         host = discovery_info.get('host')
         port = discovery_info.get('port')
         remote = RemoteControl(host, port)
@@ -69,9 +72,9 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     def __init__(self, mac, name, remote):
         """Initialize the Panasonic device."""
-        from wakeonlan import wol
+        import wakeonlan
         # Save a reference to the imported class
-        self._wol = wol
+        self._wol = wakeonlan
         self._mac = mac
         self._name = name
         self._muted = False
@@ -183,3 +186,19 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self.send_key('NRC_REW-ONOFF')
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play media."""
+        _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
+
+        if media_type == MEDIA_TYPE_URL:
+            try:
+                self._remote.open_webpage(media_id)
+            except (TimeoutError, OSError):
+                self._state = STATE_OFF
+        else:
+            _LOGGER.warning("Unsupported media_type: %s", media_type)
+
+    def media_stop(self):
+        """Stop playback."""
+        self.send_key('NRC_CANCEL-ONOFF')

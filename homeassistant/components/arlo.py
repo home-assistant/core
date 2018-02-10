@@ -47,7 +47,7 @@ def setup(hass, config):
             return False
         hass.data[DATA_ARLO] = arlo
     except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Netgar Arlo: %s", str(ex))
+        _LOGGER.error("Unable to connect to Netgear Arlo: %s", str(ex))
         hass.components.persistent_notification.create(
             'Error: {}<br />'
             'You will need to restart hass after fixing.'
