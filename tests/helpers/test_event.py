@@ -644,3 +644,22 @@ class TestEventHelpers(unittest.TestCase):
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
+
+
+@asyncio.coroutine
+def test_async_call_later(hass):
+    """Test calling an action later."""
+    def action(): pass
+    now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
+
+    with patch('homeassistant.helpers.event'
+               '.async_track_point_in_utc_time') as mock, \
+            patch('homeassistant.util.dt.utcnow', return_value=now):
+        remove = async_call_later(hass, 3, action)
+
+    assert len(mock.mock_calls) == 1
+    p_hass, p_action, p_point = mock.mock_calls[0][1]
+    assert hass is hass
+    assert p_action is action
+    assert p_point == now + timedelta(seconds=3)
+    assert remove is mock()
