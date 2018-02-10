@@ -51,7 +51,7 @@ def async_add_devices_discovery(hass, discovery_info, async_add_devices):
 
 @callback
 def async_add_devices_config(hass, config, async_add_devices):
-    """Set up switch for KNX platform configured within plattform."""
+    """Set up switch for KNX platform configured within platform."""
     import xknx
     switch = xknx.devices.Switch(
         hass.data[DATA_KNX].xknx,

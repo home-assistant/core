@@ -131,10 +131,8 @@ class NetatmoBinarySensor(BinarySensorDevice):
             self._name += ' / ' + module_name
         self._sensor_name = sensor
         self._name += ' ' + sensor
-        camera_id = data.camera_data.cameraByName(
+        self._unique_id = data.camera_data.cameraByName(
             camera=camera_name, home=home)['id']
-        self._unique_id = "Netatmo_binary_sensor {0} - {1}".format(
-            self._name, camera_id)
         self._cameratype = camera_type
         self._state = None
 

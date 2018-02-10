@@ -93,7 +93,7 @@ def setup(hass, config):
                     hass, component, DOMAIN, (vehicle.vin, attr), config)
 
     def update_vehicle(vehicle):
-        """Revieve updated information on vehicle."""
+        """Receive updated information on vehicle."""
         state.vehicles[vehicle.vin] = vehicle
         if vehicle.vin not in state.entities:
             discover_vehicle(vehicle)

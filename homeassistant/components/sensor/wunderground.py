@@ -55,7 +55,7 @@ class WUSensorConfig(object):
                 https://www.wunderground.com/weather/api/d/docs?d=data/index
             value (function(WUndergroundData)): callback that
                 extracts desired value from WUndergroundData object
-            unit_of_measurement (string): unit of meassurement
+            unit_of_measurement (string): unit of measurement
             entity_picture (string): value or callback returning
                 URL of entity picture
             icon (string): icon name or URL
@@ -84,7 +84,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
                             dictionary.
             icon (string): icon name or URL, if None sensor
                            will use current weather symbol
-            unit_of_measurement (string): unit of meassurement
+            unit_of_measurement (string): unit of measurement
         """
         super().__init__(
             friendly_name,
@@ -230,7 +230,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
             value_type (string):  "record" or "normal"
             wu_unit (string): unit name in WU API
             icon (string): icon name or URL
-            unit_of_measurement (string): unit of meassurement
+            unit_of_measurement (string): unit of measurement
         """
         super().__init__(
             friendly_name=friendly_name,

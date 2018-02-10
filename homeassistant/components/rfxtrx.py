@@ -39,7 +39,6 @@ CONF_AUTOMATIC_ADD = 'automatic_add'
 CONF_DATA_TYPE = 'data_type'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_FIRE_EVENT = 'fire_event'
-CONF_DATA_BITS = 'data_bits'
 CONF_DUMMY = 'dummy'
 CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
@@ -78,7 +77,7 @@ def setup(hass, config):
     """Set up the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
-        """Handle revieved messages from RFXtrx gateway."""
+        """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return
@@ -172,7 +171,7 @@ def get_pt2262_cmd(device_id, data_bits):
 # pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
-    for dev_id, device in RFX_DEVICES.items():
+    for device in RFX_DEVICES.values():
         if (hasattr(device, 'is_lighting4') and
                 device.masked_id == get_pt2262_deviceid(device_id,
                                                         device.data_bits)):

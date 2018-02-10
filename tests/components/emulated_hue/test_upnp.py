@@ -87,10 +87,9 @@ class TestEmulatedHue(unittest.TestCase):
         self.assertTrue('text/xml' in result.headers['content-type'])
 
         # Make sure the XML is parsable
-        # pylint: disable=bare-except
         try:
             ET.fromstring(result.text)
-        except:
+        except:  # noqa: E722  # pylint: disable=bare-except
             self.fail('description.xml is not valid XML!')
 
     def test_create_username(self):

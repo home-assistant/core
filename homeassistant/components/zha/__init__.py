@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+import enum
 import logging
 
 import voluptuous as vol
@@ -14,13 +15,26 @@ from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['bellows==0.4.0']
+REQUIREMENTS = [
+    'bellows==0.5.0',
+    'zigpy==0.0.1',
+    'zigpy-xbee==0.0.1',
+]
 
 DOMAIN = 'zha'
+
+
+class RadioType(enum.Enum):
+    """Possible options for radio type in config."""
+
+    ezsp = 'ezsp'
+    xbee = 'xbee'
+
 
 CONF_BAUDRATE = 'baudrate'
 CONF_DATABASE = 'database_path'
 CONF_DEVICE_CONFIG = 'device_config'
+CONF_RADIO_TYPE = 'radio_type'
 CONF_USB_PATH = 'usb_path'
 DATA_DEVICE_CONFIG = 'zha_device_config'
 
@@ -30,6 +44,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Optional(CONF_RADIO_TYPE, default=RadioType.ezsp):
+            cv.enum(RadioType),
         CONF_USB_PATH: cv.string,
         vol.Optional(CONF_BAUDRATE, default=57600): cv.positive_int,
         CONF_DATABASE: cv.string,
@@ -67,16 +83,22 @@ def async_setup(hass, config):
     """
     global APPLICATION_CONTROLLER
 
-    import bellows.ezsp
-    from bellows.zigbee.application import ControllerApplication
-
-    ezsp_ = bellows.ezsp.EZSP()
     usb_path = config[DOMAIN].get(CONF_USB_PATH)
     baudrate = config[DOMAIN].get(CONF_BAUDRATE)
-    yield from ezsp_.connect(usb_path, baudrate)
+    radio_type = config[DOMAIN].get(CONF_RADIO_TYPE)
+    if radio_type == RadioType.ezsp:
+        import bellows.ezsp
+        from bellows.zigbee.application import ControllerApplication
+        radio = bellows.ezsp.EZSP()
+    elif radio_type == RadioType.xbee:
+        import zigpy_xbee.api
+        from zigpy_xbee.zigbee.application import ControllerApplication
+        radio = zigpy_xbee.api.XBee()
+
+    yield from radio.connect(usb_path, baudrate)
 
     database = config[DOMAIN].get(CONF_DATABASE)
-    APPLICATION_CONTROLLER = ControllerApplication(ezsp_, database)
+    APPLICATION_CONTROLLER = ControllerApplication(radio, database)
     listener = ApplicationListener(hass, config)
     APPLICATION_CONTROLLER.add_listener(listener)
     yield from APPLICATION_CONTROLLER.startup(auto_form=True)
@@ -130,7 +152,7 @@ class ApplicationListener:
     @asyncio.coroutine
     def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
-        import bellows.zigbee.profiles
+        import zigpy.profiles
         import homeassistant.components.zha.const as zha_const
         zha_const.populate_data()
 
@@ -146,8 +168,8 @@ class ApplicationListener:
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
 
-            if endpoint.profile_id in bellows.zigbee.profiles.PROFILES:
-                profile = bellows.zigbee.profiles.PROFILES[endpoint.profile_id]
+            if endpoint.profile_id in zigpy.profiles.PROFILES:
+                profile = zigpy.profiles.PROFILES[endpoint.profile_id]
                 if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
                                               {}).get(endpoint.device_type,
                                                       None):
@@ -253,7 +275,7 @@ class Entity(entity.Entity):
         """Handle an attribute updated on this cluster."""
         pass
 
-    def zdo_command(self, aps_frame, tsn, command_id, args):
+    def zdo_command(self, tsn, command_id, args):
         """Handle a ZDO command received on this cluster."""
         pass
 

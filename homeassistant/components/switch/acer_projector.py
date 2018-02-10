@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AcerSwitch(SwitchDevice):
-    """Represents an Acer Projector as an switch."""
+    """Represents an Acer Projector as a switch."""
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
         """Init of the Acer projector."""
@@ -103,13 +103,13 @@ class AcerSwitch(SwitchDevice):
             # need to wait for timeout
             ret = self.ser.read_until(size=20).decode('utf-8')
         except serial.SerialException:
-            _LOGGER.error('Problem comunicating with %s', self._serial_port)
+            _LOGGER.error('Problem communicating with %s', self._serial_port)
         self.ser.close()
         return ret
 
     def _write_read_format(self, msg):
-        """Write msg, obtain awnser and format output."""
-        # awnsers are formatted as ***\rawnser\r***
+        """Write msg, obtain answer and format output."""
+        # answers are formatted as ***\answer\r***
         awns = self._write_read(msg)
         match = re.search(r'\r(.+)\r', awns)
         if match:

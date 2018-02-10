@@ -20,7 +20,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['venstarcolortouch==0.5']
+REQUIREMENTS = ['venstarcolortouch==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -123,7 +123,7 @@ SUPPORTED_DOMAINS = ['binary_sensor', 'sensor', 'lock', 'fan', 'cover',
                      'light', 'switch']
 SUPPORTED_PROGRAM_DOMAINS = ['binary_sensor', 'lock', 'fan', 'cover', 'switch']
 
-# ISY Scenes are more like Swithes than Hass Scenes
+# ISY Scenes are more like Switches than Hass Scenes
 # (they can turn off, and report their state)
 SCENE_DOMAIN = 'switch'
 

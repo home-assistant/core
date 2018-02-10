@@ -134,7 +134,7 @@ class RachioIro(object):
         return self._running
 
     def list_zones(self, include_disabled=False):
-        """Return alist of the zones connected to the device, incl. data."""
+        """Return a list of the zones connected to the device, incl. data."""
         if not self._zones:
             self._zones = [RachioZone(self.rachio, self, zone['id'],
                                       self.manual_run_mins)

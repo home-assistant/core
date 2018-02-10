@@ -14,7 +14,9 @@ from aiohttp import web
 from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
-from homeassistant.helpers import intent, dispatcher, entity, restore_state
+from homeassistant.helpers import (
+    intent, dispatcher, entity, restore_state,  entity_registry,
+    entity_platform)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -315,6 +317,14 @@ def mock_component(hass, component):
     hass.config.components.add(component)
 
 
+def mock_registry(hass):
+    """Mock the Entity Registry."""
+    registry = entity_registry.EntityRegistry(hass)
+    registry.entities = {}
+    hass.data[entity_platform.DATA_REGISTRY] = registry
+    return registry
+
+
 class MockModule(object):
     """Representation of a fake module."""
 
@@ -576,3 +586,40 @@ class MockDependency:
                 func(*args, **kwargs)
 
         return run_mocked
+
+
+class MockEntity(entity.Entity):
+    """Mock Entity class."""
+
+    def __init__(self, **values):
+        """Initialize an entity."""
+        self._values = values
+
+        if 'entity_id' in values:
+            self.entity_id = values['entity_id']
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._handle('name')
+
+    @property
+    def should_poll(self):
+        """Return the ste of the polling."""
+        return self._handle('should_poll')
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return self._handle('unique_id')
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._handle('available')
+
+    def _handle(self, attr):
+        """Helper for the attributes."""
+        if attr in self._values:
+            return self._values[attr]
+        return getattr(super(), attr)

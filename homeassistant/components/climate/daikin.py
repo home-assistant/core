@@ -98,10 +98,16 @@ class DaikinClimate(ClimateDevice):
         daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE]
         if self._api.device.values.get(daikin_attr) is not None:
             self._supported_features |= SUPPORT_FAN_MODE
+        else:
+            # even devices without support must have a default valid value
+            self._api.device.values[daikin_attr] = 'A'
 
         daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]
         if self._api.device.values.get(daikin_attr) is not None:
             self._supported_features |= SUPPORT_SWING_MODE
+        else:
+            # even devices without support must have a default valid value
+            self._api.device.values[daikin_attr] = '0'
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -176,11 +182,6 @@ class DaikinClimate(ClimateDevice):
         if values:
             self._force_refresh = True
             self._api.device.set(values)
-
-    @property
-    def unique_id(self):
-        """Return the ID of this AC."""
-        return "{}.{}".format(self.__class__, self._api.ip_address)
 
     @property
     def supported_features(self):

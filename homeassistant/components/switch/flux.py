@@ -33,7 +33,7 @@ CONF_START_CT = 'start_colortemp'
 CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_STOP_CT = 'stop_colortemp'
 CONF_BRIGHTNESS = 'brightness'
-CONF_DISABLE_BRIGTNESS_ADJUST = 'disable_brightness_adjust'
+CONF_DISABLE_BRIGHTNESS_ADJUST = 'disable_brightness_adjust'
 CONF_INTERVAL = 'interval'
 
 MODE_XY = 'xy'
@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_LIGHTS): cv.entity_ids,
     vol.Optional(CONF_NAME, default="Flux"): cv.string,
     vol.Optional(CONF_START_TIME): cv.time,
-    vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
+    vol.Optional(CONF_STOP_TIME): cv.time,
     vol.Optional(CONF_START_CT, default=4000):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_SUNSET_CT, default=3000):
@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_BRIGHTNESS):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
+    vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
         vol.Any(MODE_XY, MODE_MIRED, MODE_RGB),
     vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sunset_colortemp = config.get(CONF_SUNSET_CT)
     stop_colortemp = config.get(CONF_STOP_CT)
     brightness = config.get(CONF_BRIGHTNESS)
-    disable_brightness_adjust = config.get(CONF_DISABLE_BRIGTNESS_ADJUST)
+    disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
     transition = config.get(ATTR_TRANSITION)
@@ -184,9 +184,7 @@ class FluxSwitch(SwitchDevice):
 
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
-        stop_time = now.replace(
-            hour=self._stop_time.hour, minute=self._stop_time.minute,
-            second=0)
+        stop_time = self.find_stop_time(now)
 
         if stop_time <= start_time:
             # stop_time does not happen in the same day as start_time
@@ -210,7 +208,7 @@ class FluxSwitch(SwitchDevice):
             else:
                 temp = self._start_colortemp + temp_offset
         else:
-            # Nightime
+            # Night time
             time_state = 'night'
 
             if now < stop_time:
@@ -270,3 +268,13 @@ class FluxSwitch(SwitchDevice):
         else:
             sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())
         return sunrise
+
+    def find_stop_time(self, now):
+        """Return dusk or stop_time if given."""
+        if self._stop_time:
+            dusk = now.replace(
+                hour=self._stop_time.hour, minute=self._stop_time.minute,
+                second=0)
+        else:
+            dusk = get_astral_event_date(self.hass, 'dusk', now.date())
+        return dusk

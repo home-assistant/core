@@ -119,7 +119,7 @@ def run(script_args: List) -> int:
     point_wt_time = 0
 
     print("Migrating from {} to {}".format(old_dbname, args.dbname))
-    # Walk into measurenebt
+    # Walk into measurement
     for index, measurement in enumerate(measurements):
 
         # Get tag list

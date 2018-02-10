@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_CURRENCY, CONF_DISPLAY_CURRENCY)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['coinmarketcap==4.1.2']
+REQUIREMENTS = ['coinmarketcap==4.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +26,7 @@ ATTR_MARKET_CAP = 'market_cap'
 ATTR_NAME = 'name'
 ATTR_PERCENT_CHANGE_24H = 'percent_change_24h'
 ATTR_PERCENT_CHANGE_7D = 'percent_change_7d'
+ATTR_PERCENT_CHANGE_1H = 'percent_change_1h'
 ATTR_PRICE = 'price'
 ATTR_SYMBOL = 'symbol'
 ATTR_TOTAL_SUPPLY = 'total_supply'
@@ -105,6 +106,7 @@ class CoinMarketCapSensor(Entity):
                 'market_cap_{}'.format(self.data.display_currency)),
             ATTR_PERCENT_CHANGE_24H: self._ticker.get('percent_change_24h'),
             ATTR_PERCENT_CHANGE_7D: self._ticker.get('percent_change_7d'),
+            ATTR_PERCENT_CHANGE_1H: self._ticker.get('percent_change_1h'),
             ATTR_SYMBOL: self._ticker.get('symbol'),
             ATTR_TOTAL_SUPPLY: self._ticker.get('total_supply'),
         }
