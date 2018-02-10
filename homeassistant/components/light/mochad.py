@@ -62,7 +62,7 @@ class MochadLight(Light):
 
     @property
     def brightness(self):
-        """Return the birghtness of this light between 0..255."""
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     def _get_device_status(self):

@@ -44,7 +44,7 @@ class TestYamahaMediaPlayer(unittest.TestCase):
         self.hass.stop()
 
     def enable_output(self, port, enabled):
-        """Enable ouput on a specific port."""
+        """Enable output on a specific port."""
         data = {
             'entity_id': 'media_player.yamaha_receiver_main_zone',
             'port': port,

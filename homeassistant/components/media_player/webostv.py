@@ -9,6 +9,9 @@ from datetime import timedelta
 import logging
 from urllib.parse import urlparse
 
+# pylint: disable=unused-import
+from typing import Dict  # noqa: F401
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -23,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 import homeassistant.util as util
 
-REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2', 'wakeonlan==0.2.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -171,6 +174,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
+        self._channel = None
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -186,10 +190,12 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._state = STATE_OFF
                 self._current_source = None
                 self._current_source_id = None
+                self._channel = None
 
             if self._state is not STATE_OFF:
                 self._muted = self._client.get_muted()
                 self._volume = self._client.get_volume()
+                self._channel = self._client.get_current_channel()
 
                 self._source_list = {}
                 self._app_list = {}
@@ -222,6 +228,7 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._state = STATE_OFF
             self._current_source = None
             self._current_source_id = None
+            self._channel = None
 
     @property
     def name(self):
@@ -257,6 +264,14 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_content_type(self):
         """Content type of current playing media."""
         return MEDIA_TYPE_CHANNEL
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        if (self._channel is not None) and ('channelName' in self._channel):
+            return self._channel['channelName']
+        else:
+            return None
 
     @property
     def media_image_url(self):

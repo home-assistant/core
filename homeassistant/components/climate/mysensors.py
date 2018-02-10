@@ -139,8 +139,7 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value)
             if self.gateway.optimistic:
-                # O
-                # ptimistically assume that device has changed state
+                # Optimistically assume that device has changed state
                 self._values[value_type] = value
                 self.schedule_update_ha_state()
 

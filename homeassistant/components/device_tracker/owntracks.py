@@ -143,6 +143,8 @@ def _parse_see_args(message, subscribe_topic):
         kwargs['attributes']['tid'] = message['tid']
     if 'addr' in message:
         kwargs['attributes']['address'] = message['addr']
+    if 'cog' in message:
+        kwargs['attributes']['course'] = message['cog']
     if 't' in message:
         if message['t'] == 'c':
             kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_GPS

@@ -211,7 +211,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_service_register(hassio_env, hass):
-    """Check if service will be settup."""
+    """Check if service will be setup."""
     assert (yield from async_setup_component(hass, 'hassio', {}))
     assert hass.services.has_service('hassio', 'addon_start')
     assert hass.services.has_service('hassio', 'addon_stop')

@@ -378,7 +378,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         telnet.login.assert_not_called()
 
     def test_get_asuswrt_data(self):
-        """Test aususwrt data fetch."""
+        """Test asuswrt data fetch."""
         scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner._get_wl = mock.Mock()
         scanner._get_arp = mock.Mock()

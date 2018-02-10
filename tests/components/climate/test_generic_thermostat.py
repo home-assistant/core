@@ -14,6 +14,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_OFF,
+    STATE_IDLE,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE
 )
@@ -170,7 +171,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_setup_defaults_to_unknown(self):
         """Test the setting of defaults to unknown."""
-        self.assertEqual('idle', self.hass.states.get(ENTITY).state)
+        self.assertEqual(STATE_IDLE, self.hass.states.get(ENTITY).state)
 
     def test_default_setup_params(self):
         """Test the setup with default parameters."""
@@ -964,6 +965,7 @@ def test_restore_state(hass):
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
     assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
+    assert(state.state == STATE_OFF)
 
 
 @asyncio.coroutine
@@ -990,3 +992,84 @@ def test_no_restore_state(hass):
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 22)
+    assert(state.state == STATE_OFF)
+
+
+class TestClimateGenericThermostatRestoreState(unittest.TestCase):
+    """Test generic thermostat when restore state from HA startup."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.hass.config.temperature_unit = TEMP_CELSIUS
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop down everything that was started."""
+        self.hass.stop()
+
+    def test_restore_state_uncoherence_case(self):
+        """
+        Test restore from a strange state.
+
+        - Turn the generic thermostat off
+        - Restart HA and restore state from DB
+        """
+        self._mock_restore_cache(temperature=20)
+
+        self._setup_switch(False)
+        self._setup_sensor(15)
+        self._setup_climate()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(ENTITY)
+        self.assertEqual(20, state.attributes[ATTR_TEMPERATURE])
+        self.assertEqual(STATE_OFF,
+                         state.attributes[climate.ATTR_OPERATION_MODE])
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual(0, len(self.calls))
+
+        self._setup_switch(False)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY)
+        self.assertEqual(STATE_OFF,
+                         state.attributes[climate.ATTR_OPERATION_MODE])
+        self.assertEqual(STATE_OFF, state.state)
+
+    def _setup_climate(self):
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test',
+            'cold_tolerance': 2,
+            'hot_tolerance': 4,
+            'away_temp': 30,
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'ac_mode': True
+        }})
+
+    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
+        """Setup the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp, {
+            ATTR_UNIT_OF_MEASUREMENT: unit
+        })
+
+    def _setup_switch(self, is_on):
+        """Setup the test switch."""
+        self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
+        self.calls = []
+
+        @callback
+        def log_call(call):
+            """Log service calls."""
+            self.calls.append(call)
+
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
+        self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
+
+    def _mock_restore_cache(self, temperature=20, operation_mode=STATE_OFF):
+        mock_restore_cache(self.hass, (
+            State(ENTITY, '0', {
+                ATTR_TEMPERATURE: str(temperature),
+                climate.ATTR_OPERATION_MODE: operation_mode,
+                ATTR_AWAY_MODE: "on"}),
+        ))
