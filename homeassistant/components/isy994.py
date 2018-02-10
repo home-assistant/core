@@ -180,7 +180,8 @@ def _check_for_insteon_type(hass: HomeAssistant, node,
 
 
 def _check_for_uom_id(hass: HomeAssistant, node,
-                      single_domain: str = None, uom_list: list = None) -> bool:
+                      single_domain: str = None,
+                      uom_list: list = None) -> bool:
     """Check if a node's uom matches any of the domains uom filter.
 
     This is used for versions of the ISY firmware that report uoms as a single

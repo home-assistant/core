@@ -354,4 +354,5 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsLightBall, Light):
 
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight, Light):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
+
     pass
