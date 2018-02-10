@@ -172,7 +172,7 @@ class ServiceIntentHandler(IntentHandler):
         if not entity_id:
             response.async_set_speech(
                 "Could not find entity id matching {}.".format(name))
-            _LOGGER.error("Could not find entity id matching %s.", name)
+            _LOGGER.error("Could not find entity id matching %s", name)
             return response
 
         yield from hass.services.async_call(
