@@ -146,10 +146,10 @@ class MelissaClimate(ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
         self.send({self._api.TEMP: temp})
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        fan_mode = self.hass_fan_to_melissa(fan)
-        self.send({self._api.FAN: fan_mode})
+        melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
+        self.send({self._api.FAN: melissa_fan_mode})
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""

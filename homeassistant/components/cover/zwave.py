@@ -8,7 +8,7 @@ https://home-assistant.io/components/cover.zwave/
 # pylint: disable=import-error
 import logging
 from homeassistant.components.cover import (
-    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
+    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
@@ -97,9 +97,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """Move the roller shutter down."""
         self._network.manager.pressButton(self._close_id)
 
-    def set_cover_position(self, position: int, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
-        self.node.set_dimmer(self.values.primary.value_id, position)
+        self.node.set_dimmer(self.values.primary.value_id,
+                             kwargs.get(ATTR_POSITION))
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""

@@ -6,7 +6,7 @@ https://home-assistant.io/components/cover.tahoma/
 """
 import logging
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 
@@ -49,9 +49,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
         except KeyError:
             return None
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.apply_action('setPosition', 100 - position)
+        self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION))
 
     @property
     def is_closed(self):

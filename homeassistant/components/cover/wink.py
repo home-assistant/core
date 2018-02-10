@@ -6,7 +6,8 @@ https://home-assistant.io/components/cover.wink/
 """
 import asyncio
 
-from homeassistant.components.cover import CoverDevice, STATE_UNKNOWN
+from homeassistant.components.cover import CoverDevice, STATE_UNKNOWN, \
+    ATTR_POSITION
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
@@ -42,9 +43,10 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
         """Open the cover."""
         self.wink.set_state(1)
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
-        self.wink.set_state(float(position)/100)
+        position = kwargs.get(ATTR_POSITION)
+        self.wink.set_state(position/100)
 
     @property
     def current_cover_position(self):
