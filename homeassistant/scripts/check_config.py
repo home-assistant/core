@@ -1,4 +1,5 @@
 """Script to ensure a configuration file exists."""
+import asyncio
 import argparse
 import logging
 import os
@@ -32,8 +33,10 @@ MOCKS = {
                          setup._LOGGER.error),
 }
 SILENCE = (
+    'homeassistant.bootstrap.async_enable_logging',
     'homeassistant.bootstrap.clear_secret_cache',
     'homeassistant.bootstrap.async_register_signal_handling',
+    'homeassistant.config.process_ha_config_upgrade',
     'homeassistant.core._LOGGER.info',
     'homeassistant.loader._LOGGER.info',
     'homeassistant.bootstrap._LOGGER.info',
@@ -170,11 +173,12 @@ def check(config_path):
     # pylint: disable=unused-variable
     def mock_get(comp_name):
         """Mock hass.loader.get_component to replace setup & setup_platform."""
-        def mock_setup(*kwargs):
+        @asyncio.coroutine
+        def mock_async_setup(*args):
             """Mock setup, only record the component name & config."""
             assert comp_name not in res['components'], \
                 "Components should contain a list of platforms"
-            res['components'][comp_name] = kwargs[1].get(comp_name)
+            res['components'][comp_name] = args[1].get(comp_name)
             return True
         module = MOCKS['get'][1](comp_name)
 
@@ -187,15 +191,15 @@ def check(config_path):
 
         # Test if platform/component and overwrite setup
         if '.' in comp_name:
-            module.setup_platform = mock_setup
+            module.async_setup_platform = mock_async_setup
 
-            if hasattr(module, 'async_setup_platform'):
-                del module.async_setup_platform
+            if hasattr(module, 'setup_platform'):
+                del module.setup_platform
         else:
-            module.setup = mock_setup
+            module.async_setup = mock_async_setup
 
-            if hasattr(module, 'async_setup'):
-                del module.async_setup
+            if hasattr(module, 'setup'):
+                del module.setup
 
         return module
 
