@@ -237,7 +237,10 @@ def query_response_sensor(
 def query_response_climate(
         entity: Entity, config: Config, units: UnitSystem) -> dict:
     """Convert a climate entity to a QUERY response."""
-    mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
+    mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
+    if mode is None:
+        mode = entity.state
+    mode = mode.lower()
     if mode not in CLIMATE_SUPPORTED_MODES:
         mode = 'heat'
     attrs = entity.attributes
