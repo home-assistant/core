@@ -81,4 +81,3 @@ class BMWConnectedDriveVehicle(object):
         from bimmer_connected import BimmerConnected
         self.bimmer = BimmerConnected(vin, username, password, cache=True)
         self.name = name
-
