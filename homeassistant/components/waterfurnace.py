@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["waterfurnace==0.3.0"]
+REQUIREMENTS = ["waterfurnace==0.4.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +83,8 @@ class WaterFurnaceData(threading.Thread):
 
     def run(self):
         """Thread run loop."""
+        import waterfurnace.waterfurnace as wf
+
         @callback
         def register():
             """Connect to hass for shutdown."""
@@ -110,8 +112,11 @@ class WaterFurnaceData(threading.Thread):
             try:
                 self.data = self.client.read()
 
-            except ConnectionError:
-                # attempt to log back in if there was a session expiration.
+            except wf.WFException:
+                # WFExceptions are things the WF library understands
+                # that pretty much can all be solved by logging in and
+                # back out again.
+                _LOGGER.exception("Failed to read data, attempting to recover")
                 try:
                     self.client.login()
                 except Exception:  # pylint: disable=broad-except
@@ -126,10 +131,6 @@ class WaterFurnaceData(threading.Thread):
                     _LOGGER.error(
                         "Lost our connection to websocket, trying again")
                     time.sleep(SCAN_INTERVAL.seconds)
-
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error updating waterfurnace data.")
-                time.sleep(SCAN_INTERVAL.seconds)
 
             else:
                 self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)

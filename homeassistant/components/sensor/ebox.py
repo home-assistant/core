@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ebox_data = EBoxData(username, password)
         ebox_data.update()
     except requests.exceptions.HTTPError as error:
-        _LOGGER.error("Failt login: %s", error)
+        _LOGGER.error("Failed login: %s", error)
         return False
 
     name = config.get(CONF_NAME)

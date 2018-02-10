@@ -128,7 +128,7 @@ def do_authentication(hass, config):
         """Keep trying to validate the user_code until it expires."""
         if now >= dt.as_local(dev_flow.user_code_expiry):
             hass.components.persistent_notification.create(
-                'Authenication code expired, please restart '
+                'Authentication code expired, please restart '
                 'Home-Assistant and try again',
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)

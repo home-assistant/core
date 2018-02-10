@@ -87,14 +87,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(devices)
 
     def update_entities_telegram(telegram):
-        """Update entities with latests telegram and trigger state update."""
+        """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
         for device in devices:
             device.telegram = telegram
             hass.async_add_job(device.async_update_ha_state())
 
-    # Creates a asyncio.Protocol factory for reading DSMR telegrams from serial
-    # and calls update_entities_telegram to update entities on arrival
+    # Creates an asyncio.Protocol factory for reading DSMR telegrams from
+    # serial and calls update_entities_telegram to update entities on arrival
     if config[CONF_HOST]:
         reader_factory = partial(
             create_tcp_dsmr_reader, config[CONF_HOST], config[CONF_PORT],
@@ -122,7 +122,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
             if transport:
                 # Register listener to close transport on HA shutdown
-                stop_listerer = hass.bus.async_listen_once(
+                stop_listener = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STOP, transport.close)
 
                 # Wait for reader to close
@@ -131,8 +131,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if hass.state != CoreState.stopping:
                 # Unexpected disconnect
                 if transport:
-                    # remove listerer
-                    stop_listerer()
+                    # remove listener
+                    stop_listener()
 
                 # Reflect disconnect state in devices state by setting an
                 # empty telegram resulting in `unknown` states

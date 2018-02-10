@@ -249,7 +249,7 @@ class TadoClimate(ClimateDevice):
         data = self._store.get_data(self._data_id)
 
         if data is None:
-            _LOGGER.debug("Recieved no data for zone %s", self.zone_name)
+            _LOGGER.debug("Received no data for zone %s", self.zone_name)
             return
 
         if 'sensorDataPoints' in data:
@@ -294,7 +294,7 @@ class TadoClimate(ClimateDevice):
 
         overlay = False
         overlay_data = None
-        termination = self._current_operation
+        termination = CONST_MODE_SMART_SCHEDULE
         cooling = False
         fan_speed = CONST_MODE_OFF
 
@@ -317,7 +317,7 @@ class TadoClimate(ClimateDevice):
                     fan_speed = setting_data['fanSpeed']
 
         if self._device_is_active:
-            # If you set mode manualy to off, there will be an overlay
+            # If you set mode manually to off, there will be an overlay
             # and a termination, but we want to see the mode "OFF"
             self._overlay_mode = termination
             self._current_operation = termination

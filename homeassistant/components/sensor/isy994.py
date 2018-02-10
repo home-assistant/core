@@ -318,11 +318,6 @@ class ISYWeatherDevice(ISYDevice):
         super().__init__(node)
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique identifier for the node."""
-        return self._node.name
-
-    @property
     def raw_units(self) -> str:
         """Return the raw unit of measurement."""
         if self._node.uom == 'F':

@@ -1,7 +1,7 @@
 """
 Support for BME680 Sensor over SMBus.
 
-Temperature, humidity, pressure and volitile gas support.
+Temperature, humidity, pressure and volatile gas support.
 Air Quality calculation based on humidity and volatile gas.
 
 For more details about this platform, please refer to the documentation at
@@ -238,7 +238,7 @@ class BME680Handler:
 
         self._gas_sensor_running = True
 
-        # Pause to allow inital data read for device validation.
+        # Pause to allow initial data read for device validation.
         sleep(1)
 
         start_time = time()

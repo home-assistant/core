@@ -254,7 +254,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_handle_light_service(service):
-        """Hande a turn light on or off service call."""
+        """Handle a turn light on or off service call."""
         # Get the validated data
         params = service.data.copy()
 

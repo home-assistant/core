@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        # create an sensor for each zone managed by faucet
+        # create a sensor for each zone managed by faucet
         for zone in raincloud.controller.faucet.zones:
             sensors.append(
                 RainCloudSwitch(default_watering_timer,

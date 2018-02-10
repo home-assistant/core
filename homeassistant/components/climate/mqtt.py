@@ -565,7 +565,7 @@ class MqttClimate(MqttAvailability, ClimateDevice):
 
     @asyncio.coroutine
     def async_turn_aux_heat_on(self):
-        """Turn auxillary heater on."""
+        """Turn auxiliary heater on."""
         if self._topic[CONF_AUX_COMMAND_TOPIC] is not None:
             mqtt.async_publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
                                self._payload_on, self._qos, self._retain)
@@ -576,7 +576,7 @@ class MqttClimate(MqttAvailability, ClimateDevice):
 
     @asyncio.coroutine
     def async_turn_aux_heat_off(self):
-        """Turn auxillary heater off."""
+        """Turn auxiliary heater off."""
         if self._topic[CONF_AUX_COMMAND_TOPIC] is not None:
             mqtt.async_publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
                                self._payload_off, self._qos, self._retain)

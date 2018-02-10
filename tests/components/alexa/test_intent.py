@@ -98,8 +98,9 @@ def alexa_client(loop, hass, test_client):
     return loop.run_until_complete(test_client(hass.http.app))
 
 
-def _intent_req(client, data={}):
-    return client.post(intent.INTENTS_API_ENDPOINT, data=json.dumps(data),
+def _intent_req(client, data=None):
+    return client.post(intent.INTENTS_API_ENDPOINT,
+                       data=json.dumps(data or {}),
                        headers={'content-type': 'application/json'})
 
 
