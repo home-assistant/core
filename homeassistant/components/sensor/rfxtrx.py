@@ -72,6 +72,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if device_id in rfxtrx.RFX_DEVICES:
             sensors = rfxtrx.RFX_DEVICES[device_id]
             for data_type in sensors:
+                # Some multi-sensor devices send individual messages for each
+                # of their sensors. Update only if event contains the
+                # right data_type for the sensor.
                 if data_type not in event.values:
                     continue
                 sensor = sensors[data_type]
