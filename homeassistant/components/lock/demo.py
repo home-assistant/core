@@ -61,4 +61,3 @@ class DemoLock(LockDevice):
     def supported_features(self):
         if self._openable:
             return SUPPORT_OPEN
-
