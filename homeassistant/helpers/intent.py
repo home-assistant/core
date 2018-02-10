@@ -128,11 +128,11 @@ def fuzzymatch(name, entities):
     """Fuzzy matching function."""
     matches = []
     pattern = '.*?'.join(name)
-    regex = re.compile(pattern)
-    for entity in entities:
-        match = regex.search(entity)
+    regex = re.compile(pattern, re.IGNORECASE)
+    for entity_id, entity_name in entities.items():
+        match = regex.search(entity_name)
         if match:
-            matches.append((len(match.group()), match.start(), entity))
+            matches.append((len(match.group()), match.start(), entity_id))
     return [x for _, _, x in sorted(matches)]
 
 
@@ -163,27 +163,22 @@ class ServiceIntentHandler(IntentHandler):
         name = slots['name']['value']
         entities = {state.entity_id: state.name for state
                     in hass.states.async_all()}
-        entity_name = name.replace(' ', '_').lower()
-        entity_name = entity_name.replace('the_', '')
 
-        matches = fuzzymatch(entity_name, entities)
-        entity_id = next((x for x in matches if self.domain in x), None)
-        if not entity_id:
-            entity_id = matches[0] if matches else None
+        matches = fuzzymatch(name, entities)
+        entity_id = matches[0] if matches else None
         _LOGGER.debug("%s matched entity: %s", name, entity_id)
 
         response = intent_obj.create_response()
         if not entity_id:
             response.async_set_speech(
-                "Could not find entity id matching {}".format(name))
-            _LOGGER.error("Could not find entity id matching %s (%s)", name,
-                          entity_name)
+                "Could not find entity id matching {}.".format(name))
+            _LOGGER.error("Could not find entity id matching %s.", name)
             return response
 
         yield from hass.services.async_call(
             self.domain, self.service, {
                 ATTR_ENTITY_ID: entity_id
-            }, blocking=True)
+            })
 
         response.async_set_speech(
             self.speech.format(name))
