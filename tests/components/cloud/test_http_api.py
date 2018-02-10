@@ -14,8 +14,8 @@ from tests.common import mock_coro
 @pytest.fixture
 def cloud_client(hass, test_client):
     """Fixture that can fetch from the cloud client."""
-    with patch('homeassistant.components.cloud.Cloud.initialize',
-               return_value=mock_coro(True)):
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
         hass.loop.run_until_complete(async_setup_component(hass, 'cloud', {
             'cloud': {
                 'mode': 'development',

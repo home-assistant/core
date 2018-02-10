@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+from datetime import timedelta
 import functools as ft
 
 from homeassistant.loader import bind_hass
@@ -217,6 +218,14 @@ def async_track_point_in_utc_time(hass, action, point_in_time):
 
 track_point_in_utc_time = threaded_listener_factory(
     async_track_point_in_utc_time)
+
+
+@callback
+@bind_hass
+def async_call_later(hass, delay, action):
+    """Add a listener that is called in <delay>."""
+    return async_track_point_in_utc_time(
+        hass, action, dt_util.utcnow() + timedelta(seconds=delay))
 
 
 @callback
