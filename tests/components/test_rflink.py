@@ -47,7 +47,7 @@ def mock_rflink(hass, config, domain, monkeypatch, failures=None,
         'rflink.protocol.create_rflink_connection',
         mock_create)
 
-    # verify instanstiation of component with given config
+    # verify instantiation of component with given config
     with assert_setup_component(platform_count, domain):
         yield from async_setup_component(hass, domain, config)
 

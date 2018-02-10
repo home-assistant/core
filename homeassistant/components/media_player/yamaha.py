@@ -149,11 +149,6 @@ class YamahaDevice(MediaPlayerDevice):
         self._name = name
         self._zone = receiver.zone
 
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return '{0}:{1}'.format(self.receiver.ctrl_url, self._zone)
-
     def update(self):
         """Get the latest details from the device."""
         self._play_status = self.receiver.play_status()
@@ -310,7 +305,7 @@ class YamahaDevice(MediaPlayerDevice):
 
         NOTE: this might take a while, because the only API interface
         for setting the net radio station emulates button pressing and
-        navigating through the net radio menu hiearchy. And each sub
+        navigating through the net radio menu hierarchy. And each sub
         menu must be fetched by the receiver from the vtuner service.
 
         """

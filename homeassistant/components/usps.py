@@ -69,7 +69,7 @@ class USPSData(object):
     """
 
     def __init__(self, session, name):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         self.session = session
         self.name = name
         self.packages = []

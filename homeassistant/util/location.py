@@ -107,7 +107,7 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
     sinU2 = math.sin(U2)
     cosU2 = math.cos(U2)
 
-    for iteration in range(MAX_ITERATIONS):
+    for _ in range(MAX_ITERATIONS):
         sinLambda = math.sin(Lambda)
         cosLambda = math.cos(Lambda)
         sinSigma = math.sqrt((cosU2 * sinLambda) ** 2 +

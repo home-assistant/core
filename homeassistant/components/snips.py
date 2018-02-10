@@ -155,7 +155,7 @@ def async_setup(hass, config):
 
 
 def resolve_slot_values(slot):
-    """Convert snips builtin types to useable values."""
+    """Convert snips builtin types to usable values."""
     if 'value' in slot['value']:
         value = slot['value']['value']
     else:

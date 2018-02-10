@@ -243,7 +243,7 @@ class PyNUTData(object):
     """
 
     def __init__(self, host, port, alias, username, password):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         from pynut2.nut2 import PyNUTClient, PyNUTError
         self._host = host
         self._port = port

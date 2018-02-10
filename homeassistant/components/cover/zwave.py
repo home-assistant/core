@@ -158,7 +158,7 @@ class ZwaveGarageDoorBarrier(ZwaveGarageDoorBase):
 
     @property
     def is_closing(self):
-        """Return true if cover is in an closing state."""
+        """Return true if cover is in a closing state."""
         return self._state == "Closing"
 
     @property
