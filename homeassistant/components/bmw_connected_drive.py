@@ -56,7 +56,6 @@ BMW_COMPONENTS = ['device_tracker', 'sensor']
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Demo sensors."""
-
     vehicles = []
     for name, vehicle_config in config[DOMAIN].items():
         vin = vehicle_config[CONF_VIN]
@@ -78,6 +77,7 @@ class BMWConnectedDriveVehicle(object):
     """Representation of a BMW vehicle."""
 
     def __init__(self, name: str, vin: str, username: str, password: str):
+        """Constructor."""
         from bimmer_connected import BimmerConnected
         self.bimmer = BimmerConnected(vin, username, password, cache=True)
         self.name = name
