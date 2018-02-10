@@ -7,10 +7,12 @@ from datetime import datetime, timedelta
 from astral import Astral
 import pytest
 
+from homeassistant.core import callback
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
+    async_call_later,
     track_point_in_utc_time,
     track_point_in_time,
     track_utc_time_change,
@@ -52,7 +54,7 @@ class TestEventHelpers(unittest.TestCase):
         runs = []
 
         track_point_in_utc_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
 
         self._send_time_changed(before_birthday)
         self.hass.block_till_done()
@@ -68,14 +70,14 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
         track_point_in_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
 
         self._send_time_changed(after_birthday)
         self.hass.block_till_done()
         self.assertEqual(2, len(runs))
 
         unsub = track_point_in_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
         unsub()
 
         self._send_time_changed(after_birthday)
