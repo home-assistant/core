@@ -51,7 +51,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=bad-option-value
 # pylint: disable=import-error, no-member, broad-except, c-extension-no-member
 def setup(hass, config):
     """Register a port mapping for Home Assistant via UPnP."""
