@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Plex'
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -116,12 +116,21 @@ class PlexSensor(Entity):
         now_playing = []
         for sess in sessions:
             user = sess.usernames[0] if sess.usernames is not None else ""
+            playing_title = ""
             if sess.TYPE == 'movie':
-                title = sess.title if sess.title is not None else ""
-                year = sess.year if sess.year is not None else ""
-                now_playing.append((user, "{0} ({1})".format(title, year)))
+                # example
+                # "The incredible Hulk (2008)"
+                mov_title = (sess.title
+                             if sess.title is not None
+                             else "")
+                mov_year = ("({0})".format(sess.year)
+                            if sess.year is not None
+                            else "")
+                playing_title = "{0} {1}".format(mov_title, mov_year)
             elif sess.TYPE == 'episode':
-                season_year = (str(sess.show().year)
+                # example:
+                # "Supernatural (2005) - s01e13 - Route 666"
+                season_year = ("({0})".format(sess.show().year)
                                if sess.show().year is not None
                                else "")
                 season_title = (sess.grandparentTitle
@@ -133,8 +142,39 @@ class PlexSensor(Entity):
                 episode_title = (sess.title
                                  if sess.title is not None
                                  else "")
-                title = season_title + ' (' + season_year + ')' + ' - ' + \
-                    season_episode + ' - ' + episode_title
-                now_playing.append((user, "{0}".format(title)))
+                playing_title = "{0} {1} - {2} - {3}".format(season_title,
+                                                             season_year,
+                                                             season_episode,
+                                                             episode_title)
+            elif sess.TYPE == 'track':
+                # example:
+                # "Billy Talent - Afraid of Heights (2016) - Afraid of Heights"
+                track_title = (sess.title
+                               if sess.title is not None
+                               else "")
+                track_album = (sess.parentTitle
+                               if sess.parentTitle is not None
+                               else "")
+                track_year = ("({0})".format(sess.year)
+                              if sess.year is not None
+                              else "")
+                track_artist = (sess.grandparentTitle
+                                if sess.grandparentTitle is not None
+                                else "")
+                playing_title = "{0} - {1} {2} - {3}".format(track_artist,
+                                                             track_album,
+                                                             track_year,
+                                                             track_title)
+            else:
+                # example:
+                # "picture_of_last_summer_camp (2015)"
+                title = (sess.title
+                         if sess.title is not None
+                         else "")
+                year = ("({0})".format(sess.year)
+                        if sess.year is not None
+                        else "")
+                playing_title = "{0} {1}".format(title, year)
+            now_playing.append((user, playing_title))
         self._state = len(sessions)
         self._now_playing = now_playing
