@@ -128,7 +128,9 @@ class TekSavvyData(object):
         self.websession = websession
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
-        self.data = {"limit": self.bandwidth_cap}
+        # Set unlimited users to infinite, otherwise the cap.
+        self.data = {"limit": self.bandwidth_cap} if self.bandwidth_cap > 0 \
+            else {"limit": float('inf')}
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -143,17 +145,27 @@ class TekSavvyData(object):
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
-        data = yield from req.json()
-        for (api, ha_name) in API_HA_MAP:
-            self.data[ha_name] = float(data["value"][0][api])
-        on_peak_download = self.data["onpeak_download"]
-        on_peak_upload = self.data["onpeak_upload"]
-        off_peak_download = self.data["offpeak_download"]
-        off_peak_upload = self.data["offpeak_upload"]
-        limit = self.data["limit"]
-        self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
-        self.data["usage_gb"] = on_peak_download
-        self.data["onpeak_total"] = on_peak_download + on_peak_upload
-        self.data["offpeak_total"] = off_peak_download + off_peak_upload
-        self.data["onpeak_remaining"] = limit - on_peak_download
-        return True
+
+        try:
+            data = yield from req.json()
+            for (api, ha_name) in API_HA_MAP:
+                self.data[ha_name] = float(data["value"][0][api])
+            on_peak_download = self.data["onpeak_download"]
+            on_peak_upload = self.data["onpeak_upload"]
+            off_peak_download = self.data["offpeak_download"]
+            off_peak_upload = self.data["offpeak_upload"]
+            limit = self.data["limit"]
+            # Support "unlimited" users
+            if self.bandwidth_cap > 0:
+                self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+            else:
+                self.data["usage"] = 0
+            self.data["usage_gb"] = on_peak_download
+            self.data["onpeak_total"] = on_peak_download + on_peak_upload
+            self.data["offpeak_total"] =\
+                off_peak_download + off_peak_upload
+            self.data["onpeak_remaining"] = limit - on_peak_download
+            return True
+        except ValueError:
+            _LOGGER.error("JSON Decode Failed")
+            return False
