@@ -53,9 +53,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-# pylint: disable=import-error
+# pylint: disable=import-error, no-name-in-module
 class EQ3BTSmartThermostat(ClimateDevice):
-    """Representation of a eQ-3 Bluetooth Smart thermostat."""
+    """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""

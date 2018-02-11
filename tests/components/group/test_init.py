@@ -350,7 +350,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         assert sorted(self.hass.states.entity_ids()) == \
             ['group.empty_group', 'group.second_group', 'group.test_group']
-        assert self.hass.bus.listeners['state_changed'] == 3
+        assert self.hass.bus.listeners['state_changed'] == 2
 
         with patch('homeassistant.config.load_yaml_config_file', return_value={
             'group': {
@@ -364,14 +364,6 @@ class TestComponentsGroup(unittest.TestCase):
 
         assert self.hass.states.entity_ids() == ['group.hello']
         assert self.hass.bus.listeners['state_changed'] == 1
-
-    def test_stopping_a_group(self):
-        """Test that a group correctly removes itself."""
-        grp = group.Group.create_group(
-            self.hass, 'light', ['light.test_1', 'light.test_2'])
-        assert self.hass.states.entity_ids() == ['group.light']
-        grp.stop()
-        assert self.hass.states.entity_ids() == []
 
     def test_changing_group_visibility(self):
         """Test that a group can be hidden and shown."""

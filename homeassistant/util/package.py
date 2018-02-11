@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 INSTALL_LOCK = threading.Lock()
 
 
-def install_package(package: str, upgrade: bool=True,
-                    target: Optional[str]=None,
-                    constraints: Optional[str]=None) -> bool:
+def install_package(package: str, upgrade: bool = True,
+                    target: Optional[str] = None,
+                    constraints: Optional[str] = None) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.

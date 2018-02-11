@@ -180,8 +180,7 @@ class RainMachineEntity(SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{}.{}.{}'.format(self.__class__, self._device_name,
-                                 self.rainmachine_id)
+        return self.rainmachine_id
 
     @aware_throttle('local')
     def _local_update(self) -> None:

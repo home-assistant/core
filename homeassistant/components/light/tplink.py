@@ -75,7 +75,7 @@ def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb: 'SmartBulb', name):
+    def __init__(self, smartbulb: 'SmartBulb', name) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._name = name
@@ -118,7 +118,7 @@ class TPLinkSmartBulb(Light):
             rgb = kwargs.get(ATTR_RGB_COLOR)
             self.smartbulb.hsv = rgb_to_hsv(rgb)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the light off."""
         self.smartbulb.state = self.smartbulb.BULB_STATE_OFF
 

@@ -143,6 +143,13 @@ class WinkHub(WinkBinarySensorDevice):
         _attributes['update_needed'] = self.wink.update_needed()
         _attributes['firmware_version'] = self.wink.firmware_version()
         _attributes['pairing_mode'] = self.wink.pairing_mode()
+        _kidde_code = self.wink.kidde_radio_code()
+        if _kidde_code is not None:
+            # The service call to set the Kidde code
+            # takes a string of 1s and 0s so it makes
+            # sense to display it to the user that way
+            _formatted_kidde_code = "{:b}".format(_kidde_code).zfill(8)
+            _attributes['kidde_radio_code'] = _formatted_kidde_code
         return _attributes
 
 

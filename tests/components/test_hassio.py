@@ -211,7 +211,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_service_register(hassio_env, hass):
-    """Check if service will be settup."""
+    """Check if service will be setup."""
     assert (yield from async_setup_component(hass, 'hassio', {}))
     assert hass.services.has_service('hassio', 'addon_start')
     assert hass.services.has_service('hassio', 'addon_stop')
@@ -384,7 +384,11 @@ def test_auth_required_forward_request(hassio_client):
 
 
 @asyncio.coroutine
-@pytest.mark.parametrize('build_type', ['es5', 'latest'])
+@pytest.mark.parametrize(
+    'build_type', [
+        'es5/index.html', 'es5/hassio-app.html', 'latest/index.html',
+        'latest/hassio-app.html'
+    ])
 def test_forward_request_no_auth_for_panel(hassio_client, build_type):
     """Test no auth needed for ."""
     response = MagicMock()

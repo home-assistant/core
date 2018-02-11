@@ -68,7 +68,7 @@ class HMCover(HMDevice, CoverDevice):
         self._hmdevice.stop(self._channel)
 
     def _init_data_struct(self):
-        """Generate a data dictoinary (self._data) from metadata."""
+        """Generate a data dictionary (self._data) from metadata."""
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
         if "LEVEL_2" in self._hmdevice.WRITENODE:

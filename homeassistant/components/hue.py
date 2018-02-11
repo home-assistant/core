@@ -9,6 +9,7 @@ import logging
 import os
 import socket
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_HUE
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "hue"
 SERVICE_HUE_SCENE = "hue_activate_scene"
+API_NUPNP = 'https://www.meethue.com/api/nupnp'
 
 CONF_BRIDGES = "bridges"
 
@@ -49,7 +51,7 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema([{
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_BRIDGES, default=[]): BRIDGE_CONFIG_SCHEMA,
+        vol.Optional(CONF_BRIDGES): BRIDGE_CONFIG_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -69,9 +71,9 @@ Press the button on the bridge to register Philips Hue with Home Assistant.
 
 def setup(hass, config):
     """Set up the Hue platform."""
-    config = config.get(DOMAIN)
-    if config is None:
-        config = {}
+    conf = config.get(DOMAIN)
+    if conf is None:
+        conf = {}
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -82,7 +84,21 @@ def setup(hass, config):
         lambda service, discovery_info:
         bridge_discovered(hass, service, discovery_info))
 
-    bridges = config.get(CONF_BRIDGES, [])
+    # User has configured bridges
+    if CONF_BRIDGES in conf:
+        bridges = conf[CONF_BRIDGES]
+    # Component is part of config but no bridges specified, discover.
+    elif DOMAIN in config:
+        # discover from nupnp
+        hosts = requests.get(API_NUPNP).json()
+        bridges = [{
+            CONF_HOST: entry['internalipaddress'],
+            CONF_FILENAME: '.hue_{}.conf'.format(entry['id']),
+        } for entry in hosts]
+    else:
+        # Component not specified in config, we're loaded via discovery
+        bridges = []
+
     for bridge in bridges:
         filename = bridge.get(CONF_FILENAME)
         allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE)

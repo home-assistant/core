@@ -13,9 +13,8 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import (slugify)
 
-REQUIREMENTS = ['tahoma-api==0.0.10']
+REQUIREMENTS = ['tahoma-api==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def setup(hass, config):
         api.get_setup()
         devices = api.get_devices()
     except RequestException:
-        _LOGGER.exception("Cannot fetch informations from Tahoma API")
+        _LOGGER.exception("Cannot fetch information from Tahoma API")
         return False
 
     hass.data[DOMAIN] = {
@@ -101,14 +100,7 @@ class TahomaDevice(Entity):
         """Initialize the device."""
         self.tahoma_device = tahoma_device
         self.controller = controller
-        self._unique_id = TAHOMA_ID_FORMAT.format(
-            slugify(tahoma_device.label), slugify(tahoma_device.url))
         self._name = self.tahoma_device.label
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this cover."""
-        return self._unique_id
 
     @property
     def name(self):

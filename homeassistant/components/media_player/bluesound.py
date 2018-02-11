@@ -122,7 +122,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BluesoundPlayer(MediaPlayerDevice):
-    """Represenatation of a Bluesound Player."""
+    """Representation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -150,10 +150,10 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._port = DEFAULT_PORT
 
     @staticmethod
-    def _try_get_index(string, seach_string):
+    def _try_get_index(string, search_string):
         """Get the index."""
         try:
-            return string.index(seach_string)
+            return string.index(search_string)
         except ValueError:
             return -1
 
@@ -165,7 +165,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         try:
             resp = yield from self.send_bluesound_command(
                 'SyncStatus', raise_timeout, raise_timeout)
-        except:
+        except Exception:
             raise
 
         if not resp:
@@ -202,7 +202,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         except CancelledError:
             _LOGGER.debug("Stopping the polling of node %s", self._name)
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected error in %s", self._name)
             raise
 
@@ -229,7 +229,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             _LOGGER.info("Node %s is offline, retrying later", self.host)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION)
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected when initiating error in %s",
                               self.host)
             raise
@@ -338,7 +338,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
     def async_update_captures(self):
-        """Update Capture cources."""
+        """Update Capture sources."""
         resp = yield from self.send_bluesound_command(
             'RadioBrowse?service=Capture')
         if not resp:
@@ -440,8 +440,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return STATE_PAUSED
         elif status == 'stream' or status == 'play':
             return STATE_PLAYING
-        else:
-            return STATE_IDLE
+        return STATE_IDLE
 
     @property
     def media_title(self):
@@ -595,7 +594,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             # But it works with radio service_items will catch playlists.
             items = [x for x in self._preset_items if 'url2' in x and
                      parse.unquote(x['url2']) == stream_url]
-            if len(items) > 0:
+            if items:
                 return items[0]['title']
 
         # This could be a bit difficult to detect. Bluetooth could be named
@@ -606,11 +605,11 @@ class BluesoundPlayer(MediaPlayerDevice):
         if title == 'bluetooth' or stream_url == 'Capture:hw:2,0/44100/16/2':
             items = [x for x in self._capture_items
                      if x['url'] == "Capture%3Abluez%3Abluetooth"]
-            if len(items) > 0:
+            if items:
                 return items[0]['title']
 
         items = [x for x in self._capture_items if x['url'] == stream_url]
-        if len(items) > 0:
+        if items:
             return items[0]['title']
 
         if stream_url[:8] == 'Capture:':
@@ -631,12 +630,12 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         items = [x for x in self._capture_items
                  if x['name'] == current_service]
-        if len(items) > 0:
+        if items:
             return items[0]['title']
 
         items = [x for x in self._services_items
                  if x['name'] == current_service]
-        if len(items) > 0:
+        if items:
             return items[0]['title']
 
         if self._status.get('streamUrl', '') != '':

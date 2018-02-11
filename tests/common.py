@@ -14,7 +14,9 @@ from aiohttp import web
 from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
-from homeassistant.helpers import intent, dispatcher, entity, restore_state
+from homeassistant.helpers import (
+    intent, entity, restore_state,  entity_registry,
+    entity_platform)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -212,13 +214,12 @@ def async_mock_intent(hass, intent_typ):
 
 
 @ha.callback
-def async_fire_mqtt_message(hass, topic, payload, qos=0):
+def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
-    dispatcher.async_dispatcher_send(
-        hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic,
-        payload, qos)
+    msg = mqtt.Message(topic, payload, qos, retain)
+    hass.async_run_job(hass.data['mqtt']._mqtt_on_message, None, None, msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -291,16 +292,25 @@ def mock_http_component_app(hass, api_password=None):
 
 
 @asyncio.coroutine
-def async_mock_mqtt_component(hass):
+def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
-    with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
-        mock_mqtt().async_connect.return_value = mock_coro(True)
-        yield from async_setup_component(hass, mqtt.DOMAIN, {
-            mqtt.DOMAIN: {
-                mqtt.CONF_BROKER: 'mock-broker',
-            }
+    if config is None:
+        config = {mqtt.CONF_BROKER: 'mock-broker'}
+
+    with patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect.return_value = 0
+        mock_client().subscribe.return_value = (0, 0)
+        mock_client().publish.return_value = (0, 0)
+
+        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+            mqtt.DOMAIN: config
         })
-        return mock_mqtt
+        assert result
+
+        hass.data['mqtt'] = MagicMock(spec_set=hass.data['mqtt'],
+                                      wraps=hass.data['mqtt'])
+
+        return hass.data['mqtt']
 
 
 mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
@@ -313,6 +323,14 @@ def mock_component(hass, component):
         AssertionError("Component {} is already setup".format(component))
 
     hass.config.components.add(component)
+
+
+def mock_registry(hass, mock_entries=None):
+    """Mock the Entity Registry."""
+    registry = entity_registry.EntityRegistry(hass)
+    registry.entities = mock_entries or {}
+    hass.data[entity_platform.DATA_REGISTRY] = registry
+    return registry
 
 
 class MockModule(object):
@@ -542,10 +560,8 @@ class MockDependency:
         self.root = root
         self.submodules = args
 
-    def __call__(self, func):
-        """Apply decorator."""
-        from unittest.mock import MagicMock, patch
-
+    def __enter__(self):
+        """Start mocking."""
         def resolve(mock, path):
             """Resolve a mock."""
             if not path:
@@ -553,17 +569,65 @@ class MockDependency:
 
             return resolve(getattr(mock, path[0]), path[1:])
 
+        base = MagicMock()
+        to_mock = {
+            "{}.{}".format(self.root, tom): resolve(base, tom.split('.'))
+            for tom in self.submodules
+        }
+        to_mock[self.root] = base
+
+        self.patcher = patch.dict('sys.modules', to_mock)
+        self.patcher.start()
+        return base
+
+    def __exit__(self, *exc):
+        """Stop mocking."""
+        self.patcher.stop()
+        return False
+
+    def __call__(self, func):
+        """Apply decorator."""
         def run_mocked(*args, **kwargs):
             """Run with mocked dependencies."""
-            base = MagicMock()
-            to_mock = {
-                "{}.{}".format(self.root, tom): resolve(base, tom.split('.'))
-                for tom in self.submodules
-            }
-            to_mock[self.root] = base
-
-            with patch.dict('sys.modules', to_mock):
+            with self as base:
                 args = list(args) + [base]
                 func(*args, **kwargs)
 
         return run_mocked
+
+
+class MockEntity(entity.Entity):
+    """Mock Entity class."""
+
+    def __init__(self, **values):
+        """Initialize an entity."""
+        self._values = values
+
+        if 'entity_id' in values:
+            self.entity_id = values['entity_id']
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._handle('name')
+
+    @property
+    def should_poll(self):
+        """Return the ste of the polling."""
+        return self._handle('should_poll')
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return self._handle('unique_id')
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._handle('available')
+
+    def _handle(self, attr):
+        """Helper for the attributes."""
+        if attr in self._values:
+            return self._values[attr]
+        return getattr(super(), attr)

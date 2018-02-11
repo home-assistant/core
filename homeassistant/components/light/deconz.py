@@ -9,7 +9,7 @@ import asyncio
 from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
+    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
 from homeassistant.core import callback
@@ -101,6 +101,11 @@ class DeconzLight(Light):
         return self._light.name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this light."""
+        return self._light.uniqueid
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return self._features
@@ -128,6 +133,9 @@ class DeconzLight(Light):
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
             data['xy'] = xyb[0], xyb[1]
             data['bri'] = xyb[2]
+
+        if ATTR_XY_COLOR in kwargs:
+            data['xy'] = kwargs[ATTR_XY_COLOR]
 
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]

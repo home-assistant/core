@@ -153,7 +153,7 @@ class EmonCmsSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the atrributes of the sensor."""
+        """Return the attributes of the sensor."""
         return {
             ATTR_FEEDID: self._elem["id"],
             ATTR_TAG: self._elem["tag"],

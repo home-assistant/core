@@ -75,7 +75,7 @@ def get_scanner(hass, config):
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
-    def __init__(self, controller, detection_time: timedelta):
+    def __init__(self, controller, detection_time: timedelta) -> None:
         """Initialize the scanner."""
         self._detection_time = detection_time
         self._controller = controller
@@ -101,13 +101,13 @@ class UnifiScanner(DeviceScanner):
         self._update()
         return self._clients.keys()
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name (if known) of the device.
 
         If a name has been set in Unifi, then return that, else
         return the hostname if it has been detected.
         """
-        client = self._clients.get(mac, {})
+        client = self._clients.get(device, {})
         name = client.get('name') or client.get('hostname')
-        _LOGGER.debug("Device mac %s name %s", mac, name)
+        _LOGGER.debug("Device mac %s name %s", device, name)
         return name
