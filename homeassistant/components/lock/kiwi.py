@@ -5,16 +5,15 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.kiwi/
 """
 import logging
-import requests
 import datetime
-import dateutil.parser
+import requests
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import (LockDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-        CONF_PASSWORD, CONF_USERNAME, ATTR_ID, ATTR_LONGITUDE, ATTR_LATITUDE)
+    CONF_PASSWORD, CONF_USERNAME, ATTR_ID, ATTR_LONGITUDE, ATTR_LATITUDE)
 
 REQUIREMENTS = ['python-dateutil==2.6.1']
 
@@ -36,13 +35,20 @@ API_OPEN_DOOR_URL = BASE_URL + '/pre/sensors/{}/act/open'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """set up the KIWI lock platform."""
+    """Set up the KIWI lock platform."""
     kiwi = KiwiClient(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     add_devices([KiwiLock(lock, kiwi) for lock in kiwi.get_locks()], True)
 
 
 class KiwiClient:
+    """Client for KIWI service."""
+
     def __init__(self, username, password):
+        """Initiale the client.
+
+        :param username: valid KIWI username. Hint: your signup email address.
+        :param password: your KIWI account password.
+        """
         self.__username = username
         self.__password = password
         self.__session_key = None
@@ -52,14 +58,15 @@ class KiwiClient:
         self._renew_sessionkey()
 
     def _with_valid_session(self):
-        """check if the session is valid; renew if necessary"""
+        """Check if the session is valid; renew if necessary."""
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         if not self.__session_expires or (now >= self.__session_expires):
             _LOGGER.debug("no valid session found - renewing session key")
             self._renew_sessionkey()
 
     def _renew_sessionkey(self):
-        """update the clients session key."""
+        """Update the clients session key."""
+        import dateutil.parser
         _LOGGER.info(
             "authentication for user %s started.",
             self.__username)
@@ -75,17 +82,17 @@ class KiwiClient:
 
         if not auth_response.ok:
             _LOGGER.error(
-                    "could not authenticate at KIWI:\n%s",
-                    auth_response.json())
+                "could not authenticate at KIWI:\n%s",
+                auth_response.json())
 
             raise ValueError("could not authenticate")
 
         self.__session_key = auth_response.json()['result']['session_key']
         self.__session_expires = dateutil.parser.parse(
-                auth_response.json()['result']['session']['expires'])
+            auth_response.json()['result']['session']['expires'])
 
     def get_locks(self):
-        """return a list of kiwi locks"""
+        """Return a list of kiwi locks."""
         self._with_valid_session()
         sensor_list = requests.get(
             API_LIST_DOOR_URL,
@@ -100,7 +107,7 @@ class KiwiClient:
         return doors
 
     def open_door(self, door_id):
-        """open the kiwi door lock"""
+        """Open the kiwi door lock."""
         self._with_valid_session()
         open_response = requests.post(
             API_OPEN_DOOR_URL.format(door_id),
@@ -118,14 +125,14 @@ class KiwiLock(LockDevice):
         self._sensor = kiwi_lock
         self._device_attrs = None
         self._client = client
-        self.id = kiwi_lock['sensor_id']
- 
+        self.lock_id = kiwi_lock['sensor_id']
+
         address = kiwi_lock.get('address')
         lat = address.pop('lat', None)
         lng = address.pop('lng', None)
 
         self._device_attrs = {
-            ATTR_ID: self.id,
+            ATTR_ID: self.lock_id,
             ATTR_TYPE: kiwi_lock.get('hardware_type'),
             ATTR_PERMISSION: kiwi_lock.get('highest_permission'),
             ATTR_CAN_INVITE: kiwi_lock.get('can_invite')}
@@ -155,6 +162,5 @@ class KiwiLock(LockDevice):
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        if not self._client.open_door(self.id):
+        if not self._client.open_door(self.lock_id):
             _LOGGER.error("failed to open door")
-
