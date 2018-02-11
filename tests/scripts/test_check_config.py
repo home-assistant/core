@@ -1,10 +1,10 @@
 """Test check_config script."""
 import asyncio
 import logging
-import os
 import unittest
 
 import homeassistant.scripts.check_config as check_config
+from homeassistant.loader import set_component
 from tests.common import patch_yaml_files, get_test_config_dir
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,14 +34,6 @@ def change_yaml_files(check_dict):
             check_dict['yaml_files'].append(key)
         if key.startswith(root):
             check_dict['yaml_files'].append('...' + key[len(root):])
-
-
-def tearDownModule(self):  # pylint: disable=invalid-name
-    """Clean files."""
-    # .HA_VERSION created during bootstrap's config update
-    path = get_test_config_dir('.HA_VERSION')
-    if os.path.isfile(path):
-        os.remove(path)
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -124,6 +116,9 @@ class TestCheckConfig(unittest.TestCase):
 
     def test_component_platform_not_found(self):
         """Test errors if component or platform not found."""
+        # Make sure they don't exist
+        set_component('beer', None)
+        set_component('light.beer', None)
         files = {
             'badcomponent.yaml': BASE_CONFIG + 'beer:',
             'badplatform.yaml': BASE_CONFIG + 'light:\n  platform: beer',
@@ -162,7 +157,6 @@ class TestCheckConfig(unittest.TestCase):
             'secrets.yaml': ('logger: debug\n'
                              'http_pw: abc123'),
         }
-        self.maxDiff = None
 
         with patch_yaml_files(files):
             config_path = get_test_config_dir('secret.yaml')
