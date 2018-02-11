@@ -511,14 +511,14 @@ def test_media_player(hass):
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
         'media_player.volume_set',
         hass,
-        payload={'volume': 20})
+        payload={'volumeSteps': 20})
     assert call.data['volume_level'] == 0.95
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
         'media_player.volume_set',
         hass,
-        payload={'volume': -20})
+        payload={'volumeSteps': -20})
     assert call.data['volume_level'] == 0.55
 
 

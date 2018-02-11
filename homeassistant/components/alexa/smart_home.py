@@ -1168,7 +1168,7 @@ def async_api_adjust_volume(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_adjust_volume_step(hass, config, request, entity):
     """Process an adjust volume step request."""
-    volume_step = round(float(request[API_PAYLOAD]['volume'] / 100), 2)
+    volume_step = round(float(request[API_PAYLOAD]['volumeSteps'] / 100), 2)
 
     current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
 
