@@ -44,6 +44,11 @@ C_HEAD = 'bold'
 ERROR_STR = 'General Errors'
 
 
+@asyncio.coroutine
+def mock_coro(*args):
+    """Coroutine that returns None."""
+    return None
+
 def color(the_color, *args, reset=None):
     """Color helper."""
     from colorlog.escape_codes import escape_codes, parse_colors
@@ -235,7 +240,7 @@ def check(config_path):
 
     # Patches to skip functions
     for sil in SILENCE:
-        PATCHES[sil] = patch(sil)
+        PATCHES[sil] = patch(sil, return_value=mock_coro())
 
     # Patches with local mock functions
     for key, val in MOCKS.items():
