@@ -9,7 +9,7 @@ import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import (
     EntityComponent, DEFAULT_SCAN_INTERVAL)
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import entity_platform, entity_registry
 
 import homeassistant.util.dt as dt_util
 
@@ -433,3 +433,24 @@ def test_entity_with_name_and_entity_id_getting_registered(hass):
         MockEntity(unique_id='1234', name='bla',
                    entity_id='test_domain.world')])
     assert 'test_domain.world' in hass.states.async_entity_ids()
+
+
+@asyncio.coroutine
+def test_overriding_name_from_registry(hass):
+    """Test that we can override a name via the Entity Registry."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_domain',
+            name='Overridden'
+        )
+    })
+    yield from component.async_add_entities([
+        MockEntity(unique_id='1234', name='Device Name')])
+
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'Overridden'

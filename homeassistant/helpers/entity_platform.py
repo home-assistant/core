@@ -213,6 +213,7 @@ class EntityPlatform(object):
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id)
             entity.entity_id = entry.entity_id
+            entity.registry_name = entry.name
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
