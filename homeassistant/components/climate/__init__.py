@@ -62,6 +62,7 @@ SUPPORT_SWING_MODE = 512
 SUPPORT_AWAY_MODE = 1024
 SUPPORT_AUX_HEAT = 2048
 SUPPORT_ON_OFF = 4096
+SUPPORT_CURRENT_VALVEPOSITION = 8192
 
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
@@ -82,6 +83,7 @@ ATTR_OPERATION_MODE = 'operation_mode'
 ATTR_OPERATION_LIST = 'operation_list'
 ATTR_SWING_MODE = 'swing_mode'
 ATTR_SWING_LIST = 'swing_list'
+ATTR_CURRENT_VALVEPOSITION = 'current_valveposition'
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
@@ -548,6 +550,10 @@ class ClimateDevice(Entity):
         if is_aux_heat is not None:
             data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
 
+        current_valveposition = self.current_valveposition
+        if current_valveposition is not None:
+            data[ATTR_CURRENT_VALVEPOSITION] = self.current_valveposition
+
         return data
 
     @property
@@ -643,6 +649,11 @@ class ClimateDevice(Entity):
     @property
     def swing_list(self):
         """Return the list of available swing modes."""
+        return None
+
+    @property
+    def current_valveposition(self):
+        """Return the position of the valve."""
         return None
 
     def set_temperature(self, **kwargs):

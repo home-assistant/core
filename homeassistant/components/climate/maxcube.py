@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_HUMIDITY)
+    SUPPORT_OPERATION_MODE, SUPPORT_CURRENT_VALVEPOSITION)
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
@@ -32,8 +32,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = '{} {}'.format(
             cube.room_by_id(device.room_id).name, device.name)
 
-        if cube.is_thermostat(device) or cube.is_wallthermostat(device):
+        if cube.is_wallthermostat(device):
             devices.append(MaxCubeClimate(hass, name, device.rf_address))
+
+        if cube.is_thermostat(device):
+            devices.append(MaxCubeClimateValve(hass, name, device.rf_address))
 
     if devices:
         add_devices(devices)
@@ -103,12 +106,6 @@ class MaxCubeClimate(ClimateDevice):
         return self._operation_list
 
     @property
-    def current_humidity(self):
-        """Return current position of the valve."""
-        device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        return self.map_valvepos_max_hass(device.valve_position)
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
@@ -149,14 +146,6 @@ class MaxCubeClimate(ClimateDevice):
     def update(self):
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
-
-    @staticmethod
-    def map_valvepos_max_hass(position):
-        """Map Valveposition from MAX! to HASS."""
-        if position is None:
-            return 0.0
-
-        return position
 
     @staticmethod
     def map_temperature_max_hass(temperature):
@@ -209,3 +198,25 @@ class MaxCubeClimate(ClimateDevice):
             operation_mode = None
 
         return operation_mode
+
+class MaxCubeClimateValve(MaxCubeClimate):
+    """MAX! Cube Valve ClimateDevice."""
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS | SUPPORT_CURRENT_VALVEPOSITION
+
+    @property
+    def current_valveposition(self):
+        """Return the position of the valve."""
+        device = self._cubehandle.cube.device_by_rf(self._rf_address)
+        return self.map_valvepos_max_hass(device.valve_position)
+
+    @staticmethod
+    def map_valvepos_max_hass(position):
+        """Map Valveposition from MAX! to HASS."""
+        if position is None:
+            return 0.0
+
+        return position
