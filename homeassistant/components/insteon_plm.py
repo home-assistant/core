@@ -134,7 +134,7 @@ class IPDB(object):
         State(OpenClosedRelay, 'switch'),
         State(OnOffSwitch, 'switch'),
 
-        States(IoLincSensor, 'binary_sensor'),
+        State(IoLincSensor, 'binary_sensor'),
         State(SmokeCO2Sensor, 'sensor'),
         State(OnOffSensor, 'binary_sensor'),
         State(VariableSensor, 'sensor'),
