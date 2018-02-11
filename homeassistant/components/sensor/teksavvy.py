@@ -31,11 +31,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    'usage': ['Usage', PERCENT, 'mdi:percent'],
+    'usage': ['Usage Ratio', PERCENT, 'mdi:percent'],
     'usage_gb': ['Usage', GIGABYTES, 'mdi:download'],
     'limit': ['Data limit', GIGABYTES, 'mdi:download'],
     'onpeak_download': ['On Peak Download', GIGABYTES, 'mdi:download'],
-    'onpeak_upload': ['On Peak Upload ', GIGABYTES, 'mdi:upload'],
+    'onpeak_upload': ['On Peak Upload', GIGABYTES, 'mdi:upload'],
     'onpeak_total': ['On Peak Total', GIGABYTES, 'mdi:download'],
     'offpeak_download': ['Off Peak download', GIGABYTES, 'mdi:download'],
     'offpeak_upload': ['Off Peak Upload', GIGABYTES, 'mdi:upload'],
