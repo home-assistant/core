@@ -56,9 +56,6 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
-# homeassistant.components.conversation
-fuzzywuzzy==0.16.0
-
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
