@@ -8,11 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
 import homeassistant.components.rpi_pfio as rpi_pfio
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,24 +20,25 @@ DEPENDENCIES = ['rpi_pfio']
 
 ATTR_INVERT_LOGIC = 'invert_logic'
 ATTR_NAME = 'name'
+
 CONF_PORTS = 'ports'
 
 DEFAULT_INVERT_LOGIC = False
 
 PORT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean
+    vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORTS, default={}): vol.Schema({
-        cv.positive_int: PORT_SCHEMA
+        cv.positive_int: PORT_SCHEMA,
     })
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the PiFace Digital Output devices."""
+    """Set up the PiFace Digital Output devices."""
     switches = []
     ports = config.get(CONF_PORTS)
     for port, port_entity in ports.items():
@@ -66,7 +67,7 @@ class RPiPFIOSwitch(ToggleEntity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property

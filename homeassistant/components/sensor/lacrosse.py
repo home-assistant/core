@@ -4,27 +4,32 @@ Support for LaCrosse sensor components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.lacrosse/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
-from homeassistant.components.sensor import (ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_ID,
-    CONF_SENSORS, CONF_TYPE, TEMP_CELSIUS)
+    CONF_DEVICE, CONF_ID, CONF_NAME, CONF_SENSORS, CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['pylacrosse==0.2.7']
+REQUIREMENTS = ['pylacrosse==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BAUD = 'baud'
+CONF_DATARATE = 'datarate'
 CONF_EXPIRE_AFTER = 'expire_after'
+CONF_FREQUENCY = 'frequency'
+CONF_JEELINK_LED = 'led'
+CONF_TOGGLE_INTERVAL = 'toggle_interval'
+CONF_TOGGLE_MASK = 'toggle_mask'
 
 DEFAULT_DEVICE = '/dev/ttyUSB0'
 DEFAULT_BAUD = '57600'
@@ -42,7 +47,12 @@ SENSOR_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
     vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
+    vol.Optional(CONF_DATARATE): cv.positive_int,
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_FREQUENCY): cv.positive_int,
+    vol.Optional(CONF_JEELINK_LED): cv.boolean,
+    vol.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
+    vol.Optional(CONF_TOGGLE_MASK): cv.positive_int,
 })
 
 
@@ -65,6 +75,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lacrosse.close)
+
+    if CONF_JEELINK_LED in config:
+        lacrosse.led_mode_state(config.get(CONF_JEELINK_LED))
+    if CONF_FREQUENCY in config:
+        lacrosse.set_frequency(config.get(CONF_FREQUENCY))
+    if CONF_DATARATE in config:
+        lacrosse.set_datarate(config.get(CONF_DATARATE))
+    if CONF_TOGGLE_INTERVAL in config:
+        lacrosse.set_toggle_interval(config.get(CONF_TOGGLE_INTERVAL))
+    if CONF_TOGGLE_MASK in config:
+        lacrosse.set_toggle_mask(config.get(CONF_TOGGLE_MASK))
+
+    lacrosse.start_scan()
 
     sensors = []
     for device, device_config in config[CONF_SENSORS].items():
@@ -124,7 +147,7 @@ class LaCrosseSensor(Entity):
         return attributes
 
     def _callback_lacrosse(self, lacrosse_sensor, user_data):
-        """Callback function that is called from pylacrosse with new values."""
+        """Handle a function that is called from pylacrosse with new values."""
         if self._expire_after is not None and self._expire_after > 0:
             # Reset old trigger
             if self._expiration_trigger:

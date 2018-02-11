@@ -6,13 +6,13 @@ https://home-assistant.io/components/climate.tesla/
 """
 import logging
 
-from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.climate import (
-    ClimateDevice, ENTITY_ID_FORMAT, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE)
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
+    ENTITY_ID_FORMAT, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice)
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
+from homeassistant.components.tesla import TeslaDevice
 from homeassistant.const import (
-    TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_TEMPERATURE)
+    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         return OPERATION_LIST
 
     def update(self):
-        """Called by the Tesla device callback to update state."""
+        """Call by the Tesla device callback to update state."""
         _LOGGER.debug("Updating: %s", self._name)
         self.tesla_device.update()
         self._target_temperature = self.tesla_device.get_goal_temp()

@@ -1,7 +1,7 @@
 """Tests for async util methods from Python source."""
 import asyncio
-from asyncio import test_utils
 from unittest.mock import MagicMock, patch
+from unittest import TestCase
 
 import pytest
 
@@ -104,14 +104,32 @@ def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
     assert len(loop.call_soon_threadsafe.mock_calls) == 2
 
 
-class RunThreadsafeTests(test_utils.TestCase):
-    """Test case for asyncio.run_coroutine_threadsafe."""
+class RunThreadsafeTests(TestCase):
+    """Test case for hasync.run_coroutine_threadsafe."""
 
     def setUp(self):
         """Test setup method."""
-        super().setUp()
         self.loop = asyncio.new_event_loop()
-        self.set_event_loop(self.loop)  # Will cleanup properly
+
+    def tearDown(self):
+        """Test teardown method."""
+        executor = self.loop._default_executor
+        if executor is not None:
+            executor.shutdown(wait=True)
+        self.loop.close()
+
+    @staticmethod
+    def run_briefly(loop):
+        """Momentarily run a coroutine on the given loop."""
+        @asyncio.coroutine
+        def once():
+            pass
+        gen = once()
+        t = loop.create_task(gen)
+        try:
+            loop.run_until_complete(t)
+        finally:
+            gen.close()
 
     def add_callback(self, a, b, fail, invalid):
         """Return a + b."""
@@ -185,7 +203,7 @@ class RunThreadsafeTests(test_utils.TestCase):
         future = self.loop.run_in_executor(None, callback)
         with self.assertRaises(asyncio.TimeoutError):
             self.loop.run_until_complete(future)
-        test_utils.run_briefly(self.loop)
+        self.run_briefly(self.loop)
         # Check that there's no pending task (add has been cancelled)
         for task in asyncio.Task.all_tasks(self.loop):
             self.assertTrue(task.done())

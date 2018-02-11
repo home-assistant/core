@@ -33,17 +33,16 @@ ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_FIRE_EVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
-ATTR_DATA_BITS = 'data_bits'
 ATTR_DUMMY = 'dummy'
-ATTR_OFF_DELAY = 'off_delay'
+CONF_DATA_BITS = 'data_bits'
 CONF_AUTOMATIC_ADD = 'automatic_add'
 CONF_DATA_TYPE = 'data_type'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_FIRE_EVENT = 'fire_event'
-CONF_DATA_BITS = 'data_bits'
 CONF_DUMMY = 'dummy'
 CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
+CONF_OFF_DELAY = 'off_delay'
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
 DATA_TYPES = OrderedDict([
@@ -78,7 +77,7 @@ def setup(hass, config):
     """Set up the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
-        """Handle revieved messages from RFXtrx gateway."""
+        """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return
@@ -143,12 +142,13 @@ def get_rfx_object(packetid):
 
 def get_pt2262_deviceid(device_id, nb_data_bits):
     """Extract and return the address bits from a Lighting4/PT2262 packet."""
+    if nb_data_bits is None:
+        return
     import binascii
     try:
         data = bytearray.fromhex(device_id)
     except ValueError:
         return None
-
     mask = 0xFF & ~((1 << nb_data_bits) - 1)
 
     data[len(data)-1] &= mask
@@ -171,7 +171,7 @@ def get_pt2262_cmd(device_id, data_bits):
 # pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
-    for dev_id, device in RFX_DEVICES.items():
+    for device in RFX_DEVICES.values():
         if (hasattr(device, 'is_lighting4') and
                 device.masked_id == get_pt2262_deviceid(device_id,
                                                         device.data_bits)):

@@ -9,13 +9,10 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    Light, PLATFORM_SCHEMA
-)
-
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -34,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the iGlo lighs."""
+    """Set up the iGlo lights."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)

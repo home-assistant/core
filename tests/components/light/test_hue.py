@@ -68,7 +68,7 @@ class TestSetup(unittest.TestCase):
         """Return a dict suitable for mocking api.get('lights')."""
         mock_bridge_lights = lights
 
-        for light_id, info in mock_bridge_lights.items():
+        for info in mock_bridge_lights.values():
             if 'state' not in info:
                 info['state'] = {'on': False}
 
@@ -272,38 +272,20 @@ class TestSetup(unittest.TestCase):
                 hue_light.unthrottled_update_lights(
                     self.hass, mock_bridge_two, self.mock_add_devices)
 
-        self.assertEquals(sorted(mock_bridge_one.lights.keys()), [1, 2])
-        self.assertEquals(sorted(mock_bridge_two.lights.keys()), [1, 3])
+        self.assertEqual(sorted(mock_bridge_one.lights.keys()), [1, 2])
+        self.assertEqual(sorted(mock_bridge_two.lights.keys()), [1, 3])
 
-        self.assertEquals(len(self.mock_add_devices.mock_calls), 2)
+        self.assertEqual(len(self.mock_add_devices.mock_calls), 2)
 
         # first call
         name, args, kwargs = self.mock_add_devices.mock_calls[0]
-        self.assertEquals(len(args), 1)
-        self.assertEquals(len(kwargs), 0)
-
-        # one argument, a list of lights in bridge one; each of them is an
-        # object of type HueLight so we can't straight up compare them
-        lights = args[0]
-        self.assertEquals(
-            lights[0].unique_id,
-            '{}.b1l1.Light.1'.format(hue_light.HueLight))
-        self.assertEquals(
-            lights[1].unique_id,
-            '{}.b1l2.Light.2'.format(hue_light.HueLight))
+        self.assertEqual(len(args), 1)
+        self.assertEqual(len(kwargs), 0)
 
         # second call works the same
         name, args, kwargs = self.mock_add_devices.mock_calls[1]
-        self.assertEquals(len(args), 1)
-        self.assertEquals(len(kwargs), 0)
-
-        lights = args[0]
-        self.assertEquals(
-            lights[0].unique_id,
-            '{}.b2l1.Light.1'.format(hue_light.HueLight))
-        self.assertEquals(
-            lights[1].unique_id,
-            '{}.b2l3.Light.3'.format(hue_light.HueLight))
+        self.assertEqual(len(args), 1)
+        self.assertEqual(len(kwargs), 0)
 
     def test_process_lights_api_error(self):
         """Test the process_lights function when the bridge errors out."""
@@ -313,8 +295,8 @@ class TestSetup(unittest.TestCase):
         ret = hue_light.process_lights(
             self.hass, self.mock_api, self.mock_bridge, None)
 
-        self.assertEquals([], ret)
-        self.assertEquals(self.mock_bridge.lights, {})
+        self.assertEqual([], ret)
+        self.assertEqual(self.mock_bridge.lights, {})
 
     def test_process_lights_no_lights(self):
         """Test the process_lights function when bridge returns no lights."""
@@ -325,9 +307,9 @@ class TestSetup(unittest.TestCase):
             ret = hue_light.process_lights(
                 self.hass, self.mock_api, self.mock_bridge, None)
 
-            self.assertEquals([], ret)
+            self.assertEqual([], ret)
             mock_dispatcher_send.assert_not_called()
-            self.assertEquals(self.mock_bridge.lights, {})
+            self.assertEqual(self.mock_bridge.lights, {})
 
     @patch(HUE_LIGHT_NS + 'HueLight')
     def test_process_lights_some_lights(self, mock_hue_light):
@@ -341,7 +323,7 @@ class TestSetup(unittest.TestCase):
             ret = hue_light.process_lights(
                 self.hass, self.mock_api, self.mock_bridge, None)
 
-            self.assertEquals(len(ret), 2)
+            self.assertEqual(len(ret), 2)
             mock_hue_light.assert_has_calls([
                 call(
                     1, {'state': 'on'}, self.mock_bridge, mock.ANY,
@@ -353,7 +335,7 @@ class TestSetup(unittest.TestCase):
                     self.mock_bridge.allow_in_emulated_hue),
             ])
             mock_dispatcher_send.assert_not_called()
-            self.assertEquals(len(self.mock_bridge.lights), 2)
+            self.assertEqual(len(self.mock_bridge.lights), 2)
 
     @patch(HUE_LIGHT_NS + 'HueLight')
     def test_process_lights_new_light(self, mock_hue_light):
@@ -373,7 +355,7 @@ class TestSetup(unittest.TestCase):
             ret = hue_light.process_lights(
                 self.hass, self.mock_api, self.mock_bridge, None)
 
-            self.assertEquals(len(ret), 1)
+            self.assertEqual(len(ret), 1)
             mock_hue_light.assert_has_calls([
                 call(
                     2, {'state': 'off'}, self.mock_bridge, mock.ANY,
@@ -382,7 +364,7 @@ class TestSetup(unittest.TestCase):
             ])
             mock_dispatcher_send.assert_called_once_with(
                 'hue_light_callback_bridge-id_1')
-            self.assertEquals(len(self.mock_bridge.lights), 2)
+            self.assertEqual(len(self.mock_bridge.lights), 2)
 
     def test_process_groups_api_error(self):
         """Test the process_groups function when the bridge errors out."""
@@ -392,8 +374,8 @@ class TestSetup(unittest.TestCase):
         ret = hue_light.process_groups(
             self.hass, self.mock_api, self.mock_bridge, None)
 
-        self.assertEquals([], ret)
-        self.assertEquals(self.mock_bridge.lightgroups, {})
+        self.assertEqual([], ret)
+        self.assertEqual(self.mock_bridge.lightgroups, {})
 
     def test_process_groups_no_state(self):
         """Test the process_groups function when bridge returns no status."""
@@ -405,9 +387,9 @@ class TestSetup(unittest.TestCase):
             ret = hue_light.process_groups(
                 self.hass, self.mock_api, self.mock_bridge, None)
 
-            self.assertEquals([], ret)
+            self.assertEqual([], ret)
             mock_dispatcher_send.assert_not_called()
-            self.assertEquals(self.mock_bridge.lightgroups, {})
+            self.assertEqual(self.mock_bridge.lightgroups, {})
 
     @patch(HUE_LIGHT_NS + 'HueLight')
     def test_process_groups_some_groups(self, mock_hue_light):
@@ -421,7 +403,7 @@ class TestSetup(unittest.TestCase):
             ret = hue_light.process_groups(
                 self.hass, self.mock_api, self.mock_bridge, None)
 
-            self.assertEquals(len(ret), 2)
+            self.assertEqual(len(ret), 2)
             mock_hue_light.assert_has_calls([
                 call(
                     1, {'state': 'on'}, self.mock_bridge, mock.ANY,
@@ -433,7 +415,7 @@ class TestSetup(unittest.TestCase):
                     self.mock_bridge.allow_in_emulated_hue, True),
             ])
             mock_dispatcher_send.assert_not_called()
-            self.assertEquals(len(self.mock_bridge.lightgroups), 2)
+            self.assertEqual(len(self.mock_bridge.lightgroups), 2)
 
     @patch(HUE_LIGHT_NS + 'HueLight')
     def test_process_groups_new_group(self, mock_hue_light):
@@ -453,7 +435,7 @@ class TestSetup(unittest.TestCase):
             ret = hue_light.process_groups(
                 self.hass, self.mock_api, self.mock_bridge, None)
 
-            self.assertEquals(len(ret), 1)
+            self.assertEqual(len(ret), 1)
             mock_hue_light.assert_has_calls([
                 call(
                     2, {'state': 'off'}, self.mock_bridge, mock.ANY,
@@ -462,7 +444,7 @@ class TestSetup(unittest.TestCase):
             ])
             mock_dispatcher_send.assert_called_once_with(
                 'hue_light_callback_bridge-id_1')
-            self.assertEquals(len(self.mock_bridge.lightgroups), 2)
+            self.assertEqual(len(self.mock_bridge.lightgroups), 2)
 
 
 class TestHueLight(unittest.TestCase):
@@ -506,60 +488,16 @@ class TestHueLight(unittest.TestCase):
 
     def test_unique_id_for_light(self):
         """Test the unique_id method with lights."""
-        class_name = "<class 'homeassistant.components.light.hue.HueLight'>"
-
         light = self.buildLight(info={'uniqueid': 'foobar'})
-        self.assertEquals(
-            class_name+'.foobar',
-            light.unique_id)
+        self.assertEqual('foobar', light.unique_id)
 
         light = self.buildLight(info={})
-        self.assertEquals(
-            class_name+'.Unnamed Device.Light.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'name': 'my-name'})
-        self.assertEquals(
-            class_name+'.my-name.Light.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'type': 'my-type'})
-        self.assertEquals(
-            class_name+'.Unnamed Device.my-type.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'name': 'a name', 'type': 'my-type'})
-        self.assertEquals(
-            class_name+'.a name.my-type.42',
-            light.unique_id)
+        self.assertIsNone(light.unique_id)
 
     def test_unique_id_for_group(self):
         """Test the unique_id method with groups."""
-        class_name = "<class 'homeassistant.components.light.hue.HueLight'>"
-
         light = self.buildLight(info={'uniqueid': 'foobar'}, is_group=True)
-        self.assertEquals(
-            class_name+'.foobar',
-            light.unique_id)
+        self.assertEqual('foobar', light.unique_id)
 
         light = self.buildLight(info={}, is_group=True)
-        self.assertEquals(
-            class_name+'.Unnamed Device.Group.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'name': 'my-name'}, is_group=True)
-        self.assertEquals(
-            class_name+'.my-name.Group.42',
-            light.unique_id)
-
-        light = self.buildLight(info={'type': 'my-type'}, is_group=True)
-        self.assertEquals(
-            class_name+'.Unnamed Device.my-type.42',
-            light.unique_id)
-
-        light = self.buildLight(
-            info={'name': 'a name', 'type': 'my-type'},
-            is_group=True)
-        self.assertEquals(
-            class_name+'.a name.my-type.42',
-            light.unique_id)
+        self.assertIsNone(light.unique_id)

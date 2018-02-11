@@ -97,7 +97,7 @@ class AiohttpClientMockResponse:
     """Mock Aiohttp client response."""
 
     def __init__(self, method, url, status, response, cookies=None, exc=None,
-                 headers={}):
+                 headers=None):
         """Initialize a fake response."""
         self.method = method
         self._url = url
@@ -107,7 +107,7 @@ class AiohttpClientMockResponse:
         self.response = response
         self.exc = exc
 
-        self._headers = headers
+        self._headers = headers or {}
         self._cookies = {}
 
         if cookies:

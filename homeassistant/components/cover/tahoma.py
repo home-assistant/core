@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tahoma/
 """
 import logging
-from datetime import timedelta
 
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.tahoma import (
@@ -14,8 +13,6 @@ from homeassistant.components.tahoma import (
 DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -62,6 +59,14 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
 
+    @property
+    def device_class(self):
+        """Return the class of the device."""
+        if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
+            return 'window'
+        else:
+            return None
+
     def open_cover(self, **kwargs):
         """Open the cover."""
         self.apply_action('open')
@@ -77,10 +82,3 @@ class TahomaCover(TahomaDevice, CoverDevice):
             self.apply_action('setPosition', 'secured')
         else:
             self.apply_action('stopIdentify')
-
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
-            return 'window'
-        else:
-            return None

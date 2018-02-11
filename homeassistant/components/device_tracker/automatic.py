@@ -14,8 +14,8 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, ATTR_ATTRIBUTES, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_MAC,
-    ATTR_GPS, ATTR_GPS_ACCURACY)
+    ATTR_ATTRIBUTES, ATTR_DEV_ID, ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_HOST_NAME,
+    ATTR_MAC, PLATFORM_SCHEMA)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -24,35 +24,33 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['aioautomatic==0.6.4']
-DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CLIENT_ID = 'client_id'
-CONF_SECRET = 'secret'
-CONF_DEVICES = 'devices'
-CONF_CURRENT_LOCATION = 'current_location'
-
-DEFAULT_TIMEOUT = 5
-
-DEFAULT_SCOPE = ['location', 'trip', 'vehicle:events', 'vehicle:profile']
-FULL_SCOPE = DEFAULT_SCOPE + ['current_location']
-
 ATTR_FUEL_LEVEL = 'fuel_level'
-
-EVENT_AUTOMATIC_UPDATE = 'automatic_update'
-
 AUTOMATIC_CONFIG_FILE = '.automatic/session-{}.json'
+
+CONF_CLIENT_ID = 'client_id'
+CONF_CURRENT_LOCATION = 'current_location'
+CONF_DEVICES = 'devices'
+CONF_SECRET = 'secret'
 
 DATA_CONFIGURING = 'automatic_configurator_clients'
 DATA_REFRESH_TOKEN = 'refresh_token'
+DEFAULT_SCOPE = ['location', 'trip', 'vehicle:events', 'vehicle:profile']
+DEFAULT_TIMEOUT = 5
+DEPENDENCIES = ['http']
+
+EVENT_AUTOMATIC_UPDATE = 'automatic_update'
+
+FULL_SCOPE = DEFAULT_SCOPE + ['current_location']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_SECRET): cv.string,
     vol.Optional(CONF_CURRENT_LOCATION, default=False): cv.boolean,
-    vol.Optional(CONF_DEVICES, default=None): vol.All(
-        cv.ensure_list, [cv.string])
+    vol.Optional(CONF_DEVICES, default=None):
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -142,7 +140,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     @asyncio.coroutine
     def initialize_callback(code, state):
-        """Callback after OAuth2 response is returned."""
+        """Call after OAuth2 response is returned."""
         try:
             session = yield from client.create_session_from_oauth_code(
                 code, state)
@@ -181,12 +179,12 @@ class AutomaticAuthCallbackView(HomeAssistantView):
                 return response
             else:
                 _LOGGER.error(
-                    "Error authorizing Automatic. Invalid response returned.")
+                    "Error authorizing Automatic. Invalid response returned")
                 return response
 
         if DATA_CONFIGURING not in hass.data or \
                 params['state'] not in hass.data[DATA_CONFIGURING]:
-            _LOGGER.error("Automatic configuration request not found.")
+            _LOGGER.error("Automatic configuration request not found")
             return response
 
         code = params['code']
@@ -220,16 +218,15 @@ class AutomaticData(object):
 
     @asyncio.coroutine
     def handle_event(self, name, event):
-        """Coroutine to update state for a realtime event."""
+        """Coroutine to update state for a real time event."""
         import aioautomatic
 
-        # Fire a hass event
         self.hass.bus.async_fire(EVENT_AUTOMATIC_UPDATE, event.data)
 
         if event.vehicle.id not in self.vehicle_info:
             # If vehicle hasn't been seen yet, request the detailed
             # info for this vehicle.
-            _LOGGER.info("New vehicle found.")
+            _LOGGER.info("New vehicle found")
             try:
                 vehicle = yield from event.get_vehicle()
             except aioautomatic.exceptions.AutomaticError as err:
@@ -240,7 +237,7 @@ class AutomaticData(object):
         if event.created_at < self.vehicle_seen[event.vehicle.id]:
             # Skip events received out of order
             _LOGGER.debug("Skipping out of order event. Event Created %s. "
-                          "Last seen event: %s.", event.created_at,
+                          "Last seen event: %s", event.created_at,
                           self.vehicle_seen[event.vehicle.id])
             return
         self.vehicle_seen[event.vehicle.id] = event.created_at
@@ -270,13 +267,13 @@ class AutomaticData(object):
         self.ws_close_requested = False
 
         if self.ws_reconnect_handle is not None:
-            _LOGGER.debug("Retrying websocket connection.")
+            _LOGGER.debug("Retrying websocket connection")
         try:
             ws_loop_future = yield from self.client.ws_connect()
         except aioautomatic.exceptions.UnauthorizedClientError:
             _LOGGER.error("Client unauthorized for websocket connection. "
                           "Ensure Websocket is selected in the Automatic "
-                          "developer application event delivery preferences.")
+                          "developer application event delivery preferences")
             return
         except aioautomatic.exceptions.AutomaticError as err:
             if self.ws_reconnect_handle is None:
@@ -290,14 +287,14 @@ class AutomaticData(object):
             self.ws_reconnect_handle()
             self.ws_reconnect_handle = None
 
-        _LOGGER.info("Websocket connected.")
+        _LOGGER.info("Websocket connected")
 
         try:
             yield from ws_loop_future
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
 
-        _LOGGER.info("Websocket closed.")
+        _LOGGER.info("Websocket closed")
 
         # If websocket was close was not requested, attempt to reconnect
         if not self.ws_close_requested:

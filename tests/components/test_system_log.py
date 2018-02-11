@@ -1,18 +1,20 @@
 """Test system log component."""
 import asyncio
 import logging
+from unittest.mock import MagicMock, patch
+
 import pytest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
-from unittest.mock import MagicMock, patch
 
 _LOGGER = logging.getLogger('test_logger')
 
 
 @pytest.fixture(autouse=True)
 @asyncio.coroutine
-def setup_test_case(hass):
+def setup_test_case(hass, test_client):
     """Setup system_log component before test case."""
     config = {'system_log': {'max_entries': 2}}
     yield from async_setup_component(hass, system_log.DOMAIN, config)
@@ -33,7 +35,7 @@ def get_error_log(hass, test_client, expected_count):
 def _generate_and_log_exception(exception, log):
     try:
         raise Exception(exception)
-    except:  # pylint: disable=bare-except
+    except:  # noqa: E722  # pylint: disable=bare-except
         _LOGGER.exception(log)
 
 
@@ -85,6 +87,25 @@ def test_error(hass, test_client):
 
 
 @asyncio.coroutine
+def test_error_posted_as_event(hass, test_client):
+    """Test that error are posted as events."""
+    events = []
+
+    @callback
+    def event_listener(event):
+        """Listen to events of type system_log_event."""
+        events.append(event)
+
+    hass.bus.async_listen(system_log.EVENT_SYSTEM_LOG, event_listener)
+
+    _LOGGER.error('error message')
+    yield from hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert_log(events[0].data, '', 'error message', 'ERROR')
+
+
+@asyncio.coroutine
 def test_critical(hass, test_client):
     """Test that critical are logged and retrieved correctly."""
     _LOGGER.critical('critical message')
@@ -118,10 +139,53 @@ def test_clear_logs(hass, test_client):
 
 
 @asyncio.coroutine
+def test_write_log(hass):
+    """Test that error propagates to logger."""
+    logger = MagicMock()
+    with patch('logging.getLogger', return_value=logger) as mock_logging:
+        hass.async_add_job(
+            hass.services.async_call(
+                system_log.DOMAIN, system_log.SERVICE_WRITE,
+                {'message': 'test_message'}))
+        yield from hass.async_block_till_done()
+    mock_logging.assert_called_once_with(
+        'homeassistant.components.system_log.external')
+    assert logger.method_calls[0] == ('error', ('test_message',))
+
+
+@asyncio.coroutine
+def test_write_choose_logger(hass):
+    """Test that correct logger is chosen."""
+    with patch('logging.getLogger') as mock_logging:
+        hass.async_add_job(
+            hass.services.async_call(
+                system_log.DOMAIN, system_log.SERVICE_WRITE,
+                {'message': 'test_message',
+                 'logger': 'myLogger'}))
+        yield from hass.async_block_till_done()
+    mock_logging.assert_called_once_with(
+        'myLogger')
+
+
+@asyncio.coroutine
+def test_write_choose_level(hass):
+    """Test that correct logger is chosen."""
+    logger = MagicMock()
+    with patch('logging.getLogger', return_value=logger):
+        hass.async_add_job(
+            hass.services.async_call(
+                system_log.DOMAIN, system_log.SERVICE_WRITE,
+                {'message': 'test_message',
+                 'level': 'debug'}))
+        yield from hass.async_block_till_done()
+    assert logger.method_calls[0] == ('debug', ('test_message',))
+
+
+@asyncio.coroutine
 def test_unknown_path(hass, test_client):
     """Test error logged from unknown path."""
     _LOGGER.findCaller = MagicMock(
-            return_value=('unknown_path', 0, None, None))
+        return_value=('unknown_path', 0, None, None))
     _LOGGER.error('error message')
     log = (yield from get_error_log(hass, test_client, 1))[0]
     assert log['source'] == 'unknown_path'
@@ -130,26 +194,25 @@ def test_unknown_path(hass, test_client):
 def log_error_from_test_path(path):
     """Log error while mocking the path."""
     call_path = 'internal_path.py'
-    with patch.object(
-            _LOGGER,
-            'findCaller',
-            MagicMock(return_value=(call_path, 0, None, None))):
+    with patch.object(_LOGGER,
+                      'findCaller',
+                      MagicMock(return_value=(call_path, 0, None, None))):
         with patch('traceback.extract_stack',
                    MagicMock(return_value=[
-                             get_frame('main_path/main.py'),
-                             get_frame(path),
-                             get_frame(call_path),
-                             get_frame('venv_path/logging/log.py')])):
+                       get_frame('main_path/main.py'),
+                       get_frame(path),
+                       get_frame(call_path),
+                       get_frame('venv_path/logging/log.py')])):
             _LOGGER.error('error message')
 
 
 @asyncio.coroutine
 def test_homeassistant_path(hass, test_client):
     """Test error logged from homeassistant path."""
-    log_error_from_test_path('venv_path/homeassistant/component/component.py')
-
     with patch('homeassistant.components.system_log.HOMEASSISTANT_PATH',
                new=['venv_path/homeassistant']):
+        log_error_from_test_path(
+            'venv_path/homeassistant/component/component.py')
         log = (yield from get_error_log(hass, test_client, 1))[0]
     assert log['source'] == 'component/component.py'
 
@@ -157,9 +220,8 @@ def test_homeassistant_path(hass, test_client):
 @asyncio.coroutine
 def test_config_path(hass, test_client):
     """Test error logged from config path."""
-    log_error_from_test_path('config/custom_component/test.py')
-
     with patch.object(hass.config, 'config_dir', new='config'):
+        log_error_from_test_path('config/custom_component/test.py')
         log = (yield from get_error_log(hass, test_client, 1))[0]
     assert log['source'] == 'custom_component/test.py'
 
@@ -167,9 +229,8 @@ def test_config_path(hass, test_client):
 @asyncio.coroutine
 def test_netdisco_path(hass, test_client):
     """Test error logged from netdisco path."""
-    log_error_from_test_path('venv_path/netdisco/disco_component.py')
-
     with patch.dict('sys.modules',
                     netdisco=MagicMock(__path__=['venv_path/netdisco'])):
+        log_error_from_test_path('venv_path/netdisco/disco_component.py')
         log = (yield from get_error_log(hass, test_client, 1))[0]
     assert log['source'] == 'disco_component.py'

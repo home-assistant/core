@@ -8,8 +8,8 @@ import logging
 from time import sleep
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.verisure import CONF_ALARM, CONF_CODE_DIGITS
 from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import (CONF_ALARM, CONF_CODE_DIGITS)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_UNKNOWN)
@@ -43,7 +43,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     """Representation of a Verisure alarm status."""
 
     def __init__(self):
-        """Initalize the Verisure alarm panel."""
+        """Initialize the Verisure alarm panel."""
         self._state = STATE_UNKNOWN
         self._digits = hub.config.get(CONF_CODE_DIGITS)
         self._changed_by = None

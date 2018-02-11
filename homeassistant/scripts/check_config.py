@@ -13,7 +13,7 @@ from homeassistant import bootstrap, loader, setup, config as config_util
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.0.1',)
+REQUIREMENTS = ('colorlog==3.1.2',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -30,6 +30,8 @@ MOCKS = {
                       config_util._log_pkg_error),
     'logger_exception': ("homeassistant.setup._LOGGER.error",
                          setup._LOGGER.error),
+    'logger_exception_bootstrap': ("homeassistant.bootstrap._LOGGER.error",
+                                   bootstrap._LOGGER.error),
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
@@ -134,7 +136,7 @@ def run(script_args: List) -> int:
 
         for sfn, sdict in res['secret_cache'].items():
             sss = []
-            for skey, sval in sdict.items():
+            for skey in sdict:
                 if skey in flatsecret:
                     _LOGGER.error('Duplicated secrets in files %s and %s',
                                   flatsecret[skey], sfn)
@@ -228,6 +230,11 @@ def check(config_path):
         """Log logger.exceptions."""
         res['except'].setdefault(ERROR_STR, []).append(msg % params)
         MOCKS['logger_exception'][1](msg, *params)
+
+    def mock_logger_exception_bootstrap(msg, *params):
+        """Log logger.exceptions."""
+        res['except'].setdefault(ERROR_STR, []).append(msg % params)
+        MOCKS['logger_exception_bootstrap'][1](msg, *params)
 
     # Patches to skip functions
     for sil in SILENCE:

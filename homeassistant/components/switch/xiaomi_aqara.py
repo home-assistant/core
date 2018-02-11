@@ -107,7 +107,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._state = False
             self.schedule_update_ha_state()
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if IN_USE in data:
             self._in_use = int(data[IN_USE])

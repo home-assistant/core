@@ -8,14 +8,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_NAME, CONF_PORT,
-                                 STATE_OFF, STATE_ON)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    DOMAIN, MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA,
-    SUPPORT_VOLUME_MUTE, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
-
+    DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pymonoprice==0.3']
 
@@ -42,9 +41,9 @@ SERVICE_SNAPSHOT = 'snapshot'
 SERVICE_RESTORE = 'restore'
 
 # Valid zone ids: 11-16 or 21-26 or 31-36
-ZONE_IDS = vol.All(vol.Coerce(int), vol.Any(vol.Range(min=11, max=16),
-                                            vol.Range(min=21, max=26),
-                                            vol.Range(min=31, max=36)))
+ZONE_IDS = vol.All(vol.Coerce(int), vol.Any(
+    vol.Range(min=11, max=16), vol.Range(min=21, max=26),
+    vol.Range(min=31, max=36)))
 
 # Valid source ids: 1-6
 SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=6))
@@ -66,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         monoprice = get_monoprice(port)
     except SerialException:
-        _LOGGER.error('Error connecting to Monoprice controller.')
+        _LOGGER.error("Error connecting to Monoprice controller")
         return
 
     sources = {source_id: extra[CONF_NAME] for source_id, extra
@@ -75,9 +74,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.data[DATA_MONOPRICE] = []
     for zone_id, extra in config[CONF_ZONES].items():
         _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
-        hass.data[DATA_MONOPRICE].append(MonopriceZone(monoprice, sources,
-                                                       zone_id,
-                                                       extra[CONF_NAME]))
+        hass.data[DATA_MONOPRICE].append(MonopriceZone(
+            monoprice, sources, zone_id, extra[CONF_NAME]))
 
     add_devices(hass.data[DATA_MONOPRICE], True)
 
@@ -98,18 +96,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device.restore()
 
     hass.services.register(
-        DOMAIN, SERVICE_SNAPSHOT, service_handle,
-        schema=MEDIA_PLAYER_SCHEMA)
+        DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=MEDIA_PLAYER_SCHEMA)
 
     hass.services.register(
-        DOMAIN, SERVICE_RESTORE, service_handle,
-        schema=MEDIA_PLAYER_SCHEMA)
+        DOMAIN, SERVICE_RESTORE, service_handle, schema=MEDIA_PLAYER_SCHEMA)
 
 
 class MonopriceZone(MediaPlayerDevice):
-    """Representation of a a Monoprice amplifier zone."""
-
-    # pylint: disable=too-many-public-methods
+    """Representation of a Monoprice amplifier zone."""
 
     def __init__(self, monoprice, sources, zone_id, zone_name):
         """Initialize new zone."""
@@ -179,7 +173,7 @@ class MonopriceZone(MediaPlayerDevice):
 
     @property
     def source(self):
-        """"Return the current input source of the device."""
+        """Return the current input source of the device."""
         return self._source
 
     @property
@@ -224,12 +218,10 @@ class MonopriceZone(MediaPlayerDevice):
         """Volume up the media player."""
         if self._volume is None:
             return
-        self._monoprice.set_volume(self._zone_id,
-                                   min(self._volume + 1, 38))
+        self._monoprice.set_volume(self._zone_id, min(self._volume + 1, 38))
 
     def volume_down(self):
         """Volume down media player."""
         if self._volume is None:
             return
-        self._monoprice.set_volume(self._zone_id,
-                                   max(self._volume - 1, 0))
+        self._monoprice.set_volume(self._zone_id, max(self._volume - 1, 0))

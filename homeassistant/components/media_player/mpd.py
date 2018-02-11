@@ -4,22 +4,22 @@ Support to interact with a Music Player Daemon.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mpd/
 """
+from datetime import timedelta
 import logging
 import os
-from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET,
-    SUPPORT_SEEK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, PLATFORM_SCHEMA,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    CONF_PORT, CONF_PASSWORD, CONF_HOST, CONF_NAME)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -116,7 +116,7 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def available(self):
-        """True if MPD is available and connected."""
+        """Return true if MPD is available and connected."""
         return self._is_connected
 
     def update(self):

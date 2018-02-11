@@ -16,7 +16,7 @@ SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for lights."""
+    """Set up the MySensors platform for lights."""
     device_class_map = {
         'S_DIMMER': MySensorsLightDimmer,
         'S_RGB_LIGHT': MySensorsLightRGB,

@@ -113,8 +113,7 @@ class NetAtmoSensor(Entity):
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
         self.module_id = module_id[1]
-        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(
-            self._name, module_id, self.type)
+        self._unique_id = '{}-{}'.format(self.module_id, self.type)
 
     @property
     def name(self):

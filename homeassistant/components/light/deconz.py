@@ -4,15 +4,14 @@ Support for deCONZ light.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
-
 import asyncio
 
 from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_FLASH, ATTR_COLOR_TEMP, ATTR_EFFECT,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
 from homeassistant.core import callback
 from homeassistant.util.color import color_RGB_to_xy
 
@@ -23,7 +22,7 @@ ATTR_LIGHT_GROUP = 'LightGroup'
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup light for deCONZ component."""
+    """Set up the deCONZ light."""
     if discovery_info is None:
         return
 
@@ -44,7 +43,7 @@ class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
     def __init__(self, light):
-        """Setup light and add update callback to get data from websocket."""
+        """Set up light and add update callback to get data from websocket."""
         self._light = light
 
         self._features = SUPPORT_BRIGHTNESS
@@ -102,6 +101,11 @@ class DeconzLight(Light):
         return self._light.name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this light."""
+        return self._light.uniqueid
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return self._features
@@ -129,6 +133,9 @@ class DeconzLight(Light):
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
             data['xy'] = xyb[0], xyb[1]
             data['bri'] = xyb[2]
+
+        if ATTR_XY_COLOR in kwargs:
+            data['xy'] = kwargs[ATTR_XY_COLOR]
 
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]

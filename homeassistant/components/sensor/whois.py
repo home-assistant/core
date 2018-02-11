@@ -4,13 +4,13 @@ Get WHOIS information for a given host.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.whois/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -22,10 +22,10 @@ CONF_DOMAIN = 'domain'
 
 DEFAULT_NAME = 'Whois'
 
+ATTR_EXPIRES = 'expires'
 ATTR_NAME_SERVERS = 'name_servers'
 ATTR_REGISTRAR = 'registrar'
 ATTR_UPDATED = 'updated'
-ATTR_EXPIRES = 'expires'
 
 SCAN_INTERVAL = timedelta(hours=24)
 
@@ -79,12 +79,12 @@ class WhoisSensor(Entity):
 
     @property
     def icon(self):
-        """The icon to represent this sensor."""
+        """Return the icon to represent this sensor."""
         return 'mdi:calendar-clock'
 
     @property
     def unit_of_measurement(self):
-        """The unit of measurement to present the value in."""
+        """Return the unit of measurement to present the value in."""
         return 'days'
 
     @property

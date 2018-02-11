@@ -796,6 +796,34 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(('test_light/bright', 50, 0, False),
                          self.mock_publish.mock_calls[-2][1])
 
+    def test_default_availability_payload(self):
+        """Test availability by default payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'command_topic': 'test_light/set',
+                'brightness_command_topic': 'test_light/bright',
+                'rgb_command_topic': "test_light/rgb",
+                'availability_topic': 'availability-topic'
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
         self.assertTrue(setup_component(self.hass, light.DOMAIN, {

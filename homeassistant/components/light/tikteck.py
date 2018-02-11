@@ -70,7 +70,7 @@ class TikteckLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._address)
+        return self._address
 
     @property
     def name(self):

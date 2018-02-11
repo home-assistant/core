@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_VOLUME_SET, SUPPORT_TURN_ON, SUPPORT_PLAY, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, CONF_PORT,
                                  STATE_PAUSED, STATE_PLAYING,
                                  STATE_UNAVAILABLE)
@@ -23,7 +23,6 @@ REQUIREMENTS = ['libsoundtouch==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'media_player'
 SERVICE_PLAY_EVERYWHERE = 'soundtouch_play_everywhere'
 SERVICE_CREATE_ZONE = 'soundtouch_create_zone'
 SERVICE_ADD_ZONE_SLAVE = 'soundtouch_add_zone_slave'
