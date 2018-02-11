@@ -263,6 +263,13 @@ def check(config_path):
     except Exception as err:  # pylint: disable=broad-except
         print(color('red', 'Fatal error while loading config:'), str(err))
         res['except'].setdefault(ERROR_STR, []).append(err)
+    finally:
+        # Stop all patches
+        for pat in PATCHES.values():
+            pat.stop()
+        # Ensure !secrets point to the original function
+        yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+        bootstrap.clear_secret_cache()
 
     return res
 
