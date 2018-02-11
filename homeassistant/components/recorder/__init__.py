@@ -43,10 +43,12 @@ DOMAIN = 'recorder'
 SERVICE_PURGE = 'purge'
 
 ATTR_KEEP_DAYS = 'keep_days'
+ATTR_REPACK = 'repack'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.Optional(ATTR_KEEP_DAYS):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Optional(ATTR_REPACK, default=False): cv.boolean
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
@@ -76,7 +78,7 @@ FILTER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
-        vol.Optional(CONF_PURGE_KEEP_DAYS):
+        vol.Optional(CONF_PURGE_KEEP_DAYS, default=10):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_PURGE_INTERVAL, default=1):
             vol.All(vol.Coerce(int), vol.Range(min=0)),
@@ -122,12 +124,6 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
-    if keep_days is None and purge_interval != 0:
-        _LOGGER.warning(
-            "From version 0.64.0 the 'recorder' component will by default "
-            "purge data older than 10 days. To keep data longer you must "
-            "configure 'purge_keep_days' or 'purge_interval'.")
-
     db_url = conf.get(CONF_DB_URL, None)
     if not db_url:
         db_url = DEFAULT_URL.format(
@@ -144,7 +140,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @asyncio.coroutine
     def async_handle_purge_service(service):
         """Handle calls to the purge service."""
-        instance.do_adhoc_purge(service.data[ATTR_KEEP_DAYS])
+        instance.do_adhoc_purge(**service.data)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PURGE, async_handle_purge_service,
@@ -153,7 +149,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return (yield from instance.async_db_ready)
 
 
-PurgeTask = namedtuple('PurgeTask', ['keep_days'])
+PurgeTask = namedtuple('PurgeTask', ['keep_days', 'repack'])
 
 
 class Recorder(threading.Thread):
@@ -188,10 +184,12 @@ class Recorder(threading.Thread):
         """Initialize the recorder."""
         self.hass.bus.async_listen(MATCH_ALL, self.event_listener)
 
-    def do_adhoc_purge(self, keep_days):
+    def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
-        if keep_days is not None:
-            self.queue.put(PurgeTask(keep_days))
+        keep_days = kwargs.get(ATTR_KEEP_DAYS, self.keep_days)
+        repack = kwargs.get(ATTR_REPACK)
+
+        self.queue.put(PurgeTask(keep_days, repack))
 
     def run(self):
         """Start processing events to save."""
@@ -261,7 +259,8 @@ class Recorder(threading.Thread):
                 @callback
                 def async_purge(now):
                     """Trigger the purge and schedule the next run."""
-                    self.queue.put(PurgeTask(self.keep_days))
+                    self.queue.put(
+                        PurgeTask(self.keep_days, repack=not self.did_vacuum))
                     self.hass.helpers.event.async_track_point_in_time(
                         async_purge, now + timedelta(days=self.purge_interval))
 
@@ -294,7 +293,7 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 return
             elif isinstance(event, PurgeTask):
-                purge.purge_old_data(self, event.keep_days)
+                purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue
             elif event.event_type == EVENT_TIME_CHANGED:
