@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.json import load_json, save_json
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysabnzbd==0.0.1']
+REQUIREMENTS = ['pysabnzbd==0.0.3']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_check_sabnzbd(sab_api, base_url, api_key):
     """Check if we can reach SABnzbd."""
-    from pysabnzbd.sabnzbd_api import SabnzbdApiException
+    from pysabnzbd import SabnzbdApiException
     sab_api = sab_api(base_url, api_key)
 
     try:
@@ -127,7 +127,7 @@ def request_configuration(host, name, hass, config, async_add_devices,
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the SABnzbd platform."""
-    from pysabnzbd.sabnzbd_api import SabnzbdApi
+    from pysabnzbd import SabnzbdApi
 
     if discovery_info is not None:
         host = discovery_info.get(CONF_HOST)
@@ -189,7 +189,7 @@ class SabnzbdSensor(Entity):
     @asyncio.coroutine
     def async_refresh_sabnzbd_data(self):
         """Call the throttled SABnzbd refresh method."""
-        from pysabnzbd.sabnzbd_api import SabnzbdApiException
+        from pysabnzbd import SabnzbdApiException
         try:
             yield from async_update_queue(self.sabnzbd_api)
         except SabnzbdApiException:
