@@ -61,6 +61,7 @@ REQUIRES = [
     'chardet==3.0.4',
     'astral==1.5',
     'certifi>=2017.4.17',
+    'attrs==17.4.0',
 ]
 
 MIN_PY_VERSION = '.'.join(map(

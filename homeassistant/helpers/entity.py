@@ -80,6 +80,9 @@ class Entity(object):
     # Process updates in parallel
     parallel_updates = None
 
+    # Name in the entity registry
+    registry_name = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -225,7 +228,7 @@ class Entity(object):
         if unit_of_measurement is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
-        name = self.name
+        name = self.registry_name or self.name
         if name is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
