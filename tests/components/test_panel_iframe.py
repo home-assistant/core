@@ -55,6 +55,11 @@ class TestPanelIframe(unittest.TestCase):
                         'title': 'Api',
                         'url': '/api',
                     },
+                    'ftp': {
+                        'icon': 'mdi:weather',
+                        'title': 'FTP',
+                        'url': 'ftp://some/ftp',
+                    },
                 },
             })
 
@@ -85,4 +90,13 @@ class TestPanelIframe(unittest.TestCase):
             'title': 'Api',
             'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
             'url_path': 'api',
+        }
+
+        assert panels.get('ftp').to_response(self.hass, None) == {
+            'component_name': 'iframe',
+            'config': {'url': 'ftp://some/ftp'},
+            'icon': 'mdi:weather',
+            'title': 'FTP',
+            'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
+            'url_path': 'ftp',
         }
