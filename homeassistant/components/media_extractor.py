@@ -85,7 +85,7 @@ class MediaExtractor(object):
         else:
             entities = self.get_entities()
 
-            if len(entities) == 0:
+            if not entities:
                 self.call_media_player_service(stream_selector, None)
 
             for entity_id in entities:
@@ -108,7 +108,7 @@ class MediaExtractor(object):
             _LOGGER.warning(
                 "Playlists are not supported, looking for the first video")
             entries = list(all_media['entries'])
-            if len(entries) > 0:
+            if entries:
                 selected_media = entries[0]
             else:
                 _LOGGER.error("Playlist is empty")

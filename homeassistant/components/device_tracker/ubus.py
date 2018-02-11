@@ -96,11 +96,11 @@ class UbusDeviceScanner(DeviceScanner):
         raise NotImplementedError
 
     @_refresh_on_access_denied
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
             self._generate_mac2name()
-        name = self.mac2name.get(mac.upper(), None)
+        name = self.mac2name.get(device.upper(), None)
         return name
 
     @_refresh_on_access_denied

@@ -111,8 +111,7 @@ class VenstarThermostat(ClimateDevice):
         """Return the unit of measurement, as defined by the API."""
         if self._client.tempunits == self._client.TEMPUNITS_F:
             return TEMP_FAHRENHEIT
-        else:
-            return TEMP_CELSIUS
+        return TEMP_CELSIUS
 
     @property
     def fan_list(self):
@@ -143,16 +142,14 @@ class VenstarThermostat(ClimateDevice):
             return STATE_COOL
         elif self._client.mode == self._client.MODE_AUTO:
             return STATE_AUTO
-        else:
-            return STATE_OFF
+        return STATE_OFF
 
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
         if self._client.fan == self._client.FAN_AUTO:
             return STATE_AUTO
-        else:
-            return STATE_ON
+        return STATE_ON
 
     @property
     def device_state_attributes(self):
@@ -169,24 +166,21 @@ class VenstarThermostat(ClimateDevice):
             return self._client.heattemp
         elif self._client.mode == self._client.MODE_COOL:
             return self._client.cooltemp
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.heattemp
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.cooltemp
-        else:
-            return None
+        return None
 
     @property
     def target_humidity(self):
@@ -245,9 +239,9 @@ class VenstarThermostat(ClimateDevice):
             if not success:
                 _LOGGER.error("Failed to change the temperature")
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        if fan == STATE_ON:
+        if fan_mode == STATE_ON:
             success = self._client.set_fan(self._client.FAN_ON)
         else:
             success = self._client.set_fan(self._client.FAN_AUTO)

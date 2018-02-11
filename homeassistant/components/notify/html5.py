@@ -136,7 +136,7 @@ def _load_config(filename):
 class JSONBytesDecoder(json.JSONEncoder):
     """JSONEncoder to decode bytes objects to unicode."""
 
-    # pylint: disable=method-hidden
+    # pylint: disable=method-hidden, arguments-differ
     def default(self, obj):
         """Decode object if it's a bytes object, else defer to base class."""
         if isinstance(obj, bytes):
