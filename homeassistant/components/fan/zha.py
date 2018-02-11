@@ -10,7 +10,7 @@ from homeassistant.components import zha
 from homeassistant.components.fan import (
     DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED)
-from homeassistant.const import STATE_UNKNOWN, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_UNKNOWN
 
 DEPENDENCIES = ['zha']
 
@@ -35,8 +35,9 @@ SPEED_LIST = [
     SPEED_SMART
 ]
 
-VALUE_TO_SPEED = {i: speed for i, speed in enumerate(SPEED_LIST) }
-SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST) }
+VALUE_TO_SPEED = {i: speed for i, speed in enumerate(SPEED_LIST)}
+SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -47,9 +48,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices([ZhaFan(**discovery_info)], update_before_add=True)
 
+
 class ZhaFan(zha.Entity, FanEntity):
     """Representation of a ZHA fan."""
-    
+
     _domain = DOMAIN
 
     @property
@@ -92,7 +94,7 @@ class ZhaFan(zha.Entity, FanEntity):
         """Set the speed of the fan."""
         yield from self._endpoint.fan.write_attributes({
             'fan_mode': SPEED_TO_VALUE[speed]})
-        
+
         self._state = speed
         self.async_schedule_update_ha_state()
 
@@ -100,7 +102,8 @@ class ZhaFan(zha.Entity, FanEntity):
     def async_update(self):
         """Retrieve latest state."""
         result = yield from zha.safe_read(self._endpoint.fan, ['fan_mode'])
-        self._state = VALUE_TO_SPEED.get(result.get('fan_mode', self._state), STATE_UNKNOWN)
+        value = result.get('fan_mode', self._state)
+        self._state = VALUE_TO_SPEED.get(value, STATE_UNKNOWN)
 
     @property
     def should_poll(self) -> bool:
