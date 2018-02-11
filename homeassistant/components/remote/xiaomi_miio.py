@@ -226,7 +226,6 @@ class XiaomiMiioRemote(RemoteDevice):
         _LOGGER.error("Device does not support turn_off, " +
                       "please use 'remote.send_command' to send commands.")
 
-    # pylint: enable=R0201
     def _send_command(self, payload):
         """Send a command."""
         from miio import DeviceException
