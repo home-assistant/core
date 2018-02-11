@@ -46,6 +46,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             async_entities_added_callback=async_entities_added_callback,
         )
 
+
 class TestHelpersEntityPlatform(unittest.TestCase):
     """Test homeassistant.helpers.entity_component module."""
 
