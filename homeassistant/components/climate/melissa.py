@@ -146,10 +146,10 @@ class MelissaClimate(ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
         self.send({self._api.TEMP: temp})
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        fan_mode = self.hass_fan_to_melissa(fan)
-        self.send({self._api.FAN: fan_mode})
+        melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
+        self.send({self._api.FAN: melissa_fan_mode})
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
@@ -174,8 +174,7 @@ class MelissaClimate(ClimateDevice):
         if not self._api.send(self._serial_number, self._cur_settings):
             self._cur_settings = old_value
             return False
-        else:
-            return True
+        return True
 
     def update(self):
         """Get latest data from Melissa."""
@@ -196,8 +195,7 @@ class MelissaClimate(ClimateDevice):
             return STATE_OFF
         elif state == self._api.STATE_IDLE:
             return STATE_IDLE
-        else:
-            return None
+        return None
 
     def melissa_op_to_hass(self, mode):
         """Translate Melissa modes to hass states."""
@@ -211,10 +209,9 @@ class MelissaClimate(ClimateDevice):
             return STATE_DRY
         elif mode == self._api.MODE_FAN:
             return STATE_FAN_ONLY
-        else:
-            _LOGGER.warning(
-                "Operation mode %s could not be mapped to hass", mode)
-            return None
+        _LOGGER.warning(
+            "Operation mode %s could not be mapped to hass", mode)
+        return None
 
     def melissa_fan_to_hass(self, fan):
         """Translate Melissa fan modes to hass modes."""
@@ -226,9 +223,8 @@ class MelissaClimate(ClimateDevice):
             return SPEED_MEDIUM
         elif fan == self._api.FAN_HIGH:
             return SPEED_HIGH
-        else:
-            _LOGGER.warning("Fan mode %s could not be mapped to hass", fan)
-            return None
+        _LOGGER.warning("Fan mode %s could not be mapped to hass", fan)
+        return None
 
     def hass_mode_to_melissa(self, mode):
         """Translate hass states to melissa modes."""

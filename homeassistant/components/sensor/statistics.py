@@ -173,7 +173,7 @@ class StatisticsSensor(Entity):
         """Remove states which are older than self._max_age."""
         now = dt_util.utcnow()
 
-        while (len(self.ages) > 0) and (now - self.ages[0]) > self._max_age:
+        while self.ages and (now - self.ages[0]) > self._max_age:
             self.ages.popleft()
             self.states.popleft()
 

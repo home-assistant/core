@@ -56,11 +56,11 @@ class GC100Switch(ToggleEntity):
         """Return the state of the entity."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         self._gc100.write_switch(self._port_addr, 1, self.set_state)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         self._gc100.write_switch(self._port_addr, 0, self.set_state)
 

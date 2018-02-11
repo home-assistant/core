@@ -101,13 +101,13 @@ class UnifiScanner(DeviceScanner):
         self._update()
         return self._clients.keys()
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name (if known) of the device.
 
         If a name has been set in Unifi, then return that, else
         return the hostname if it has been detected.
         """
-        client = self._clients.get(mac, {})
+        client = self._clients.get(device, {})
         name = client.get('name') or client.get('hostname')
-        _LOGGER.debug("Device mac %s name %s", mac, name)
+        _LOGGER.debug("Device mac %s name %s", device, name)
         return name

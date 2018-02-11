@@ -210,8 +210,7 @@ class XiaomiMiioRemote(RemoteDevice):
         """Hide remote by default."""
         if self._is_hidden:
             return {'hidden': 'true'}
-        else:
-            return
+        return
 
     # pylint: disable=R0201
     @asyncio.coroutine

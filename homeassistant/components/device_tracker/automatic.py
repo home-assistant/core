@@ -177,10 +177,9 @@ class AutomaticAuthCallbackView(HomeAssistantView):
                 _LOGGER.error(
                     "Error authorizing Automatic: %s", params['error'])
                 return response
-            else:
-                _LOGGER.error(
-                    "Error authorizing Automatic. Invalid response returned")
-                return response
+            _LOGGER.error(
+                "Error authorizing Automatic. Invalid response returned")
+            return response
 
         if DATA_CONFIGURING not in hass.data or \
                 params['state'] not in hass.data[DATA_CONFIGURING]:
