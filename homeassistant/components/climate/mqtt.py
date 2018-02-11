@@ -482,15 +482,15 @@ class MqttClimate(MqttAvailability, ClimateDevice):
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
-    def async_set_fan_mode(self, fan):
+    def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         if self._send_if_off or self._current_operation != STATE_OFF:
             mqtt.async_publish(
                 self.hass, self._topic[CONF_FAN_MODE_COMMAND_TOPIC],
-                fan, self._qos, self._retain)
+                fan_mode, self._qos, self._retain)
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
-            self._current_fan_mode = fan
+            self._current_fan_mode = fan_mode
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -552,15 +552,15 @@ class MqttClimate(MqttAvailability, ClimateDevice):
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
-    def async_set_hold_mode(self, hold):
+    def async_set_hold_mode(self, hold_mode):
         """Update hold mode on."""
         if self._topic[CONF_HOLD_COMMAND_TOPIC] is not None:
             mqtt.async_publish(self.hass,
                                self._topic[CONF_HOLD_COMMAND_TOPIC],
-                               hold, self._qos, self._retain)
+                               hold_mode, self._qos, self._retain)
 
         if self._topic[CONF_HOLD_STATE_TOPIC] is None:
-            self._hold = hold
+            self._hold = hold_mode
             self.async_schedule_update_ha_state()
 
     @asyncio.coroutine

@@ -101,7 +101,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self._write_to_hub(self._sid, **{self._data_key: 'off'}):
             self._state = False

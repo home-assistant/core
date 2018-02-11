@@ -2,7 +2,7 @@
 # make new things fail. Manually update these pins when pulling in a
 # new version
 flake8==3.5
-pylint==1.6.5
+pylint==1.8.2
 mypy==0.560
 pydocstyle==1.1.1
 coveralls==1.2.0

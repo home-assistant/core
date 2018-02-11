@@ -43,6 +43,6 @@ class WinkScene(WinkDevice, Scene):
         """Python-wink will always return False."""
         return self.wink.state()
 
-    def activate(self, **kwargs):
+    def activate(self):
         """Activate the scene."""
         self.wink.activate()

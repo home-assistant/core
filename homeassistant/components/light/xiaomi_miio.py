@@ -242,7 +242,7 @@ class XiaomiPhilipsGenericLight(Light):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @asyncio.coroutine
-    def async_set_scene(self, scene: int=1):
+    def async_set_scene(self, scene: int = 1):
         """Set the fixed scene."""
         yield from self._try_command(
             "Setting a fixed scene failed.",
@@ -259,10 +259,6 @@ class XiaomiPhilipsGenericLight(Light):
 
 class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
     """Representation of a Xiaomi Philips Light Ball."""
-
-    def __init__(self, name, light, device_info):
-        """Initialize the light device."""
-        super().__init__(name, light, device_info)
 
     @property
     def color_temp(self):
@@ -345,10 +341,6 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
 class XiaomiPhilipsCeilingLamp(XiaomiPhilipsLightBall, Light):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
 
-    def __init__(self, name, light, device_info):
-        """Initialize the light device."""
-        super().__init__(name, light, device_info)
-
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
@@ -363,6 +355,4 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsLightBall, Light):
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight, Light):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
-    def __init__(self, name, light, device_info):
-        """Initialize the light device."""
-        super().__init__(name, light, device_info)
+    pass

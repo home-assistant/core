@@ -40,7 +40,7 @@ class VeraScene(Scene):
         """Update the scene status."""
         self.vera_scene.refresh()
 
-    def activate(self, **kwargs):
+    def activate(self):
         """Activate the scene."""
         self.vera_scene.activate()
 

@@ -133,10 +133,6 @@ class LaCrosseSensor(Entity):
         """Return the name of the sensor."""
         return self._name
 
-    def update(self, *args):
-        """Get the latest data."""
-        pass
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
