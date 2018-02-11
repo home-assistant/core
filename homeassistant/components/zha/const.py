@@ -39,6 +39,7 @@ def populate_data():
         zcl.clusters.general.OnOff: 'switch',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
+        zcl.clusters.hvac.Fan: 'fan',
     })
 
     # A map of hass components to all Zigbee clusters it could use
