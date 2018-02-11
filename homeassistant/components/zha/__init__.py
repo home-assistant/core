@@ -262,6 +262,16 @@ class Entity(entity.Entity):
                 ieeetail,
                 endpoint.endpoint_id,
             )
+
+        self._device_state_attributes['ieee_address'] = \
+            str(endpoint.device.ieee)
+        self._device_state_attributes['nwk'] = endpoint.device.nwk
+        self._device_state_attributes['endpoint'] = endpoint.endpoint_id
+        if manufacturer is not None:
+            self._device_state_attributes['manufacturer'] = manufacturer
+        if model is not None:
+            self._device_state_attributes['model'] = model
+
         for cluster in in_clusters.values():
             cluster.add_listener(self)
         for cluster in out_clusters.values():
