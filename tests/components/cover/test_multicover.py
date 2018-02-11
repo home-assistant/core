@@ -63,8 +63,8 @@ CONFIG_WINTERPROTECTION = {
                     'winter_protection': {
                         'close_position': 10,
                         'open_position': 90,
-                        'temp': 5,
-                        'temp_sensor': 'sensor.temperature',
+                        'temperature': 5,
+                        'temperature_sensor': 'sensor.temperature',
                     },
                     'entity_id': [
                         DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT

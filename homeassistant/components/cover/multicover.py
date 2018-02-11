@@ -34,8 +34,8 @@ TILT_SUPPORT = 'tilt'
 CONF_WINTER_PROTECTION = 'winter_protection'
 CONF_CLOSE_POSITION = 'close_position'
 CONF_OPEN_POSITION = 'open_position'
-CONF_TEMPERATURE = 'temp'
-CONF_TEMPERATURE_SENSOR = 'temp_sensor'
+CONF_TEMPERATURE = 'temperature'
+CONF_TEMPERATURE_SENSOR = 'temperature_sensor'
 
 
 WINTER_PROTECTION_SCHEMA = vol.All(vol.Schema({
