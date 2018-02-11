@@ -235,8 +235,6 @@ class MultiCover(CoverDevice):
         position = -1
         for entity_id in self.covers['position']:
             state = self.hass.states.get(entity_id)
-            if state is None:
-                break
             pos = state.attributes.get(ATTR_CURRENT_POSITION)
             if position == -1:
                 position = pos
@@ -262,8 +260,6 @@ class MultiCover(CoverDevice):
         position = -1
         for entity_id in self.tilts['position']:
             state = self.hass.states.get(entity_id)
-            if state is None:
-                break
             pos = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
             if position == -1:
                 position = pos
