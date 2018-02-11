@@ -6,13 +6,17 @@ https://home-assistant.io/components/lock.kiwi/
 """
 import logging
 import requests
+import datetime
+import dateutil.parser
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import (LockDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-        CONF_PASSWORD, CONF_USERNAME, ATTR_ID)
+        CONF_PASSWORD, CONF_USERNAME, ATTR_ID, ATTR_LONGITUDE, ATTR_LATITUDE)
+
+REQUIREMENTS = ['python-dateutil==2.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,11 +46,19 @@ class KiwiClient:
         self.__username = username
         self.__password = password
         self.__session_key = None
+        self.__session_expires = None
 
         # get a new session token on client startup
-        self._check_sessionkey()
+        self._renew_sessionkey()
 
-    def _check_sessionkey(self):
+    def _with_valid_session(self):
+        """check if the session is valid; renew if necessary"""
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        if not self.__session_expires or (now >= self.__session_expires):
+            _LOGGER.debug("no valid session found - renewing session key")
+            self._renew_sessionkey()
+
+    def _renew_sessionkey(self):
         """update the clients session key."""
         _LOGGER.info(
             "authentication for user %s started.",
@@ -69,9 +81,12 @@ class KiwiClient:
             raise ValueError("could not authenticate")
 
         self.__session_key = auth_response.json()['result']['session_key']
+        self.__session_expires = dateutil.parser.parse(
+                auth_response.json()['result']['session']['expires'])
 
     def get_locks(self):
         """return a list of kiwi locks"""
+        self._with_valid_session()
         sensor_list = requests.get(
             API_LIST_DOOR_URL,
             params={"session_key": self.__session_key},
@@ -86,6 +101,7 @@ class KiwiClient:
 
     def open_door(self, door_id):
         """open the kiwi door lock"""
+        self._with_valid_session()
         open_response = requests.post(
             API_OPEN_DOOR_URL.format(door_id),
             headers={"Accept": "application/json"},
@@ -103,6 +119,22 @@ class KiwiLock(LockDevice):
         self._device_attrs = None
         self._client = client
         self.id = kiwi_lock['sensor_id']
+ 
+        address = kiwi_lock.get('address')
+        lat = address.pop('lat', None)
+        lng = address.pop('lng', None)
+
+        self._device_attrs = {
+            ATTR_ID: self.id,
+            ATTR_TYPE: kiwi_lock.get('hardware_type'),
+            ATTR_PERMISSION: kiwi_lock.get('highest_permission'),
+            ATTR_CAN_INVITE: kiwi_lock.get('can_invite')}
+
+        self._device_attrs.update(address)
+        self._device_attrs.update({
+            ATTR_LATITUDE: lat,
+            ATTR_LONGITUDE: lng
+        })
 
     @property
     def name(self):
@@ -120,18 +152,6 @@ class KiwiLock(LockDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return self._device_attrs
-
-    def update(self):
-        """Update the kiwi lock properties."""
-        s = self._sensor
-        address = s.get('address')
-        self._device_attrs = {
-            ATTR_ID: self.id,
-            ATTR_TYPE: s.get('hardware_type'),
-            ATTR_PERMISSION: s.get('highest_permission'),
-            ATTR_CAN_INVITE: s.get('can_invite')}
-
-        self._device_attrs.update(address)
 
     def unlock(self, **kwargs):
         """Unlock the device."""
