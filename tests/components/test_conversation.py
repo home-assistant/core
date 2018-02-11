@@ -50,9 +50,6 @@ def test_register_before_setup(hass):
     """Test calling an intent from a conversation."""
     intents = async_mock_intent(hass, 'OrderBeer')
 
-    result = yield from component.async_setup(hass, {})
-    assert result
-
     hass.components.conversation.async_register('OrderBeer', [
         'A {type} beer, please'
     ])
