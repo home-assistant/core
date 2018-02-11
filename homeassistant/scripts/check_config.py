@@ -49,6 +49,7 @@ def mock_coro(*args):
     """Coroutine that returns None."""
     return None
 
+
 def color(the_color, *args, reset=None):
     """Color helper."""
     from colorlog.escape_codes import escape_codes, parse_colors
