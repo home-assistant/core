@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 REQUIREMENTS = [
     'bellows==0.5.0',
     'zigpy==0.0.1',
-    'zigpy-xbee==0.0.1',
+    'zigpy-xbee==0.0.2',
 ]
 
 DOMAIN = 'zha'
