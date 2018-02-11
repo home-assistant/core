@@ -91,6 +91,19 @@ class TestComponentWeblink(unittest.TestCase):
             }
         }))
 
+    def test_good_config_ftp_link(self):
+        """Test if new entity is created."""
+        self.assertTrue(setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [
+                    {
+                        weblink.CONF_NAME: 'My FTP URL',
+                        weblink.CONF_URL: 'ftp://somehost/'
+                    },
+                ],
+            }
+        }))
+
     def test_entities_get_created(self):
         """Test if new entity is created."""
         self.assertTrue(setup_component(self.hass, weblink.DOMAIN, {
