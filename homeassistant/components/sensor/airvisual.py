@@ -27,7 +27,6 @@ ATTR_COUNTRY = 'country'
 ATTR_POLLUTANT_SYMBOL = 'pollutant_symbol'
 ATTR_POLLUTANT_UNIT = 'pollutant_unit'
 ATTR_REGION = 'region'
-ATTR_TIMESTAMP = 'timestamp'
 
 CONF_CITY = 'city'
 CONF_COUNTRY = 'country'
@@ -80,6 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
+    from ctypes import c_size_t
     import pyairvisual as pav
 
     api_key = config.get(CONF_API_KEY)
@@ -95,60 +95,63 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if city and state and country:
         _LOGGER.debug(
             "Using city, state, and country: %s, %s, %s", city, state, country)
+        location_id = city + state + country
         data = AirVisualData(
             pav.Client(api_key), city=city, state=state, country=country,
             show_on_map=show_on_map)
     else:
         _LOGGER.debug(
             "Using latitude and longitude: %s, %s", latitude, longitude)
+        location_id = latitude + longitude
         data = AirVisualData(
             pav.Client(api_key), latitude=latitude, longitude=longitude,
             radius=radius, show_on_map=show_on_map)
+
+    unique_id = c_size_t(hash(location_id)).value
 
     data.update()
     sensors = []
     for locale in monitored_locales:
         for sensor_class, name, icon in SENSOR_TYPES:
-            sensors.append(globals()[sensor_class](data, name, icon, locale))
+            sensors.append(globals()[sensor_class](
+                data,
+                name,
+                icon,
+                locale,
+                unique_id))
 
     add_devices(sensors, True)
-
-
-def merge_two_dicts(dict1, dict2):
-    """Merge two dicts into a new dict as a shallow copy."""
-    final = dict1.copy()
-    final.update(dict2)
-    return final
 
 
 class AirVisualBaseSensor(Entity):
     """Define a base class for all of our sensors."""
 
-    def __init__(self, data, name, icon, locale):
+    def __init__(self, data, name, icon, locale, unique_id):
         """Initialize the sensor."""
         self.data = data
+        self._attrs = {}
         self._icon = icon
         self._locale = locale
         self._name = name
         self._state = None
+        self._unique_id = unique_id
         self._unit = None
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attrs = merge_two_dicts({
+        self._attrs.update({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_TIMESTAMP: self.data.pollution_info.get('ts')
-        }, self.data.attrs)
+        })
 
         if self.data.show_on_map:
-            attrs[ATTR_LATITUDE] = self.data.latitude
-            attrs[ATTR_LONGITUDE] = self.data.longitude
+            self._attrs[ATTR_LATITUDE] = self.data.latitude
+            self._attrs[ATTR_LONGITUDE] = self.data.longitude
         else:
-            attrs['lati'] = self.data.latitude
-            attrs['long'] = self.data.longitude
+            self._attrs['lat'] = self.data.latitude
+            self._attrs['long'] = self.data.longitude
 
-        return attrs
+        return self._attrs
 
     @property
     def icon(self):
@@ -168,6 +171,11 @@ class AirVisualBaseSensor(Entity):
 
 class AirPollutionLevelSensor(AirVisualBaseSensor):
     """Define a sensor to measure air pollution level."""
+
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_pollution_level'.format(self._unique_id)
 
     def update(self):
         """Update the status of the sensor."""
@@ -190,6 +198,11 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
     """Define a sensor to measure AQI."""
 
     @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_aqi'.format(self._unique_id)
+
+    @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return 'PSI'
@@ -205,19 +218,16 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
 class MainPollutantSensor(AirVisualBaseSensor):
     """Define a sensor to the main pollutant of an area."""
 
-    def __init__(self, data, name, icon, locale):
+    def __init__(self, data, name, icon, locale, unique_id):
         """Initialize the sensor."""
-        super().__init__(data, name, icon, locale)
+        super().__init__(data, name, icon, locale, unique_id)
         self._symbol = None
         self._unit = None
 
     @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return merge_two_dicts(super().device_state_attributes, {
-            ATTR_POLLUTANT_SYMBOL: self._symbol,
-            ATTR_POLLUTANT_UNIT: self._unit
-        })
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_main_pollutant'.format(self._unique_id)
 
     def update(self):
         """Update the status of the sensor."""
@@ -228,6 +238,11 @@ class MainPollutantSensor(AirVisualBaseSensor):
         self._state = pollution_info.get('label')
         self._unit = pollution_info.get('unit')
         self._symbol = symbol
+
+        self._attrs.update({
+            ATTR_POLLUTANT_SYMBOL: self._symbol,
+            ATTR_POLLUTANT_UNIT: self._unit
+        })
 
 
 class AirVisualData(object):
