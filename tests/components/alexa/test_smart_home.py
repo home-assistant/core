@@ -1096,6 +1096,23 @@ def test_report_lock_state(hass):
 
 
 @asyncio.coroutine
+def test_report_dimmable_light_state(hass):
+    """Test BrightnessController reports brightness correctly."""
+    hass.states.async_set(
+        'light.test_on', 'on', {'friendly_name': "Test light On",
+                                'brightness': 128, 'supported_features': 1})
+    hass.states.async_set(
+        'light.test_off', 'off', {'friendly_name': "Test light Off",
+                                  'supported_features': 1})
+
+    properties = yield from reported_properties(hass, 'light.test_on')
+    properties.assert_equal('Alexa.BrightnessController', 'brightness', 50)
+
+    properties = yield from reported_properties(hass, 'light.test_off')
+    properties.assert_equal('Alexa.BrightnessController', 'brightness', 0)
+
+
+@asyncio.coroutine
 def reported_properties(hass, endpoint):
     """Use ReportState to get properties and return them.
 
@@ -1118,7 +1135,7 @@ class _ReportedProperties(object):
         for prop in self.properties:
             if prop['namespace'] == namespace and prop['name'] == name:
                 assert prop['value'] == value
-            return prop
+                return prop
 
         assert False, 'property %s:%s not in %r' % (
             namespace,

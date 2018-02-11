@@ -328,8 +328,10 @@ class _AlexaBrightnessController(_AlexaInterface):
     def get_property(self, name):
         if name != 'brightness':
             raise _UnsupportedProperty(name)
-
-        return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        if 'brightness' in self.entity.attributes:
+            return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        else:
+            return 0
 
 
 class _AlexaColorController(_AlexaInterface):
