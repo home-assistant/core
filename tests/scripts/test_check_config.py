@@ -212,3 +212,20 @@ class TestCheckConfig(unittest.TestCase):
             assert res['components'] == {}
             assert res['secret_cache'] == {}
             assert res['secrets'] == {}
+
+    def test_bootstrap_error(self): \
+            # pylint: disable=no-self-use,invalid-name
+        """Test a valid platform setup."""
+        files = {
+            'badbootstrap.yaml': BASE_CONFIG + 'automation: !include no.yaml',
+        }
+        with patch_yaml_files(files):
+            res = check_config.check(get_test_config_dir('badbootstrap.yaml'))
+            change_yaml_files(res)
+
+            err = res['except'].pop(check_config.ERROR_STR)
+            assert len(err) == 1
+            assert res['except'] == {}
+            assert res['components'] == {}
+            assert res['secret_cache'] == {}
+            assert res['secrets'] == {}

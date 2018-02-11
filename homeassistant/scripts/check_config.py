@@ -30,6 +30,8 @@ MOCKS = {
                       config_util._log_pkg_error),
     'logger_exception': ("homeassistant.setup._LOGGER.error",
                          setup._LOGGER.error),
+    'logger_exception_bootstrap': ("homeassistant.bootstrap._LOGGER.error",
+                                   bootstrap._LOGGER.error),
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
@@ -228,6 +230,11 @@ def check(config_path):
         """Log logger.exceptions."""
         res['except'].setdefault(ERROR_STR, []).append(msg % params)
         MOCKS['logger_exception'][1](msg, *params)
+
+    def mock_logger_exception_bootstrap(msg, *params):
+        """Log logger.exceptions."""
+        res['except'].setdefault(ERROR_STR, []).append(msg % params)
+        MOCKS['logger_exception_bootstrap'][1](msg, *params)
 
     # Patches to skip functions
     for sil in SILENCE:
