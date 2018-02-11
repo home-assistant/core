@@ -5,13 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
 import asyncio
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 from urllib.parse import urlparse
 
 # pylint: disable=unused-import
 from typing import Dict  # noqa: F401
 
+import pytz
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -139,7 +140,7 @@ def request_configuration(
         return
 
     # pylint: disable=unused-argument
-    def lgtv_configuration_callback(data):
+    def lgtv_configuration_callback():
         """Handle actions when configuration callback is called."""
         setup_tv(host, name, customize, config, timeout, hass,
                  add_devices, turn_on_action)
@@ -174,7 +175,19 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
-        self._channel = None
+
+        self.reset_channel_info()
+        self._progress_updated_at = util.dt.utcnow()
+
+    @property
+    def app_id(self):
+        """ID of the current running app."""
+        return self._current_source_id
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        return self._current_source
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -190,45 +203,23 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._state = STATE_OFF
                 self._current_source = None
                 self._current_source_id = None
-                self._channel = None
+                self.reset_channel_info()
 
             if self._state is not STATE_OFF:
                 self._muted = self._client.get_muted()
                 self._volume = self._client.get_volume()
-                self._channel = self._client.get_current_channel()
 
-                self._source_list = {}
-                self._app_list = {}
-                conf_sources = self._customize.get(CONF_SOURCES, [])
+                self.update_channel_info()
+                self.update_apps_and_sources()
 
-                for app in self._client.get_apps():
-                    self._app_list[app['id']] = app
-                    if app['id'] == self._current_source_id:
-                        self._current_source = app['title']
-                        self._source_list[app['title']] = app
-                    elif (not conf_sources or
-                          app['id'] in conf_sources or
-                          any(word in app['title']
-                              for word in conf_sources) or
-                          any(word in app['id']
-                              for word in conf_sources)):
-                        self._source_list[app['title']] = app
-
-                for source in self._client.get_inputs():
-                    if source['id'] == self._current_source_id:
-                        self._current_source = source['label']
-                        self._source_list[source['label']] = source
-                    elif (not conf_sources or
-                          source['label'] in conf_sources or
-                          any(source['label'].find(word) != -1
-                              for word in conf_sources)):
-                        self._source_list[source['label']] = source
         except (OSError, ConnectionClosed, TypeError,
                 asyncio.TimeoutError):
             self._state = STATE_OFF
             self._current_source = None
             self._current_source_id = None
-            self._channel = None
+            self.reset_channel_info()
+
+        self._progress_updated_at = util.dt.utcnow()
 
     @property
     def name(self):
@@ -268,10 +259,37 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if (self._channel is not None) and ('channelName' in self._channel):
-            return self._channel['channelName']
-        else:
+        return self._title
+
+    @property
+    def media_channel(self):
+        """Channel currently playing."""
+        return self._channel
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self._progress is None:
             return None
+
+        position = self._progress
+
+        if self._state == STATE_PLAYING:
+            position += (util.dt.utcnow() -
+                         self._progress_updated_at).total_seconds()
+
+        return position
+
+    @ property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        if self.state == STATE_PLAYING:
+            return self._progress_updated_at
+
+    @ property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        return self._duration
 
     @property
     def media_image_url(self):
@@ -363,3 +381,84 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self._client.rewind()
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        self._playing = True
+        self._state = STATE_PLAYING
+        if media_type != MEDIA_TYPE_CHANNEL:
+            self._client.play()
+        else:
+            self._client.set_channel(media_id)
+
+    def update_channel_info(self):
+        channel = self._client.get_current_channel()
+
+        # no need to updated channel info while we are not watching TV
+        if channel.get('returnValue') is None:
+            self.reset_channel_info()
+            return
+
+        self._channel = channel.get('channelName')
+        self._title = self._channel
+        self._duration = None
+        channel_id = channel.get('channelId')
+        self._progress_updated_at = util.dt.utcnow()
+        info = self._client.get_channel_info()
+
+        # tv returns the list of all channels
+        now = datetime.now(pytz.UTC)
+        for program in info.get('programList', []):
+            # skip any invalid data
+            if program['startTime'] == '' or program['endTime'] == '':
+                continue
+
+            st = self._date_helper(program['startTime'])
+            ed = self._date_helper(program['endTime'])
+            if program['channelId'] == channel_id and st <= now < ed:
+                self._title = "{}: {}".format(
+                    self._channel,
+                    program['programName']
+                )
+                self._duration = program['duration']
+                self._progress = (now - st).total_seconds()
+                break
+
+    def reset_channel_info(self):
+        self._channel = None
+        self._title = None
+        self._duration = None
+        self._progress = None
+
+    def update_apps_and_sources(self):
+        self._source_list = {}
+        self._app_list = {}
+        conf_sources = self._customize.get(CONF_SOURCES, [])
+
+        for app in self._client.get_apps():
+            self._app_list[app['id']] = app
+            if app['id'] == self._current_source_id:
+                self._current_source = app['title']
+                self._source_list[app['title']] = app
+            elif (not conf_sources or
+                  app['id'] in conf_sources or
+                  any(word in app['title']
+                      for word in conf_sources) or
+                  any(word in app['id']
+                      for word in conf_sources)):
+                self._source_list[app['title']] = app
+
+        for source in self._client.get_inputs():
+            if source['id'] == self._current_source_id:
+                self._current_source = source['label']
+                self._source_list[source['label']] = source
+            elif (not conf_sources or
+                  source['label'] in conf_sources or
+                  any(source['label'].find(word) != -1
+                      for word in conf_sources)):
+                self._source_list[source['label']] = source
+
+    def _date_helper(self, date_str):
+        return pytz.utc.localize(
+            datetime.strptime(date_str, '%Y,%m,%d,%H,%M,%S')
+        )
