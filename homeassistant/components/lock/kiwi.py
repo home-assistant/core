@@ -85,7 +85,7 @@ class KiwiClient:
                 "could not authenticate at KIWI:\n%s",
                 auth_response.json())
 
-            raise ValueError("could not authenticate")
+            raise ValueError("authentication failed")
 
         self.__session_key = auth_response.json()['result']['session_key']
         self.__session_expires = dateutil.parser.parse(
