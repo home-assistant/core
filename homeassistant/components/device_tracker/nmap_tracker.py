@@ -41,9 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
-    scanner = NmapDeviceScanner(config[DOMAIN])
-
-    return scanner
+    return NmapDeviceScanner(config[DOMAIN])
 
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
