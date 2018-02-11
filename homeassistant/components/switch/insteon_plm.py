@@ -29,7 +29,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         stateKey = deviceInfo['stateKey']
         newnames = deviceInfo['newnames']
 
-        stateName = device[stateKey].name
+        stateName = device.states[stateKey].name
        
         if stateName in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff']:
             state_list.append(InsteonPLMSwitchDevice( hass, device, stateKey, newnames))
