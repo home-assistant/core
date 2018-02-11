@@ -11,7 +11,7 @@ After initializing, call EntityRegistry.async_ensure_loaded to load the data
 from disk.
 """
 import asyncio
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 from itertools import chain
 import logging
 import os
