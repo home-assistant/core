@@ -37,11 +37,6 @@ SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
     'homeassistant.bootstrap.async_register_signal_handling',
     'homeassistant.config.process_ha_config_upgrade',
-    'homeassistant.core._LOGGER.info',
-    'homeassistant.loader._LOGGER.info',
-    'homeassistant.bootstrap._LOGGER.info',
-    'homeassistant.bootstrap._LOGGER.warning',
-    'homeassistant.util.yaml._LOGGER.debug',
 )
 PATCHES = {}
 
@@ -156,6 +151,11 @@ def run(script_args: List) -> int:
 
 def check(config_path):
     """Perform a check by mocking hass load functions."""
+    logging.getLogger('homeassistant.core').setLevel(logging.WARNING)
+    logging.getLogger('homeassistant.loader').setLevel(logging.WARNING)
+    logging.getLogger('homeassistant.setup').setLevel(logging.WARNING)
+    logging.getLogger('homeassistant.bootstrap').setLevel(logging.ERROR)
+    logging.getLogger('homeassistant.util.yaml').setLevel(logging.INFO)
     res = {
         'yaml_files': OrderedDict(),  # yaml_files loaded
         'secrets': OrderedDict(),  # secret cache and secrets loaded
