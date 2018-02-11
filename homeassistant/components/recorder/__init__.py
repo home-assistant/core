@@ -94,7 +94,7 @@ def wait_connection_ready(hass):
     return hass.data[DATA_INSTANCE].async_db_ready
 
 
-def run_information(hass, point_in_time: Optional[datetime]=None):
+def run_information(hass, point_in_time: Optional[datetime] = None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.

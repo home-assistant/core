@@ -8,8 +8,9 @@ import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
-
 import async_timeout
+
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
@@ -19,7 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
 
 
 REQUIREMENTS = ['rflink==0.0.34']

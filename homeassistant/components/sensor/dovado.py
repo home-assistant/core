@@ -79,7 +79,7 @@ class Dovado:
 
         def send_sms(service):
             """Send SMS through the router."""
-            number = service.data.get('number'),
+            number = service.data.get('number')
             message = service.data.get('message')
             _LOGGER.debug("message for %s: %s", number, message)
             self._dovado.send_sms(number, message)
